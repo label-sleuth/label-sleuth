@@ -1,0 +1,21 @@
+pandas==1.2.4
+enum34==1.1.6
+numpy==1.19.3
+scikit-learn==1.0.1
+jsonpickle==1.4.1
+filelock==3.0.12
+nose==1.3.7
+ujson==3.1.0
+bs4==0.0.1
+requests==2.26.0
+nltk==3.4.4
+en_core_web_lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.0.0/en_core_web_lg-3.0.0.tar.gz
+flask==1.1.2
+flask_cors==3.0.9
+six==1.15.0
+nose==1.3.7
+flask_httpauth==4.1.0
+dacite==1.6.0
+wcwidth==0.2.5
+waitress==2.0.0
+ruamel-yaml==0.15.87
