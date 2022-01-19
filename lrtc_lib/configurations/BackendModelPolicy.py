@@ -1,7 +1,7 @@
 from enum import Enum
 
-from lrtc_lib.experiment_runners.learning_policies.model.model_policy import ModelPolicy
-from lrtc_lib.train_and_infer_service.model_type import ModelTypes
+from lrtc_lib.models.core.model_type import ModelTypes
+from lrtc_lib.models.policy.model_policy import ModelPolicy
 
 
 class BackendModelPolicy(Enum):

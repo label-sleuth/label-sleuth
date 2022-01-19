@@ -7,19 +7,21 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.train_and_infer_service.languages import Languages
-from lrtc_lib.train_and_infer_service.tools import RepresentationType, get_glove_representation
-from lrtc_lib.train_and_infer_service.train_and_infer_api import infer_with_cache, delete_model_cache
-from lrtc_lib.train_and_infer_service.train_and_infer_with_async import TrainAndInferWithAsync, update_train_status
 
 import logging
+
+from lrtc_lib.models.core.languages import Languages
+from lrtc_lib.models.core.model_api import infer_with_cache, delete_model_cache
+from lrtc_lib.models.core.model_async import ModelAsync, update_train_status
+from lrtc_lib.models.core.tools import RepresentationType, get_glove_representation
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 
-class TrainAndInferNB(TrainAndInferWithAsync):
+class NaiveBayes(ModelAsync):
     def __init__(self, representation_type, max_datapoints=10000, async_call=False,
                  model_dir=os.path.join(ROOT_DIR, "output", "models", "custom_nb")):
-        super(TrainAndInferNB, self).__init__(async_call=async_call)
+        super(NaiveBayes, self).__init__(async_call=async_call)
         self.model_dir = model_dir
         os.makedirs(self.get_models_dir(), exist_ok=True)
         self.features_num = 0
@@ -42,7 +44,7 @@ class TrainAndInferNB(TrainAndInferWithAsync):
     @update_train_status
     def train_with_async_support(self, model_id, train_data, dev_data, train_params):
         model = MultinomialNB() if self.representation_type == RepresentationType.BOW else GaussianNB()
-        # Train the model using the training sets
+        # Train the policy using the training sets
         language = self.get_language(model_id)
         sentences = [sentence["text"] for sentence in train_data]
         sentences = sentences[:self.max_datapoints]
@@ -55,9 +57,7 @@ class TrainAndInferNB(TrainAndInferWithAsync):
             pickle.dump(vectorizer, fl)
         with open(self.model_file_by_id(model_id), "wb") as fl:
             pickle.dump(model, fl)
-        if test_data is not None:
-            logging.info(f"NB model {model_id} is running infer on {len(test_data)} items")
-            self.infer(model_id, test_data, infer_params=None)
+
 
     @infer_with_cache
     def infer(self, model_id, items_to_infer, infer_params=None, use_cache=True):
@@ -81,7 +81,7 @@ class TrainAndInferNB(TrainAndInferWithAsync):
         return {"labels": labels, "scores": scores}
 
     def model_file_by_id(self, model_id):
-        return os.path.join(self.get_model_dir_by_id(model_id), "model")
+        return os.path.join(self.get_model_dir_by_id(model_id), "policy")
 
     def vectorizer_file_by_id(self, model_id):
         return os.path.join(self.get_model_dir_by_id(model_id), "vectorizer")
@@ -91,14 +91,14 @@ class TrainAndInferNB(TrainAndInferWithAsync):
 
     @delete_model_cache
     def delete_model(self, model_id):
-        logging.info(f"deleting NB model {model_id}")
+        logging.info(f"deleting NB policy {model_id}")
         model_dir = self.get_model_dir_by_id(model_id)
         if os.path.isdir(model_dir):
             shutil.rmtree(model_dir)
 
 
 if __name__ == '__main__':
-    nb = TrainAndInferNB(RepresentationType.BOW)
+    nb = NaiveBayes(RepresentationType.BOW)
     train_data = [{"text":"I love dogs","label":1},
                   {"text":"I like to play with dogs","label":1},
                   {"text":"dogs are better than cats","label":1},

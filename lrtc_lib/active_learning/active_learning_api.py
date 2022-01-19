@@ -22,7 +22,7 @@ class ActiveLearner:
                                            category_name: str, sample_size: int = 1) -> Sequence[TextElement]:
         """
         Returns a batch of *sample_size* elements suggested by the active learning module,
-        for a given dataset and category, based on the outputs of model *model_id*
+        for a given dataset and category, based on the outputs of policy *model_id*
         :param workspace_id:
         :param model_id:
         :param dataset_name:

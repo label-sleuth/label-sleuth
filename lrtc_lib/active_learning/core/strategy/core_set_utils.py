@@ -74,7 +74,7 @@ class RaisingThread(threading.Thread):
 
 class CoreSetMIPSampling:
     """
-    An implementation of the core set query strategy with the MIPMIP formulation.
+    An implementation of the util set query strategy with the MIPMIP formulation.
     """
 
     def __init__(self, robustness_percentage=10 ** 4, max_seconds=180, max_nodes=20000, greedy=False):
@@ -239,7 +239,7 @@ class CoreSetMIPSampling:
         model.__data = points, outliers
         model.emphasis = 1
         model.threads = -1
-        # model.max_seconds = self.max_seconds
+        # policy.max_seconds = self.max_seconds
 
         return model, graph
 
@@ -286,7 +286,7 @@ class CoreSetMIPSampling:
 
         model.__data = points, outliers
         model.emphasis = 1
-        # model.max_seconds = self.max_seconds
+        # policy.max_seconds = self.max_seconds
         return model
 
     def query_regular(self, X_train, labeled_idx, amount, representation):
@@ -309,7 +309,7 @@ class CoreSetMIPSampling:
         print("Building MIP Model...")
         model, graph = self.mip_model(representation, labeled_idx, len(labeled_idx) + amount, upper_bound,
                                       outlier_count, greedy_indices=new_indices)
-        # model.max_nodes = self.max_nodes
+        # policy.max_nodes = self.max_nodes
         points, outliers = self.get_points_and_outliers(model)
         model.optimize(max_seconds=self.max_seconds, max_nodes=self.max_nodes)
         indices = [i for i in graph if points[i].x == 1]
@@ -332,7 +332,7 @@ class CoreSetMIPSampling:
                 model, graph = self.mip_model(representation, labeled_idx, len(labeled_idx) + amount, current_delta,
                                               outlier_count, greedy_indices=indices)
                 points, outliers = self.get_points_and_outliers(model)
-                # model.max_nodes = self.max_nodes
+                # policy.max_nodes = self.max_nodes
 
             else:
                 # print("Optimization Succeeded!")
@@ -347,7 +347,7 @@ class CoreSetMIPSampling:
                 model, graph = self.mip_model(representation, labeled_idx, len(labeled_idx) + amount, current_delta,
                                               outlier_count, greedy_indices=indices)
                 points, outliers = self.get_points_and_outliers(model)
-                # model.max_nodes = self.max_nodes
+                # policy.max_nodes = self.max_nodes
 
             if upper_bound - lower_bound > eps:
                 # wrap the optimizing with a timer as the original timing sometimes fails to stop the optimizer
@@ -358,12 +358,12 @@ class CoreSetMIPSampling:
                                        daemon=True)
 
                 thread.start()
-                # allow some buffer (1.2) for the model.optimize to close by itself in max_seconds
+                # allow some buffer (1.2) for the policy.optimize to close by itself in max_seconds
                 thread.join(self.max_seconds * 1.2)
                 timed_out = thread.is_alive()
                 if timed_out:
                     thread.raise_exception()
-                # model.optimize(max_seconds=self.max_seconds, max_nodes=self.max_nodes) # this should suffice, but mip ignores max_seconds sometimes)
+                # policy.optimize(max_seconds=self.max_seconds, max_nodes=self.max_nodes) # this should suffice, but mip ignores max_seconds sometimes)
         return np.array(indices)
 
     def query_subsample(self, X_train, labeled_idx, amount, representation=None):

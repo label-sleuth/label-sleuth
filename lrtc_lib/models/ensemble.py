@@ -2,45 +2,46 @@ import os
 from typing import Iterable
 import numpy as np
 
-from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.train_and_infer_service.model_type import ModelType
-from lrtc_lib.train_and_infer_service.train_and_infer_api import ModelStatus, TrainAndInferAPI, \
-    infer_with_cache, delete_model_cache
-from lrtc_lib.train_and_infer_service.train_and_infer_factory import TrainAndInferFactory
+
 import logging
+
+from lrtc_lib.definitions import ROOT_DIR
+from lrtc_lib.models.core.model_api import ModelAPI, infer_with_cache, ModelStatus, delete_model_cache
+from lrtc_lib.models.core.model_type import ModelType, ModelTypes
+from lrtc_lib.models.core.models_factory import ModelFactory
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 
-class TrainAndInferMulti(TrainAndInferAPI):
+class Ensemble(ModelAPI):
     def __init__(self, model_types: Iterable[ModelType], multi_label=False, factory=None,
                  aggregation=lambda x: np.mean(x, axis=0),
                  model_dir=os.path.join(ROOT_DIR, "output", "models", "multi"), return_all_scores=True):
         """
         Create train and infer over multiple models
 
-        :param model_types: an ordered iterable of model types, models and return values would keep this order
+        :param model_types: an ordered iterable of policy types, models and return values would keep this order
         :param multi_label:
         :param factory:
         :param aggregation: aggregation function, scores and labels would represent this aggregation
-        aggregation should get a list of model scores and return the aggregated score
-        model scores dimensions: [model,score_per_class]
+        aggregation should get a list of policy scores and return the aggregated score
+        policy scores dimensions: [policy,score_per_class]
         common uses:
-        sum, average: lambda x: np.mean(x, axis=0), return the first model's score:lambda x:x[0]
+        sum, average: lambda x: np.mean(x, axis=0), return the first policy's score:lambda x:x[0]
         :param model_dir:
         :param return_all_scores: If true returns outputs of models with index of their number (corresponding to places in model_types argument)
         """
         super().__init__()
 
         if factory is None:
-            factory = TrainAndInferFactory()
+            factory = ModelFactory()
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         self.aggregation = aggregation
         self.model_dir = model_dir
 
         self.return_all_scores= return_all_scores
-        self.models = [factory.get_train_and_infer(model_type) for model_type in model_types]
+        self.models = [factory.get_model(model_type) for model_type in model_types]
 
     def train(self, train_data, dev_data, train_params):
         model_ids = [model.train(train_data, dev_data, train_params) for model in self.models]
@@ -83,8 +84,8 @@ class TrainAndInferMulti(TrainAndInferAPI):
 
 
 if __name__ == '__main__':
-    from lrtc_lib.train_and_infer_service.model_type import ModelTypes
-    tni = TrainAndInferMulti([ModelTypes.NB_OVER_BOW, ModelTypes.SVM_OVER_GLOVE])
+
+    tni = Ensemble([ModelTypes.NB_OVER_BOW, ModelTypes.SVM_OVER_GLOVE])
     train_data = [{"text": "I love dogs", "label": 1},
                   {"text": "I like to play with dogs", "label": 1},
                   {"text": "dogs are better than cats", "label": 1},
@@ -92,7 +93,7 @@ if __name__ == '__main__':
                   {"text": "play with cats", "label": 0},
                   {"text": "dont know", "label": 0},
                   {"text": "what else", "label": 0}]
-    model_id = tni.train(train_data, None, None, {})
+    model_id = tni.train(train_data, None, {})
     infer_list = []
     # for x in range(3):
     #     infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})

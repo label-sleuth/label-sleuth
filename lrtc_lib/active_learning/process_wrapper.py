@@ -7,7 +7,7 @@ def wrap_as_process(function):
     """Using tensorflow as part of an active learning module can lead to problems related to parallel processes in a
     tensorflow-based train_and_infer. In order to avoid this, use the wrapper to run the relevant part of the AL module
     as a separate process. Due to limitations of the python 'multiprocessing' module, the wrapped function cannot be
-    one that returns very large or unpickleable objects (e.g. a keras model object, or a list of very large tensors)"""
+    one that returns very large or unpickleable objects (e.g. a keras policy object, or a list of very large tensors)"""
 
     @functools.wraps(function)
     def wrapper(*args, **kwargs):

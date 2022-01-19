@@ -2,10 +2,10 @@ import threading
 import time
 
 from lrtc_lib.definitions import PROJECT_PROPERTIES
+from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 import logging
 import traceback
-from lrtc_lib.train_and_infer_service.train_and_infer_api import ModelStatus
 
 WAIT_TIME_BETWEEN_STATUS_CHECK = 10
 
@@ -30,9 +30,9 @@ def run(update_recommendation_func, post_train_method, post_active_learning_func
                 logging.debug("workspace status:%s" % workspace)
                 for category_name in workspace.category_to_models:  # TODO shouldn't return empty
                     for model in list(workspace.category_to_models[
-                        category_name].values()):  # TODO ensure only updating the recommendations for the *latest* model
+                        category_name].values()):  # TODO ensure only updating the recommendations for the *latest* policy
                         if model.model_status == ModelStatus.TRAINING:
-                            train_and_infer_api = PROJECT_PROPERTIES["train_and_infer_factory"].get_train_and_infer(model.model_type)
+                            train_and_infer_api = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model.model_type)
                             latest_model_status = train_and_infer_api.get_model_status(model.model_id)
                             logging.debug(f"orchestrator latest logging status for model_id {model.model_id} "
                                           f"from train_and_infer_api: {latest_model_status}")

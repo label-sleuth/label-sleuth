@@ -17,9 +17,8 @@ import threading
 
 from lrtc_lib.data_access.core.utils import get_all_datasets
 from lrtc_lib.definitions import WORKSPACE_DATA_DIR
-from lrtc_lib.train_and_infer_service.train_and_infer_api import ModelStatus
-from lrtc_lib.train_and_infer_service.model_type import ModelType
-
+from lrtc_lib.models.core.model_api import ModelStatus
+from lrtc_lib.models.core.model_type import ModelType
 
 WORKSPACE_CLASS_VERSION = 2
 
@@ -188,7 +187,7 @@ def add_model(workspace_id: str, category_name: str, model_id: str, model_status
     workspace = _load_workspace(workspace_id)
     if category_name not in workspace.category_to_description:
         raise Exception(
-            f"Cannot add a model for unknown category '{category_name}', please use add_category_to_workspace first")
+            f"Cannot add a policy for unknown category '{category_name}', please use add_category_to_workspace first")
     category_models = workspace.category_to_models.get(category_name, OrderedDict())
     if model_id in category_models:
         raise Exception(f"Model id '{model_id}' already exists in workspace '{workspace_id}'")

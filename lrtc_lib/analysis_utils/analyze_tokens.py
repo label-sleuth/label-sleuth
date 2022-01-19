@@ -4,8 +4,8 @@ from scipy.stats import hypergeom
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_selection import mutual_info_classif
 
-from lrtc_lib.train_and_infer_service.languages import Languages
-from lrtc_lib.train_and_infer_service.tools import remove_stop_words_and_punctuation, remove_punctuation
+from lrtc_lib.models.core.languages import Languages
+from lrtc_lib.models.core.tools import remove_stop_words_and_punctuation, remove_punctuation
 
 
 def ngrams_by_info_gain(texts, relevant_labels, ngram_max_length, language=Languages.ENGLISH):

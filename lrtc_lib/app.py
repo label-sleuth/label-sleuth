@@ -1,4 +1,7 @@
 import logging
+
+from lrtc_lib.models.core.model_api import ModelStatus
+
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 import getpass
@@ -26,8 +29,6 @@ from lrtc_lib.config import CONFIGURATION
 from lrtc_lib.configurations.users import users, tokens
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
 from lrtc_lib.data_access.data_access_api import AlreadyExistException
-from lrtc_lib.train_and_infer_service.train_and_infer_api import ModelStatus
-
 
 print("user:")
 print(getpass.getuser())
@@ -591,7 +592,7 @@ def get_labelling_status(workspace_id):
     """
     :param workspace_id:
     :param labelclass_name:
-    :return empty string or model id:
+    :return empty string or policy id:
     """
 
     labelclass_name = request.args.get('lblcls_name')
@@ -618,7 +619,7 @@ def force_train_for_category(workspace_id):
     """
     :param workspace_id:
     :param labelclass_name:
-    :return empty string or model id:
+    :return empty string or policy id:
     """
 
     labelclass_name = request.args.get('lblcls_name')
@@ -633,7 +634,7 @@ def force_train_for_category(workspace_id):
 
     # print(rec)
     labeling_counts = orch.get_label_counts(workspace_id, dataset_name, labelclass_name)
-    logging.info(f"force training  a new model in workspace {workspace_id} in category {labelclass_name}, model id {model_id}")
+    logging.info(f"force training  a new policy in workspace {workspace_id} in category {labelclass_name}, policy id {model_id}")
 
     return jsonify({
         "labeling_counts": labeling_counts,

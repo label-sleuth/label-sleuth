@@ -8,22 +8,23 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.multiclass import OneVsRestClassifier
 
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.train_and_infer_service.languages import Languages
-from lrtc_lib.train_and_infer_service.train_and_infer_api import infer_with_cache, \
-    delete_model_cache
-from lrtc_lib.train_and_infer_service.tools import RepresentationType, get_glove_representation
-from lrtc_lib.train_and_infer_service.train_and_infer_with_async import TrainAndInferWithAsync, \
-    update_train_status
+
 
 import logging
+
+from lrtc_lib.models.core.languages import Languages
+from lrtc_lib.models.core.model_api import infer_with_cache, delete_model_cache
+from lrtc_lib.models.core.model_async import ModelAsync, update_train_status
+from lrtc_lib.models.core.tools import RepresentationType, get_glove_representation
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 # TODO remove unsupported types (multi-label etc.)
-class TrainAndInferSVM(TrainAndInferWithAsync):
+class SVM(ModelAsync):
     def __init__(self, representations_type: RepresentationType, multi_label=False, async_call=False,
                  model_dir=os.path.join(ROOT_DIR, "output", "models", "svm"), kernel="linear",
                  use_context_features=False):
-        super(TrainAndInferSVM, self).__init__(async_call=async_call)
+        super(SVM, self).__init__(async_call=async_call)
         os.makedirs(model_dir, exist_ok=True)
         self.model_dir = model_dir
 
@@ -108,7 +109,7 @@ class TrainAndInferSVM(TrainAndInferWithAsync):
                 return get_glove_representation(texts, language=language), None
 
     def model_file_by_id(self, model_id):
-        return os.path.join(self.get_model_dir_by_id(model_id), "model")
+        return os.path.join(self.get_model_dir_by_id(model_id), "policy")
 
     def vectorizer_file_by_id(self, model_id):
         return os.path.join(self.get_model_dir_by_id(model_id), "vectorizer")
@@ -118,7 +119,7 @@ class TrainAndInferSVM(TrainAndInferWithAsync):
 
     @delete_model_cache
     def delete_model(self, model_id):
-        logging.info(f"deleting SVM model {model_id}")
+        logging.info(f"deleting SVM policy {model_id}")
         model_dir = self.get_model_dir_by_id(model_id)
         if os.path.isdir(model_dir):
             shutil.rmtree(model_dir)
@@ -147,12 +148,12 @@ def create_context_features_from_sparse_vectorizer(texts, vectorizer):
 #     X = [[0, 0], [10, 10], [20, 30], [30, 30], [40, 30], [80, 60], [80, 50]]
 #     y = [0, 1, 2, 3, 4, 5, 5]
 #     y = [0, 0, 0, 1, 0, 1, 1]
-#     model = svm.SVC()
-#     model.fit(X, y)
+#     policy = svm.SVC()
+#     policy.fit(X, y)
 #
 #     x_pred = [[10, 10]]
 #
-#     distances = np.array(model.decision_function(x_pred))  # get distances from hyperplanes (per class)
+#     distances = np.array(policy.decision_function(x_pred))  # get distances from hyperplanes (per class)
 #     # Binary class may produce only 1 class instead of 2
 #     if len(distances.shape) == 1:
 #         distances = distances / 2 + 0.5
@@ -160,14 +161,14 @@ def create_context_features_from_sparse_vectorizer(texts, vectorizer):
 #         distances = np.concatenate([1 - distances, distances], axis=1)
 #     prob = np.exp(distances) / np.sum(np.exp(distances), axis=1,
 #                                       keepdims=True)  # softmax to convert distances to probabilities
-#     classes = model.predict(x_pred)
+#     classes = policy.predict(x_pred)
 #     print()
 
 
 if __name__ == '__main__':
 
     import uuid
-    svm = TrainAndInferSVM(RepresentationType.GLOVE, use_context_features=False)
+    svm = SVM(RepresentationType.GLOVE, use_context_features=False)
 
     train_data = [{"text": "I love dogs", "label": 2},
                   {"text": "I like to play with dogs", "label": 1},

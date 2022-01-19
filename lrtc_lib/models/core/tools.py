@@ -5,7 +5,7 @@ import string
 from collections import defaultdict
 from enum import Enum
 
-from lrtc_lib.train_and_infer_service.languages import Languages
+from lrtc_lib.models.core.languages import Languages
 
 
 class RepresentationType(Enum):

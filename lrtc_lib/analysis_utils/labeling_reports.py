@@ -10,17 +10,18 @@ from sklearn.neighbors import NearestNeighbors
 
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, BINARY_LABELS
 from lrtc_lib.definitions import PROJECT_PROPERTIES
+from lrtc_lib.models.core.languages import Languages
+from lrtc_lib.models.core.model_api import ModelStatus
+from lrtc_lib.models.core.model_type import ModelTypes
+from lrtc_lib.models.core.tools import get_glove_representation, remove_stop_words_and_punctuation
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.utils import _convert_to_dicts_with_numeric_labels
-from lrtc_lib.train_and_infer_service.train_and_infer_api import ModelStatus
-from lrtc_lib.train_and_infer_service.model_type import ModelTypes
-from lrtc_lib.train_and_infer_service.tools import remove_stop_words_and_punctuation, \
-    get_glove_representation
+
 from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import \
     TrainingSetSelectionStrategy
 from lrtc_lib.training_set_selector.training_set_selector_factory \
     import TrainingSetSelectorFactory as training_set_selector_factory
-from lrtc_lib.train_and_infer_service.languages import Languages
+
 
 MIN_OVERLAP_THRESHOLD = 0.4
 
@@ -34,7 +35,7 @@ def get_disagreements_using_cross_validation(workspace_id,dataset_name, category
     all_train_text_elements, _ = train_and_dev_sets_selector.get_train_and_dev_sets(
         workspace_id=workspace_id, train_dataset_name=dataset_name,
         category_name=category_name, dev_dataset_name=None)
-    train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_train_and_infer(model_type)
+    train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model_type)
 
     num_folds = 4
     all_category_labels = BINARY_LABELS

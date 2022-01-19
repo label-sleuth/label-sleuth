@@ -7,8 +7,8 @@ import os
 from pathlib import Path
 
 from lrtc_lib.active_learning.active_learning_factory import ActiveLearningFactory
-from lrtc_lib.active_learning.strategies import ActiveLearningStrategies, get_compatible_models
-from lrtc_lib.train_and_infer_service.train_and_infer_factory import TrainAndInferFactory
+from lrtc_lib.active_learning.strategies import ActiveLearningStrategies
+from lrtc_lib.models.core.models_factory import ModelFactory
 from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import TrainingSetSelectionStrategy
 
 
@@ -41,7 +41,7 @@ INFER_CACHE_SIZE = 5000000
 
 PROJECT_PROPERTIES = {
     "active_learning_factory": ActiveLearningFactory(),
-    "train_and_infer_factory": TrainAndInferFactory(),
+    "train_and_infer_factory": ModelFactory(),
     "training_set_selection": TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO,
     "active_learning_strategy": ActiveLearningStrategies.HARD_MINING,
 

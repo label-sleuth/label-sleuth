@@ -1,7 +1,7 @@
 import logging
 
 from lrtc_lib.analysis_utils.analyze_tokens import ngrams_by_info_gain
-from lrtc_lib.train_and_infer_service.languages import Languages
+from lrtc_lib.models.core.languages import Languages
 
 
 def information_gain(elements, target_labels, language=Languages.ENGLISH):

@@ -22,13 +22,13 @@ from transformers import BertTokenizer, TFBertForSequenceClassification, InputFe
 from tensorflow.keras import backend as K
 
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.train_and_infer_service.train_and_infer_api import TrainAndInferAPI, ModelStatus, infer_with_cache
+from lrtc_lib.models.core.model_api import infer_with_cache, ModelStatus
 
 MODEL_DIR = os.path.join(ROOT_DIR, "output", "models", "transformers")
 HF_CACHE_DIR = os.path.join(ROOT_DIR, "output", "temp", "hf_cache")
 
 
-class TrainAndInferHF(TrainAndInferAPI):
+class HFTransformers(ModelAPI):
     def __init__(self, batch_size, infer_batch_size=10, learning_rate=5e-5, debug=False, model_dir=MODEL_DIR,
                  infer_with_cls=False):
         """
@@ -41,14 +41,14 @@ class TrainAndInferHF(TrainAndInferAPI):
         last hidden later. Otherwise, the embeddings output is the output after pooling, i.e. just before the final
         classifier layer.
         """
-        super(TrainAndInferHF, self).__init__()
+        super(HFTransformers, self).__init__()
         self.infer_with_cls = infer_with_cls
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         self.model_dir = model_dir
-        # Load dataset, tokenizer, model from pretrained model/vocabulary
+        # Load dataset, tokenizer, policy from pretrained policy/vocabulary
         self.tokenizer = self.get_tokenizer()
-        # Prepare training: Compile tf.keras model with optimizer, loss and learning rate schedule
+        # Prepare training: Compile tf.keras policy with optimizer, loss and learning rate schedule
         self.learning_rate = learning_rate
         self.max_length = 100
         self.batch_size = batch_size
@@ -72,7 +72,7 @@ class TrainAndInferHF(TrainAndInferAPI):
 
     def process_inputs(self, texts, labels=None, to_dataset=True):
         """
-        convert text to tf dataset used as model input (e.g. for training)
+        convert text to tf dataset used as policy input (e.g. for training)
         """
         if labels is None:
             labels = repeat(0)
@@ -93,7 +93,7 @@ class TrainAndInferHF(TrainAndInferAPI):
         return tokenized
 
     def train(self, train_data, dev_data, train_params: dict) -> str:
-        logging.info("Training hf model...")
+        logging.info("Training hf policy...")
         model_id = str(uuid.uuid1())
         self.model_id = model_id
         epochs = 5
@@ -125,7 +125,7 @@ class TrainAndInferHF(TrainAndInferAPI):
                 metric = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
             model.compile(optimizer=optimizer, loss=loss, metrics=[metric])
 
-            # Train the model using the training sets
+            # Train the policy using the training sets
             if self.debug:
                 train_data = train_data[:self.batch_size]
                 dev_data = dev_data[:self.batch_size]
@@ -157,7 +157,7 @@ class TrainAndInferHF(TrainAndInferAPI):
 
     @infer_with_cache
     def infer(self, model_id, items_to_infer, infer_params: dict, use_cache=True):
-        logging.info("Inferring with hf model...")
+        logging.info("Inferring with hf policy...")
         items_to_infer = [x["text"] for x in items_to_infer]
         model = TFBertForSequenceClassification.from_pretrained(self.get_model_dir_by_id(model_id))
 
@@ -179,13 +179,13 @@ class TrainAndInferHF(TrainAndInferAPI):
         labels = [int(np.argmax(logit)) for logit in logits]
         predictions = softmax(logits, axis=1)
         scores = [float(prediction[label]) for label, prediction in zip(labels, predictions)]
-        logging.info("Infer hf model done")
+        logging.info("Infer hf policy done")
         return {"labels": labels, "scores": scores, "logits": logits.numpy().tolist(),
                 "embeddings": out_emb.numpy().tolist()}
 
     def get_model_status(self, model_id) -> ModelStatus:
         """
-        returns the model status defined in the ModelStatus enum.
+        returns the policy status defined in the ModelStatus enum.
         """
         if os.path.isfile(self.train_file_by_id(model_id)):
             if not os.path.isdir(self.get_model_dir_by_id(model_id)):
@@ -201,7 +201,7 @@ class TrainAndInferHF(TrainAndInferAPI):
 
     def delete_model(self, model_id):
         """
-        deletes model files
+        deletes policy files
         """
         train_file = self.train_file_by_id(model_id)
         model_dir = self.get_model_dir_by_id(model_id)
@@ -311,7 +311,7 @@ def _get_grads_eager(model, x, y, params, sample_weight=None, learning_phase=0, 
 
 def get_gradients(model, x, y, params, sample_weight=None, learning_phase=0, relevant_output=None):
     """
-    Returns the gradient of a model given input x and required output y.
+    Returns the gradient of a policy given input x and required output y.
     Note: works both in eager and graph execution. Graph execution is generally faster.
     Based on github.com/OverLordGoldDragon/see-rnn
     """

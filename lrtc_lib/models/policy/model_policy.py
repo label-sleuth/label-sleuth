@@ -1,6 +1,6 @@
 import abc
 
-from lrtc_lib.train_and_infer_service.model_type import ModelType
+from lrtc_lib.models.core.model_type import ModelType
 
 
 class ModelPolicy(object, metaclass=abc.ABCMeta):
@@ -12,11 +12,11 @@ class ModelPolicy(object, metaclass=abc.ABCMeta):
         """
 
         :param iteration_num:
-        :return: ignores input and returns the static model defined in the initialization
+        :return: ignores input and returns the static policy defined in the initialization
         """
         model = self.static_model
         if model is None:
-            raise ValueError('no model was provided in the initialization')
+            raise ValueError('no policy was provided in the initialization')
         return model
 
     def get_name(self):

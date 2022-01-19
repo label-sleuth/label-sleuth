@@ -42,20 +42,20 @@ class TestEndToEnd(unittest.TestCase):
 
             self.assertEqual(len(predicted_label_by_latets),NUM_PREDICTIONS,msg="received a different number of predictions than requested")
             self.assertEqual(predicted_label_by_latets, predicted_label_by_model_id,
-                             msg="predictions by latest model is different from the predictions by the only model that was trained")
+                             msg="predictions by latest policy is different from the predictions by the only policy that was trained")
             sample_uris = [x.uri for x in sample]
             predicted_by_uris = backend.infer_by_uris(WORKSPACE_ID, CATEGORY_NAME, sample_uris,model_id=model_id)["labels"]
             self.assertEqual(predicted_label_by_model_id,predicted_by_uris,
-                             msg="predictions by uris is different from the predictions by the trained model")
+                             msg="predictions by uris is different from the predictions by the trained policy")
             items_to_label = backend.get_elements_to_label(WORKSPACE_ID, CATEGORY_NAME, 10)
             uri_with_positive_label = [(x.uri, {CATEGORY_NAME: Label("true", {})}) for x in items_to_label]
             backend.set_labels(WORKSPACE_ID, uri_with_positive_label)
 
-            # we expect more positive labels than in the previous model
+            # we expect more positive labels than in the previous policy
             self.assertLess(first_model_pos_labels,backend.get_label_counts(WORKSPACE_ID, DATASET_NAME, CATEGORY_NAME)["true"],
                                "AL suggestions were not added")
             model_id_by_al = backend.train_if_recommended(WORKSPACE_ID, CATEGORY_NAME)
-            self.assertIsNotNone(model_id_by_al,"new model by AL was not trained")
+            self.assertIsNotNone(model_id_by_al,"new policy by AL was not trained")
 
         finally:
             backend.delete_workspace(WORKSPACE_ID)

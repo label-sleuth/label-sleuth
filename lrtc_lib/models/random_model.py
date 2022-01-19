@@ -8,14 +8,14 @@ import random
 import numpy as np
 
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.train_and_infer_service.train_and_infer_api import TrainAndInferAPI, ModelStatus
+from lrtc_lib.models.core.model_api import ModelAPI, ModelStatus
 
 MODEL_DIR = os.path.join(ROOT_DIR, "output", "models", "random")
 
 
-class TrainAndInferRandom(TrainAndInferAPI):
+class RandomModel(ModelAPI):
     def __init__(self):
-        super(TrainAndInferRandom, self).__init__()
+        super(ModelAPI, self).__init__()
         self.models = set()
         self.id = -1
 
@@ -26,7 +26,7 @@ class TrainAndInferRandom(TrainAndInferAPI):
 
     def infer(self, model_id, items_to_infer, infer_params=None, use_cache=False):
         if model_id not in self.models:
-            raise ValueError("trying to infer with untrained model")
+            raise ValueError("trying to infer with untrained policy")
         random_previous_state = random.getstate()
         random.seed(model_id)
         predicted = np.array([random.random() for _ in range(len(items_to_infer))])

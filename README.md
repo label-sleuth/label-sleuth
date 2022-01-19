@@ -69,9 +69,9 @@ using `python -m lrtc_lib.data_access.loaded_datasets_info`.
 
 ### Implementing a new machine learning model
 These are the steps for integrating a new classification model:
-1. Implement a new `TrainAndInferAPI`
+1. Implement a new `ModelAPI`
 
-    Machine learning models are integrated by adding a new implementation of the TrainAndInferAPI.
+    Machine learning models are integrated by adding a new implementation of the ModelAPI.
     The main functions are *train* and *infer*:
     
     **Train** a new model and return a unique model identifier that will be used for inference.
@@ -103,7 +103,7 @@ These are the steps for integrating a new classification model:
     e.g. *{"labels": [1, 0], "gradients": [[0.24, -0.39, -0.66, 0.25], [0.14, 0.29, -0.26, 0.16]]}*
 
 2. Specify a new ModelType in `ModelTypes`
-3. Return the newly implemented TrainAndInferAPI in `TrainAndInferFactory`
+3. Return the newly implemented ModelAPI in `ModelFactory`
 4. The system assumes that active learning strategies that require special inference outputs (e.g. text embeddings)
 are not supported by your new model. If your model does support this, add it to the appropriate category 
 in `get_compatible_models` in `strategies.py`
