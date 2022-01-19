@@ -1,7 +1,4 @@
 import logging
-
-from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
-
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 import getpass
@@ -25,9 +22,9 @@ from lrtc_lib.async_support.orchestrator_background_jobs_manager import \
     start_orchestrator_background_job_manager
 import lrtc_lib.core.backend as orch
 from lrtc_lib.core.information_gain_utils import information_gain
-from lrtc_lib.core.noticifactions import ALMOST_READY
 from lrtc_lib.config import CONFIGURATION
 from lrtc_lib.configurations.users import users, tokens
+from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
 from lrtc_lib.data_access.data_access_api import AlreadyExistException
 from lrtc_lib.train_and_infer_service.train_and_infer_api import ModelStatus
 
@@ -111,28 +108,6 @@ def elements_back_to_front(workspace_id, elt_array, category):
     return res
 
 
-def getPredictionSampleElements(workspace_id, category, size):
-    random_state = len(orch.get_all_models_by_state(workspace_id, category, ModelStatus.READY))
-    all_elements = orchestrator_api.get_all_text_elements(_get_dataset_name(workspace_id))
-    if CONFIGURATION.precision_evaluation_filter:
-        before_size = len(all_elements)
-        all_elements=[x for x in all_elements if CONFIGURATION.precision_evaluation_filter in x.uri]
-        logging.info(f"Precision evaluation uri filter {CONFIGURATION.precision_evaluation_filter} applied. num elements changed from {before_size} to {len(all_elements)}")
-    sample_elements_predictions = orch.infer(workspace_id, category, all_elements)["labels"]
-    prediction_sample = \
-        [text_element for text_element, prediction in zip(all_elements, sample_elements_predictions) if
-         prediction == LABEL_POSITIVE]
-    logging.info(f"Precision evaluation {len(prediction_sample)} left after removing negative predictions")
-    import random
-    random.Random(random_state).shuffle(prediction_sample)
-    prediction_sample=prediction_sample[0:size]
-    res = dict()
-    elements_transformed = elements_back_to_front(workspace_id,
-                                                  prediction_sample,
-                                                  category)
-    res['elements'] = elements_transformed
-    logging.info(f"sampled {len(elements_transformed)} elements for evaluation")
-    return jsonify(res)
 
 
 def updateElementByUser(workspace_id, eltid, labelclass_id, value, update_counter=True):
@@ -214,7 +189,6 @@ def login():
         })
 
 
-# @auth.verify_password
 def verify_password(username, password):
     if username in users:
         user = users[username]
@@ -222,35 +196,11 @@ def verify_password(username, password):
     else:
         return False
 
-
-###########################
-#  DATA TRANSFORMATION
-##########################
-
-''''
-Backend sample element object:
-"category_to_label": "{}",
-"metadata": "{}",
-"span": [[0,190]],
-"text": "Once a person in authority (school teacher) was telling blatant lies about me and the headmistress would not let me defend myself. She was also telling lies about other members of my family.",
-"uri": "isear_train-0-0"
-  }
-Frontend element class:
-  id: string,
-  doc_id: string
-  begin: number,
-  end: number,
-  text: string,
-  user_labels: {'labelclass' : 'value'}
-  user_labels_no: string[],
-  model_predicts_yes: string[],
-  model_predicts_no: string[],
-  latest_user_action: {
-      labelclass_id: string,
-      value: string
-  }
-'''
-
+@auth.verify_token
+def verify_token(token):
+    if not token:
+        return False
+    return token in tokens
 
 def _get_document_id(element_id):
     idx = element_id.rfind('-')
@@ -264,7 +214,7 @@ def _get_document_id(element_id):
 # Create
 @app.route("/workspace", methods=['POST'])
 @auth.login_required
-def createWorkspace():
+def create_workspace():
     """
     Create workspace
     :param workspace_id
@@ -292,7 +242,7 @@ def createWorkspace():
 # Get all
 @app.route("/workspaces", methods=['GET'])
 @auth.login_required
-def retrieveWorkspaces():
+def get_all_workspace_ids():
     """
     Get all existing workspaces
     :return array of workspace ids as strings:
@@ -301,23 +251,10 @@ def retrieveWorkspaces():
     return jsonify(res)
 
 
-@auth.verify_token
-def verify_token(token):
-    if not token:
-        return False
-    return token in tokens
-
-
-@app.route("/", methods=['GET'])
-@auth.login_required
-def hello_world():
-    return "hello world###"
-
-
 # Get Single
 @app.route("/workspace/<workspace_id>", methods=['GET'])
 @auth.login_required
-def retrieveWorkspace(workspace_id):
+def get_workspace_info(workspace_id):
     """
     Get workspace info
     :param workspace_id
@@ -333,24 +270,10 @@ def retrieveWorkspace(workspace_id):
                          'document_ids': document_ids}}
     return jsonify(res)
 
-
-# Update
-@app.route("/workspace/<workspace_id>", methods=['PUT'])
-@auth.login_required
-def updateWorkspace(workspace_id):
-    """
-    Update workspace - functionality not clear yet
-    :param <workspace_id>
-    :return same format as retrieveWorkspace
-    """
-
-    return "Not Implemented", 503
-
-
 # Delete
 @app.route("/workspace/<workspace_id>", methods=['DELETE'])
 @auth.login_required
-def deleteWorkspace(workspace_id):
+def delete_workspace(workspace_id):
     """
     Delete Workspace
     :param <workspace_id>
@@ -360,26 +283,13 @@ def deleteWorkspace(workspace_id):
     return jsonify({'workspace_id': workspace_id})
 
 
-# reset notifications
-@app.route("/workspace/<workspace_id>/reset_notifications", methods=['POST'])
-@auth.login_required
-def reset_notifications(workspace_id):
-    """
-    Update workspace - functionality not clear yet
-    :param <workspace_id>
-    :return same format as retrieveWorkspace
-    """
-    orch.reset_notification(workspace_id)
-    return jsonify([])
-
-
 # Get all
 @app.route("/datasets", methods=['GET'])
 @auth.login_required
-def retrieveDatasets():
+def get_all_dataset_ids():
     """
     Get all existing datasets
-    :return array of dataset names as strings:
+    :return array of dataset ids as strings:
     """
     all_datasets = orch.get_all_datasets()
     res = {'datasets':
@@ -394,7 +304,7 @@ def retrieveDatasets():
 # get all documents given workspace
 @app.route("/workspace/<workspace_id>/documents", methods=['GET'])
 @auth.login_required
-def getDocuments(workspace_id):
+def get_all_document_uris(workspace_id):
     """
     get all Documents
     :param workspace_id:
@@ -403,13 +313,13 @@ def getDocuments(workspace_id):
 
     doc_uris = orch.get_all_document_uris(workspace_id)
     res = {"documents":
-               [{"document_id": uri} for uri in doc_uris]}
+               [{"document_id": uri} for uri in doc_uris]} # TODO change document_id to document_uri in the ui
     return jsonify(res)
 
 
 @app.route("/workspace/<workspace_id>/document/<document_id>", methods=['GET'])
 @auth.login_required
-def getDocument(workspace_id, document_id):
+def get_document_elements(workspace_id, document_id):
     """
     get all elements in a document
     :param workspace_id:
@@ -431,7 +341,7 @@ def getDocument(workspace_id, document_id):
 
 @app.route("/workspace/<workspace_id>/positive_elements", methods=['GET'])
 @auth.login_required
-def get_positive_labeled_elements(workspace_id):
+def get_all_positive_labeled_elements_for_category(workspace_id):
     category = request.args.get('lblcls_name')
     elements = \
         orch.get_all_labeled_text_elements(workspace_id, _get_dataset_name(workspace_id), category)["results"]
@@ -445,7 +355,7 @@ def get_positive_labeled_elements(workspace_id):
 
 @app.route("/workspace/<workspace_id>/disagree_elements", methods=['GET'])
 @auth.login_required
-def get_disagree_labeled_elements(workspace_id):
+def get_label_and_model_disagreements(workspace_id):
     category = request.args.get('lblcls_name')
     elements = \
         orch.get_all_labeled_text_elements(workspace_id, _get_dataset_name(workspace_id), category)["results"]
@@ -460,7 +370,7 @@ def get_disagree_labeled_elements(workspace_id):
 
 @app.route("/workspace/<workspace_id>/labeled_info_gain", methods=['GET'])
 @auth.login_required
-def get_labeled_info_gain(workspace_id):
+def get_labeled_elements_enriched_tokens(workspace_id):
     category = request.args.get('lblcls_name')
     elements = \
         orch.get_all_labeled_text_elements(workspace_id, _get_dataset_name(workspace_id), category)["results"]
@@ -473,25 +383,10 @@ def get_labeled_info_gain(workspace_id):
     return jsonify(res)
 
 
-def sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False, required_label=LABEL_POSITIVE,
-                                  random_state: int = 0):
-    if unlabeled_only:
-        sample_elements = orch.sample_unlabeled_text_elements(
-            workspace_id, _get_dataset_name(workspace_id), category, size * 10000, random_state)["results"]
-    else:
-        sample_elements = orch.sample_text_elements(
-            workspace_id, _get_dataset_name(workspace_id), size * 10000, random_state)["results"]
-    sample_elements_predictions = orch.infer(workspace_id, category, sample_elements)["labels"]
-    prediction_sample = \
-        [text_element for text_element, prediction in zip(sample_elements, sample_elements_predictions) if
-         prediction == required_label]
-    # TODO: add predictions to the elements here
-    return prediction_sample[:size]
-
 
 @app.route("/workspace/<workspace_id>/document/<document_id>/predictions", methods=['GET'])
 @auth.login_required
-def getDocumentPredictions(workspace_id, document_id):
+def get_document_predictions(workspace_id, document_id):
     """
     get all elements in a document
     :param workspace_id:
@@ -533,31 +428,9 @@ def getDocumentPredictions(workspace_id, document_id):
 #     Element
 ##########################
 
-
-@app.route("/workspace/<workspace_id>/elements", methods=['GET'])
-@auth.login_required
-@cross_origin()
-def elements(workspace_id):
-    """
-    get all elements
-    :param workspace_id:
-    :return elements:
-    """
-
-    dataset_name = _get_dataset_name(workspace_id)
-
-    elements = orch.get_all_text_elements(dataset_name)
-    labelclass_name = request.args.get('lblcls_name')
-
-    elements_transformed = elements_back_to_front(workspace_id, elements, labelclass_name)
-
-    res = {'elements': elements_transformed}
-    return jsonify(res)
-
-
 @app.route("/workspace/<workspace_id>/query", methods=['GET'])
 @auth.login_required
-def elementsQuery(workspace_id):
+def query(workspace_id):
     """
     get elements that match query string
     :param workspace_id:
@@ -591,7 +464,7 @@ def elementsQuery(workspace_id):
 
 @app.route("/workspace/<workspace_id>/active_learning", methods=['GET'])
 @auth.login_required
-def activeLearning(workspace_id):
+def get_elements_to_label(workspace_id):
     """
     get elements that AL strategy wants labeled
     :param workspace_id:
@@ -617,13 +490,13 @@ def activeLearning(workspace_id):
 
 @app.route("/workspace/<workspace_id>/element/<eltid>", methods=['GET'])
 @auth.login_required
-def getElementApi(workspace_id, eltid):
+def get_element_by_id(workspace_id, eltid):
     return getElement(workspace_id, eltid)
 
 
 @app.route('/workspace/<workspace_id>/element/<eltid>', methods=['PUT'])
 @auth.login_required
-def user_update_element(workspace_id, eltid):
+def set_element_label(workspace_id, eltid):
     """
     update element
     :param workspace_id:
@@ -650,7 +523,7 @@ def user_update_element(workspace_id, eltid):
 
 @app.route("/workspace/<workspace_id>/labelclasses", methods=['GET'])
 @auth.login_required
-def labelclasses(workspace_id):
+def get_all_categories(workspace_id):
     """
     :param workspace_id:
     Get current state of classes
@@ -666,7 +539,7 @@ def labelclasses(workspace_id):
 
 @app.route("/workspace/<workspace_id>/labelclass/<lblclsid>", methods=['POST'])
 @auth.login_required
-def userAddLabelClass(workspace_id, lblclsid):
+def add_category(workspace_id, lblclsid):
     """
     add a new labelclass
     :param workspace_id:
@@ -682,17 +555,9 @@ def userAddLabelClass(workspace_id, lblclsid):
     res = {'labelclass': post_data}
     return jsonify(res)
 
-
-@app.route("/workspace/<workspace_id>/labelclass/", methods=['OPTIONS'])
-@auth.login_required
-def PreflightOptionsLabelClass(workspace_id):
-    print("PreflightOptionsLabelClass no id")
-    return _build_cors_preflight_response()
-
-
 @app.route("/workspace/<workspace_id>/labelclass/<lblclsid>", methods=['PUT'])
 @auth.login_required
-def userEditLabelClass(workspace_id, lblclsid):
+def rename_category(workspace_id, lblclsid):
     """
     edit labelclass - TODO, will need to change the backend function
     :param workspace_id:
@@ -707,7 +572,7 @@ def userEditLabelClass(workspace_id, lblclsid):
 
 @app.route("/workspace/<workspace_id>/labelclass/<lblclsid>", methods=['DELETE'])
 @auth.login_required
-def userDeleteLabelClass(workspace_id, lblclsid):
+def delete_category(workspace_id, lblclsid):
     """
     :param workspace_id:
     :param lblclsid:
@@ -722,7 +587,7 @@ def userDeleteLabelClass(workspace_id, lblclsid):
 
 @app.route("/workspace/<workspace_id>/status", methods=['GET'])
 @auth.login_required
-def getStatus(workspace_id):
+def get_labelling_status(workspace_id):
     """
     :param workspace_id:
     :param labelclass_name:
@@ -738,23 +603,18 @@ def getStatus(workspace_id):
     # print(rec)
     labeling_counts = orch.get_label_counts(workspace_id, dataset_name, labelclass_name)
     progress = orch.get_progress(workspace_id, dataset_name, labelclass_name)
-    if 70 < progress['all'] < 100:
-        orch.push_notification(workspace_id, labelclass_name, ALMOST_READY)
-    else:
-        orch.remove_notification(workspace_id, labelclass_name, ALMOST_READY)
-    notifications = orch.get_notifications(workspace_id, labelclass_name)
-    notifications_json = list(map(lambda notification: notification.__dict__, notifications))
+
 
     return jsonify({
         "labeling_counts": labeling_counts,
         "progress": progress,
-        "notifications": notifications_json
+        "notifications": [] # TODO remove from UI
     })
 
 
 @app.route("/workspace/<workspace_id>/force_train", methods=['GET'])
 @auth.login_required
-def force_train(workspace_id):
+def force_train_for_category(workspace_id):
     """
     :param workspace_id:
     :param labelclass_name:
@@ -780,43 +640,8 @@ def force_train(workspace_id):
         "model_id": model_id
     })
 
-@app.route("/workspace/<workspace_id>/model_status/<model_id>", methods=['GET'])
-@auth.login_required
-def getModelStatus(workspace_id, model_id):
-    """
-    :param workspace_id:
-    :param model_id:
-    :return model status:
-        if model_id was 'none', status = 'none'
-        if model is still training, status = 'TRAINING'
-        if model is done training, status = 'READY'
-        if model has an error, status = 'ERROR'
-    """
 
-    res = dict()
-
-    if model_id == 'none':
-        status = 'none'
-        model = []
-        res['model'] = {'model_id': model_id, 'model': {}, 'model_status': 'none'}
-    else:
-        model_status = orch.get_model_status(workspace_id, model_id).name
-        al_status = orchestrator_api.get_model_active_learning_status(workspace_id, model_id).name
-        # if status == 'READY':
-        models = create_model_information_list(workspace_id, orch.get_all_models(workspace_id).values())
-        model = list(filter(lambda model: model['model_id'] == model_id, models))[0]
-        # TODO model_status should be returned in model status, I used the al_status in the model_status as a workaround.
-        # (they are both set to "READY" eventually)
-        # we should set it back to al_status and the UI should use the active_learning_status to decide whether it should
-        # try to get the AL recommendations, or not.
-
-        res['model'] = {'model_id': model_id, 'model': model, 'model_status': al_status,
-                        'active_learning_status': al_status}
-
-    return jsonify(res)
-
-
-def create_model_information_list(workspace_id, models):
+def extract_model_information_list(workspace_id, models):
     res_list = \
         [{'model_id': model.model_id,
           'model_status': model.model_status.name,
@@ -836,7 +661,7 @@ def create_model_information_list(workspace_id, models):
 @app.route("/workspace/<workspace_id>/models", methods=['GET'])
 @auth.login_required
 @cross_origin()
-def getModels(workspace_id):
+def get_all_models_for_category(workspace_id):
     """
     :param workspace_id:
     :param lblcls_name:
@@ -849,19 +674,19 @@ def getModels(workspace_id):
 
     if labelclass_name == 'all':
         models = orch.get_all_models(workspace_id).values()
-        res['models'] = create_model_information_list(workspace_id, models)
+        res['models'] = extract_model_information_list(workspace_id, models)
     elif labelclass_name == 'none':
         res['models'] = []
     else:
         models = orch.get_all_models_for_category(workspace_id, labelclass_name).values()
-        res['models'] = create_model_information_list(workspace_id, models)
+        res['models'] = extract_model_information_list(workspace_id, models)
     return jsonify(res)
 
 
 @app.route("/workspace/<workspace_id>/predictions_info_gain", methods=['GET'])
 @auth.login_required
 @cross_origin()
-def get_predictions_info_gain(workspace_id):
+def get_predictions_enriched_tokens(workspace_id):
     """
     :param workspace_id:
     :param lblcls_name:
@@ -874,9 +699,9 @@ def get_predictions_info_gain(workspace_id):
         res['info_gain'] = []
         return jsonify(res)
 
-    true_elements = sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
+    true_elements = orch.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
                                                   required_label=LABEL_POSITIVE)
-    false_elements = sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
+    false_elements = orch.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
                                                    required_label=LABEL_NEGATIVE)
 
     elements = true_elements + false_elements
@@ -893,16 +718,37 @@ def get_predictions_info_gain(workspace_id):
 
 @app.route("/workspace/<workspace_id>/evaluation_elements", methods=['GET'])
 @auth.login_required
-def getEvaluationElements(workspace_id):
+def get_elements_for_precision_evaluation(workspace_id):
     size = CONFIGURATION.precision_evaluation_size
     category = request.args.get('lblcls_name')
-    return getPredictionSampleElements(workspace_id, category, size)
+    random_state = len(orch.get_all_models_by_state(workspace_id, category, ModelStatus.READY))
+    all_elements = orchestrator_api.get_all_text_elements(_get_dataset_name(workspace_id))
+    if CONFIGURATION.precision_evaluation_filter:
+        before_size = len(all_elements)
+        all_elements = [x for x in all_elements if CONFIGURATION.precision_evaluation_filter in x.uri]
+        logging.info(
+            f"Precision evaluation uri filter {CONFIGURATION.precision_evaluation_filter} applied. num elements changed from {before_size} to {len(all_elements)}")
+    sample_elements_predictions = orch.infer(workspace_id, category, all_elements)["labels"]
+    prediction_sample = \
+        [text_element for text_element, prediction in zip(all_elements, sample_elements_predictions) if
+         prediction == LABEL_POSITIVE]
+    logging.info(f"Precision evaluation {len(prediction_sample)} left after removing negative predictions")
+    import random
+    random.Random(random_state).shuffle(prediction_sample)
+    prediction_sample = prediction_sample[0:size]
+    res = dict()
+    elements_transformed = elements_back_to_front(workspace_id,
+                                                  prediction_sample,
+                                                  category)
+    res['elements'] = elements_transformed
+    logging.info(f"sampled {len(elements_transformed)} elements for evaluation")
+    return jsonify(res)
 
 
 @app.route('/workspace/<workspace_id>/estimate_precision', methods=['POST'])
 @auth.login_required
 @cross_origin()
-def save_exam_labeles_and_score(workspace_id):
+def run_precision_evaluation(workspace_id):
     """
     update element
     :param workspace_id:
@@ -936,7 +782,7 @@ def get_suspicious_elements(workspace_id):
 
 @app.route("/workspace/<workspace_id>/contradiction_elements", methods=['GET'])
 @auth.login_required
-def getContradictionElements(workspace_id):
+def get_contradicting_elements(workspace_id):
     category = request.args.get('lblcls_name')
     try:
         contradiction_element_tuples = orch.get_contradictions_report_with_diffs(workspace_id,
@@ -951,64 +797,17 @@ def getContradictionElements(workspace_id):
         res = {'pairs': []}
         return jsonify(res)
 
-###########################
-#     DEBUGGING
-##########################
-
-@app.route('/workspace/<workspace_id>/oracle_label', methods=['POST'])
-@auth.login_required
-def oracle_label(workspace_id):
-    """
-    update element
-    :param workspace_id:
-    :param lblcls_name:
-    :param qry_string:
-    :return success:
-    """
-
-    dataset_name = _get_dataset_name(workspace_id)
-
-    post_data = request.get_json(force=True)
-    category_name = post_data["lblcls_name"]
-    query_string = post_data["qry_string"]
-
-    query_results = orch.query(workspace_id, dataset_name, category_name, query_string,
-                               unlabeled_only=True, sample_size=100)["results"]
-
-    # set positives labels for all the queries sentences ("user's labels")
-    uri_with_positive_label = [(x.uri, {category_name: orch.Label("true", {})}) for x in
-                               query_results]
-    orch.set_labels(workspace_id, uri_with_positive_label)
-
-    return jsonify({"elements": query_results})
-
-
-@app.route('/translation_mode', methods=['PUT'])
-@auth.login_required
-def change_translation_mode():
-    orch.SHOW_TRANSLATION = False if orch.SHOW_TRANSLATION else True
-    return jsonify({'translation_mode': orch.SHOW_TRANSLATION})
 
 
 ###########################
 #     export / import
 ##########################
 
-#
-# @app.route('/workspace/<workspace_id>/export_labels/<category_name>', methods=['GET'])
-# @auth.login_required
-# def export_category_labels(workspace_id, category_name):
-#     # TODO use dataset name?
-#     # dataset_name = _get_dataset_name(workspace_id)
-#     return orch.export_category_labels(workspace_id, category_name).to_csv(index=False)
-
-
 @app.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
 @auth.login_required
-def export_workspace_labels(workspace_id):
-    # TODO use dataset name?
-    # dataset_name = _get_dataset_name(workspace_id)
+def export_labels(workspace_id):
     return orch.export_workspace_labels(workspace_id).to_csv(index=False)
+
 
 @app.route('/workspace/<workspace_id>/export_predictions', methods=['GET'])
 @auth.login_required
@@ -1063,11 +862,16 @@ def add_documents(dataset_name):
             os.remove(os.path.join(temp_dir,temp_file_name))
 
 
-@app.route('/workspace/<workspace_id>/export_model/<model_id>', methods=['GET'])
+@app.route('/workspace/<workspace_id>/export_model', methods=['GET'])
 @auth.login_required
-def export_model(workspace_id, model_id):
+def export_model(workspace_id):
     import zipfile
     from io import BytesIO
+    category_name = request.args.get('lblcls_name')
+    model_id = request.args.get('model_id', None)
+    if model_id is None:
+        category_models = orch.get_all_models_by_state(workspace_id, category_name, ModelStatus.READY)
+        model_id = category_models[-1].model_id
     model_dir = orch.export_model(workspace_id, model_id)
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
@@ -1080,51 +884,6 @@ def export_model(workspace_id, model_id):
     return send_file(memory_file, attachment_filename=f'{model_id}.zip', as_attachment=True)
 
 
-# @app.route('/workspace/<workspace_id>/export_latest_model', methods=['GET'])
-# @auth.login_required
-# def export_latest_model(workspace_id):
-#     category_name = request.args.get('lblcls_name')
-#     category_models = orch.get_all_models_by_state(workspace_id, category_name, ModelStatus.READY)
-#     latest_model_id = category_models[-1].model_id
-#     return export_model(workspace_id, latest_model_id)
-
-
-'''
-have a document loaded, clicking away
-status: is there a new model ready or not? 
-
-as soon as you got a model id: start pinging model status with that model id, to figure out if that model is ready
-
-so what we need is ANOTHER api call that is constantly pinging model id status, by passing a model id, and ui keeps track of the current ids
-
-
-after the back end says new model has been trained, button appears
-
-user clicks refresh button
-
-once again run get document call
-
-assumption is that get document api call always includes a call to infer on all the elements in that document
-
-THREE TO-DOs:
-
-        - change the get document api call to always call infer on all the elements BEFORE doing the back to front transform
-
-        - double check the GET status call is doing the right damn thing
-
-        - double check the GET model_status call, which expects a model id, what should it return?
-
-FOR FRONT END:
-
-    - Need to be keeping track of models, including two special ones: the one currently training, if any, 
-    and the most recent that finished training, which is responsible for the current inference output.
-    The rest is sorted model id history
-
-    - Need to implement button to refresh document, which when clicked JUST CALLS GET DOCUMENT AGAIN ON CURRENT DOCUMENT
-        - it is greyed out if return from GET model_status is empty, becomes active when it's no longer empty, 
-        and once it's clicked, again becomes greyed out, and the pinging need to move on to using the next "current model"
-
-'''
 
 if __name__ == '__main__':
     # app.run(port=8000, debug=True, use_reloader=False)

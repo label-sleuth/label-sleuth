@@ -18,8 +18,8 @@ import lrtc_lib.data_access.data_access_factory as data_access_factory
 from lrtc_lib.active_learning.strategies import ActiveLearningStrategy
 from lrtc_lib.analysis_utils.analyze_tokens import ngrams_by_info_gain
 from lrtc_lib.analysis_utils.labeling_reports import get_suspected_labeling_contradictions_by_distance, \
-    get_suspected_labeling_contradictions_by_distance_with_diffs, get_disagreements_between_labels_and_model
-from lrtc_lib.data_access.core.data_structs import Document, Label, TextElement, BINARY_LABELS
+    get_suspected_labeling_contradictions_by_distance_with_diffs, get_disagreements_using_cross_validation
+from lrtc_lib.data_access.core.data_structs import Document, Label, TextElement, BINARY_LABELS, LABEL_POSITIVE
 from lrtc_lib.data_access.core.utils import get_workspace_labels_dump_filename
 from lrtc_lib.definitions import PROJECT_PROPERTIES
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
@@ -542,25 +542,35 @@ def add_documents_from_file(dataset_name,temp_filename):
     return load_dataset_using_processor(dataset_name,False,LiveCsvProcessor(dataset_name,temp_filename))
 
 
-# from orchestrator_internal
-def get_contradictions_report(workspace_id, category_name) -> List[Tuple[TextElement]]:
-    dataset_name = get_workspace(workspace_id).dataset_name
-    labeled_elements = get_all_labeled_text_elements(workspace_id,dataset_name,category_name)
-    return get_suspected_labeling_contradictions_by_distance(labeled_elements, category_name)
-
-
 def get_contradictions_report_with_diffs(workspace_id, category_name) -> List[Tuple[TextElement]]:
     dataset_name = get_workspace(workspace_id).dataset_name
-    labeled_elements = get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
+    labeled_elements = get_all_labeled_text_elements(workspace_id, dataset_name, category_name)["results"]
     return get_suspected_labeling_contradictions_by_distance_with_diffs(labeled_elements, category_name)
 
 
 # TODO more complicated as get_disagreements_between_labels_and_model uses train_and_dev_set_selectors which use the workspace internally
 # (and if we keep it we have a circular dependency
-# def get_disagreements_report(workspace_id, category_name, model_type: ModelType = ModelTypes.M_SVM) -> List[TextElement]:
-#     return get_disagreements_between_labels_and_model(workspace_id, category_name, model_type)
+def get_suspicious_elements_report(workspace_id, category_name, model_type: ModelType = ModelTypes.M_SVM) -> List[TextElement]:
+    dataset_name = get_workspace(workspace_id).dataset_name
+    return get_disagreements_using_cross_validation(workspace_id, dataset_name, category_name, model_type)
 
 
 def get_ngrams_by_info_gain(texts, labels, ngram_max_length, language) -> List[Tuple[str, float]]:
     return ngrams_by_info_gain(texts, labels, ngram_max_length=ngram_max_length, language=language)
 
+
+def sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False, required_label=LABEL_POSITIVE,
+                                  random_state: int = 0):
+    dataset_name = get_workspace(workspace_id).dataset_name
+    if unlabeled_only:
+        sample_elements = sample_unlabeled_text_elements(
+            workspace_id, dataset_name, category, size * 10000, random_state)["results"]
+    else:
+        sample_elements = sample_text_elements(
+            workspace_id, dataset_name, size * 10000, random_state)["results"]
+    sample_elements_predictions = infer(workspace_id, category, sample_elements)["labels"]
+    prediction_sample = \
+        [text_element for text_element, prediction in zip(sample_elements, sample_elements_predictions) if
+         prediction == required_label]
+    # TODO: add predictions to the elements here
+    return prediction_sample[:size]

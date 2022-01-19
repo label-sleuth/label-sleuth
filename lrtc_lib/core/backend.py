@@ -14,9 +14,6 @@ from typing import Mapping, List, Sequence, Tuple
 from lrtc_lib import definitions
 from lrtc_lib.data_access.core.utils import get_document_uri
 
-from lrtc_lib.core.noticifactions import Notifications, Notification, MODEL_READY
-
-from lrtc_lib.experiment_runners.non_daemon_pool import NoDaemonProcessPool
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s [%(threadName)s]')
 
@@ -251,22 +248,6 @@ def get_label_counts(workspace_id: str, dataset_name: str, category_name: str):
 
 
 
-#TODO: remember to save it in files later on, as for now, it is only saved in memory and won't be available after server restart or with multi instances
-notifications = Notifications()
-
-def push_notification(workspace_id: str, category: str, notification: Notification):
-    return notifications.push(workspace_id, category, notification)
-
-
-def remove_notification(workspace_id: str, category: str, notification: Notification):
-    return notifications.remove(workspace_id, category, notification)
-
-def reset_notification(workspace_id: str):
-    return notifications.reset(workspace_id)
-
-
-def get_notifications(workspace_id: str, category: str):
-    return notifications.get_notifications(workspace_id, category)
 
 
 def get_progress(workspace_id: str, dataset_name: str, category: str):
@@ -542,11 +523,7 @@ def infer_missing_elements(workspace_id, category, dataset_name, model_id):
 
 
 def get_suspicious_report(workspace_id, category_name) -> List[TextElement]:
-    return orchestrator_api.get_disagreements_report(workspace_id, category_name)
-
-
-def get_contradictions_report(workspace_id, category_name) -> List[Tuple[TextElement]]:
-    return orchestrator_api.get_contradictions_report(workspace_id, category_name)
+    return orchestrator_api.get_suspicious_elements_report(workspace_id, category_name)
 
 
 def get_contradictions_report_with_diffs(workspace_id, category_name) -> List[Tuple[TextElement]]:
@@ -634,5 +611,8 @@ if __name__ == '__main__':
         print(items_to_label)
 
 
+def sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False, required_label=LABEL_POSITIVE,
+                                  random_state: int = 0):
+    orchestrator_api.sample_elements_by_prediction(**locals())
     # print_document_by_id_print_text_element_by_id()
     # end_to_end_example()

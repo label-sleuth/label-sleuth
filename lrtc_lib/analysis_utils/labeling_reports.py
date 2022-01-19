@@ -8,9 +8,10 @@ from typing import List, Tuple
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
-from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
+from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, BINARY_LABELS
 from lrtc_lib.definitions import PROJECT_PROPERTIES
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
+from lrtc_lib.orchestrator.utils import _convert_to_dicts_with_numeric_labels
 from lrtc_lib.train_and_infer_service.train_and_infer_api import ModelStatus
 from lrtc_lib.train_and_infer_service.model_type import ModelTypes
 from lrtc_lib.train_and_infer_service.tools import remove_stop_words_and_punctuation, \
@@ -24,7 +25,7 @@ from lrtc_lib.train_and_infer_service.languages import Languages
 MIN_OVERLAP_THRESHOLD = 0.4
 
 
-def get_disagreements_between_labels_and_model(dataset_name, category_name,
+def get_disagreements_using_cross_validation(workspace_id,dataset_name, category_name,
                                                model_type=ModelTypes.M_SVM,
                                                selector=TrainingSetSelectionStrategy.ALL_LABELED,
                                                language=Languages.ENGLISH):
@@ -36,15 +37,15 @@ def get_disagreements_between_labels_and_model(dataset_name, category_name,
     train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_train_and_infer(model_type)
 
     num_folds = 4
-    all_category_labels = workspace.category_to_labels[category_name]
+    all_category_labels = BINARY_LABELS
     random.Random(0).shuffle(all_train_text_elements)
-    all_train_data = orchestrator_api._convert_to_dicts_with_numeric_labels(
+    all_train_data = _convert_to_dicts_with_numeric_labels(
         all_train_text_elements, category_name, all_category_labels)
     train_splits = np.array_split(np.array(all_train_data), num_folds)
     all_pos_scores = []
     for i in range(num_folds):
         fold_train_data = np.concatenate([part for j, part in enumerate(train_splits) if j != i])
-        mid = train_and_infer.train(fold_train_data, [], all_train_data, {'Language': language})
+        mid = train_and_infer.train(fold_train_data, None, {'Language': language})
         logging.info(f'*** waiting for cross-validation model {mid} ***')
         while train_and_infer.get_model_status(mid) == ModelStatus.TRAINING:  # TODO find proper fix
             time.sleep(0.1)
@@ -79,9 +80,6 @@ def get_suspected_labeling_contradictions_by_distance_with_diffs(labeled_element
     return pairs_with_diff
 
 
-# OLD def get_suspected_labeling_contradictions_by_distance(workspace_id, category_name,
-                                                      # embedding_func=get_glove_representation,
-                                                      # language=Languages.ENGLISH):
 def get_suspected_labeling_contradictions_by_distance(labeled_elements, category_name,
                                                       embedding_func=get_glove_representation,
                                                       language=Languages.ENGLISH):
@@ -98,7 +96,6 @@ def get_suspected_labeling_contradictions_by_distance(labeled_elements, category
         source_embs = [sent_reps[i] for i in source_idxs]
         target_embs = [sent_reps[i] for i in target_idxs]
 
-        # nbrs = NearestNeighbors(n_neighbors=1, algorithm='brute', metric='cosine').fit(source_embs)
         nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(source_embs)
         distances_to_closest_source, indices_of_closest_source = nbrs.kneighbors(target_embs)
 
@@ -116,34 +113,6 @@ def get_suspected_labeling_contradictions_by_distance(labeled_elements, category
         for pair in unified_pairs_list]
     return unified_pairs_list
 
-
-def get_largest_overlap(workspace_id, category_name, language=Languages.ENGLISH):
-    dataset_name = orchestrator_api.get_workspace(workspace_id).dataset_name
-    labeled_elements = orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_name)['results']
-    sentences = remove_stop_words_and_punctuation([e.text for e in labeled_elements], language=language)
-
-    sentence_tokens = [set(sent.lower().split()) for sent in sentences]
-    pairs = []
-    for source_label in [LABEL_POSITIVE, LABEL_NEGATIVE]:
-        source_idxs = [i for i, element in enumerate(labeled_elements)
-                       if next(iter(element.category_to_label[category_name].labels)) == source_label]
-        target_idxs = [i for i, element in enumerate(labeled_elements)
-                       if next(iter(element.category_to_label[category_name].labels)) != source_label]
-        overlap_ratios_per_source = [[len(sentence_tokens[source_idx].intersection(sentence_tokens[target_idx]))
-                                      / max(len(sentence_tokens[source_idx]), len(sentence_tokens[target_idx]))
-                                      for target_idx in target_idxs] for source_idx in source_idxs]
-        distances_and_pairs = [(max(overlap_ratio), (labeled_elements[source_idxs[i]],
-                                labeled_elements[target_idxs[overlap_ratio.index(max(overlap_ratio))]]))
-                               for i, overlap_ratio in enumerate(overlap_ratios_per_source)]
-        sorted_element_pairs = [x[1] for x in sorted(distances_and_pairs, key=lambda x: x[0], reverse=True)]
-        pairs.append(sorted_element_pairs)
-    unified_pairs_list = [tup for subset in itertools.zip_longest(*pairs) for tup in subset if tup is not None]
-    unified_pairs_list = filter_nearest_neighbor_pairs(unified_pairs_list, language=language, tuple_index_to_filter=0)
-    # align pairs by label
-    unified_pairs_list = [
-        sorted(pair, key=lambda te: next(iter(te.category_to_label[category_name].labels)), reverse=True)
-        for pair in unified_pairs_list]
-    return unified_pairs_list
 
 
 def get_word_overlap(text_a, text_b):
