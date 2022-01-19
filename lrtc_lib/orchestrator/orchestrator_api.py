@@ -121,7 +121,7 @@ def delete_workspace(workspace_id: str, delete_models: DeleteModels = DeleteMode
     delete a given workspace
     :param workspace_id:
     :param delete_models: ALL - delete all the models of the workspace, FALSE - do not delete models,
-    ALL_BUT_FIRST_MODEL - keep the first policy of each category
+    ALL_BUT_FIRST_MODEL - keep the first model of each category
     :param ignore_errors:
     """
     logging.info(f"deleting workspace {workspace_id} ignore errors {ignore_errors}")
@@ -225,7 +225,7 @@ def _update_recommendation(workspace_id, dataset_name, category_name, count, mod
     :param dataset_name:
     :param category_name:
     :param count:
-    :param model: policy to use or None to use the latest policy in status READY
+    :param model: model to use or None to use the latest model in status READY
     """
     if model is None:
         model = orchestrator_state_api.get_latest_model_by_state(workspace_id, category_name, ModelStatus.READY)
@@ -309,14 +309,14 @@ def sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_
 def train(workspace_id: str, category_name: str, model_type: ModelType, train_data, dev_data,
           train_params=None):
     """
-    train a policy for a category in the specified workspace
+    train a model for a category in the specified workspace
     :param workspace_id:
     :param category_name:
     :param model_type:
     :param train_data:
     :param dev_data:
     :param train_params:
-    :return: policy id
+    :return: model_id
     """
     def get_counts_per_label(text_elements):
         label_objects = [element.category_to_label[category_name] for element in text_elements]
@@ -333,7 +333,7 @@ def train(workspace_id: str, category_name: str, model_type: ModelType, train_da
 
     workspace = get_workspace(workspace_id)
     logging.info(
-        f"workspace {workspace_id} training a policy for category '{category_name}', model_metadata: {model_metadata}")
+        f"workspace {workspace_id} training a model for category '{category_name}', model_metadata: {model_metadata}")
     all_category_labels = workspace.category_to_labels[category_name]
     train_data = _convert_to_dicts_with_numeric_labels(train_data, category_name, all_category_labels)
     if dev_data:
@@ -345,7 +345,7 @@ def train(workspace_id: str, category_name: str, model_type: ModelType, train_da
     logging.info(f'start training using {len(train_data)} items')
     model_id = train_and_infer.train(train_data=train_data, dev_data=dev_data,
                                      train_params=params)
-    logging.info(f"new policy id is {model_id}")
+    logging.info(f"new model id is {model_id}")
 
     model_status = train_and_infer.get_model_status(model_id)
     orchestrator_state_api.add_model(workspace_id=workspace_id, category_name=category_name, model_id=model_id,
@@ -367,7 +367,7 @@ def get_model_status(workspace_id: str, model_id: str) -> ModelStatus:
 
 def get_model_train_counts(workspace_id: str, model_id: str) -> Mapping:
     """
-    number of elements for each label that were used to train a given policy
+    number of elements for each label that were used to train a given model
     :param workspace_id:
     :param model_id:
     :return:
@@ -393,12 +393,12 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
     :param workspace_id:
     :param category_name:
     :param elements_to_infer: list of TextElements
-    :param model_id: model_id to use. If set to None, the latest policy for the category will be used
+    :param model_id: model_id to use. If set to None, the latest model for the category will be used
     :param infer_params: dictionary for additional inference parameters. Default is None
     :param use_cache: utilize a cache that stores inference results
     :return: a dictionary of inference results, with at least the "labels" key, where the value is a list of string
     labels for each element in texts_to_infer. Additional keys, with list values of the same length, can be passed.
-    e.g. {"labels": ['false', 'true', 'true'],
+    e.g. {"labels": [False, True, True],
           "scores": [0.23, 0.79, 0.98],
           "gradients": [[0.24, -0.39, -0.66, 0.25], [0.14, 0.29, -0.26, 0.16], [-0.46, 0.61, -0.02, 0.23]]}
     """
@@ -415,7 +415,7 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
     else:
         model = _get_model(workspace_id, model_id)
         if model.model_status is not ModelStatus.READY:
-            raise Exception(f"policy id {model_id} is not in READY status")
+            raise Exception(f"model id {model_id} is not in READY status")
     train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model.model_type)
     list_of_dicts = [{"text": element.text} for element in elements_to_infer]
     infer_results = train_and_infer.infer(model_id=model.model_id, items_to_infer=list_of_dicts,
@@ -440,12 +440,12 @@ def infer_by_uris(workspace_id: str, category_name: str, uris_to_infer: Sequence
     :param workspace_id:
     :param category_name:
     :param uris_to_infer: list of uris (str)
-    :param model_id: model_id to use. If set to None, the latest policy for the category will be used
+    :param model_id: model_id to use. If set to None, the latest model for the category will be used
     :param infer_params: dictionary for additional inference parameters. Default is None
     :param use_cache: utilize a cache that stores inference results
     :return: a dictionary of inference results, with at least the "labels" key, where the value is a list of string
     labels for each element in texts_to_infer. Additional keys, with list values of the same length, can be passed.
-    e.g. {"labels": ['false', 'true', 'true'],
+    e.g. {"labels": [False, True, True],
           "scores": [0.23, 0.79, 0.98],
           "gradients": [[0.24, -0.39, -0.66, 0.25], [0.14, 0.29, -0.26, 0.16], [-0.46, 0.61, -0.02, 0.23]]}
     """
@@ -487,30 +487,17 @@ def get_label_counts(workspace_id: str, dataset_name: str, category_name: str, r
     """
     return data_access.get_label_counts(workspace_id, dataset_name, category_name, remove_duplicates=remove_duplicates)
 
-
-def is_model_compatible_with_active_learning(al: ActiveLearningStrategy, model: ModelType):
-    """
-    return true if active learning strategy is supported by the given policy type
-    for example, ActiveLearningStrategies.CORE_SET and ActiveLearningStrategies.DAL are not supported by Naive Bayes
-    defined in method get_compatible_models() under lrtc_lib.active_learning.strategies.py
-    :param al:
-    :param model:
-    :return:
-    """
-    return PROJECT_PROPERTIES["models_compatible_with_strategies_func"](model, al)
-
-
 def delete_model(workspace_id, category_name, model_id):
     model_info = _get_model(workspace_id, model_id)
     train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model_info.model_type)
 
     if model_info.model_status == ModelStatus.DELETED:
         raise Exception(
-            f"trying to delete policy id {model_id} which is already in {ModelStatus.DELETED} from"
+            f"trying to delete model id {model_id} which is already in {ModelStatus.DELETED} from"
             f" workspace {workspace_id} in category {category_name}")
 
     logging.info(
-        f"marking policy id {model_id} from workspace {workspace_id} in category {category_name} as deleted, and deleting the policy")
+        f"marking model id {model_id} from workspace {workspace_id} in category {category_name} as deleted, and deleting the model")
     orchestrator_state_api.update_model_state(workspace_id, category_name, model_id,ModelStatus.DELETED)
     train_and_infer.delete_model(model_id)
 
@@ -534,7 +521,7 @@ def _get_model(workspace_id, model_id) -> ModelInfo:
     all_models = {k: v for d in workspace.category_to_models.values() for k, v in d.items()}
     if all_models[model_id]:
         return all_models[model_id]
-    raise Exception(f"policy id {model_id} does not exist in workspace {workspace_id}")
+    raise Exception(f"model id {model_id} does not exist in workspace {workspace_id}")
 
 def add_documents_from_file(dataset_name,temp_filename):
     from lrtc_lib.data_access.single_dataset_loader import load_dataset_using_processor

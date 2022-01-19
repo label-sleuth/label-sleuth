@@ -62,9 +62,9 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         dataset_name = "None"
         orchestrator_api.add_documents(dataset_name, [generate_simple_doc(dataset_name)])
         orchestrator_state_api.create_workspace(workspace_id=ws_id, dataset_name=dataset_name)
-        orchestrator_state_api.add_category_to_workspace(ws_id,"cat1","bla bla",["True","False"])
-        orchestrator_state_api.add_category_to_workspace(ws_id, "cat2", "bla bla", ["True", "False"])
-        orchestrator_state_api.add_category_to_workspace(ws_id, "cat3", "bla bla", ["True", "False"])
+        orchestrator_state_api.add_category_to_workspace(ws_id,"cat1","bla bla",[True,False])
+        orchestrator_state_api.add_category_to_workspace(ws_id, "cat2", "bla bla", [True, False])
+        orchestrator_state_api.add_category_to_workspace(ws_id, "cat3", "bla bla", [True, False])
         orchestrator_state_api.delete_category_from_workspace(ws_id,"cat2")
         ws = orchestrator_state_api.get_workspace(ws_id)
         self.assertEqual(len(ws.category_to_labels),2)

@@ -7,8 +7,8 @@ from dataclasses import dataclass
 
 from typing import List, Tuple, Mapping
 
-LABEL_POSITIVE = "true" # TODO change to boolean....good luck
-LABEL_NEGATIVE = "false"
+LABEL_POSITIVE = True # TODO change to boolean....good luck
+LABEL_NEGATIVE = False
 BINARY_LABELS = frozenset({LABEL_NEGATIVE, LABEL_POSITIVE})
 
 @dataclass
@@ -36,7 +36,7 @@ class Label:
     metadata: Mapping
 
     def __init__(self, labels, metadata: Mapping):
-        if type(labels) in [int, str]:
+        if type(labels) in [int, str, bool]:
             self.labels = frozenset([labels])
         elif type(labels) == list:
             self.labels = frozenset(labels)

@@ -18,7 +18,7 @@ def ngrams_by_info_gain(texts, relevant_labels, ngram_max_length, language=Langu
 
 def ngrams_by_hypergeometric_test(texts, relevant_labels, ngram_max_length, bonferroni_correction=False,
                                   language=Languages.ENGLISH, ngrams=None):
-    positive_labels = {1, '1', True, 'true', 'True'}
+    positive_labels = {1, '1', True, True, True}
     positive_texts = [text for text, label in zip(texts, relevant_labels) if label in positive_labels]
     negative_texts = [text for text, label in zip(texts, relevant_labels) if label not in positive_labels]
     positive_ngrams = extract_ngrams(positive_texts, ngram_max_length, language=language)

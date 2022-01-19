@@ -39,12 +39,12 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
     def train(self, train_data: Sequence[Mapping], dev_data: Sequence[Mapping],
               train_params: dict) -> str:
         """
-        train a new policy and return a unique policy identifier that will be used for inference.
+        train a new model and return a unique model identifier that will be used for inference.
         :param train_data: a list of dictionaries with at least the "text" and "label" fields, additional fields can be
         passed e.g. [{'text': 'text1', 'label': 1, 'additional_field': 'value1'}, {'text': 'text2', 'label': 0,
         'additional_field': 'value2'}]
-        :param dev_data: can be None if not used by the implemented policy
-        :param test_data: can be None if not used by the implemented policy
+        :param dev_data: can be None if not used by the implemented model
+        :param test_data: can be None if not used by the implemented model
         :param train_params: dictionary for additional train parameters (can be None)
         :rtype: model_id unique id
         """
@@ -71,7 +71,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         """
         return one of:
         ModelStatus.TRAINING - for async mode implementations only
-        ModelStatus.READY - policy is ready
+        ModelStatus.READY - model is ready
         ModelStatus.ERROR - training error
 
         :rtype: ModelStatus

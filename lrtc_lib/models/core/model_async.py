@@ -21,7 +21,7 @@ def update_train_status(async_train_func):
             async_train_func(self, model_id, *args, **kwargs)
             self.mark_train_as_completed(model_id)
         except Exception as e:
-            logging.error(f'policy {model_id} failed with exception')
+            logging.error(f'model {model_id} failed with exception')
             logging.error(traceback.format_exc())
             self.mark_train_as_error(model_id)
     return wrapper
@@ -39,7 +39,7 @@ class ModelAsync(ModelAPI, metaclass=abc.ABCMeta):
         self.mark_train_as_started(model_id)
         self.save_metadata(model_id, train_params)
         if self.async_call:
-            logging.info(f"starting background thread to wait for training of policy {model_id}")
+            logging.info(f"starting background thread to wait for training of model {model_id}")
             training_process = threading.Thread(target=self.train_with_async_support, args=(model_id, *args))
             training_process.start()
             return model_id
@@ -51,7 +51,7 @@ class ModelAsync(ModelAPI, metaclass=abc.ABCMeta):
     def train_with_async_support(self, model_id: str, train_data: Sequence[Mapping], dev_data: Sequence[Mapping],
                                  test_data: Sequence[Mapping], train_params: dict):
         """
-        An async implementation of train, that receives a policy id from the *train* wrapper and trains a new policy
+        An async implementation of train, that receives a model id from the *train* wrapper and trains a new policy
         for this id. After the training process is complete (this may include inference on *test_data*), this function
         must call *self.mark_train_as_completed*
         """

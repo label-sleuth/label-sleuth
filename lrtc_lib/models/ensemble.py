@@ -20,12 +20,12 @@ class Ensemble(ModelAPI):
         """
         Create train and infer over multiple models
 
-        :param model_types: an ordered iterable of policy types, models and return values would keep this order
+        :param model_types: an ordered iterable of model types, models and return values would keep this order
         :param multi_label:
         :param factory:
         :param aggregation: aggregation function, scores and labels would represent this aggregation
-        aggregation should get a list of policy scores and return the aggregated score
-        policy scores dimensions: [policy,score_per_class]
+        aggregation should get a list of model scores and return the aggregated score
+        model scores dimensions: [model,score_per_class]
         common uses:
         sum, average: lambda x: np.mean(x, axis=0), return the first policy's score:lambda x:x[0]
         :param model_dir:

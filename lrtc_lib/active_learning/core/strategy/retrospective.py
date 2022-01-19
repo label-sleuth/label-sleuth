@@ -22,7 +22,7 @@ class RetrospectiveLearner(ActiveLearner):
         if len(unlabeled) == 0:
             return unlabeled
 
-        # a list containing either one list of scores or several lists of scores (in the case of ensemble policy)
+        # a list containing either one list of scores or several lists of scores (in the case of ensemble model)
         scores = self.get_per_element_score(unlabeled, workspace_id, model_id, dataset_name, category_name)
 
         indices = []
@@ -30,7 +30,7 @@ class RetrospectiveLearner(ActiveLearner):
             model_top = self.get_top_indices(model_scores, sample_size)
             indices.append(model_top)
         unique = set()
-        # in case of ensemble policy, we add the indices of the top predictions for each policy
+        # in case of ensemble model, we add the indices of the top predictions for each model
         flat_indices = [x for sublist in list(zip(*indices)) for x in sublist if x not in unique and not unique.add(x)]
         top_indices = flat_indices[:sample_size]
 

@@ -1,10 +1,4 @@
-# (c) Copyright IBM Corporation 2020.
-
-# LICENSE: Apache License 2.0 (Apache-2.0)
-# http://www.apache.org/licenses/LICENSE-2.0
-import json
 from typing import Sequence, Set
-import logging
 import jsonpickle
 import os
 from collections import OrderedDict, defaultdict
@@ -22,6 +16,7 @@ from lrtc_lib.models.core.model_type import ModelType
 
 WORKSPACE_CLASS_VERSION = 2
 
+
 @dataclass
 class Workspace:
     workspace_id: str
@@ -32,7 +27,8 @@ class Workspace:
     category_to_labels: 'dict' = field(default_factory=dict)
     category_to_number_of_label_changed: 'dict' = field(default_factory=dict)
     category_to_models: OrderedDict = field(default_factory=OrderedDict)  # category_name to model_id to ModelInfo
-    category_to_model_to_recommendations: 'dict' = field(default_factory=lambda: defaultdict(OrderedDict))  # category to {model_id:[TextElement...]}
+    category_to_model_to_recommendations: 'dict' = field(
+        default_factory=lambda: defaultdict(OrderedDict))  # category to {model_id:[TextElement...]}
     category_to_model_to_recommendations_status: 'dict' = field(default_factory=lambda: defaultdict(OrderedDict))
     train_params: 'dict' = field(default_factory=dict)
     workspace_class_version: 'int' = WORKSPACE_CLASS_VERSION
@@ -40,6 +36,7 @@ class Workspace:
     @classmethod
     def get_field_names(cls):
         return cls.__annotations__.keys()
+
 
 class ActiveLearningRecommendationsStatus(Enum):
     MODEL_NOT_READY = 0
@@ -58,11 +55,14 @@ class ModelInfo:
 
 
 lock = threading.RLock()
+
+
 def withlock(func):
     @functools.wraps(func)
     def wrapper(*a, **k):
         with lock:
             return func(*a, **k)
+
     return wrapper
 
 
@@ -105,12 +105,14 @@ def delete_category_from_workspace(workspace_id: str, category_name: str):
     workspace = _load_workspace(workspace_id)
     for field_name in workspace.get_field_names():
         if field_name.startswith("category_to"):
-            field_dict = getattr(workspace,field_name)
+            field_dict = getattr(workspace, field_name)
             if category_name in field_dict:
                 field_dict.pop(category_name)
 
 
 workspaces = dict()
+
+
 def _load_workspace(workspace_id) -> Workspace:
     cached_workspace = workspaces.get(workspace_id)
     if cached_workspace:
@@ -158,7 +160,7 @@ def update_category_recommendations(workspace_id: str, category_name: str, model
 @withlock
 def set_number_of_changes_since_last_model(workspace_id: str, category_name: str, number_of_changes: int):
     workspace = _load_workspace(workspace_id)
-    workspace.category_to_number_of_label_changed[category_name]= number_of_changes
+    workspace.category_to_number_of_label_changed[category_name] = number_of_changes
     _save_workspace(workspace)
 
 
@@ -187,7 +189,7 @@ def add_model(workspace_id: str, category_name: str, model_id: str, model_status
     workspace = _load_workspace(workspace_id)
     if category_name not in workspace.category_to_description:
         raise Exception(
-            f"Cannot add a policy for unknown category '{category_name}', please use add_category_to_workspace first")
+            f"Cannot add a model for unknown category '{category_name}', please use add_category_to_workspace first")
     category_models = workspace.category_to_models.get(category_name, OrderedDict())
     if model_id in category_models:
         raise Exception(f"Model id '{model_id}' already exists in workspace '{workspace_id}'")
@@ -309,7 +311,7 @@ def get_active_learning_status(workspace_id, model_id):
 
 
 @withlock
-def add_model_metadata(workspace_id, category_name, model_id, metadata:dict):
+def add_model_metadata(workspace_id, category_name, model_id, metadata: dict):
     workspace = _load_workspace(workspace_id)
     workspace.category_to_models[category_name][model_id].model_metadata.update(metadata)
     _save_workspace(workspace)

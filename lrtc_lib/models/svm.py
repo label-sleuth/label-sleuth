@@ -109,7 +109,7 @@ class SVM(ModelAsync):
                 return get_glove_representation(texts, language=language), None
 
     def model_file_by_id(self, model_id):
-        return os.path.join(self.get_model_dir_by_id(model_id), "policy")
+        return os.path.join(self.get_model_dir_by_id(model_id), "model")
 
     def vectorizer_file_by_id(self, model_id):
         return os.path.join(self.get_model_dir_by_id(model_id), "vectorizer")
@@ -119,7 +119,7 @@ class SVM(ModelAsync):
 
     @delete_model_cache
     def delete_model(self, model_id):
-        logging.info(f"deleting SVM policy {model_id}")
+        logging.info(f"deleting SVM model {model_id}")
         model_dir = self.get_model_dir_by_id(model_id)
         if os.path.isdir(model_dir):
             shutil.rmtree(model_dir)
@@ -148,12 +148,12 @@ def create_context_features_from_sparse_vectorizer(texts, vectorizer):
 #     X = [[0, 0], [10, 10], [20, 30], [30, 30], [40, 30], [80, 60], [80, 50]]
 #     y = [0, 1, 2, 3, 4, 5, 5]
 #     y = [0, 0, 0, 1, 0, 1, 1]
-#     policy = svm.SVC()
-#     policy.fit(X, y)
+#     model = svm.SVC()
+#     model.fit(X, y)
 #
 #     x_pred = [[10, 10]]
 #
-#     distances = np.array(policy.decision_function(x_pred))  # get distances from hyperplanes (per class)
+#     distances = np.array(model.decision_function(x_pred))  # get distances from hyperplanes (per class)
 #     # Binary class may produce only 1 class instead of 2
 #     if len(distances.shape) == 1:
 #         distances = distances / 2 + 0.5
@@ -161,7 +161,7 @@ def create_context_features_from_sparse_vectorizer(texts, vectorizer):
 #         distances = np.concatenate([1 - distances, distances], axis=1)
 #     prob = np.exp(distances) / np.sum(np.exp(distances), axis=1,
 #                                       keepdims=True)  # softmax to convert distances to probabilities
-#     classes = policy.predict(x_pred)
+#     classes = model.predict(x_pred)
 #     print()
 
 

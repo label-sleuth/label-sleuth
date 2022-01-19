@@ -115,22 +115,22 @@ def get_elements_to_label(workspace_id: str, category_name: str, count: int, sta
         return orchestrator_api.get_elements_to_label(**locals())
     else:
         # time.sleep(45)
-        # TODO check for latest policy in AL results ready?
+        # TODO check for latest model in AL results ready?
         latest_ready_model = \
             orchestrator_state_api.get_latest_model_by_state(workspace_id, category_name, ModelStatus.READY)
         if not latest_ready_model:
-            logging.info(f"no elements to label for category {category_name} in workspace {workspace_id} (policy not ready)")
-            return []  # no policy in status ready
+            logging.info(f"no elements to label for category {category_name} in workspace {workspace_id} (model not ready)")
+            return []  # no model in status ready
         latest_al_ready_model_id = \
             orchestrator_state_api.get_latest_model_id_by_al_status(workspace_id, category_name,
                                                                     ActiveLearningRecommendationsStatus.READY)
         if not latest_al_ready_model_id:
             logging.info(
                 f"no elements to label for category {category_name} in workspace {workspace_id}"
-                f" (policy is ready but AL recommendations are still missing)")
-            return []  # no policy with AL recommendations ready
+                f" (model is ready but AL recommendations are still missing)")
+            return []  # no model with AL recommendations ready
         if latest_ready_model.model_id != latest_al_ready_model_id:
-            logging.info("latest trained policy AL recommendations are not ready, uses the previous policy recommendations")
+            logging.info("latest trained model AL recommendations are not ready, uses the previous model recommendations")
         recommended_uris = orchestrator_state_api.get_current_category_recommendations(workspace_id, category_name,
                                                                                        latest_al_ready_model_id)
         if start_index > len(recommended_uris):
@@ -175,8 +175,8 @@ def train_if_recommended(workspace_id: str, category_name: str, force=False):
             return None
         orchestrator_state_api.set_number_of_changes_since_last_model(workspace_id,category_name,0)
         logging.info(f"{label_counts[LABEL_POSITIVE]} positive elements (>={CONFIGURATION.first_model_positive_threshold})"
-                     f" {changes_since_last_model} elements changed since last policy (>={CONFIGURATION.changed_element_threshold})"
-                     f" training a new policy")
+                     f" {changes_since_last_model} elements changed since last model (>={CONFIGURATION.changed_element_threshold})"
+                     f" training a new model")
         iteration_num = len(models_without_errors)
         model_type = PROJECT_PROPERTIES['model_policy'].get_model(iteration_num)
         train_and_dev_sets_selector = training_set_selector_factory.get_training_set_selector(
@@ -189,8 +189,8 @@ def train_if_recommended(workspace_id: str, category_name: str, force=False):
         return model_id
     else:
         logging.info(f"{label_counts[LABEL_POSITIVE]} positive elements (should be >={CONFIGURATION.first_model_positive_threshold}) AND"
-                     f" {changes_since_last_model} elements changed since last policy (should be >={CONFIGURATION.changed_element_threshold})"
-                     f" not training a new policy")
+                     f" {changes_since_last_model} elements changed since last model (should be >={CONFIGURATION.changed_element_threshold})"
+                     f" not training a new model")
         return None
 
 
@@ -299,7 +299,7 @@ def _post_train_method(workspace_id, category_name, model_id):
     elements = orchestrator_api.get_all_text_elements(dataset_name)
     predictions = orchestrator_api.infer(workspace_id, category_name, elements, model_id)
     dataset_size = len(predictions["labels"])
-    positive_fraction = predictions["labels"].count("true")/dataset_size
+    positive_fraction = predictions["labels"].count(True)/dataset_size
     post_train_metadata = {"positive_fraction": positive_fraction}
 
     category_models = get_all_models_by_state(workspace_id, category_name, ModelStatus.READY)
@@ -310,7 +310,7 @@ def _post_train_method(workspace_id, category_name, model_id):
         num_identical = sum(x == y for x, y in zip(predictions["labels"], previous_model_predictions["labels"]))
         post_train_metadata["changed_fraction"] = (dataset_size-num_identical)/dataset_size
 
-    logging.info(f"post train measurements for policy id {model_id}: {post_train_metadata}")
+    logging.info(f"post train measurements for model id {model_id}: {post_train_metadata}")
     orchestrator_state_api.add_model_metadata(workspace_id, category_name, model_id, post_train_metadata)
 
 
@@ -319,7 +319,7 @@ def get_model_active_learning_status(workspace_id, model_id):
 
 
 def _post_active_learning_func(workspace_id, category_name, model):
-    logging.info(f"active learning suggestions for policy {model.model_id} "
+    logging.info(f"active learning suggestions for model {model.model_id} "
                  f"of category ({category_name}) are ready")
 
     all_models = orchestrator_state_api.get_workspace(workspace_id).category_to_models[category_name]
@@ -335,7 +335,7 @@ def _post_active_learning_func(workspace_id, category_name, model):
         if prev_count > NUMBER_OF_MODELS_TO_KEEP:
             model_to_delete = all_models[model_id]
             if model_to_delete.model_status == ModelStatus.READY:
-                logging.info(f"keep only {NUMBER_OF_MODELS_TO_KEEP} models, deleting old policy {model_id}")
+                logging.info(f"keep only {NUMBER_OF_MODELS_TO_KEEP} models, deleting old model {model_id}")
                 orchestrator_api.delete_model(workspace_id,category_name,model_id)
     logging.info(all_models)
 
@@ -390,8 +390,8 @@ def import_category_labels(workspace_id, labels_df_to_import: pd.DataFrame):
     categories_created = []
     lines_skipped = []
 
-    labels_df_to_import['labels'] = labels_df_to_import['labels'].apply(lambda x: 'true' if x.lower() in ['true', '1']
-                                                                        else 'false')
+    labels_df_to_import['labels'] = labels_df_to_import['labels'].apply(lambda x: True if x.lower() in [True, '1']
+                                                                        else False)
     for category_name, category_df in labels_df_to_import.groupby('category_name'):
         if category_name not in categories:
             if not re.match("^[A-Za-z0-9_-]*$",category_name):
@@ -430,7 +430,7 @@ def import_category_labels(workspace_id, labels_df_to_import: pd.DataFrame):
         logging.info(
             f"Updated total label count in workspace '{workspace_id}' for category {category_name} is {label_count}"
             f" ({label_counts_dict})")
-        categories_counter[category_name] += label_counts_dict['true']
+        categories_counter[category_name] += label_counts_dict[True]
 
     categories_counter_list = [{'category': key, 'counter': value} for key, value in categories_counter.items()]
     total = sum(categories_counter.values())
@@ -499,25 +499,25 @@ def infer_missing_elements(workspace_id, category, dataset_name, model_id):
     model_status = get_model_status(workspace_id,model_id)
     if (model_status == ModelStatus.ERROR):
         logging.error(
-            f"cannot run inference with the last policy for category {category} in workspace "
-            f"{workspace_id} after new documents were loaded to dataset {dataset_name} using policy {model_id} as the policy status is ERROR")
+            f"cannot run inference with the last model for category {category} in workspace "
+            f"{workspace_id} after new documents were loaded to dataset {dataset_name} using model {model_id} as the model status is ERROR")
         return
     start_time = time.time()
     while (model_status!=ModelStatus.READY):
         wait_time = time.time() - start_time
         if wait_time>15 * 60:
-            logging.error(f"timeout reached when waiting to run inference with the last policy for category {category} in workspace "
-                 f"{workspace_id} after new documents were loaded to dataset {dataset_name} using policy {model_id}")
+            logging.error(f"timeout reached when waiting to run inference with the last model for category {category} in workspace "
+                 f"{workspace_id} after new documents were loaded to dataset {dataset_name} using model {model_id}")
             return
-        logging.info(f"waiting for policy {model_id} training to complete in order to infer newly added documents")
+        logging.info(f"waiting for model {model_id} training to complete in order to infer newly added documents")
         time.sleep(30)
         model_status = get_model_status(workspace_id, model_id)
 
-    logging.info(f"running inference with the last policy for category {category} in workspace "
-                 f"{workspace_id} after new documents were loaded to dataset {dataset_name} using policy {model_id}")
+    logging.info(f"running inference with the last model for category {category} in workspace "
+                 f"{workspace_id} after new documents were loaded to dataset {dataset_name} using model {model_id}")
     infer(workspace_id,category,get_all_text_elements(dataset_name),model_id)
-    logging.info(f"completed inference with the last policy for category {category} in workspace "
-                 f"{workspace_id} after new documents were loaded to dataset {dataset_name} using policy {model_id}")
+    logging.info(f"completed inference with the last model for category {category} in workspace "
+                 f"{workspace_id} after new documents were loaded to dataset {dataset_name} using model {model_id}")
 
 
 def get_suspicious_report(workspace_id, category_name) -> List[TextElement]:
@@ -586,15 +586,15 @@ if __name__ == '__main__':
         query_results = query(workspace_id,dataset_name,category_name,"warrant",unlabeled_only=True,sample_size=100)["results"]
 
         #set positives labels for all the queries sentences ("user's labels")
-        uri_with_positive_label = [(x.uri, {category_name: Label("true",{})}) for x in query_results[:-2]]
-        uri_with_negative_label = [(x.uri, {category_name: Label("false",{})}) for x in query_results[-2:]]
+        uri_with_positive_label = [(x.uri, {category_name: Label(True,{})}) for x in query_results[:-2]]
+        uri_with_negative_label = [(x.uri, {category_name: Label(False,{})}) for x in query_results[-2:]]
         print(uri_with_positive_label)
         set_labels(workspace_id,uri_with_positive_label+uri_with_negative_label)
 
         # print the label counts (100 positive labels with no negative labels)
         logging.info(get_label_counts(workspace_id, dataset_name, category_name))
 
-        # train a new policy using the above 100 samples (and random sentences as negatives)
+        # train a new model using the above 100 samples (and random sentences as negatives)
         train_if_recommended(workspace_id,category_name)
 
         # get 10 random sentences from the dataset and predict their label

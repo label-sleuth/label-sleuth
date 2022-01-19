@@ -75,7 +75,7 @@ def elements_back_to_front(workspace_id, elt_array, category):
         for key, value in e.category_to_label.items():
             if len(value.labels) > 1:
                 raise Exception("no multilabel support by the UI")
-            e_res['user_labels'][key] = next(iter(value.labels))  # single label case
+            e_res['user_labels'][key] = str(next(iter(value.labels))).lower()  # current UI is using true and false as strings. change to boolean in the new UI
 
         e_res['model_predictions'] = {}
 
@@ -112,6 +112,14 @@ def elements_back_to_front(workspace_id, elt_array, category):
 
 
 def updateElementByUser(workspace_id, eltid, labelclass_id, value, update_counter=True):
+    if value != 'none':
+        if value in ['true', "True", "TRUE", True]:
+            value = True
+        elif value in ['false', "False", "FALSE", False]:
+            value = False
+        else:
+            raise Exception (f"cannot convert label to boolean. Input label = {value}")
+
     uri_with_updated_label = [(eltid, {labelclass_id: orch.Label(value, {})})]
 
     # add unset here if repeating the selection
@@ -592,7 +600,7 @@ def get_labelling_status(workspace_id):
     """
     :param workspace_id:
     :param labelclass_name:
-    :return empty string or policy id:
+    :return empty string or model id:
     """
 
     labelclass_name = request.args.get('lblcls_name')
@@ -619,7 +627,7 @@ def force_train_for_category(workspace_id):
     """
     :param workspace_id:
     :param labelclass_name:
-    :return empty string or policy id:
+    :return empty string or model id:
     """
 
     labelclass_name = request.args.get('lblcls_name')
@@ -634,7 +642,7 @@ def force_train_for_category(workspace_id):
 
     # print(rec)
     labeling_counts = orch.get_label_counts(workspace_id, dataset_name, labelclass_name)
-    logging.info(f"force training  a new policy in workspace {workspace_id} in category {labelclass_name}, policy id {model_id}")
+    logging.info(f"force training  a new model in workspace {workspace_id} in category {labelclass_name}, policy id {model_id}")
 
     return jsonify({
         "labeling_counts": labeling_counts,
@@ -648,7 +656,8 @@ def extract_model_information_list(workspace_id, models):
           'model_status': model.model_status.name,
           'creation_epoch': model.creation_date.timestamp(),
           'model_type': model.model_type.name,
-          'model_metadata': model.model_metadata,
+          # The current UI expects a dict of string to int, and train counts contains a mix of boolean and string keys.
+          'model_metadata': {**model.model_metadata,"train_counts":{str(k).lower():v for k,v in model.model_metadata["train_counts"].items()}},
           'active_learning_status':
               orchestrator_api.get_model_active_learning_status(workspace_id, model.model_id).name}
         for model in models]
@@ -891,7 +900,7 @@ if __name__ == '__main__':
     disable_html_printouts = False
     if disable_html_printouts:
         logging.getLogger('werkzeug').disabled = True
-        os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+        os.environ['WERKZEUG_RUN_MAIN'] = True
     # app.run(host="0.0.0.0",port=8008,debug=False) # to enable running on a remote machine
     if not definitions.ASYNC:
         raise Exception(

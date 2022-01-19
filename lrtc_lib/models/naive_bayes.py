@@ -44,7 +44,7 @@ class NaiveBayes(ModelAsync):
     @update_train_status
     def train_with_async_support(self, model_id, train_data, dev_data, train_params):
         model = MultinomialNB() if self.representation_type == RepresentationType.BOW else GaussianNB()
-        # Train the policy using the training sets
+        # Train the model using the training sets
         language = self.get_language(model_id)
         sentences = [sentence["text"] for sentence in train_data]
         sentences = sentences[:self.max_datapoints]
@@ -81,7 +81,7 @@ class NaiveBayes(ModelAsync):
         return {"labels": labels, "scores": scores}
 
     def model_file_by_id(self, model_id):
-        return os.path.join(self.get_model_dir_by_id(model_id), "policy")
+        return os.path.join(self.get_model_dir_by_id(model_id), "model")
 
     def vectorizer_file_by_id(self, model_id):
         return os.path.join(self.get_model_dir_by_id(model_id), "vectorizer")
@@ -91,7 +91,7 @@ class NaiveBayes(ModelAsync):
 
     @delete_model_cache
     def delete_model(self, model_id):
-        logging.info(f"deleting NB policy {model_id}")
+        logging.info(f"deleting NB model {model_id}")
         model_dir = self.get_model_dir_by_id(model_id)
         if os.path.isdir(model_dir):
             shutil.rmtree(model_dir)

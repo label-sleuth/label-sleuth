@@ -46,9 +46,9 @@ class HFTransformers(ModelAPI):
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         self.model_dir = model_dir
-        # Load dataset, tokenizer, policy from pretrained policy/vocabulary
+        # Load dataset, tokenizer, model from pretrained model/vocabulary
         self.tokenizer = self.get_tokenizer()
-        # Prepare training: Compile tf.keras policy with optimizer, loss and learning rate schedule
+        # Prepare training: Compile tf.keras model with optimizer, loss and learning rate schedule
         self.learning_rate = learning_rate
         self.max_length = 100
         self.batch_size = batch_size
@@ -72,7 +72,7 @@ class HFTransformers(ModelAPI):
 
     def process_inputs(self, texts, labels=None, to_dataset=True):
         """
-        convert text to tf dataset used as policy input (e.g. for training)
+        convert text to tf dataset used as model input (e.g. for training)
         """
         if labels is None:
             labels = repeat(0)
@@ -93,7 +93,7 @@ class HFTransformers(ModelAPI):
         return tokenized
 
     def train(self, train_data, dev_data, train_params: dict) -> str:
-        logging.info("Training hf policy...")
+        logging.info("Training hf model...")
         model_id = str(uuid.uuid1())
         self.model_id = model_id
         epochs = 5
@@ -125,7 +125,7 @@ class HFTransformers(ModelAPI):
                 metric = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
             model.compile(optimizer=optimizer, loss=loss, metrics=[metric])
 
-            # Train the policy using the training sets
+            # Train the model using the training sets
             if self.debug:
                 train_data = train_data[:self.batch_size]
                 dev_data = dev_data[:self.batch_size]
@@ -157,7 +157,7 @@ class HFTransformers(ModelAPI):
 
     @infer_with_cache
     def infer(self, model_id, items_to_infer, infer_params: dict, use_cache=True):
-        logging.info("Inferring with hf policy...")
+        logging.info("Inferring with hf model...")
         items_to_infer = [x["text"] for x in items_to_infer]
         model = TFBertForSequenceClassification.from_pretrained(self.get_model_dir_by_id(model_id))
 
@@ -179,13 +179,13 @@ class HFTransformers(ModelAPI):
         labels = [int(np.argmax(logit)) for logit in logits]
         predictions = softmax(logits, axis=1)
         scores = [float(prediction[label]) for label, prediction in zip(labels, predictions)]
-        logging.info("Infer hf policy done")
+        logging.info("Infer hf model done")
         return {"labels": labels, "scores": scores, "logits": logits.numpy().tolist(),
                 "embeddings": out_emb.numpy().tolist()}
 
     def get_model_status(self, model_id) -> ModelStatus:
         """
-        returns the policy status defined in the ModelStatus enum.
+        returns the model status defined in the ModelStatus enum.
         """
         if os.path.isfile(self.train_file_by_id(model_id)):
             if not os.path.isdir(self.get_model_dir_by_id(model_id)):
@@ -201,7 +201,7 @@ class HFTransformers(ModelAPI):
 
     def delete_model(self, model_id):
         """
-        deletes policy files
+        deletes model files
         """
         train_file = self.train_file_by_id(model_id)
         model_dir = self.get_model_dir_by_id(model_id)
@@ -311,7 +311,7 @@ def _get_grads_eager(model, x, y, params, sample_weight=None, learning_phase=0, 
 
 def get_gradients(model, x, y, params, sample_weight=None, learning_phase=0, relevant_output=None):
     """
-    Returns the gradient of a policy given input x and required output y.
+    Returns the gradient of a model given input x and required output y.
     Note: works both in eager and graph execution. Graph execution is generally faster.
     Based on github.com/OverLordGoldDragon/see-rnn
     """

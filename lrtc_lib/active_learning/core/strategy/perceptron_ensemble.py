@@ -72,7 +72,7 @@ def train_perceptron_ensemble_model(pos, neg, n_units=1):
 
     def get_model():
         model = get_perceptron_model(len(pos[0]))
-        # train the policy:
+        # train the model:
         model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
         model.fit(X_train, Y_train,
                   epochs=epochs,

@@ -47,15 +47,15 @@ def train(workspace_id, dataset_name, category_name, model_type):
         workspace_id=workspace_id, train_dataset_name=dataset_name,
         category_name=category_name, dev_dataset_name=dataset_name.replace('_train', '_dev'))
     model_id = orchestrator_api.train(workspace_id, category_name, model_type, train_data, dev_data)
-    assert model_id is not None, "train_model_if_recommended returned None - no policy will be trained"
+    assert model_id is not None, "train_model_if_recommended returned None - no model will be trained"
     status = orchestrator_api.get_model_status(workspace_id, model_id)
-    logging.info(f"waiting for policy {model_id} to complete training, current status:{status}")
+    logging.info(f"waiting for model {model_id} to complete training, current status:{status}")
     while status != ModelStatus.READY:
-        #logging.info("waiting for policy %s to complete training, current status:%s" % (model_id, status))
+        #logging.info("waiting for model %s to complete training, current status:%s" % (model_id, status))
         status = orchestrator_api.get_model_status(workspace_id, model_id)
         time.sleep(2)
-    logging.info("finished waiting for policy %s, status is:%s" % (model_id, status))
-    assert status==ModelStatus.READY,"policy status is not READY"
+    logging.info("finished waiting for model %s, status is:%s" % (model_id, status))
+    assert status==ModelStatus.READY,"model status is not READY"
 
 
 def wait_and_print_al_recommendations(workspace_id, category_name):

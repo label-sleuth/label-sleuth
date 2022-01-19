@@ -78,9 +78,9 @@ class DiscriminativeRepresentationSampling(ActiveLearner):
 
             # if labeled_so_far==sample_size:
             #     additional_to_predict_idx = np.sort(additional_to_predict_idx)
-            #     predictions = policy.predict(Train[additional_to_predict_idx])
+            #     predictions = model.predict(Train[additional_to_predict_idx])
 
-            # delete the policy to free GPU memory:
+            # delete the model to free GPU memory:
             del model
             gc.collect()
         return additional_to_predict_idx
@@ -88,7 +88,7 @@ class DiscriminativeRepresentationSampling(ActiveLearner):
 
 def train_discriminative_model(labeled, unlabeled, input_shape):
     """
-    A function that trains and returns a discriminative policy on the labeled and unlabeled data.
+    A function that trains and returns a discriminative model on the labeled and unlabeled data.
     """
 
     # create the binary dataset:
@@ -98,10 +98,10 @@ def train_discriminative_model(labeled, unlabeled, input_shape):
     Y_train = np.vstack((y_L, y_U))
     Y_train = tf.keras.utils.to_categorical(Y_train)
 
-    # build the policy:
+    # build the model:
     model = get_discriminative_model(input_shape)
 
-    # train the policy:
+    # train the model:
     batch_size = 100
     epochs = 10
     optimizer = tf.keras.optimizers.Adam(lr=0.0001)
@@ -122,7 +122,7 @@ def train_discriminative_model(labeled, unlabeled, input_shape):
 
 def get_discriminative_model(input_shape):
     """
-    The MLP policy for discriminative active learning, without any regularization techniques.
+    The MLP model for discriminative active learning, without any regularization techniques.
     """
     width = input_shape
     model = tf.keras.Sequential()

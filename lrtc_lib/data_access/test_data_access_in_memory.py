@@ -101,10 +101,10 @@ class TestDataAccessInMemory(unittest.TestCase):
         data_access.set_labels(workspace_id, texts_and_labels_list)
 
         labels_count = data_access.get_label_counts(workspace_id, dataset_name, category)
-        self.assertGreater(labels_count['true'], 0)
+        self.assertGreater(labels_count[True], 0)
         data_access.unset_labels(workspace_id, category, [x[0] for x in texts_and_labels_list])
         labels_count_after_unset = data_access.get_label_counts(workspace_id, dataset_name, category)
-        self.assertEqual(0, labels_count_after_unset["true"])
+        self.assertEqual(0, labels_count_after_unset[True])
         ds_loader.clear_all_saved_files(dataset_name)
 
     def test_get_all_document_uris(self):

@@ -26,7 +26,7 @@ class RandomModel(ModelAPI):
 
     def infer(self, model_id, items_to_infer, infer_params=None, use_cache=False):
         if model_id not in self.models:
-            raise ValueError("trying to infer with untrained policy")
+            raise ValueError("trying to infer with untrained model")
         random_previous_state = random.getstate()
         random.seed(model_id)
         predicted = np.array([random.random() for _ in range(len(items_to_infer))])
