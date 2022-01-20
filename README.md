@@ -1,13 +1,8 @@
 # SLEUTH-classification
-
+TBD
 
 **Table of contents**
 
 
-[License](#license)
-
 ## Installation
-
-
-## Running active learning experiments
 
