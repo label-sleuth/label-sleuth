@@ -1,8 +1,3 @@
-# (c) Copyright IBM Corporation 2020.
-
-# LICENSE: Apache License 2.0 (Apache-2.0)
-# http://www.apache.org/licenses/LICENSE-2.0
-
 from lrtc_lib.training_set_selector.train_and_dev_sets_selectors import TrainAndDevSetsSelectorAllLabeled, TrainAndDevSetsSelectorAllLabeledPlusUnlabeledAsWeakNegative
 from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import TrainingSetSelectionStrategy
 

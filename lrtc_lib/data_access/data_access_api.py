@@ -1,8 +1,3 @@
-# (c) Copyright IBM Corporation 2020.
-
-# LICENSE: Apache License 2.0 (Apache-2.0)
-# http://www.apache.org/licenses/LICENSE-2.0
-
 import abc
 from typing import Iterable, Sequence, Mapping, List, Tuple
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label
