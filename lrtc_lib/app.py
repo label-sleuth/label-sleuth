@@ -152,11 +152,6 @@ def getElement(workspace_id, eltid):
 
 ## end of move to common
 
-##  move to exams_usecase
-
-
-
-## end of move to exams_usecase
 
 def _build_cors_preflight_response():
     response = make_response()
@@ -166,18 +161,27 @@ def _build_cors_preflight_response():
     return response
 
 
-def get_workspace_id():
-    return "Warranties_cnc_in_domain_Warranties_NB"
-
-
-def get_category_name():
-    return "Warranties"
-
 
 def authenticate_response(user):
     return make_response(jsonify(user), 200)
 
 
+def verify_password(username, password):
+    if username in users:
+        user = users[username]
+        return user and user.password == password
+    else:
+        return False
+
+@auth.verify_token
+def verify_token(token):
+    if not token:
+        return False
+    return token in tokens
+
+def _get_document_id(element_id):
+    idx = element_id.rfind('-')
+    return element_id[0:idx]
 @app.route('/users/authenticate', methods=['POST'])
 def login():
     post_data = request.get_json(force=True)
@@ -198,29 +202,46 @@ def login():
         })
 
 
-def verify_password(username, password):
-    if username in users:
-        user = users[username]
-        return user and user.password == password
-    else:
-        return False
-
-@auth.verify_token
-def verify_token(token):
-    if not token:
-        return False
-    return token in tokens
-
-def _get_document_id(element_id):
-    idx = element_id.rfind('-')
-    return element_id[0:idx]
+@app.route("/datasets", methods=['GET'])
+@auth.login_required
+def get_all_dataset_ids():
+    """
+    Get all existing datasets
+    :return array of dataset ids as strings:
+    """
+    all_datasets = orch.get_all_datasets()
+    res = {'datasets':
+               [{"dataset_id": d} for d in sorted(all_datasets)]}
+    return jsonify(res)
 
 
-###########################
-#     WORKSPACES - CRUD
-##########################
+@app.route('/datasets/<dataset_name>/add_documents', methods=['POST'])
+@cross_origin()
+@auth.login_required
+def add_documents(dataset_name):
+    temp_dir = None
+    try:
+        csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
+        df = pd.read_csv(csv_data)
+        temp_dir = os.path.join(definitions.ROOT_DIR,"output","temp","csv_upload")
+        temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
+        os.makedirs(temp_dir,exist_ok=True)
+        df.to_csv(os.path.join(temp_dir,temp_file_name))
+        loaded, workspaces_to_update = orch.add_documents_from_file(dataset_name,temp_file_name)
 
-# Create
+        return jsonify({"dataset_name":dataset_name,
+                        "num_docs":len(loaded),
+                        "num_sentences":sum(len(doc.text_elements) for doc in loaded),
+                        "workspaces_to_update":workspaces_to_update})
+    except AlreadyExistException as e:
+        return jsonify({"dataset_name":dataset_name, "error": "documents already exists", "documents":e.documents, "error_code":409})
+    except Exception:
+        logging.exception(f"failed to load or add documents to dataset {dataset_name}")
+        return jsonify({"dataset_name":dataset_name, "error": traceback.format_exc(),"error_code":400})
+    finally:
+        if temp_dir is not None and os.path.exists(os.path.join(temp_dir,temp_file_name)):
+            os.remove(os.path.join(temp_dir,temp_file_name))
+
 @app.route("/workspace", methods=['POST'])
 @auth.login_required
 def create_workspace():
@@ -259,6 +280,16 @@ def get_all_workspace_ids():
     res = {'workspaces': orch.list_workspaces()}
     return jsonify(res)
 
+@app.route("/workspace/<workspace_id>", methods=['DELETE'])
+@auth.login_required
+def delete_workspace(workspace_id):
+    """
+    Delete Workspace
+    :param <workspace_id>
+    :return success
+    """
+    orch.delete_workspace(workspace_id)
+    return jsonify({'workspace_id': workspace_id})
 
 # Get Single
 @app.route("/workspace/<workspace_id>", methods=['GET'])
@@ -277,32 +308,6 @@ def get_workspace_info(workspace_id):
                          'dataset_name': workspace_info['dataset_name'],
                          'first_document_id': first_document_id,
                          'document_ids': document_ids}}
-    return jsonify(res)
-
-# Delete
-@app.route("/workspace/<workspace_id>", methods=['DELETE'])
-@auth.login_required
-def delete_workspace(workspace_id):
-    """
-    Delete Workspace
-    :param <workspace_id>
-    :return success
-    """
-    orch.delete_workspace(workspace_id)
-    return jsonify({'workspace_id': workspace_id})
-
-
-# Get all
-@app.route("/datasets", methods=['GET'])
-@auth.login_required
-def get_all_dataset_ids():
-    """
-    Get all existing datasets
-    :return array of dataset ids as strings:
-    """
-    all_datasets = orch.get_all_datasets()
-    res = {'datasets':
-               [{"dataset_id": d} for d in sorted(all_datasets)]}
     return jsonify(res)
 
 
@@ -842,34 +847,6 @@ def import_labels(workspace_id):
     csv_data = StringIO(request.data.decode("utf-8"))
     df = pd.read_csv(csv_data, dtype={'labels': str})
     return jsonify(orch.import_category_labels(workspace_id, df))
-
-
-@app.route('/datasets/<dataset_name>/add_documents', methods=['POST'])
-@cross_origin()
-@auth.login_required
-def add_documents(dataset_name):
-    temp_dir = None
-    try:
-        csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
-        df = pd.read_csv(csv_data)
-        temp_dir = os.path.join(definitions.ROOT_DIR,"output","temp","csv_upload")
-        temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
-        os.makedirs(temp_dir,exist_ok=True)
-        df.to_csv(os.path.join(temp_dir,temp_file_name))
-        loaded, workspaces_to_update = orch.add_documents_from_file(dataset_name,temp_file_name)
-
-        return jsonify({"dataset_name":dataset_name,
-                        "num_docs":len(loaded),
-                        "num_sentences":sum(len(doc.text_elements) for doc in loaded),
-                        "workspaces_to_update":workspaces_to_update})
-    except AlreadyExistException as e:
-        return jsonify({"dataset_name":dataset_name, "error": "documents already exists", "documents":e.documents, "error_code":409})
-    except Exception:
-        logging.exception(f"failed to load or add documents to dataset {dataset_name}")
-        return jsonify({"dataset_name":dataset_name, "error": traceback.format_exc(),"error_code":400})
-    finally:
-        if temp_dir is not None and os.path.exists(os.path.join(temp_dir,temp_file_name)):
-            os.remove(os.path.join(temp_dir,temp_file_name))
 
 
 @app.route('/workspace/<workspace_id>/export_model', methods=['GET'])
