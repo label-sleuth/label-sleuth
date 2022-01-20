@@ -1,14 +1,16 @@
-import ast
+import json
 import os
+import logging
 from dataclasses import dataclass
 from typing import List
 
 import dacite
-import json
-from configurations.BackendActiveLearningStrategy import BackendActiveLearningStrategy
-from configurations.BackendModelPolicy import BackendModelPolicy
-from configurations.BackendTrainAndDevSetSelector import BackendTrainAndDevSetSelector
-import logging
+
+from lrtc_lib.active_learning.strategies import ActiveLearningStrategies
+from lrtc_lib.definitions import ROOT_DIR
+from lrtc_lib.models.core.model_policies import ModelPolicies
+from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import TrainingSetSelectionStrategy
+
 
 # based on https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
 
@@ -21,7 +23,6 @@ import logging
 # TRAINING_SET_SELECTION_STRATEGY = TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO
 # ACTIVE_LEARNING_STRATEGY = ActiveLearningStrategies.HARD_MINING
 # LOCAL_FINETUNE = False
-from lrtc_lib.definitions import ROOT_DIR
 
 
 @dataclass
@@ -31,18 +32,18 @@ class Configuration:
     sync_mode_elements_to_label: int
     info_gain_stop_words: str
     show_translation: bool
-    backend_model_policy: BackendModelPolicy
-    backend_training_set_selection_strategy: BackendTrainAndDevSetSelector
-    backend_active_learning_strategy: BackendActiveLearningStrategy
+    model_policy: ModelPolicies
+    training_set_selection_strategy: TrainingSetSelectionStrategy
+    active_learning_strategy: ActiveLearningStrategies
     local_finetune: bool
     users: List[dict]
     precision_evaluation_size: int
     precision_evaluation_filter: str
 
 converters = {
-    BackendModelPolicy: lambda x: BackendModelPolicy[x],
-    BackendTrainAndDevSetSelector: lambda x: BackendTrainAndDevSetSelector[x],
-    BackendActiveLearningStrategy: lambda x: BackendActiveLearningStrategy[x]
+    ModelPolicies: lambda x: getattr(ModelPolicies, x),
+    TrainingSetSelectionStrategy: lambda x: getattr(TrainingSetSelectionStrategy, x),
+    ActiveLearningStrategies: lambda x: getattr(ActiveLearningStrategies, x)
 }
 
 def load_config():
@@ -50,7 +51,7 @@ def load_config():
     with open(os.path.join(ROOT_DIR,'config.json'),) as f:
         raw_cfg = json.load(f)
 
-    config =  dacite.from_dict(
+    config = dacite.from_dict(
         data_class=Configuration, data=raw_cfg,
         config=dacite.Config(type_hooks=converters),
     )

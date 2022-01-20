@@ -12,7 +12,7 @@ from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIV
 from lrtc_lib.definitions import PROJECT_PROPERTIES
 from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_api import ModelStatus
-from lrtc_lib.models.core.model_type import ModelTypes
+from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.tools import get_glove_representation, remove_stop_words_and_punctuation
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.utils import _convert_to_dicts_with_numeric_labels
@@ -27,9 +27,9 @@ MIN_OVERLAP_THRESHOLD = 0.4
 
 
 def get_disagreements_using_cross_validation(workspace_id,dataset_name, category_name,
-                                               model_type=ModelTypes.M_SVM,
-                                               selector=TrainingSetSelectionStrategy.ALL_LABELED,
-                                               language=Languages.ENGLISH):
+                                             model_type=ModelTypes.SVM_ENSEMBLE,
+                                             selector=TrainingSetSelectionStrategy.ALL_LABELED,
+                                             language=Languages.ENGLISH):
     start_time = time.time()
     train_and_dev_sets_selector = training_set_selector_factory.get_training_set_selector(selector=selector)
     all_train_text_elements, _ = train_and_dev_sets_selector.get_train_and_dev_sets(

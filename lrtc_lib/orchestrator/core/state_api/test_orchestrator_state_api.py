@@ -12,7 +12,7 @@ from lrtc_lib.orchestrator.orchestrator_api import BINARY_LABELS
 from lrtc_lib.orchestrator.test_orchestrator_api import generate_simple_doc
 from lrtc_lib.text_transformers.text_transformers import TextTransformersStrategy
 from lrtc_lib.train_and_infer_service.train_and_infer_api import ModelStatus
-from lrtc_lib.train_and_infer_service.model_type import ModelTypes
+from lrtc_lib.models.core.model_types import ModelTypes
 
 
 class TestOrchestratorStateAPI(unittest.TestCase):

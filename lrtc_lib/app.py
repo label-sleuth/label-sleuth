@@ -36,10 +36,9 @@ executor = ThreadPoolExecutor(20)
 
 
 def init_properties():
-    definitions.PROJECT_PROPERTIES["model_policy"] = CONFIGURATION.backend_model_policy.value
-    definitions.PROJECT_PROPERTIES["training_set_selection"] = CONFIGURATION. \
-        backend_training_set_selection_strategy.value
-    orch.set_active_learning_strategy(CONFIGURATION.backend_active_learning_strategy.value)
+    definitions.PROJECT_PROPERTIES["model_policy"] = CONFIGURATION.model_policy.value
+    definitions.PROJECT_PROPERTIES["training_set_selection"] = CONFIGURATION.training_set_selection_strategy
+    orch.set_active_learning_strategy(CONFIGURATION.active_learning_strategy)
 
     definitions.ASYNC = True  # Always async in the UI
     start_orchestrator_background_job_manager(orchestrator_api._update_recommendation,

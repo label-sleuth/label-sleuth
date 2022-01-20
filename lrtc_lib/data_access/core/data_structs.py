@@ -11,6 +11,7 @@ LABEL_POSITIVE = True # TODO change to boolean....good luck
 LABEL_NEGATIVE = False
 BINARY_LABELS = frozenset({LABEL_NEGATIVE, LABEL_POSITIVE})
 
+
 @dataclass
 class TextElement:
     uri: str
@@ -22,6 +23,7 @@ class TextElement:
     @classmethod
     def get_field_names(cls):
         return cls.__annotations__.keys()
+
 
 @dataclass
 class Document:

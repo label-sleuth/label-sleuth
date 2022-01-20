@@ -10,7 +10,7 @@ from sleuth_internal_lib.training_set_selector.training_set_selector_factory_int
 from sleuth_internal_lib.async_support.orchestrator_background_jobs_manager import \
     start_orchestrator_background_job_manager
 from sleuth_internal_lib.definitions_internal import init_internal_definitions
-from sleuth_internal_lib.train_and_infer_service.model_type import ModelTypesInternal
+from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.experiment_runners.experiment_runners_core.assessment.evaluate_predictions import evaluate_predictions
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ActiveLearningRecommendationsStatus
 

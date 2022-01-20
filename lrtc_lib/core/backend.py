@@ -1,15 +1,12 @@
-import itertools
 import logging
-import random
 import re
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
 
-import numpy as np
 import pandas as pd
 from collections import OrderedDict, defaultdict, Counter
 from enum import Enum
-from typing import Mapping, List, Sequence, Tuple
+from typing import Mapping, Sequence, Tuple
 
 from lrtc_lib import definitions
 from lrtc_lib.data_access.core.utils import get_document_uri
@@ -27,13 +24,13 @@ from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ActiveLe
 from lrtc_lib.data_access.core.data_structs import TextElement, Label, Document
 from lrtc_lib.training_set_selector.training_set_selector_factory \
     import TrainingSetSelectorFactory as training_set_selector_factory
-from lrtc_lib.orchestrator import orchestrator_api
 from lrtc_lib.config import *
 
 
 class RecommendedAction(Enum):
     LABEL_BY_QUERY = 0
     LABEL_BY_MODEL = 1
+
 
 NUMBER_OF_MODELS_TO_KEEP = 2
 new_data_infer_thread_pool = ThreadPoolExecutor(1)
@@ -528,6 +525,10 @@ def get_contradictions_report_with_diffs(workspace_id, category_name) -> List[Tu
     return orchestrator_api.get_contradictions_report_with_diffs(workspace_id, category_name)
 
 
+def sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False, required_label=LABEL_POSITIVE,
+                                  random_state: int = 0):
+    orchestrator_api.sample_elements_by_prediction(**locals())
+
 
 if __name__ == '__main__':
     # orchestrator_api.delete_workspace("Warranties_cnc_in_domain_Warranties_NB")
@@ -609,8 +610,5 @@ if __name__ == '__main__':
         print(items_to_label)
 
 
-def sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False, required_label=LABEL_POSITIVE,
-                                  random_state: int = 0):
-    orchestrator_api.sample_elements_by_prediction(**locals())
     # print_document_by_id_print_text_element_by_id()
     # end_to_end_example()

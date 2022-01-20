@@ -12,7 +12,7 @@ import threading
 from lrtc_lib.data_access.core.utils import get_all_datasets
 from lrtc_lib.definitions import WORKSPACE_DATA_DIR
 from lrtc_lib.models.core.model_api import ModelStatus
-from lrtc_lib.models.core.model_type import ModelType
+from lrtc_lib.models.core.model_types import ModelTypes
 
 WORKSPACE_CLASS_VERSION = 2
 
@@ -50,7 +50,7 @@ class ModelInfo:
     model_id: str
     model_status: ModelStatus
     creation_date: datetime
-    model_type: ModelType
+    model_type: ModelTypes
     model_metadata: dict
 
 
@@ -184,7 +184,7 @@ def get_workspace(workspace_id):
 
 
 @withlock
-def add_model(workspace_id: str, category_name: str, model_id: str, model_status: ModelStatus, model_type: ModelType,
+def add_model(workspace_id: str, category_name: str, model_id: str, model_status: ModelStatus, model_type: ModelTypes,
               model_metadata: dict):
     workspace = _load_workspace(workspace_id)
     if category_name not in workspace.category_to_description:

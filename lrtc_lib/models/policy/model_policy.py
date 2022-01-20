@@ -1,14 +1,14 @@
 import abc
 
-from lrtc_lib.models.core.model_type import ModelType
+from lrtc_lib.models.core.model_types import ModelTypes
 
 
 class ModelPolicy(object, metaclass=abc.ABCMeta):
 
-    def __init__(self, model: ModelType = None):
+    def __init__(self, model: ModelTypes = None):
         self.static_model = model
 
-    def get_model(self, iteration_num: int) -> ModelType:
+    def get_model(self, iteration_num: int) -> ModelTypes:
         """
 
         :param iteration_num:

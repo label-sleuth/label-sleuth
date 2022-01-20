@@ -7,14 +7,14 @@ import logging
 
 from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.models.core.model_api import ModelAPI, infer_with_cache, ModelStatus, delete_model_cache
-from lrtc_lib.models.core.model_type import ModelType, ModelTypes
+from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.models_factory import ModelFactory
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 
 class Ensemble(ModelAPI):
-    def __init__(self, model_types: Iterable[ModelType], multi_label=False, factory=None,
+    def __init__(self, model_types: Iterable[ModelTypes], multi_label=False, factory=None,
                  aggregation=lambda x: np.mean(x, axis=0),
                  model_dir=os.path.join(ROOT_DIR, "output", "models", "multi"), return_all_scores=True):
         """

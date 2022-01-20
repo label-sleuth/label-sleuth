@@ -4,7 +4,7 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 import logging
 
-from lrtc_lib.models.core.model_type import ModelType, ModelTypes
+from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.tools import RepresentationType
 
 
@@ -12,18 +12,18 @@ class ModelFactory(object):
     def __init__(self):
         self.loaded_models = {}
 
-    def get_model(self, model_type: ModelType):
+    def get_model(self, model_type: ModelTypes):
         from lrtc_lib.definitions import ASYNC
         try:
             if model_type == ModelTypes.RAND:
                 if model_type not in self.loaded_models:
                     from lrtc_lib.models.random_model import RandomModel
                     self.loaded_models[model_type] = RandomModel()
-            elif model_type == ModelTypes.HFBERT:
+            elif model_type == ModelTypes.HF_BERT:
                 if model_type not in self.loaded_models:
                     from lrtc_lib.models.hf_transformers import HFTransformers
                     self.loaded_models[model_type] = HFTransformers(50)
-            elif model_type == ModelTypes.M_SVM:
+            elif model_type == ModelTypes.SVM_ENSEMBLE:
                 from lrtc_lib.models.ensemble import Ensemble
                 if model_type not in self.loaded_models:
                     self.loaded_models[model_type] = \

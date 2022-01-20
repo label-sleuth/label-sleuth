@@ -8,7 +8,7 @@ from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label
 import lrtc_lib.data_access.single_dataset_loader as ds_loader
 from lrtc_lib.orchestrator import orchestrator_api
 from lrtc_lib.orchestrator.orchestrator_api import LABEL_NEGATIVE
-from lrtc_lib.train_and_infer_service.model_type import ModelTypes
+from lrtc_lib.models.core.model_types import ModelTypes
 
 
 def generate_simple_doc(dataset_name, category_name, doc_id=0):

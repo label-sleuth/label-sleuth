@@ -1,6 +1,6 @@
 import numpy as np
 
-from sleuth_internal_lib.active_learning.strategies import ActiveLearningStrategiesInternal
+from sleuth_internal_lib.active_learning.strategies import ActiveLearningStrategies
 from lrtc_lib.active_learning.active_learning_api import ActiveLearner
 from lrtc_lib.orchestrator import orchestrator_api
 
@@ -10,7 +10,7 @@ class DropoutLearner(ActiveLearner):
         self.max_to_consider = max_to_consider
 
     def get_strategy(self):
-        return ActiveLearningStrategiesInternal.DROPOUT
+        return ActiveLearningStrategies.DROPOUT
 
     def get_recommended_items_for_labeling(self, workspace_id, model_id, dataset_name, category_name, sample_size=1):
         unlabeled = self.get_unlabeled_data(workspace_id, dataset_name, category_name, self.max_to_consider)

@@ -4,36 +4,17 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 
 import abc
+from enum import Enum
 from typing import Tuple, Sequence
 
 from lrtc_lib.data_access.core.data_structs import TextElement
 
 
-class TrainAndDevSetSelector(object):
-    def __init__(self, name):
-        self.name = name
-
-    def __eq__(self, other):
-        if isinstance(other, TrainAndDevSetSelector):
-            return self.name == other.name
-        else:
-            raise TypeError(f"comparing {other.__class__} to TrainAndDevSetSelector is not allowed! ")
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.name)
-
-
-class TrainingSetSelectionStrategy(object):
-    ALL_LABELED = TrainAndDevSetSelector("ALL_LABELED")
-    ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO = \
-        TrainAndDevSetSelector("ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO")
-    ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO = \
-        TrainAndDevSetSelector("ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO")
-    ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO = \
-        TrainAndDevSetSelector("ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO")
+class TrainingSetSelectionStrategy(Enum):
+    ALL_LABELED = 0
+    ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO = 1
+    ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO = 2
+    ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO = 3
 
 
 class TrainAndDevSetsSelectorAPI(object, metaclass=abc.ABCMeta):

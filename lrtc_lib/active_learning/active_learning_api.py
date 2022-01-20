@@ -7,14 +7,14 @@ import abc
 import logging
 from typing import Sequence
 
-from lrtc_lib.active_learning.strategies import ActiveLearningStrategy
+from lrtc_lib.active_learning.strategies import ActiveLearningStrategies
 from lrtc_lib.data_access.core.data_structs import TextElement
 
 
 class ActiveLearner:
 
     @abc.abstractmethod
-    def get_strategy(self) -> ActiveLearningStrategy:
+    def get_strategy(self) -> ActiveLearningStrategies:
         raise NotImplementedError("API functions should not be called")
 
     @abc.abstractmethod

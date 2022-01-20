@@ -15,7 +15,6 @@ from typing import Mapping, List, Sequence, Tuple, Set
 from sklearn.preprocessing import MultiLabelBinarizer
 
 import lrtc_lib.data_access.data_access_factory as data_access_factory
-from lrtc_lib.active_learning.strategies import ActiveLearningStrategy
 from lrtc_lib.analysis_utils.analyze_tokens import ngrams_by_info_gain
 from lrtc_lib.analysis_utils.labeling_reports import  \
     get_suspected_labeling_contradictions_by_distance_with_diffs, get_disagreements_using_cross_validation
@@ -23,7 +22,7 @@ from lrtc_lib.data_access.core.data_structs import Document, Label, TextElement,
 from lrtc_lib.data_access.core.utils import get_workspace_labels_dump_filename
 from lrtc_lib.definitions import PROJECT_PROPERTIES
 from lrtc_lib.models.core.model_api import ModelStatus
-from lrtc_lib.models.core.model_type import ModelType, ModelTypes
+from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ModelInfo, ActiveLearningRecommendationsStatus
 from lrtc_lib.orchestrator.utils import _convert_to_dicts_with_numeric_labels
@@ -306,8 +305,7 @@ def sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_
                                                       remove_duplicates=False, random_state=random_state)
 
 
-def train(workspace_id: str, category_name: str, model_type: ModelType, train_data, dev_data,
-          train_params=None):
+def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_data, dev_data, train_params=None):
     """
     train a model for a category in the specified workspace
     :param workspace_id:
@@ -537,7 +535,8 @@ def get_contradictions_report_with_diffs(workspace_id, category_name) -> List[Tu
 
 # TODO more complicated as get_disagreements_between_labels_and_model uses train_and_dev_set_selectors which use the workspace internally
 # (and if we keep it we have a circular dependency
-def get_suspicious_elements_report(workspace_id, category_name, model_type: ModelType = ModelTypes.M_SVM) -> List[TextElement]:
+def get_suspicious_elements_report(workspace_id, category_name, model_type: ModelTypes = ModelTypes.SVM_ENSEMBLE) \
+        -> List[TextElement]:
     dataset_name = get_workspace(workspace_id).dataset_name
     return get_disagreements_using_cross_validation(workspace_id, dataset_name, category_name, model_type)
 
