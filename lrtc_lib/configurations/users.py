@@ -1,8 +1,9 @@
 from collections import namedtuple
 from dataclasses import dataclass
 
-from config import CONFIGURATION
 import dacite
+
+from lrtc_lib.config import CONFIGURATION
 
 
 @dataclass
