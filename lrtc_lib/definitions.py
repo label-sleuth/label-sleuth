@@ -5,7 +5,6 @@ from lrtc_lib.models.core.models_factory import ModelFactory
 
 ASYNC = False
 LOCAL_FINETUNE = False
-RESEARCH_MODE = True
 ROOT_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
 
 WORKSPACE_DATA_DIR = os.path.normpath(os.path.join(ROOT_DIR, "output/workspaces"))
