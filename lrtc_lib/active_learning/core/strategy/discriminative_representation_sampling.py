@@ -137,7 +137,7 @@ class DiscriminativeEarlyStopping(tf.keras.callbacks.Callback):
     """
 
     def __init__(self, monitor='accuracy', threshold=0.98, verbose=0):
-        super(tf.keras.callbacks.Callback, self).__init__()
+        super(DiscriminativeEarlyStopping, self).__init__()
         self.monitor = monitor
         self.threshold = threshold
         self.verbose = verbose

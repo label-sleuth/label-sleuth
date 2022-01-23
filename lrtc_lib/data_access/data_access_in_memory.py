@@ -32,8 +32,9 @@ class DataAccessInMemory(DataAccessApi):
         else:
             doc_ids = {document.uri for document in documents}
             intersection = doc_ids.intersection(set(self.get_all_document_uris(dataset_name)))
-            if len(intersection)>0:
-                raise AlreadyExistException(f"{len(intersection)} documents are already in dataset {dataset_name}. uris: ({intersection})",list(intersection))
+            if len(intersection) > 0:
+                raise AlreadyExistException(f"{len(intersection)} documents are already in dataset {dataset_name}."
+                                            f" uris: ({intersection})", list(intersection))
 
         for doc in documents:
             # save doc to file
@@ -46,7 +47,7 @@ class DataAccessInMemory(DataAccessApi):
             sentences.extend(doc.text_elements)
         logic.add_sentences_to_dataset_in_memory(dataset_name=dataset_name, sentences=sentences)
 
-    def get_lock_for_workspace(self,workspace_id: str):
+    def get_lock_for_workspace(self, workspace_id: str):
         lock_object = self.workspaces_labels_locks_dict[workspace_id]
         return lock_object
 
@@ -263,7 +264,7 @@ class DataAccessInMemory(DataAccessApi):
         with self.get_lock_for_workspace(workspace_id):
             results_dict = logic.sample_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                       sample_size=sample_size,
-                                                      sample_start_idx = sample_start_idx,
+                                                      sample_start_idx=sample_start_idx,
                                                       filter_func=filter_func,
                                                       remove_duplicates=remove_duplicates,
                                                       random_state=random_state)
@@ -320,7 +321,7 @@ class DataAccessInMemory(DataAccessApi):
         category_label_list = \
             [labels_by_uri[uri][category_name].labels for uri in labels_by_uri
              if category_name in labels_by_uri[uri]]
-        category_label_list = [item for sublist in category_label_list for item in sublist] # flatten list of sets to a list
+        category_label_list = [item for sublist in category_label_list for item in sublist]  # flatten list of sets to a list
         category_label_counts = Counter(category_label_list)
         return category_label_counts
 
@@ -380,4 +381,3 @@ if __name__ == '__main__':
     orig_csv_path = '/tmp/multi_train.csv'
     texts = {t for t in pd.read_csv(orig_csv_path)['Sentences']}
     filtered_elements = [x.uri for x in all_elements if x.text in texts]
-

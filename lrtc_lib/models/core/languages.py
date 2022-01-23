@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from nltk.corpus import stopwords
-from sklearn.feature_extraction._stop_words import ENGLISH_STOP_WORDS
 
 
 @dataclass
@@ -13,7 +12,7 @@ class Language:
     wnlp_syntax_model_name: str
     wnlp_use_model_name: str
     wnlp_glove_model_name: str
-    wnlp_glove_300d_model_name: str=None
+    wnlp_glove_300d_model_name: str = None
 
     def __repr__(self):
         return self.name

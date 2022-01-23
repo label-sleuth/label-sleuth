@@ -14,7 +14,7 @@ class TestEndToEnd(unittest.TestCase):
             CATEGORY_NAME = "test_category"
             CATEGORY_DESCRIPTION="description"
             NUM_PREDICTIONS = 10
-            if (backend.workspace_exists(WORKSPACE_ID)):
+            if backend.workspace_exists(WORKSPACE_ID):
                 backend.delete_workspace(WORKSPACE_ID)
             backend.create_workspace(WORKSPACE_ID,DATASET_NAME)
             self.assertTrue(backend.workspace_exists(WORKSPACE_ID),msg="workspace not created")

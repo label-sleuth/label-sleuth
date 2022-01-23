@@ -14,14 +14,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(f
 
 
 class Ensemble(ModelAPI):
-    def __init__(self, model_types: Iterable[ModelTypes], multi_label=False, factory=None,
-                 aggregation=lambda x: np.mean(x, axis=0),
+    def __init__(self, model_types: Iterable[ModelTypes], factory=None, aggregation=lambda x: np.mean(x, axis=0),
                  model_dir=os.path.join(ROOT_DIR, "output", "models", "multi"), return_all_scores=True):
         """
         Create train and infer over multiple models
 
         :param model_types: an ordered iterable of model types, models and return values would keep this order
-        :param multi_label:
         :param factory:
         :param aggregation: aggregation function, scores and labels would represent this aggregation
         aggregation should get a list of model scores and return the aggregated score
@@ -40,7 +38,7 @@ class Ensemble(ModelAPI):
         self.aggregation = aggregation
         self.model_dir = model_dir
 
-        self.return_all_scores= return_all_scores
+        self.return_all_scores = return_all_scores
         self.models = [factory.get_model(model_type) for model_type in model_types]
 
     def train(self, train_data, dev_data, train_params):
@@ -84,8 +82,7 @@ class Ensemble(ModelAPI):
 
 
 if __name__ == '__main__':
-
-    tni = Ensemble([ModelTypes.NB_OVER_BOW, ModelTypes.SVM_OVER_GLOVE])
+    model = Ensemble([ModelTypes.NB_OVER_BOW, ModelTypes.SVM_OVER_GLOVE])
     train_data = [{"text": "I love dogs", "label": 1},
                   {"text": "I like to play with dogs", "label": 1},
                   {"text": "dogs are better than cats", "label": 1},
@@ -93,12 +90,12 @@ if __name__ == '__main__':
                   {"text": "play with cats", "label": 0},
                   {"text": "dont know", "label": 0},
                   {"text": "what else", "label": 0}]
-    model_id = tni.train(train_data, None, {})
+    model_id = model.train(train_data, None, {})
     infer_list = []
     # for x in range(3):
     #     infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})
     infer_list.append({"text": "hello with play"})
     infer_list.append({"text": "I cats"})
     infer_list.append({"text": "I love dogs"})
-    res = tni.infer(model_id, infer_list, {})
+    res = model.infer(model_id, infer_list, {})
     print(res)

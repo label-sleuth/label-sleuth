@@ -14,7 +14,6 @@ from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.tools import get_glove_representation, remove_stop_words_and_punctuation
-from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.utils import _convert_to_dicts_with_numeric_labels
 
 from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import \
@@ -26,7 +25,7 @@ from lrtc_lib.training_set_selector.training_set_selector_factory \
 MIN_OVERLAP_THRESHOLD = 0.4
 
 
-def get_disagreements_using_cross_validation(workspace_id,dataset_name, category_name,
+def get_disagreements_using_cross_validation(workspace_id, dataset_name, category_name,
                                              model_type=ModelTypes.SVM_ENSEMBLE,
                                              selector=TrainingSetSelectionStrategy.ALL_LABELED,
                                              language=Languages.ENGLISH):
@@ -113,7 +112,6 @@ def get_suspected_labeling_contradictions_by_distance(labeled_elements, category
         sorted(pair, key=lambda te: next(iter(te.category_to_label[category_name].labels)), reverse=True)
         for pair in unified_pairs_list]
     return unified_pairs_list
-
 
 
 def get_word_overlap(text_a, text_b):

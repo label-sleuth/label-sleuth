@@ -17,7 +17,7 @@ class HybridLearner(ActiveLearner):
         unlabeled = self.get_unlabeled_data(workspace_id, dataset_name, category_name, self.max_to_consider)
         if len(unlabeled) == 0:
             return unlabeled
-        scores = self.get_per_element_score(unlabeled,workspace_id, model_id, dataset_name, category_name)
+        scores = self.get_per_element_score(unlabeled, workspace_id, model_id, dataset_name, category_name)
         indices = np.argpartition(scores, -sample_size)[-sample_size:]
         res = np.array(unlabeled)[indices]
         return res.tolist()

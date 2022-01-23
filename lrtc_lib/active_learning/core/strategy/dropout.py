@@ -24,18 +24,18 @@ class DropoutLearner(ActiveLearner):
     def compute_from_vectors(self, orig_items_len, single_output):
         output_split = [single_output[i: i + orig_items_len] for i in range(0, len(single_output), orig_items_len)]
         mean_predictions = np.mean(np.array(output_split), axis=0)
-        unlabeled_predictions = mean_predictions * np.log(mean_predictions + 1e-10)+(1-mean_predictions) * np.log(1-mean_predictions + 1e-10)
+        unlabeled_predictions = mean_predictions * np.log(mean_predictions + 1e-10) + \
+                                (1-mean_predictions) * np.log(1-mean_predictions + 1e-10)
         return unlabeled_predictions
 
-    def get_per_element_score(self,items,workspace_id, model_id, dataset_name, category_name):
+    def get_per_element_score(self, items, workspace_id, model_id, dataset_name, category_name):
         iter_num = 10
         extended_items = items * iter_num
 
         single_output = orchestrator_api.infer(workspace_id, category_name, extended_items,
                                                infer_params={"infer_with_dropout_seed": 51}, use_cache=False)["scores"]
-        #        single_output = np.random.rand(len(extended_items), 1)
         orig_items_len = len(items)
-        unlabeled_predictions = self.compute_from_vectors(orig_items_len,single_output)
+        unlabeled_predictions = self.compute_from_vectors(orig_items_len, single_output)
         return 1-unlabeled_predictions
 
 

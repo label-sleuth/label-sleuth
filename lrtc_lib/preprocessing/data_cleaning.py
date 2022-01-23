@@ -1,5 +1,6 @@
 import re
 
+
 def cleanse(text):
 
     # We remove the paragraphs indication

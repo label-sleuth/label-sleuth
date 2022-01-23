@@ -8,7 +8,7 @@ import ast
 import pandas as pd
 import threading
 from collections import defaultdict
-from typing import Sequence, Iterable, Mapping
+from typing import Sequence, Iterable, List, Mapping
 from enum import Enum
 from pathlib import Path
 
@@ -172,7 +172,7 @@ def filter_by_query_and_label_status(df: pd.DataFrame, category_name: str, label
     return df
 
 
-def get_text_elements(dataset_name: str, uris: Iterable) -> Sequence[TextElement]:
+def get_text_elements(dataset_name: str, uris: Iterable) -> List[TextElement]:
     corpus_df = get_ds_in_memory(dataset_name)
     uris = list(uris)
     corpus_df = corpus_df.loc[corpus_df['uri'].isin(uris)]

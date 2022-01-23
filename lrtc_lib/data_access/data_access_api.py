@@ -155,7 +155,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def sample_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str, sample_size: int,
-                                       sample_start_idx:int = 0,
+                                       sample_start_idx: int = 0,
                                        query: str = None, remove_duplicates=False,
                                        random_state: int = 0) -> Mapping:
         """
@@ -232,12 +232,10 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         func_name = self.clear_saved_labels.__name__
         raise NotImplementedError('users must define ' + func_name + ' to use this base class')
 
-
     @abc.abstractmethod
     def get_text_elements_by_uris(self, dataset_name, uris) -> List[TextElement]:
         func_name = self.get_text_elements_by_uris.__name__
         raise NotImplementedError('users must define ' + func_name + ' to use this base class')
-
 
     @abc.abstractmethod
     def get_text_elements_with_labels_info(self, workspace_id: str, dataset_name: str, uris: Iterable[str]) -> \

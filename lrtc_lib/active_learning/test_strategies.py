@@ -4,10 +4,9 @@ import unittest
 from lrtc_lib.active_learning.active_learning_factory import ActiveLearningFactory
 from lrtc_lib.active_learning.strategies import ActiveLearningStrategies
 from lrtc_lib.data_access.core.utils import URI_SEP
-from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label
+from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label, LABEL_NEGATIVE
 import lrtc_lib.data_access.single_dataset_loader as ds_loader
 from lrtc_lib.orchestrator import orchestrator_api
-from lrtc_lib.orchestrator.orchestrator_api import LABEL_NEGATIVE
 from lrtc_lib.models.core.model_types import ModelTypes
 
 

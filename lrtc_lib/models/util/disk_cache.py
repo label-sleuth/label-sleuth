@@ -15,11 +15,10 @@ def get_disk_cache(path_to_model_cache) -> dict:
         if not os.path.isfile(path_to_model_cache):
             return {}
 
-
         with open(path_to_model_cache) as reader:
             model_cache = ujson.load(reader)
         model_cache = {ast.literal_eval(x): y for x, y in model_cache.items()}
-        path_to_cache_dict[path_to_model_cache]=model_cache
+        path_to_cache_dict[path_to_model_cache] = model_cache
     finally:
         disk_cache_sem.release()
     return model_cache

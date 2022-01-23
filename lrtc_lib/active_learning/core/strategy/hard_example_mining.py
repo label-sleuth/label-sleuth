@@ -21,11 +21,10 @@ class HardMiningLearner(ActiveLearner):
 
         entropy_scores = self.get_per_element_score(unlabeled, workspace_id, model_id, dataset_name, category_name)
         indices = list(reversed(np.argsort(entropy_scores)[-sample_size:]))
-        #indices = np.argpartition(confidences, sample_size)[:sample_size]
+        # indices = np.argpartition(confidences, sample_size)[:sample_size]
         items = np.array(unlabeled)[indices]
-        # comment out before commit
         logging.debug(f"top hard mining active learning recommendations {workspace_id}:{category_name}:")
-        for idx,item in enumerate(items):
+        for idx, item in enumerate(items):
             logging.debug(f"{idx}. {item.text}")
         return items.tolist()
 
@@ -33,5 +32,4 @@ class HardMiningLearner(ActiveLearner):
         scores = orchestrator_api.infer(workspace_id, category_name, items)["scores"]
 
         entropy_all = np.array([entropy(score) for score in scores]) # == 0.5 - np.abs(np.array([x[1] for x in scores]) - 0.5)
-        #larger_diff = [first-second for x in scores for second,first in [np.partition(x, -2)[-2:]] ]
         return entropy_all

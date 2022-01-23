@@ -31,7 +31,6 @@ TRAIN_COUNTS_STR_KEY = "train_counts"
 DEV_COUNTS_STR_KEY = "dev_counts"
 
 
-
 # members
 
 active_learning_strategy = PROJECT_PROPERTIES["active_learning_strategy"]
@@ -52,6 +51,7 @@ def _delete_orphan_labels():
         if dump_file not in dump_files_with_parents:
             logging.info(f"deleting orphan labels file {dump_file}")
             os.remove(dump_file)
+
 
 def copy_workspace(existing_workspace_id: str, new_workspace_id: str):
     """
@@ -128,7 +128,7 @@ def delete_workspace(workspace_id: str, delete_models: DeleteModels = DeleteMode
                     for idx, model_id in enumerate(workspace.category_to_models[category]):
                         if idx == 0 and delete_models == DeleteModels.ALL_BUT_FIRST_MODEL:
                             continue
-                        delete_model(workspace_id,category,model_id)
+                        delete_model(workspace_id, category, model_id)
             orchestrator_state_api.delete_workspace_state(workspace_id)
         except Exception as e:
             logging.error(f"error deleting workspace {workspace_id}")
@@ -146,15 +146,8 @@ def delete_workspace(workspace_id: str, delete_models: DeleteModels = DeleteMode
                 raise e
 
 
-
-
-def edit_category(workspace_id: str, prev_category_name: str, new_category_name: str, new_category_description: str):
-    raise Exception("Not implemented yet")
-
-
 def delete_category(workspace_id: str, category_name: str):
-    orchestrator_state_api.delete_category_from_workspace(workspace_id,category_name)
-
+    orchestrator_state_api.delete_category_from_workspace(workspace_id, category_name)
 
 
 def add_documents(dataset_name, docs):
@@ -162,7 +155,8 @@ def add_documents(dataset_name, docs):
 
 
 def query(workspace_id: str, dataset_name: str, category_name: str, query: str,
-          sample_size: int, sample_start_idx:int = 0, unlabeled_only: bool = False, remove_duplicates=False) -> Mapping[str, object]:
+          sample_size: int, sample_start_idx: int = 0, unlabeled_only: bool = False, remove_duplicates=False) \
+        -> Mapping[str, object]:
     """
     query a dataset using the given regex, returning up to *sample_size* elements that meet the query
 
@@ -182,13 +176,13 @@ def query(workspace_id: str, dataset_name: str, category_name: str, query: str,
     if unlabeled_only:
         return data_access.sample_unlabeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                           category_name=category_name, sample_size=sample_size,
-                                                          sample_start_idx = sample_start_idx,
+                                                          sample_start_idx=sample_start_idx,
                                                           query=query,
                                                           remove_duplicates=remove_duplicates)
     else:
         return data_access.sample_text_elements_with_labels_info(workspace_id=workspace_id, dataset_name=dataset_name,
                                                                  sample_size=sample_size,
-                                                                 sample_start_idx = sample_start_idx,
+                                                                 sample_start_idx=sample_start_idx,
                                                                  query=query,
                                                                  remove_duplicates=remove_duplicates)
 
@@ -480,6 +474,7 @@ def get_label_counts(workspace_id: str, dataset_name: str, category_name: str, r
     """
     return data_access.get_label_counts(workspace_id, dataset_name, category_name, remove_duplicates=remove_duplicates)
 
+
 def delete_model(workspace_id, category_name, model_id):
     model_info = _get_model(workspace_id, model_id)
     train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model_info.model_type)
@@ -489,14 +484,10 @@ def delete_model(workspace_id, category_name, model_id):
             f"trying to delete model id {model_id} which is already in {ModelStatus.DELETED} from"
             f" workspace {workspace_id} in category {category_name}")
 
-    logging.info(
-        f"marking model id {model_id} from workspace {workspace_id} in category {category_name} as deleted, and deleting the model")
-    orchestrator_state_api.update_model_state(workspace_id, category_name, model_id,ModelStatus.DELETED)
+    logging.info(f"marking model id {model_id} from workspace {workspace_id} in category {category_name} as deleted,"
+                 f" and deleting the model")
+    orchestrator_state_api.update_model_state(workspace_id, category_name, model_id, ModelStatus.DELETED)
     train_and_infer.delete_model(model_id)
-
-
-def add_train_param(workspace_id: str, train_param_key: str, train_param_value: str):
-    raise Exception("Not implemented yet")
 
 
 def workspace_exists(workspace_id: str) -> bool:
@@ -516,10 +507,11 @@ def _get_model(workspace_id, model_id) -> ModelInfo:
         return all_models[model_id]
     raise Exception(f"model id {model_id} does not exist in workspace {workspace_id}")
 
-def add_documents_from_file(dataset_name,temp_filename):
+
+def add_documents_from_file(dataset_name, temp_filename):
     from lrtc_lib.data_access.single_dataset_loader import load_dataset_using_processor
     from lrtc_lib.data_access.processors.live_process_csv_data import LiveCsvProcessor
-    return load_dataset_using_processor(dataset_name,False,LiveCsvProcessor(dataset_name,temp_filename))
+    return load_dataset_using_processor(dataset_name, False, LiveCsvProcessor(dataset_name, temp_filename))
 
 
 def get_contradictions_report_with_diffs(workspace_id, category_name) -> List[Tuple[TextElement]]:

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from typing import List, Tuple, Mapping
 
-LABEL_POSITIVE = True # TODO change to boolean....good luck
+LABEL_POSITIVE = True
 LABEL_NEGATIVE = False
 BINARY_LABELS = frozenset({LABEL_NEGATIVE, LABEL_POSITIVE})
 
@@ -46,8 +46,3 @@ class Label:
     def to_dict(self):
         dict_for_json = {'labels': list(self.labels), 'metadata': self.metadata}
         return dict_for_json
-
-
-if __name__ == '__main__':
-    l = Label(3,{})
-    print(l)

@@ -39,7 +39,6 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         passed e.g. [{'text': 'text1', 'label': 1, 'additional_field': 'value1'}, {'text': 'text2', 'label': 0,
         'additional_field': 'value2'}]
         :param dev_data: can be None if not used by the implemented model
-        :param test_data: can be None if not used by the implemented model
         :param train_params: dictionary for additional train parameters (can be None)
         :rtype: model_id unique id
         """
@@ -100,7 +99,7 @@ def infer_with_cache(infer_function):
     def wrapper(self: ModelAPI, model_id, items_to_infer, infer_params, use_cache=True):
         if not use_cache:
             return infer_function(self, model_id, items_to_infer, infer_params, use_cache)
-        if not hasattr(self,"lock"):
+        if not hasattr(self, "lock"):
             self.lock = threading.Lock()
         with self.lock:
             infer_params_key = None if infer_params is None else tuple(sorted(infer_params.items()))
@@ -148,7 +147,6 @@ def infer_with_cache(infer_function):
 
     setattr(wrapper, '__wrapper_func__', infer_with_cache.__name__)
     return wrapper
-
 
 
 def delete_model_cache(delete_model_function):

@@ -29,8 +29,7 @@ class ModelFactory(object):
             elif model_type == ModelTypes.SVM_OVER_GLOVE:
                 from lrtc_lib.models.svm import SVM
                 if model_type not in self.loaded_models:
-                    self.loaded_models[model_type] = SVM(RepresentationType.GLOVE,
-                                                                               async_call=ASYNC)
+                    self.loaded_models[model_type] = SVM(RepresentationType.GLOVE, async_call=ASYNC)
             elif model_type == ModelTypes.SVM_OVER_BOW:
                 from lrtc_lib.models.svm import SVM
                 if model_type not in self.loaded_models:
@@ -39,13 +38,11 @@ class ModelFactory(object):
             elif model_type == ModelTypes.NB_OVER_GLOVE:
                 from lrtc_lib.models.naive_bayes import NaiveBayes
                 if model_type not in self.loaded_models:
-                    self.loaded_models[model_type] = NaiveBayes(RepresentationType.GLOVE,
-                                                                              async_call=ASYNC)
+                    self.loaded_models[model_type] = NaiveBayes(RepresentationType.GLOVE, async_call=ASYNC)
             elif model_type == ModelTypes.NB_OVER_BOW:
                 from lrtc_lib.models.naive_bayes import NaiveBayes
                 if model_type not in self.loaded_models:
-                    self.loaded_models[model_type] = NaiveBayes(RepresentationType.BOW,
-                                                                                    async_call=ASYNC)
+                    self.loaded_models[model_type] = NaiveBayes(RepresentationType.BOW, async_call=ASYNC)
             else:
                 raise Exception(f"model type {model_type.name} is not supported by {self.__class__.__name__}")
         except Exception:

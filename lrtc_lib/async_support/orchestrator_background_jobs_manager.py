@@ -29,8 +29,7 @@ def run(update_recommendation_func, post_train_method, post_active_learning_func
             for workspace in all_workspaces:
                 logging.debug("workspace status:%s" % workspace)
                 for category_name in workspace.category_to_models:  # TODO shouldn't return empty
-                    for model in list(workspace.category_to_models[
-                        category_name].values()):  # TODO ensure only updating the recommendations for the *latest* model
+                    for model in list(workspace.category_to_models[category_name].values()):  # TODO ensure only updating the recommendations for the *latest* model
                         if model.model_status == ModelStatus.TRAINING:
                             train_and_infer_api = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model.model_type)
                             latest_model_status = train_and_infer_api.get_model_status(model.model_id)

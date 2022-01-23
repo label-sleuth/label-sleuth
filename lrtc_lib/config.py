@@ -40,15 +40,17 @@ class Configuration:
     precision_evaluation_size: int
     precision_evaluation_filter: str
 
+
 converters = {
     ModelPolicies: lambda x: getattr(ModelPolicies, x),
     TrainingSetSelectionStrategy: lambda x: getattr(TrainingSetSelectionStrategy, x),
     ActiveLearningStrategies: lambda x: getattr(ActiveLearningStrategies, x)
 }
 
+
 def load_config():
-    #If this code is executed without an exception then we have a valid Configuration object
-    with open(os.path.join(ROOT_DIR,'config.json'),) as f:
+    # If this code is executed without an exception then we have a valid Configuration object
+    with open(os.path.join(ROOT_DIR, 'config.json'),) as f:
         raw_cfg = json.load(f)
 
     config = dacite.from_dict(

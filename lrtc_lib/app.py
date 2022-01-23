@@ -1,13 +1,10 @@
 import logging
-
-from lrtc_lib.models.core.model_api import ModelStatus
-
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 import getpass
 import os
 
-from io import StringIO
+from io import BytesIO, StringIO
 import pandas as pd
 import tempfile
 import traceback
@@ -19,11 +16,10 @@ from flask_httpauth import HTTPTokenAuth
 
 from lrtc_lib.orchestrator import orchestrator_api
 
-
 from lrtc_lib import definitions
-from lrtc_lib.async_support.orchestrator_background_jobs_manager import \
-    start_orchestrator_background_job_manager
+from lrtc_lib.async_support.orchestrator_background_jobs_manager import start_orchestrator_background_job_manager
 import lrtc_lib.core.backend as orch
+from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.core.information_gain_utils import information_gain
 from lrtc_lib.config import CONFIGURATION
 from lrtc_lib.configurations.users import users, tokens
@@ -58,76 +54,33 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 ## move to common :
 
 def elements_back_to_front(workspace_id, elt_array, category):
-    res = []
-    elements_res = {}
-    e_res = {}
-
-    for e in elt_array:
-        e_res['id'] = e.uri
-        e_res['docid'] = _get_document_id(e.uri)
-        e_res['begin'] = e.span[0][0]
-        e_res['end'] = e.span[0][1]
-        e_res['text'] = str(e.metadata)[1:-1] if CONFIGURATION.show_translation else e.text
-        # e_res['latest_user_action'] = {'category_name':'', 'value':''}
-
-        e_res['user_labels'] = {}
-        for key, value in e.category_to_label.items():
-            if len(value.labels) > 1:
-                raise Exception("no multilabel support by the UI")
-            e_res['user_labels'][key] = str(next(iter(value.labels))).lower()  # current UI is using true and false as strings. change to boolean in the new UI
-
-        e_res['model_predictions'] = {}
-
-        elements_res[e_res['id']] = e_res
-        e_res = {}
+    element_uri_to_info = \
+        {text_element.uri:
+             {'id': text_element.uri,
+              'docid': _get_document_id(text_element.uri),
+              'begin': text_element.span[0][0],
+              'end': text_element.span[0][1],
+              'text': text_element.text,
+              'user_labels': {k: str(next(iter(v.labels))).lower()  # current UI is using true and false as strings. change to boolean in the new UI
+                              for k, v in text_element.category_to_label.items()},
+              'model_predictions': {}
+              }
+         for text_element in elt_array}
 
     if category:
-
-        rec = orch.get_recommended_action(workspace_id, category)[0].name
-
-        # print(rec)
-
-        if rec == 'LABEL_BY_MODEL':
+        rec = orch.get_recommended_action(workspace_id, category)[0]
+        if rec == orch.RecommendedAction.LABEL_BY_MODEL:
             if len(elt_array) == 0:
                 logging.info("no elements to infer")
             else:
-                predicted_label = orch.infer(workspace_id, category, elt_array)["labels"]
-
-                for text_element, prediction in zip(elt_array, predicted_label):
-                    elements_res[text_element.uri]['model_predictions'][category] = str(prediction).lower() # since the current expects string labels and not boolean
-
-        # if(rec == 'LABEL_BY_QUERY'):
-        #     print("LABEL_BY_QUERY")
+                predicted_labels = orch.infer(workspace_id, category, elt_array)["labels"]
+                for text_element, prediction in zip(elt_array, predicted_labels):
+                    element_uri_to_info[text_element.uri]['model_predictions'][category] \
+                        = str(prediction).lower()  # since the current UI expects string labels and not boolean
     else:
         logging.warning("skipping category!")
 
-    # return an array of elements
-    for key, value in elements_res.items():
-        res.append(value)
-
-    return res
-
-
-
-
-def updateElementByUser(workspace_id, eltid, category_name, value, update_counter=True):
-    if value != 'none':
-        if value in ['true', "True", "TRUE", True]:
-            value = True
-        elif value in ['false', "False", "FALSE", False]:
-            value = False
-        else:
-            raise Exception (f"cannot convert label to boolean. Input label = {value}")
-
-    uri_with_updated_label = [(eltid, {category_name: orch.Label(value, {})})]
-
-    # add unset here if repeating the selection
-    if value == 'none':
-        orch.unset_labels(workspace_id, category_name, [eltid])
-    else:
-        orch.set_labels(workspace_id, uri_with_updated_label, update_label_counter=update_counter)
-
-    return getElement(workspace_id, eltid)
+    return [element_info for element_info in element_uri_to_info.values()]
 
 
 def _get_dataset_name(workspace_id):
@@ -135,7 +88,7 @@ def _get_dataset_name(workspace_id):
     return workspace_info['dataset_name']
 
 
-def getElement(workspace_id, eltid):
+def get_element(workspace_id, eltid):
     """
     get element
     :param workspace_id:
@@ -160,7 +113,6 @@ def _build_cors_preflight_response():
     return response
 
 
-
 def authenticate_response(user):
     return make_response(jsonify(user), 200)
 
@@ -172,15 +124,19 @@ def verify_password(username, password):
     else:
         return False
 
+
 @auth.verify_token
 def verify_token(token):
     if not token:
         return False
     return token in tokens
 
+
 def _get_document_id(element_id):
     idx = element_id.rfind('-')
     return element_id[0:idx]
+
+
 @app.route('/users/authenticate', methods=['POST'])
 def login():
     post_data = request.get_json(force=True)
@@ -222,24 +178,26 @@ def add_documents(dataset_name):
     try:
         csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
         df = pd.read_csv(csv_data)
-        temp_dir = os.path.join(definitions.ROOT_DIR,"output","temp","csv_upload")
+        temp_dir = os.path.join(definitions.ROOT_DIR, "output", "temp", "csv_upload")
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
-        os.makedirs(temp_dir,exist_ok=True)
-        df.to_csv(os.path.join(temp_dir,temp_file_name))
-        loaded, workspaces_to_update = orch.add_documents_from_file(dataset_name,temp_file_name)
+        os.makedirs(temp_dir, exist_ok=True)
+        df.to_csv(os.path.join(temp_dir, temp_file_name))
+        loaded, workspaces_to_update = orch.add_documents_from_file(dataset_name, temp_file_name)
 
-        return jsonify({"dataset_name":dataset_name,
-                        "num_docs":len(loaded),
-                        "num_sentences":sum(len(doc.text_elements) for doc in loaded),
-                        "workspaces_to_update":workspaces_to_update})
+        return jsonify({"dataset_name": dataset_name,
+                        "num_docs": len(loaded),
+                        "num_sentences": sum(len(doc.text_elements) for doc in loaded),
+                        "workspaces_to_update": workspaces_to_update})
     except AlreadyExistException as e:
-        return jsonify({"dataset_name":dataset_name, "error": "documents already exists", "documents":e.documents, "error_code":409})
+        return jsonify({"dataset_name": dataset_name, "error": "documents already exist", "documents": e.documents,
+                        "error_code": 409})
     except Exception:
         logging.exception(f"failed to load or add documents to dataset {dataset_name}")
-        return jsonify({"dataset_name":dataset_name, "error": traceback.format_exc(),"error_code":400})
+        return jsonify({"dataset_name": dataset_name, "error": traceback.format_exc(), "error_code": 400})
     finally:
-        if temp_dir is not None and os.path.exists(os.path.join(temp_dir,temp_file_name)):
-            os.remove(os.path.join(temp_dir,temp_file_name))
+        if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
+            os.remove(os.path.join(temp_dir, temp_file_name))
+
 
 @app.route("/workspace", methods=['POST'])
 @auth.login_required
@@ -268,7 +226,6 @@ def create_workspace():
     return jsonify(res)
 
 
-# Get all
 @app.route("/workspaces", methods=['GET'])
 @auth.login_required
 def get_all_workspace_ids():
@@ -278,6 +235,7 @@ def get_all_workspace_ids():
     """
     res = {'workspaces': orch.list_workspaces()}
     return jsonify(res)
+
 
 @app.route("/workspace/<workspace_id>", methods=['DELETE'])
 @auth.login_required
@@ -290,7 +248,7 @@ def delete_workspace(workspace_id):
     orch.delete_workspace(workspace_id)
     return jsonify({'workspace_id': workspace_id})
 
-# Get Single
+
 @app.route("/workspace/<workspace_id>", methods=['GET'])
 @auth.login_required
 def get_workspace_info(workspace_id):
@@ -326,7 +284,7 @@ def get_all_document_uris(workspace_id):
 
     doc_uris = orch.get_all_document_uris(workspace_id)
     res = {"documents":
-               [{"document_id": uri} for uri in doc_uris]} # TODO change document_id to document_uri in the ui
+               [{"document_id": uri} for uri in doc_uris]}  # TODO change document_id to document_uri in the ui
     return jsonify(res)
 
 
@@ -394,7 +352,6 @@ def get_labeled_elements_enriched_tokens(workspace_id):
                           for element in elements_transformed]
         res['info_gain'] = information_gain(elements, boolean_labels)
     return jsonify(res)
-
 
 
 @app.route("/workspace/<workspace_id>/document/<document_id>/predictions", methods=['GET'])
@@ -504,7 +461,7 @@ def get_elements_to_label(workspace_id):
 @app.route("/workspace/<workspace_id>/element/<eltid>", methods=['GET'])
 @auth.login_required
 def get_element_by_id(workspace_id, eltid):
-    return getElement(workspace_id, eltid)
+    return get_element(workspace_id, eltid)
 
 
 @app.route('/workspace/<workspace_id>/element/<eltid>', methods=['PUT'])
@@ -525,10 +482,22 @@ def set_element_label(workspace_id, eltid):
     value = post_data["value"]
     update_counter = post_data.get('update_counter', True)
 
-    element = updateElementByUser(workspace_id, eltid, category_name, value, update_counter)
-    res = {'element': element, 'workspace_id': workspace_id, 'category_name': category_name}
-    return jsonify(res)
+    if value == 'none':
+        orch.unset_labels(workspace_id, category_name, [eltid])
 
+    else:
+        if value in ['true', "True", "TRUE", True]:
+            value = True
+        elif value in ['false', "False", "FALSE", False]:
+            value = False
+        else:
+            raise Exception(f"cannot convert label to boolean. Input label = {value}")
+
+        uri_with_updated_label = [(eltid, {category_name: orch.Label(value, {})})]
+        orch.set_labels(workspace_id, uri_with_updated_label, update_label_counter=update_counter)
+
+    res = {'element': get_element(workspace_id, eltid), 'workspace_id': workspace_id, 'category_name': category_name}
+    return jsonify(res)
 
 
 @app.route("/workspace/<workspace_id>/categories", methods=['GET'])
@@ -564,6 +533,7 @@ def add_category(workspace_id, category_name):
 
     res = {'category': post_data}
     return jsonify(res)
+
 
 @app.route("/workspace/<workspace_id>/category/<category_name>", methods=['PUT'])
 @auth.login_required
@@ -605,20 +575,16 @@ def get_labelling_status(workspace_id):
     """
 
     category_name = request.args.get('category_name')
-    # print(category_name)
     dataset_name = _get_dataset_name(workspace_id)
-    #rec = orch.train_if_recommended(workspace_id, category_name)
     future = executor.submit(orch.train_if_recommended, workspace_id, category_name)
 
-    # print(rec)
     labeling_counts = orch.get_label_counts(workspace_id, dataset_name, category_name)
     progress = orch.get_progress(workspace_id, dataset_name, category_name)
-
 
     return jsonify({
         "labeling_counts": labeling_counts,
         "progress": progress,
-        "notifications": [] # TODO remove from UI
+        "notifications": []  # TODO remove from UI
     })
 
 
@@ -632,18 +598,16 @@ def force_train_for_category(workspace_id):
     """
 
     category_name = request.args.get('category_name')
-    # print(category_name)
     dataset_name = _get_dataset_name(workspace_id)
-    #rec = orch.train_if_recommended(workspace_id, category_name)
     if category_name not in orch.get_all_categories(workspace_id):
         return jsonify({
             "error": "no such category '"+(category_name if category_name else "<category not provided in category_name param>")+"'"
         })
-    model_id = orch.train_if_recommended(workspace_id, category_name,force=True)
+    model_id = orch.train_if_recommended(workspace_id, category_name, force=True)
 
-    # print(rec)
     labeling_counts = orch.get_label_counts(workspace_id, dataset_name, category_name)
-    logging.info(f"force training  a new model in workspace {workspace_id} in category {category_name}, policy id {model_id}")
+    logging.info(f"force training a new model in workspace {workspace_id} for category {category_name}, "
+                 f"model id: {model_id}")
 
     return jsonify({
         "labeling_counts": labeling_counts,
@@ -658,10 +622,11 @@ def extract_model_information_list(workspace_id, models):
           'creation_epoch': model.creation_date.timestamp(),
           'model_type': model.model_type.name,
           # The current UI expects a dict of string to int, and train counts contains a mix of boolean and string keys.
-          'model_metadata': {**model.model_metadata,"train_counts":{str(k).lower():v for k,v in model.model_metadata["train_counts"].items()}},
+          'model_metadata': {**model.model_metadata, "train_counts":
+              {str(k).lower(): v for k, v in model.model_metadata["train_counts"].items()}},
           'active_learning_status':
               orchestrator_api.get_model_active_learning_status(workspace_id, model.model_id).name}
-        for model in models]
+         for model in models]
 
     res_sorted = [{**model_dict, 'iteration': i} for i, model_dict in enumerate(
         sorted(res_list, key=lambda item: item['creation_epoch']))]
@@ -678,11 +643,9 @@ def get_all_models_for_category(workspace_id):
     :param category_name:
     :return array of all models sorted from oldest to newest:
     """
-
     category_name = request.args.get('category_name')
 
     res = dict()
-
     if category_name == 'all':
         models = orch.get_all_models(workspace_id).values()
         res['models'] = extract_model_information_list(workspace_id, models)
@@ -711,9 +674,9 @@ def get_predictions_enriched_tokens(workspace_id):
         return jsonify(res)
 
     true_elements = orch.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
-                                                  required_label=LABEL_POSITIVE)
+                                                       required_label=LABEL_POSITIVE)
     false_elements = orch.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
-                                                   required_label=LABEL_NEGATIVE)
+                                                        required_label=LABEL_NEGATIVE)
 
     elements = true_elements + false_elements
     targets = [1] * len(true_elements) + [0] * len(false_elements)
@@ -738,7 +701,8 @@ def get_elements_for_precision_evaluation(workspace_id):
         before_size = len(all_elements)
         all_elements = [x for x in all_elements if CONFIGURATION.precision_evaluation_filter in x.uri]
         logging.info(
-            f"Precision evaluation uri filter {CONFIGURATION.precision_evaluation_filter} applied. num elements changed from {before_size} to {len(all_elements)}")
+            f"Precision evaluation uri filter {CONFIGURATION.precision_evaluation_filter} applied. "
+            f"num elements changed from {before_size} to {len(all_elements)}")
     sample_elements_predictions = orch.infer(workspace_id, category, all_elements)["labels"]
     prediction_sample = \
         [text_element for text_element, prediction in zip(all_elements, sample_elements_predictions) if
@@ -776,6 +740,7 @@ def run_precision_evaluation(workspace_id):
     res = {'score': score}
     return jsonify(res)
 
+
 @app.route("/workspace/<workspace_id>/suspicious_elements", methods=['GET'])
 @auth.login_required
 def get_suspicious_elements(workspace_id):
@@ -798,16 +763,15 @@ def get_contradicting_elements(workspace_id):
     try:
         contradiction_element_tuples = orch.get_contradictions_report_with_diffs(workspace_id,
                                                                                  category)
-        elements_transformed = [elements_back_to_front(workspace_id, [tuple[0], tuple[2]], category)
-                                for tuple in contradiction_element_tuples]
-        diffs = [[list(tuple[1]), list(tuple[3])] for tuple in contradiction_element_tuples]
+        elements_transformed = [elements_back_to_front(workspace_id, [tup[0], tup[2]], category)
+                                for tup in contradiction_element_tuples]
+        diffs = [[list(tup[1]), list(tup[3])] for tup in contradiction_element_tuples]
         res = {'pairs': elements_transformed, 'diffs': diffs}
         return jsonify(res)
     except Exception:
         logging.exception("Failed to generate contradiction report")
         res = {'pairs': []}
         return jsonify(res)
-
 
 
 ###########################
@@ -829,17 +793,15 @@ def export_predictions(workspace_id):
     elements = orch.get_all_text_elements(_get_dataset_name(workspace_id))
     if filter:
         elements = [x for x in elements if filter in x.uri]
-    infer_results = orch.infer(workspace_id, category_name, elements,
-                                           model_id=model_id)
-    return pd.DataFrame([{**o.__dict__, "score": scores[1], 'predicted_label': labels} for o, scores, labels in
-                       zip(elements, infer_results["scores"], infer_results["labels"])]).to_csv(index=False)
+    infer_results = orch.infer(workspace_id, category_name, elements, model_id=model_id)
+    return pd.DataFrame([{**o.__dict__, "score": scores[1], 'predicted_label': labels} for o, scores, labels
+                         in zip(elements, infer_results["scores"], infer_results["labels"])]).to_csv(index=False)
+
 
 @app.route('/workspace/<workspace_id>/import_labels', methods=['POST'])
 @cross_origin()
 @auth.login_required
 def import_labels(workspace_id):
-    from io import StringIO
-    import pandas as pd
     csv_data = StringIO(request.data.decode("utf-8"))
     df = pd.read_csv(csv_data, dtype={'labels': str})
     return jsonify(orch.import_category_labels(workspace_id, df))
@@ -849,7 +811,6 @@ def import_labels(workspace_id):
 @auth.login_required
 def export_model(workspace_id):
     import zipfile
-    from io import BytesIO
     category_name = request.args.get('category_name')
     model_id = request.args.get('model_id', None)
     if model_id is None:
@@ -865,7 +826,6 @@ def export_model(workspace_id):
                 zf.write(file_path, archive_file_path)
     memory_file.seek(0)
     return send_file(memory_file, attachment_filename=f'{model_id}.zip', as_attachment=True)
-
 
 
 if __name__ == '__main__':

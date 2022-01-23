@@ -58,7 +58,6 @@ class NaiveBayes(ModelAsync):
         with open(self.model_file_by_id(model_id), "wb") as fl:
             pickle.dump(model, fl)
 
-
     @infer_with_cache
     def infer(self, model_id, items_to_infer, infer_params=None, use_cache=True):
         with open(self.vectorizer_file_by_id(model_id), "rb") as fl:
@@ -96,16 +95,3 @@ class NaiveBayes(ModelAsync):
         if os.path.isdir(model_dir):
             shutil.rmtree(model_dir)
 
-
-if __name__ == '__main__':
-    nb = NaiveBayes(RepresentationType.BOW)
-    train_data = [{"text":"I love dogs","label":1},
-                  {"text":"I like to play with dogs","label":1},
-                  {"text":"dogs are better than cats","label":1},
-                  {"text":"cats cats cats","label":0},
-                  {"text":"play with cats","label":0},
-                  {"text":"dont know","label":0},
-                  {"text":"what else","label":0}]
-    model_id = nb.train(train_data,None,{})
-    res = nb.infer(model_id, [{"text":"I don't know dogs"}],{})
-    print(res)

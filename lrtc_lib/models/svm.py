@@ -142,29 +142,6 @@ def create_context_features_from_sparse_vectorizer(texts, vectorizer):
     return [np.hstack([m, c]) for m, c in zip(main_reps, context_reps)]
 
 
-# if __name__ == '__main__':
-#     import matplotlib.pyplot as plt
-#
-#     X = [[0, 0], [10, 10], [20, 30], [30, 30], [40, 30], [80, 60], [80, 50]]
-#     y = [0, 1, 2, 3, 4, 5, 5]
-#     y = [0, 0, 0, 1, 0, 1, 1]
-#     model = svm.SVC()
-#     model.fit(X, y)
-#
-#     x_pred = [[10, 10]]
-#
-#     distances = np.array(model.decision_function(x_pred))  # get distances from hyperplanes (per class)
-#     # Binary class may produce only 1 class instead of 2
-#     if len(distances.shape) == 1:
-#         distances = distances / 2 + 0.5
-#         distances = np.expand_dims(distances, 1)
-#         distances = np.concatenate([1 - distances, distances], axis=1)
-#     prob = np.exp(distances) / np.sum(np.exp(distances), axis=1,
-#                                       keepdims=True)  # softmax to convert distances to probabilities
-#     classes = model.predict(x_pred)
-#     print()
-
-
 if __name__ == '__main__':
 
     import uuid
@@ -182,7 +159,7 @@ if __name__ == '__main__':
     #               {"text": 'before text__CONTEXT__fascinating text__CONTEXT__after text', "label": 0},
     #               ]
 
-    model_id = svm.train(train_data, None, None, {})
+    model_id = svm.train(train_data, None, {})
     infer_list = []
     for x in range(3):
         # infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})

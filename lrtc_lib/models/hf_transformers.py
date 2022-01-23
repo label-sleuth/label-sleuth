@@ -17,7 +17,7 @@ from transformers import BertTokenizer, TFBertForSequenceClassification, InputFe
 from tensorflow.keras import backend as K
 
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.models.core.model_api import infer_with_cache, ModelStatus
+from lrtc_lib.models.core.model_api import infer_with_cache, ModelStatus, ModelAPI
 
 MODEL_DIR = os.path.join(ROOT_DIR, "output", "models", "transformers")
 HF_CACHE_DIR = os.path.join(ROOT_DIR, "output", "temp", "hf_cache")
@@ -126,8 +126,8 @@ class HFTransformers(ModelAPI):
                 dev_data = dev_data[:self.batch_size]
             texts = [element["text"] for element in train_data]
             labels = [element["label"] for element in train_data]
-            input = self.process_inputs(texts, labels)
-            input = input.shuffle(self.batch_size * 100).batch(self.batch_size)
+            inputs = self.process_inputs(texts, labels)
+            inputs = inputs.shuffle(self.batch_size * 100).batch(self.batch_size)
             dev_texts = [element["text"] for element in dev_data]
             dev_labels = [element["label"] for element in dev_data]
             dev_input = self.process_inputs(dev_texts, dev_labels)
@@ -264,7 +264,7 @@ def _get_grads_eager(model, x, y, params, sample_weight=None, learning_phase=0, 
         return x, y, sample_weight
 
     def _clip_scale_grads(strategy, tape, optimizer, loss, params):
-        from tensorflow.python.keras.mixed_precision.experimental import (loss_scale_optimizer as lso)
+        from tensorflow.python.keras.mixed_precision import loss_scale_optimizer as lso
         with tape:
             if isinstance(optimizer, lso.LossScaleOptimizer):
                 loss = optimizer.get_scaled_loss(loss)

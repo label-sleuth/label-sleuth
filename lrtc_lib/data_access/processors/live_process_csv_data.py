@@ -31,7 +31,7 @@ class LiveCsvProcessor(DataProcessorAPI):
 
     """
 
-    def __init__(self, dataset_name: str, temp_file_name:str, text_col: str = 'text',
+    def __init__(self, dataset_name: str, temp_file_name: str, text_col: str = 'text',
                  label_col: str = 'label', context_col: str = None, context_col_label: str = METADATA_CONTEXT_KEY,
                  doc_id_col: str = 'document_id',
                  encoding: str = 'utf-8'):
@@ -81,7 +81,7 @@ class LiveCsvProcessor(DataProcessorAPI):
         return self.uri_category_labels
 
     def _get_train_file_path(self) -> str:
-        return os.path.join(ROOT_DIR,"output","temp","csv_upload", self.temp_file_name)
+        return os.path.join(ROOT_DIR, "output", "temp", "csv_upload", self.temp_file_name)
 
     def _get_dev_file_path(self) -> str:
         raise Exception("no dev in upload")

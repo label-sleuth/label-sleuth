@@ -1,15 +1,6 @@
 import os
-
-#shutil.rmtree(os.path.join(ROOT_DIR, "sleuth/orchestrator/util/state_api/data/"))
 import logging
 
-from sleuth_internal_lib.training_set_selector.train_and_dev_set_selectors_internal import \
-    TrainingSetSelectionStrategyInternal
-from sleuth_internal_lib.training_set_selector.training_set_selector_factory_internal \
-    import TrainingSetSelectorFactoryInternal as training_set_selector_factory
-from sleuth_internal_lib.async_support.orchestrator_background_jobs_manager import \
-    start_orchestrator_background_job_manager
-from sleuth_internal_lib.definitions_internal import init_internal_definitions
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.experiment_runners.experiment_runners_core.assessment.evaluate_predictions import evaluate_predictions
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ActiveLearningRecommendationsStatus
@@ -26,7 +17,6 @@ import pandas as pd
 import time
 
 
-init_internal_definitions()
 start_orchestrator_background_job_manager(orchestrator_api._update_recommendation, post_train_method=lambda *args: None,
                                           on_ready=lambda *args: None)
 
@@ -98,7 +88,7 @@ if __name__ == '__main__':
     if orchestrator_api.workspace_exists(workspace_name):
         orchestrator_api.delete_workspace(workspace_id=workspace_name,ignore_errors=True)
     train(workspace_id=workspace_name, dataset_name=dataset + "_train", category_name=category,
-          model_type=ModelTypesInternal.WNLP_SVM_TF_IDF)
+          model_type=ModelTypes.WNLP_SVM_TF_IDF)
     wait_and_print_al_recommendations(workspace_name, category)
     evaluation_results = infer_and_assess(workspace_id=workspace_name, dataset_name=dataset + "_train",
                                           category_name=category)

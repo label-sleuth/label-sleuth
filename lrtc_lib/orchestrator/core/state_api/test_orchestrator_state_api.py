@@ -5,8 +5,7 @@ from lrtc_lib.orchestrator import orchestrator_api
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.orchestrator_api import BINARY_LABELS
 from lrtc_lib.orchestrator.test_orchestrator_api import generate_simple_doc
-from lrtc_lib.text_transformers.text_transformers import TextTransformersStrategy
-from lrtc_lib.train_and_infer_service.train_and_infer_api import ModelStatus
+from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 
 
@@ -23,7 +22,6 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         orchestrator_state_api.add_category_to_workspace(ws_id, cat_name, cat_desc, BINARY_LABELS)
         orchestrator_state_api.add_model(workspace_id=ws_id, category_name=cat_name, model_id=model_id,
                                          model_status=ModelStatus.READY, model_type=ModelTypes.RAND,
-                                         text_transformer_type=TextTransformersStrategy.KEEP_ORIGINAL_TEXT,
                                          model_metadata={})
         new_ws_id = "new_" + ws_id
         orchestrator_state_api.copy_workspace(ws_id, new_ws_id)
