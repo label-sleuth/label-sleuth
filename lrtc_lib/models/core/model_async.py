@@ -49,7 +49,7 @@ class ModelAsync(ModelAPI, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def train_with_async_support(self, model_id: str, train_data: Sequence[Mapping], dev_data: Sequence[Mapping],
-                                 test_data: Sequence[Mapping], train_params: dict):
+                                 train_params: dict):
         """
         An async implementation of train, that receives a model id from the *train* wrapper and trains a new policy
         for this id. After the training process is complete (this may include inference on *test_data*), this function

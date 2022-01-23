@@ -19,7 +19,7 @@ class ModelFactory(object):
             elif model_type == ModelTypes.HF_BERT:
                 if model_type not in self.loaded_models:
                     from lrtc_lib.models.hf_transformers import HFTransformers
-                    self.loaded_models[model_type] = HFTransformers(50)
+                    self.loaded_models[model_type] = HFTransformers(pretrained_model='bert-base-uncased')
             elif model_type == ModelTypes.SVM_ENSEMBLE:
                 from lrtc_lib.models.ensemble import Ensemble
                 if model_type not in self.loaded_models:
