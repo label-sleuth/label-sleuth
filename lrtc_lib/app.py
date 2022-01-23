@@ -32,8 +32,6 @@ executor = ThreadPoolExecutor(20)
 
 
 def init_properties():
-    definitions.PROJECT_PROPERTIES["model_policy"] = CONFIGURATION.model_policy.value
-    definitions.PROJECT_PROPERTIES["training_set_selection"] = CONFIGURATION.training_set_selection_strategy
     orch.set_active_learning_strategy(CONFIGURATION.active_learning_strategy)
 
     definitions.ASYNC = True  # Always async in the UI

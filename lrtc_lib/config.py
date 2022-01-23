@@ -8,7 +8,7 @@ import dacite
 
 from lrtc_lib.active_learning.strategies import ActiveLearningStrategies
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.models.core.model_policies import ModelPolicies
+from lrtc_lib.models.core.model_policies import ModelPolicies, ModelPolicy
 from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import TrainingSetSelectionStrategy
 
 
@@ -32,7 +32,7 @@ class Configuration:
     sync_mode_elements_to_label: int
     info_gain_stop_words: str
     show_translation: bool
-    model_policy: ModelPolicies
+    model_policy: ModelPolicy
     training_set_selection_strategy: TrainingSetSelectionStrategy
     active_learning_strategy: ActiveLearningStrategies
     local_finetune: bool
@@ -42,7 +42,7 @@ class Configuration:
 
 
 converters = {
-    ModelPolicies: lambda x: getattr(ModelPolicies, x),
+    ModelPolicy: lambda x: getattr(ModelPolicies, x),
     TrainingSetSelectionStrategy: lambda x: getattr(TrainingSetSelectionStrategy, x),
     ActiveLearningStrategies: lambda x: getattr(ActiveLearningStrategies, x)
 }

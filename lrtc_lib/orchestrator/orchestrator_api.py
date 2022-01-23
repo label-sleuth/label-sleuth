@@ -13,9 +13,10 @@ import lrtc_lib.data_access.data_access_factory as data_access_factory
 from lrtc_lib.analysis_utils.analyze_tokens import ngrams_by_info_gain
 from lrtc_lib.analysis_utils.labeling_reports import  \
     get_suspected_labeling_contradictions_by_distance_with_diffs, get_disagreements_using_cross_validation
+from lrtc_lib.config import CONFIGURATION
 from lrtc_lib.data_access.core.data_structs import Document, Label, TextElement, BINARY_LABELS, LABEL_POSITIVE
 from lrtc_lib.data_access.core.utils import get_workspace_labels_dump_filename
-from lrtc_lib.definitions import PROJECT_PROPERTIES
+from lrtc_lib.definitions import ACTIVE_LEARNING_FACTORY, MODEL_FACTORY
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
@@ -33,9 +34,8 @@ DEV_COUNTS_STR_KEY = "dev_counts"
 
 # members
 
-active_learning_strategy = PROJECT_PROPERTIES["active_learning_strategy"]
-active_learner = PROJECT_PROPERTIES["active_learning_factory"].get_active_learner(active_learning_strategy)
-
+active_learning_strategy = CONFIGURATION.active_learning_strategy
+active_learner = ACTIVE_LEARNING_FACTORY.get_active_learner(active_learning_strategy)
 data_access = data_access_factory.get_data_access()
 
 
@@ -77,7 +77,7 @@ def set_active_learning_strategy(new_active_learning_strategy=None):
     global active_learner, active_learning_strategy
     if new_active_learning_strategy is not None:
         active_learning_strategy = new_active_learning_strategy
-        active_learner = PROJECT_PROPERTIES["active_learning_factory"].get_active_learner(active_learning_strategy)
+        active_learner = ACTIVE_LEARNING_FACTORY.get_active_learner(active_learning_strategy)
 
 
 def create_workspace(workspace_id: str, dataset_name: str, dev_dataset_name: str = None, test_dataset_name: str = None):
@@ -328,13 +328,12 @@ def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_d
 
     params = {} if train_params is None else train_params
 
-    train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model_type)
+    model = MODEL_FACTORY.get_model(model_type)
     logging.info(f'start training using {len(train_data)} items')
-    model_id = train_and_infer.train(train_data=train_data, dev_data=dev_data,
-                                     train_params=params)
+    model_id = model.train(train_data=train_data, dev_data=dev_data, train_params=params)
     logging.info(f"new model id is {model_id}")
 
-    model_status = train_and_infer.get_model_status(model_id)
+    model_status = model.get_model_status(model_id)
     orchestrator_state_api.add_model(workspace_id=workspace_id, category_name=category_name, model_id=model_id,
                                      model_status=model_status, model_type=model_type,
                                      model_metadata={**model_metadata, **params})
@@ -348,8 +347,8 @@ def get_model_status(workspace_id: str, model_id: str) -> ModelStatus:
     :param model_id:
     :return:
     """
-    model = _get_model(workspace_id, model_id)
-    return model.model_status
+    model_info = get_model_info(workspace_id, model_id)
+    return model_info.model_status
 
 
 def get_model_train_counts(workspace_id: str, model_id: str) -> Mapping:
@@ -359,8 +358,8 @@ def get_model_train_counts(workspace_id: str, model_id: str) -> Mapping:
     :param model_id:
     :return:
     """
-    model = _get_model(workspace_id, model_id)
-    return model.model_metadata[TRAIN_COUNTS_STR_KEY]
+    model_info = get_model_info(workspace_id, model_id)
+    return model_info.model_metadata[TRAIN_COUNTS_STR_KEY]
 
 
 def get_all_models_for_category(workspace_id, category_name: str):
@@ -396,17 +395,17 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
     if len(models) == 0:
         raise Exception(f"There are no models in workspace {workspace_id} for category {category_name}")
     if model_id is None:  # use latest
-        model = orchestrator_state_api.get_latest_model_by_state(workspace_id=workspace_id,
+        model_info = orchestrator_state_api.get_latest_model_by_state(workspace_id=workspace_id,
                                                                  category_name=category_name,
                                                                  model_status=ModelStatus.READY)
     else:
-        model = _get_model(workspace_id, model_id)
-        if model.model_status is not ModelStatus.READY:
+        model_info = get_model_info(workspace_id, model_id)
+        if model_info.model_status is not ModelStatus.READY:
             raise Exception(f"model id {model_id} is not in READY status")
-    train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model.model_type)
+    model = MODEL_FACTORY.get_model(model_info.model_type)
     list_of_dicts = [{"text": element.text} for element in elements_to_infer]
-    infer_results = train_and_infer.infer(model_id=model.model_id, items_to_infer=list_of_dicts,
-                                          infer_params=infer_params, use_cache=use_cache)
+    infer_results = model.infer(model_id=model_info.model_id, items_to_infer=list_of_dicts, infer_params=infer_params,
+                                use_cache=use_cache)
 
     all_labels = get_workspace(workspace_id).category_to_labels[category_name]
     is_multi_label = isinstance(infer_results['labels'][0], list)
@@ -476,8 +475,8 @@ def get_label_counts(workspace_id: str, dataset_name: str, category_name: str, r
 
 
 def delete_model(workspace_id, category_name, model_id):
-    model_info = _get_model(workspace_id, model_id)
-    train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model_info.model_type)
+    model_info = get_model_info(workspace_id, model_id)
+    train_and_infer = MODEL_FACTORY.get_model(model_info.model_type)
 
     if model_info.model_status == ModelStatus.DELETED:
         raise Exception(
@@ -500,7 +499,7 @@ def get_workspace(workspace_id):
     return orchestrator_state_api.get_workspace(workspace_id)
 
 
-def _get_model(workspace_id, model_id) -> ModelInfo:
+def get_model_info(workspace_id, model_id) -> ModelInfo:
     workspace = get_workspace(workspace_id)
     all_models = {k: v for d in workspace.category_to_models.values() for k, v in d.items()}
     if all_models[model_id]:

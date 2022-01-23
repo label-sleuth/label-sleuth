@@ -9,17 +9,15 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, BINARY_LABELS
-from lrtc_lib.definitions import PROJECT_PROPERTIES
+from lrtc_lib.definitions import MODEL_FACTORY
 from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.tools import get_glove_representation, remove_stop_words_and_punctuation
 from lrtc_lib.orchestrator.utils import _convert_to_dicts_with_numeric_labels
-
 from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import \
     TrainingSetSelectionStrategy
-from lrtc_lib.training_set_selector.training_set_selector_factory \
-    import TrainingSetSelectorFactory as training_set_selector_factory
+from lrtc_lib.training_set_selector.training_set_selector_factory import get_training_set_selector
 
 
 MIN_OVERLAP_THRESHOLD = 0.4
@@ -30,11 +28,11 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
                                              selector=TrainingSetSelectionStrategy.ALL_LABELED,
                                              language=Languages.ENGLISH):
     start_time = time.time()
-    train_and_dev_sets_selector = training_set_selector_factory.get_training_set_selector(selector=selector)
+    train_and_dev_sets_selector = get_training_set_selector(selector=selector)
     all_train_text_elements, _ = train_and_dev_sets_selector.get_train_and_dev_sets(
         workspace_id=workspace_id, train_dataset_name=dataset_name,
         category_name=category_name, dev_dataset_name=None)
-    train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model_type)
+    model = MODEL_FACTORY.get_model(model_type)
 
     num_folds = 4
     all_category_labels = BINARY_LABELS
@@ -45,16 +43,16 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
     all_pos_scores = []
     for i in range(num_folds):
         fold_train_data = np.concatenate([part for j, part in enumerate(train_splits) if j != i])
-        mid = train_and_infer.train(fold_train_data, None, {'Language': language})
+        mid = model.train(fold_train_data, None, {'Language': language})
         logging.info(f'*** waiting for cross-validation model {mid} ***')
-        while train_and_infer.get_model_status(mid) == ModelStatus.TRAINING:  # TODO find proper fix
+        while model.get_model_status(mid) == ModelStatus.TRAINING:  # TODO find proper fix
             time.sleep(0.1)
         logging.info(f'*** done waiting for cross-validation model {mid} ***')
-        scores = train_and_infer.infer(mid, all_train_data, None)['scores']
+        scores = model.infer(mid, all_train_data, None)['scores']
         scores = [score[1] if element_dict in train_splits[i]
                   and 'weak' not in element.category_to_label[category_name].metadata
                   else np.nan for element_dict, element, score in zip(all_train_data, all_train_text_elements, scores)]
-        train_and_infer.delete_model(mid)
+        model.delete_model(mid)
         all_pos_scores.append(scores)
     pos_scores = np.nanmean(all_pos_scores, axis=0)
     disagreement_scores_and_elements = \

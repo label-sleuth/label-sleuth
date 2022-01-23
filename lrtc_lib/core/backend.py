@@ -10,20 +10,19 @@ from typing import Mapping, Sequence, Tuple
 
 from lrtc_lib import definitions
 from lrtc_lib.data_access.core.utils import get_document_uri
+from lrtc_lib.definitions import MODEL_FACTORY
 from lrtc_lib.models.core.model_api import ModelStatus
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s [%(threadName)s]')
 
 
-from lrtc_lib.definitions import PROJECT_PROPERTIES
 from lrtc_lib.orchestrator import orchestrator_api
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
 from lrtc_lib.orchestrator.orchestrator_api import data_access, DeleteModels
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ActiveLearningRecommendationsStatus
 from lrtc_lib.data_access.core.data_structs import TextElement, Label, Document
-from lrtc_lib.training_set_selector.training_set_selector_factory \
-    import TrainingSetSelectorFactory as training_set_selector_factory
+from lrtc_lib.training_set_selector.training_set_selector_factory import get_training_set_selector
 from lrtc_lib.config import *
 
 
@@ -182,9 +181,8 @@ def train_if_recommended(workspace_id: str, category_name: str, force=False):
             f" {changes_since_last_model} elements changed since last model (>={CONFIGURATION.changed_element_threshold})"
             f" training a new model")
         iteration_num = len(models_without_errors)
-        model_type = PROJECT_PROPERTIES['model_policy'].get_model(iteration_num)
-        train_and_dev_sets_selector = training_set_selector_factory.get_training_set_selector(
-            selector=PROJECT_PROPERTIES["training_set_selection"])
+        model_type = CONFIGURATION.model_policy.get_model(iteration_num)
+        train_and_dev_sets_selector = get_training_set_selector(selector=CONFIGURATION.training_set_selection_strategy)
         train_data, dev_data = train_and_dev_sets_selector.get_train_and_dev_sets(
             workspace_id=workspace_id, train_dataset_name=dataset_name,
             category_name=category_name, dev_dataset_name=workspace.dev_dataset_name)
@@ -451,8 +449,8 @@ def export_workspace_labels(workspace_id) -> pd.DataFrame:
 
 
 def export_model(workspace_id, model_id):
-    model_type = orchestrator_api._get_model(workspace_id, model_id).model_type
-    train_and_infer = PROJECT_PROPERTIES["train_and_infer_factory"].get_model(model_type)
+    model_type = orchestrator_api.get_model_info(workspace_id, model_id).model_type
+    train_and_infer = MODEL_FACTORY.get_model(model_type)
     exported_model_dir = train_and_infer.export_model(model_id)
     return exported_model_dir
 

@@ -5,22 +5,20 @@ import numpy as np
 
 import logging
 
-from lrtc_lib.definitions import ROOT_DIR
+from lrtc_lib.definitions import ROOT_DIR, MODEL_FACTORY
 from lrtc_lib.models.core.model_api import ModelAPI, infer_with_cache, ModelStatus, delete_model_cache
 from lrtc_lib.models.core.model_types import ModelTypes
-from lrtc_lib.models.core.models_factory import ModelFactory
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 
 class Ensemble(ModelAPI):
-    def __init__(self, model_types: Iterable[ModelTypes], factory=None, aggregation=lambda x: np.mean(x, axis=0),
+    def __init__(self, model_types: Iterable[ModelTypes], aggregation=lambda x: np.mean(x, axis=0),
                  model_dir=os.path.join(ROOT_DIR, "output", "models", "multi"), return_all_scores=True):
         """
         Create train and infer over multiple models
 
         :param model_types: an ordered iterable of model types, models and return values would keep this order
-        :param factory:
         :param aggregation: aggregation function, scores and labels would represent this aggregation
         aggregation should get a list of model scores and return the aggregated score
         model scores dimensions: [model,score_per_class]
@@ -31,15 +29,13 @@ class Ensemble(ModelAPI):
         """
         super().__init__()
 
-        if factory is None:
-            factory = ModelFactory()
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         self.aggregation = aggregation
         self.model_dir = model_dir
 
         self.return_all_scores = return_all_scores
-        self.models = [factory.get_model(model_type) for model_type in model_types]
+        self.models = [MODEL_FACTORY.get_model(model_type) for model_type in model_types]
 
     def train(self, train_data, dev_data, train_params):
         model_ids = [model.train(train_data, dev_data, train_params) for model in self.models]
