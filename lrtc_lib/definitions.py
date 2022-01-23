@@ -1,6 +1,6 @@
 import os
 
-from lrtc_lib.active_learning.active_learning_factory import ActiveLearningFactory
+from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
 from lrtc_lib.models.core.models_factory import ModelFactory
 
 ASYNC = False

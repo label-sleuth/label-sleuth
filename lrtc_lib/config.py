@@ -6,7 +6,7 @@ from typing import List
 
 import dacite
 
-from lrtc_lib.active_learning.strategies import ActiveLearningStrategies
+from lrtc_lib.active_learning.core.active_learning_strategies import ActiveLearningStrategies
 from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.models.core.model_policies import ModelPolicies, ModelPolicy
 from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import TrainingSetSelectionStrategy

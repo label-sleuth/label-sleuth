@@ -1,8 +1,8 @@
 import random
 import unittest
 
-from lrtc_lib.active_learning.active_learning_factory import ActiveLearningFactory
-from lrtc_lib.active_learning.strategies import ActiveLearningStrategies
+from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
+from lrtc_lib.active_learning.core.active_learning_strategies import ActiveLearningStrategies
 from lrtc_lib.data_access.core.utils import URI_SEP
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label, LABEL_NEGATIVE
 import lrtc_lib.data_access.single_dataset_loader as ds_loader

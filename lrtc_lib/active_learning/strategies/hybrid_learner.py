@@ -1,6 +1,6 @@
 import numpy as np
 
-from lrtc_lib.active_learning.active_learning_api import ActiveLearner
+from lrtc_lib.active_learning.core.active_learning_api import ActiveLearner
 
 
 class HybridLearner(ActiveLearner):
@@ -8,10 +8,6 @@ class HybridLearner(ActiveLearner):
         self.max_to_consider = max_to_consider
         self.active_learner1 = active_learner1
         self.active_learner2 = active_learner2
-        self.strategy = hybrid_name
-
-    def get_strategy(self):
-        return self.strategy
 
     def get_recommended_items_for_labeling(self, workspace_id, model_id, dataset_name, category_name, sample_size=1):
         unlabeled = self.get_unlabeled_data(workspace_id, dataset_name, category_name, self.max_to_consider)

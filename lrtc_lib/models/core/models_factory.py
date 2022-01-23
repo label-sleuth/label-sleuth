@@ -24,8 +24,8 @@ class ModelFactory(object):
                 from lrtc_lib.models.ensemble import Ensemble
                 if model_type not in self.loaded_models:
                     self.loaded_models[model_type] = \
-                        Ensemble(factory=self, model_types=[ModelTypes.SVM_OVER_BOW,
-                                                            ModelTypes.SVM_OVER_GLOVE])
+                        Ensemble(model_types=[ModelTypes.SVM_OVER_BOW,
+                                              ModelTypes.SVM_OVER_GLOVE])
             elif model_type == ModelTypes.SVM_OVER_GLOVE:
                 from lrtc_lib.models.svm import SVM
                 if model_type not in self.loaded_models:
