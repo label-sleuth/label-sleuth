@@ -59,7 +59,7 @@ def elements_back_to_front(workspace_id, elt_array, category):
               'begin': text_element.span[0][0],
               'end': text_element.span[0][1],
               'text': text_element.text,
-              'user_labels': {k: str(next(iter(v.labels))).lower()  # current UI is using true and false as strings. change to boolean in the new UI
+              'user_labels': {k: str(v.label).lower()  # current UI is using true and false as strings. change to boolean in the new UI
                               for k, v in text_element.category_to_label.items()},
               'model_predictions': {}
               }
@@ -73,8 +73,7 @@ def elements_back_to_front(workspace_id, elt_array, category):
             else:
                 predicted_labels = orch.infer(workspace_id, category, elt_array)["labels"]
                 for text_element, prediction in zip(elt_array, predicted_labels):
-                    element_uri_to_info[text_element.uri]['model_predictions'][category] \
-                        = str(prediction).lower()  # since the current UI expects string labels and not boolean
+                    element_uri_to_info[text_element.uri]['model_predictions'][category] = str(prediction).lower()  # since the current UI expects string labels and not boolean
     else:
         logging.warning("skipping category!")
 
@@ -314,11 +313,11 @@ def get_all_positive_labeled_elements_for_category(workspace_id):
     category = request.args.get('category_name')
     elements = \
         orch.get_all_labeled_text_elements(workspace_id, _get_dataset_name(workspace_id), category)["results"]
-    elements_transformed = elements_back_to_front(workspace_id, elements, category)
+    positive_elements = [element for element in elements if element.category_to_label[category].label == LABEL_POSITIVE]
 
-    res = {'positive_elements':
-               [element for element in elements_transformed
-                if category in element['user_labels'] and element['user_labels'][category] == LABEL_POSITIVE]}
+    elements_transformed = elements_back_to_front(workspace_id, positive_elements, category)
+
+    res = {'positive_elements': elements_transformed}
     return jsonify(res)
 
 
@@ -364,31 +363,18 @@ def get_document_predictions(workspace_id, document_id):
     """
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
-
     category_name = request.args.get('category_name')
 
     dataset_name = _get_dataset_name(workspace_id)
-
     document = orch.get_documents(workspace_id, dataset_name, [document_id])[0]
 
     elements = document.text_elements
+    predictions = orch.infer(workspace_id, category_name, elements)['labels']
+    positive_predicted_elements = [element for element, prediction in zip(elements, predictions) if prediction == LABEL_POSITIVE]
 
-    elements_transformed = elements_back_to_front(workspace_id, elements, category_name)
-
-    model_predictions_first = \
-        elements_transformed[0]['model_predictions']  # check if this category has been predicted yet
-
-    if category_name in model_predictions_first.keys():
-        elements_transformed_predictions = \
-            list(filter(
-                lambda element: element['model_predictions'][category_name] == LABEL_POSITIVE,
-                elements_transformed))
-        elements_transformed_predictions = elements_transformed_predictions[start_idx: start_idx + size]
-
-    else:
-        elements_transformed_predictions = []
-
-    res = {'elements': elements_transformed_predictions}
+    elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_name)
+    elements_transformed = elements_transformed[start_idx: start_idx + size]
+    res = {'elements': elements_transformed}
     return jsonify(res)
 
 

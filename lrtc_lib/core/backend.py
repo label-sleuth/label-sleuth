@@ -63,7 +63,7 @@ def estimate_precision(workspace_id, category, ids, changed_elements_count, mode
     # save as csv?
     dataset_name = orchestrator_state_api.get_workspace(workspace_id).dataset_name
     exam_text_elements = get_text_elements(workspace_id, dataset_name, ids)
-    positive_elements = [te for te in exam_text_elements if next(iter(te.category_to_label[category].labels)) == LABEL_POSITIVE]
+    positive_elements = [te for te in exam_text_elements if te.category_to_label[category].label == LABEL_POSITIVE]
 
     estimated_precision = len(positive_elements)/len(exam_text_elements)
     orchestrator_state_api.add_model_metadata(workspace_id, category, model_id,
@@ -155,45 +155,48 @@ def unset_labels(workspace_id: str, category_name, uris: Sequence[str]):
 
 
 def train_if_recommended(workspace_id: str, category_name: str, force=False):
-    workspace = orchestrator_state_api.get_workspace(workspace_id)
-    dataset_name = workspace.dataset_name
-    models = workspace.category_to_models.get(category_name, OrderedDict())
-    models_without_errors = OrderedDict()
-    for mid in models:
-        if models[mid].model_status != ModelStatus.ERROR:
-            models_without_errors[mid] = models[mid]
+    try:
+        workspace = orchestrator_state_api.get_workspace(workspace_id)
+        dataset_name = workspace.dataset_name
+        models = workspace.category_to_models.get(category_name, OrderedDict())
+        models_without_errors = OrderedDict()
+        for mid in models:
+            if models[mid].model_status != ModelStatus.ERROR:
+                models_without_errors[mid] = models[mid]
 
-    label_counts = data_access.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                category_name=category_name, remove_duplicates=True)
-    changes_since_last_model = orchestrator_state_api.get_number_of_changed_since_last_model(workspace_id, category_name)
+        label_counts = data_access.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
+                                                    category_name=category_name, remove_duplicates=True)
+        changes_since_last_model = orchestrator_state_api.get_number_of_changed_since_last_model(workspace_id, category_name)
 
-    if force or (LABEL_POSITIVE in label_counts
-                 and label_counts[LABEL_POSITIVE] >= CONFIGURATION.first_model_positive_threshold
-                 and changes_since_last_model >= CONFIGURATION.changed_element_threshold):
-        if len(models_without_errors) > 0 and \
-                orchestrator_state_api.get_active_learning_status(
-                    workspace_id, next(reversed(models_without_errors))) != ActiveLearningRecommendationsStatus.READY:
-            logging.info("new elements criterion meet but previous AL still not ready, not initiating a new training")
+        if force or (LABEL_POSITIVE in label_counts
+                     and label_counts[LABEL_POSITIVE] >= CONFIGURATION.first_model_positive_threshold
+                     and changes_since_last_model >= CONFIGURATION.changed_element_threshold):
+            if len(models_without_errors) > 0 and \
+                    orchestrator_state_api.get_active_learning_status(
+                        workspace_id, next(reversed(models_without_errors))) != ActiveLearningRecommendationsStatus.READY:
+                logging.info("new elements criterion meet but previous AL still not ready, not initiating a new training")
+                return None
+            orchestrator_state_api.set_number_of_changes_since_last_model(workspace_id, category_name, 0)
+            logging.info(
+                f"{label_counts[LABEL_POSITIVE]} positive elements (>={CONFIGURATION.first_model_positive_threshold})"
+                f" {changes_since_last_model} elements changed since last model (>={CONFIGURATION.changed_element_threshold})"
+                f" training a new model")
+            iteration_num = len(models_without_errors)
+            model_type = CONFIGURATION.model_policy.get_model(iteration_num)
+            train_and_dev_sets_selector = get_training_set_selector(selector=CONFIGURATION.training_set_selection_strategy)
+            train_data, dev_data = train_and_dev_sets_selector.get_train_and_dev_sets(
+                workspace_id=workspace_id, train_dataset_name=dataset_name,
+                category_name=category_name, dev_dataset_name=workspace.dev_dataset_name)
+            model_id = orchestrator_api.train(workspace_id=workspace_id, category_name=category_name,
+                                              model_type=model_type, train_data=train_data, dev_data=dev_data)
+            return model_id
+        else:
+            logging.info(f"{label_counts[LABEL_POSITIVE]} positive elements (should be >={CONFIGURATION.first_model_positive_threshold}) AND"
+                         f" {changes_since_last_model} elements changed since last model (should be >={CONFIGURATION.changed_element_threshold})"
+                         f" not training a new model")
             return None
-        orchestrator_state_api.set_number_of_changes_since_last_model(workspace_id, category_name, 0)
-        logging.info(
-            f"{label_counts[LABEL_POSITIVE]} positive elements (>={CONFIGURATION.first_model_positive_threshold})"
-            f" {changes_since_last_model} elements changed since last model (>={CONFIGURATION.changed_element_threshold})"
-            f" training a new model")
-        iteration_num = len(models_without_errors)
-        model_type = CONFIGURATION.model_policy.get_model(iteration_num)
-        train_and_dev_sets_selector = get_training_set_selector(selector=CONFIGURATION.training_set_selection_strategy)
-        train_data, dev_data = train_and_dev_sets_selector.get_train_and_dev_sets(
-            workspace_id=workspace_id, train_dataset_name=dataset_name,
-            category_name=category_name, dev_dataset_name=workspace.dev_dataset_name)
-        model_id = orchestrator_api.train(workspace_id=workspace_id, category_name=category_name,
-                                          model_type=model_type, train_data=train_data, dev_data=dev_data)
-        return model_id
-    else:
-        logging.info(f"{label_counts[LABEL_POSITIVE]} positive elements (should be >={CONFIGURATION.first_model_positive_threshold}) AND"
-                     f" {changes_since_last_model} elements changed since last model (should be >={CONFIGURATION.changed_element_threshold})"
-                     f" not training a new model")
-        return None
+    except Exception:
+        logging.exception("train_if_recommended failed in a background thread. Model will not be trained")
 
 
 def get_model_status(workspace_id: str, model_id: str) -> ModelStatus:
@@ -342,8 +345,9 @@ def _post_active_learning_func(workspace_id, category_name, model):
 
 def import_category_labels(workspace_id, labels_df_to_import: pd.DataFrame):
     punctuation = '!"#$%&()*+,-./:;<=>?@[\\]^`{|}~ '
+    positive_indicators = {LABEL_POSITIVE,str(LABEL_POSITIVE),str(LABEL_POSITIVE).upper(),str(LABEL_POSITIVE).lower(),1,"1"}
     binary_labels = len(set(labels_df_to_import['labels'].unique()).intersection(
-        {LABEL_POSITIVE, LABEL_POSITIVE.upper(), LABEL_POSITIVE.capitalize()})) > 0
+        positive_indicators)) > 0
     if 'category_name' not in labels_df_to_import.columns and not binary_labels:
         labels_df_to_import['category_name'] = labels_df_to_import['labels']
         labels_df_to_import['labels'] = LABEL_POSITIVE
@@ -369,7 +373,7 @@ def import_category_labels(workspace_id, labels_df_to_import: pd.DataFrame):
     categories_created = []
     lines_skipped = []
 
-    labels_df_to_import['labels'] = labels_df_to_import['labels'].apply(lambda x: True if x.lower() in [True, '1']
+    labels_df_to_import['labels'] = labels_df_to_import['labels'].apply(lambda x: True if x in positive_indicators
                                                                         else False)
     for category_name, category_df in labels_df_to_import.groupby('category_name'):
         if category_name not in categories:
@@ -393,14 +397,14 @@ def import_category_labels(workspace_id, labels_df_to_import: pd.DataFrame):
                                                                  sample_size=10**6, remove_duplicates=False)['results']
                     elements_with_label = [e for e in elements_from_query
                                            if get_document_uri(e.uri) == f'{dataset_name}-{doc}']
-                    uris_with_label.extend((e.uri, {category_name: Label(labels=frozenset({label}), metadata={})})
+                    uris_with_label.extend((e.uri, {category_name: Label(label=label, metadata={})})
                                            for e in elements_with_label)
         else:
             for label, df_for_label in category_df.groupby('labels'):
                 regex = '|'.join(f'^{re.escape(t)}$' for t in df_for_label['text'])
                 elements_with_label = orchestrator_api.query(workspace_id, dataset_name, category_name, query=regex,
                                                              sample_size=10**6, remove_duplicates=True)['results']
-                uris_with_label.extend((e.uri, {category_name: Label(labels=frozenset({label}), metadata={})})
+                uris_with_label.extend((e.uri, {category_name: Label(label=label, metadata={})})
                                        for e in elements_with_label)
         logging.info(f'{category_name}: adding labels for {len(uris_with_label)} uris')
         set_labels(workspace_id, uris_with_label, propagate_to_duplicates=False)
@@ -443,7 +447,7 @@ def export_workspace_labels(workspace_id) -> pd.DataFrame:
             'text': le.text,
             'uri': le.uri,
             'element_metadata': le.metadata,
-            'labels': ','.join(label for label in le.category_to_label[category].labels)}
+            'labels': le.category_to_label[category].label}
             for le in labeled_representatives]
     return pd.DataFrame(list_of_dicts)
 

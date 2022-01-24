@@ -66,7 +66,7 @@ def infer_and_assess(workspace_id, dataset_name, category_name):
     gold_labels = oracle_data_access_api.get_gold_labels(dataset_name=dataset_name,
                                                          text_element_uris=all_text_elements_uris)
 
-    gold_category_labels = [sample_labels[category_name].labels for _, sample_labels in gold_labels]
+    gold_category_labels = [sample_labels[category_name].label for _, sample_labels in gold_labels]
     predicted_labels = orchestrator_api.infer(workspace_id, category_name, all_texts)
 
     evaluation = evaluate_predictions(gold_category_labels, predicted_labels,LABEL_POSITIVE)

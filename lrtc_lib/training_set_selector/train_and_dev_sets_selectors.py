@@ -35,8 +35,7 @@ class TrainAndDevSetsSelectorAllLabeled(TrainAndDevSetsSelectorAPI):
         labeled_sample = data_access.sample_labeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                                   category_name=category_name, sample_size=MAX_VALUE,
                                                                   remove_duplicates=remove_duplicates)["results"]
-        labels = [element.category_to_label[category_name].labels for element in labeled_sample]
-        labels = [item for subset in labels for item in subset]  # flatten list of sets
+        labels = [element.category_to_label[category_name].label for element in labeled_sample]
         counts = Counter(labels)
 
         return labeled_sample, counts
@@ -93,10 +92,10 @@ class TrainAndDevSetsSelectorAllLabeledPlusUnlabeledAsWeakNegative(TrainAndDevSe
         elif current_neg_count > max_neg_count:
             logging.info(f"Too many strong negative elements, sampling "
                          f"to get to a ratio of less than {self.max_negative_ratio} negatives per positive")
-            positives = [element for element in train_data if next(iter(element.category_to_label[category_name].labels)) == self.pos_label]
+            positives = [element for element in train_data if element.category_to_label[category_name].label == self.pos_label]
             shuffled_elements = get_elements_by_selection_order(workspace_id, train_dataset_name)
             negatives_to_keep = [element for element in shuffled_elements if category_name in element.category_to_label
-                                 and next(iter(element.category_to_label[category_name].labels)) == self.neg_label][:max_neg_count]
+                                 and element.category_to_label[category_name].label == self.neg_label][:max_neg_count]
             train_data = positives + negatives_to_keep
             train_counts[self.neg_label] = len(negatives_to_keep)
 

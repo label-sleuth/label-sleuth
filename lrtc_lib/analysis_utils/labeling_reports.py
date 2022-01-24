@@ -86,10 +86,10 @@ def get_suspected_labeling_contradictions_by_distance(labeled_elements, category
     pairs = []
     for source_label in [LABEL_POSITIVE, LABEL_NEGATIVE]:
         source_idxs = [i for i, (element, rep) in enumerate(zip(labeled_elements, sent_reps))
-                       if next(iter(element.category_to_label[category_name].labels)) == source_label
+                       if element.category_to_label[category_name].label == source_label
                        and rep[0] != 0]
         target_idxs = [i for i, (element, rep) in enumerate(zip(labeled_elements, sent_reps))
-                       if next(iter(element.category_to_label[category_name].labels)) != source_label
+                       if element.category_to_label[category_name].label != source_label
                        and rep[0] != 0]
         source_embs = [sent_reps[i] for i in source_idxs]
         target_embs = [sent_reps[i] for i in target_idxs]
@@ -107,7 +107,7 @@ def get_suspected_labeling_contradictions_by_distance(labeled_elements, category
     unified_pairs_list = filter_nearest_neighbor_pairs(unified_pairs_list, language=language, tuple_index_to_filter=0)
     # align pairs by label
     unified_pairs_list = [
-        sorted(pair, key=lambda te: next(iter(te.category_to_label[category_name].labels)), reverse=True)
+        sorted(pair, key=lambda te: te.category_to_label[category_name].label, reverse=True)
         for pair in unified_pairs_list]
     return unified_pairs_list
 

@@ -88,7 +88,7 @@ def train_perceptron_ensemble_model(pos, neg, n_units=1):
 def get_pos_idx(category_name, labeled):
     from lrtc_lib.orchestrator.orchestrator_api import LABEL_POSITIVE
     pos_idx = [i for i, sentence in enumerate(labeled)
-               if LABEL_POSITIVE in sentence.category_to_label[category_name].labels]
+               if LABEL_POSITIVE == sentence.category_to_label[category_name].label]
     return pos_idx
 
 

@@ -307,9 +307,9 @@ def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_d
     """
     def get_counts_per_label(text_elements):
         label_objects = [element.category_to_label[category_name] for element in text_elements]
-        # flatten list of sets and incorporate metadata into label names
-        label_names = [label if len(label_obj.metadata) == 0 else f'{next(iter(label_obj.metadata))}_{label}'
-                       for label_obj in label_objects for label in label_obj.labels]
+
+        label_names = [label_obj.label if len(label_obj.metadata) == 0 else f'{label_obj.metadata}_{label_obj.label}'
+                       for label_obj in label_objects]
         return dict(Counter(label_names))
 
     model_metadata = dict()

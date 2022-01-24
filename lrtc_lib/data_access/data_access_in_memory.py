@@ -319,9 +319,8 @@ class DataAccessInMemory(DataAccessApi):
                             if t.text not in unique_texts and not unique_texts.add(t.text)}
             labels_by_uri = {key: value for key, value in labels_by_uri.items() if key in uris_to_keep}
         category_label_list = \
-            [labels_by_uri[uri][category_name].labels for uri in labels_by_uri
+            [labels_by_uri[uri][category_name].label for uri in labels_by_uri
              if category_name in labels_by_uri[uri]]
-        category_label_list = [item for sublist in category_label_list for item in sublist]  # flatten list of sets to a list
         category_label_counts = Counter(category_label_list)
         return category_label_counts
 

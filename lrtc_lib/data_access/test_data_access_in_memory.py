@@ -43,8 +43,8 @@ def generate_random_texts_and_labels(doc: Document, num_sentences_to_label: int,
     text_elements_to_label = random.sample(doc.text_elements, min(num_sentences_to_label, len(doc.text_elements)))
     for elem in text_elements_to_label:
         categories_to_label = random.sample(categories, random.randint(0, len(categories)))
-        labels = {cat: Label(labels=LABEL_POSITIVE, metadata={}) if cat in categories_to_label else Label(
-            labels=LABEL_NEGATIVE, metadata={}) for cat in categories}
+        labels = {cat: Label(label=LABEL_POSITIVE, metadata={}) if cat in categories_to_label else Label(
+            label=LABEL_NEGATIVE, metadata={}) for cat in categories}
         sentences_and_labels.append((elem.uri, labels))
     return sentences_and_labels
 
@@ -52,7 +52,7 @@ def generate_random_texts_and_labels(doc: Document, num_sentences_to_label: int,
 def add_labels_to_doc(doc: Document, category: str):
     sentences_and_labels = []
     for elem in doc.text_elements:
-        labels = {category: Label(labels=LABEL_POSITIVE, metadata={})}
+        labels = {category: Label(label=LABEL_POSITIVE, metadata={})}
         sentences_and_labels.append((elem.uri, labels))
     return sentences_and_labels
 
@@ -233,9 +233,9 @@ class TestDataAccessInMemory(unittest.TestCase):
         # add labels info for a single doc
         texts_and_labels_list = [
             # 1st sent does not match query
-            (doc.text_elements[0].uri, {category: Label(labels=LABEL_POSITIVE, metadata={})}),
+            (doc.text_elements[0].uri, {category: Label(label=LABEL_POSITIVE, metadata={})}),
             # 2nd sent does match query
-            (doc.text_elements[1].uri, {category: Label(labels=LABEL_POSITIVE, metadata={})})]
+            (doc.text_elements[1].uri, {category: Label(label=LABEL_POSITIVE, metadata={})})]
         data_access.set_labels(workspace_id, texts_and_labels_list)
 
         # query + unlabeled elements
@@ -332,8 +332,8 @@ class TestDataAccessInMemory(unittest.TestCase):
             texts_and_labels_list = generate_random_texts_and_labels(doc, 5, categories)
             data_access.set_labels(workspace_id, texts_and_labels_list)
             sentences_and_labels_all.extend(texts_and_labels_list)
-        true_count = len([1 for x in sentences_and_labels_all if list(x[1][category].labels)[0] == LABEL_POSITIVE])
-        false_count = len([1 for x in sentences_and_labels_all if list(x[1][category].labels)[0] == LABEL_NEGATIVE])
+        true_count = len([1 for x in sentences_and_labels_all if list(x[1][category].label)[0] == LABEL_POSITIVE])
+        false_count = len([1 for x in sentences_and_labels_all if list(x[1][category].label)[0] == LABEL_NEGATIVE])
         results[idx] =  {LABEL_POSITIVE:true_count,LABEL_NEGATIVE:false_count}
 
     def test_get_label_counts(self):
@@ -346,15 +346,15 @@ class TestDataAccessInMemory(unittest.TestCase):
         texts_and_labels_list = generate_random_texts_and_labels(selected_doc, 5, ['Autobots'])
         if texts_and_labels_list:
             if category in texts_and_labels_list[0][1]:
-                texts_and_labels_list[0][1][category].labels = frozenset(LABEL_NEGATIVE)
+                texts_and_labels_list[0][1][category].label = LABEL_NEGATIVE
             else:
-                texts_and_labels_list[0][1][category] = Label(labels=LABEL_NEGATIVE, metadata={})
+                texts_and_labels_list[0][1][category] = Label(label=LABEL_NEGATIVE, metadata={})
         data_access.set_labels(workspace_id, texts_and_labels_list)
 
         category_label_counts = data_access.get_label_counts(workspace_id, dataset_name, category)
         for label_val, observed_count in category_label_counts.items():
             expected_count = len(
-                [t for t in texts_and_labels_list if category in t[1] and label_val in t[1][category].labels])
+                [t for t in texts_and_labels_list if category in t[1] and label_val == t[1][category].label]) ## TODO verify
             self.assertEqual(expected_count, observed_count, f'count for {label_val} does not match.')
         ds_loader.clear_all_saved_files(dataset_name)
 
@@ -396,7 +396,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         self.assertEqual(len(all_elements), len(all_without_dups)+1)
 
         # 1. test propagation of labels:
-        texts_and_labels_list = [(elem.uri, {category: Label(labels=LABEL_POSITIVE, metadata={})})
+        texts_and_labels_list = [(elem.uri, {category: Label(label=LABEL_POSITIVE, metadata={})})
                                  for elem in all_without_dups]
         # set labels without propagating to duplicates
         data_access.set_labels(workspace_id, texts_and_labels_list, propagate_to_duplicates=False)
@@ -414,7 +414,7 @@ class TestDataAccessInMemory(unittest.TestCase):
 
         # 2. test sampling of duplicate examples:
         non_representative_duplicates = [x for x in all_elements if x not in all_without_dups]
-        texts_and_labels_list = [(elem.uri, {category: Label(labels=LABEL_POSITIVE, metadata={})})
+        texts_and_labels_list = [(elem.uri, {category: Label(label=LABEL_POSITIVE, metadata={})})
                                  for elem in non_representative_duplicates]
         # set labels without propagating to duplicates
         data_access.set_labels(workspace_id, texts_and_labels_list, propagate_to_duplicates=False)

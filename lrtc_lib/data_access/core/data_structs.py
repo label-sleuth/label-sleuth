@@ -31,18 +31,14 @@ class Document:
 
 @dataclass
 class Label:
-    labels: frozenset
+    label: bool
     metadata: Mapping
 
-    def __init__(self, labels, metadata: Mapping):
-        if type(labels) in [int, str, bool]:
-            self.labels = frozenset([labels])
-        elif type(labels) == list:
-            self.labels = frozenset(labels)
-        else:
-            self.labels = labels
+    def __init__(self, label:bool, metadata: Mapping):
+
+        self.label = label
         self.metadata = metadata
 
     def to_dict(self):
-        dict_for_json = {'labels': list(self.labels), 'metadata': self.metadata}
+        dict_for_json = {'label': self.label, 'metadata': self.metadata}
         return dict_for_json
