@@ -240,9 +240,9 @@ def get_model_status(workspace_id: str, category_name: str, model_id):
 @withlock
 def get_all_models_by_state(workspace_id: str, category_name: str, model_status: ModelStatus):
     workspace = _load_workspace(workspace_id)
-    assert workspace.category_to_models, f"No models found in workspace_id {workspace_id}"
+    if category_name not in workspace.category_to_models:
+        return []
     models = workspace.category_to_models[category_name]
-    assert models, f"No models found in workspace_id {workspace_id} for category {category_name}"
     return [model_params for model_name, model_params in models.items() if model_params.model_status == model_status]
 
 

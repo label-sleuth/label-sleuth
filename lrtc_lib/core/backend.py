@@ -26,11 +26,6 @@ from lrtc_lib.training_set_selector.training_set_selector_factory import get_tra
 from lrtc_lib.config import *
 
 
-class RecommendedAction(Enum):
-    LABEL_BY_QUERY = 0
-    LABEL_BY_MODEL = 1
-
-
 NUMBER_OF_MODELS_TO_KEEP = 2
 new_data_infer_thread_pool = ThreadPoolExecutor(1)
 
@@ -71,28 +66,6 @@ def estimate_precision(workspace_id, category, ids, changed_elements_count, mode
                                                "estimated_precision_num_elements": len(ids)})
     orchestrator_state_api.increase_number_of_changes_since_last_model(workspace_id, category, changed_elements_count)
     return estimated_precision
-
-
-def get_recommended_action(workspace_id: str, category_name: str) -> List[RecommendedAction]:
-    """
-        get the system recommendations for the next action/actions by the user
-
-
-        :rtype: list of RecommendedAction. *It's possible that we will use a more complex response in the future (for
-                example: label by a new query etc...)
-        :param workspace_id:
-        :param category_name:
-    """
-    workspace = orchestrator_state_api.get_workspace(workspace_id)
-    category_models = workspace.category_to_models.get(category_name, {})
-
-# all(category_models.items()))[1].model_status != ModelStatus.READY:
-    if any(model_info.model_status == ModelStatus.READY for _, model_info in category_models.items()) and \
-            any(al_status == ActiveLearningRecommendationsStatus.READY for model_id, al_status
-                in workspace.category_to_model_to_recommendations_status[category_name].items()):
-        return [RecommendedAction.LABEL_BY_MODEL]
-    else:
-        return [RecommendedAction.LABEL_BY_QUERY]
 
 
 def query(workspace_id: str, dataset_name: str, category_name: str, query: str, unlabeled_only: bool = False,

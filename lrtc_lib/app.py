@@ -51,7 +51,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 ## move to common :
 
-def elements_back_to_front(workspace_id, elt_array, category):
+def elements_back_to_front(workspace_id, elements, category):
     element_uri_to_info = \
         {text_element.uri:
              {'id': text_element.uri,
@@ -63,19 +63,12 @@ def elements_back_to_front(workspace_id, elt_array, category):
                               for k, v in text_element.category_to_label.items()},
               'model_predictions': {}
               }
-         for text_element in elt_array}
+         for text_element in elements}
 
-    if category:
-        rec = orch.get_recommended_action(workspace_id, category)[0]
-        if rec == orch.RecommendedAction.LABEL_BY_MODEL:
-            if len(elt_array) == 0:
-                logging.info("no elements to infer")
-            else:
-                predicted_labels = orch.infer(workspace_id, category, elt_array)["labels"]
-                for text_element, prediction in zip(elt_array, predicted_labels):
-                    element_uri_to_info[text_element.uri]['model_predictions'][category] = str(prediction).lower()  # since the current UI expects string labels and not boolean
-    else:
-        logging.warning("skipping category!")
+    if category and len(orch.get_all_models_by_state(workspace_id, category, ModelStatus.READY))>0 and len(elements)>0:
+        predicted_labels = orch.infer(workspace_id, category, elements)["labels"]
+        for text_element, prediction in zip(elements, predicted_labels):
+            element_uri_to_info[text_element.uri]['model_predictions'][category] = str(prediction).lower()  # since the current UI expects string labels and not boolean
 
     return [element_info for element_info in element_uri_to_info.values()]
 
