@@ -18,7 +18,7 @@ from lrtc_lib.orchestrator import orchestrator_api
 
 from lrtc_lib import definitions
 from lrtc_lib.async_support.orchestrator_background_jobs_manager import start_orchestrator_background_job_manager
-import lrtc_lib.core.backend as orch
+
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.core.information_gain_utils import information_gain
 from lrtc_lib.config import CONFIGURATION
@@ -32,12 +32,12 @@ executor = ThreadPoolExecutor(20)
 
 
 def init_properties():
-    orch.set_active_learning_strategy(CONFIGURATION.active_learning_strategy)
+    orchestrator_api.set_active_learning_strategy(CONFIGURATION.active_learning_strategy)
 
     definitions.ASYNC = True  # Always async in the UI
     start_orchestrator_background_job_manager(orchestrator_api._update_recommendation,
-                                              orch._post_train_method,
-                                              orch._post_active_learning_func)
+                                              orchestrator_api._post_train_method,
+                                              orchestrator_api._post_active_learning_func)
     definitions.LOCAL_FINETUNE = CONFIGURATION.local_finetune
 
 
@@ -65,28 +65,23 @@ def elements_back_to_front(workspace_id, elements, category):
               }
          for text_element in elements}
 
-    if category and len(orch.get_all_models_by_state(workspace_id, category, ModelStatus.READY))>0 and len(elements)>0:
-        predicted_labels = orch.infer(workspace_id, category, elements)["labels"]
+    if category and len(orchestrator_api.get_all_models_by_state(workspace_id, category, ModelStatus.READY)) > 0 \
+            and len(elements) > 0:
+        predicted_labels = orchestrator_api.infer(workspace_id, category, elements)["labels"]
         for text_element, prediction in zip(elements, predicted_labels):
             element_uri_to_info[text_element.uri]['model_predictions'][category] = str(prediction).lower()  # since the current UI expects string labels and not boolean
 
     return [element_info for element_info in element_uri_to_info.values()]
 
 
-def _get_dataset_name(workspace_id):
-    workspace_info = orch.get_workspace_info(workspace_id)
-    return workspace_info['dataset_name']
-
-
-def get_element(workspace_id, eltid):
+def get_element(workspace_id, element_id):
     """
     get element
     :param workspace_id:
-    :param elt_id:
-    :return element:
+    :param element_id:
     """
-    dataset_name = _get_dataset_name(workspace_id)
-    element = orch.get_text_elements(workspace_id, dataset_name, [eltid])
+    dataset_name = orchestrator_api.get_dataset_name(workspace_id)
+    element = orchestrator_api.get_text_elements(workspace_id, dataset_name, [element_id])
     category_name = request.args.get('category_name')
     element_transformed = elements_back_to_front(workspace_id, element, category_name)
     return element_transformed[0]
@@ -154,7 +149,7 @@ def get_all_dataset_ids():
     Get all existing datasets
     :return array of dataset ids as strings:
     """
-    all_datasets = orch.get_all_datasets()
+    all_datasets = orchestrator_api.get_all_datasets()
     res = {'datasets':
                [{"dataset_id": d} for d in sorted(all_datasets)]}
     return jsonify(res)
@@ -172,7 +167,7 @@ def add_documents(dataset_name):
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
         os.makedirs(temp_dir, exist_ok=True)
         df.to_csv(os.path.join(temp_dir, temp_file_name))
-        loaded, workspaces_to_update = orch.add_documents_from_file(dataset_name, temp_file_name)
+        loaded, workspaces_to_update = orchestrator_api.add_documents_from_file(dataset_name, temp_file_name)
 
         return jsonify({"dataset_name": dataset_name,
                         "num_docs": len(loaded),
@@ -202,11 +197,11 @@ def create_workspace():
     workspace_id = post_data["workspace_id"]
     dataset_name = post_data["dataset_id"]
 
-    if orch.workspace_exists(workspace_id):
+    if orchestrator_api.workspace_exists(workspace_id):
         raise Exception(f"workspace {workspace_id} already exists")
-    orch.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
+    orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
-    all_document_ids = orch.get_all_document_uris(workspace_id)
+    all_document_ids = orchestrator_api.get_all_document_uris(workspace_id)
     first_document_id = all_document_ids[0]
 
     res = {'workspace': {'workspace_id': workspace_id,
@@ -223,7 +218,7 @@ def get_all_workspace_ids():
     Get all existing workspaces
     :return array of workspace ids as strings:
     """
-    res = {'workspaces': orch.list_workspaces()}
+    res = {'workspaces': orchestrator_api.list_workspaces()}
     return jsonify(res)
 
 
@@ -235,7 +230,7 @@ def delete_workspace(workspace_id):
     :param <workspace_id>
     :return success
     """
-    orch.delete_workspace(workspace_id)
+    orchestrator_api.delete_workspace(workspace_id)
     return jsonify({'workspace_id': workspace_id})
 
 
@@ -247,12 +242,11 @@ def get_workspace_info(workspace_id):
     :param workspace_id
     :return workspace_id, dataset_name, array of all document_ids, id of first document:
     """
-    workspace_info = orch.get_workspace_info(workspace_id)
-    document_ids = orch.get_all_document_uris(workspace_id)
+    document_ids = orchestrator_api.get_all_document_uris(workspace_id)
     first_document_id = document_ids[0]
 
-    res = {'workspace': {'workspace_id': workspace_info['workspace_id'],
-                         'dataset_name': workspace_info['dataset_name'],
+    res = {'workspace': {'workspace_id': workspace_id,
+                         'dataset_name': orchestrator_api.get_dataset_name(workspace_id),
                          'first_document_id': first_document_id,
                          'document_ids': document_ids}}
     return jsonify(res)
@@ -272,7 +266,7 @@ def get_all_document_uris(workspace_id):
     :return documents:
     """
 
-    doc_uris = orch.get_all_document_uris(workspace_id)
+    doc_uris = orchestrator_api.get_all_document_uris(workspace_id)
     res = {"documents":
                [{"document_id": uri} for uri in doc_uris]}  # TODO change document_id to document_uri in the ui
     return jsonify(res)
@@ -287,8 +281,8 @@ def get_document_elements(workspace_id, document_id):
     :param document_id: the uri of the document
     :return elements:
     """
-    dataset_name = _get_dataset_name(workspace_id)
-    document = orch.get_documents(workspace_id, dataset_name, [document_id])[0]
+    dataset_name = orchestrator_api.get_dataset_name(workspace_id)
+    document = orchestrator_api.get_documents(workspace_id, dataset_name, [document_id])[0]
     elements = document.text_elements
 
     category = None
@@ -305,7 +299,8 @@ def get_document_elements(workspace_id, document_id):
 def get_all_positive_labeled_elements_for_category(workspace_id):
     category = request.args.get('category_name')
     elements = \
-        orch.get_all_labeled_text_elements(workspace_id, _get_dataset_name(workspace_id), category)["results"]
+        orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id),
+                                                       category)["results"]
     positive_elements = [element for element in elements if element.category_to_label[category].label == LABEL_POSITIVE]
 
     elements_transformed = elements_back_to_front(workspace_id, positive_elements, category)
@@ -319,7 +314,8 @@ def get_all_positive_labeled_elements_for_category(workspace_id):
 def get_label_and_model_disagreements(workspace_id):
     category = request.args.get('category_name')
     elements = \
-        orch.get_all_labeled_text_elements(workspace_id, _get_dataset_name(workspace_id), category)["results"]
+        orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id),
+                                                       category)["results"]
     elements_transformed = elements_back_to_front(workspace_id, elements, category)
 
     res = {'disagree_elements':
@@ -333,8 +329,7 @@ def get_label_and_model_disagreements(workspace_id):
 @auth.login_required
 def get_labeled_elements_enriched_tokens(workspace_id):
     category = request.args.get('category_name')
-    elements = \
-        orch.get_all_labeled_text_elements(workspace_id, _get_dataset_name(workspace_id), category)["results"]
+    elements = orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id), category)["results"]
     elements_transformed = elements_back_to_front(workspace_id, elements, category)
     res = dict()
     if elements:
@@ -358,11 +353,11 @@ def get_document_predictions(workspace_id, document_id):
     start_idx = int(request.args.get('start_idx', 0))
     category_name = request.args.get('category_name')
 
-    dataset_name = _get_dataset_name(workspace_id)
-    document = orch.get_documents(workspace_id, dataset_name, [document_id])[0]
+    dataset_name = orchestrator_api.get_dataset_name(workspace_id)
+    document = orchestrator_api.get_documents(workspace_id, dataset_name, [document_id])[0]
 
     elements = document.text_elements
-    predictions = orch.infer(workspace_id, category_name, elements)['labels']
+    predictions = orchestrator_api.infer(workspace_id, category_name, elements)['labels']
     positive_predicted_elements = [element for element, prediction in zip(elements, predictions) if prediction == LABEL_POSITIVE]
 
     elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_name)
@@ -393,10 +388,9 @@ def query(workspace_id):
     sample_start_idx = int(request.args.get('sample_start_idx', 0))
     category_name = request.args.get('category_name')
 
-    resp = orch.query(workspace_id, _get_dataset_name(workspace_id), category_name, query_string,
-                      unlabeled_only=False,
-                      sample_size=sample_size, sample_start_idx=sample_start_idx,
-                      remove_duplicates=True)
+    resp = orchestrator_api.query(workspace_id, orchestrator_api.get_dataset_name(workspace_id), category_name,
+                                  query_string, unlabeled_only=False, sample_size=sample_size,
+                                  sample_start_idx=sample_start_idx, remove_duplicates=True)
     elements = resp[
         "results"]  # TODO we might want to pass unlabeled_only=True / let the user decide
 
@@ -425,10 +419,10 @@ def get_elements_to_label(workspace_id):
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
 
-    if len(orch.get_all_models_for_category(workspace_id, category_name)) == 0:
+    if len(orchestrator_api.get_all_models_for_category(workspace_id, category_name)) == 0:
         return jsonify({"elements": []})
 
-    elements = orch.get_elements_to_label(workspace_id, category_name, size, start_idx)
+    elements = orchestrator_api.get_elements_to_label(workspace_id, category_name, size, start_idx)
     elements_transformed = elements_back_to_front(workspace_id, elements, category_name)
 
     res = {'elements': elements_transformed}
@@ -443,11 +437,11 @@ def get_element_by_id(workspace_id, eltid):
 
 @app.route('/workspace/<workspace_id>/element/<eltid>', methods=['PUT'])
 @auth.login_required
-def set_element_label(workspace_id, eltid):
+def set_element_label(workspace_id, element_id):
     """
     update element
     :param workspace_id:
-    :param elt_id:
+    :param element_id:
     :param category_name:
     :param value:
     :param update_counter:
@@ -460,7 +454,7 @@ def set_element_label(workspace_id, eltid):
     update_counter = post_data.get('update_counter', True)
 
     if value == 'none':
-        orch.unset_labels(workspace_id, category_name, [eltid])
+        orchestrator_api.unset_labels(workspace_id, category_name, [element_id])
 
     else:
         if value in ['true', "True", "TRUE", True]:
@@ -470,10 +464,10 @@ def set_element_label(workspace_id, eltid):
         else:
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
 
-        uri_with_updated_label = [(eltid, {category_name: orch.Label(value, {})})]
-        orch.set_labels(workspace_id, uri_with_updated_label, update_label_counter=update_counter)
+        uri_with_updated_label = [(element_id, {category_name: orchestrator_api.Label(value, {})})]
+        orchestrator_api.set_labels(workspace_id, uri_with_updated_label, update_label_counter=update_counter)
 
-    res = {'element': get_element(workspace_id, eltid), 'workspace_id': workspace_id, 'category_name': category_name}
+    res = {'element': get_element(workspace_id, element_id), 'workspace_id': workspace_id, 'category_name': category_name}
     return jsonify(res)
 
 
@@ -485,7 +479,7 @@ def get_all_categories(workspace_id):
     Get current state of classes
     :return classes:
     """
-    categories = orch.get_all_categories(workspace_id)
+    categories = orchestrator_api.get_all_categories(workspace_id)
     category_dicts = [{'id': name, 'className': name, 'classDescription': description}
                       for name, description in categories.items()]
 
@@ -506,7 +500,7 @@ def add_category(workspace_id, category_name):
     """
     post_data = request.get_json(force=True)
     post_data['id'] = category_name
-    orch.create_new_category(workspace_id, post_data["className"], post_data["classDescription"])
+    orchestrator_api.create_new_category(workspace_id, post_data["className"], post_data["classDescription"])
 
     res = {'category': post_data}
     return jsonify(res)
@@ -535,7 +529,7 @@ def delete_category(workspace_id, category_name):
     :param category_name:
     :return success:
     """
-    orch.delete_category(workspace_id, category_name)
+    orchestrator_api.delete_category(workspace_id, category_name)
 
 
 ###########################
@@ -552,11 +546,11 @@ def get_labelling_status(workspace_id):
     """
 
     category_name = request.args.get('category_name')
-    dataset_name = _get_dataset_name(workspace_id)
-    future = executor.submit(orch.train_if_recommended, workspace_id, category_name)
+    dataset_name = orchestrator_api.get_dataset_name(workspace_id)
+    future = executor.submit(orchestrator_api.train_if_recommended, workspace_id, category_name)
 
-    labeling_counts = orch.get_label_counts(workspace_id, dataset_name, category_name)
-    progress = orch.get_progress(workspace_id, dataset_name, category_name)
+    labeling_counts = orchestrator_api.get_label_counts(workspace_id, dataset_name, category_name)
+    progress = orchestrator_api.get_progress(workspace_id, dataset_name, category_name)
 
     return jsonify({
         "labeling_counts": labeling_counts,
@@ -575,14 +569,14 @@ def force_train_for_category(workspace_id):
     """
 
     category_name = request.args.get('category_name')
-    dataset_name = _get_dataset_name(workspace_id)
-    if category_name not in orch.get_all_categories(workspace_id):
+    dataset_name = orchestrator_api.get_dataset_name(workspace_id)
+    if category_name not in orchestrator_api.get_all_categories(workspace_id):
         return jsonify({
             "error": "no such category '"+(category_name if category_name else "<category not provided in category_name param>")+"'"
         })
-    model_id = orch.train_if_recommended(workspace_id, category_name, force=True)
+    model_id = orchestrator_api.train_if_recommended(workspace_id, category_name, force=True)
 
-    labeling_counts = orch.get_label_counts(workspace_id, dataset_name, category_name)
+    labeling_counts = orchestrator_api.get_label_counts(workspace_id, dataset_name, category_name)
     logging.info(f"force training a new model in workspace {workspace_id} for category {category_name}, "
                  f"model id: {model_id}")
 
@@ -624,12 +618,12 @@ def get_all_models_for_category(workspace_id):
 
     res = dict()
     if category_name == 'all':
-        models = orch.get_all_models(workspace_id).values()
+        models = orchestrator_api.get_all_models(workspace_id).values()
         res['models'] = extract_model_information_list(workspace_id, models)
     elif category_name == 'none':
         res['models'] = []
     else:
-        models = orch.get_all_models_for_category(workspace_id, category_name).values()
+        models = orchestrator_api.get_all_models_for_category(workspace_id, category_name).values()
         res['models'] = extract_model_information_list(workspace_id, models)
     return jsonify(res)
 
@@ -645,15 +639,15 @@ def get_predictions_enriched_tokens(workspace_id):
     """
     res = dict()
     category = request.args.get('category_name')
-    models = orch.get_all_models_for_category(workspace_id, category)
+    models = orchestrator_api.get_all_models_for_category(workspace_id, category)
     if len(models) == 0:
         res['info_gain'] = []
         return jsonify(res)
 
-    true_elements = orch.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
-                                                       required_label=LABEL_POSITIVE)
-    false_elements = orch.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
-                                                        required_label=LABEL_NEGATIVE)
+    true_elements = orchestrator_api.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
+                                                                   required_label=LABEL_POSITIVE)
+    false_elements = orchestrator_api.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
+                                                                    required_label=LABEL_NEGATIVE)
 
     elements = true_elements + false_elements
     targets = [1] * len(true_elements) + [0] * len(false_elements)
@@ -672,15 +666,15 @@ def get_predictions_enriched_tokens(workspace_id):
 def get_elements_for_precision_evaluation(workspace_id):
     size = CONFIGURATION.precision_evaluation_size
     category = request.args.get('category_name')
-    random_state = len(orch.get_all_models_by_state(workspace_id, category, ModelStatus.READY))
-    all_elements = orchestrator_api.get_all_text_elements(_get_dataset_name(workspace_id))
+    random_state = len(orchestrator_api.get_all_models_by_state(workspace_id, category, ModelStatus.READY))
+    all_elements = orchestrator_api.get_all_text_elements(orchestrator_api.get_dataset_name(workspace_id))
     if CONFIGURATION.precision_evaluation_filter:
         before_size = len(all_elements)
         all_elements = [x for x in all_elements if CONFIGURATION.precision_evaluation_filter in x.uri]
         logging.info(
             f"Precision evaluation uri filter {CONFIGURATION.precision_evaluation_filter} applied. "
             f"num elements changed from {before_size} to {len(all_elements)}")
-    sample_elements_predictions = orch.infer(workspace_id, category, all_elements)["labels"]
+    sample_elements_predictions = orchestrator_api.infer(workspace_id, category, all_elements)["labels"]
     prediction_sample = \
         [text_element for text_element, prediction in zip(all_elements, sample_elements_predictions) if
          prediction == LABEL_POSITIVE]
@@ -713,7 +707,7 @@ def run_precision_evaluation(workspace_id):
     ids = post_data["ids"]
     changed_elements_count = post_data["changed_elements_count"]
     model_id = post_data["model_id"]
-    score = orch.estimate_precision(workspace_id, category_name, ids, changed_elements_count, model_id)
+    score = orchestrator_api.estimate_precision(workspace_id, category_name, ids, changed_elements_count, model_id)
     res = {'score': score}
     return jsonify(res)
 
@@ -723,7 +717,7 @@ def run_precision_evaluation(workspace_id):
 def get_suspicious_elements(workspace_id):
     category = request.args.get('category_name')
     try:
-        suspicious_elements = orch.get_suspicious_report(workspace_id, category)
+        suspicious_elements = orchestrator_api.get_suspicious_elements_report(workspace_id, category)
         elements_transformed = elements_back_to_front(workspace_id, suspicious_elements, category)
         res = {'elements': elements_transformed}
         return jsonify(res)
@@ -738,7 +732,7 @@ def get_suspicious_elements(workspace_id):
 def get_contradicting_elements(workspace_id):
     category = request.args.get('category_name')
     try:
-        contradiction_element_tuples = orch.get_contradictions_report_with_diffs(workspace_id,
+        contradiction_element_tuples = orchestrator_api.get_contradictions_report_with_diffs(workspace_id,
                                                                                  category)
         elements_transformed = [elements_back_to_front(workspace_id, [tup[0], tup[2]], category)
                                 for tup in contradiction_element_tuples]
@@ -758,7 +752,7 @@ def get_contradicting_elements(workspace_id):
 @app.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
 @auth.login_required
 def export_labels(workspace_id):
-    return orch.export_workspace_labels(workspace_id).to_csv(index=False)
+    return orchestrator_api.export_workspace_labels(workspace_id).to_csv(index=False)
 
 
 @app.route('/workspace/<workspace_id>/export_predictions', methods=['GET'])
@@ -767,10 +761,10 @@ def export_predictions(workspace_id):
     category_name = request.args.get('category_name')
     filter = request.args.get('uri_filter', None)
     model_id = request.args.get('model_id')
-    elements = orch.get_all_text_elements(_get_dataset_name(workspace_id))
+    elements = orchestrator_api.get_all_text_elements(orchestrator_api.get_dataset_name(workspace_id))
     if filter:
         elements = [x for x in elements if filter in x.uri]
-    infer_results = orch.infer(workspace_id, category_name, elements, model_id=model_id)
+    infer_results = orchestrator_api.infer(workspace_id, category_name, elements, model_id=model_id)
     return pd.DataFrame([{**o.__dict__, "score": scores[1], 'predicted_label': labels} for o, scores, labels
                          in zip(elements, infer_results["scores"], infer_results["labels"])]).to_csv(index=False)
 
@@ -781,7 +775,7 @@ def export_predictions(workspace_id):
 def import_labels(workspace_id):
     csv_data = StringIO(request.data.decode("utf-8"))
     df = pd.read_csv(csv_data, dtype={'labels': str})
-    return jsonify(orch.import_category_labels(workspace_id, df))
+    return jsonify(orchestrator_api.import_category_labels(workspace_id, df))
 
 
 @app.route('/workspace/<workspace_id>/export_model', methods=['GET'])
@@ -791,9 +785,9 @@ def export_model(workspace_id):
     category_name = request.args.get('category_name')
     model_id = request.args.get('model_id', None)
     if model_id is None:
-        category_models = orch.get_all_models_by_state(workspace_id, category_name, ModelStatus.READY)
+        category_models = orchestrator_api.get_all_models_by_state(workspace_id, category_name, ModelStatus.READY)
         model_id = category_models[-1].model_id
-    model_dir = orch.export_model(workspace_id, model_id)
+    model_dir = orchestrator_api.export_model(workspace_id, model_id)
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
         for dirpath, dirnames, filenames in os.walk(model_dir):
