@@ -49,12 +49,6 @@ pip install -r lrtc_lib/requirements.txt
 </p>
 </details>
 
-3. Install the project dependencies: ``
-
-   Windows users also need to download the latest [Microsoft Visual C++ Redistributable for Visual Studio](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads) in order to support tensorflow
-3. Run the shell script `lrtc_lib/download_and_prepare_datasets.sh`.
-This script downloads the [datasets with built-in support](#built-in-implementations).
-
 
 ### Implementing a new machine learning model
 These are the steps for integrating a new classification model:
@@ -121,67 +115,13 @@ These are the steps for integrating a new active learning approach:
 accordingly. For instance, if the strategy relies on model embeddings, add it to the set of embedding-based strategies.
 5. Set your ActiveLearningStrategy in one of the ExperimentRunners, and run
 
-### Adding a new dataset
-These are the steps for adding a new dataset:
-
-1. Split your dataset into 3 csv files: `train.csv`, `dev.csv`, and `test.csv`. 
-   1. Each line is a text element.
-   1. Each file should have at least two columns: `label` and `text`, and may have additional columns.
-   1. Files are placed under `lrtc_lib/data/available_datasets/<new_dataset_name>`
-1. Create a processor for the new dataset by extending `CsvProcessor` (which implements `DataProcessorAPI`)
-and place it under `lrtc_lib/data_access/processors`.
-   `CsvProcessor`  `__init__` function looks like this:
-   
-   ```python    
-   def __init__(self, dataset_name: str, dataset_part: DatasetPart, text_col: str = 'text',
-                 label_col: str = 'label', context_col: str = None,
-                 doc_id_col: str = None,
-                 encoding: str = 'utf-8'):
-   ``` 
-
-    - dataset_name: the name of the processed dataset
-    - dataset_part: the part - train/dev/test - of the dataset
-    - text_col: the name of the column which holds the text of the TextElement. Default is `text`.
-    - label_col: the name of the column which holds the label. Default is `label`.
-    - context_col: the name of the column which provides context for the text, None if no context is available.
-    Default is None.
-    - doc_id_col: column name by which text elements should be grouped into documents.
-    If None, all text elements would be put in a single dummy doc. Default is None.
-    - encoding: the encoding to use to read the csv raw file(s). Default is `utf-8`.
-    
-    For example, here is the processor for DBPedia (which uses the default values of `CsvProcessor`):
-       
-   ```python
-    class DbpediaProcessor(CsvProcessor):
-
-    def __init__(self, dataset_part: DatasetPart):
-        super().__init__(dataset_name='dbpedia', dataset_part=dataset_part)
-   ```
-    
-   If more flexibility is needed, implement `DataProcessorAPI` directly. 
-1. Add the new processor to `data_processor_factory`. Note, in this step you define the name of the new dataset. 
-1. Run `load_dataset` with the new dataset name (as defined in `data_processor_factory`) to generate dump files under 
-`data/data_access_dumps` (for the documents and text elements of the dataset) and `data/oracle_access_dumps` 
-(for the gold labels of the text elements).
-
-
-## Built in Implementations
-### Datasets
-- [AG’s News](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
-- [CoLA](https://nyu-mll.github.io/CoLA/)
-- [ISEAR](https://www.unige.ch/cisa/research/materials-and-online-research/research-material/)*
-- [Polarity](https://www.cs.cornell.edu/people/pabo/movie-review-data/)
-- [Subjectivity](https://www.cs.cornell.edu/people/pabo/movie-review-data/)
-- [TREC](https://cogcomp.seas.upenn.edu/Data/QA/QC/)
-- [Wiki Attack](https://meta.wikimedia.org/wiki/Research:Detox/Data_Release)
-
-\* _Loading the ISEAR dataset requires installing additional dependencies before 
-[running the installation script](#installation), and is only supported on Mac/Linux. Specifically, you will need to 
-install [mdbtools](https://github.com/mdbtools/mdbtools) on your machine and then `pip install pandas_access`_.
-
 ### Classification models
-- **ModelTypes.NB**: a Naive Bayes implementation from [scikit-learn](https://scikit-learn.org)
-- **ModelTypes.HF_BERT**: A tensorflow implementation of BERT (Devlin et al. 2018) that uses the [huggingface Transformers](https://github.com/huggingface/transformers) library 
+- **ModelTypes.NB_OVER_BOW**: a Naive Bayes implementation from [scikit-learn](https://scikit-learn.org) over Bag-of-words representations
+- **ModelTypes.NB_OVER_GLOVE**: a Naive Bayes implementation over GloVe representations
+- **ModelTypes.SVM_OVER_BOW**: a Support Vector Machine implementation from [scikit-learn](https://scikit-learn.org) over Bag-of-words representations
+- **ModelTypes.SVM_OVER_GLOVE**: a Support Vector Machine implementation over GloVe representations
+- **ModelTypes.SVM_ENSEMBLE**: an ensemble of the SVM_OVER_BOW and SVM_OVER_GLOVE models
+- **ModelTypes.HF_BERT**: A pytorch implementation of BERT (Devlin et al. 2018) that uses the [huggingface Transformers](https://github.com/huggingface/transformers) library 
 
 ### Active learning strategies
 - **RANDOM**: AL baseline, randomly sample from unlabeled data.
