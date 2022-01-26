@@ -1,3 +1,8 @@
+
+###TODOs
+# category_description->category_description
+# category_name->category_name
+# handle stream of csv as text and not file
 import logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -347,6 +352,8 @@ def get_document_predictions(workspace_id, document_id):
     :param workspace_id:
     :param document_id:
     :param category_name:
+    :param size:
+    :param start_idx:
     :return elements filtered by whether in this document and the selected category, the prediction is positive:
     """
     size = int(request.args.get('size', 100))
@@ -409,8 +416,9 @@ def get_elements_to_label(workspace_id):
     """
     get elements that AL strategy wants labeled
     :param workspace_id:
-    :param qry_string:
     :param category_name:
+    :param size:
+    :param start_idx:
     :return elements IN ORDER:
     :currently hardcoding ActiveLearningStrategies.RANDOM:
     """
@@ -435,7 +443,7 @@ def get_element_by_id(workspace_id, eltid):
     return get_element(workspace_id, eltid)
 
 
-@app.route('/workspace/<workspace_id>/element/<eltid>', methods=['PUT'])
+@app.route('/workspace/<workspace_id>/element/<element_id>', methods=['PUT'])
 @auth.login_required
 def set_element_label(workspace_id, element_id):
     """
@@ -480,7 +488,7 @@ def get_all_categories(workspace_id):
     :return classes:
     """
     categories = orchestrator_api.get_all_categories(workspace_id)
-    category_dicts = [{'id': name, 'className': name, 'classDescription': description}
+    category_dicts = [{'id': name, 'category_name': name, 'category_description': description}
                       for name, description in categories.items()]
 
     res = {'categories': category_dicts}
@@ -489,18 +497,18 @@ def get_all_categories(workspace_id):
 
 @app.route("/workspace/<workspace_id>/category/<category_name>", methods=['POST'])
 @auth.login_required
-def add_category(workspace_id, category_name):
+def create_category(workspace_id, category_name):
     """
     add a new category
     :param workspace_id:
     :param category_name:
-    :param className:
-    :param classDescription:
+    :param category_name:
+    :param category_description:
     :return success:
     """
     post_data = request.get_json(force=True)
     post_data['id'] = category_name
-    orchestrator_api.create_new_category(workspace_id, post_data["className"], post_data["classDescription"])
+    orchestrator_api.create_new_category(workspace_id, post_data["category_name"], post_data["category_description"])
 
     res = {'category': post_data}
     return jsonify(res)
@@ -513,8 +521,8 @@ def rename_category(workspace_id, category_name):
     edit category - TODO, will need to change the backend function
     :param workspace_id:
     :param category_name:
-    :param className:
-    :param classDescription:
+    :param category_name:
+    :param category_description:
     :return success:
     """
 
@@ -773,7 +781,7 @@ def export_predictions(workspace_id):
 @cross_origin()
 @auth.login_required
 def import_labels(workspace_id):
-    csv_data = StringIO(request.data.decode("utf-8"))
+    csv_data = StringIO(request.data.decode("utf-8")) #TODO use request.data also in load_documents()
     df = pd.read_csv(csv_data, dtype={'labels': str})
     return jsonify(orchestrator_api.import_category_labels(workspace_id, df))
 
