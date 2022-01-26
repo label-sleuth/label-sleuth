@@ -49,6 +49,7 @@ pip install -r lrtc_lib/requirements.txt
 </p>
 </details>
 
+4. Start SLEUTH server `python start_service.py`
 
 ### Implementing a new machine learning model
 These are the steps for integrating a new classification model:
