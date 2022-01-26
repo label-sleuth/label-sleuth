@@ -21,11 +21,11 @@ Currently, the framework requires Python 3.8
 <details><summary><b>Installing with <tt>conda</tt></b></summary>
 <p>
 
-Install Anaconda https://docs.anaconda.com/anaconda/install/index.html
+- Install Anaconda https://docs.anaconda.com/anaconda/install/index.html
 
-Restart your console
+- Restart your console
 
-Use the following commands to create a new anaconda environment:
+- Use the following commands to create a new anaconda environment and install the requirements:
 ```bash
 # Create and activate a virtual environment:
 conda create --yes -n sleuth_classification python=3.8
@@ -42,7 +42,7 @@ Assuming python 3.8 is already installed.
 
 - Restart your console
 
-- Install requirements
+- Install requirements:
 ```bash
 pip install -r lrtc_lib/requirements.txt
 ```
