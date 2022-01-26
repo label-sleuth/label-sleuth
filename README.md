@@ -38,10 +38,11 @@ pip install -r lrtc_lib/requirements.txt
 <details><summary><b>Installing with <tt>pip</tt></b></summary>
 <p>
 Assuming python 3.8 is already installed.
-Install pip https://pip.pypa.io/en/stable/installation/
+- Install pip https://pip.pypa.io/en/stable/installation/
 
-Restart your console
+- Restart your console
 
+- Install requirements
 ```bash
 pip install -r lrtc_lib/requirements.txt
 ```
