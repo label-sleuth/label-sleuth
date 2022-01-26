@@ -6,10 +6,10 @@ TBD
 **Table of contents**
 
 [Installation](#installation)
+
 [Adapting to additional scenarios](#adapting-to-additional-scenarios):
 * [Implementing a new machine learning model](#implementing-a-new-machine-learning-model)
 * [Implementing a new active learning strategy](#implementing-a-new-active-learning-strategy)
-[License](#license)
 
 ## Installation
 Currently, the framework requires Python 3.8
@@ -51,6 +51,7 @@ pip install -r lrtc_lib/requirements.txt
 
 4. Start SLEUTH server `python start_service.py`
 
+## Adapting to additional scenarios
 ### Implementing a new machine learning model
 These are the steps for integrating a new classification model:
 1. Implement a new `TrainAndInferAPI`
@@ -134,36 +135,4 @@ accordingly. For instance, if the strategy relies on model embeddings, add it to
 using an ensemble of perceptrons, which were trained over output embeddings from the original model.
 - **DROPOUT_PERCEPTRON**: similar to the above, but instead of an ensemble of perceptrons, uses a single perceptron
 with Monte Carlo dropout (Gal and Ghahramani, 2016)
-
-
-## Reference
-Liat Ein-Dor, Alon Halfon, Ariel Gera, Eyal Shnarch, Lena Dankin, Leshem Choshen, Marina Danilevsky, Ranit Aharonov, Yoav Katz and Noam Slonim (2020). 
-[Active Learning for BERT: An Empirical Study](https://www.aclweb.org/anthology/2020.emnlp-main.638/). EMNLP 2020
-
-Please cite: 
-```
-@inproceedings{ein-dor-etal-2020-active,
-    title = "Active Learning for {BERT}: An Empirical Study",
-    author = "Ein-Dor, Liat  and
-      Halfon, Alon  and
-      Gera, Ariel  and
-      Shnarch, Eyal  and
-      Dankin, Lena  and
-      Choshen, Leshem  and
-      Danilevsky, Marina  and
-      Aharonov, Ranit  and
-      Katz, Yoav  and
-      Slonim, Noam",
-    booktitle = "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
-    month = nov,
-    year = "2020",
-    address = "Online",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/2020.emnlp-main.638",
-    pages = "7949--7962",
-}
-```
-
-## License
-This work is released under the Apache 2.0 license. The full text of the license can be found in [LICENSE](LICENSE).
 
