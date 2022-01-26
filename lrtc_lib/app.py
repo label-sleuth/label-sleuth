@@ -1,8 +1,10 @@
-
 ###TODOs
-# category_description->category_description
-# category_name->category_name
 # handle stream of csv as text and not file
+# orchestrator cleanups and reorganization (create utils by use cases and move items)
+# remove dev parameter from train function
+
+
+
 import logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -807,8 +809,9 @@ def export_model(workspace_id):
     return send_file(memory_file, attachment_filename=f'{model_id}.zip', as_attachment=True)
 
 
-if __name__ == '__main__':
+def start_server(port=8000):
     # app.run(port=8000, debug=True, use_reloader=False)
+    logging.info(f"Starting SLEUTH classification server on port {port}")
     disable_html_printouts = False
     if disable_html_printouts:
         logging.getLogger('werkzeug').disabled = True
@@ -818,4 +821,4 @@ if __name__ == '__main__':
         raise Exception(
             "Non async models are not supported by the UI. change definitions.ASYNC to True")
     from waitress import serve
-    serve(app, port=8009, threads=20)  # to enable running on a remote machine
+    serve(app, port=port, threads=20)  # to enable running on a remote machine
