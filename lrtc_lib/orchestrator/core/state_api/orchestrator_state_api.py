@@ -21,10 +21,7 @@ WORKSPACE_CLASS_VERSION = 2
 class Workspace:
     workspace_id: str
     dataset_name: str
-    dev_dataset_name: str
-    test_dataset_name: str
     category_to_description: 'dict' = field(default_factory=dict)
-    category_to_labels: 'dict' = field(default_factory=dict)
     category_to_number_of_label_changed: 'dict' = field(default_factory=dict)
     category_to_models: OrderedDict = field(default_factory=OrderedDict)  # category_name to model_id to ModelInfo
     category_to_model_to_recommendations: 'dict' = field(
@@ -71,15 +68,14 @@ def _filename_from_workspace_id(workspace_id: str):
 
 
 @withlock
-def create_workspace(workspace_id: str, dataset_name: str, dev_dataset_name: str = None, test_dataset_name: str = None):
+def create_workspace(workspace_id: str, dataset_name: str):
     illegal_chars = "".join(x for x in workspace_id if not x.isalnum() and x not in "_-")
     assert len(illegal_chars) == 0, f"Workspace id '{workspace_id}' contains illegal characters: '{illegal_chars}'"
 
     assert dataset_name in get_all_datasets(), f"Dataset {dataset_name} does not exist, existing datasets are:" \
                                                f"\n{get_all_datasets()}"
 
-    workspace = Workspace(workspace_id=workspace_id, dataset_name=dataset_name, dev_dataset_name=dev_dataset_name,
-                          test_dataset_name=test_dataset_name)
+    workspace = Workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
     if _filename_from_workspace_id(workspace_id) in os.listdir(WORKSPACE_DATA_DIR):
         raise Exception(f"workspace name '{workspace_id}' already exists")
@@ -125,13 +121,11 @@ def _load_workspace(workspace_id) -> Workspace:
 
 
 @withlock
-def add_category_to_workspace(workspace_id: str, category_name: str, category_description: str,
-                              category_labels: Set[str]):
+def add_category_to_workspace(workspace_id: str, category_name: str, category_description: str):
     workspace = _load_workspace(workspace_id)
     if category_name in workspace.category_to_description:
         raise Exception(f"Category '{category_name}' already exists in workspace '{workspace_id}'")
     workspace.category_to_description[category_name] = category_description
-    workspace.category_to_labels[category_name] = category_labels
     _save_workspace(workspace)
 
 

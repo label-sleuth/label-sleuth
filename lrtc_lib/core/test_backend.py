@@ -22,7 +22,7 @@ class TestEndToEnd(unittest.TestCase):
             query_results = \
             backend.query(WORKSPACE_ID, DATASET_NAME, CATEGORY_NAME, "warrant", unlabeled_only=True, sample_size=20,remove_duplicates=True)["results"]
             # set positives labels for all the queries sentences ("user's labels")
-            uri_with_positive_label = [(x.uri, {CATEGORY_NAME: Label(True, {})}) for x in query_results]
+            uri_with_positive_label = [(x.uri, {CATEGORY_NAME: Label(True)}) for x in query_results]
             backend.set_labels(WORKSPACE_ID, uri_with_positive_label)
 
             first_model_pos_labels = backend.get_label_counts(WORKSPACE_ID, DATASET_NAME, CATEGORY_NAME)[True]
@@ -47,7 +47,7 @@ class TestEndToEnd(unittest.TestCase):
             self.assertEqual(predicted_label_by_model_id,predicted_by_uris,
                              msg="predictions by uris is different from the predictions by the trained model")
             items_to_label = backend.get_elements_to_label(WORKSPACE_ID, CATEGORY_NAME, 10)
-            uri_with_positive_label = [(x.uri, {CATEGORY_NAME: Label(True, {})}) for x in items_to_label]
+            uri_with_positive_label = [(x.uri, {CATEGORY_NAME: Label(True)}) for x in items_to_label]
             backend.set_labels(WORKSPACE_ID, uri_with_positive_label)
 
             # we expect more positive labels than in the previous model

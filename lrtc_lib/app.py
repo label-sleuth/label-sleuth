@@ -1,4 +1,5 @@
 ###TODOs
+#TODO data access, refactor, decide what to do with duplicates,  - FIRST STEP - always return labels
 # handle stream of csv as text and not file
 # orchestrator cleanups and reorganization (create utils by use cases and move items)
 # data access, refactor, decide what to do with duplicates, etc
@@ -7,6 +8,9 @@
 # keep only working active learning strategies
 # get rid of pandas warning
 # consider passing the inferred scores to the active learning, instead of calling the orchestrator.infer()
+# remove dev_dataset_name from Workspace
+# simplify load_documents_from_csv
+# consider changing the output format of infer() method
 
 import logging
 logging.basicConfig(level=logging.INFO,
@@ -47,7 +51,6 @@ def init_properties():
                                               orchestrator_api._post_active_learning_func)
 
 
-
 init_properties()
 app = Flask(__name__)
 auth = HTTPTokenAuth(scheme='Bearer')
@@ -62,7 +65,7 @@ def elements_back_to_front(workspace_id, elements, category):
     element_uri_to_info = \
         {text_element.uri:
              {'id': text_element.uri,
-              'docid': _get_document_id(text_element.uri),
+              'docid': orchestrator_api.get_document_uri(text_element.uri),
               'begin': text_element.span[0][0],
               'end': text_element.span[0][1],
               'text': text_element.text,
@@ -122,11 +125,6 @@ def verify_token(token):
     if not token:
         return False
     return token in tokens
-
-
-def _get_document_id(element_id):
-    idx = element_id.rfind('-')
-    return element_id[0:idx]
 
 
 @app.route('/users/authenticate', methods=['POST'])
@@ -474,7 +472,7 @@ def set_element_label(workspace_id, element_id):
         else:
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
 
-        uri_with_updated_label = [(element_id, {category_name: orchestrator_api.Label(value, {})})]
+        uri_with_updated_label = [(element_id, {category_name: orchestrator_api.Label(value)})]
         orchestrator_api.set_labels(workspace_id, uri_with_updated_label, update_label_counter=update_counter)
 
     res = {'element': get_element(workspace_id, element_id), 'workspace_id': workspace_id, 'category_name': category_name}
@@ -691,7 +689,7 @@ def get_elements_for_precision_evaluation(workspace_id):
     logging.info(f"Precision evaluation {len(prediction_sample)} left after removing negative predictions")
     import random
     random.Random(random_state).shuffle(prediction_sample)
-    prediction_sample = prediction_sample[0:size]
+    prediction_sample = prediction_sample[:size]
     res = dict()
     elements_transformed = elements_back_to_front(workspace_id,
                                                   prediction_sample,

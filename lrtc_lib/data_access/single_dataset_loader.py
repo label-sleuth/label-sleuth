@@ -14,7 +14,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 
-def load_dataset_using_processor(dataset_name: str, force_new,data_processor: DataProcessorAPI) -> List[Document]:
+def load_dataset_using_processor(dataset_name: str, force_new, data_processor: DataProcessorAPI) -> List[Document]:
     """
     Load the Documents of the given dataset.
     :param dataset_name:

@@ -18,7 +18,7 @@ def generate_simple_doc(dataset_name, category_name, doc_id=0):
     start_span = 0
     for idx, sentence in enumerate(sentences):
         end_span = start_span + len(sentence)
-        mock_label = {category_name: Label(LABEL_NEGATIVE, {})}
+        mock_label = {category_name: Label(LABEL_NEGATIVE)}
         text_elements.append(TextElement(uri=URI_SEP.join([dataset_name, str(doc_id), str(idx)]), text=sentence,
                                          span=[(start_span, end_span)], metadata={}, category_to_label=mock_label))
         start_span = end_span + 1

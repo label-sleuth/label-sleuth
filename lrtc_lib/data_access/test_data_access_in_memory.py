@@ -43,8 +43,8 @@ def generate_random_texts_and_labels(doc: Document, num_sentences_to_label: int,
     text_elements_to_label = random.sample(doc.text_elements, min(num_sentences_to_label, len(doc.text_elements)))
     for elem in text_elements_to_label:
         categories_to_label = random.sample(categories, random.randint(0, len(categories)))
-        labels = {cat: Label(label=LABEL_POSITIVE, metadata={}) if cat in categories_to_label else Label(
-            label=LABEL_NEGATIVE, metadata={}) for cat in categories}
+        labels = {cat: Label(label=LABEL_POSITIVE) if cat in categories_to_label else Label(
+            label=LABEL_NEGATIVE) for cat in categories}
         sentences_and_labels.append((elem.uri, labels))
     return sentences_and_labels
 
@@ -52,7 +52,7 @@ def generate_random_texts_and_labels(doc: Document, num_sentences_to_label: int,
 def add_labels_to_doc(doc: Document, category: str):
     sentences_and_labels = []
     for elem in doc.text_elements:
-        labels = {category: Label(label=LABEL_POSITIVE, metadata={})}
+        labels = {category: Label(label=LABEL_POSITIVE)}
         sentences_and_labels.append((elem.uri, labels))
     return sentences_and_labels
 
@@ -233,14 +233,13 @@ class TestDataAccessInMemory(unittest.TestCase):
         # add labels info for a single doc
         texts_and_labels_list = [
             # 1st sent does not match query
-            (doc.text_elements[0].uri, {category: Label(label=LABEL_POSITIVE, metadata={})}),
+            (doc.text_elements[0].uri, {category: Label(label=LABEL_POSITIVE)}),
             # 2nd sent does match query
-            (doc.text_elements[1].uri, {category: Label(label=LABEL_POSITIVE, metadata={})})]
+            (doc.text_elements[1].uri, {category: Label(label=LABEL_POSITIVE)})]
         data_access.set_labels(workspace_id, texts_and_labels_list)
 
         # query + unlabeled elements
-        sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name,
-                                                                       category, sample_all,query=query)
+        sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_all)
         for sampled_text in sampled_texts_res['results']:
             self.assertDictEqual(sampled_text.category_to_label, {})
 
@@ -268,24 +267,21 @@ class TestDataAccessInMemory(unittest.TestCase):
 
 
         # query no limit
-        sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_all,
-                                                                     query=query)
+        sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_all)
         self.assertEqual(20, len(sampled_texts_res['results']),
                          f' {len(sampled_texts_res)} elements should have been sampled.')
 
         second_element_uri = sampled_texts_res["results"][1].uri
-        sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name,
-                                                                       category, sample_all,sample_start_idx=1,
-                                                                       query=query)
+        sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_all,
+                                                                       sample_start_idx=1)
         self.assertEqual(19, len(sampled_texts_res['results']),
                          f' {len(sampled_texts_res)} elements should have been sampled.')
 
         self.assertEqual(second_element_uri,sampled_texts_res['results'][0].uri,"when using sample_start_idx=1,"
                                                                                 "the first element should be the second element without paging")
 
-        sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name,
-                                                   category, sample_all, sample_start_idx=20,
-                                                   query=query)
+        sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_all,
+                                                                       sample_start_idx=20)
         self.assertEqual(0, len(sampled_texts_res['results']),
                          "when sample_start_idx=number_of_elements, no element should return")
 
@@ -348,7 +344,7 @@ class TestDataAccessInMemory(unittest.TestCase):
             if category in texts_and_labels_list[0][1]:
                 texts_and_labels_list[0][1][category].label = LABEL_NEGATIVE
             else:
-                texts_and_labels_list[0][1][category] = Label(label=LABEL_NEGATIVE, metadata={})
+                texts_and_labels_list[0][1][category] = Label(label=LABEL_NEGATIVE)
         data_access.set_labels(workspace_id, texts_and_labels_list)
 
         category_label_counts = data_access.get_label_counts(workspace_id, dataset_name, category)
@@ -396,7 +392,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         self.assertEqual(len(all_elements), len(all_without_dups)+1)
 
         # 1. test propagation of labels:
-        texts_and_labels_list = [(elem.uri, {category: Label(label=LABEL_POSITIVE, metadata={})})
+        texts_and_labels_list = [(elem.uri, {category: Label(label=LABEL_POSITIVE)})
                                  for elem in all_without_dups]
         # set labels without propagating to duplicates
         data_access.set_labels(workspace_id, texts_and_labels_list, propagate_to_duplicates=False)
@@ -414,7 +410,7 @@ class TestDataAccessInMemory(unittest.TestCase):
 
         # 2. test sampling of duplicate examples:
         non_representative_duplicates = [x for x in all_elements if x not in all_without_dups]
-        texts_and_labels_list = [(elem.uri, {category: Label(label=LABEL_POSITIVE, metadata={})})
+        texts_and_labels_list = [(elem.uri, {category: Label(label=LABEL_POSITIVE)})
                                  for elem in non_representative_duplicates]
         # set labels without propagating to duplicates
         data_access.set_labels(workspace_id, texts_and_labels_list, propagate_to_duplicates=False)

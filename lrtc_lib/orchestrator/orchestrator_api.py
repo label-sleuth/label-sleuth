@@ -1,13 +1,10 @@
-import glob
 import logging
-import os
 import re
 import time
 import traceback
 from collections import Counter, defaultdict, OrderedDict
 from concurrent.futures.thread import ThreadPoolExecutor
-from enum import Enum
-from typing import Mapping, List, Sequence, Tuple, Set
+from typing import Mapping, List, Sequence, Tuple
 
 import pandas as pd
 
@@ -20,7 +17,7 @@ from lrtc_lib.data_access.core.data_structs import Document, Label, TextElement,
     LABEL_NEGATIVE
 from lrtc_lib.data_access.single_dataset_loader import load_dataset_using_processor
 from lrtc_lib.data_access.processors.live_process_csv_data import LiveCsvProcessor
-from lrtc_lib.data_access.core.utils import get_workspace_labels_dump_filename, get_document_uri
+from lrtc_lib.data_access.core.utils import get_document_uri
 from lrtc_lib.definitions import ACTIVE_LEARNING_FACTORY, MODEL_FACTORY
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
@@ -31,94 +28,72 @@ from lrtc_lib.training_set_selector.training_set_selector_factory import get_tra
 
 
 # constants
-
 MAX_VALUE = 1000000
 NUMBER_OF_MODELS_TO_KEEP = 2
 TRAIN_COUNTS_STR_KEY = "train_counts"
-DEV_COUNTS_STR_KEY = "dev_counts"
 
 
 # members
-
 data_access = data_access_factory.get_data_access()
 new_data_infer_thread_pool = ThreadPoolExecutor(1)
 
 
-def create_workspace(workspace_id: str, dataset_name: str, dev_dataset_name: str = None, test_dataset_name: str = None):
+def create_workspace(workspace_id: str, dataset_name: str):
     """
     create a new workspace
     :param workspace_id:
     :param dataset_name:
-    :param dev_dataset_name:
-    :param test_dataset_name:
     """
-    orchestrator_state_api.create_workspace(workspace_id, dataset_name, dev_dataset_name, test_dataset_name)
+    orchestrator_state_api.create_workspace(workspace_id, dataset_name)
     logging.info(f"Creating workspace {workspace_id} using dataset {dataset_name}")
 
 
-def create_new_category(workspace_id: str, category_name: str, category_description: str,
-                        category_labels: Set[str] = BINARY_LABELS):
+def create_new_category(workspace_id: str, category_name: str, category_description: str):
     """
     declare a new category in the given workspace
     :param workspace_id:
     :param category_name:
     :param category_description:
-    :param category_labels:
     """
-    orchestrator_state_api.add_category_to_workspace(workspace_id, category_name, category_description, category_labels)
+    orchestrator_state_api.add_category_to_workspace(workspace_id, category_name, category_description)
 
 
-class DeleteModels(Enum):
-    ALL = 0
-    FALSE = 1
-    ALL_BUT_FIRST_MODEL = 2
-
-
-def delete_workspace(workspace_id: str, delete_models: DeleteModels = DeleteModels.ALL, ignore_errors=False):
+def delete_workspace(workspace_id: str):
     """
     delete a given workspace
     :param workspace_id:
-    :param delete_models: ALL - delete all the models of the workspace, FALSE - do not delete models,
-    ALL_BUT_FIRST_MODEL - keep the first model of each category
-    :param ignore_errors:
     """
-    logging.info(f"deleting workspace {workspace_id} ignore errors {ignore_errors}")
-
+    logging.info(f"deleting workspace {workspace_id}")
     if workspace_exists(workspace_id):
         workspace = orchestrator_state_api.get_workspace(workspace_id)
         try:
-            if delete_models != DeleteModels.FALSE:
-                for category in workspace.category_to_models:
-                    for idx, model_id in enumerate(workspace.category_to_models[category]):
-                        if idx == 0 and delete_models == DeleteModels.ALL_BUT_FIRST_MODEL:
-                            continue
-                        delete_model(workspace_id, category, model_id)
+            for category in workspace.category_to_models:
+                delete_category_models(workspace_id, category)
             orchestrator_state_api.delete_workspace_state(workspace_id)
         except Exception as e:
-            logging.error(f"error deleting workspace {workspace_id}")
+            logging.exception(f"error deleting workspace {workspace_id}")
             traceback.print_exc()
-            if not ignore_errors:
-                raise e
+            raise e
         try:
             data_access.clear_saved_labels(workspace_id, workspace.dataset_name)
-            if workspace.dev_dataset_name:
-                data_access.clear_saved_labels(workspace_id, workspace.dev_dataset_name)
         except Exception as e:
-            logging.error(f"error clearing saved label for workspace {workspace_id}")
+            logging.exception(f"error clearing saved labels for workspace {workspace_id}")
             traceback.print_exc()
-            if not ignore_errors:
-                raise e
+            raise e
+
+
+def delete_category_models(workspace_id, category_name):
+    workspace = get_workspace(workspace_id)
+    for idx, model_id in enumerate(workspace.category_to_models[category_name]):
+        delete_model(workspace_id, category_name, model_id)
 
 
 def delete_category(workspace_id: str, category_name: str):
+    delete_category_models(workspace_id, category_name)
     orchestrator_state_api.delete_category_from_workspace(workspace_id, category_name)
 
 
-def add_documents(dataset_name, docs):
-    data_access.add_documents(dataset_name=dataset_name, documents=docs)
-
-
-def query(workspace_id: str, dataset_name: str, category_name: str, query: str,
+def query(workspace_id: str, dataset_name: str, category_name: str, query_regex: str,
           sample_size: int, sample_start_idx: int = 0, unlabeled_only: bool = False, remove_duplicates=False) \
         -> Mapping[str, object]:
     """
@@ -127,7 +102,7 @@ def query(workspace_id: str, dataset_name: str, category_name: str, query: str,
     :param workspace_id:
     :param dataset_name:
     :param category_name:
-    :param query: regex string
+    :param query_regex: string
     :param unlabeled_only: if True, filters out labeled elements
     :param sample_size: maximum items to return
     :param sample_start_idx: get elements starting from this index (for paging)
@@ -141,13 +116,12 @@ def query(workspace_id: str, dataset_name: str, category_name: str, query: str,
         return data_access.sample_unlabeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                           category_name=category_name, sample_size=sample_size,
                                                           sample_start_idx=sample_start_idx,
-                                                          query=query,
                                                           remove_duplicates=remove_duplicates)
     else:
         return data_access.sample_text_elements_with_labels_info(workspace_id=workspace_id, dataset_name=dataset_name,
                                                                  sample_size=sample_size,
                                                                  sample_start_idx=sample_start_idx,
-                                                                 query=query,
+                                                                 query_regex=query_regex,
                                                                  remove_duplicates=remove_duplicates)
 
 
@@ -266,6 +240,7 @@ def unset_labels(workspace_id: str, category_name, uris: Sequence[str]):
     """
     data_access.unset_labels(workspace_id, category_name, uris)
 
+# TODO refactor data access and use better names for each method
 
 def get_all_labeled_text_elements(workspace_id, dataset_name, category) -> Mapping:
     return data_access.sample_labeled_text_elements(workspace_id, dataset_name, category, 10 ** 6,
@@ -292,34 +267,34 @@ def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_d
     :param train_params:
     :return: model_id
     """
-    def get_counts_per_label(text_elements):
-        label_objects = [element.category_to_label[category_name] for element in text_elements]
+    def _get_counts_per_label(text_elements):
+        """
+        reflect the more detailed description of training labels, e.g. how many of the elements have weak labels
+        """
+        label_names = [element.category_to_label[category_name].label.get_detailed_label_name()
+                       for element in text_elements]
 
-        label_names = [label_obj.label if len(label_obj.metadata) == 0 else f'{label_obj.metadata}_{label_obj.label}'
-                       for label_obj in label_objects]
         return dict(Counter(label_names))
 
     model_metadata = dict()
-    train_counts = get_counts_per_label(train_data)
+    train_counts = _get_counts_per_label(train_data)
     model_metadata[TRAIN_COUNTS_STR_KEY] = train_counts
 
-    workspace = get_workspace(workspace_id)
     logging.info(
         f"workspace {workspace_id} training a model for category '{category_name}', model_metadata: {model_metadata}")
-    all_category_labels = workspace.category_to_labels[category_name]
-    train_data = _convert_to_dicts_with_numeric_labels(train_data, category_name, all_category_labels)
-
-    params = {} if train_params is None else train_params
+    train_data = _convert_to_dicts_with_numeric_labels(train_data, category_name, BINARY_LABELS)
 
     model = MODEL_FACTORY.get_model(model_type)
     logging.info(f'start training using {len(train_data)} items')
-    model_id = model.train(train_data=train_data, train_params=params)
+    model_id = model.train(train_data=train_data, train_params=train_params)
     logging.info(f"new model id is {model_id}")
 
     model_status = model.get_model_status(model_id)
+    if train_params:
+        model_metadata = {**model_metadata, **train_params}
     orchestrator_state_api.add_model(workspace_id=workspace_id, category_name=category_name, model_id=model_id,
                                      model_status=model_status, model_type=model_type,
-                                     model_metadata={**model_metadata, **params})
+                                     model_metadata=model_metadata)
     return model_id
 
 
@@ -390,8 +365,7 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
     infer_results = model.infer(model_id=model_info.model_id, items_to_infer=list_of_dicts, infer_params=infer_params,
                                 use_cache=use_cache)
 
-    all_labels = get_workspace(workspace_id).category_to_labels[category_name]
-    numeric_label_to_text = {i: label for i, label in enumerate(sorted(all_labels))}
+    numeric_label_to_text = {i: label for i, label in enumerate(sorted(BINARY_LABELS))}
     infer_results['labels'] = [numeric_label_to_text[l] for l in infer_results['labels']]
 
     return infer_results
@@ -671,14 +645,14 @@ def import_category_labels(workspace_id, labels_df_to_import: pd.DataFrame):
                                                                  sample_size=10**6, remove_duplicates=False)['results']
                     elements_with_label = [e for e in elements_from_query
                                            if get_document_uri(e.uri) == f'{dataset_name}-{doc}']
-                    uris_with_label.extend((e.uri, {category_name: Label(label=label, metadata={})})
+                    uris_with_label.extend((e.uri, {category_name: Label(label=label)})
                                            for e in elements_with_label)
         else:
             for label, df_for_label in category_df.groupby('labels'):
                 regex = '|'.join(f'^{re.escape(t)}$' for t in df_for_label['text'])
                 elements_with_label = query(workspace_id, dataset_name, category_name, query=regex,
                                                              sample_size=10**6, remove_duplicates=True)['results']
-                uris_with_label.extend((e.uri, {category_name: Label(label=label, metadata={})})
+                uris_with_label.extend((e.uri, {category_name: Label(label=label)})
                                        for e in elements_with_label)
         logging.info(f'{category_name}: adding labels for {len(uris_with_label)} uris')
         set_labels(workspace_id, uris_with_label, propagate_to_duplicates=False)

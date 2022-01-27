@@ -132,7 +132,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def sample_text_elements_with_labels_info(self, workspace_id: str, dataset_name: str, sample_size: int,
                                               sample_start_idx=0,
-                                              query: str = None, remove_duplicates=False,
+                                              query_regex: str = None, remove_duplicates=False,
                                               random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query,
@@ -142,7 +142,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for paging)
-        :param query: a regular expression that should be matched in the sampled TextElements. If None, then no such
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
@@ -156,7 +156,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def sample_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str, sample_size: int,
                                        sample_start_idx: int = 0,
-                                       query: str = None, remove_duplicates=False,
+                                       query_regex: str = None, remove_duplicates=False,
                                        random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, unlabeled for category_name in workspace_id, optionally
@@ -167,7 +167,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param category_name: the name of the category whose label information are the target of this sample
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for paging)
-        :param query: a regular expression that should be matched in the sampled TextElements. If None, then no such
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
@@ -217,8 +217,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         raise NotImplementedError('users must define ' + func_name + ' to use this base class')
 
     @abc.abstractmethod
-    def copy_labels_to_new_workspace(self, old_worspace_id: str, new_workspace_id: str, dataset_name: str,
-                                     dev_dataset_name: str):
+    def copy_labels_to_new_workspace(self, old_worspace_id: str, new_workspace_id: str, dataset_name: str):
         func_name = self.copy_labels_to_new_workspace.__name__
         raise NotImplementedError('users must define ' + func_name + ' to use this base class')
 

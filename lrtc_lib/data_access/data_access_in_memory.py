@@ -182,14 +182,14 @@ class DataAccessInMemory(DataAccessApi):
         """
         return logic.get_text_elements_from_df_without_labels(logic.get_ds_in_memory(dataset_name))
 
-    def sample_text_elements(self, dataset_name: str, sample_size: int = DEFAULT_SAMPLE_SIZE, query: str = None,
+    def sample_text_elements(self, dataset_name: str, sample_size: int = DEFAULT_SAMPLE_SIZE, query_regex: str = None,
                              remove_duplicates=False, random_state: int = None) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query.
 
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param sample_size: how many TextElements should be sampled
-        :param query: a regular expression that should be matched in the sampled TextElements. If None, then no such
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state:
@@ -199,7 +199,7 @@ class DataAccessInMemory(DataAccessApi):
         """
         results_dict = logic.sample_text_elements(workspace_id=None, dataset_name=dataset_name,
                                                   sample_size=sample_size,
-                                                  filter_func=lambda df: logic.filter_by_query(df, query),
+                                                  filter_func=lambda df: logic.filter_by_query(df, query_regex),
                                                   remove_duplicates=remove_duplicates,
                                                   random_state=random_state)
         return results_dict
@@ -207,7 +207,7 @@ class DataAccessInMemory(DataAccessApi):
     def sample_text_elements_with_labels_info(self, workspace_id: str, dataset_name: str,
                                               sample_size: int = DEFAULT_SAMPLE_SIZE,
                                               sample_start_idx: int = 0,
-                                              query: str = None,
+                                              query_regex: str = None,
                                               remove_duplicates=False,
                                               random_state: int = 0) -> Mapping:
         """
@@ -218,7 +218,7 @@ class DataAccessInMemory(DataAccessApi):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for paging) default is 0
-        :param query: a regular expression that should be matched in the sampled TextElements. If None, then no such
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
@@ -229,17 +229,15 @@ class DataAccessInMemory(DataAccessApi):
         with self.get_lock_for_workspace(workspace_id):
             results_dict = logic.sample_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                       sample_size=sample_size,
-                                                      filter_func=lambda df: logic.filter_by_query(df, query),
+                                                      filter_func=lambda df: logic.filter_by_query(df, query_regex),
                                                       sample_start_idx=sample_start_idx,
                                                       remove_duplicates=remove_duplicates,
                                                       random_state=random_state)
 
         return results_dict
 
-    def sample_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
-                                       sample_size: int = DEFAULT_SAMPLE_SIZE,
-                                       sample_start_idx: int = 0, query: str = None,
-                                       remove_duplicates=False,
+    def sample_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str, sample_size: int,
+                                       sample_start_idx: int = 0, query_regex: str = None, remove_duplicates=False,
                                        random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, unlabeled for category_name in workspace_id, optionally
@@ -250,7 +248,7 @@ class DataAccessInMemory(DataAccessApi):
         :param category_name: the name of the category whose label information are the target of this sample
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for paging) default is 0
-        :param query: a regular expression that should be matched in the sampled TextElements. If None, then no such
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
@@ -259,7 +257,7 @@ class DataAccessInMemory(DataAccessApi):
         {'results': [TextElement], 'hit_count': int}
         """
         filter_func = lambda df: logic.filter_by_query_and_label_status(df, category_name, LabeledStatus.UNLABELED,
-                                                                        query)
+                                                                        query_regex)
 
         with self.get_lock_for_workspace(workspace_id):
             results_dict = logic.sample_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
@@ -271,7 +269,7 @@ class DataAccessInMemory(DataAccessApi):
         return results_dict
 
     def sample_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
-                                     sample_size: int = DEFAULT_SAMPLE_SIZE, query: str = None,
+                                     sample_size: int = DEFAULT_SAMPLE_SIZE, query_regex: str = None,
                                      remove_duplicates=False,
                                      random_state: int = 0) -> Mapping:
         """
@@ -282,7 +280,7 @@ class DataAccessInMemory(DataAccessApi):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param category_name: the name of the category whose label information are the target of this sample
         :param sample_size: how many TextElements should be sampled
-        :param query: a regular expression that should be matched in the sampled TextElements. If None, then no such
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
@@ -290,7 +288,7 @@ class DataAccessInMemory(DataAccessApi):
         value is the total number of TextElements in the dataset matched by the query.
         {'results': [TextElement], 'hit_count': int}
         """
-        filter_func = lambda df: logic.filter_by_query_and_label_status(df, category_name, LabeledStatus.LABELED, query)
+        filter_func = lambda df: logic.filter_by_query_and_label_status(df, category_name, LabeledStatus.LABELED, query_regex)
         results_dict = logic.sample_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                   sample_size=sample_size,
                                                   filter_func=filter_func,
@@ -324,16 +322,10 @@ class DataAccessInMemory(DataAccessApi):
         category_label_counts = Counter(category_label_list)
         return category_label_counts
 
-    def copy_labels_to_new_workspace(self, old_worspace_id: str, new_workspace_id: str, dataset_name: str,
-                                     dev_dataset_name: str):
+    def copy_labels_to_new_workspace(self, old_worspace_id: str, new_workspace_id: str, dataset_name: str):
         labels_dict_from_old_workspace = logic.get_labels(old_worspace_id, dataset_name)
         labels_list = [(uri, deepcopy(label_dict)) for uri, label_dict in labels_dict_from_old_workspace.items()]
         self.set_labels(new_workspace_id, labels_list)
-
-        if dev_dataset_name is not None:
-            labels_dict_from_old_workspace = logic.get_labels(old_worspace_id, dev_dataset_name)
-            labels_list = [(uri, deepcopy(label_dict)) for uri, label_dict in labels_dict_from_old_workspace.items()]
-            self.set_labels(new_workspace_id, labels_list)
 
     def clear_saved_labels(self, workspace_id, dataset_name):
         """

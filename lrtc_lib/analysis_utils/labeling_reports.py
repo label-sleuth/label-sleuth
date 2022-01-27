@@ -8,7 +8,7 @@ from typing import List, Tuple
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
-from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, BINARY_LABELS
+from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, BINARY_LABELS, LabelType
 from lrtc_lib.definitions import MODEL_FACTORY
 from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_api import ModelStatus
@@ -47,11 +47,14 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
         logging.info(f'*** waiting for cross-validation model {mid} ***')
         while model.get_model_status(mid) == ModelStatus.TRAINING:  # TODO find proper fix
             time.sleep(0.1)
+
         logging.info(f'*** done waiting for cross-validation model {mid} ***')
         scores = model.infer(mid, all_train_data, None)['scores']
+        # only look at scores of strong labeled elements from the current validation fold
+        # TODO each element has only one scores so we can concatenate one vector instead of mean of one value?
         scores = [score[1] if element_dict in train_splits[i]
-                  and 'weak' not in element.category_to_label[category_name].metadata
-                  else np.nan for element_dict, element, score in zip(all_train_data, all_train_text_elements, scores)]
+                              and element.category_to_label[category_name].type == LabelType.Standard else np.nan
+                  for element_dict, element, score in zip(all_train_data, all_train_text_elements, scores)]
         model.delete_model(mid)
         all_pos_scores.append(scores)
     pos_scores = np.nanmean(all_pos_scores, axis=0)

@@ -3,7 +3,7 @@ import random
 from collections import Counter
 from typing import Tuple, Sequence, List
 
-from lrtc_lib.data_access.core.data_structs import Label, TextElement
+from lrtc_lib.data_access.core.data_structs import Label, TextElement, BINARY_LABELS, LabelType
 from lrtc_lib.data_access import data_access_factory
 from lrtc_lib.training_set_selector.train_set_selector_api import TrainSetSelectorAPI
 from lrtc_lib.orchestrator import orchestrator_api
@@ -20,7 +20,7 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
                                                                         remove_duplicates=True)
 
 
-        self.verify_all_labels_are_in_train(workspace_id, category_name, train_counts)
+        self.verify_all_labels_are_in_train(train_counts)
 
         logging.info(f"using {len(train_data)} for train using dataset {train_dataset_name}")
 
@@ -37,9 +37,8 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
 
         return labeled_sample, counts
 
-    def verify_all_labels_are_in_train(self, workspace_id, category_name, train_counts):
-        all_category_labels = orchestrator_api.get_workspace(workspace_id).category_to_labels[category_name]
-        labels_not_in_train = [label for label in all_category_labels if train_counts[label] == 0] # TODO no need to use orchest for that
+    def verify_all_labels_are_in_train(self, train_counts):
+        labels_not_in_train = [label for label in BINARY_LABELS if train_counts[label] == 0]
         if len(labels_not_in_train) > 0:
             raise Exception(
                 f"no train examples for labels: {labels_not_in_train}, cannot train a model: {train_counts}")
@@ -80,7 +79,7 @@ class TrainSetSelectorAllLabeledPlusUnlabeledAsWeakNegative(TrainSetSelectorAllL
                 if weak_negatives_added == required_number_of_unlabeled_as_neg:
                     break
                 if category_name not in element.category_to_label:  # unlabeled
-                    element.category_to_label = {category_name: Label(self.neg_label, {'weak': True})}
+                    element.category_to_label = {category_name: Label(self.neg_label, label_type=LabelType.Weak)}
                     train_data.append(element)
                     weak_negatives_added += 1
             train_counts[self.neg_label] += weak_negatives_added
@@ -95,7 +94,7 @@ class TrainSetSelectorAllLabeledPlusUnlabeledAsWeakNegative(TrainSetSelectorAllL
             train_data = positives + negatives_to_keep
             train_counts[self.neg_label] = len(negatives_to_keep)
 
-        self.verify_all_labels_are_in_train(workspace_id, category_name, train_counts)
+        self.verify_all_labels_are_in_train(train_counts)
 
         logging.info(f"using {len(train_data)} for train using dataset {train_dataset_name}")
 
