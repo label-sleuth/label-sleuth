@@ -31,7 +31,7 @@ class SVM(ModelAPI):
         self.multi_label = multi_label
 
 
-    def train_with_async_support(self, model_id, train_data, train_params):
+    def _train(self, model_id, train_data, train_params):
         if self.kernel == "linear":
             svm_implementation = sklearn.svm.LinearSVC()
         elif self.kernel == "rbf":

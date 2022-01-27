@@ -54,7 +54,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
 
     def train_and_update_status(self, model_id, *args):
         try:
-            self.train_with_async_support(model_id, *args)
+            self._train(model_id, *args)
             self.mark_train_as_completed(model_id)
         except Exception:
             logging.exception(f'model {model_id} failed with exception')
@@ -185,18 +185,17 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         self.__raise_not_implemented('_infer')
 
     @abc.abstractmethod
-    def train_with_async_support(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
+    def _train(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
         """
         An async implementation of train, that receives a model id from the *train* wrapper and trains a new policy
         for this id. After the training process is complete (this may include inference on *test_data*), this function
         must call *self.mark_train_as_completed*
         """
-        self.__raise_not_implemented('train_with_async_support')
+        self.__raise_not_implemented('_train')
 
     @abc.abstractmethod
     def get_models_dir(self):
         self.__raise_not_implemented('get_models_dir')
-
 
 
     def delete_model(self, model_id):

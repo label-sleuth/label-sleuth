@@ -40,7 +40,7 @@ class NaiveBayes(ModelAPI):
         elif self.representation_type == RepresentationType.GLOVE:
             return get_glove_representation(input_data, language=language), None
 
-    def train_with_async_support(self, model_id, train_data, train_params):
+    def _train(self, model_id, train_data, train_params):
         model = MultinomialNB() if self.representation_type == RepresentationType.BOW else GaussianNB()
         # Train the model using the training sets
         language = self.get_language(model_id)

@@ -42,7 +42,7 @@ class Ensemble(ModelAPI):
         model_ids = [model.train(train_data, train_params) for model in self.models]
         return ",".join(model_ids)
 
-    def train_with_async_support(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
+    def _train(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
         pass
 
     def _infer(self, model_id, items_to_infer, infer_params=None):

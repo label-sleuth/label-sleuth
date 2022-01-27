@@ -32,7 +32,7 @@ class HFTransformers(ModelAPI):
         self.tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model_name)
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-    def train_with_async_support(self, model_id, train_data, train_params: dict):
+    def _train(self, model_id, train_data, train_params: dict):
         texts = [element["text"] for element in train_data]
         labels = [element["label"] for element in train_data]
         train_dataset = self.process_inputs(texts, labels)
