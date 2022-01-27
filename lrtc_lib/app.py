@@ -1,8 +1,12 @@
 ###TODOs
 # handle stream of csv as text and not file
 # orchestrator cleanups and reorganization (create utils by use cases and move items)
-# unite async with model API and remove async parameter from the system
-
+# data access, refactor, decide what to do with duplicates, etc
+# improve /async_support/_post_method and stuff...
+# consider using one threadpool and one process pool for all thread/processes we run?
+# keep only working active learning strategies
+# get rid of pandas warning
+# consider passing the inferred scores to the active learning, instead of calling the orchestrator.infer()
 
 import logging
 logging.basicConfig(level=logging.INFO,
@@ -38,13 +42,10 @@ executor = ThreadPoolExecutor(20)
 
 
 def init_properties():
-    orchestrator_api.set_active_learning_strategy(CONFIGURATION.active_learning_strategy)
-
-    definitions.ASYNC = True  # Always async in the UI
     start_orchestrator_background_job_manager(orchestrator_api._update_recommendation,
                                               orchestrator_api._post_train_method,
                                               orchestrator_api._post_active_learning_func)
-    definitions.LOCAL_FINETUNE = CONFIGURATION.local_finetune
+
 
 
 init_properties()
@@ -816,8 +817,6 @@ def start_server(port=8000):
         logging.getLogger('werkzeug').disabled = True
         os.environ['WERKZEUG_RUN_MAIN'] = True
     # app.run(host="0.0.0.0",port=8008,debug=False) # to enable running on a remote machine
-    if not definitions.ASYNC:
-        raise Exception(
-            "Non async models are not supported by the UI. change definitions.ASYNC to True")
+
     from waitress import serve
     serve(app, port=port, threads=20)  # to enable running on a remote machine

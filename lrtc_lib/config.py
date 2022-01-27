@@ -22,7 +22,6 @@ from lrtc_lib.training_set_selector.train_set_selector_api import TrainingSetSel
 # MODEL_POLICY = ModelPolicy(ModelTypesInternal.M_SVM)
 # TRAINING_SET_SELECTION_STRATEGY = TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO
 # ACTIVE_LEARNING_STRATEGY = ActiveLearningStrategies.HARD_MINING
-# LOCAL_FINETUNE = False
 
 
 @dataclass

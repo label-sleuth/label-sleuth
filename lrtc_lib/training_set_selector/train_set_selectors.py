@@ -39,7 +39,7 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
 
     def verify_all_labels_are_in_train(self, workspace_id, category_name, train_counts):
         all_category_labels = orchestrator_api.get_workspace(workspace_id).category_to_labels[category_name]
-        labels_not_in_train = [label for label in all_category_labels if train_counts[label] == 0]
+        labels_not_in_train = [label for label in all_category_labels if train_counts[label] == 0] # TODO no need to use orchest for that
         if len(labels_not_in_train) > 0:
             raise Exception(
                 f"no train examples for labels: {labels_not_in_train}, cannot train a model: {train_counts}")

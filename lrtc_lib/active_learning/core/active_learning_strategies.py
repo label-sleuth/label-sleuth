@@ -10,6 +10,7 @@ class ActiveLearningStrategies(Enum): #TODO keep only they important strategies
     DAL = 3
     DROPOUT_PERCEPTRON = 4
     PERCEPTRON_ENSEMBLE = 5
+    BLA = 6
 
 
 def get_compatible_models(model_type, active_learning_strategy):

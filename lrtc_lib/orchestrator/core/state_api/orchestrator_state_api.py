@@ -273,13 +273,6 @@ def update_model_state(workspace_id: str, category_name: str, model_id: str, new
 
 
 @withlock
-def copy_workspace(existing_workspace_id: str, new_workspace_id: str):
-    workspace = _load_workspace(existing_workspace_id)
-    workspace.workspace_id = new_workspace_id
-    _save_workspace(workspace)
-
-
-@withlock
 def workspace_exists(workspace_id: str) -> bool:
     return os.path.exists(os.path.join(WORKSPACE_DATA_DIR, _filename_from_workspace_id(workspace_id)))
 

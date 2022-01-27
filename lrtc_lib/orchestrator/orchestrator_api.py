@@ -40,51 +40,8 @@ DEV_COUNTS_STR_KEY = "dev_counts"
 
 # members
 
-active_learning_strategy = CONFIGURATION.active_learning_strategy
-active_learner = ACTIVE_LEARNING_FACTORY.get_active_learner(active_learning_strategy)
 data_access = data_access_factory.get_data_access()
 new_data_infer_thread_pool = ThreadPoolExecutor(1)
-
-
-def _delete_orphan_labels():
-    """
-    delete labels that are not attached to a known workspace
-    """
-    all_label_dump_files = glob.glob(get_workspace_labels_dump_filename(workspace_id='*', dataset_name='*'))
-    existing_workspace_ids = [w.workspace_id for w in orchestrator_state_api.get_all_workspaces()]
-    dump_files_with_parents = [file for wid in existing_workspace_ids for file in
-                               glob.glob(get_workspace_labels_dump_filename(workspace_id=wid, dataset_name='*'))]
-    for dump_file in all_label_dump_files:
-        if dump_file not in dump_files_with_parents:
-            logging.info(f"deleting orphan labels file {dump_file}")
-            os.remove(dump_file)
-
-
-def copy_workspace(existing_workspace_id: str, new_workspace_id: str):
-    """
-    Creates a copy of a given workspace with its labels under a new workspace id
-    :param existing_workspace_id:
-    :param new_workspace_id:
-    :return:
-    """
-    workspace = get_workspace(existing_workspace_id)
-    dataset_name = workspace.dataset_name
-    dev_dataset_name = workspace.dev_dataset_name
-    data_access.copy_labels_to_new_workspace(existing_workspace_id, new_workspace_id, dataset_name, dev_dataset_name)
-    orchestrator_state_api.copy_workspace(existing_workspace_id, new_workspace_id)
-    return new_workspace_id
-
-
-def set_active_learning_strategy(new_active_learning_strategy=None):
-    """
-    Set active learning policy to use
-    :param new_active_learning_strategy:
-    :return:
-    """
-    global active_learner, active_learning_strategy
-    if new_active_learning_strategy is not None:
-        active_learning_strategy = new_active_learning_strategy
-        active_learner = ACTIVE_LEARNING_FACTORY.get_active_learner(active_learning_strategy)
 
 
 def create_workspace(workspace_id: str, dataset_name: str, dev_dataset_name: str = None, test_dataset_name: str = None):
@@ -230,7 +187,7 @@ def _update_recommendation(workspace_id, dataset_name, category_name, count, mod
     if num_recommendations < count:
         orchestrator_state_api.update_active_learning_status(workspace_id, category_name, model.model_id,
                                                              ActiveLearningRecommendationsStatus.AL_IN_PROGRESS)
-
+        active_learner = ACTIVE_LEARNING_FACTORY.get_active_learner(CONFIGURATION.active_learning_strategy)
         new_recommendations = active_learner.get_recommended_items_for_labeling(
             workspace_id=workspace_id, model_id=model.model_id, dataset_name=dataset_name, category_name=category_name,
             sample_size=count)

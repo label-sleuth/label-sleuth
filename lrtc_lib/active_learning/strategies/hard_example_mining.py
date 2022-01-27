@@ -25,6 +25,7 @@ class HardMiningLearner(ActiveLearner):
         return items.tolist()
 
     def get_per_element_score(self, items, workspace_id, model_id, dataset_name, category_name):
+        #TODO consider passing the inferred scores to the ActiveLearning instead of using the orchestrator
         scores = orchestrator_api.infer(workspace_id, category_name, items)["scores"]
 
         entropy_all = np.array([entropy(score) for score in scores]) # == 0.5 - np.abs(np.array([x[1] for x in scores]) - 0.5)
