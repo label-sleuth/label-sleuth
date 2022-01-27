@@ -1,12 +1,13 @@
 import os
-from typing import Iterable
+import time
+from typing import Iterable, Sequence, Mapping
 import numpy as np
 
 
 import logging
 
 from lrtc_lib.definitions import ROOT_DIR, MODEL_FACTORY
-from lrtc_lib.models.core.model_api import ModelAPI, infer_with_cache, ModelStatus, delete_model_cache
+from lrtc_lib.models.core.model_api import ModelAPI, ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -27,7 +28,7 @@ class Ensemble(ModelAPI):
         :param model_dir:
         :param return_all_scores: If true returns outputs of models with index of their number (corresponding to places in model_types argument)
         """
-        super().__init__()
+        super(Ensemble, self).__init__()
 
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
@@ -37,16 +38,19 @@ class Ensemble(ModelAPI):
         self.return_all_scores = return_all_scores
         self.models = [MODEL_FACTORY.get_model(model_type) for model_type in model_types]
 
-    def train(self, train_data, dev_data, train_params):
-        model_ids = [model.train(train_data, dev_data, train_params) for model in self.models]
+    def train(self, train_data, train_params):
+        model_ids = [model.train(train_data, train_params) for model in self.models]
         return ",".join(model_ids)
 
-    @infer_with_cache
-    def infer(self, model_id, items_to_infer, infer_params=None, use_cache=True):
+    def train_with_async_support(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
+        pass
+
+    def _infer(self, model_id, items_to_infer, infer_params=None):
         results = {}
         all_scores = []
         for i, (model, m_id) in enumerate(zip(self.models, model_id.split(","))):
-            res = model.infer(m_id, items_to_infer, infer_params, use_cache)
+            res = model.infer(m_id, items_to_infer, infer_params, use_cache=False) # no need to cache the results as
+                                                                                   # the ensemble is caching the results
             if self.return_all_scores:
                 for key, val in res.items():
                     # currently raises if key is not a string, to not assume it: f"{key}{i}"
@@ -71,7 +75,6 @@ class Ensemble(ModelAPI):
     def get_models_dir(self):
         return self.models[0].get_models_dir()
 
-    @delete_model_cache
     def delete_model(self, model_id):
         for model, m_id in zip(self.models, model_id.split(",")):
             model.delete_model(m_id)
@@ -86,7 +89,10 @@ if __name__ == '__main__':
                   {"text": "play with cats", "label": 0},
                   {"text": "dont know", "label": 0},
                   {"text": "what else", "label": 0}]
-    model_id = model.train(train_data, None, {})
+    model_id = model.train(train_data, {})
+    while model.get_model_status(model_id)!=ModelStatus.READY:
+        logging.info(f"waiting for model status to be ready {model.get_model_status(model_id)}")
+        time.sleep(1)
     infer_list = []
     # for x in range(3):
     #     infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})
@@ -94,4 +100,7 @@ if __name__ == '__main__':
     infer_list.append({"text": "I cats"})
     infer_list.append({"text": "I love dogs"})
     res = model.infer(model_id, infer_list, {})
+    logging.info("infer the same elements.")
+    res = model.infer(model_id, infer_list, {})
+    model.delete_model(model_id)
     print(res)

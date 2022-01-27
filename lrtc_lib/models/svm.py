@@ -3,7 +3,7 @@ import shutil
 import os
 import numpy as np
 
-from sklearn import svm
+import sklearn.svm
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.multiclass import OneVsRestClassifier
 
@@ -13,33 +13,30 @@ from lrtc_lib.definitions import ROOT_DIR
 import logging
 
 from lrtc_lib.models.core.languages import Languages
-from lrtc_lib.models.core.model_api import infer_with_cache, delete_model_cache
-from lrtc_lib.models.core.model_async import ModelAsync, update_train_status
+from lrtc_lib.models.core.model_api import ModelAPI
 from lrtc_lib.models.core.tools import RepresentationType, get_glove_representation
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 # TODO remove unsupported types (multi-label etc.)
-class SVM(ModelAsync):
-    def __init__(self, representations_type: RepresentationType, multi_label=False, async_call=False,
-                 model_dir=os.path.join(ROOT_DIR, "output", "models", "svm"), kernel="linear",
-                 use_context_features=False):
-        super(SVM, self).__init__(async_call=async_call)
+class SVM(ModelAPI):
+    def __init__(self, representations_type: RepresentationType, multi_label=False,
+                 model_dir=os.path.join(ROOT_DIR, "output", "models", "svm"), kernel="linear"):
+        super().__init__()
         os.makedirs(model_dir, exist_ok=True)
         self.model_dir = model_dir
 
         self.kernel = kernel
         self.representation_type = representations_type
         self.multi_label = multi_label
-        self.use_context_features = use_context_features
 
-    @update_train_status
-    def train_with_async_support(self, model_id, train_data, dev_data, train_params):
+
+    def train_with_async_support(self, model_id, train_data, train_params):
         if self.kernel == "linear":
-            svm_implementation = svm.LinearSVC()
+            svm_implementation = sklearn.svm.LinearSVC()
         elif self.kernel == "rbf":
             logging.warning("Using some arbitrary low gamma, gamma and C values might be better with tuning")
-            svm_implementation = svm.SVC(gamma=1e-08)
+            svm_implementation = sklearn.svm.SVC(gamma=1e-08)
         else:
             raise ValueError("Unknown kernel type")
 
@@ -58,8 +55,8 @@ class SVM(ModelAsync):
         with open(self.model_file_by_id(model_id), "wb") as fl:
             pickle.dump(model, fl)
 
-    @infer_with_cache
-    def infer(self, model_id, items_to_infer, infer_params=None, use_cache=True):
+
+    def _infer(self, model_id, items_to_infer, infer_params=None):
         with open(self.vectorizer_file_by_id(model_id), "rb") as fl:
             vectorizer = pickle.load(fl)
         with open(self.model_file_by_id(model_id), "rb") as fl:
@@ -89,24 +86,11 @@ class SVM(ModelAsync):
                 vectorizer = CountVectorizer(analyzer="word", tokenizer=None, preprocessor=None, stop_words=None,
                                              lowercase=True, max_features=10000)
                 train_data_features = vectorizer.fit_transform(texts)
-                if self.use_context_features:
-                    return create_context_features_from_sparse_vectorizer(texts, vectorizer), vectorizer
-                else:
-                    return train_data_features, vectorizer
+                return train_data_features, vectorizer
             else:
-                if self.use_context_features:
-                    return create_context_features_from_sparse_vectorizer(texts, vectorizer), None
-                else:
-                    return vectorizer.transform(texts), None
+                return vectorizer.transform(texts), None
         elif self.representation_type == RepresentationType.GLOVE:
-            if self.use_context_features:
-                main_texts, context_texts = split_to_main_and_context_texts(texts)
-                main_reps = get_glove_representation(main_texts, language=language)
-                context_reps = get_glove_representation(context_texts, language=language)
-                joint_reps = [np.hstack([m, c]) for m, c in zip(main_reps, context_reps)]
-                return joint_reps, None
-            else:
-                return get_glove_representation(texts, language=language), None
+            return get_glove_representation(texts, language=language), None
 
     def model_file_by_id(self, model_id):
         return os.path.join(self.get_model_dir_by_id(model_id), "model")
@@ -117,35 +101,10 @@ class SVM(ModelAsync):
     def get_models_dir(self):
         return self.model_dir
 
-    @delete_model_cache
-    def delete_model(self, model_id):
-        logging.info(f"deleting SVM model {model_id}")
-        model_dir = self.get_model_dir_by_id(model_id)
-        if os.path.isdir(model_dir):
-            shutil.rmtree(model_dir)
-
-
-def split_to_main_and_context_texts(texts):
-    main_texts = []
-    context_texts = []
-    for combined_text in texts:
-        context_a, main, context_b = combined_text.split('__CONTEXT__')
-        main_texts.append(main)
-        context_texts.append(' __SEP__ '.join([context_a, context_b]))
-    return main_texts, context_texts
-
-
-def create_context_features_from_sparse_vectorizer(texts, vectorizer):
-    main_texts, context_texts = split_to_main_and_context_texts(texts)
-    main_reps = vectorizer.transform(main_texts).toarray()
-    context_reps = vectorizer.transform(context_texts).toarray()
-    return [np.hstack([m, c]) for m, c in zip(main_reps, context_reps)]
-
-
 if __name__ == '__main__':
 
     import uuid
-    svm = SVM(RepresentationType.GLOVE, use_context_features=False)
+    svm = SVM(RepresentationType.GLOVE)
 
     train_data = [{"text": "I love dogs", "label": 2},
                   {"text": "I like to play with dogs", "label": 1},
@@ -159,7 +118,7 @@ if __name__ == '__main__':
     #               {"text": 'before text__CONTEXT__fascinating text__CONTEXT__after text', "label": 0},
     #               ]
 
-    model_id = svm.train(train_data, None, {})
+    model_id = svm.train(train_data, {})
     infer_list = []
     for x in range(3):
         # infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})

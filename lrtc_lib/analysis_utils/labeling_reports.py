@@ -15,7 +15,7 @@ from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.tools import get_glove_representation, remove_stop_words_and_punctuation
 from lrtc_lib.orchestrator.utils import _convert_to_dicts_with_numeric_labels
-from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import \
+from lrtc_lib.training_set_selector.train_set_selector_api import \
     TrainingSetSelectionStrategy
 from lrtc_lib.training_set_selector.training_set_selector_factory import get_training_set_selector
 
@@ -28,10 +28,10 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
                                              selector=TrainingSetSelectionStrategy.ALL_LABELED,
                                              language=Languages.ENGLISH):
     start_time = time.time()
-    train_and_dev_sets_selector = get_training_set_selector(selector=selector)
-    all_train_text_elements, _ = train_and_dev_sets_selector.get_train_and_dev_sets(
+    train_set_selector = get_training_set_selector(selector=selector)
+    all_train_text_elements, _ = train_set_selector.get_train_set(
         workspace_id=workspace_id, train_dataset_name=dataset_name,
-        category_name=category_name, dev_dataset_name=None)
+        category_name=category_name)
     model = MODEL_FACTORY.get_model(model_type)
 
     num_folds = 4
@@ -43,7 +43,7 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
     all_pos_scores = []
     for i in range(num_folds):
         fold_train_data = np.concatenate([part for j, part in enumerate(train_splits) if j != i])
-        mid = model.train(fold_train_data, None, {'Language': language})
+        mid = model.train(fold_train_data, {'Language': language})
         logging.info(f'*** waiting for cross-validation model {mid} ***')
         while model.get_model_status(mid) == ModelStatus.TRAINING:  # TODO find proper fix
             time.sleep(0.1)

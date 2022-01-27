@@ -325,14 +325,13 @@ def sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_
                                                       remove_duplicates=False, random_state=random_state)
 
 
-def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_data, dev_data, train_params=None):
+def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_data, train_params=None):
     """
     train a model for a category in the specified workspace
     :param workspace_id:
     :param category_name:
     :param model_type:
     :param train_data:
-    :param dev_data:
     :param train_params:
     :return: model_id
     """
@@ -346,22 +345,18 @@ def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_d
     model_metadata = dict()
     train_counts = get_counts_per_label(train_data)
     model_metadata[TRAIN_COUNTS_STR_KEY] = train_counts
-    if dev_data is not None:
-        model_metadata[DEV_COUNTS_STR_KEY] = get_counts_per_label(dev_data)
 
     workspace = get_workspace(workspace_id)
     logging.info(
         f"workspace {workspace_id} training a model for category '{category_name}', model_metadata: {model_metadata}")
     all_category_labels = workspace.category_to_labels[category_name]
     train_data = _convert_to_dicts_with_numeric_labels(train_data, category_name, all_category_labels)
-    if dev_data:
-        dev_data = _convert_to_dicts_with_numeric_labels(dev_data, category_name, all_category_labels)
 
     params = {} if train_params is None else train_params
 
     model = MODEL_FACTORY.get_model(model_type)
     logging.info(f'start training using {len(train_data)} items')
-    model_id = model.train(train_data=train_data, dev_data=dev_data, train_params=params)
+    model_id = model.train(train_data=train_data, train_params=params)
     logging.info(f"new model id is {model_id}")
 
     model_status = model.get_model_status(model_id)
@@ -854,12 +849,12 @@ def train_if_recommended(workspace_id: str, category_name: str, force=False):
                 f" training a new model")
             iteration_num = len(models_without_errors)
             model_type = CONFIGURATION.model_policy.get_model(iteration_num)
-            train_and_dev_sets_selector = get_training_set_selector(selector=CONFIGURATION.training_set_selection_strategy)
-            train_data, dev_data = train_and_dev_sets_selector.get_train_and_dev_sets(
+            train_set_selector = get_training_set_selector(selector=CONFIGURATION.training_set_selection_strategy)
+            train_data = train_set_selector.get_train_set(
                 workspace_id=workspace_id, train_dataset_name=dataset_name,
-                category_name=category_name, dev_dataset_name=workspace.dev_dataset_name)
+                category_name=category_name)
             model_id = train(workspace_id=workspace_id, category_name=category_name, model_type=model_type,
-                             train_data=train_data, dev_data=dev_data)
+                             train_data=train_data)
             return model_id
         else:
             logging.info(f"{label_counts[LABEL_POSITIVE]} positive elements (should be >={CONFIGURATION.first_model_positive_threshold}) AND"

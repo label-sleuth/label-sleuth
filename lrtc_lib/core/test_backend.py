@@ -1,8 +1,7 @@
 import unittest
-from lrtc_lib.core import backend
 from lrtc_lib import definitions
 from lrtc_lib.data_access.core.data_structs import Label
-from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import TrainingSetSelectionStrategy
+from lrtc_lib.training_set_selector.train_set_selector_api import TrainingSetSelectionStrategy
 
 
 class TestEndToEnd(unittest.TestCase):

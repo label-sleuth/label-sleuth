@@ -1,4 +1,3 @@
-
 import logging
 
 from lrtc_lib.models.core.model_types import ModelTypes
@@ -10,7 +9,6 @@ class ModelFactory(object):
         self.loaded_models = {}
 
     def get_model(self, model_type: ModelTypes):
-        from lrtc_lib.definitions import ASYNC
         try:
             if model_type == ModelTypes.RAND:
                 if model_type not in self.loaded_models:
@@ -29,20 +27,20 @@ class ModelFactory(object):
             elif model_type == ModelTypes.SVM_OVER_GLOVE:
                 from lrtc_lib.models.svm import SVM
                 if model_type not in self.loaded_models:
-                    self.loaded_models[model_type] = SVM(RepresentationType.GLOVE, async_call=ASYNC)
+                    self.loaded_models[model_type] = SVM(RepresentationType.GLOVE)
             elif model_type == ModelTypes.SVM_OVER_BOW:
                 from lrtc_lib.models.svm import SVM
                 if model_type not in self.loaded_models:
-                    self.loaded_models[model_type] = SVM(RepresentationType.BOW, async_call=ASYNC)
+                    self.loaded_models[model_type] = SVM(RepresentationType.BOW)
 
             elif model_type == ModelTypes.NB_OVER_GLOVE:
                 from lrtc_lib.models.naive_bayes import NaiveBayes
                 if model_type not in self.loaded_models:
-                    self.loaded_models[model_type] = NaiveBayes(RepresentationType.GLOVE, async_call=ASYNC)
+                    self.loaded_models[model_type] = NaiveBayes(RepresentationType.GLOVE)
             elif model_type == ModelTypes.NB_OVER_BOW:
                 from lrtc_lib.models.naive_bayes import NaiveBayes
                 if model_type not in self.loaded_models:
-                    self.loaded_models[model_type] = NaiveBayes(RepresentationType.BOW, async_call=ASYNC)
+                    self.loaded_models[model_type] = NaiveBayes(RepresentationType.BOW)
             else:
                 raise Exception(f"model type {model_type.name} is not supported by {self.__class__.__name__}")
         except Exception:

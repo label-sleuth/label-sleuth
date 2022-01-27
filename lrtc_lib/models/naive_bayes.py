@@ -11,17 +11,16 @@ from lrtc_lib.definitions import ROOT_DIR
 import logging
 
 from lrtc_lib.models.core.languages import Languages
-from lrtc_lib.models.core.model_api import infer_with_cache, delete_model_cache
-from lrtc_lib.models.core.model_async import ModelAsync, update_train_status
+from lrtc_lib.models.core.model_api import ModelAPI
 from lrtc_lib.models.core.tools import RepresentationType, get_glove_representation
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 
-class NaiveBayes(ModelAsync):
-    def __init__(self, representation_type, max_datapoints=10000, async_call=False,
+class NaiveBayes(ModelAPI):
+    def __init__(self, representation_type, max_datapoints=10000,
                  model_dir=os.path.join(ROOT_DIR, "output", "models", "custom_nb")):
-        super(NaiveBayes, self).__init__(async_call=async_call)
+        super().__init__()
         self.model_dir = model_dir
         os.makedirs(self.get_models_dir(), exist_ok=True)
         self.features_num = 0
@@ -41,8 +40,7 @@ class NaiveBayes(ModelAsync):
         elif self.representation_type == RepresentationType.GLOVE:
             return get_glove_representation(input_data, language=language), None
 
-    @update_train_status
-    def train_with_async_support(self, model_id, train_data, dev_data, train_params):
+    def train_with_async_support(self, model_id, train_data, train_params):
         model = MultinomialNB() if self.representation_type == RepresentationType.BOW else GaussianNB()
         # Train the model using the training sets
         language = self.get_language(model_id)
@@ -58,8 +56,8 @@ class NaiveBayes(ModelAsync):
         with open(self.model_file_by_id(model_id), "wb") as fl:
             pickle.dump(model, fl)
 
-    @infer_with_cache
-    def infer(self, model_id, items_to_infer, infer_params=None, use_cache=True):
+
+    def _infer(self, model_id, items_to_infer, infer_params=None):
         with open(self.vectorizer_file_by_id(model_id), "rb") as fl:
             vectorizer = pickle.load(fl)
         with open(self.model_file_by_id(model_id), "rb") as fl:
@@ -88,10 +86,4 @@ class NaiveBayes(ModelAsync):
     def get_models_dir(self):
         return self.model_dir
 
-    @delete_model_cache
-    def delete_model(self, model_id):
-        logging.info(f"deleting NB model {model_id}")
-        model_dir = self.get_model_dir_by_id(model_id)
-        if os.path.isdir(model_dir):
-            shutil.rmtree(model_dir)
 

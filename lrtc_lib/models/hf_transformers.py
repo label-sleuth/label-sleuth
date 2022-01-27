@@ -8,15 +8,13 @@ import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, InputFeatures, Trainer, TrainingArguments
 
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.models.core.model_api import delete_model_cache, infer_with_cache
-from lrtc_lib.models.core.model_async import ModelAsync, update_train_status
+from lrtc_lib.models.core.model_api import ModelAPI
 
 MODEL_DIR = os.path.join(ROOT_DIR, "output", "models", "transformers")
 
 
-class HFTransformers(ModelAsync):
-    def __init__(self, pretrained_model="bert-base-uncased", batch_size=32, learning_rate=5e-5,
-                 model_dir=MODEL_DIR, async_call=True):
+class HFTransformers(ModelAPI):
+    def __init__(self, pretrained_model="bert-base-uncased", batch_size=32, learning_rate=5e-5, model_dir=MODEL_DIR):
         """
         :param pretrained_model:
         :param batch_size:
@@ -24,7 +22,7 @@ class HFTransformers(ModelAsync):
         :param model_dir:
 
         """
-        super(HFTransformers, self).__init__(async_call)
+        super().__init__()
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         self.pretrained_model_name = pretrained_model
@@ -34,8 +32,7 @@ class HFTransformers(ModelAsync):
         self.tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model_name)
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-    @update_train_status
-    def train_with_async_support(self, model_id, train_data, dev_data, train_params: dict):
+    def train_with_async_support(self, model_id, train_data, train_params: dict):
         texts = [element["text"] for element in train_data]
         labels = [element["label"] for element in train_data]
         train_dataset = self.process_inputs(texts, labels)
@@ -51,8 +48,8 @@ class HFTransformers(ModelAsync):
         trainer.train()
         trainer.save_model(self.get_model_dir_by_id(model_id))
 
-    @infer_with_cache
-    def infer(self, model_id, items_to_infer, infer_params=None, use_cache=True):
+
+    def _infer(self, model_id, items_to_infer, infer_params=None):
         model_path = self.get_model_dir_by_id(model_id)
         model = AutoModelForSequenceClassification.from_pretrained(model_path).to(self.device)
         preds = []
@@ -69,13 +66,6 @@ class HFTransformers(ModelAsync):
         scores = [pred.squeeze().numpy().tolist() for pred in preds]
         labels = [int(example_scores[1] > 0.5) for example_scores in scores]
         return {"labels": labels, "scores": scores}
-
-    @delete_model_cache
-    def delete_model(self, model_id):
-        logging.info(f"deleting HF model {model_id}")
-        model_dir = self.get_model_dir_by_id(model_id)
-        if os.path.isdir(model_dir):
-            shutil.rmtree(model_dir)
 
     def get_models_dir(self):
         return MODEL_DIR
@@ -94,7 +84,7 @@ class HFTransformers(ModelAsync):
 
 
 if __name__ == '__main__':
-    model = HFTransformers(async_call=False, batch_size=32)
+    model = HFTransformers(batch_size=32)
 
     train_data = [{"text": "I love dogs", "label": 1},
                   {"text": "I like to play with dogs", "label": 1},
@@ -106,7 +96,7 @@ if __name__ == '__main__':
 
     import uuid
 
-    model_id = model.train(train_data, None, {})
+    model_id = model.train(train_data, {})
     print(model_id)
     infer_list = []
     for x in range(3):

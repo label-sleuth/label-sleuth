@@ -5,29 +5,26 @@ from typing import Tuple, Sequence, List
 
 from lrtc_lib.data_access.core.data_structs import Label, TextElement
 from lrtc_lib.data_access import data_access_factory
-from lrtc_lib.training_set_selector.train_and_dev_set_selector_api import TrainAndDevSetsSelectorAPI
+from lrtc_lib.training_set_selector.train_set_selector_api import TrainSetSelectorAPI
 from lrtc_lib.orchestrator import orchestrator_api
 
 data_access = data_access_factory.get_data_access()
 MAX_VALUE = 10000000000
 
 
-class TrainAndDevSetsSelectorAllLabeled(TrainAndDevSetsSelectorAPI):
-    def get_train_and_dev_sets(self, workspace_id, train_dataset_name, category_name, dev_dataset_name=None) \
+class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
+    def get_train_set(self, workspace_id, train_dataset_name, category_name) \
             -> Tuple[Sequence[TextElement], Sequence[TextElement]]:
 
         train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_name,
                                                                         remove_duplicates=True)
-        dev_data, dev_counts = self.get_data_and_counts_for_labeled(workspace_id, dev_dataset_name, category_name,
-                                                                    remove_duplicates=True)
+
 
         self.verify_all_labels_are_in_train(workspace_id, category_name, train_counts)
 
-        logging.info(f"using {len(train_data)} for train using dataset {train_dataset_name}" +
-                     (f" and {len(dev_data)} for dev using dataset {dev_dataset_name}" if dev_data is not None
-                      else " with no dev dataset"))
+        logging.info(f"using {len(train_data)} for train using dataset {train_dataset_name}")
 
-        return train_data, dev_data
+        return train_data
 
     def get_data_and_counts_for_labeled(self, workspace_id, dataset_name, category_name, remove_duplicates=False):
         if dataset_name is None:
@@ -48,7 +45,7 @@ class TrainAndDevSetsSelectorAllLabeled(TrainAndDevSetsSelectorAPI):
                 f"no train examples for labels: {labels_not_in_train}, cannot train a model: {train_counts}")
 
 
-class TrainAndDevSetsSelectorAllLabeledPlusUnlabeledAsWeakNegative(TrainAndDevSetsSelectorAllLabeled):
+class TrainSetSelectorAllLabeledPlusUnlabeledAsWeakNegative(TrainSetSelectorAllLabeled):
     """
     Use unlabeled samples as negative, only meant to be used in a binary classifier
     """
@@ -62,13 +59,12 @@ class TrainAndDevSetsSelectorAllLabeledPlusUnlabeledAsWeakNegative(TrainAndDevSe
         self.neg_label = LABEL_NEGATIVE
         self.pos_label = LABEL_POSITIVE
 
-    def get_train_and_dev_sets(self, workspace_id, train_dataset_name, category_name, dev_dataset_name=None) \
-            -> Tuple[Sequence[TextElement], Sequence[TextElement]]:
+    def get_train_set(self, workspace_id, train_dataset_name, category_name) \
+            -> Sequence[TextElement]:
 
         train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_name,
                                                                         remove_duplicates=True)
-        dev_data, dev_counts = self.get_data_and_counts_for_labeled(workspace_id, dev_dataset_name, category_name,
-                                                                    remove_duplicates=True)
+
         current_neg_count = train_counts.get(self.neg_label, 0)
         required_neg_count = self.negative_ratio * train_counts[self.pos_label] if self.negative_ratio else MAX_VALUE
         max_neg_count = self.max_negative_ratio * train_counts[self.pos_label]
@@ -101,11 +97,9 @@ class TrainAndDevSetsSelectorAllLabeledPlusUnlabeledAsWeakNegative(TrainAndDevSe
 
         self.verify_all_labels_are_in_train(workspace_id, category_name, train_counts)
 
-        logging.info(f"using {len(train_data)} for train using dataset {train_dataset_name}" +
-                     (f" and {len(dev_data)} for dev using dataset {dev_dataset_name}" if dev_data is not None
-                      else " with no dev dataset"))
+        logging.info(f"using {len(train_data)} for train using dataset {train_dataset_name}")
 
-        return train_data, dev_data
+        return train_data
 
     def get_weak_negative_candidates(self, workspace_id, dataset_name, category_name) -> List[TextElement]:
         return get_elements_by_selection_order(workspace_id, dataset_name)

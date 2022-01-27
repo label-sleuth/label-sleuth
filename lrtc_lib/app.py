@@ -1,8 +1,7 @@
 ###TODOs
 # handle stream of csv as text and not file
 # orchestrator cleanups and reorganization (create utils by use cases and move items)
-# remove dev parameter from train function
-
+# unite async with model API and remove async parameter from the system
 
 
 import logging

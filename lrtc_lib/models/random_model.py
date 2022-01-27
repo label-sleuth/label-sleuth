@@ -10,16 +10,16 @@ MODEL_DIR = os.path.join(ROOT_DIR, "output", "models", "random")
 
 class RandomModel(ModelAPI):
     def __init__(self):
-        super(ModelAPI, self).__init__()
+        super().__init__()
         self.models = set()
         self.id = -1
 
-    def train(self, train_data, dev_data, train_params):
+    def train(self, train_data, train_params):
         self.id += 1
         self.models.add(self.id)
         return self.id
 
-    def infer(self, model_id, items_to_infer, infer_params=None, use_cache=False):
+    def _infer(self, model_id, items_to_infer, infer_params=None):
         if model_id not in self.models:
             raise ValueError("trying to infer with untrained model")
         random_previous_state = random.getstate()

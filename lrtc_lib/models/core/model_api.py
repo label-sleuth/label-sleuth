@@ -1,17 +1,25 @@
+import shutil
+import traceback
+from enum import Enum
+from typing import Dict
 import abc
 import functools
+import jsonpickle
 import logging
 import os
 import threading
-from enum import Enum
-from typing import Dict, Mapping, Sequence
 
+import uuid
+from typing import Mapping, Sequence
+
+from lrtc_lib.models.core.languages import Languages, Language
 
 import lrtc_lib.definitions as definitions
 from lrtc_lib.models.util.LRUCache import LRUCache
 from lrtc_lib.models.util.disk_cache import get_disk_cache, save_cache_to_disk
 
 PREDICTIONS_CACHE_DIR_NAME = "predictions_cache"
+METADATA_PARAMS_AND_DEFAULTS = {'Language': Languages.ENGLISH}
 
 
 class ModelStatus(Enum):
@@ -20,85 +28,58 @@ class ModelStatus(Enum):
     ERROR = 2
     DELETED = 3
 
-
 class ModelAPI(object, metaclass=abc.ABCMeta):
     def __init__(self):
-        if hasattr(self.infer, "__wrapper_func__") and getattr(self.infer, "__wrapper_func__") == infer_with_cache.__name__:
-            assert hasattr(self.delete_model, "__wrapper_func__") \
-                   and getattr(self.delete_model, "__wrapper_func__") == delete_model_cache.__name__, \
-                f"When wrapping infer method using '{infer_with_cache.__name__}', delete method should be wrapped by '{delete_model_cache.__name__}'"
-            getattr(self.infer, "__wrapper_func__")
         self.cache = LRUCache(definitions.INFER_CACHE_SIZE)
 
-    @abc.abstractmethod
-    def train(self, train_data: Sequence[Mapping], dev_data: Sequence[Mapping],
-              train_params: dict) -> str:
+
+    def train(self, train_data: Sequence[Mapping], train_params: dict) -> str:
         """
-        train a new model and return a unique model identifier that will be used for inference.
+        start training in a background thread and returns a unique model identifier that will be used for inference.
         :param train_data: a list of dictionaries with at least the "text" and "label" fields, additional fields can be
         passed e.g. [{'text': 'text1', 'label': 1, 'additional_field': 'value1'}, {'text': 'text2', 'label': 0,
         'additional_field': 'value2'}]
-        :param dev_data: can be None if not used by the implemented model
         :param train_params: dictionary for additional train parameters (can be None)
         :rtype: model_id unique id
         """
-        self.__raise_not_implemented('train')
+        model_id = f"{self.__class__.__name__}_{str(uuid.uuid1())}"
+        args = (train_data, train_params)
+        self.mark_train_as_started(model_id)
+        self.save_metadata(model_id, train_params)
 
-    @abc.abstractmethod
-    def infer(self, model_id, items_to_infer: Sequence[Mapping], infer_params: dict, use_cache=True) -> Dict:
+        logging.info(f"starting background thread to train model id {model_id} of type {self.__class__.__name__}")
+        training_process = threading.Thread(target=self.train_and_update_status, args=(model_id, *args))
+        training_process.start()
+        return model_id
+
+    def train_and_update_status(self, model_id, *args):
+        try:
+            self.train_with_async_support(model_id, *args)
+            self.mark_train_as_completed(model_id)
+        except Exception:
+            logging.exception(f'model {model_id} failed with exception')
+            logging.error(traceback.format_exc())
+            self.mark_train_as_error(model_id)
+
+        return
+
+    def infer(self, model_id, items_to_infer: Sequence[Mapping], infer_params: dict = None, use_cache=True) -> Dict:
         """
         infer a given sequence of elements and return the results
         :param model_id:
         :param items_to_infer: a list of dictionaries with at least the "text" field, additional fields can be passed
         e.g. [{'text': 'text1', 'additional_field': 'value1'}, {'text': 'text2', 'additional_field': 'value2'}]
         :param infer_params: dictionary for additional inference parameters (can be None)
-        :param use_cache: save the inference results to cache. Default is True. In order to use the built-in cache
+        :param use_cache: save the inference results to cache. Default is True
         mechanism, add the 'infer_with_cache' wrapper as a decorator.
         :rtype: dictionary with at least the "labels" key where the value is a list of numeric labels for each element
         in items_to_infer, additional keys (with list values of the same length) can be passed
          e.g {"labels": [1,0], "gradients": [[0.24,-0.39,-0.66,0.25], [0.14,0.29,-0.26,0.16]]
         """
-        self.__raise_not_implemented('infer')
-
-    @abc.abstractmethod
-    def get_model_status(self, model_id) -> ModelStatus:
-        """
-        return one of:
-        ModelStatus.TRAINING - for async mode implementations only
-        ModelStatus.READY - model is ready
-        ModelStatus.ERROR - training error
-
-        :rtype: ModelStatus
-        :param model_id:
-        """
-        self.__raise_not_implemented('get_model_status')
-
-    @abc.abstractmethod
-    def get_models_dir(self):
-        self.__raise_not_implemented('get_models_dir')
-
-    @abc.abstractmethod
-    def delete_model(self, model_id):
-        self.__raise_not_implemented('delete_model')
-
-    def export_model(self, model_id):
-        raise NotImplementedError(f'export function has not been implemented for {self.__class__.__name__}')
-
-    def __raise_not_implemented(self, func_name):
-        raise NotImplementedError('users must define ' + func_name + ' to use this base class')
-
-    def get_prediction_cache_file(self, model_id):
-        return os.path.join(self.get_models_dir(), PREDICTIONS_CACHE_DIR_NAME, model_id + ".json")
-
-
-def infer_with_cache(infer_function):
-    """
-    Wrapper for the "infer" call that incorporates both an in-memory cache and a disk cache for inference results
-    """
-    @functools.wraps(infer_function)
-    def wrapper(self: ModelAPI, model_id, items_to_infer, infer_params, use_cache=True):
         if not use_cache:
-            return infer_function(self, model_id, items_to_infer, infer_params, use_cache)
+            logging.info(
+                f"Running infer without cache for {len(items_to_infer)} values in {self.__class__.__name__}")
+            return self._infer(model_id, items_to_infer, infer_params)
         if not hasattr(self, "lock"):
             self.lock = threading.Lock()
         with self.lock:
@@ -129,7 +110,7 @@ def infer_with_cache(infer_function):
                 uniques_to_infer = [e for e in missing_entries if frozenset(e.items()) not in uniques
                                     and not uniques.add(frozenset(e.items()))]
 
-                new_res_dict = infer_function(self, model_id, uniques_to_infer, infer_params, use_cache)
+                new_res_dict = self._infer(model_id, uniques_to_infer, infer_params)
                 logging.info(f"finished running infer for {len(cache_misses)} values")
 
                 new_res_list = [{k: new_res_dict[k][i] for k in new_res_dict.keys()} for i in range(len(uniques))]
@@ -145,21 +126,93 @@ def infer_with_cache(infer_function):
             infer_res_dict = {k: [x[k] for x in infer_res] for k in infer_res[0].keys()}
             return infer_res_dict
 
-    setattr(wrapper, '__wrapper_func__', infer_with_cache.__name__)
-    return wrapper
+
+    def mark_train_as_started(self, model_id):
+        os.makedirs(self.get_model_dir_by_id(model_id), exist_ok=True)
+        with open(self.get_in_progress_flag_path(model_id), 'w') as f:
+            pass
+
+    def mark_train_as_completed(self, model_id):
+        with open(self.get_completed_flag_path(model_id), 'w') as f:
+            pass
+        os.remove(self.get_in_progress_flag_path(model_id))
+
+    def mark_train_as_error(self, model_id):
+        os.remove(self.get_in_progress_flag_path(model_id))
+
+    def get_model_status(self, model_id):
+        """
+        return one of:
+        ModelStatus.TRAINING - for async mode implementations only
+        ModelStatus.READY - model is ready
+        ModelStatus.ERROR - training error
+
+        :rtype: ModelStatus
+        :param model_id:
+        """
+        if os.path.isfile(self.get_completed_flag_path(model_id)):
+            return ModelStatus.READY
+        elif os.path.isfile(self.get_in_progress_flag_path(model_id)):
+            return ModelStatus.TRAINING
+        return ModelStatus.ERROR
+
+    def get_model_dir_by_id(self, model_id):
+        return os.path.join(self.get_models_dir(), model_id)
+
+    def get_completed_flag_path(self, model_id):
+        return os.path.join(self.get_model_dir_by_id(model_id), f'train_complete_for_{model_id}')
+
+    def get_in_progress_flag_path(self, model_id):
+        return os.path.join(self.get_model_dir_by_id(model_id), f'train_in_progress_for_{model_id}')
+
+    def save_metadata(self, model_id, train_params):
+        metadata_path = os.path.join(self.get_model_dir_by_id(model_id), 'model_metadata.json')
+        model_metadata = {key: train_params.get(key, default) for key, default in METADATA_PARAMS_AND_DEFAULTS.items()}
+        with open(metadata_path, 'w') as f:
+            f.write(jsonpickle.encode(model_metadata))
+
+    def get_metadata(self, model_id):
+        metadata_path = os.path.join(self.get_model_dir_by_id(model_id), 'model_metadata.json')
+        with open(metadata_path, 'r') as f:
+            metadata = jsonpickle.decode(f.read())
+        return metadata
+
+    def get_language(self, model_id) -> Language:
+        return self.get_metadata(model_id)['Language']
+
+    @abc.abstractmethod
+    def _infer(self, model_id, items_to_infer: Sequence[Mapping], infer_params: dict) -> Dict:
+        self.__raise_not_implemented('_infer')
+
+    @abc.abstractmethod
+    def train_with_async_support(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
+        """
+        An async implementation of train, that receives a model id from the *train* wrapper and trains a new policy
+        for this id. After the training process is complete (this may include inference on *test_data*), this function
+        must call *self.mark_train_as_completed*
+        """
+        self.__raise_not_implemented('train_with_async_support')
+
+    @abc.abstractmethod
+    def get_models_dir(self):
+        self.__raise_not_implemented('get_models_dir')
 
 
-def delete_model_cache(delete_model_function):
-    """
-    Wrapper for the "infer" call that incorporates both an in-memory cache and a disk cache for inference results
-    """
-    @functools.wraps(delete_model_function)
-    def wrapper(self, model_id):
+
+    def delete_model(self, model_id):
+        logging.info(f"deleting {self.__class__.__name__} model id {model_id}")
+        model_dir = self.get_model_dir_by_id(model_id)
+        if os.path.isdir(model_dir):
+            shutil.rmtree(model_dir)
         if os.path.exists(self.get_prediction_cache_file(model_id)):
             logging.info(f"Deleting prediction cache {self.get_prediction_cache_file(model_id)}")
             os.remove(self.get_prediction_cache_file(model_id))
 
-        return delete_model_function(self, model_id)
+    def export_model(self, model_id):
+        raise NotImplementedError(f'export function has not been implemented for {self.__class__.__name__}')
 
-    setattr(wrapper, '__wrapper_func__', delete_model_cache.__name__)
-    return wrapper
+    def __raise_not_implemented(self, func_name):
+        raise NotImplementedError('users must define ' + func_name + ' to use this base class')
+
+    def get_prediction_cache_file(self, model_id):
+        return os.path.join(self.get_models_dir(), PREDICTIONS_CACHE_DIR_NAME, model_id + ".json")
