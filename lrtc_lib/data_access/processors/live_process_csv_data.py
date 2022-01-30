@@ -32,7 +32,7 @@ class LiveCsvProcessor(DataProcessorAPI):
     """
 
     def __init__(self, dataset_name: str, temp_file_name: str, text_col: str = 'text',
-                 label_col: str = 'label', context_col: str = None, context_col_label: str = METADATA_CONTEXT_KEY,
+                 context_col: str = None, context_col_label: str = METADATA_CONTEXT_KEY,
                  doc_id_col: str = 'document_id',
                  encoding: str = 'utf-8'):
         """
@@ -40,7 +40,6 @@ class LiveCsvProcessor(DataProcessorAPI):
         :param dataset_name: the name of the processed dataset
         :param dataset_part: the part - train/dev/test - of the dataset
         :param text_col: the name of the column which holds the text of the TextElement. Default is 'text'.
-        :param label_col: the name of the column which holds the label. Default is 'label'.
         :param context_col: the name of the column which provides context for the text, None if no context is available.
         Default is None.
         :param doc_id_col: column name by which text elements should be grouped into docs.
@@ -50,11 +49,9 @@ class LiveCsvProcessor(DataProcessorAPI):
         """
         super().__init__(None)
         self.documents = []
-        self.uri_category_labels = []
         self.dataset_name = dataset_name
         self.temp_file_name = temp_file_name
         self.text_col = text_col
-        self.label_col = label_col
         self.context_col = context_col
         self.context_col_label = context_col_label
         self.doc_id_col = doc_id_col
@@ -70,15 +67,7 @@ class LiveCsvProcessor(DataProcessorAPI):
         return self.documents
 
     def get_texts_and_gold_labels(self) -> List[Tuple[str, Mapping[str, Label]]]:
-        """
-        Process the raw data into gold labels information.
-
-        :rtype: a list of tuples of uri and a dict. The dict keys are category names and values are Labels.
-        For example: [(uri_1, {category_1: Label_cat_1}),
-                      (uri_2, {category_1: Label_cat_1,
-                               category_2: Label_cat_2})]
-        """
-        return self.uri_category_labels
+        raise Exception('no gold labels in upload')
 
     def _get_train_file_path(self) -> str:
         return os.path.join(ROOT_DIR, "output", "temp", "csv_upload", self.temp_file_name)
@@ -100,22 +89,20 @@ class LiveCsvProcessor(DataProcessorAPI):
         df = df[df[self.text_col].apply(lambda x: len(x) > 0)]
         if self.doc_id_col not in df.columns:
             self.doc_id_col = None
-        if self.label_col not in df.columns:
-            df[self.label_col] = None
-        uri_to_category_labels = []
-        prev_doc_id = None
-        element_id = -1
-        text_span_start = 0
         doc_uri_to_text_elements = defaultdict(list)
-        for idx, (text, label, context, doc_id) in enumerate(zip(
-                *get_columns(df, [self.text_col, self.label_col, self.context_col, self.doc_id_col]))):
-            if prev_doc_id is not None and prev_doc_id != doc_id:
-                element_id = -1
-                text_span_start = 0
+        for idx, (text, context, doc_id) in enumerate(zip(
+                *get_columns(df, [self.text_col, self.context_col, self.doc_id_col]))):
 
             doc_name_for_uri = '0' if doc_id is None else str(doc_id).replace(URI_SEP, '_')
             doc_uri = self.dataset_name + URI_SEP + doc_name_for_uri
-            element_id += 1
+            if doc_uri not in doc_uri_to_text_elements:
+                element_id = 0
+                text_span_start = 0
+            else:
+                prev_element = doc_uri_to_text_elements[doc_uri][-1]
+                element_id = int(prev_element.uri.split(URI_SEP)[-1]) + 1
+                text_span_start = prev_element.span[0][1] + 1
+
             text_element_uri = doc_uri + URI_SEP + str(element_id)
             metadata = {self.context_col_label: context} if context else {}
             text_element = TextElement(uri=text_element_uri, text=text,
@@ -123,11 +110,5 @@ class LiveCsvProcessor(DataProcessorAPI):
                                        category_to_label={})
             doc_uri_to_text_elements[doc_uri].append(text_element)
 
-            category_to_label_dict = {}
-            uri_to_category_labels.append((text_element_uri, category_to_label_dict))
-            prev_doc_id = doc_id
-            text_span_start += (len(text) + 1)
-
         self.documents = [Document(uri=doc_uri, text_elements=text_elements, metadata={})
                           for doc_uri, text_elements in doc_uri_to_text_elements.items()]
-        self.uri_category_labels = uri_to_category_labels
