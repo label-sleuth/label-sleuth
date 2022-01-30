@@ -1,6 +1,7 @@
 
 from collections import defaultdict
 from dataclasses import dataclass
+from enum import Enum
 
 from typing import List, Tuple, Mapping
 
@@ -28,9 +29,11 @@ class Document:
     text_elements: List[TextElement]
     metadata: Mapping
 
+
 class LabelType(Enum):
     Standard = ""
     Weak = "Weak"
+
 
 @dataclass
 class Label:
@@ -46,7 +49,7 @@ class Label:
         self.label_type = label_type
 
     def get_detailed_label_name(self):
-        return self.label if self.label_type == LabelType.Standard else f'{self.label_type}_{self.label}'
+        return str(self.label) if self.label_type == LabelType.Standard else f'{self.label_type.name}_{self.label}'
 
     def to_dict(self):
         dict_for_json = {'label': self.label, 'metadata': self.metadata}

@@ -271,7 +271,7 @@ def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_d
         """
         reflect the more detailed description of training labels, e.g. how many of the elements have weak labels
         """
-        label_names = [element.category_to_label[category_name].label.get_detailed_label_name()
+        label_names = [element.category_to_label[category_name].get_detailed_label_name()
                        for element in text_elements]
 
         return dict(Counter(label_names))
@@ -298,14 +298,14 @@ def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_d
     return model_id
 
 
-def get_model_status(workspace_id: str, model_id: str) -> ModelStatus:
+def get_model_status(workspace_id: str, category_name:str, model_id: str) -> ModelStatus:
     """
     ModelStatus can be TRAINING, READY or ERROR
     :param workspace_id:
     :param model_id:
     :return:
     """
-    model_info = get_model_info(workspace_id, model_id)
+    model_info = get_model_info(workspace_id, category_name, model_id)
     return model_info.model_status
 
 
@@ -357,7 +357,7 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
                                                                       category_name=category_name,
                                                                       model_status=ModelStatus.READY)
     else:
-        model_info = get_model_info(workspace_id, model_id)
+        model_info = get_model_info(workspace_id, category_name, model_id)
         if model_info.model_status is not ModelStatus.READY:
             raise Exception(f"model id {model_id} is not in READY status")
     model = MODEL_FACTORY.get_model(model_info.model_type)
@@ -455,12 +455,13 @@ def get_dataset_name(workspace_id: str) -> str:
     return get_workspace(workspace_id).dataset_name
 
 
-def get_model_info(workspace_id, model_id) -> ModelInfo:
+def get_model_info(workspace_id, category_name, model_id) -> ModelInfo:
     workspace = get_workspace(workspace_id)
-    all_models = {k: v for d in workspace.category_to_models.values() for k, v in d.items()}
-    if all_models[model_id]:
-        return all_models[model_id]
-    raise Exception(f"model id {model_id} does not exist in workspace {workspace_id}")
+    if category_name not in workspace.category_to_models:
+        raise Exception(f"Category {category_name} does not exist")
+    if model_id not in workspace.category_to_models[category_name]:
+        raise Exception(f"Model {model_id} does not exist in category {category_name}")
+    return workspace.category_to_models[category_name][model_id]
 
 
 def get_contradictions_report_with_diffs(workspace_id, category_name) -> List[Tuple[TextElement]]:
@@ -510,13 +511,6 @@ def estimate_precision(workspace_id, category, ids, changed_elements_count, mode
                                                "estimated_precision_num_elements": len(ids)})
     orchestrator_state_api.increase_number_of_changes_since_last_model(workspace_id, category, changed_elements_count)
     return estimated_precision
-
-
-def get_all_models(workspace_id):
-    workspace = orchestrator_state_api.get_workspace(workspace_id)
-
-    all_models = {k: v for d in workspace.category_to_models.values() for k, v in d.items()}
-    return all_models
 
 
 def get_all_categories(workspace_id: str):
@@ -726,7 +720,7 @@ def add_documents_from_file(dataset_name, temp_filename):
 
 
 def infer_missing_elements(workspace_id, category, dataset_name, model_id):
-    model_status = get_model_status(workspace_id, model_id)
+    model_status = get_model_status(workspace_id, category, model_id)
     if model_status == ModelStatus.ERROR:
         logging.error(
             f"cannot run inference for category {category} in workspace {workspace_id} after new documents were loaded "
@@ -742,7 +736,7 @@ def infer_missing_elements(workspace_id, category, dataset_name, model_id):
             return
         logging.info(f"waiting for model {model_id} training to complete in order to infer newly added documents")
         time.sleep(30)
-        model_status = get_model_status(workspace_id, model_id)
+        model_status = get_model_status(workspace_id, category, model_id)
 
     logging.info(f"running inference with the last model for category {category} in workspace "
                  f"{workspace_id} after new documents were loaded to dataset {dataset_name} using model {model_id}")

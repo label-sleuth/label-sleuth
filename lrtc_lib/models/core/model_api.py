@@ -166,7 +166,10 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
 
     def save_metadata(self, model_id, train_params):
         metadata_path = os.path.join(self.get_model_dir_by_id(model_id), 'model_metadata.json')
-        model_metadata = {key: train_params.get(key, default) for key, default in METADATA_PARAMS_AND_DEFAULTS.items()}
+        if train_params is None:
+            model_metadata = METADATA_PARAMS_AND_DEFAULTS
+        else:
+            model_metadata = {key: train_params.get(key, default) for key, default in METADATA_PARAMS_AND_DEFAULTS.items()}
         with open(metadata_path, 'w') as f:
             f.write(jsonpickle.encode(model_metadata))
 

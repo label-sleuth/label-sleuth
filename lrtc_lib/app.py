@@ -9,7 +9,7 @@
 # get rid of pandas warning
 # consider passing the inferred scores to the active learning, instead of calling the orchestrator.infer()
 # remove dev_dataset_name from Workspace
-# simplify load_documents_from_csv
+# simplify load_documents_from_csv (LiveProcessor)
 # consider changing the output format of infer() method
 
 import logging
@@ -625,14 +625,9 @@ def get_all_models_for_category(workspace_id):
     category_name = request.args.get('category_name')
 
     res = dict()
-    if category_name == 'all':
-        models = orchestrator_api.get_all_models(workspace_id).values()
-        res['models'] = extract_model_information_list(workspace_id, models)
-    elif category_name == 'none':
-        res['models'] = []
-    else:
-        models = orchestrator_api.get_all_models_for_category(workspace_id, category_name).values()
-        res['models'] = extract_model_information_list(workspace_id, models)
+
+    models = orchestrator_api.get_all_models_for_category(workspace_id, category_name).values()
+    res['models'] = extract_model_information_list(workspace_id, models)
     return jsonify(res)
 
 
