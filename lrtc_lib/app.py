@@ -8,7 +8,6 @@
 # keep only working active learning strategies
 # get rid of pandas warning
 # consider passing the inferred scores to the active learning, instead of calling the orchestrator.infer()
-# remove dev_dataset_name from Workspace
 # simplify load_documents_from_csv (LiveProcessor)
 # consider changing the output format of infer() method
 

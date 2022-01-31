@@ -1,14 +1,11 @@
-import ast
-import logging
 import os
 from collections import defaultdict
 
 import pandas as pd
 
-from typing import List, Mapping, Tuple
-from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label
+from typing import List
+from lrtc_lib.data_access.core.data_structs import Document, TextElement
 from lrtc_lib.data_access.processors.data_processor_api import DataProcessorAPI, METADATA_CONTEXT_KEY
-from lrtc_lib.data_access.processors.dataset_part import DatasetPart
 from lrtc_lib.data_access.core.utils import URI_SEP
 from lrtc_lib.definitions import ROOT_DIR
 
@@ -16,7 +13,7 @@ from lrtc_lib.definitions import ROOT_DIR
 def get_columns(df, column_names):
     column_values = []
     for col_name_to_add in column_names:
-        if col_name_to_add:
+        if col_name_to_add is not None:
             if col_name_to_add not in df.columns:
                 raise NameError(f'"{col_name_to_add}" is not one of the columns in the given DataFrame: {df.columns}')
             column_values.append(df[col_name_to_add].values)
@@ -27,18 +24,17 @@ def get_columns(df, column_names):
 
 class LiveCsvProcessor(DataProcessorAPI):
     """
-    A DataProcessor for corpus that is given in a csv format, one TextElement per line.
+    A DataProcessor for a corpus that is given in a csv format, one TextElement per line.
 
     """
 
     def __init__(self, dataset_name: str, temp_file_name: str, text_col: str = 'text',
                  context_col: str = None, context_col_label: str = METADATA_CONTEXT_KEY,
-                 doc_id_col: str = 'document_id',
-                 encoding: str = 'utf-8'):
+                 doc_id_col: str = 'document_id', encoding: str = 'utf-8'):
         """
 
         :param dataset_name: the name of the processed dataset
-        :param dataset_part: the part - train/dev/test - of the dataset
+        :param temp_file_name: the temporary file used to store the csv before processing
         :param text_col: the name of the column which holds the text of the TextElement. Default is 'text'.
         :param context_col: the name of the column which provides context for the text, None if no context is available.
         Default is None.
@@ -47,8 +43,6 @@ class LiveCsvProcessor(DataProcessorAPI):
         :param encoding: the encoding to use to read the csv raw file(s). Default is `utf-8`.
 
         """
-        super().__init__(None)
-        self.documents = []
         self.dataset_name = dataset_name
         self.temp_file_name = temp_file_name
         self.text_col = text_col
@@ -56,34 +50,18 @@ class LiveCsvProcessor(DataProcessorAPI):
         self.context_col_label = context_col_label
         self.doc_id_col = doc_id_col
         self.encoding = encoding
-        self._process()
+
+    def get_raw_data_path(self) -> str:
+        return os.path.join(ROOT_DIR, "output", "temp", "csv_upload", self.temp_file_name)
 
     def build_documents(self) -> List[Document]:
         """
-        Process the raw data into a list of Documents. No labels information is provided.
+        Process the raw data into a list of Documents.
 
         :rtype: List[Document]
         """
-        return self.documents
-
-    def get_texts_and_gold_labels(self) -> List[Tuple[str, Mapping[str, Label]]]:
-        raise Exception('no gold labels in upload')
-
-    def _get_train_file_path(self) -> str:
-        return os.path.join(ROOT_DIR, "output", "temp", "csv_upload", self.temp_file_name)
-
-    def _get_dev_file_path(self) -> str:
-        raise Exception("no dev in upload")
-
-    def _get_test_file_path(self) -> str:
-        raise Exception("no test in upload")
-
-    def get_raw_data_path(self) -> str:
-        return self._get_train_file_path()
-
-    def _process(self):
         if not os.path.isfile(self.get_raw_data_path()):
-            raise Exception(f'file for dataset "{self.dataset_name}" not found')
+            raise Exception(f'file for dataset {self.dataset_name} not found')
 
         df = pd.read_csv(self.get_raw_data_path(), encoding=self.encoding, na_filter=False)
         df = df[df[self.text_col].apply(lambda x: len(x) > 0)]
@@ -110,5 +88,6 @@ class LiveCsvProcessor(DataProcessorAPI):
                                        category_to_label={})
             doc_uri_to_text_elements[doc_uri].append(text_element)
 
-        self.documents = [Document(uri=doc_uri, text_elements=text_elements, metadata={})
-                          for doc_uri, text_elements in doc_uri_to_text_elements.items()]
+        documents = [Document(uri=doc_uri, text_elements=text_elements, metadata={})
+                     for doc_uri, text_elements in doc_uri_to_text_elements.items()]
+        return documents

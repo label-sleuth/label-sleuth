@@ -9,9 +9,11 @@ labels_filename = 'workspace_labels.json'
 
 URI_SEP = "-"
 
+
 def get_all_datasets():
     all_datasets = sorted(x for x in os.listdir(get_datasets_base_dir()) if not x.startswith('.'))
     return all_datasets
+
 
 def get_dataset_base_dir(dataset_name):
     return os.path.join(get_datasets_base_dir(), dataset_name)

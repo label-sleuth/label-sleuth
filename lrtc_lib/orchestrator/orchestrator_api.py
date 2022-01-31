@@ -704,7 +704,7 @@ def export_model(workspace_id, model_id):
 def add_documents_from_file(dataset_name, temp_filename):
     global new_data_infer_thread_pool
     logging.info(f"adding documents to dataset {dataset_name}")
-    loaded = load_dataset_using_processor(dataset_name, False, LiveCsvProcessor(dataset_name, temp_filename))
+    loaded = load_dataset_using_processor(dataset_name, LiveCsvProcessor(dataset_name, temp_filename))
     workspaces_to_update = []
     total_infer_jobs = 0
     for workspace_id in list_workspaces():
