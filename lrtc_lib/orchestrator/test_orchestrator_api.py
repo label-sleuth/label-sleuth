@@ -1,6 +1,5 @@
 import unittest
 
-from lrtc_lib.data_access import single_dataset_loader
 from lrtc_lib.data_access.core.data_structs import Label, TextElement, Document
 from lrtc_lib.orchestrator import orchestrator_api
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE

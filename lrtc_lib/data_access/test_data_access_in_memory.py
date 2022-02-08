@@ -4,7 +4,6 @@ from collections import Counter
 from typing import List
 
 import lrtc_lib.data_access.data_access_factory as data_access_factory
-import lrtc_lib.data_access.single_dataset_loader as ds_loader
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label
 from lrtc_lib.data_access.core.utils import URI_SEP
 import lrtc_lib.data_access.core.data_access_in_memory_logic as logic
@@ -32,7 +31,7 @@ def generate_simple_doc(dataset_name, doc_id=0, add_duplicate=False):
 
 
 def generate_corpus(dataset_name, num_of_documents=1, add_duplicate=False):
-    ds_loader.delete_dataset(dataset_name)
+    data_access.delete_dataset(dataset_name)
     docs = [generate_simple_doc(dataset_name, doc_id, add_duplicate) for doc_id in range(0, num_of_documents)]
     data_access.add_documents(dataset_name=dataset_name, documents=docs)
     return docs
@@ -67,7 +66,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         diffs = [(field, getattr(doc_in_memory, field), getattr(doc, field)) for field in
                  Document.__annotations__ if not getattr(doc_in_memory, field) == getattr(doc, field)]
         self.assertEqual(0, len(diffs))
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
     def test_set_labels_and_get_documents_with_labels_info(self):
         workspace_id = 'test_set_labels'
@@ -85,7 +84,7 @@ class TestDataAccessInMemory(unittest.TestCase):
                 self.assertDictEqual(text.category_to_label, texts_and_labels_dict[text.uri])
             else:
                 self.assertDictEqual(text.category_to_label, {})
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
     def test_unset_labels(self):
         workspace_id = 'test_unset_labels'
@@ -100,7 +99,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         data_access.unset_labels(workspace_id, category, [x[0] for x in texts_and_labels_list])
         labels_count_after_unset = data_access.get_label_counts(workspace_id, dataset_name, category)
         self.assertEqual(0, labels_count_after_unset[True])
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
     def test_get_all_document_uris(self):
         dataset_name = self.test_get_all_document_uris.__name__ + '_dump'
@@ -108,7 +107,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         docs_uris_in_memory = data_access.get_all_document_uris(dataset_name)
         docs_uris_expected = [doc.uri for doc in docs]
         self.assertSetEqual(set(docs_uris_expected), set(docs_uris_in_memory))
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
     def test_get_all_text_elements_uris(self):
         dataset_name = self.test_get_all_text_elements_uris.__name__ + '_dump'
@@ -116,7 +115,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         text_elements_uris_in_memory = data_access.get_all_text_elements_uris(dataset_name)
         text_elements_uris_expected = [text.uri for doc in docs for text in doc.text_elements]
         self.assertSetEqual(set(text_elements_uris_expected), set(text_elements_uris_in_memory))
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
     def test_get_all_text_elements(self):
         dataset_name = self.test_get_all_text_elements.__name__ + '_dump'
@@ -132,31 +131,30 @@ class TestDataAccessInMemory(unittest.TestCase):
         text_elements_found = data_access.get_all_text_elements(dataset_name)
         text_elements_found.sort(key=lambda t: t.uri)
         self.assertListEqual(text_elements_expected, text_elements_found)
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
+
+    # def test_sample_text_elements(self):
+    #     dataset_name = self.test_sample_text_elements.__name__ + '_dump'
+    #     sample_size = 5
+    #     generate_corpus(dataset_name, 10)
+    #     sampled_texts_res = data_access.sample_text_elements(dataset_name, sample_size)
+    #     self.assertEqual(sample_size, len(sampled_texts_res['results']))
+    #
+    #     sample_all = 10 ** 100  # a huge sample_size to sample all elements
+    #     sampled_texts_res = data_access.sample_text_elements(dataset_name, sample_all)
+    #     self.assertEqual(sampled_texts_res['hit_count'], len(sampled_texts_res['results']),
+    #                      f'the number of sampled elements does not equal to the hit count, '
+    #                      f'even though asked to sample all.')
+    #     self.assertEqual(len(data_access.get_all_text_elements_uris(dataset_name)), sampled_texts_res['hit_count'],
+    #                      f'the hit count does not equal to the total number of element uris in the dataset, '
+    #                      f'even though asked to sample all.')
+    #     # assert no labels were added
+    #     self.assertDictEqual(sampled_texts_res['results'][0].category_to_label, {})
+    #     data_access.delete_dataset(dataset_name)
 
     def test_sample_text_elements(self):
-        dataset_name = self.test_sample_text_elements.__name__ + '_dump'
-        sample_size = 5
-        generate_corpus(dataset_name, 10)
-        sampled_texts_res = data_access.sample_text_elements(dataset_name, sample_size)
-        self.assertEqual(sample_size, len(sampled_texts_res['results']))
-
-        sample_all = 10 ** 100  # a huge sample_size to sample all elements
-        sampled_texts_res = data_access.sample_text_elements(dataset_name, sample_all)
-        self.assertEqual(sampled_texts_res['hit_count'], len(sampled_texts_res['results']),
-                         f'the number of sampled elements does not equal to the hit count, '
-                         f'even though asked to sample all.')
-        self.assertEqual(len(data_access.get_all_text_elements_uris(dataset_name)), sampled_texts_res['hit_count'],
-                         f'the hit count does not equal to the total number of element uris in the dataset, '
-                         f'even though asked to sample all.')
-        # assert no labels were added
-        self.assertDictEqual(sampled_texts_res['results'][0].category_to_label, {})
-        ds_loader.delete_dataset(dataset_name)
-
-    def test_sample_text_elements_with_labels_info(self):
         def sample_and_check_that_labels_match(doc, orig_dict):
-            sampled_texts_res = data_access.sample_text_elements_with_labels_info(workspace_id, dataset_name,
-                                                                                  sample_all)
+            sampled_texts_res = data_access.sample_text_elements(workspace_id, dataset_name, sample_all)
             for doc_text in doc.text_elements:
                 sampled_text = [sampled for sampled in sampled_texts_res['results'] if sampled.uri == doc_text.uri]
                 self.assertEqual(1, len(sampled_text))
@@ -166,8 +164,8 @@ class TestDataAccessInMemory(unittest.TestCase):
                 else:
                     self.assertDictEqual(sampled_text[0].category_to_label, {}, f'for text {doc_text}')
 
-        workspace_id = 'test_sample_text_elements_with_labels_info'
-        dataset_name = self.test_sample_text_elements_with_labels_info.__name__ + '_dump'
+        workspace_id = 'test_sample_text_elements'
+        dataset_name = self.test_sample_text_elements.__name__ + '_dump'
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
         docs = generate_corpus(dataset_name, 5)
         # add labels info for a single doc
@@ -180,7 +178,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         del logic.ds_in_memory[dataset_name]
         # check again after clearing from memory
         sample_and_check_that_labels_match(selected_doc, texts_and_labels_dict)
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
     def test_sample_unlabeled_text_elements(self):
         workspace_id = 'test_sample_unlabeled_text_elements'
@@ -196,7 +194,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_all)
         for sampled_text in sampled_texts_res['results']:
             self.assertDictEqual(sampled_text.category_to_label, {})
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
     def test_sample_labeled_text_elements(self):
         workspace_id = 'test_sample_labeled_text_elements'
@@ -219,7 +217,7 @@ class TestDataAccessInMemory(unittest.TestCase):
                           f'the sampled text uri - {sampled_text.uri} - was not found in the '
                           f'texts that were labeled: {texts_and_labels_dict}')
             self.assertDictEqual(sampled_text.category_to_label, texts_and_labels_dict[sampled_text.uri])
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
     def test_sample_by_query_text_elements(self):
         workspace_id = 'test_sample_by_query_text_elements'
@@ -254,8 +252,7 @@ class TestDataAccessInMemory(unittest.TestCase):
                           f'the sampled text uri - {sampled_text.uri} - was not found in the '
                           f'texts that were labeled: {texts_and_labels_dict}')
             self.assertIn(query, sampled_text.text)
-        ds_loader.delete_dataset(dataset_name)
-
+        data_access.delete_dataset(dataset_name)
 
     def test_query_text_elements_paging(self):
         workspace_id = 'test_sample_by_query_text_elements'
@@ -263,19 +260,18 @@ class TestDataAccessInMemory(unittest.TestCase):
         category = 'Autobots'
         query = 'sentence'
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
-        generate_corpus(dataset_name, 10)
-
+        generate_corpus(dataset_name, 5)
 
         # query no limit
         sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_all)
         self.assertEqual(20, len(sampled_texts_res['results']),
-                         f' {len(sampled_texts_res)} elements should have been sampled.')
+                         f"20 elements should have been sampled.")
 
         second_element_uri = sampled_texts_res["results"][1].uri
         sampled_texts_res = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_all,
                                                                        sample_start_idx=1)
         self.assertEqual(19, len(sampled_texts_res['results']),
-                         f' {len(sampled_texts_res)} elements should have been sampled.')
+                         f'19 elements should have been sampled.')
 
         self.assertEqual(second_element_uri,sampled_texts_res['results'][0].uri,"when using sample_start_idx=1,"
                                                                                 "the first element should be the second element without paging")
@@ -291,17 +287,16 @@ class TestDataAccessInMemory(unittest.TestCase):
         #                   f'the sampled text uri - {sampled_text.uri} - was not found in the '
         #                   f'texts that were labeled: {texts_and_labels_dict}')
         #     self.assertIn(query, sampled_text.text)
-        # ds_loader.delete_dataset(dataset_name)
-
+        # data_access.delete_dataset(dataset_name)
 
     def test_multithread_async_set_labels(self):
         import threading
         NUM_DOCS = 100
         workspace_id = 'test_multithread_set_labels'
-        dataset_name = self.test_get_label_counts.__name__ + '_dump'
+        dataset_name = self.test_multithread_async_set_labels.__name__ + '_dump'
         category = 'Decepticons'
         categories = [category]
-        corpus = generate_corpus(dataset_name,num_of_documents=NUM_DOCS)
+        corpus = generate_corpus(dataset_name, num_of_documents=NUM_DOCS)
         batch_size = 10
 
         threads = []
@@ -320,16 +315,16 @@ class TestDataAccessInMemory(unittest.TestCase):
         for d in results:
             all_from_threads.update(d)
         self.assertDictEqual(dict(all_from_threads),dict(data_access.get_label_counts(workspace_id,dataset_name,category)))
-        print(results)
+        data_access.delete_dataset(dataset_name)
 
-    def set_labels_thread(self, categories, category, corpus, workspace_id,start,stop,idx,results):
+    def set_labels_thread(self, categories, category, corpus, workspace_id,start, stop, idx, results):
         sentences_and_labels_all =[]
         for doc in corpus[start:stop]:
             texts_and_labels_list = generate_random_texts_and_labels(doc, 5, categories)
             data_access.set_labels(workspace_id, texts_and_labels_list)
             sentences_and_labels_all.extend(texts_and_labels_list)
-        true_count = len([1 for x in sentences_and_labels_all if list(x[1][category].label)[0] == LABEL_POSITIVE])
-        false_count = len([1 for x in sentences_and_labels_all if list(x[1][category].label)[0] == LABEL_NEGATIVE])
+        true_count = len([1 for x in sentences_and_labels_all if x[1][category].label == LABEL_POSITIVE])
+        false_count = len([1 for x in sentences_and_labels_all if x[1][category].label == LABEL_NEGATIVE])
         results[idx] =  {LABEL_POSITIVE:true_count,LABEL_NEGATIVE:false_count}
 
     def test_get_label_counts(self):
@@ -352,7 +347,7 @@ class TestDataAccessInMemory(unittest.TestCase):
             expected_count = len(
                 [t for t in texts_and_labels_list if category in t[1] and label_val == t[1][category].label]) ## TODO verify
             self.assertEqual(expected_count, observed_count, f'count for {label_val} does not match.')
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
     def test_get_text_elements_by_id(self):
         workspace_id = "test_get_text_elements_by_id"
@@ -378,7 +373,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         self.assertEqual(uri_to_labels[uris[0]], all_elements[0].category_to_label)
         self.assertEqual(uri_to_labels[uris[1]], all_elements[1].category_to_label)
 
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
     def test_duplicates_removal(self):
         workspace_id = 'test_duplicates_removal'
@@ -386,9 +381,9 @@ class TestDataAccessInMemory(unittest.TestCase):
         generate_corpus(dataset_name, 1, add_duplicate=True)
         category = 'cat1'
         all_elements = data_access.get_all_text_elements(dataset_name)
-        all_elements2 = data_access.sample_text_elements(dataset_name, 10**6, remove_duplicates=False)['results']
+        all_elements2 = data_access.sample_text_elements(workspace_id, dataset_name, 10**6, remove_duplicates=False)['results']
         self.assertListEqual(all_elements, all_elements2)
-        all_without_dups = data_access.sample_text_elements(dataset_name, 10**6, remove_duplicates=True)['results']
+        all_without_dups = data_access.sample_text_elements(workspace_id, dataset_name, 10**6, remove_duplicates=True)['results']
         self.assertEqual(len(all_elements), len(all_without_dups)+1)
 
         # 1. test propagation of labels:
@@ -428,7 +423,7 @@ class TestDataAccessInMemory(unittest.TestCase):
                                                             remove_duplicates=True)
         self.assertEqual(labels_count_no_dups[LABEL_POSITIVE], len(sampled), len(non_representative_duplicates))
 
-        ds_loader.delete_dataset(dataset_name)
+        data_access.delete_dataset(dataset_name)
 
 
 if __name__ == "__main__":

@@ -1,14 +1,17 @@
 import random
 import unittest
 
+from lrtc_lib.data_access.data_access_factory import get_data_access
+
 from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
 from lrtc_lib.active_learning.core.active_learning_strategies import ActiveLearningStrategies
 from lrtc_lib.data_access.core.utils import URI_SEP
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label, LABEL_NEGATIVE
-import lrtc_lib.data_access.single_dataset_loader as ds_loader
 from lrtc_lib.orchestrator import orchestrator_api
 from lrtc_lib.models.core.model_types import ModelTypes
 
+
+data_access = get_data_access()
 
 def generate_simple_doc(dataset_name, category_name, doc_id=0):
     sentences = ['Document Title is Super Interesting', 'First sentence is not that attractive.',
@@ -28,12 +31,12 @@ def generate_simple_doc(dataset_name, category_name, doc_id=0):
 
 
 def prepare_workspace_with_trained_model(workspace_id):
-    orchestrator_api.delete_workspace(workspace_id, ignore_errors=True)
+    orchestrator_api.delete_workspace(workspace_id)
     dataset_name = 'ds'
     category_name = f'cat_{random.random()}'
-    ds_loader.delete_dataset(dataset_name)
+    data_access.delete_dataset(dataset_name)
     docs = [generate_simple_doc(dataset_name, category_name, i) for i in range(200)]
-    orchestrator_api.add_documents(dataset_name, docs)
+    data_access.add_documents(dataset_name, docs)
     orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
     orchestrator_api.create_new_category(workspace_id, category_name, '')
     orchestrator_api.train(workspace_id, category_name, ModelTypes.RAND, docs[0].text_elements, None)
@@ -56,8 +59,8 @@ class TestActiveLearningStrategies(unittest.TestCase):
 
         self.assertEqual(batch1_uris, batch2_uris)
 
-        orchestrator_api.delete_workspace(workspace_id, ignore_errors=True)
-        ds_loader.delete_dataset(ds)
+        orchestrator_api.delete_workspace(workspace_id)
+        data_access.delete_dataset(ds)
 
     def test_hard_mining(self):
         workspace_id = self.test_hard_mining.__name__
@@ -74,8 +77,8 @@ class TestActiveLearningStrategies(unittest.TestCase):
 
         self.assertEqual(uris_by_least_confidence[:sample_size], batch_uris)
 
-        orchestrator_api.delete_workspace(workspace_id, ignore_errors=True)
-        ds_loader.delete_dataset(ds)
+        orchestrator_api.delete_workspace(workspace_id)
+        data_access.delete_dataset(ds)
 
     def test_retrospective(self):
         workspace_id = self.test_retrospective.__name__
@@ -92,5 +95,5 @@ class TestActiveLearningStrategies(unittest.TestCase):
 
         self.assertEqual(uris_by_pos_score[:sample_size], batch_uris)
 
-        orchestrator_api.delete_workspace(workspace_id, ignore_errors=True)
-        ds_loader.delete_dataset(ds)
+        orchestrator_api.delete_workspace(workspace_id)
+        data_access.delete_dataset(ds)
