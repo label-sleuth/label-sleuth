@@ -31,7 +31,7 @@ def prepare_workspace_with_trained_model(workspace_id):
     orchestrator_api.delete_workspace(workspace_id, ignore_errors=True)
     dataset_name = 'ds'
     category_name = f'cat_{random.random()}'
-    ds_loader.clear_all_saved_files(dataset_name)
+    ds_loader.delete_dataset(dataset_name)
     docs = [generate_simple_doc(dataset_name, category_name, i) for i in range(200)]
     orchestrator_api.add_documents(dataset_name, docs)
     orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
@@ -57,7 +57,7 @@ class TestActiveLearningStrategies(unittest.TestCase):
         self.assertEqual(batch1_uris, batch2_uris)
 
         orchestrator_api.delete_workspace(workspace_id, ignore_errors=True)
-        ds_loader.clear_all_saved_files(ds)
+        ds_loader.delete_dataset(ds)
 
     def test_hard_mining(self):
         workspace_id = self.test_hard_mining.__name__
@@ -75,7 +75,7 @@ class TestActiveLearningStrategies(unittest.TestCase):
         self.assertEqual(uris_by_least_confidence[:sample_size], batch_uris)
 
         orchestrator_api.delete_workspace(workspace_id, ignore_errors=True)
-        ds_loader.clear_all_saved_files(ds)
+        ds_loader.delete_dataset(ds)
 
     def test_retrospective(self):
         workspace_id = self.test_retrospective.__name__
@@ -93,4 +93,4 @@ class TestActiveLearningStrategies(unittest.TestCase):
         self.assertEqual(uris_by_pos_score[:sample_size], batch_uris)
 
         orchestrator_api.delete_workspace(workspace_id, ignore_errors=True)
-        ds_loader.clear_all_saved_files(ds)
+        ds_loader.delete_dataset(ds)

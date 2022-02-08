@@ -35,7 +35,7 @@ class TestOrchestratorStateAPI(unittest.TestCase):
 
         orchestrator_state_api.delete_workspace_state(ws_id)
         orchestrator_state_api.delete_workspace_state(new_ws_id)
-        single_dataset_loader.clear_all_saved_files(dataset_name)
+        single_dataset_loader.delete_dataset(dataset_name)
 
     def test_set_train_param(self):
 
@@ -47,7 +47,7 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.assertEqual(orchestrator_state_api.get_workspace(ws_id).train_params["key"], "value")
 
         orchestrator_state_api.delete_workspace_state(ws_id)
-        single_dataset_loader.clear_all_saved_files(dataset_name)
+        single_dataset_loader.delete_dataset(dataset_name)
 
     def test_delete_category_from_workspace(self):
         ws_id = self.test_delete_category_from_workspace.__name__ + '_workspace'
@@ -62,6 +62,6 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         ws = orchestrator_state_api.get_workspace(ws_id)
 
         orchestrator_state_api.delete_workspace_state(ws_id)
-        single_dataset_loader.clear_all_saved_files(dataset_name)
+        single_dataset_loader.delete_dataset(dataset_name)
         # TODO assert that category doesn't exist anymore in workspace
 

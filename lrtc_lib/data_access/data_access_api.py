@@ -1,6 +1,8 @@
 import abc
+import sys
 from typing import Iterable, Sequence, Mapping, List, Tuple
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label
+from lrtc_lib.data_access.processors.data_processor_api import DataProcessorAPI
 
 
 class AlreadyExistException(Exception):
@@ -111,29 +113,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         raise NotImplementedError('users must define ' + func_name + ' to use this base class')
 
     @abc.abstractmethod
-    def sample_text_elements(self, dataset_name: str, sample_size: int, query: str = None, remove_duplicates=False,
-                             random_state: int = 0) -> Mapping:
-        """
-        Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query.
-
-        :param dataset_name: the name of the dataset from which TextElements are sampled
-        :param sample_size: how many TextElements should be sampled
-        :param query: a regular expression that should be matched in the sampled TextElements. If None, then no such
-        filtering is performed.
-        :param remove_duplicates: if True, do not include elements that are duplicates of each other.
-        :param random_state: provide an int seed to define a random state. Default is zero.
-        :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
-        value is the total number of TextElements in the dataset matched by the query.
-        {'results': [TextElement], 'hit_count': int}
-        """
-        func_name = self.sample_text_elements.__name__
-        raise NotImplementedError('users must define ' + func_name + ' to use this base class')
-
-    @abc.abstractmethod
-    def sample_text_elements_with_labels_info(self, workspace_id: str, dataset_name: str, sample_size: int,
-                                              sample_start_idx=0,
-                                              query_regex: str = None, remove_duplicates=False,
-                                              random_state: int = 0) -> Mapping:
+    def sample_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int, sample_start_idx=0,
+                             query_regex: str = None, remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query,
         and add their labels information for workspace_id, if available.
@@ -150,11 +131,12 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         value is the total number of TextElements in the dataset matched by the query.
         {'results': [TextElement], 'hit_count': int}
         """
-        func_name = self.sample_text_elements_with_labels_info.__name__
+        func_name = self.sample_text_elements.__name__
         raise NotImplementedError('users must define ' + func_name + ' to use this base class')
 
     @abc.abstractmethod
-    def sample_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str, sample_size: int,
+    def sample_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
+                                       sample_size: int = sys.maxsize,
                                        sample_start_idx: int = 0,
                                        query_regex: str = None, remove_duplicates=False,
                                        random_state: int = 0) -> Mapping:
@@ -179,8 +161,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         raise NotImplementedError('users must define ' + func_name + ' to use this base class')
 
     @abc.abstractmethod
-    def sample_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str, sample_size: int,
-                                     query: str = None, remove_duplicates=False,
+    def sample_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
+                                     sample_size: int = sys.maxsize, query: str = None, remove_duplicates=False,
                                      random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, labeled for category_name in workspace_id,
@@ -232,13 +214,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         raise NotImplementedError('users must define ' + func_name + ' to use this base class')
 
     @abc.abstractmethod
-    def get_text_elements_by_uris(self, dataset_name, uris) -> List[TextElement]:
-        func_name = self.get_text_elements_by_uris.__name__
-        raise NotImplementedError('users must define ' + func_name + ' to use this base class')
-
-    @abc.abstractmethod
-    def get_text_elements_with_labels_info(self, workspace_id: str, dataset_name: str, uris: Iterable[str]) -> \
-            List[TextElement]:
+    def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Iterable[str]) -> List[TextElement]:
         """
         Return a List of TextElement objects from the given dataset_name, matching the uris provided, and add the label
         information for the workspace to these TextElements, if available.
@@ -246,10 +222,22 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param dataset_name:
         :param uris:
         """
-        func_name = self.get_text_elements_with_labels_info.__name__
+        func_name = self.get_text_elements_by_uris.__name__
         raise NotImplementedError('users must define ' + func_name + ' to use this base class')
 
     @abc.abstractmethod
     def get_all_datasets(self) -> List[str]:
         func_name = self.get_all_datasets.__name__
+        raise NotImplementedError('users must define ' + func_name + ' to use this base class')
+
+
+    @abc.abstractmethod
+    def load_dataset_using_processor(self, dataset_name: str, data_processor: DataProcessorAPI) -> List[Document]:
+        func_name = self.load_dataset_using_processor.__name__
+        raise NotImplementedError('users must define ' + func_name + ' to use this base class')
+
+
+    @abc.abstractmethod
+    def delete_dataset(self, dataset_name):
+        func_name = self.delete_dataset.__name__
         raise NotImplementedError('users must define ' + func_name + ' to use this base class')

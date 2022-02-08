@@ -62,15 +62,13 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
 
         return
 
-    def infer(self, model_id, items_to_infer: Sequence[Mapping], infer_params: dict = None, use_cache=True) -> Dict:
+    def infer(self, model_id, items_to_infer: Sequence[Mapping], use_cache=True) -> Dict:
         """
         infer a given sequence of elements and return the results
         :param model_id:
         :param items_to_infer: a list of dictionaries with at least the "text" field, additional fields can be passed
         e.g. [{'text': 'text1', 'additional_field': 'value1'}, {'text': 'text2', 'additional_field': 'value2'}]
-        :param infer_params: dictionary for additional inference parameters (can be None)
         :param use_cache: save the inference results to cache. Default is True
-        mechanism, add the 'infer_with_cache' wrapper as a decorator.
         :rtype: dictionary with at least the "labels" key where the value is a list of numeric labels for each element
         in items_to_infer, additional keys (with list values of the same length) can be passed
          e.g {"labels": [1,0], "gradients": [[0.24,-0.39,-0.66,0.25], [0.14,0.29,-0.26,0.16]]
@@ -78,12 +76,11 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         if not use_cache:
             logging.info(
                 f"Running infer without cache for {len(items_to_infer)} values in {self.__class__.__name__}")
-            return self._infer(model_id, items_to_infer, infer_params)
+            return self._infer(model_id, items_to_infer)
         if not hasattr(self, "lock"):
             self.lock = threading.Lock()
         with self.lock:
-            infer_params_key = None if infer_params is None else tuple(sorted(infer_params.items()))
-            cache_keys = [(model_id, tuple(sorted(item.items())), infer_params_key) for item in items_to_infer]
+            cache_keys = [(model_id, tuple(sorted(item.items()))) for item in items_to_infer]
             infer_res = [self.cache.get(cache_key) for cache_key in cache_keys]
             cache_misses = [i for i, v in enumerate(infer_res) if v is None]
 
@@ -109,7 +106,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                 uniques_to_infer = [e for e in missing_entries if frozenset(e.items()) not in uniques
                                     and not uniques.add(frozenset(e.items()))]
 
-                new_res_dict = self._infer(model_id, uniques_to_infer, infer_params)
+                new_res_dict = self._infer(model_id, uniques_to_infer)
                 logging.info(f"finished running infer for {len(cache_misses)} values")
 
                 new_res_list = [{k: new_res_dict[k][i] for k in new_res_dict.keys()} for i in range(len(uniques))]
@@ -183,7 +180,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         return self.get_metadata(model_id)['Language']
 
     @abc.abstractmethod
-    def _infer(self, model_id, items_to_infer: Sequence[Mapping], infer_params: dict) -> Dict:
+    def _infer(self, model_id, items_to_infer: Sequence[Mapping]) -> Dict:
         self.__raise_not_implemented('_infer')
 
     @abc.abstractmethod

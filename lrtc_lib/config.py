@@ -37,7 +37,6 @@ class Configuration:
     local_finetune: bool
     users: List[dict]
     precision_evaluation_size: int
-    precision_evaluation_filter: str
 
 
 converters = {

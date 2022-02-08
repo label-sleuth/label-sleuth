@@ -57,7 +57,7 @@ class NaiveBayes(ModelAPI):
             pickle.dump(model, fl)
 
 
-    def _infer(self, model_id, items_to_infer, infer_params=None):
+    def _infer(self, model_id, items_to_infer):
         with open(self.vectorizer_file_by_id(model_id), "rb") as fl:
             vectorizer = pickle.load(fl)
         with open(self.model_file_by_id(model_id), "rb") as fl:

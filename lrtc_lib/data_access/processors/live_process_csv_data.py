@@ -22,7 +22,7 @@ def get_columns(df, column_names):
     return column_values
 
 
-class LiveCsvProcessor(DataProcessorAPI):
+class CsvFileProcessor(DataProcessorAPI):
     """
     A DataProcessor for a corpus that is given in a csv format, one TextElement per line.
 

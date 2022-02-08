@@ -1,8 +1,5 @@
-import logging
 import gc
 import os
-import shutil
-
 import torch
 import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, InputFeatures, Trainer, TrainingArguments
@@ -48,8 +45,7 @@ class HFTransformers(ModelAPI):
         trainer.train()
         trainer.save_model(self.get_model_dir_by_id(model_id))
 
-
-    def _infer(self, model_id, items_to_infer, infer_params=None):
+    def _infer(self, model_id, items_to_infer):
         model_path = self.get_model_dir_by_id(model_id)
         model = AutoModelForSequenceClassification.from_pretrained(model_path).to(self.device)
         preds = []

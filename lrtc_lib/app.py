@@ -1,15 +1,19 @@
 ###TODOs
-#TODO data access, refactor, decide what to do with duplicates,  - FIRST STEP - always return labels
-# handle stream of csv as text and not file
 # orchestrator cleanups and reorganization (create utils by use cases and move items)
+#TODO data access, refactor, decide what to do with duplicates,  - FIRST STEP - always return labels
+# handle stream of csv as text and not file? Ask Dakuo
 # data access, refactor, decide what to do with duplicates, etc
 # improve /async_support/_post_method and stuff...
+# Change Document uri to doc_id, change TextElement uri to element_id?
 # consider using one threadpool and one process pool for all thread/processes we run?
 # keep only working active learning strategies
 # get rid of pandas warning
 # consider passing the inferred scores to the active learning, instead of calling the orchestrator.infer()
 # simplify load_documents_from_csv (LiveProcessor)
 # consider changing the output format of infer() method
+# consider renaming infer cache to "store" or something similiar
+# when loading documents, use ast.literal_eval to import element_metadata if exists
+# import_category_labels, can we move it to the dataaccess?  import also element_metadata and label_type (if exists)
 
 import logging
 logging.basicConfig(level=logging.INFO,
@@ -74,7 +78,7 @@ def elements_back_to_front(workspace_id, elements, category):
               }
          for text_element in elements}
 
-    if category and len(orchestrator_api.get_all_models_by_state(workspace_id, category, ModelStatus.READY)) > 0 \
+    if category and len(orchestrator_api.get_all_models_by_status(workspace_id, category, ModelStatus.READY)) > 0 \
             and len(elements) > 0:
         predicted_labels = orchestrator_api.infer(workspace_id, category, elements)["labels"]
         for text_element, prediction in zip(elements, predicted_labels):
@@ -155,7 +159,7 @@ def get_all_dataset_ids():
     """
     all_datasets = orchestrator_api.get_all_datasets()
     res = {'datasets':
-               [{"dataset_id": d} for d in sorted(all_datasets)]}
+               [{"dataset_id": d} for d in all_datasets]}
     return jsonify(res)
 
 
@@ -343,9 +347,9 @@ def get_labeled_elements_enriched_tokens(workspace_id):
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/document/<document_id>/predictions", methods=['GET'])
+@app.route("/workspace/<workspace_id>/document/<document_id>/positive_predictions", methods=['GET'])
 @auth.login_required
-def get_document_predictions(workspace_id, document_id):
+def get_document_positive_predictions(workspace_id, document_id):
     """
     get all elements in a document
     :param workspace_id:
@@ -355,19 +359,23 @@ def get_document_predictions(workspace_id, document_id):
     :param start_idx:
     :return elements filtered by whether in this document and the selected category, the prediction is positive:
     """
+
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
     category_name = request.args.get('category_name')
+    if len(orchestrator_api.get_all_models_by_status(workspace_id, category_name, ModelStatus.READY)) == 0:
+        elements_transformed = []
+    else:
+        dataset_name = orchestrator_api.get_dataset_name(workspace_id)
+        document = orchestrator_api.get_documents(workspace_id, dataset_name, [document_id])[0]
 
-    dataset_name = orchestrator_api.get_dataset_name(workspace_id)
-    document = orchestrator_api.get_documents(workspace_id, dataset_name, [document_id])[0]
+        elements = document.text_elements
 
-    elements = document.text_elements
-    predictions = orchestrator_api.infer(workspace_id, category_name, elements)['labels']
-    positive_predicted_elements = [element for element, prediction in zip(elements, predictions) if prediction == LABEL_POSITIVE]
+        predictions = orchestrator_api.infer(workspace_id, category_name, elements)['labels']
+        positive_predicted_elements = [element for element, prediction in zip(elements, predictions) if prediction == LABEL_POSITIVE]
 
-    elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_name)
-    elements_transformed = elements_transformed[start_idx: start_idx + size]
+        elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_name)
+        elements_transformed = elements_transformed[start_idx: start_idx + size]
     res = {'elements': elements_transformed}
     return jsonify(res)
 
@@ -488,7 +496,7 @@ def get_all_categories(workspace_id):
     """
     categories = orchestrator_api.get_all_categories(workspace_id)
     category_dicts = [{'id': name, 'category_name': name, 'category_description': description}
-                      for name, description in categories.items()]
+                      for name, description in sorted(categories.items())]
 
     res = {'categories': category_dicts}
     return jsonify(res)
@@ -668,28 +676,13 @@ def get_predictions_enriched_tokens(workspace_id):
 def get_elements_for_precision_evaluation(workspace_id):
     size = CONFIGURATION.precision_evaluation_size
     category = request.args.get('category_name')
-    random_state = len(orchestrator_api.get_all_models_by_state(workspace_id, category, ModelStatus.READY))
-    all_elements = orchestrator_api.get_all_text_elements(orchestrator_api.get_dataset_name(workspace_id))
-    if CONFIGURATION.precision_evaluation_filter:
-        before_size = len(all_elements)
-        all_elements = [x for x in all_elements if CONFIGURATION.precision_evaluation_filter in x.uri]
-        logging.info(
-            f"Precision evaluation uri filter {CONFIGURATION.precision_evaluation_filter} applied. "
-            f"num elements changed from {before_size} to {len(all_elements)}")
-    sample_elements_predictions = orchestrator_api.infer(workspace_id, category, all_elements)["labels"]
-    prediction_sample = \
-        [text_element for text_element, prediction in zip(all_elements, sample_elements_predictions) if
-         prediction == LABEL_POSITIVE]
-    logging.info(f"Precision evaluation {len(prediction_sample)} left after removing negative predictions")
-    import random
-    random.Random(random_state).shuffle(prediction_sample)
-    prediction_sample = prediction_sample[:size]
-    res = dict()
-    elements_transformed = elements_back_to_front(workspace_id,
-                                                  prediction_sample,
-                                                  category)
-    res['elements'] = elements_transformed
+    random_state = len(orchestrator_api.get_all_models_by_status(workspace_id, category, ModelStatus.READY))
+    positive_predicted_elements = \
+        orchestrator_api.sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False,
+                                                       required_label=LABEL_POSITIVE, random_state=random_state)
+    elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category)
     logging.info(f"sampled {len(elements_transformed)} elements for evaluation")
+    res = {'elements': elements_transformed}
     return jsonify(res)
 
 
@@ -734,8 +727,7 @@ def get_suspicious_elements(workspace_id):
 def get_contradicting_elements(workspace_id):
     category = request.args.get('category_name')
     try:
-        contradiction_element_tuples = orchestrator_api.get_contradictions_report_with_diffs(workspace_id,
-                                                                                 category)
+        contradiction_element_tuples = orchestrator_api.get_contradiction_report(workspace_id, category)
         elements_transformed = [elements_back_to_front(workspace_id, [tup[0], tup[2]], category)
                                 for tup in contradiction_element_tuples]
         diffs = [[list(tup[1]), list(tup[3])] for tup in contradiction_element_tuples]
@@ -787,9 +779,9 @@ def export_model(workspace_id):
     category_name = request.args.get('category_name')
     model_id = request.args.get('model_id', None)
     if model_id is None:
-        category_models = orchestrator_api.get_all_models_by_state(workspace_id, category_name, ModelStatus.READY)
+        category_models = orchestrator_api.get_all_models_by_status(workspace_id, category_name, ModelStatus.READY)
         model_id = category_models[-1].model_id
-    model_dir = orchestrator_api.export_model(workspace_id, model_id)
+    model_dir = orchestrator_api.export_model(workspace_id, category_name, model_id)
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
         for dirpath, dirnames, filenames in os.walk(model_dir):

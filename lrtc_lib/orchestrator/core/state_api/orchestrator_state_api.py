@@ -232,7 +232,7 @@ def get_model_status(workspace_id: str, category_name: str, model_id):
 
 
 @withlock
-def get_all_models_by_state(workspace_id: str, category_name: str, model_status: ModelStatus):
+def get_all_models_by_status(workspace_id: str, category_name: str, model_status: ModelStatus):
     workspace = _load_workspace(workspace_id)
     if category_name not in workspace.category_to_models:
         return []

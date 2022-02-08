@@ -31,8 +31,9 @@ maps workspace_id -> dataset name -> URIs -> categories -> labels and info
 maps dataset to (clusters, uri_to_rep) where clusters is a dict of rep uri to list of uris
 and uri_to_rep is a dict of uri to a representative uri of a cluster
 '''
+
 ds_in_memory = defaultdict(pd.DataFrame)
-labels_in_memory = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict))))
+labels_in_memory = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(Label))))
 clusters_in_memory = defaultdict(tuple)
 dataset_in_memory_lock = threading.RLock()
 
@@ -101,10 +102,9 @@ def get_labels(workspace_id, dataset_name):
             with open(file_path) as f:
                 labels_encoded = f.read()
             simplified_dict = json.loads(labels_encoded)
-            labels_dict = defaultdict(lambda: defaultdict(dict))
-            labels_dict.update({k: {category: Label(**label_dict) for category, label_dict in v.items()}
-                                for k, v in simplified_dict.items()})
-            labels_in_memory[workspace_id][dataset_name] = labels_dict
+            for uri, category_to_label in simplified_dict.items():
+                for category, label_dict in category_to_label.items():
+                    labels_in_memory[workspace_id][dataset_name][uri][category] = Label(**label_dict)
         else:
             # Save empty dict to disk
             os.makedirs(Path(file_path).parent, exist_ok=True)
@@ -204,7 +204,7 @@ def sample_text_elements(workspace_id: str, dataset_name: str, sample_size: int,
     results_dict = {}
     corpus_df = get_ds_in_memory(dataset_name).copy()
     if workspace_id:
-        random_state = sum([ord(c) for c in workspace_id]) + random_state
+        random_state = sum([ord(c) for c in workspace_id]) + random_state # TODO remove this sum
         labels_dict = get_labels(workspace_id, dataset_name).copy()
         corpus_df['category_to_label'] = corpus_df['uri'].apply(lambda u: labels_dict[u] if u in labels_dict else {})
     else:
@@ -217,11 +217,9 @@ def sample_text_elements(workspace_id: str, dataset_name: str, sample_size: int,
         results_dict['hit_count_unique'] = len(corpus_df)
 
     if sample_size is not None:
-        if len(corpus_df) > (sample_size+sample_start_idx):
-            corpus_df = corpus_df.sample(n=sample_size+sample_start_idx, random_state=random_state
-                                         )[sample_start_idx:sample_start_idx+sample_size]
-        else:
-            corpus_df = corpus_df[sample_start_idx:sample_start_idx+sample_size]
+        # TODO UNKNOWN BUG fix
+        corpus_df = corpus_df.sample(n=min(sample_size+sample_start_idx, len(corpus_df)), random_state=random_state
+                                     )[sample_start_idx:sample_start_idx+sample_size]
 
     results_dict['results'] = [TextElement(*t) for t in
                                corpus_df[TextElement.get_field_names()].itertuples(index=False, name=None)]
@@ -230,7 +228,7 @@ def sample_text_elements(workspace_id: str, dataset_name: str, sample_size: int,
 
 def clear_labels_in_memory():
     global labels_in_memory
-    labels_in_memory = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict))))
+    labels_in_memory.clear()
 
 
 def save_labels_data(dataset_name, workspace_id):

@@ -19,7 +19,7 @@ class RandomModel(ModelAPI):
         self.models.add(self.id)
         return self.id
 
-    def _infer(self, model_id, items_to_infer, infer_params=None):
+    def _infer(self, model_id, items_to_infer):
         if model_id not in self.models:
             raise ValueError("trying to infer with untrained model")
         random_previous_state = random.getstate()

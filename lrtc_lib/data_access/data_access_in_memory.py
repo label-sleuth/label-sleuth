@@ -1,4 +1,8 @@
+import logging
 import os
+import shutil
+import sys
+
 import jsonpickle
 from collections import Counter, defaultdict
 from copy import deepcopy
@@ -10,6 +14,7 @@ import lrtc_lib.data_access.core.utils as utils
 from lrtc_lib.data_access.core.data_access_in_memory_logic import LabeledStatus
 from lrtc_lib.data_access.core.data_structs import Document, Label, TextElement
 from lrtc_lib.data_access.data_access_api import DataAccessApi, AlreadyExistException
+from lrtc_lib.data_access.processors.data_processor_api import DataProcessorAPI
 
 
 class DataAccessInMemory(DataAccessApi):
@@ -182,34 +187,9 @@ class DataAccessInMemory(DataAccessApi):
         """
         return logic.get_text_elements_from_df_without_labels(logic.get_ds_in_memory(dataset_name))
 
-    def sample_text_elements(self, dataset_name: str, sample_size: int = DEFAULT_SAMPLE_SIZE, query_regex: str = None,
-                             remove_duplicates=False, random_state: int = None) -> Mapping:
-        """
-        Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query.
-
-        :param dataset_name: the name of the dataset from which TextElements are sampled
-        :param sample_size: how many TextElements should be sampled
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
-        filtering is performed.
-        :param remove_duplicates: if True, do not include elements that are duplicates of each other.
-        :param random_state:
-        :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
-        value is the total number of TextElements in the dataset matched by the query.
-        {'results': [TextElement], 'hit_count': int}
-        """
-        results_dict = logic.sample_text_elements(workspace_id=None, dataset_name=dataset_name,
-                                                  sample_size=sample_size,
-                                                  filter_func=lambda df: logic.filter_by_query(df, query_regex),
-                                                  remove_duplicates=remove_duplicates,
-                                                  random_state=random_state)
-        return results_dict
-
-    def sample_text_elements_with_labels_info(self, workspace_id: str, dataset_name: str,
-                                              sample_size: int = DEFAULT_SAMPLE_SIZE,
-                                              sample_start_idx: int = 0,
-                                              query_regex: str = None,
-                                              remove_duplicates=False,
-                                              random_state: int = 0) -> Mapping:
+    def sample_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = DEFAULT_SAMPLE_SIZE,
+                             sample_start_idx: int = 0, query_regex: str = None, remove_duplicates=False,
+                             random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query,
         and add their labels information for workspace_id, if available.
@@ -236,8 +216,9 @@ class DataAccessInMemory(DataAccessApi):
 
         return results_dict
 
-    def sample_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str, sample_size: int,
-                                       sample_start_idx: int = 0, query_regex: str = None, remove_duplicates=False,
+    def sample_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
+                                       sample_size: int = sys.maxsize, sample_start_idx: int = 0,
+                                       query_regex: str = None, remove_duplicates=False,
                                        random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, unlabeled for category_name in workspace_id, optionally
@@ -340,11 +321,7 @@ class DataAccessInMemory(DataAccessApi):
         if os.path.exists(workspace_dumps_dir) and len(os.listdir(workspace_dumps_dir)) == 0:
             os.rmdir(workspace_dumps_dir)
 
-    def get_text_elements_by_uris(self, dataset_name, uris) -> List[TextElement]:
-        return logic.get_text_elements(dataset_name, uris)
-
-    def get_text_elements_with_labels_info(self, workspace_id: str, dataset_name: str, uris: Iterable[str]) -> \
-            List[TextElement]:
+    def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Iterable[str]) -> List[TextElement]:
         """
         Return a List of TextElement objects from the given dataset_name, matching the uris provided, and add the label
         information for the workspace to these TextElements, if available.
@@ -362,6 +339,33 @@ class DataAccessInMemory(DataAccessApi):
     def get_all_datasets(self) -> List[str]:
         path = utils.get_datasets_base_dir()
         return [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
+
+    def load_dataset_using_processor(self, dataset_name: str, data_processor: DataProcessorAPI) -> List[Document]:
+        """
+        Load the Documents of the given dataset.
+        :param dataset_name:
+        :param data_processor:
+        :return: List[Document]
+        """
+        docs_from_preprocessor = data_processor.build_documents()
+        self.add_documents(dataset_name=dataset_name, documents=docs_from_preprocessor)
+        num_of_text_elements = sum([len(doc.text_elements) for doc in docs_from_preprocessor])
+        docs_dir = utils.get_documents_dump_dir(dataset_name)
+        logging.info(f'{dataset_name}:\t\tloaded {len(docs_from_preprocessor)} documents '
+                     f'({num_of_text_elements} text elements) under {docs_dir}')
+        return docs_from_preprocessor
+
+    def delete_dataset(self, dataset_name):
+        """
+        Delete dataset
+        :param dataset_name:
+        """
+        logging.info(f"Deleting dataset {dataset_name}")
+        dataset_dir = utils.get_dataset_base_dir(dataset_name)
+        if os.path.isdir(dataset_dir):
+            shutil.rmtree(dataset_dir)
+        if dataset_name in logic.ds_in_memory:
+            del logic.ds_in_memory[dataset_name]
 
 
 if __name__ == '__main__':

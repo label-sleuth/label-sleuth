@@ -108,6 +108,6 @@ def get_elements_by_selection_order(workspace_id, dataset_name):
     dataset_uris = sorted(data_access.get_all_text_elements_uris(dataset_name))
     random_seed = sum([ord(c) for c in dataset_name])
     random.Random(random_seed).shuffle(dataset_uris)
-    elements_by_order = data_access.get_text_elements_with_labels_info(workspace_id=workspace_id,
-                                                                       dataset_name=dataset_name, uris=dataset_uris)
+    elements_by_order = data_access.get_text_elements_by_uris(workspace_id=workspace_id, dataset_name=dataset_name,
+                                                              uris=dataset_uris)
     return elements_by_order

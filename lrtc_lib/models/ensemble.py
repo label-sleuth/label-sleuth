@@ -45,11 +45,11 @@ class Ensemble(ModelAPI):
     def _train(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
         pass
 
-    def _infer(self, model_id, items_to_infer, infer_params=None):
+    def _infer(self, model_id, items_to_infer):
         results = {}
         all_scores = []
         for i, (model, m_id) in enumerate(zip(self.models, model_id.split(","))):
-            res = model.infer(m_id, items_to_infer, infer_params, use_cache=False) # no need to cache the results as
+            res = model.infer(m_id, items_to_infer, use_cache=False) # no need to cache the results as
                                                                                    # the ensemble is caching the results
             if self.return_all_scores:
                 for key, val in res.items():

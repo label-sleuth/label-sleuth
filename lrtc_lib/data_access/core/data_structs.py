@@ -16,7 +16,7 @@ class TextElement:
     text: str
     span: List[Tuple]
     metadata: Mapping
-    category_to_label: defaultdict
+    category_to_label: defaultdict # TODO does this still need to be a defaultdict?
 
     @classmethod
     def get_field_names(cls):
@@ -39,6 +39,7 @@ class LabelType(Enum):
 class Label:
     label: bool
     metadata: Mapping
+    label_type: LabelType
 
     def __init__(self, label: bool, metadata=None, label_type: LabelType = LabelType.Standard):
 
@@ -52,5 +53,18 @@ class Label:
         return str(self.label) if self.label_type == LabelType.Standard else f'{self.label_type.name}_{self.label}'
 
     def to_dict(self):
-        dict_for_json = {'label': self.label, 'metadata': self.metadata}
+        dict_for_json = {'label': self.label, 'metadata': self.metadata} # TODO this means label_type is not saved
         return dict_for_json
+
+
+class DisplayFields(object):
+    workspace_id = 'workspace_id'
+    category_name = 'category_name'
+    doc_id = 'doc_id'
+    dataset = 'dataset'
+    text = 'text'
+    uri = 'uri'
+    element_metadata = 'element_metadata'
+    label = 'label'
+    label_metadata = 'label_metadata'
+    label_type = 'label_type'
