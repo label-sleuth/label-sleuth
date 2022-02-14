@@ -47,6 +47,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         self.save_metadata(model_id, train_params)
 
         logging.info(f"starting background thread to train model id {model_id} of type {self.__class__.__name__}")
+        # TODO move to Threadpool to avoid too many trainings at the same time
         training_process = threading.Thread(target=self.train_and_update_status, args=(model_id, *args))
         training_process.start()
         return model_id

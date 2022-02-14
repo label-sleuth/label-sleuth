@@ -150,21 +150,18 @@ def _update_recommendation(workspace_id, dataset_name, category_name, count, mod
     """
     if model is None:
         model = orchestrator_state_api.get_latest_model_by_state(workspace_id, category_name, ModelStatus.READY)
-    curr_cat_recommendations = orchestrator_state_api.get_current_category_recommendations(workspace_id, category_name,
-                                                                                           model.model_id)
-    num_recommendations = len(curr_cat_recommendations)
-    if num_recommendations < count:
-        orchestrator_state_api.update_active_learning_status(workspace_id, category_name, model.model_id,
-                                                             ActiveLearningRecommendationsStatus.AL_IN_PROGRESS)
-        active_learner = ACTIVE_LEARNING_FACTORY.get_active_learner(CONFIGURATION.active_learning_strategy)
-        new_recommendations = active_learner.get_recommended_items_for_labeling(
-            workspace_id=workspace_id, model_id=model.model_id, dataset_name=dataset_name, category_name=category_name,
-            sample_size=count)
-        orchestrator_state_api.update_category_recommendations(workspace_id=workspace_id, category_name=category_name,
-                                                               model_id=model.model_id,
-                                                               recommended_items=[x.uri for x in new_recommendations])
-        orchestrator_state_api.update_active_learning_status(workspace_id, category_name, model.model_id,
-                                                             ActiveLearningRecommendationsStatus.READY)
+
+    orchestrator_state_api.update_active_learning_status(workspace_id, category_name, model.model_id,
+                                                         ActiveLearningRecommendationsStatus.AL_IN_PROGRESS)
+    active_learner = ACTIVE_LEARNING_FACTORY.get_active_learner(CONFIGURATION.active_learning_strategy)
+    new_recommendations = active_learner.get_recommended_items_for_labeling(
+        workspace_id=workspace_id, model_id=model.model_id, dataset_name=dataset_name, category_name=category_name,
+        sample_size=count)
+    orchestrator_state_api.update_category_recommendations(workspace_id=workspace_id, category_name=category_name,
+                                                           model_id=model.model_id,
+                                                           recommended_items=[x.uri for x in new_recommendations])
+    orchestrator_state_api.update_active_learning_status(workspace_id, category_name, model.model_id,
+                                                         ActiveLearningRecommendationsStatus.READY)
     return model.model_id
 
 
@@ -498,7 +495,6 @@ def _post_train_method(workspace_id, category_name, model_id): #TODO refactor
 
     category_models = get_all_models_by_status(workspace_id, category_name, ModelStatus.READY)
     if len(category_models) > 1:
-        print(list(category_models)[-2])
         previous_model_id = list(category_models)[-2].model_id
         previous_model_predictions = infer(workspace_id, category_name, elements, previous_model_id)
         num_identical = sum(x == y for x, y in zip(predictions["labels"], previous_model_predictions["labels"]))

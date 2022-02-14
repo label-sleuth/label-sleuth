@@ -16,6 +16,11 @@ def start_orchestrator_background_job_manager(update_recommendation_func, post_t
     logging.info("Starting orchestrator background job manager")
     thread.start()  # Start the execution
 
+# ModelAPI add a new model that starts training to a "models_in_train" list
+# Background job check every x second the status of each model in this list, if changed,
+# invoke in background, one method, that will run 1. post_train_method(infer+model prediction statistics)
+# 2. calculate active learning for 1000 elements. 3. delete old models
+
 
 def run(update_recommendation_func, post_train_method, post_active_learning_func):  # TODO we should get the current instance in a different way
     """ Method that runs forever """

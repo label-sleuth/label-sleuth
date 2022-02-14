@@ -1,10 +1,10 @@
 #Immidiate action items:
-# 2. when adding documents and apply_to_duplicates is True, apply labels to the new texts
+# 1. improve /async_support/_post_method and stuff... # consider using one threadpool and one process pool for all thread/processes we run?
+#
 
 
 ###TODOs
 
-# improve /async_support/_post_method and stuff... # consider using one threadpool and one process pool for all thread/processes we run?
 # consider passing the inferred scores to the active learning, instead of calling the orchestrator.infer()
 # consider changing the output format of infer() method
 
