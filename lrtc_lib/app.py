@@ -1,22 +1,20 @@
 #Immidiate action items:
-# 1. simplify duplicate clusters by adding a unique id for each text, and use the same id for duplicates. remove the
-# "cluster" term from this mechanism.
+# 2. when adding documents and apply_to_duplicates is True, apply labels to the new texts
 
 
 ###TODOs
-#TODO data access, refactor, decide what to do with duplicates
-# handle stream of csv as text and not file? Ask Dakuo
-# data access, refactor, decide what to do with duplicates, etc
-# improve /async_support/_post_method and stuff...
-# Change Document uri to doc_id, change TextElement uri to element_id?
-# consider using one threadpool and one process pool for all thread/processes we run?
-# keep only working active learning strategies
-# get rid of pandas warning
+
+# improve /async_support/_post_method and stuff... # consider using one threadpool and one process pool for all thread/processes we run?
 # consider passing the inferred scores to the active learning, instead of calling the orchestrator.infer()
 # consider changing the output format of infer() method
+
+# keep only working active learning strategies
+
 # consider renaming infer cache to "store" or something similiar
 # when loading documents, use ast.literal_eval to import element_metadata if exists
 # import_category_labels, import also element_metadata and label_type (if exists)?
+# Change Document uri to doc_id, change TextElement uri to element_id?
+# handle stream of csv as text and not file? Ask Dakuo
 
 import logging
 
@@ -98,7 +96,7 @@ def get_element(workspace_id, element_id):
     :param element_id:
     """
     dataset_name = orchestrator_api.get_dataset_name(workspace_id)
-    element = orchestrator_api.get_text_elements(workspace_id, dataset_name, [element_id])
+    element = orchestrator_api.get_text_elements_by_uris(workspace_id, dataset_name, [element_id])
     category_name = request.args.get('category_name')
     element_transformed = elements_back_to_front(workspace_id, element, category_name)
     return element_transformed[0]
@@ -484,7 +482,7 @@ def set_element_label(workspace_id, element_id):
         else:
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
 
-        uri_with_updated_label = [(element_id, {category_name: orchestrator_api.Label(value)})]
+        uri_with_updated_label = {element_id: {category_name: orchestrator_api.Label(value)}}
         orchestrator_api.set_labels(workspace_id, uri_with_updated_label,
                                     apply_to_duplicate_texts=CONFIGURATION.apply_labels_to_duplicate_texts,
                                     update_label_counter=update_counter)

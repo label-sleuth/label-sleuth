@@ -25,7 +25,7 @@ class DiscriminativeRepresentationSampling(ActiveLearner):
         if len(unlabeled) == 0:
             return unlabeled
 
-        labeled = data_access.sample_labeled_text_elements(workspace_id, dataset_name, category_name,
+        labeled = data_access.get_labeled_text_elements(workspace_id, dataset_name, category_name,
                                                            self.max_to_consider)["results"]
 
         sents_to_infer = labeled + unlabeled

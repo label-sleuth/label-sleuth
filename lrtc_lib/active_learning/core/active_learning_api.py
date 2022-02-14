@@ -44,7 +44,7 @@ class ActiveLearner:
         """
         from lrtc_lib.data_access.data_access_factory import get_data_access
         data_access = get_data_access()
-        unlabeled = data_access.sample_unlabeled_text_elements(workspace_id, dataset_name, category_name,
+        unlabeled = data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category_name,
                                                                max_to_consider, remove_duplicates=True)["results"]
         logging.info(f"Got {len(unlabeled)} unlabeled elements for active learning")
         return unlabeled

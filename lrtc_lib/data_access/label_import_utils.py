@@ -7,6 +7,7 @@ from typing import Mapping, Sequence, Tuple
 import pandas as pd
 
 from lrtc_lib.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement
+from lrtc_lib.data_access.data_access_api import get_document_uri
 from lrtc_lib.data_access.data_access_factory import get_data_access
 
 
@@ -21,7 +22,7 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
     # TODO When we pass a doc_id, it is important not to remove duplicates. But is it really necessary to remove duplicates when we don't?
     remove_duplicates = False if doc_uri is not None else True
     regex = '|'.join(f'^{re.escape(t)}$' for t in texts)
-    elements = data_access.sample_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+    elements = data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                 sample_size=sys.maxsize, query_regex=regex,
                                                 remove_duplicates=remove_duplicates)['results']
     if doc_uri is not None:
@@ -43,7 +44,7 @@ def process_labels_dataframe(workspace_id, dataset_name, labels_df_to_import: pd
     labels_df_to_import[DisplayFields.label] = labels_df_to_import[DisplayFields.label].apply(
         lambda x: True if x in positive_indicators else False)
 
-    category_to_uris_and_labels = dict()
+    category_to_uri_to_label = dict()
     for category_name, category_df in labels_df_to_import.groupby(DisplayFields.category_name):
         # Here we group the texts by label, and optionally also by doc_id. The goal is to be able to efficiently
         # query for a group of elements by their texts - using *get_element_group_by_texts* - rather than querying
@@ -57,11 +58,11 @@ def process_labels_dataframe(workspace_id, dataset_name, labels_df_to_import: pd
                                             {label: df_for_label[DisplayFields.text]
                                              for label, df_for_label in df_for_doc.groupby(DisplayFields.label)}
                                         for doc_id, df_for_doc in category_df.groupby(DisplayFields.doc_id)}
-        uris_with_label = []
+        uri_to_label = {}
         for doc_id, label_to_texts in doc_id_to_label_to_texts.items():
             doc_uri = f'{dataset_name}-{doc_id}' if doc_id is not None else None # TODO if we change uri and doc id etc, we should change this field here
             for label, texts in label_to_texts.items():
                 elements_to_label = get_element_group_by_texts(texts, workspace_id, dataset_name, doc_uri=doc_uri)
-                uris_with_label.extend((e.uri, {category_name: Label(label=label)}) for e in elements_to_label)
-        category_to_uris_and_labels[category_name] = uris_with_label
-    return category_to_uris_and_labels
+                uri_to_label.update({e.uri: {category_name: Label(label=label)} for e in elements_to_label})
+        category_to_uri_to_label[category_name] = uri_to_label
+    return category_to_uri_to_label

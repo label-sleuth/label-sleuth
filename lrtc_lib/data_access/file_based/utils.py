@@ -46,7 +46,7 @@ def get_workspace_labels_dir(workspace_id):
     return os.path.join(get_labels_dump_dir(), str(workspace_id))
 
 
-def get_dataset_name(uri):
+def get_dataset_name_from_uri(uri):
     uri_split = uri.split(URI_SEP)
     return uri_split[0]
 

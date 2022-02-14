@@ -39,13 +39,13 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def set_labels(self, workspace_id: str, texts_and_labels: Sequence[Tuple[str, Mapping[str, Label]]],
+    def set_labels(self, workspace_id: str, uris_to_labels: Mapping[str, Mapping[str, Label]],
                    apply_to_duplicate_texts=False):
         """
         Set labels to TextElements in dataset for a given workspace_id.
 
         :param workspace_id: the workspace_id of the labeling effort.
-        :param texts_and_labels: list of tuples of TextElement URI and a dict that represents a label.
+        :param uris_to_labels: list of tuples of TextElement URI and a dict that represents a label.
         The dict keys are category names and values are Labels. For example: [(uri_1, {category_1: Label_cat_1}),
                                                                               (uri_2, {category_1: Label_cat_1,
                                                                                        category_2: Label_cat_2})]
@@ -121,7 +121,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def sample_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize, sample_start_idx=0,
+    def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize, sample_start_idx=0,
                              query_regex: str = None, remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query,
@@ -141,7 +141,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def sample_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
+    def get_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
                                        sample_size: int = sys.maxsize,
                                        sample_start_idx: int = 0,
                                        query_regex: str = None, remove_duplicates=False,
@@ -165,7 +165,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def sample_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
+    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
                                      sample_size: int = sys.maxsize, query: str = None, remove_duplicates=False,
                                      random_state: int = 0) -> Mapping:
         """

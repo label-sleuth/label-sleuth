@@ -110,12 +110,12 @@ def query(workspace_id: str, dataset_name: str, category_name: str, query_regex:
     """
 
     if unlabeled_only:
-        return data_access.sample_unlabeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+        return data_access.get_unlabeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                           category_name=category_name, sample_size=sample_size,
                                                           sample_start_idx=sample_start_idx,
                                                           remove_duplicates=remove_duplicates)
     else:
-        return data_access.sample_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+        return data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                 sample_size=sample_size, sample_start_idx=sample_start_idx,
                                                 query_regex=query_regex, remove_duplicates=remove_duplicates)
 
@@ -130,7 +130,7 @@ def get_documents(workspace_id: str, dataset_name: str, uris: Sequence[str]) -> 
     return data_access.get_documents(workspace_id, dataset_name, uris)
 
 
-def get_text_elements(workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[TextElement]:
+def get_text_elements_by_uris(workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[TextElement]:
     """
     :param workspace_id:
     :param dataset_name:
@@ -205,15 +205,15 @@ def get_elements_to_label(workspace_id: str, category_name: str, count: int, sta
         raise Exception(f"exceeded max recommended items. last element index is {len(recommended_uris) - 1}")
     recommended_uris = recommended_uris[start_index:start_index + count]
     dataset_name = get_dataset_name(workspace_id)
-    return get_text_elements(workspace_id, dataset_name, recommended_uris)
+    return get_text_elements_by_uris(workspace_id, dataset_name, recommended_uris)
 
 
-def set_labels(workspace_id: str, labeled_sentences: Sequence[Tuple[str, Mapping[str, Label]]],
+def set_labels(workspace_id: str, uri_to_label: Mapping[str, Mapping[str, Label]],
                apply_to_duplicate_texts=True, update_label_counter=True):
     """
     set labels for URIs.
     :param workspace_id:
-    :param labeled_sentences: Sequence of tuples of URI and a dict in the format of {"category_name":Label},
+    :param uri_to_label: Maps URIs to a dict in the format of {"category_name":Label},
     where Label is an instance of data_structs.Label
     :param apply_to_duplicate_texts: if True, also set the same labels for additional URIs that are duplicates of
     the URIs provided.
@@ -221,10 +221,10 @@ def set_labels(workspace_id: str, labeled_sentences: Sequence[Tuple[str, Mapping
     """
     if update_label_counter:
         # count the number of labels for each category
-        changes_per_cat = Counter([cat for uri, labels_dict in labeled_sentences for cat in labels_dict])
+        changes_per_cat = Counter([cat for uri, labels_dict in uri_to_label.items() for cat in labels_dict])
         for cat, num_changes in changes_per_cat.items():
             orchestrator_state_api.increase_number_of_changes_since_last_model(workspace_id, cat, num_changes)
-    data_access.set_labels(workspace_id, labeled_sentences, apply_to_duplicate_texts)
+    data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts)
 
 
 def unset_labels(workspace_id: str, category_name, uris: Sequence[str], apply_to_duplicate_texts=True):
@@ -241,17 +241,17 @@ def unset_labels(workspace_id: str, category_name, uris: Sequence[str], apply_to
 # TODO refactor data access and use better names for each method
 
 def get_all_labeled_text_elements(workspace_id, dataset_name, category) -> Mapping:
-    return data_access.sample_labeled_text_elements(workspace_id, dataset_name, category, 10 ** 6,
+    return data_access.get_labeled_text_elements(workspace_id, dataset_name, category, 10 ** 6,
                                                     remove_duplicates=False)
 
  
-def sample_text_elements(workspace_id, dataset_name, sample_size=sys.maxsize, random_state: int = 0) -> Mapping:
-    return data_access.sample_text_elements(workspace_id, dataset_name, sample_size, remove_duplicates=False,
+def get_text_elements(workspace_id, dataset_name, sample_size=sys.maxsize, random_state: int = 0) -> Mapping:
+    return data_access.get_text_elements(workspace_id, dataset_name, sample_size, remove_duplicates=False,
                                             random_state=random_state)
 
 
-def sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_size=sys.maxsize, random_state: int = 0) -> Mapping:
-    return data_access.sample_unlabeled_text_elements(workspace_id, dataset_name, category, sample_size,
+def get_unlabeled_text_elements(workspace_id, dataset_name, category, sample_size=sys.maxsize, random_state: int = 0) -> Mapping:
+    return data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category, sample_size,
                                                       remove_duplicates=False, random_state=random_state)
 
 
@@ -430,10 +430,10 @@ def sample_elements_by_prediction(workspace_id, category, sample_size: int = sys
     dataset_name = get_dataset_name(workspace_id)
     if unlabeled_only:
         sample_elements = \
-            sample_unlabeled_text_elements(workspace_id, dataset_name, category, random_state=random_state)["results"]
+            get_unlabeled_text_elements(workspace_id, dataset_name, category, random_state=random_state)["results"]
     else:
         sample_elements = \
-            sample_text_elements(workspace_id, dataset_name, random_state=random_state)["results"]
+            get_text_elements(workspace_id, dataset_name, random_state=random_state)["results"]
     sample_elements_predictions = infer(workspace_id, category, sample_elements)["labels"]
     prediction_sample = \
         [text_element for text_element, prediction in zip(sample_elements, sample_elements_predictions) if
@@ -444,7 +444,7 @@ def sample_elements_by_prediction(workspace_id, category, sample_size: int = sys
 
 def estimate_precision(workspace_id, category, ids, changed_elements_count, model_id):
     dataset_name = get_dataset_name(workspace_id)
-    text_elements = get_text_elements(workspace_id, dataset_name, ids)
+    text_elements = get_text_elements_by_uris(workspace_id, dataset_name, ids)
     positive_elements = [te for te in text_elements if te.category_to_label[category].label == LABEL_POSITIVE]
 
     estimated_precision = len(positive_elements)/len(text_elements)
@@ -539,21 +539,21 @@ def import_category_labels(workspace_id, labels_df_to_import: pd.DataFrame):
     categories_counter = defaultdict(int)
     categories_created = []
     lines_skipped = []
-    for category_name, uris_with_label in imported_categories_to_uris_and_labels.items():
+    for category_name, uri_to_label in imported_categories_to_uris_and_labels.items():
         if category_name not in existing_categories:
             logging.info(f"** category '{category_name}' is missing, creating it ** ")
             create_new_category(workspace_id, category_name, f'{category_name} (created during upload)')
             categories_created.append(category_name)
 
-        logging.info(f'{category_name}: adding labels for {len(uris_with_label)} uris')
-        set_labels(workspace_id, uris_with_label,
+        logging.info(f'{category_name}: adding labels for {len(uri_to_label)} uris')
+        set_labels(workspace_id, uri_to_label,
                    apply_to_duplicate_texts=CONFIGURATION.apply_labels_to_duplicate_texts,
                    update_label_counter=True)
 
         label_counts_dict = get_label_counts(workspace_id, dataset_name, category_name, False)
         logging.info(f"Updated total label count in workspace '{workspace_id}' for category {category_name} "
                      f"is {sum(label_counts_dict.values())} ({label_counts_dict})")
-        categories_counter[category_name] = len(uris_with_label)
+        categories_counter[category_name] = len(uri_to_label)
     # TODO return both positive and negative counts
     categories_counter_list = [{'category': key, 'counter': value} for key, value in categories_counter.items()]
     total = sum(categories_counter.values())
@@ -572,7 +572,7 @@ def export_workspace_labels(workspace_id) -> pd.DataFrame:
     for category in categories:
         label_count = sum(get_label_counts(workspace_id, dataset_name, category, False).values())
         logging.info(f"Total label count in workspace '{workspace_id}' is {label_count}")
-        labeled_elements = data_access.sample_labeled_text_elements(workspace_id, dataset_name, category,
+        labeled_elements = data_access.get_labeled_text_elements(workspace_id, dataset_name, category,
                                                                     remove_duplicates=False)['results']
         logging.info(f"Exporting {len(labeled_elements)} unique labeled elements for category '{category}'"
                      f" from workspace '{workspace_id}'")
@@ -609,10 +609,19 @@ def add_documents_from_file(dataset_name, temp_filename):
         workspace = orchestrator_state_api.get_workspace(workspace_id)
         if workspace.dataset_name == dataset_name:
             workspaces_to_update.append(workspace_id)
-            for category, model_id_to_model in workspace.category_to_models.items():
-                last_model = next(reversed(model_id_to_model))
-                new_data_infer_thread_pool.submit(infer_missing_elements, workspace_id, category, dataset_name, last_model)
-                total_infer_jobs += 1
+
+            for category in workspace.category_to_description:
+                if CONFIGURATION.apply_labels_to_duplicate_texts:
+                    # since new data may contain texts identical to existing labeled texts, we set all the existing
+                    # labels again to apply the labels to the new data
+                    labeled_elements = data_access.get_labeled_text_elements(workspace_id, dataset_name, category)['results']
+                    uri_to_label = {te.uri: te.category_to_label for te in labeled_elements}
+                    data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts=True)
+                if category in workspace.category_to_models:
+                    model_id_to_model = workspace.category_to_models[category]
+                    last_model = next(reversed(model_id_to_model))
+                    new_data_infer_thread_pool.submit(infer_missing_elements, workspace_id, category, dataset_name, last_model)
+                    total_infer_jobs += 1
     logging.info(f"{total_infer_jobs} infer jobs were submitted in the background")
     return document_statistics, workspaces_to_update
 

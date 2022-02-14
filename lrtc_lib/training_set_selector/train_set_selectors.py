@@ -29,7 +29,7 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
     def get_data_and_counts_for_labeled(self, workspace_id, dataset_name, category_name, remove_duplicates=False):
         if dataset_name is None:
             return None, None
-        labeled_sample = data_access.sample_labeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+        labeled_sample = data_access.get_labeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                                   category_name=category_name, sample_size=MAX_VALUE,
                                                                   remove_duplicates=remove_duplicates)["results"]
         labels = [element.category_to_label[category_name].label for element in labeled_sample]

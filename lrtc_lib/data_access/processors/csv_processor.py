@@ -1,4 +1,5 @@
 import os
+import time
 from collections import defaultdict
 
 import pandas as pd
@@ -69,8 +70,10 @@ class CsvFileProcessor(DataProcessorAPI):
         metadata_dict = {col_name.split(self.metadata_column_name_prefix)[1]: col_values
                          for col_name, col_values in zip(metadata_column_names, get_columns(df, metadata_column_names))}
         for idx, (text, doc_id) in enumerate(zip(*get_columns(df, [self.text_col, self.doc_id_col]))):
-
-            doc_name_for_uri = '0' if doc_id is None else str(doc_id).replace(URI_SEP, '_')
+            if doc_id is None:
+                doc_name_for_uri = time.strftime('%d_%b_%Y_%H:%M', time.gmtime())
+            else:
+                doc_name_for_uri = str(doc_id).replace(URI_SEP, '_')
             doc_uri = self.dataset_name + URI_SEP + doc_name_for_uri
             if doc_uri not in doc_uri_to_text_elements:
                 element_id = 0

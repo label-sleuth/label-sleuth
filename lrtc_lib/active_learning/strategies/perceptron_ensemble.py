@@ -37,7 +37,7 @@ class PerceptronEnsemble(ActiveLearner):
     def get_per_element_score(self, items, workspace_id, model_id, dataset_name, category_name):
         from lrtc_lib.orchestrator import orchestrator_api
         data_access = get_data_access()
-        labeled = data_access.sample_labeled_text_elements(workspace_id, dataset_name, category_name,
+        labeled = data_access.get_labeled_text_elements(workspace_id, dataset_name, category_name,
                                                            self.max_to_consider)["results"]
         train_embeddings = np.array(orchestrator_api.infer(workspace_id, category_name, labeled)["embeddings"])
         unlabeled_embeddings = np.array(orchestrator_api.infer(workspace_id, category_name, items)["embeddings"])
