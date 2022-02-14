@@ -5,7 +5,7 @@ from lrtc_lib.data_access.data_access_factory import get_data_access
 
 from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
 from lrtc_lib.active_learning.core.active_learning_strategies import ActiveLearningStrategies
-from lrtc_lib.data_access.core.utils import URI_SEP
+from lrtc_lib.data_access.file_based.utils import URI_SEP
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label, LABEL_NEGATIVE
 from lrtc_lib.orchestrator import orchestrator_api
 from lrtc_lib.models.core.model_types import ModelTypes

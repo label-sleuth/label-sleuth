@@ -29,7 +29,7 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
                                              language=Languages.ENGLISH):
     start_time = time.time()
     train_set_selector = get_training_set_selector(selector=selector)
-    all_train_text_elements, _ = train_set_selector.get_train_set(
+    all_train_text_elements = train_set_selector.get_train_set(
         workspace_id=workspace_id, train_dataset_name=dataset_name,
         category_name=category_name)
     model = MODEL_FACTORY.get_model(model_type)
@@ -53,7 +53,7 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
         # only look at scores of strong labeled elements from the current validation fold
         # TODO each element has only one scores so we can concatenate one vector instead of mean of one value?
         scores = [score[1] if element_dict in train_splits[i]
-                              and element.category_to_label[category_name].type == LabelType.Standard else np.nan
+                              and element.category_to_label[category_name].label_type == LabelType.Standard else np.nan
                   for element_dict, element, score in zip(all_train_data, all_train_text_elements, scores)]
         model.delete_model(mid)
         all_pos_scores.append(scores)

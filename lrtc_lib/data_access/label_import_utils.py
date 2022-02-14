@@ -7,7 +7,6 @@ from typing import Mapping, Sequence, Tuple
 import pandas as pd
 
 from lrtc_lib.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement
-from lrtc_lib.data_access.core.utils import get_document_uri
 from lrtc_lib.data_access.data_access_factory import get_data_access
 
 

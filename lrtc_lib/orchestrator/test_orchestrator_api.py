@@ -1,9 +1,7 @@
 import unittest
 
-from lrtc_lib.data_access.core.data_structs import Label, TextElement, Document
-from lrtc_lib.orchestrator import orchestrator_api
-from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
-from lrtc_lib.data_access.core.utils import URI_SEP
+from lrtc_lib.data_access.core.data_structs import TextElement, Document
+from lrtc_lib.data_access.file_based.utils import URI_SEP
 
 
 def generate_simple_doc(dataset_name, doc_id=0):

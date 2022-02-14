@@ -4,9 +4,8 @@ from collections import defaultdict
 import pandas as pd
 
 from typing import List
-from lrtc_lib.data_access.core.data_structs import Document, TextElement
-from lrtc_lib.data_access.processors.data_processor_api import DataProcessorAPI, METADATA_CONTEXT_KEY
-from lrtc_lib.data_access.core.utils import URI_SEP
+from lrtc_lib.data_access.core.data_structs import Document, TextElement, DisplayFields, URI_SEP
+from lrtc_lib.data_access.processors.data_processor_api import DataProcessorAPI
 from lrtc_lib.definitions import ROOT_DIR
 
 
@@ -28,16 +27,15 @@ class CsvFileProcessor(DataProcessorAPI):
 
     """
 
-    def __init__(self, dataset_name: str, temp_file_name: str, text_col: str = 'text',
-                 context_col: str = None, context_col_label: str = METADATA_CONTEXT_KEY,
-                 doc_id_col: str = 'document_id', encoding: str = 'utf-8'):
+    def __init__(self, dataset_name: str, temp_file_name: str, text_col: str = DisplayFields.text,
+                 metadata_column_name_prefix = DisplayFields.csv_metadata_column_prefix,
+                 doc_id_col: str = DisplayFields.doc_id, encoding: str = 'utf-8'):
         """
 
         :param dataset_name: the name of the processed dataset
         :param temp_file_name: the temporary file used to store the csv before processing
         :param text_col: the name of the column which holds the text of the TextElement. Default is 'text'.
-        :param context_col: the name of the column which provides context for the text, None if no context is available.
-        Default is None.
+        :param metadata_column_name_prefix: prefix of metadata columns that should be saved with the text element
         :param doc_id_col: column name by which text elements should be grouped into docs.
         If None all text elements would be put in a single dummy doc. Default is None.
         :param encoding: the encoding to use to read the csv raw file(s). Default is `utf-8`.
@@ -46,8 +44,7 @@ class CsvFileProcessor(DataProcessorAPI):
         self.dataset_name = dataset_name
         self.temp_file_name = temp_file_name
         self.text_col = text_col
-        self.context_col = context_col
-        self.context_col_label = context_col_label
+        self.metadata_column_name_prefix = metadata_column_name_prefix
         self.doc_id_col = doc_id_col
         self.encoding = encoding
 
@@ -68,8 +65,10 @@ class CsvFileProcessor(DataProcessorAPI):
         if self.doc_id_col not in df.columns:
             self.doc_id_col = None
         doc_uri_to_text_elements = defaultdict(list)
-        for idx, (text, context, doc_id) in enumerate(zip(
-                *get_columns(df, [self.text_col, self.context_col, self.doc_id_col]))):
+        metadata_column_names = [col for col in df.columns if col.startswith(self.metadata_column_name_prefix)]
+        metadata_dict = {col_name.split(self.metadata_column_name_prefix)[1]: col_values
+                         for col_name, col_values in zip(metadata_column_names, get_columns(df, metadata_column_names))}
+        for idx, (text, doc_id) in enumerate(zip(*get_columns(df, [self.text_col, self.doc_id_col]))):
 
             doc_name_for_uri = '0' if doc_id is None else str(doc_id).replace(URI_SEP, '_')
             doc_uri = self.dataset_name + URI_SEP + doc_name_for_uri
@@ -82,7 +81,7 @@ class CsvFileProcessor(DataProcessorAPI):
                 text_span_start = prev_element.span[0][1] + 1
 
             text_element_uri = doc_uri + URI_SEP + str(element_id)
-            metadata = {self.context_col_label: context} if context else {}
+            metadata = {k: v[idx] for k, v in metadata_dict.items()}
             text_element = TextElement(uri=text_element_uri, text=text,
                                        span=[(text_span_start, (text_span_start+len(text)))], metadata=metadata,
                                        category_to_label={})

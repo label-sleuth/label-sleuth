@@ -2,8 +2,6 @@ import abc
 from typing import List
 from lrtc_lib.data_access.core.data_structs import Document
 
-METADATA_CONTEXT_KEY = 'context'
-
 
 class DataProcessorAPI(object, metaclass=abc.ABCMeta):
 

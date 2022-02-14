@@ -1,4 +1,4 @@
-from typing import Sequence, Set
+from typing import Sequence
 import jsonpickle
 import os
 from collections import OrderedDict, defaultdict
@@ -9,7 +9,7 @@ from enum import Enum
 import functools
 import threading
 
-from lrtc_lib.data_access.core.utils import get_all_datasets
+from lrtc_lib.data_access.file_based.utils import get_all_dataset_names
 from lrtc_lib.definitions import WORKSPACE_DATA_DIR
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
@@ -72,8 +72,8 @@ def create_workspace(workspace_id: str, dataset_name: str):
     illegal_chars = "".join(x for x in workspace_id if not x.isalnum() and x not in "_-")
     assert len(illegal_chars) == 0, f"Workspace id '{workspace_id}' contains illegal characters: '{illegal_chars}'"
 
-    assert dataset_name in get_all_datasets(), f"Dataset {dataset_name} does not exist, existing datasets are:" \
-                                               f"\n{get_all_datasets()}"
+    assert dataset_name in get_all_dataset_names(), f"Dataset {dataset_name} does not exist, existing datasets are:" \
+                                               f"\n{get_all_dataset_names()}"
 
     workspace = Workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 

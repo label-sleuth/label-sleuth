@@ -1,5 +1,3 @@
-
-from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 
@@ -8,26 +6,7 @@ from typing import List, Tuple, Mapping
 LABEL_POSITIVE = True
 LABEL_NEGATIVE = False
 BINARY_LABELS = frozenset({LABEL_NEGATIVE, LABEL_POSITIVE})
-
-
-@dataclass
-class TextElement:
-    uri: str
-    text: str
-    span: List[Tuple]
-    metadata: Mapping
-    category_to_label: defaultdict # TODO does this still need to be a defaultdict?
-
-    @classmethod
-    def get_field_names(cls):
-        return cls.__annotations__.keys()
-
-
-@dataclass
-class Document:
-    uri: str
-    text_elements: List[TextElement]
-    metadata: Mapping
+URI_SEP = "-"
 
 
 class LabelType(Enum):
@@ -57,14 +36,35 @@ class Label:
         return dict_for_json
 
 
+@dataclass
+class TextElement:
+    uri: str
+    text: str
+    span: List[Tuple]
+    metadata: Mapping
+    category_to_label: Mapping[str, Label]
+
+    @classmethod
+    def get_field_names(cls):
+        return cls.__annotations__.keys()
+
+
+@dataclass
+class Document:
+    uri: str
+    text_elements: List[TextElement]
+    metadata: Mapping
+
+
 class DisplayFields(object):
     workspace_id = 'workspace_id'
     category_name = 'category_name'
-    doc_id = 'doc_id'
+    doc_id = 'document_id'
     dataset = 'dataset'
     text = 'text'
     uri = 'uri'
     element_metadata = 'element_metadata'
     label = 'label'
-    label_metadata = 'label_metadata'
+    label_metadata = 'label_metadata' #TODO currently not supported
     label_type = 'label_type'
+    csv_metadata_column_prefix = 'metadata_'

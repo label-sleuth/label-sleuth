@@ -5,12 +5,12 @@ from typing import List
 
 import lrtc_lib.data_access.data_access_factory as data_access_factory
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label
-from lrtc_lib.data_access.core.utils import URI_SEP
+from lrtc_lib.data_access.file_based.utils import URI_SEP
 import lrtc_lib.data_access.core.data_access_in_memory_logic as logic
-from lrtc_lib.data_access.data_access_in_memory import DataAccessInMemory
+from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
 
-data_access: DataAccessInMemory = data_access_factory.get_data_access()
+data_access: FileBasedDataAccess = data_access_factory.get_data_access()
 
 
 def generate_simple_doc(dataset_name, doc_id=0, add_duplicate=False):
@@ -61,23 +61,23 @@ class TestDataAccessInMemory(unittest.TestCase):
     def test_add_documents_and_get_documents(self):
         dataset_name = self.test_add_documents_and_get_documents.__name__ + '_dump'
         doc = generate_corpus(dataset_name)[0]
-        doc_in_memory = data_access.get_documents(dataset_name, [doc.uri])[0]
+        doc_in_memory = data_access.get_documents(None,dataset_name, [doc.uri])[0]
         # compare all fields
         diffs = [(field, getattr(doc_in_memory, field), getattr(doc, field)) for field in
                  Document.__annotations__ if not getattr(doc_in_memory, field) == getattr(doc, field)]
         self.assertEqual(0, len(diffs))
         data_access.delete_dataset(dataset_name)
 
-    def test_set_labels_and_get_documents_with_labels_info(self):
+    def test_set_labels_and_get_documents(self):
         workspace_id = 'test_set_labels'
-        dataset_name = self.test_set_labels_and_get_documents_with_labels_info.__name__ + '_dump'
+        dataset_name = self.test_set_labels_and_get_documents.__name__ + '_dump'
         categories = ['cat_' + str(i) for i in range(3)]
         doc = generate_corpus(dataset_name)[0]
         texts_and_labels_list = generate_random_texts_and_labels(doc, 5,
                                                                  categories)  # [(uri, {category: Label})]
         data_access.set_labels(workspace_id, texts_and_labels_list)
 
-        doc_with_labels_info = data_access.get_documents_with_labels_info(workspace_id, dataset_name, [doc.uri])
+        doc_with_labels_info = data_access.get_documents(workspace_id, dataset_name, [doc.uri])
         texts_and_labels_dict = dict(texts_and_labels_list)
         for text in doc_with_labels_info[0].text_elements:
             if text.uri in texts_and_labels_dict:
@@ -88,7 +88,7 @@ class TestDataAccessInMemory(unittest.TestCase):
 
     def test_unset_labels(self):
         workspace_id = 'test_unset_labels'
-        dataset_name = self.test_set_labels_and_get_documents_with_labels_info.__name__ + '_dump'
+        dataset_name = self.test_set_labels_and_get_documents.__name__ + '_dump'
         category = "cat1"
         doc = generate_corpus(dataset_name)[0]
         texts_and_labels_list = add_labels_to_doc(doc, category)
@@ -390,7 +390,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         texts_and_labels_list = [(elem.uri, {category: Label(label=LABEL_POSITIVE)})
                                  for elem in all_without_dups]
         # set labels without propagating to duplicates
-        data_access.set_labels(workspace_id, texts_and_labels_list, propagate_to_duplicates=False)
+        data_access.set_labels(workspace_id, texts_and_labels_list, apply_to_duplicate_texts=False)
         labels_count = data_access.get_label_counts(workspace_id, dataset_name, category)
         self.assertEqual(labels_count[LABEL_POSITIVE], len(all_without_dups))
         # unset labels
@@ -398,7 +398,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         labels_count = data_access.get_label_counts(workspace_id, dataset_name, category)
         self.assertEqual(labels_count[LABEL_POSITIVE], 0)
         # set labels with propagating to duplicates
-        data_access.set_labels(workspace_id, texts_and_labels_list, propagate_to_duplicates=True)
+        data_access.set_labels(workspace_id, texts_and_labels_list, apply_to_duplicate_texts=True)
         labels_count = data_access.get_label_counts(workspace_id, dataset_name, category)
         self.assertEqual(labels_count[LABEL_POSITIVE], len(all_elements))
         data_access.unset_labels(workspace_id, category, [elem.uri for elem in all_elements])
@@ -408,13 +408,13 @@ class TestDataAccessInMemory(unittest.TestCase):
         texts_and_labels_list = [(elem.uri, {category: Label(label=LABEL_POSITIVE)})
                                  for elem in non_representative_duplicates]
         # set labels without propagating to duplicates
-        data_access.set_labels(workspace_id, texts_and_labels_list, propagate_to_duplicates=False)
+        data_access.set_labels(workspace_id, texts_and_labels_list, apply_to_duplicate_texts=False)
         labels_count = data_access.get_label_counts(workspace_id, dataset_name, category)
         sampled = data_access.sample_labeled_text_elements(workspace_id, dataset_name, category, 10**6,
                                                            remove_duplicates=True)['results']
         self.assertEqual(labels_count[LABEL_POSITIVE], len(sampled), len(non_representative_duplicates))
         # set labels with propagating to duplicates
-        data_access.set_labels(workspace_id, texts_and_labels_list, propagate_to_duplicates=True)
+        data_access.set_labels(workspace_id, texts_and_labels_list, apply_to_duplicate_texts=True)
         labels_count = data_access.get_label_counts(workspace_id, dataset_name, category)
         sampled = data_access.sample_labeled_text_elements(workspace_id, dataset_name, category, 10 ** 6,
                                                            remove_duplicates=True)['results']

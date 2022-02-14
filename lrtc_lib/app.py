@@ -1,6 +1,10 @@
+#Immidiate action items:
+# 1. simplify duplicate clusters by adding a unique id for each text, and use the same id for duplicates. remove the
+# "cluster" term from this mechanism.
+
+
 ###TODOs
-# orchestrator cleanups and reorganization (create utils by use cases and move items)
-#TODO data access, refactor, decide what to do with duplicates,  - FIRST STEP - always return labels
+#TODO data access, refactor, decide what to do with duplicates
 # handle stream of csv as text and not file? Ask Dakuo
 # data access, refactor, decide what to do with duplicates, etc
 # improve /async_support/_post_method and stuff...
@@ -9,13 +13,13 @@
 # keep only working active learning strategies
 # get rid of pandas warning
 # consider passing the inferred scores to the active learning, instead of calling the orchestrator.infer()
-# simplify load_documents_from_csv (LiveProcessor)
 # consider changing the output format of infer() method
 # consider renaming infer cache to "store" or something similiar
 # when loading documents, use ast.literal_eval to import element_metadata if exists
-# import_category_labels, can we move it to the dataaccess?  import also element_metadata and label_type (if exists)
+# import_category_labels, import also element_metadata and label_type (if exists)?
 
 import logging
+
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 import getpass
@@ -41,7 +45,7 @@ from lrtc_lib.core.information_gain_utils import information_gain
 from lrtc_lib.config import CONFIGURATION
 from lrtc_lib.configurations.users import users, tokens
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
-from lrtc_lib.data_access.data_access_api import AlreadyExistException
+from lrtc_lib.data_access.data_access_api import AlreadyExistException, get_document_uri
 
 print("user:")
 print(getpass.getuser())
@@ -68,7 +72,7 @@ def elements_back_to_front(workspace_id, elements, category):
     element_uri_to_info = \
         {text_element.uri:
              {'id': text_element.uri,
-              'docid': orchestrator_api.get_document_uri(text_element.uri),
+              'docid': get_document_uri(text_element.uri),
               'begin': text_element.span[0][0],
               'end': text_element.span[0][1],
               'text': text_element.text,
@@ -157,7 +161,7 @@ def get_all_dataset_ids():
     Get all existing datasets
     :return array of dataset ids as strings:
     """
-    all_datasets = orchestrator_api.get_all_datasets()
+    all_datasets = orchestrator_api.get_all_dataset_names()
     res = {'datasets':
                [{"dataset_id": d} for d in all_datasets]}
     return jsonify(res)
@@ -175,11 +179,11 @@ def add_documents(dataset_name):
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
         os.makedirs(temp_dir, exist_ok=True)
         df.to_csv(os.path.join(temp_dir, temp_file_name))
-        loaded, workspaces_to_update = orchestrator_api.add_documents_from_file(dataset_name, temp_file_name)
+        document_statistics, workspaces_to_update = orchestrator_api.add_documents_from_file(dataset_name, temp_file_name)
 
         return jsonify({"dataset_name": dataset_name,
-                        "num_docs": len(loaded),
-                        "num_sentences": sum(len(doc.text_elements) for doc in loaded),
+                        "num_docs": document_statistics.documents_loaded,
+                        "num_sentences": document_statistics.text_elements_loaded,
                         "workspaces_to_update": workspaces_to_update})
     except AlreadyExistException as e:
         return jsonify({"dataset_name": dataset_name, "error": "documents already exist", "documents": e.documents,
@@ -469,7 +473,8 @@ def set_element_label(workspace_id, element_id):
     update_counter = post_data.get('update_counter', True)
 
     if value == 'none':
-        orchestrator_api.unset_labels(workspace_id, category_name, [element_id])
+        orchestrator_api.unset_labels(workspace_id, category_name, [element_id],
+                                      apply_to_duplicate_texts=CONFIGURATION.apply_labels_to_duplicate_texts)
 
     else:
         if value in ['true', "True", "TRUE", True]:
@@ -480,7 +485,9 @@ def set_element_label(workspace_id, element_id):
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
 
         uri_with_updated_label = [(element_id, {category_name: orchestrator_api.Label(value)})]
-        orchestrator_api.set_labels(workspace_id, uri_with_updated_label, update_label_counter=update_counter)
+        orchestrator_api.set_labels(workspace_id, uri_with_updated_label,
+                                    apply_to_duplicate_texts=CONFIGURATION.apply_labels_to_duplicate_texts,
+                                    update_label_counter=update_counter)
 
     res = {'element': get_element(workspace_id, element_id), 'workspace_id': workspace_id, 'category_name': category_name}
     return jsonify(res)
@@ -564,7 +571,8 @@ def get_labelling_status(workspace_id):
     dataset_name = orchestrator_api.get_dataset_name(workspace_id)
     future = executor.submit(orchestrator_api.train_if_recommended, workspace_id, category_name)
 
-    labeling_counts = orchestrator_api.get_label_counts(workspace_id, dataset_name, category_name)
+    labeling_counts = orchestrator_api.get_label_counts(workspace_id, dataset_name, category_name,
+                                                        remove_duplicates=CONFIGURATION.apply_labels_to_duplicate_texts)
     progress = orchestrator_api.get_progress(workspace_id, dataset_name, category_name)
 
     return jsonify({

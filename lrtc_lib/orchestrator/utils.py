@@ -2,6 +2,8 @@ from typing import Mapping, Sequence, Set
 
 from sklearn.preprocessing import MultiLabelBinarizer
 
+from lrtc_lib.data_access.core.data_structs import URI_SEP
+
 
 def _convert_to_dicts_with_numeric_labels(data, category_name, all_category_labels: Set[str]) -> Sequence[Mapping]:
     """
@@ -16,3 +18,5 @@ def _convert_to_dicts_with_numeric_labels(data, category_name, all_category_labe
                        **example_metadata}
                       for element, label_set, example_metadata in zip(data, labels, metadata)]
     return converted_data
+
+

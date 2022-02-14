@@ -30,13 +30,14 @@ class Configuration:
     changed_element_threshold: int
     sync_mode_elements_to_label: int
     info_gain_stop_words: str
-    show_translation: bool
     model_policy: ModelPolicy
     training_set_selection_strategy: TrainingSetSelectionStrategy
     active_learning_strategy: ActiveLearningStrategies
     local_finetune: bool
     users: List[dict]
     precision_evaluation_size: int
+    apply_labels_to_duplicate_texts: bool
+
 
 
 converters = {
