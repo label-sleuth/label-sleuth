@@ -5,7 +5,7 @@ from sklearn.preprocessing import MultiLabelBinarizer
 from lrtc_lib.data_access.core.data_structs import URI_SEP
 
 
-def _convert_to_dicts_with_numeric_labels(data, category_name, all_category_labels: Set[str]) -> Sequence[Mapping]:
+def _convert_text_elements_to_train_data(data, category_name) -> Sequence[Mapping]:
     """
     convert textual labels to integers and convert to expected inference input format
     :param data:
@@ -13,10 +13,9 @@ def _convert_to_dicts_with_numeric_labels(data, category_name, all_category_labe
     labels = [element.category_to_label[category_name].label for element in data]
     metadata = [element.category_to_label[category_name].metadata for element in data]
 
-    text_to_number = {label: i for i, label in enumerate(sorted(all_category_labels))}
-    converted_data = [{"text": element.text, "label": text_to_number[label_set],
+    converted_data = [{"text": element.text, "label": label,
                        **example_metadata}
-                      for element, label_set, example_metadata in zip(data, labels, metadata)]
+                      for element, label, example_metadata in zip(data, labels, metadata)]
     return converted_data
 
 

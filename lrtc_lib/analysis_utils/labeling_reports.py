@@ -14,7 +14,7 @@ from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.tools import get_glove_representation, remove_stop_words_and_punctuation
-from lrtc_lib.orchestrator.utils import _convert_to_dicts_with_numeric_labels
+from lrtc_lib.orchestrator.utils import _convert_text_elements_to_train_data
 from lrtc_lib.training_set_selector.train_set_selector_api import \
     TrainingSetSelectionStrategy
 from lrtc_lib.training_set_selector.training_set_selector_factory import get_training_set_selector
@@ -35,10 +35,9 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
     model = MODEL_FACTORY.get_model(model_type)
 
     num_folds = 4
-    all_category_labels = BINARY_LABELS
     random.Random(0).shuffle(all_train_text_elements)
-    all_train_data = _convert_to_dicts_with_numeric_labels(
-        all_train_text_elements, category_name, all_category_labels)
+    all_train_data = _convert_text_elements_to_train_data(
+        all_train_text_elements, category_name)
     train_splits = np.array_split(np.array(all_train_data), num_folds)
     all_pos_scores = []
     for i in range(num_folds):
@@ -49,10 +48,10 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
             time.sleep(0.1)
 
         logging.info(f'*** done waiting for cross-validation model {mid} ***')
-        scores = model.infer(mid, all_train_data, None)['scores']
+        scores = [pred.score for pred in model.infer(mid, all_train_data)]
         # only look at scores of strong labeled elements from the current validation fold
         # TODO each element has only one scores so we can concatenate one vector instead of mean of one value?
-        scores = [score[1] if element_dict in train_splits[i]
+        scores = [score if element_dict in train_splits[i]
                               and element.category_to_label[category_name].label_type == LabelType.Standard else np.nan
                   for element_dict, element, score in zip(all_train_data, all_train_text_elements, scores)]
         model.delete_model(mid)

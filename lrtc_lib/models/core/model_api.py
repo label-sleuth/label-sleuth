@@ -1,5 +1,6 @@
 import shutil
 import traceback
+from dataclasses import dataclass
 from enum import Enum
 from typing import Dict
 import abc
@@ -15,7 +16,7 @@ from lrtc_lib.models.core.languages import Languages, Language
 
 import lrtc_lib.definitions as definitions
 from lrtc_lib.models.util.LRUCache import LRUCache
-from lrtc_lib.models.util.disk_cache import get_disk_cache, save_cache_to_disk
+from lrtc_lib.models.util.disk_cache import load_model_prediction_store_from_disk, save_model_prediction_store_to_disk
 
 PREDICTIONS_CACHE_DIR_NAME = "predictions_cache"
 METADATA_PARAMS_AND_DEFAULTS = {'Language': Languages.ENGLISH}
@@ -26,6 +27,21 @@ class ModelStatus(Enum):
     READY = 1
     ERROR = 2
     DELETED = 3
+
+
+@dataclass
+class Prediction:
+    """
+    Each model.infer should return at least these fields for each element.
+    In order to add more fields (e.g embedding), inherit this class and add the desired fields
+    """
+    label: bool
+    score: float
+
+    def __post_init__(self):
+        # we make sure to convert numpy objects, which are not json-serializable
+        self.label = bool(self.label)
+        self.score = float(self.score)
 
 
 class ModelAPI(object, metaclass=abc.ABCMeta):
@@ -63,16 +79,28 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
 
         return
 
-    def infer(self, model_id, items_to_infer: Sequence[Mapping], use_cache=True) -> Dict:
+    def _disk_store_key_to_in_memory_cache_key(self,model_id, disk_key):
+        return (model_id,disk_key)
+
+
+    def _load_model_prediction_store_to_cache(self,model_id):
+        logging.debug("start loading cache from disk")
+        model_predictions_store = load_model_prediction_store_from_disk(self.get_model_prediction_store_file(model_id), self.get_prediction_class())
+        logging.debug("done loading cache from disk")
+        if len(model_predictions_store) > 0:
+            for key in model_predictions_store.keys():
+                self.cache.set(self._disk_store_key_to_in_memory_cache_key(model_id, key), model_predictions_store[key])
+        return model_predictions_store
+
+
+    def infer(self, model_id, items_to_infer: Sequence[Mapping], use_cache=True) -> Sequence[Prediction]:
         """
         infer a given sequence of elements and return the results
         :param model_id:
         :param items_to_infer: a list of dictionaries with at least the "text" field, additional fields can be passed
         e.g. [{'text': 'text1', 'additional_field': 'value1'}, {'text': 'text2', 'additional_field': 'value2'}]
         :param use_cache: save the inference results to cache. Default is True
-        :rtype: dictionary with at least the "labels" key where the value is a list of numeric labels for each element
-        in items_to_infer, additional keys (with list values of the same length) can be passed
-         e.g {"labels": [1,0], "gradients": [[0.24,-0.39,-0.66,0.25], [0.14,0.29,-0.26,0.16]]
+        :return: a list of Prediction objects
         """
         if not use_cache:
             logging.info(
@@ -81,47 +109,46 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         if not hasattr(self, "lock"):
             self.lock = threading.Lock()
         with self.lock:
-            cache_keys = [(model_id, tuple(sorted(item.items()))) for item in items_to_infer]
-            infer_res = [self.cache.get(cache_key) for cache_key in cache_keys]
-            cache_misses = [i for i, v in enumerate(infer_res) if v is None]
+            in_memory_cache_keys = [(model_id, tuple(sorted(item.items()))) for item in items_to_infer]
+            model_predictions_store_keys = [tuple(sorted(item.items())) for item in items_to_infer]
+            # try to get the predictions from the in-memory cache.
+            infer_res = [self.cache.get(cache_key) for cache_key in in_memory_cache_keys]
+            indices_not_in_cache = [i for i, v in enumerate(infer_res) if v is None]
 
-            if len(cache_misses) > 0:  # not in memory cache, try loading from disk cache
-                model_cache_file = self.get_prediction_cache_file(model_id)
-                logging.debug("start loading cache from disk")
-                disk_cache = get_disk_cache(model_cache_file)
-                logging.debug("done loading cache from disk")
-                if len(disk_cache) > 0:
-                    for key in disk_cache.keys():
-                        self.cache.set(key, disk_cache[key])
-                    for idx in cache_misses:
-                        infer_res[idx] = self.cache.get(cache_keys[idx])
-                    cache_misses = [i for i, v in enumerate(infer_res) if v is None]
+            if len(indices_not_in_cache) > 0:  # not in memory cache, loading model prediction store
+                logging.info(
+                    f"{len(indices_not_in_cache)} not in cache, loading model prediction store from disk"
+                    f" in {self.__class__.__name__}")
+                model_predictions_store = self._load_model_prediction_store_to_cache(model_id)
+                for idx in indices_not_in_cache:
+                    infer_res[idx] = self.cache.get(in_memory_cache_keys[idx])
+                indices_not_in_cache = [i for i, v in enumerate(infer_res) if v is None]
 
-            logging.info(f"{len(items_to_infer)-len(cache_misses)} already in cache, running infer for {len(cache_misses)}"
-                         f" values (cache size {self.cache.get_current_size()}) in {self.__class__.__name__}")
-
-            if len(cache_misses) > 0:  # not in memory cache or in disk cache
-                missing_entries = [items_to_infer[idx] for idx in cache_misses]
+            if len(indices_not_in_cache) > 0:  # not in memory cache or in model prediction store
+                logging.info(
+                    f"{len(items_to_infer) - len(indices_not_in_cache)} already in cache, running infer for {len(indices_not_in_cache)}"
+                    f" values (cache size {self.cache.get_current_size()}) in {self.__class__.__name__}")
+                missing_items_to_infer = [items_to_infer[idx] for idx in indices_not_in_cache]
                 uniques = set()
                 # if duplicates exist, do not infer the same item more than once
-                uniques_to_infer = [e for e in missing_entries if frozenset(e.items()) not in uniques
+                uniques_to_infer = [e for e in missing_items_to_infer if frozenset(e.items()) not in uniques
                                     and not uniques.add(frozenset(e.items()))]
 
-                new_res_dict = self._infer(model_id, uniques_to_infer)
-                logging.info(f"finished running infer for {len(cache_misses)} values")
+                new_predictions = self._infer(model_id, uniques_to_infer)
+                logging.info(f"finished running infer for {len(indices_not_in_cache)} values")
 
-                new_res_list = [{k: new_res_dict[k][i] for k in new_res_dict.keys()} for i in range(len(uniques))]
-                results_by_item = {frozenset(unique_item.items()): item_results for unique_item, item_results
-                                   in zip(uniques_to_infer, new_res_list)}
-                for idx, entry in zip(cache_misses, missing_entries):
-                    item_res = results_by_item[frozenset(entry.items())]
-                    infer_res[idx] = item_res
-                    self.cache.set(cache_keys[idx], item_res)
-                    disk_cache[cache_keys[idx]] = item_res
-                save_cache_to_disk(model_cache_file, disk_cache)  # update disk cache
+                text_to_prediction = {frozenset(unique_item.items()): item_predictions for unique_item, item_predictions
+                                      in zip(uniques_to_infer, new_predictions)}
 
-            infer_res_dict = {k: [x[k] for x in infer_res] for k in infer_res[0].keys()}
-            return infer_res_dict
+                # update cache, model prediction store and infer results with the inferred elements
+                for idx, entry in zip(indices_not_in_cache, missing_items_to_infer):
+                    prediction = text_to_prediction[frozenset(entry.items())]
+                    infer_res[idx] = prediction
+                    self.cache.set(in_memory_cache_keys[idx], prediction)
+                    model_predictions_store[model_predictions_store_keys[idx]] = prediction
+                save_model_prediction_store_to_disk(self.get_model_prediction_store_file(model_id), model_predictions_store)  # update disk cache
+
+            return infer_res
 
 
     def mark_train_as_started(self, model_id):
@@ -181,31 +208,43 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         return self.get_metadata(model_id)['Language']
 
     @abc.abstractmethod
-    def _infer(self, model_id, items_to_infer: Sequence[Mapping]) -> Dict:
-        self.__raise_not_implemented('_infer')
+    def _infer(self, model_id, items_to_infer: Sequence[Mapping]) -> Sequence[Prediction]:
+        """
+        TODO
+        """
 
     @abc.abstractmethod
     def _train(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
-        self.__raise_not_implemented('_train')
+        """
+        TODO
+        """
 
     @abc.abstractmethod
     def get_models_dir(self):
-        self.__raise_not_implemented('get_models_dir')
+        """
+        TODO
+        """
 
     def delete_model(self, model_id):
         logging.info(f"deleting {self.__class__.__name__} model id {model_id}")
         model_dir = self.get_model_dir_by_id(model_id)
         if os.path.isdir(model_dir):
             shutil.rmtree(model_dir)
-        if os.path.exists(self.get_prediction_cache_file(model_id)):
-            logging.info(f"Deleting prediction cache {self.get_prediction_cache_file(model_id)}")
-            os.remove(self.get_prediction_cache_file(model_id))
+        if os.path.exists(self.get_model_prediction_store_file(model_id)):
+            logging.info(f"Deleting prediction cache {self.get_model_prediction_store_file(model_id)}")
+            os.remove(self.get_model_prediction_store_file(model_id))
 
     def export_model(self, model_id):
-        raise NotImplementedError(f'export function has not been implemented for {self.__class__.__name__}')
+        """
+        TODO
+        """
 
-    def __raise_not_implemented(self, func_name):
-        raise NotImplementedError('users must define ' + func_name + ' to use this base class')
+    def get_prediction_class(self):
+        """
+        @return: Prediction class used by the Model. This used for storing and loading the predictions from the disk.
 
-    def get_prediction_cache_file(self, model_id):
+        """
+        return Prediction
+
+    def get_model_prediction_store_file(self, model_id):
         return os.path.join(self.get_models_dir(), PREDICTIONS_CACHE_DIR_NAME, model_id + ".json")

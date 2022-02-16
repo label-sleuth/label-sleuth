@@ -2,7 +2,7 @@ import logging
 import re
 import string
 import sys
-from typing import Mapping, Sequence, Tuple
+from typing import Mapping, Sequence
 
 import pandas as pd
 
@@ -31,7 +31,7 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
 
 
 def process_labels_dataframe(workspace_id, dataset_name, labels_df_to_import: pd.DataFrame) \
-        -> Mapping[str, Sequence[Tuple]]:
+        -> Mapping[str, Mapping[str, Label]]:
     logging.warning("Currently label metadata and label_type are ignored")
     # replace punctuation with underscores in category names
     punctuation = string.punctuation.replace("'", "") + string.whitespace

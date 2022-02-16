@@ -1,33 +1,32 @@
 import ast
 import logging
 import os
-import threading
 import time
 import ujson
-
-disk_cache_sem = threading.Semaphore()
-path_to_cache_dict = dict()
-def get_disk_cache(path_to_model_cache) -> dict:
-    try:
-        disk_cache_sem.acquire()
-        if path_to_model_cache in path_to_cache_dict:
-            return path_to_cache_dict[path_to_model_cache]
-        if not os.path.isfile(path_to_model_cache):
-            return {}
-
-        with open(path_to_model_cache) as reader:
-            model_cache = ujson.load(reader)
-        model_cache = {ast.literal_eval(x): y for x, y in model_cache.items()}
-        path_to_cache_dict[path_to_model_cache] = model_cache
-    finally:
-        disk_cache_sem.release()
-    return model_cache
+import dataclasses
 
 
-def save_cache_to_disk(path_to_model_cache, model_cache):
+def load_model_prediction_store_from_disk(path_to_model_cache, cls) -> dict:
+    """
+    @param path_to_model_cache:
+    @param cls: Class of the model prediction object. Usually of type Prediction.
+    @return:
+    """
+
+    if not os.path.isfile(path_to_model_cache):
+        return {}
+
+    with open(path_to_model_cache) as reader:
+        model_prediction_store = ujson.load(reader)
+    return {ast.literal_eval(x): cls(**y) for x, y in model_prediction_store.items()}
+
+
+def save_model_prediction_store_to_disk(path_to_model_cache, model_cache):
     os.makedirs(os.path.dirname(path_to_model_cache), exist_ok=True)
     start = time.time()
+    model_cache = {k: dataclasses.asdict(v) for k, v in model_cache.items()}
     with open(path_to_model_cache, "w") as output_file:
         output_file.write(ujson.dumps(model_cache))
     end = time.time()
-    logging.info(f"saving {len(model_cache)} items to disk cache took {end-start}")
+    logging.info(f"saving {len(model_cache)} items to model prediction store on disk took {end-start}")
+

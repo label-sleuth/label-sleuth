@@ -1,10 +1,16 @@
 #Immidiate action items:
+
+# Update cache function to reflect the new infer results structure (include conversion)
+# fix weird part in ensemble
+
+
 # 1. improve /async_support/_post_method and stuff... # consider using one threadpool and one process pool for all thread/processes we run?
 #
 
 
 ###TODOs
 
+# make RandomModel work in the new world
 # consider passing the inferred scores to the active learning, instead of calling the orchestrator.infer()
 # consider changing the output format of infer() method
 
@@ -82,7 +88,7 @@ def elements_back_to_front(workspace_id, elements, category):
 
     if category and len(orchestrator_api.get_all_models_by_status(workspace_id, category, ModelStatus.READY)) > 0 \
             and len(elements) > 0:
-        predicted_labels = orchestrator_api.infer(workspace_id, category, elements)["labels"]
+        predicted_labels = [pred.label for pred in orchestrator_api.infer(workspace_id, category, elements)]
         for text_element, prediction in zip(elements, predicted_labels):
             element_uri_to_info[text_element.uri]['model_predictions'][category] = str(prediction).lower()  # since the current UI expects string labels and not boolean
 
@@ -373,7 +379,7 @@ def get_document_positive_predictions(workspace_id, document_id):
 
         elements = document.text_elements
 
-        predictions = orchestrator_api.infer(workspace_id, category_name, elements)['labels']
+        predictions = [pred.label for pred in orchestrator_api.infer(workspace_id, category_name, elements)]
         positive_predicted_elements = [element for element, prediction in zip(elements, predictions) if prediction == LABEL_POSITIVE]
 
         elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_name)
@@ -765,8 +771,8 @@ def export_predictions(workspace_id):
     if filter:
         elements = [x for x in elements if filter in x.uri]
     infer_results = orchestrator_api.infer(workspace_id, category_name, elements, model_id=model_id)
-    return pd.DataFrame([{**o.__dict__, "score": scores[1], 'predicted_label': labels} for o, scores, labels
-                         in zip(elements, infer_results["scores"], infer_results["labels"])]).to_csv(index=False)
+    return pd.DataFrame([{**te.__dict__, "score": pred.score, 'predicted_label': pred.label} for te, pred
+                         in zip(elements, infer_results)]).to_csv(index=False)
 
 
 @app.route('/workspace/<workspace_id>/import_labels', methods=['POST'])

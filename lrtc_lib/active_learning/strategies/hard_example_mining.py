@@ -1,32 +1,23 @@
+from typing import Sequence
 import numpy as np
-from scipy.stats import entropy
-
 from lrtc_lib.active_learning.core.active_learning_api import ActiveLearner
-from lrtc_lib.orchestrator import orchestrator_api
-import logging
+from lrtc_lib.data_access.core.data_structs import TextElement
+from lrtc_lib.models.core.model_api import Prediction
 
 
 class HardMiningLearner(ActiveLearner):
-    def __init__(self, max_to_consider=10 ** 6):
-        self.max_to_consider = max_to_consider
+    def get_recommended_items_for_labeling(self, workspace_id, model_id, dataset_name, category_name,
+                                           candidate_text_elements: Sequence[TextElement],
+                                           candidate_text_element_predictions: Sequence[Prediction],
+                                           sample_size=1):
+        uncertainty_scores = self.get_per_element_score(candidate_text_elements, candidate_text_element_predictions,
+                                                        workspace_id, model_id, dataset_name, category_name)
+        sorted_indices = np.argsort(uncertainty_scores)[::-1]
+        top_indices = sorted_indices[:sample_size]
+        recommended_items = np.array(candidate_text_elements)[np.array(top_indices)].tolist()
+        return recommended_items
 
-    def get_recommended_items_for_labeling(self, workspace_id, model_id, dataset_name, category_name, sample_size=1):
-        unlabeled = self.get_unlabeled_data(workspace_id, dataset_name, category_name, self.max_to_consider)
-        if len(unlabeled) == 0:
-            return unlabeled
-
-        entropy_scores = self.get_per_element_score(unlabeled, workspace_id, model_id, dataset_name, category_name)
-        indices = list(reversed(np.argsort(entropy_scores)[-sample_size:]))
-        # indices = np.argpartition(confidences, sample_size)[:sample_size]
-        items = np.array(unlabeled)[indices]
-        logging.debug(f"top hard mining active learning recommendations {workspace_id}:{category_name}:")
-        for idx, item in enumerate(items):
-            logging.debug(f"{idx}. {item.text}")
-        return items.tolist()
-
-    def get_per_element_score(self, items, workspace_id, model_id, dataset_name, category_name):
-        #TODO consider passing the inferred scores to the ActiveLearning instead of using the orchestrator
-        scores = orchestrator_api.infer(workspace_id, category_name, items)["scores"]
-
-        entropy_all = np.array([entropy(score) for score in scores]) # == 0.5 - np.abs(np.array([x[1] for x in scores]) - 0.5)
-        return entropy_all
+    def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
+                              candidate_text_element_predictions: Sequence[Prediction], workspace_id: str,
+                              model_id: str, dataset_name: str, category_name: str) -> Sequence[float]:
+        return [2*(0.5-abs(pred.score-0.5)) for pred in candidate_text_element_predictions]

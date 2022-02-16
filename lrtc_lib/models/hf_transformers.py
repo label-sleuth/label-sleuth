@@ -5,7 +5,7 @@ import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, InputFeatures, Trainer, TrainingArguments
 
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.models.core.model_api import ModelAPI
+from lrtc_lib.models.core.model_api import ModelAPI, Prediction
 
 MODEL_DIR = os.path.join(ROOT_DIR, "output", "models", "transformers")
 
@@ -59,9 +59,8 @@ class HFTransformers(ModelAPI):
             gc.collect()
             torch.cuda.empty_cache()
 
-        scores = [pred.squeeze().numpy().tolist() for pred in preds]
-        labels = [int(example_scores[1] > 0.5) for example_scores in scores]
-        return {"labels": labels, "scores": scores}
+        scores = [pred.squeeze().numpy()[1] for pred in preds]
+        return [Prediction(label=score > 0.5, score=score) for score in scores]
 
     def get_models_dir(self):
         return MODEL_DIR
@@ -82,13 +81,20 @@ class HFTransformers(ModelAPI):
 if __name__ == '__main__':
     model = HFTransformers(batch_size=32)
 
-    train_data = [{"text": "I love dogs", "label": 1},
-                  {"text": "I like to play with dogs", "label": 1},
-                  {"text": "dogs are better than cats", "label": 1},
-                  {"text": "cats cats cats", "label": 0},
-                  {"text": "play with cats", "label": 0},
-                  {"text": "dont know", "label": 0},
-                  {"text": "what else", "label": 0}]
+    train_data = [{"text": "I love dogs", "label": True},
+                  {"text": "I like to play with dogs", "label": True},
+                  {"text": "dogs are better than cats", "label": True},
+                  {"text": "cats cats cats", "label": False},
+                  {"text": "play with cats", "label": False},
+                  {"text": "dont know", "label": False},
+                  {"text": "what else", "label": False}]
+    # train_data = [{"text": "I love dogs", "label": 1},
+    #               {"text": "I like to play with dogs", "label": 1},
+    #               {"text": "dogs are better than cats", "label": 1},
+    #               {"text": "cats cats cats", "label": 0},
+    #               {"text": "play with cats", "label": 0},
+    #               {"text": "dont know", "label": 0},
+    #               {"text": "what else", "label": 0}]
 
     import uuid
 
@@ -97,5 +103,8 @@ if __name__ == '__main__':
     infer_list = []
     for x in range(3):
         infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})
+    infer_list.append({"text":"I really love dogs"})
+    import time
+    time.sleep(20)
     res = model.infer(model_id, infer_list, {})
     print(res)

@@ -13,22 +13,22 @@ from lrtc_lib.definitions import ROOT_DIR
 import logging
 
 from lrtc_lib.models.core.languages import Languages
-from lrtc_lib.models.core.model_api import ModelAPI
+from lrtc_lib.models.core.model_api import ModelAPI, Prediction
 from lrtc_lib.models.core.tools import RepresentationType, get_glove_representation
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 # TODO remove unsupported types (multi-label etc.)
 class SVM(ModelAPI):
-    def __init__(self, representations_type: RepresentationType, multi_label=False,
+    def __init__(self, representation_type: RepresentationType,
                  model_dir=os.path.join(ROOT_DIR, "output", "models", "svm"), kernel="linear"):
         super().__init__()
         os.makedirs(model_dir, exist_ok=True)
         self.model_dir = model_dir
 
         self.kernel = kernel
-        self.representation_type = representations_type
-        self.multi_label = multi_label
+        self.representation_type = representation_type
+
 
 
     def _train(self, model_id, train_data, train_params):
@@ -40,10 +40,7 @@ class SVM(ModelAPI):
         else:
             raise ValueError("Unknown kernel type")
 
-        if self.multi_label:
-            model = OneVsRestClassifier(svm_implementation)
-        else:
-            model = svm_implementation
+        model = svm_implementation
         language = self.get_language(model_id)
         texts = [x['text'] for x in train_data]
         train_data_features, vectorizer = self.input_to_features(texts, language=language, train=True)
@@ -55,7 +52,6 @@ class SVM(ModelAPI):
         with open(self.model_file_by_id(model_id), "wb") as fl:
             pickle.dump(model, fl)
 
-
     def _infer(self, model_id, items_to_infer):
         with open(self.vectorizer_file_by_id(model_id), "rb") as fl:
             vectorizer = pickle.load(fl)
@@ -63,11 +59,12 @@ class SVM(ModelAPI):
             model = pickle.load(fl)
         language = self.get_language(model_id)
 
-        features_all_texts, _ = self.input_to_features([x['text'] for x in items_to_infer], language=language, train=False, vectorizer=vectorizer)
+        features_all_texts, _ = self.input_to_features([x['text'] for x in items_to_infer], language=language,
+                                                       train=False, vectorizer=vectorizer)
         labels = model.predict(features_all_texts).tolist()
-        scores = self.get_probs(model, features_all_texts)
-        scores = scores.tolist() # to be json serializable
-        return {"labels": labels, "scores": scores}
+        # The True label is in the second position as sorted([True, False]) is [False, True]
+        scores = [probs[1] for probs in self.get_probs(model, features_all_texts)]
+        return [Prediction(label=label, score=score) for label, score in zip(labels, scores)]
 
     def get_probs(self, model, features):
         distances = np.array(model.decision_function(features))  # get distances from hyperplanes (per class)
@@ -101,27 +98,28 @@ class SVM(ModelAPI):
     def get_models_dir(self):
         return self.model_dir
 
+
 if __name__ == '__main__':
+    model = SVM(representation_type=RepresentationType.GLOVE)
 
+    train_data = [{"text": "I love dogs", "label": True},
+                  {"text": "I like to play with dogs", "label": True},
+                  {"text": "dogs are better than cats", "label": True},
+                  {"text": "cats cats cats", "label": False},
+                  {"text": "play with cats", "label": False},
+                  {"text": "dont know", "label": False},
+                  {"text": "what else", "label": False}]
+
+    model_id = model.train(train_data, {})
+    print(model_id)
     import uuid
-    svm = SVM(RepresentationType.GLOVE)
-
-    train_data = [{"text": "I love dogs", "label": 2},
-                  {"text": "I like to play with dogs", "label": 1},
-                  {"text": "dogs are better than cats", "label": 1},
-                  {"text": "cats cats cats", "label": 0},
-                  {"text": "play with cats", "label": 0},
-                  {"text": "dont know", "label": 0},
-                  {"text": "what else", "label": 0}]
-
-    # train_data = [{"text": 'text1__CONTEXT__main_text__CONTEXT__text2', "label": 1},
-    #               {"text": 'before text__CONTEXT__fascinating text__CONTEXT__after text', "label": 0},
-    #               ]
-
-    model_id = svm.train(train_data, {})
+    import time
+    time.sleep(10)
     infer_list = []
+    infer_list.append({"text": "I really love dogs"})
     for x in range(3):
-        # infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})
-        infer_list.append({"text": "some context__CONTEXT__hello " + str(uuid.uuid4()) + str(x) + "__CONTEXT__some other context"})
-    res = svm.infer(model_id, infer_list, {})
+        infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})
+    infer_list.append({"text":"I really love dogs"})
+    res = model.infer(model_id, infer_list)
     print(res)
+

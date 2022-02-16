@@ -1,17 +1,15 @@
-import pickle
-import shutil
+import logging
 import os
+import pickle
+
 import numpy as np
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 
 from lrtc_lib.definitions import ROOT_DIR
-
-import logging
-
 from lrtc_lib.models.core.languages import Languages
-from lrtc_lib.models.core.model_api import ModelAPI
+from lrtc_lib.models.core.model_api import ModelAPI, Prediction
 from lrtc_lib.models.core.tools import RepresentationType, get_glove_representation
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -65,17 +63,18 @@ class NaiveBayes(ModelAPI):
         language = self.get_language(model_id)
         items_to_infer = [x["text"] for x in items_to_infer]
         last_batch = 0
-        predicted = []
+        predictions = []
         while last_batch < len(items_to_infer):
             batch = items_to_infer[last_batch:last_batch + self.infer_batch_size]
             last_batch += self.infer_batch_size
             batch, _ = self.input_to_features(batch, language=language, train=False, vectorizer=vectorizer)
-            predicted.append(model.predict_proba(batch))
-        predicted = np.concatenate(predicted, axis=0)
+            predictions.append(model.predict_proba(batch))
+        predictions = np.concatenate(predictions, axis=0)
 
-        labels = [int(np.argmax(prediction)) for prediction in predicted]
-        scores = [prediction.tolist() for prediction in predicted]
-        return {"labels": labels, "scores": scores}
+        labels = [bool(np.argmax(prediction)) for prediction in predictions]
+        # The True label is in the second position as sorted([True, False]) is [False, True]
+        scores = [prediction[1] for prediction in predictions]
+        return [Prediction(label=label, score=score) for label, score in zip(labels, scores)]
 
     def model_file_by_id(self, model_id):
         return os.path.join(self.get_model_dir_by_id(model_id), "model")
@@ -86,4 +85,28 @@ class NaiveBayes(ModelAPI):
     def get_models_dir(self):
         return self.model_dir
 
+
+if __name__ == '__main__':
+    model = NaiveBayes(representation_type=RepresentationType.BOW)
+
+    train_data = [{"text": "what else", "label": False},
+        {"text": "I love dogs", "label": True},
+                  {"text": "I like to play with dogs", "label": True},
+                  {"text": "dogs are better than cats", "label": True},
+                  {"text": "cats cats cats", "label": False},
+                  {"text": "play with cats", "label": False},
+                  {"text": "dont know", "label": False},
+                  ]
+
+    model_id = model.train(train_data, {})
+    print(model_id)
+    import uuid
+    import time
+    time.sleep(5)
+    infer_list = []
+    for x in range(3):
+        infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})
+    infer_list.append({"text":"I really love dogs"})
+    res = model.infer(model_id, infer_list, {})
+    print(res)
 

@@ -48,13 +48,18 @@ class TestActiveLearningStrategies(unittest.TestCase):
         workspace_id = self.test_random_reproducibility.__name__
         ds, cat = prepare_workspace_with_trained_model(workspace_id)
         al = ActiveLearningFactory().get_active_learner(ActiveLearningStrategies.RANDOM)
-
-        batch1 = al.get_recommended_items_for_labeling(workspace_id, None, ds, cat, 50)
+        candidates = orchestrator_api.get_unlabeled_text_elements(workspace_id, ds, cat)['results']
+        candidate_predictions = orchestrator_api.infer(workspace_id, cat, candidates)
+        batch1 = al.get_recommended_items_for_labeling(workspace_id, None, ds, cat, None,
+                                                       candidates, candidate_predictions, 50)
         batch1_uris = [e.uri for e in batch1]
 
         workspace_id2 = self.test_random_reproducibility.__name__+'b'
         ds, cat2 = prepare_workspace_with_trained_model(workspace_id2)
-        batch2 = al.get_recommended_items_for_labeling(workspace_id2, None, ds, cat2, 50)
+        candidates = orchestrator_api.get_unlabeled_text_elements(workspace_id, ds, cat)['results']
+        candidate_predictions = orchestrator_api.infer(workspace_id, cat, candidates)
+        batch2 = al.get_recommended_items_for_labeling(workspace_id2, None, ds, cat2, None,
+                                                       candidates, candidate_predictions, 50)
         batch2_uris = [e.uri for e in batch2]
 
         self.assertEqual(batch1_uris, batch2_uris)
@@ -66,8 +71,11 @@ class TestActiveLearningStrategies(unittest.TestCase):
         workspace_id = self.test_hard_mining.__name__
         ds, cat = prepare_workspace_with_trained_model(workspace_id)
         al = ActiveLearningFactory().get_active_learner(ActiveLearningStrategies.HARD_MINING)
+        candidates = orchestrator_api.get_unlabeled_text_elements(workspace_id, ds, cat)['results']
+        candidate_predictions = orchestrator_api.infer(workspace_id, cat, candidates)
         sample_size = 50
-        batch = al.get_recommended_items_for_labeling(workspace_id, None, ds, cat, sample_size)
+        batch = al.get_recommended_items_for_labeling(workspace_id, None, ds, cat, None,
+                                                      candidates, candidate_predictions, sample_size)
         batch_uris = [e.uri for e in batch]
 
         unlabeled = al.get_unlabeled_data(workspace_id, ds, cat, 10**6)
@@ -85,11 +93,13 @@ class TestActiveLearningStrategies(unittest.TestCase):
         ds, cat = prepare_workspace_with_trained_model(workspace_id)
         al = ActiveLearningFactory().get_active_learner(ActiveLearningStrategies.RETROSPECTIVE)
         sample_size = 50
-        batch = al.get_recommended_items_for_labeling(workspace_id, None, ds, cat, sample_size)
+        candidates = orchestrator_api.get_unlabeled_text_elements(workspace_id, ds, cat)['results']
+        candidate_predictions = orchestrator_api.infer(workspace_id, cat, candidates)
+        batch = al.get_recommended_items_for_labeling(workspace_id, None, ds, cat, None, candidates, candidate_predictions, sample_size)
         batch_uris = [e.uri for e in batch]
 
         unlabeled = al.get_unlabeled_data(workspace_id, ds, cat, 10**6)
-        random_model_scores = orchestrator_api.infer(workspace_id, cat, unlabeled)['scores']
+        random_model_scores = porchestrator_api.infer(workspace_id, cat, unlabeled)
         pos_scores = [(scores[1], i) for i, scores in enumerate(random_model_scores)]
         uris_by_pos_score = [unlabeled[i].uri for s, i in sorted(pos_scores, key=lambda x: x[0], reverse=True)]
 

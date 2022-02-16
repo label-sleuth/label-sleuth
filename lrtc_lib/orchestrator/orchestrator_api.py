@@ -17,11 +17,11 @@ from lrtc_lib.data_access.core.data_structs import Document, Label, TextElement,
 from lrtc_lib.data_access.label_import_utils import process_labels_dataframe
 from lrtc_lib.data_access.processors.csv_processor import CsvFileProcessor
 from lrtc_lib.definitions import ACTIVE_LEARNING_FACTORY, MODEL_FACTORY
-from lrtc_lib.models.core.model_api import ModelStatus
+from lrtc_lib.models.core.model_api import ModelStatus, Prediction
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ModelInfo, ActiveLearningRecommendationsStatus
-from lrtc_lib.orchestrator.utils import _convert_to_dicts_with_numeric_labels
+from lrtc_lib.orchestrator.utils import _convert_text_elements_to_train_data
 from lrtc_lib.training_set_selector.training_set_selector_factory import get_training_set_selector
 
 
@@ -154,9 +154,16 @@ def _update_recommendation(workspace_id, dataset_name, category_name, count, mod
     orchestrator_state_api.update_active_learning_status(workspace_id, category_name, model.model_id,
                                                          ActiveLearningRecommendationsStatus.AL_IN_PROGRESS)
     active_learner = ACTIVE_LEARNING_FACTORY.get_active_learner(CONFIGURATION.active_learning_strategy)
-    new_recommendations = active_learner.get_recommended_items_for_labeling(
-        workspace_id=workspace_id, model_id=model.model_id, dataset_name=dataset_name, category_name=category_name,
-        sample_size=count)
+    unlabeled = data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category_name,
+                                                        remove_duplicates=True)["results"]
+    predictions = infer(workspace_id, category_name, unlabeled)
+    new_recommendations = active_learner.get_recommended_items_for_labeling(workspace_id=workspace_id,
+                                                                            model_id=model.model_id,
+                                                                            dataset_name=dataset_name,
+                                                                            category_name=category_name,
+                                                                            candidate_text_elements=unlabeled,
+                                                                            candidate_text_element_predictions=predictions,
+                                                                            sample_size=count)
     orchestrator_state_api.update_category_recommendations(workspace_id=workspace_id, category_name=category_name,
                                                            model_id=model.model_id,
                                                            recommended_items=[x.uri for x in new_recommendations])
@@ -277,7 +284,7 @@ def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_d
 
     logging.info(
         f"workspace {workspace_id} training a model for category '{category_name}', model_metadata: {model_metadata}")
-    train_data = _convert_to_dicts_with_numeric_labels(train_data, category_name, BINARY_LABELS)
+    train_data = _convert_text_elements_to_train_data(train_data, category_name)
 
     model = MODEL_FACTORY.get_model(model_type)
     logging.info(f'start training using {len(train_data)} items')
@@ -288,8 +295,7 @@ def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_d
     if train_params:
         model_metadata = {**model_metadata, **train_params}
     orchestrator_state_api.add_model(workspace_id=workspace_id, category_name=category_name, model_id=model_id,
-                                     model_status=model_status, model_type=model_type,
-                                     model_metadata=model_metadata)
+                                     model_status=model_status, model_type=model_type, model_metadata=model_metadata)
     return model_id
 
 
@@ -315,7 +321,7 @@ def get_all_models_for_category(workspace_id, category_name: str):
 
 
 def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[TextElement], model_id: str = None,
-          use_cache: bool = True) -> dict:
+          use_cache: bool = True) -> Sequence[Prediction]:
     """
     get the prediction for a list of TextElements
     :param workspace_id:
@@ -323,14 +329,10 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
     :param elements_to_infer: list of TextElements
     :param model_id: model_id to use. If set to None, the latest model for the category will be used #TODO do we want to keep it?
     :param use_cache: utilize a cache that stores inference results
-    :return: a dictionary of inference results, with at least the "labels" key, where the value is a list of string
-    labels for each element in texts_to_infer. Additional keys, with list values of the same length, can be passed.
-    e.g. {"labels": [False, True, True],
-          "scores": [0.23, 0.79, 0.98],
-          "gradients": [[0.24, -0.39, -0.66, 0.25], [0.14, 0.29, -0.26, 0.16], [-0.46, 0.61, -0.02, 0.23]]}
+    :return: a list of Prediction objects
     """
     if len(elements_to_infer) == 0:
-        return {'labels': [], 'scores': []}
+        return []
 
     models = get_all_models_for_category(workspace_id, category_name)
     if len(models) == 0:
@@ -345,13 +347,9 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
             raise Exception(f"model id {model_id} is not in READY status")
     model = MODEL_FACTORY.get_model(model_info.model_type)
     list_of_dicts = [{"text": element.text} for element in elements_to_infer]
-    infer_results = model.infer(model_id=model_info.model_id, items_to_infer=list_of_dicts,
-                                use_cache=use_cache)
+    predictions = model.infer(model_id=model_info.model_id, items_to_infer=list_of_dicts, use_cache=use_cache)
 
-    numeric_label_to_text = {i: label for i, label in enumerate(sorted(BINARY_LABELS))}
-    infer_results['labels'] = [numeric_label_to_text[l] for l in infer_results['labels']]
-
-    return infer_results
+    return predictions
 
 
 def get_all_text_elements(dataset_name: str) -> List[TextElement]:
@@ -426,15 +424,14 @@ def sample_elements_by_prediction(workspace_id, category, sample_size: int = sys
                                   random_state: int = 0):
     dataset_name = get_dataset_name(workspace_id)
     if unlabeled_only:
-        sample_elements = \
+        elements = \
             get_unlabeled_text_elements(workspace_id, dataset_name, category, random_state=random_state)["results"]
     else:
-        sample_elements = \
-            get_text_elements(workspace_id, dataset_name, random_state=random_state)["results"]
-    sample_elements_predictions = infer(workspace_id, category, sample_elements)["labels"]
+        elements = get_text_elements(workspace_id, dataset_name, random_state=random_state)["results"]
+    predictions = infer(workspace_id, category, elements)
     prediction_sample = \
-        [text_element for text_element, prediction in zip(sample_elements, sample_elements_predictions) if
-         prediction == required_label]
+        [text_element for text_element, prediction in zip(elements, predictions) if
+         prediction.label == required_label]
 
     return prediction_sample[:sample_size]
 
@@ -489,15 +486,15 @@ def _post_train_method(workspace_id, category_name, model_id): #TODO refactor
     dataset_name = get_dataset_name(workspace_id)
     elements = get_all_text_elements(dataset_name)
     predictions = infer(workspace_id, category_name, elements, model_id)
-    dataset_size = len(predictions["labels"])
-    positive_fraction = predictions["labels"].count(True)/dataset_size
+    dataset_size = len(predictions)
+    positive_fraction = sum([pred.label==True for pred in predictions])/dataset_size
     post_train_metadata = {"positive_fraction": positive_fraction}
 
     category_models = get_all_models_by_status(workspace_id, category_name, ModelStatus.READY)
     if len(category_models) > 1:
         previous_model_id = list(category_models)[-2].model_id
         previous_model_predictions = infer(workspace_id, category_name, elements, previous_model_id)
-        num_identical = sum(x == y for x, y in zip(predictions["labels"], previous_model_predictions["labels"]))
+        num_identical = sum(x.label == y.label for x, y in zip(predictions, previous_model_predictions))
         post_train_metadata["changed_fraction"] = (dataset_size-num_identical)/dataset_size
 
     logging.info(f"post train measurements for model id {model_id}: {post_train_metadata}")
@@ -542,6 +539,7 @@ def import_category_labels(workspace_id, labels_df_to_import: pd.DataFrame):
             categories_created.append(category_name)
 
         logging.info(f'{category_name}: adding labels for {len(uri_to_label)} uris')
+        #TODO something with the structure doesn't make sense - is it category to uri to label or uri to category to label
         set_labels(workspace_id, uri_to_label,
                    apply_to_duplicate_texts=CONFIGURATION.apply_labels_to_duplicate_texts,
                    update_label_counter=True)
@@ -644,6 +642,7 @@ def infer_missing_elements(workspace_id, category, dataset_name, model_id):
 
     logging.info(f"running inference with the last model for category {category} in workspace "
                  f"{workspace_id} after new documents were loaded to dataset {dataset_name} using model {model_id}")
+    #TODO think how to make it less odd
     infer(workspace_id, category, get_all_text_elements(dataset_name), model_id)
     logging.info(f"completed inference with the last model for category {category} in workspace "
                  f"{workspace_id} after new documents were loaded to dataset {dataset_name} using model {model_id}")
