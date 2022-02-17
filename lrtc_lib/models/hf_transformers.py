@@ -13,7 +13,8 @@ MODEL_DIR = os.path.join(ROOT_DIR, "output", "models", "transformers")
 class HFTransformers(ModelAPI):
     def __init__(self, pretrained_model="bert-base-uncased", batch_size=32, learning_rate=5e-5, model_dir=MODEL_DIR):
         """
-        :param pretrained_model:
+        :param pretrained_model: the name of a transfomer model from huggingface.co, or a path to a directory containing
+        a pytorch model created using the huggingface transformers library
         :param batch_size:
         :param learning_rate:
         :param model_dir:

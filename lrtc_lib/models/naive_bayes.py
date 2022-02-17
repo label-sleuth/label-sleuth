@@ -46,14 +46,14 @@ class NaiveBayes(ModelAPI):
         sentences = sentences[:self.max_datapoints]
         labels = [sentence["label"] for sentence in train_data]
         labels = labels[:self.max_datapoints]
-        features, vectorizer = self.input_to_features(sentences, language=language, train=True)
-        model.fit(features, labels)
+        train_data_features, vectorizer = self.input_to_features(sentences, language=language, train=True)
+
+        model.fit(train_data_features, labels)
 
         with open(self.vectorizer_file_by_id(model_id), "wb") as fl:
             pickle.dump(vectorizer, fl)
         with open(self.model_file_by_id(model_id), "wb") as fl:
             pickle.dump(model, fl)
-
 
     def _infer(self, model_id, items_to_infer):
         with open(self.vectorizer_file_by_id(model_id), "rb") as fl:
@@ -61,6 +61,7 @@ class NaiveBayes(ModelAPI):
         with open(self.model_file_by_id(model_id), "rb") as fl:
             model = pickle.load(fl)
         language = self.get_language(model_id)
+
         items_to_infer = [x["text"] for x in items_to_infer]
         last_batch = 0
         predictions = []

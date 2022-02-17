@@ -616,7 +616,7 @@ def add_documents_from_file(dataset_name, temp_filename):
                     last_model = next(reversed(model_id_to_model))
                     new_data_infer_thread_pool.submit(infer_missing_elements, workspace_id, category, dataset_name, last_model)
                     total_infer_jobs += 1
-    logging.info(f"{total_infer_jobs} infer jobs were submitted in the background")
+    logging.info(f"done adding documents to {dataset_name} upload statistics: {document_statistics}. {total_infer_jobs} infer jobs were submitted in the background")
     return document_statistics, workspaces_to_update
 
 

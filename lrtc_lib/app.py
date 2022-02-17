@@ -1,22 +1,20 @@
 #Immidiate action items:
+# 0.
+# 1. Change ModelStatus to TrainStatus and add ModelStatus that reflects the phase the model is in (train/infer/AL/statistics/ready)
+# 2. elements back to front should use the last model that finished inference should only use the latest model that in ready state of the new ModelStatus
+# 3. ModelAPI should not use the same lock for all models as we want to be able to get the predictions of previous models
+# while a new model is training
 
-# Update cache function to reflect the new infer results structure (include conversion)
-# fix weird part in ensemble
+# 4. Workspace.category_to_model_to_recommendations. Is this the right place for this? what about the other category_to..() fields?
+
 
 
 # 1. improve /async_support/_post_method and stuff... # consider using one threadpool and one process pool for all thread/processes we run?
 #
 
-
 ###TODOs
+#
 
-# make RandomModel work in the new world
-# consider passing the inferred scores to the active learning, instead of calling the orchestrator.infer()
-# consider changing the output format of infer() method
-
-# keep only working active learning strategies
-
-# consider renaming infer cache to "store" or something similiar
 # when loading documents, use ast.literal_eval to import element_metadata if exists
 # import_category_labels, import also element_metadata and label_type (if exists)?
 # Change Document uri to doc_id, change TextElement uri to element_id?

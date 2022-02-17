@@ -1,17 +1,13 @@
-import pickle
-import shutil
+import logging
 import os
+import pickle
+
 import numpy as np
 
 import sklearn.svm
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.multiclass import OneVsRestClassifier
 
 from lrtc_lib.definitions import ROOT_DIR
-
-
-import logging
-
 from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_api import ModelAPI, Prediction
 from lrtc_lib.models.core.tools import RepresentationType, get_glove_representation
@@ -29,8 +25,6 @@ class SVM(ModelAPI):
         self.kernel = kernel
         self.representation_type = representation_type
 
-
-
     def _train(self, model_id, train_data, train_params):
         if self.kernel == "linear":
             svm_implementation = sklearn.svm.LinearSVC()
@@ -47,6 +41,7 @@ class SVM(ModelAPI):
         labels = np.array([x['label'] for x in train_data])
 
         model.fit(train_data_features, labels)
+
         with open(self.vectorizer_file_by_id(model_id), "wb") as fl:
             pickle.dump(vectorizer, fl)
         with open(self.model_file_by_id(model_id), "wb") as fl:
