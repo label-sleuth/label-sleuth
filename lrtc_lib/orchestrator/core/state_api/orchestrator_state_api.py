@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Mapping, Dict, List
 import jsonpickle
 import os
 from collections import OrderedDict, defaultdict
@@ -17,29 +17,19 @@ from lrtc_lib.models.core.model_types import ModelTypes
 WORKSPACE_CLASS_VERSION = 2
 
 
-@dataclass
-class Workspace:
-    workspace_id: str
-    dataset_name: str
-    category_to_description: 'dict' = field(default_factory=dict)
-    category_to_number_of_label_changed: 'dict' = field(default_factory=dict)
-    category_to_models: OrderedDict = field(default_factory=OrderedDict)  # category_name to model_id to ModelInfo
-    category_to_model_to_recommendations: 'dict' = field(
-        default_factory=lambda: defaultdict(OrderedDict))  # category to {model_id:[TextElement...]}
-    category_to_model_to_recommendations_status: 'dict' = field(default_factory=lambda: defaultdict(OrderedDict))
-    train_params: 'dict' = field(default_factory=dict)
-    workspace_class_version: 'int' = WORKSPACE_CLASS_VERSION
+class IterationStatus(Enum):
+    TRAINING = 0
+    RUNNING_INFERENCE = 1 # over the whole dataset
+    RUNNING_ACTIVE_LEARNING = 2
+    CALCULATING_STATISTICS = 3
+    READY = 4
+    ERROR = 5
+    MODEL_DELETED = 6
 
-    @classmethod
-    def get_field_names(cls):
-        return cls.__annotations__.keys()
-
-
-class ActiveLearningRecommendationsStatus(Enum):
-    MODEL_NOT_READY = 0
-    AL_NOT_STARTED = 1
-    AL_IN_PROGRESS = 2
-    READY = 3
+    # MODEL_NOT_READY = 0
+    # AL_NOT_STARTED = 1
+    # AL_IN_PROGRESS = 2
+    # READY = 3
 
 
 @dataclass
@@ -51,10 +41,49 @@ class ModelInfo:
     model_metadata: dict
 
 
+@dataclass
+class ActiveLearningIteration: # do we have a better name for this Iteration?
+    model: ModelInfo
+    status: IterationStatus
+    iteration_statistics: Dict = field(default_factory=dict)
+    active_learning_recommendations: Sequence[str] = field(default_factory=list)
+
+
+@dataclass
+class Category:
+    name: str
+    description: str
+    label_change_count_since_last_train: int = 0
+    active_learning_iterations: List[ActiveLearningIteration] = field(default_factory=list) # can be changed to SortedDict
+
+
+@dataclass
+class Workspace:
+    workspace_id: str
+    dataset_name: str
+    categories: Dict[str, Category] = field(default_factory=dict) #category_to_description: 'dict' = field(default_factory=dict)
+    #category_to_number_of_label_changed: 'dict' = field(default_factory=dict)
+    # category_to_models: OrderedDict = field(default_factory=OrderedDict)  # category_name to model_id to ModelInfo
+    # category_to_model_to_recommendations: 'dict' = field(
+    #     default_factory=lambda: defaultdict(OrderedDict))  # category to {model_id:[TextElement...]}
+    # category_to_model_to_recommendations_status: 'dict' = field(default_factory=lambda: defaultdict(OrderedDict))
+    workspace_class_version: 'int' = WORKSPACE_CLASS_VERSION
+
+    @classmethod
+    def get_field_names(cls):
+        return cls.__annotations__.keys()
+
+
+
+
+
+
+
+
 lock = threading.RLock()
 
 
-def withlock(func):
+def withlock(func): # TODO lock per workspace
     @functools.wraps(func)
     def wrapper(*a, **k):
         with lock:
@@ -99,11 +128,7 @@ def delete_workspace_state(workspace_id: str):
 @withlock
 def delete_category_from_workspace(workspace_id: str, category_name: str):
     workspace = _load_workspace(workspace_id)
-    for field_name in workspace.get_field_names():
-        if field_name.startswith("category_to"):
-            field_dict = getattr(workspace, field_name)
-            if category_name in field_dict:
-                field_dict.pop(category_name)
+    workspace.categories.pop(category_name)
 
 
 workspaces = dict()
@@ -123,53 +148,50 @@ def _load_workspace(workspace_id) -> Workspace:
 @withlock
 def add_category_to_workspace(workspace_id: str, category_name: str, category_description: str):
     workspace = _load_workspace(workspace_id)
-    if category_name in workspace.category_to_description:
+    if category_name in workspace.categories:
         raise Exception(f"Category '{category_name}' already exists in workspace '{workspace_id}'")
-    workspace.category_to_description[category_name] = category_description
+    workspace.categories[category_name] = Category(name=category_name, description=category_description)
     _save_workspace(workspace)
 
 
 @withlock
-def get_current_category_recommendations(workspace_id: str, category_name: str, model_id) -> Sequence[str]:
+def get_current_category_recommendations(workspace_id: str, category_name: str) -> Sequence[str]:
     workspace = _load_workspace(workspace_id)
+    category = workspace.categories[category_name]
 
-    if model_id not in workspace.category_to_model_to_recommendations[category_name]:
-        return []
-
-    return workspace.category_to_model_to_recommendations[category_name][model_id]
-
+    for iteration in reversed(category.active_learning_iterations):
+        if iteration.status == IterationStatus.READY:
+            return iteration.active_learning_recommendations
+    return []
 
 @withlock
-def update_category_recommendations(workspace_id: str, category_name: str, model_id: str,
+def update_category_recommendations(workspace_id: str, category_name: str, iteration_index: int,
                                     recommended_items: Sequence[str]):
     workspace = _load_workspace(workspace_id)
-    current_recommendations = workspace.category_to_model_to_recommendations[category_name].get(model_id, None)
-    if current_recommendations is None:
-        workspace.category_to_model_to_recommendations[category_name][model_id] = recommended_items
-    else:
-        current_recommendations.extend(recommended_items)
+    workspace.categories[category_name].active_learning_iterations[iteration_index].active_learning_recommendations = \
+        recommended_items
     _save_workspace(workspace)
 
 
 @withlock
-def set_number_of_changes_since_last_model(workspace_id: str, category_name: str, number_of_changes: int):
+def set_label_change_count_since_last_train(workspace_id: str, category_name: str, number_of_changes: int):
     workspace = _load_workspace(workspace_id)
-    workspace.category_to_number_of_label_changed[category_name] = number_of_changes
+    workspace.categories[category_name].label_change_count_since_last_train = number_of_changes
     _save_workspace(workspace)
 
 
 @withlock
-def increase_number_of_changes_since_last_model(workspace_id: str, category_name: str, number_of_new_changes: int):
+def increase_label_change_count_since_last_train(workspace_id: str, category_name: str, number_of_new_changes: int):
     workspace = _load_workspace(workspace_id)
-    workspace.category_to_number_of_label_changed[category_name] = \
-        workspace.category_to_number_of_label_changed.get(category_name, 0) + number_of_new_changes
+    workspace.categories[category_name].label_change_count_since_last_train = \
+        workspace.categories[category_name].label_change_count_since_last_train + number_of_new_changes
     _save_workspace(workspace)
 
 
 @withlock
-def get_number_of_changed_since_last_model(workspace_id: str, category_name: str):
+def get_label_change_count_since_last_train(workspace_id: str, category_name: str):
     workspace = _load_workspace(workspace_id)
-    return workspace.category_to_number_of_label_changed.get(category_name, 0)
+    return workspace.categories[category_name].label_change_count_since_last_train
 
 
 @withlock
@@ -178,67 +200,51 @@ def get_workspace(workspace_id):
 
 
 @withlock
-def add_model(workspace_id: str, category_name: str, model_id: str, model_status: ModelStatus, model_type: ModelTypes,
-              model_metadata: dict):
+def add_iteration(workspace_id: str, category_name: str, model_info: ModelInfo):
     workspace = _load_workspace(workspace_id)
-    if category_name not in workspace.category_to_description:
-        raise Exception(
-            f"Cannot add a model for unknown category '{category_name}', please use add_category_to_workspace first")
-    category_models = workspace.category_to_models.get(category_name, OrderedDict())
-    if model_id in category_models:
-        raise Exception(f"Model id '{model_id}' already exists in workspace '{workspace_id}'")
-    category_models[model_id] = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
-                                          model_metadata=model_metadata, creation_date=datetime.now())
-    workspace.category_to_models[category_name] = category_models
-
-    category_model_statuses = workspace.category_to_model_to_recommendations_status.get(category_name, OrderedDict())
-    if model_status == ModelStatus.READY:
-        category_model_statuses[model_id] = ActiveLearningRecommendationsStatus.AL_NOT_STARTED
-    elif model_status == ModelStatus.TRAINING:
-        category_model_statuses[model_id] = ActiveLearningRecommendationsStatus.MODEL_NOT_READY
-    else:
-        raise Exception("Model status should be either READY or TRAINING")
-    workspace.category_to_model_to_recommendations_status[category_name] = category_model_statuses
+    iteration = ActiveLearningIteration(model=model_info, status=IterationStatus.TRAINING)
+    workspace.categories[category_name].active_learning_iterations.append(iteration)
     _save_workspace(workspace)
 
-
 @withlock
-def get_latest_model_by_state(workspace_id: str, category_name: str, model_status: ModelStatus):
+def get_latest_iteration_by_status(workspace_id: str, category_name: str, iteration_status: IterationStatus):
     workspace = _load_workspace(workspace_id)
-    assert workspace.category_to_models, f"No models found in workspace_id {workspace_id}"
-    models = workspace.category_to_models[category_name]
-    assert models, f"No models found in workspace_id {workspace_id} for category {category_name}"
-    for model_name, model_params in reversed(models.items()):
-        if model_params.model_status == model_status:
-            return model_params
+    iterations = workspace.categories[category_name].active_learning_iterations
+    for iteration in reversed(iterations):
+        if iteration.status == iteration_status:
+            return iteration
+    raise Exception(f"workspace {workspace_id} category {category_name} has no iteration in status {iteration_status}")
 
-
-@withlock
-def get_latest_model_id_by_al_status(workspace_id: str, category_name: str,
-                                     al_status: ActiveLearningRecommendationsStatus):
-    workspace = _load_workspace(workspace_id)
-    models = workspace.category_to_model_to_recommendations_status[category_name]
-    for model_id, model_al_status in reversed(models.items()):
-        if model_al_status == al_status:
-            return model_id
-    return None
-
-
-@withlock
-def get_model_status(workspace_id: str, category_name: str, model_id):
-    workspace = _load_workspace(workspace_id)
-    models = workspace.category_to_models[category_name]
-    return models[model_id].model_status
-
-
-@withlock
-def get_all_models_by_status(workspace_id: str, category_name: str, model_status: ModelStatus):
-    workspace = _load_workspace(workspace_id)
-    if category_name not in workspace.category_to_models:
-        return []
-    models = workspace.category_to_models[category_name]
-    return [model_params for model_name, model_params in models.items() if model_params.model_status == model_status]
-
+#
+# @withlock
+# def get_latest_model_by_state(workspace_id: str, category_name: str, model_status: ModelStatus):
+#     workspace = _load_workspace(workspace_id)
+#     assert workspace.category_to_models, f"No models found in workspace_id {workspace_id}"
+#     models = workspace.category_to_models[category_name]
+#     assert models, f"No models found in workspace_id {workspace_id} for category {category_name}"
+#     for model_name, model_params in reversed(models.items()):
+#         if model_params.model_status == model_status:
+#             return model_params
+#
+#
+# @withlock
+# def get_latest_model_id_by_al_status(workspace_id: str, category_name: str,
+#                                      al_status: IterationStatus):
+#     workspace = _load_workspace(workspace_id)
+#     models = workspace.category_to_model_to_recommendations_status[category_name]
+#     for model_id, model_al_status in reversed(models.items()):
+#         if model_al_status == al_status:
+#             return model_id
+#     return None
+#
+#
+# @withlock
+# def get_model_status(workspace_id: str, category_name: str, model_id):
+#     workspace = _load_workspace(workspace_id)
+#     models = workspace.category_to_models[category_name]
+#     return models[model_id].model_status
+#
+#
 
 @withlock
 def get_all_workspaces() -> Sequence[Workspace]:
@@ -253,16 +259,11 @@ def get_all_workspaces() -> Sequence[Workspace]:
 
 
 @withlock
-def update_model_state(workspace_id: str, category_name: str, model_id: str, new_status: ModelStatus):
+def update_model_state(workspace_id: str, category_name: str, iteration_index: int, new_status: ModelStatus):
     workspace = _load_workspace(workspace_id)
-    assert len(workspace.category_to_models) > 0, f"No models found in workspace_id {workspace_id}"
-
-    models = workspace.category_to_models[category_name]
-    assert len(models) > 0, f"No models found in workspace_id {workspace_id} for category {category_name}"
-
-    assert model_id in models, f"Model id '{model_id}' doesn't exist in workspace '{workspace_id}'"
-
-    models[model_id].model_status = new_status
+    iterations = workspace.categories[category_name].active_learning_iterations
+    assert len(iterations) > iteration_index, f"Iteration '{iteration_index}' doesn't exist in workspace '{workspace_id}'"
+    iterations[iteration_index].model.model_status = new_status
     _save_workspace(workspace)
 
 
@@ -272,33 +273,44 @@ def workspace_exists(workspace_id: str) -> bool:
 
 
 @withlock
-def add_train_param(workspace_id: str, train_param_key: str, train_param_value: str):
+def update_iteration_status(workspace_id, category_name, iteration_index, new_status: IterationStatus):
     workspace = _load_workspace(workspace_id)
-    workspace.train_params[train_param_key] = train_param_value
+    workspace.categories[category_name].active_learning_iterations[iteration_index].status = new_status
     _save_workspace(workspace)
 
 
 @withlock
-def update_active_learning_status(workspace_id, category_name, model_id,
-                                  new_status: ActiveLearningRecommendationsStatus):
+def get_iteration_status(workspace_id, category_name, iteration_index):
     workspace = _load_workspace(workspace_id)
-    model_to_recommendation_status = workspace.category_to_model_to_recommendations_status[category_name]
-    model_to_recommendation_status[model_id] = new_status
+    return workspace.categories[category_name].active_learning_iterations[iteration_index].status
+
+
+
+@withlock
+def add_iteration_statistics(workspace_id, category_name, iteration_index, statistics_dict: dict):
+    workspace = _load_workspace(workspace_id)
+    iteration = workspace.categories[category_name].active_learning_iterations[iteration_index]
+    iteration.iteration_statistics.update(statistics_dict)
     _save_workspace(workspace)
 
 
 @withlock
-def get_active_learning_status(workspace_id, model_id):
+def mark_iteration_model_as_deleted(workspace_id, category_name, iteration_index):
     workspace = _load_workspace(workspace_id)
-    for models_of_category in workspace.category_to_model_to_recommendations_status.values():
-        status = models_of_category.get(model_id)
-        if status:
-            return status
-    return None
+    iteration = workspace.categories[category_name].active_learning_iterations[iteration_index]
+    iteration.model.model_status = ModelStatus.DELETED
+    iteration.status = IterationStatus.MODEL_DELETED
+    _save_workspace(workspace)
 
 
 @withlock
-def add_model_metadata(workspace_id, category_name, model_id, metadata: dict):
+def get_all_iterations(workspace_id, category_name):
     workspace = _load_workspace(workspace_id)
-    workspace.category_to_models[category_name][model_id].model_metadata.update(metadata)
-    _save_workspace(workspace)
+    return workspace.categories[category_name].active_learning_iterations
+
+
+@withlock
+def get_all_iterations_by_status(workspace_id, category_name, status: IterationStatus):
+    workspace = _load_workspace(workspace_id)
+    return [iteration for iteration in workspace.categories[category_name].active_learning_iterations
+            if iteration.status == status]

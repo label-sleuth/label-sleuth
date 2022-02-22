@@ -1,15 +1,7 @@
 #Immidiate action items:
 # 0.
-# 1. Change ModelStatus to TrainStatus and add ModelStatus that reflects the phase the model is in (train/infer/AL/statistics/ready)
-# 2. elements back to front should use the last model that finished inference should only use the latest model that in ready state of the new ModelStatus
-# 3. ModelAPI should not use the same lock for all models as we want to be able to get the predictions of previous models
-# while a new model is training
-
-# 4. Workspace.category_to_model_to_recommendations. Is this the right place for this? what about the other category_to..() fields?
-
-
-
-# 1. improve /async_support/_post_method and stuff... # consider using one threadpool and one process pool for all thread/processes we run?
+# 1. ModelAPI should not use the same lock for all models as we want to be able to get the predictions of previous models while a new model is training
+# 2. improve /async_support/_post_method and stuff... # consider using one threadpool and one process pool for all thread/processes we run?
 #
 
 ###TODOs
@@ -19,8 +11,10 @@
 # import_category_labels, import also element_metadata and label_type (if exists)?
 # Change Document uri to doc_id, change TextElement uri to element_id?
 # handle stream of csv as text and not file? Ask Dakuo
+# when a new model is ready during precision evaluation, the score will be attched to the new model instead of the evaluated model
 
 import logging
+from typing import Sequence
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -38,11 +32,11 @@ from flask_cors import CORS, cross_origin
 from flask_httpauth import HTTPTokenAuth
 
 from lrtc_lib.orchestrator import orchestrator_api
+from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ActiveLearningIteration, IterationStatus
 
 from lrtc_lib import definitions
 from lrtc_lib.async_support.orchestrator_background_jobs_manager import start_orchestrator_background_job_manager
 
-from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.core.information_gain_utils import information_gain
 from lrtc_lib.config import CONFIGURATION
 from lrtc_lib.configurations.users import users, tokens
@@ -84,8 +78,8 @@ def elements_back_to_front(workspace_id, elements, category):
               }
          for text_element in elements}
 
-    if category and len(orchestrator_api.get_all_models_by_status(workspace_id, category, ModelStatus.READY)) > 0 \
-            and len(elements) > 0:
+    if category and len(elements) > 0 \
+            and len(orchestrator_api.get_all_iterations_by_status(workspace_id, category, IterationStatus.READY)) > 0:
         predicted_labels = [pred.label for pred in orchestrator_api.infer(workspace_id, category, elements)]
         for text_element, prediction in zip(elements, predicted_labels):
             element_uri_to_info[text_element.uri]['model_predictions'][category] = str(prediction).lower()  # since the current UI expects string labels and not boolean
@@ -369,7 +363,7 @@ def get_document_positive_predictions(workspace_id, document_id):
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
     category_name = request.args.get('category_name')
-    if len(orchestrator_api.get_all_models_by_status(workspace_id, category_name, ModelStatus.READY)) == 0:
+    if len(orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)) == 0:
         elements_transformed = []
     else:
         dataset_name = orchestrator_api.get_dataset_name(workspace_id)
@@ -440,7 +434,7 @@ def get_elements_to_label(workspace_id):
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
 
-    if len(orchestrator_api.get_all_models_for_category(workspace_id, category_name)) == 0:
+    if len(orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)) == 0:
         return jsonify({"elements": []})
 
     elements = orchestrator_api.get_elements_to_label(workspace_id, category_name, size, start_idx)
@@ -504,8 +498,8 @@ def get_all_categories(workspace_id):
     :return classes:
     """
     categories = orchestrator_api.get_all_categories(workspace_id)
-    category_dicts = [{'id': name, 'category_name': name, 'category_description': description}
-                      for name, description in sorted(categories.items())]
+    category_dicts = [{'id': name, 'category_name': name, 'category_description': category.description}
+                      for name, category in sorted(categories.items())]
 
     res = {'categories': category_dicts}
     return jsonify(res)
@@ -611,18 +605,18 @@ def force_train_for_category(workspace_id):
     })
 
 
-def extract_model_information_list(workspace_id, models):
+def extract_iteration_information_list(iterations: Sequence[ActiveLearningIteration]):
     res_list = \
-        [{'model_id': model.model_id,
-          'model_status': model.model_status.name,
-          'creation_epoch': model.creation_date.timestamp(),
-          'model_type': model.model_type.name,
+        [{'model_id': iteration_index,#iteration.model.model_id,
+          'model_status': iteration.model.model_status.name,
+          'creation_epoch': iteration.model.creation_date.timestamp(),
+          'model_type': iteration.model.model_type.name,
           # The current UI expects a dict of string to int, and train counts contains a mix of boolean and string keys.
-          'model_metadata': {**model.model_metadata, "train_counts":
-              {str(k).lower(): v for k, v in model.model_metadata["train_counts"].items()}},
+          'model_metadata': {**iteration.model.model_metadata,**iteration.iteration_statistics, "train_counts":
+              {str(k).lower(): v for k, v in iteration.model.model_metadata["train_counts"].items()}},
           'active_learning_status':
-              orchestrator_api.get_model_active_learning_status(workspace_id, model.model_id).name}
-         for model in models]
+              iteration.status.name}
+         for iteration_index, iteration in enumerate(iterations)]
 
     res_sorted = [{**model_dict, 'iteration': i} for i, model_dict in enumerate(
         sorted(res_list, key=lambda item: item['creation_epoch']))]
@@ -641,10 +635,8 @@ def get_all_models_for_category(workspace_id):
     """
     category_name = request.args.get('category_name')
 
-    res = dict()
-
-    models = orchestrator_api.get_all_models_for_category(workspace_id, category_name).values()
-    res['models'] = extract_model_information_list(workspace_id, models)
+    iterations = orchestrator_api.get_all_iterations_for_category(workspace_id, category_name)
+    res = {'models': extract_iteration_information_list(iterations)}
     return jsonify(res)
 
 
@@ -659,8 +651,8 @@ def get_predictions_enriched_tokens(workspace_id):
     """
     res = dict()
     category = request.args.get('category_name')
-    models = orchestrator_api.get_all_models_for_category(workspace_id, category)
-    if len(models) == 0:
+
+    if len(orchestrator_api.get_all_iterations_by_status(workspace_id, category, IterationStatus.READY)) == 0:
         res['info_gain'] = []
         return jsonify(res)
 
@@ -686,7 +678,7 @@ def get_predictions_enriched_tokens(workspace_id):
 def get_elements_for_precision_evaluation(workspace_id):
     size = CONFIGURATION.precision_evaluation_size
     category = request.args.get('category_name')
-    random_state = len(orchestrator_api.get_all_models_by_status(workspace_id, category, ModelStatus.READY))
+    random_state = len(orchestrator_api.get_all_iterations_for_category(workspace_id,category))
     positive_predicted_elements = \
         orchestrator_api.sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False,
                                                        required_label=LABEL_POSITIVE, random_state=random_state)
@@ -787,11 +779,14 @@ def import_labels(workspace_id):
 def export_model(workspace_id):
     import zipfile
     category_name = request.args.get('category_name')
-    model_id = request.args.get('model_id', None)
-    if model_id is None:
-        category_models = orchestrator_api.get_all_models_by_status(workspace_id, category_name, ModelStatus.READY)
-        model_id = category_models[-1].model_id
-    model_dir = orchestrator_api.export_model(workspace_id, category_name, model_id)
+    iteration_index = request.args.get('iteration_index', None) #TODO update in UI model_id -> iteration_index
+    if iteration_index is None:
+        category_iterations = \
+            orchestrator_api.get_all_iterations(workspace_id, category_name)
+        iteration_index = \
+            [candidate_iteration_index for candidate_iteration_index, iteration in enumerate(category_iterations)
+             if iteration.status == IterationStatus.READY]
+    model_dir = orchestrator_api.export_model(workspace_id, category_name, iteration_index)
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
         for dirpath, dirnames, filenames in os.walk(model_dir):

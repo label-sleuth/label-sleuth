@@ -13,8 +13,7 @@ def _convert_text_elements_to_train_data(data, category_name) -> Sequence[Mappin
     labels = [element.category_to_label[category_name].label for element in data]
     metadata = [element.category_to_label[category_name].metadata for element in data]
 
-    converted_data = [{"text": element.text, "label": label,
-                       **example_metadata}
+    converted_data = [{"text": element.text, "label": label, **example_metadata}
                       for element, label, example_metadata in zip(data, labels, metadata)]
     return converted_data
 

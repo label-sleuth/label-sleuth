@@ -2,7 +2,7 @@ import logging
 import re
 import string
 import sys
-from typing import Mapping, Sequence
+from typing import Dict, Sequence
 
 import pandas as pd
 
@@ -31,7 +31,7 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
 
 
 def process_labels_dataframe(workspace_id, dataset_name, labels_df_to_import: pd.DataFrame) \
-        -> Mapping[str, Mapping[str, Label]]:
+        -> Dict[str, Dict[str, Label]]:
     logging.warning("Currently label metadata and label_type are ignored")
     # replace punctuation with underscores in category names
     punctuation = string.punctuation.replace("'", "") + string.whitespace
@@ -44,7 +44,7 @@ def process_labels_dataframe(workspace_id, dataset_name, labels_df_to_import: pd
     labels_df_to_import[DisplayFields.label] = labels_df_to_import[DisplayFields.label].apply(
         lambda x: True if x in positive_indicators else False)
 
-    category_to_uri_to_label = dict()
+    category_to_uri_to_label = {}
     for category_name, category_df in labels_df_to_import.groupby(DisplayFields.category_name):
         # Here we group the texts by label, and optionally also by doc_id. The goal is to be able to efficiently
         # query for a group of elements by their texts - using *get_element_group_by_texts* - rather than querying

@@ -8,11 +8,11 @@ from lrtc_lib.active_learning.core.active_learning_api import ActiveLearner
 
 
 class RetrospectiveLearner(ActiveLearner):
-    def get_recommended_items_for_labeling(self, workspace_id, model_id, dataset_name, category_name,
+    def get_recommended_items_for_labeling(self, workspace_id, dataset_name, category_name,
                                            candidate_text_elements: Sequence[TextElement],
                                            candidate_text_element_predictions: Sequence[Prediction], sample_size=1):
-        scores = self.get_per_element_score(candidate_text_elements, candidate_text_element_predictions,
-                                            workspace_id, model_id, dataset_name, category_name)
+        scores = self.get_per_element_score(candidate_text_elements, candidate_text_element_predictions, workspace_id,
+                                            dataset_name, category_name)
         sorted_indices = np.argsort(scores)[::-1]
         top_indices = sorted_indices[:sample_size]
         recommended_items = np.array(candidate_text_elements)[np.array(top_indices)].tolist()
@@ -20,7 +20,7 @@ class RetrospectiveLearner(ActiveLearner):
 
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
                               candidate_text_element_predictions: Sequence[Prediction], workspace_id: str,
-                              model_id: str, dataset_name: str, category_name: str) -> Sequence[float]:
+                              dataset_name: str, category_name: str) -> Sequence[float]:
         return [pred.score for pred in candidate_text_element_predictions]
 
 

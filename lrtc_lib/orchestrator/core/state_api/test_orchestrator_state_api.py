@@ -3,7 +3,6 @@ import unittest
 from lrtc_lib.data_access.data_access_factory import get_data_access
 from lrtc_lib.orchestrator import orchestrator_api
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
-from lrtc_lib.orchestrator.orchestrator_api import BINARY_LABELS
 from lrtc_lib.orchestrator.test_orchestrator_api import generate_simple_doc
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
@@ -44,8 +43,6 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         dataset_name = ws_id + '_dump'
         data_access.add_documents(dataset_name, [generate_simple_doc(dataset_name)])
         orchestrator_state_api.create_workspace(workspace_id=ws_id, dataset_name=dataset_name)
-        orchestrator_state_api.add_train_param(ws_id, "key", "value")
-        self.assertEqual(orchestrator_state_api.get_workspace(ws_id).train_params["key"], "value")
 
         orchestrator_state_api.delete_workspace_state(ws_id)
         data_access.delete_dataset(dataset_name)

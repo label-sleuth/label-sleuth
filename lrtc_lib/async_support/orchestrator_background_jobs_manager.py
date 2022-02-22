@@ -7,6 +7,8 @@ from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 import logging
 import traceback
 
+from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import IterationStatus
+
 WAIT_TIME_BETWEEN_STATUS_CHECK = 10
 
 
@@ -33,8 +35,9 @@ def run(update_recommendation_func, post_train_method, post_active_learning_func
 
             for workspace in all_workspaces:
                 logging.debug("workspace status:%s" % workspace)
-                for category_name in workspace.category_to_models:  # TODO shouldn't return empty
-                    for model in list(workspace.category_to_models[category_name].values()):  # TODO ensure only updating the recommendations for the *latest* model
+                for category_name, category in workspace.categories.items():  # TODO shouldn't return empty
+                    for iteration_index, iteration in enumerate(category.active_learning_iterations):  # TODO ensure only updating the recommendations for the *latest* model
+                        model = iteration.model
                         if model.model_status == ModelStatus.TRAINING:
                             train_and_infer_api = MODEL_FACTORY.get_model(model.model_type)
                             latest_model_status = train_and_infer_api.get_model_status(model.model_id)
@@ -44,15 +47,21 @@ def run(update_recommendation_func, post_train_method, post_active_learning_func
                             if prev_model_status != latest_model_status:
                                 orchestrator_state_api.update_model_state(workspace_id=workspace.workspace_id,
                                                                           category_name=category_name,
-                                                                          model_id=model.model_id,
+                                                                          iteration_index=iteration_index,
                                                                           new_status=latest_model_status)
                             if prev_model_status == ModelStatus.TRAINING and latest_model_status == ModelStatus.READY:
                                 logging.info(f"model id {model.model_id} ({model.model_type.name}) "
                                              f"changed status from TRAINING to READY, updating AL recommendations")
-                                post_train_method(workspace.workspace_id, category_name, model.model_id)
+                                orchestrator_state_api.update_iteration_status(workspace.workspace_id, category_name, iteration_index,
+                                                                               new_status=IterationStatus.RUNNING_INFERENCE)
+                                post_train_method(workspace.workspace_id, category_name, iteration_index)
+                                orchestrator_state_api.update_iteration_status(workspace.workspace_id, category_name, iteration_index,
+                                                                               new_status=IterationStatus.RUNNING_ACTIVE_LEARNING)
                                 update_recommendation_func(workspace.workspace_id, workspace.dataset_name,
-                                                           category_name, sample_size, model)
-                                post_active_learning_func(workspace.workspace_id, category_name, model)
+                                                           category_name, sample_size, iteration_index)
+                                post_active_learning_func(workspace.workspace_id, category_name, iteration_index)
+                                orchestrator_state_api.update_iteration_status(workspace.workspace_id, category_name, iteration_index,
+                                                                               new_status=IterationStatus.READY)
 
         except Exception as e:
             logging.critical(f"Error in background manager {e}")
