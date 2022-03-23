@@ -11,8 +11,8 @@
 # import_category_labels, import also element_metadata and label_type (if exists)?
 # Change Document uri to doc_id, change TextElement uri to element_id?
 # handle stream of csv as text and not file? Ask Dakuo
-# when a new model is ready during precision evaluation, the score will be attched to the new model instead of the evaluated model
-
+# BUG: when a new model is ready during precision evaluation, the score will be attched to the new model instead of the evaluated model
+# check the list of new features in sleuth-channel https://ibm.ent.box.com/file/913021100270
 import logging
 from typing import Sequence
 
@@ -505,9 +505,9 @@ def get_all_categories(workspace_id):
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/category/<category_name>", methods=['POST'])
+@app.route("/workspace/<workspace_id>/category", methods=['POST'])
 @auth.login_required
-def create_category(workspace_id, category_name):
+def create_category(workspace_id):
     """
     add a new category
     :param workspace_id:
@@ -517,7 +517,7 @@ def create_category(workspace_id, category_name):
     :return success:
     """
     post_data = request.get_json(force=True)
-    post_data['id'] = category_name
+
     orchestrator_api.create_new_category(workspace_id, post_data["category_name"], post_data["category_description"])
 
     res = {'category': post_data}
