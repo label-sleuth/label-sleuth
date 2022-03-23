@@ -511,9 +511,6 @@ def create_category(workspace_id):
     """
     add a new category
     :param workspace_id:
-    :param category_name:
-    :param category_name:
-    :param category_description:
     :return success:
     """
     post_data = request.get_json(force=True)
