@@ -1,7 +1,7 @@
 # Sleuth annotation system
 
 ## System access
-The up-to-date system is hosted at: [website](http://35.223.169.65:8000/), you can easily check the latest progress via this cloud server.
+you can directly check the latest progress via this [website](http://35.223.169.65:8000/)
 
 ## Local installation
 Below are instructions to run this website in your local environment
