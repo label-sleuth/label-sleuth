@@ -50,7 +50,7 @@ pip install -r lrtc_lib/requirements.txt
 </p>
 </details>
 
-4. Start SLEUTH server `python start_service.py`
+4. Start SLEUTH server `python start_sleuth.py`
 
 ## Adapting to additional scenarios
 ### Implementing a new machine learning model
