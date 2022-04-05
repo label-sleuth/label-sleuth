@@ -10,7 +10,7 @@ bs4==0.0.1
 requests==2.26.0
 nltk==3.4.4
 en_core_web_lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.0.0/en_core_web_lg-3.0.0.tar.gz
-flask==1.1.2
+flask==1.1.4
 flask_cors==3.0.9
 six==1.15.0
 flask_httpauth==4.1.0
@@ -18,3 +18,7 @@ dacite==1.6.0
 wcwidth==0.2.5
 waitress==2.0.0
 ruamel-yaml==0.15.87
+
+# workaround for issues with m
+jinja2<3.1.0
+markupsafe==2.0.1
