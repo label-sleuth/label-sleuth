@@ -1,0 +1,33 @@
+
+.container{
+    height: 80vh;
+    position: absolute;
+    display: flex;
+    flex-wrap: wrap;
+    left: 0;
+    right: 0;
+    margin: 100px 50px 100px 50px;
+    border:1px solid rgb(246, 250, 252);
+    border-radius: 10px;
+    background-color: rgb(246, 250, 252);
+    overflow: auto;
+    justify-content: center;
+    align-items: center;
+}
+.hexagon {
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    margin: 10px 10px;
+    height: 300px;
+    width: 300px;
+    max-height: 300px;
+    max-width: 300px;
+    background-color: rgb(219, 238, 247);
+    flex: 40% 1;
+    display: flex;
+    flex-flow: column;
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
+
