@@ -7,12 +7,16 @@
 ###TODOs
 #
 
+
+# handle GPU lock for train/infer of hf_transformers
+# https://flask.palletsprojects.com/en/2.1.x/tutorial/tests/
 # when loading documents, use ast.literal_eval to import element_metadata if exists
 # import_category_labels, import also element_metadata and label_type (if exists)?
 # Change Document uri to doc_id, change TextElement uri to element_id?
 # handle stream of csv as text and not file? Ask Dakuo
 # BUG: when a new model is ready during precision evaluation, the score will be attched to the new model instead of the evaluated model
 # check the list of new features in sleuth-channel https://ibm.ent.box.com/file/913021100270
+# Eyal suggested to add more active learning strategies
 import logging
 from typing import Sequence
 
@@ -514,7 +518,7 @@ def create_category(workspace_id):
     :return success:
     """
     post_data = request.get_json(force=True)
-
+    post_data['id'] = post_data["category_name"] # old frontend expects the category name to be in id, remove after moving to new frontend
     orchestrator_api.create_new_category(workspace_id, post_data["category_name"], post_data["category_description"])
 
     res = {'category': post_data}
@@ -753,11 +757,11 @@ def export_labels(workspace_id):
 def export_predictions(workspace_id):
     category_name = request.args.get('category_name')
     filter = request.args.get('uri_filter', None)
-    model_id = request.args.get('model_id')
+    iteration_index = request.args.get('iteration_index')
     elements = orchestrator_api.get_all_text_elements(orchestrator_api.get_dataset_name(workspace_id))
     if filter:
         elements = [x for x in elements if filter in x.uri]
-    infer_results = orchestrator_api.infer(workspace_id, category_name, elements, model_id=model_id)
+    infer_results = orchestrator_api.infer(workspace_id, category_name, elements, iteration_index=iteration_index)
     return pd.DataFrame([{**te.__dict__, "score": pred.score, 'predicted_label': pred.label} for te, pred
                          in zip(elements, infer_results)]).to_csv(index=False)
 
@@ -779,7 +783,7 @@ def export_model(workspace_id):
     iteration_index = request.args.get('iteration_index', None) #TODO update in UI model_id -> iteration_index
     if iteration_index is None:
         category_iterations = \
-            orchestrator_api.get_all_iterations(workspace_id, category_name)
+            orchestrator_api.get_all_iterations(workspace_id, category_name) #TODO fix
         iteration_index = \
             [candidate_iteration_index for candidate_iteration_index, iteration in enumerate(category_iterations)
              if iteration.status == IterationStatus.READY]
