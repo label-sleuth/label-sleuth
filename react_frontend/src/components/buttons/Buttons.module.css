@@ -1,0 +1,19 @@
+.button-light{
+    color: white;
+    width: 50%;
+    border: 0;
+    height: 48px;
+    padding: 0 30px;
+    background: linear-gradient(45deg, rgb(232 240 254) 30%, #61dafb 90%);
+    box-shadow: 0 3px 5px 2px rgb(255 105 135 / 30%);
+    border-radius: 3px;
+    justify-content: center;
+    cursor: pointer;
+    font-family: "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+    font-weight: 400;
+    font-size: 1rem;
+    transition-duration: 0.4s;
+}
+  .button-light:hover {
+    color: black;
+}

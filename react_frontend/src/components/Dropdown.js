@@ -1,28 +1,64 @@
-import * as React from 'react';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
+import React, { useEffect, useState } from 'react';
+
+import MenuItem from '@mui/material/MenuItem/MenuItem';
 import Select from '@mui/material/Select';
+import InputLabel from '@mui/material/InputLabel';
 
-export default function SelectVariants({ name, options, label, handleChange, ...rest }) {
 
+const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur }) => {
+  const ITEM_HEIGHT = 30;
+  const ITEM_PADDING_TOP = 8;
+  const MenuProps = {
+    PaperProps: {
+      style: {
+        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+        // width: 250,
+      },
+    },
+  };
+  const [localValue, setLocalValue] = useState(value ?? '');   
+  useEffect(() => setLocalValue(value ?? ''), [value]);       
+  const handleFocus = () => {
+    if (onFocus) {
+      onFocus();
+    }
+  };
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setLocalValue(value);
+    if (onChange) {
+      onChange(value);
+    }
+  };
+  const handleBlur = (e) => {
+    if (onBlur) {
+      onBlur(e.target.value);
+    }
+  };
   return (
-      <FormControl variant="standard" sx={{ m: 1, minWidth: 200 }}>
-        <InputLabel id="demo-simple-select-standard-label">{label}</InputLabel>
-        <Select
-          labelId="demo-simple-select-standard-label"
-          id={name}
-          value={name}
-          label= {label}
-          onChange={handleChange}
-        >
-         {options.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                  {option.title}
-              </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+    <>
+      <InputLabel id="demo-simple-select-helper-label">{label}</InputLabel>
+      <Select
+        labelId="demo-simple-select-helper-label"
+        id="demo-simple-select-helper"
+        value={localValue}
+        label={label}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        MenuProps={MenuProps}
+      >
+        {options?.map(option => {
+          return (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label ?? option.value}
+            </MenuItem>
+          );
+        })}
+      </Select>
+    </>
+
   );
-}
- 
+};
+
+export default ControlledSelect;

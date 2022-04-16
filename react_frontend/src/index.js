@@ -8,16 +8,16 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import configureStore from "./store/configureStore";
 import { Provider } from 'react-redux'
- 
+
 
 ReactDOM.render(
-  <Provider store={configureStore}> 
-  <ThemeProvider theme={theme}>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </ThemeProvider>
- </Provider>,
+  <Provider store={configureStore}>
+    <ThemeProvider theme={theme}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </ThemeProvider>
+  </Provider>,
   document.getElementById('root')
 );
 
