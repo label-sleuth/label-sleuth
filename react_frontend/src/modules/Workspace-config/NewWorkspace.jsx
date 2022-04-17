@@ -8,17 +8,18 @@ import ControlledSelect from "../../components/Dropdown"
 import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
 import ButtonLight from "../../components/buttons/ButtonLight"
-
+import {  toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ExistingWorkspace = () => {
-
+    const notify = (message) => toast(message);
     const { datasets, loading } = useSelector((state) => state.workspaces)
 
     let navigate = useNavigate();
     const dispatch = useDispatch()
 
     useEffect(() => {
-        if (loading) return <p>Loading...</p>
+        // if (loading) return <p>Loading...</p>
         dispatch(getDatasets())
     }, [dispatch])
 
@@ -34,6 +35,9 @@ const ExistingWorkspace = () => {
     const isEnabled = selectedValue && textValue;
 
     const handleClick = () => {
+        if(!selectedValue || !textValue){
+            return notify("Please fill out all the required fields!")
+        }
         dispatch(createWorkspace({ workspace_id: textValue, dataset_id: selectedValue }))
         navigate('/')
     }
@@ -43,7 +47,7 @@ const ExistingWorkspace = () => {
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FormControl variant="standard" sx={{ m: 1, minWidth: 300 }}>
-                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: "#f48c06" }}>Create a new workspace</FormLabel>
+                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: "#f48c06"  }}>Create a new workspace</FormLabel>
                 <FormControl variant="standard" sx={{ m: 1 }}>
                     <TextField onChange={handleChangeText} required id="standard-basic" label="Name" variant="standard" />
                 </FormControl>

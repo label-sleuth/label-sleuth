@@ -7,9 +7,11 @@ import ControlledSelect from "../../components/Dropdown"
 import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
 import ButtonLight from "../../components/buttons/ButtonLight";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ExistingWorkspace = () => {
-
+    const notify = (message) => toast(message);
     const { workspaces, loading } = useSelector((state) => state.workspaces)
     const workspace = useSelector((state) => state.workspace)
 
@@ -30,6 +32,9 @@ const ExistingWorkspace = () => {
     };
 
     const handleClick = (e) => {
+        if(!value){
+            return notify("Please select workspace!")
+        }
         navigate('/')
     };
 
@@ -39,7 +44,7 @@ const ExistingWorkspace = () => {
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FormControl variant="standard" sx={{ m: 1, minWidth: 300 }}>
-                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: "#f48c06" }}>Select an existing workspace</FormLabel>
+                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: "#f48c06",marginTop:'-10px' }}>Select an existing workspace</FormLabel>
                 <FormControl required variant="standard" sx={{ m: 1, marginTop: '50px' }}>
                     <ControlledSelect
                         label="Select workspace"
@@ -49,7 +54,7 @@ const ExistingWorkspace = () => {
                     />
                 </FormControl>
                 <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center', height: '100px', marginTop: '100px' }}>
-                    <ButtonLight onClick={handleClick} text="Go" />
+                    <ButtonLight onClick={ handleClick} text="Go" />
                 </FormControl>
             </FormControl>
         </Box>

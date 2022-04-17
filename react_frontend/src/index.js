@@ -8,13 +8,14 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import configureStore from "./store/configureStore";
 import { Provider } from 'react-redux'
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 ReactDOM.render(
   <Provider store={configureStore}>
     <ThemeProvider theme={theme}>
       <BrowserRouter>
-        <App />
+        <App  ToastContainer ={ToastContainer}  toast={toast} />
       </BrowserRouter>
     </ThemeProvider>
   </Provider>,

@@ -12,9 +12,10 @@ import uploadDocIcon from "../../assets/workspace-config/upload.png"
 import ButtonAppBar from "../../components/bars/upperBar/ButtonAppBar"
 import new_workspace_icon from "../../assets/workspace-config/create_new_workspace.png"
 import { clearState } from '../Login/LoginSlice';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Workspaces = () => {
-
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
@@ -31,6 +32,7 @@ const Workspaces = () => {
   return (
     <>
       <ButtonAppBar logout={logout} />
+      <ToastContainer position="top-center"/>
       <div className={classes.container}>
         <div className={classes.hexagon}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
@@ -45,7 +47,7 @@ const Workspaces = () => {
           <NewWorkspace />
         </div>
         <div className={classes.hexagon}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-50px', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-20px' }}>
             <img alt="load document" src={uploadDocIcon} style={{ width: '35%' }} />
           </div>
           <LoadDocument />

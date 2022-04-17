@@ -7,9 +7,11 @@ import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
 import ButtonLight from "../../components/buttons/ButtonLight"
 import { getAuthenticated, clearState } from './LoginSlice';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const LoginForm = () => {
-
+const LoginForm = (props) => {
+    
     let navigate = useNavigate();
     const dispatch = useDispatch()
     const { token, errorMessage } = useSelector((state) => state.authenticate)
@@ -29,9 +31,10 @@ const LoginForm = () => {
     const handlePassword = (e) => {
         setPassword(e.target.value);
     };
-
+    const notify = (message) => toast(message);
     const handleClick = () => {
         dispatch(clearState())
+        notify("Wrong username or password!")
         dispatch(getAuthenticated({ username: username, password: password }))
     }
 
@@ -46,6 +49,7 @@ const LoginForm = () => {
             backgroundColor: 'f48c06',
             boxShadow: '0 0 20px 5px rgb(0 0 0 / 30%)'
         }}>
+            <ToastContainer  position="top-center" />
             <FormControl variant="standard" sx={{ m: 1, minWidth: 350 }}>
                 <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: "#f48c06", fontSize: '1.5rem' }}>Login</FormLabel>
                 <FormControl variant="standard" sx={{ m: 1 }}>
