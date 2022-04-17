@@ -47,22 +47,23 @@ const LoginForm = () => {
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: '5px',
-            width: 350,
-            height: 350,
-            backgroundColor: 'rgb(232, 240, 254)',
+            width: 450,
+            height: 450,
+            backgroundColor: 'f48c06',
+            boxShadow: '0 0 20px 5px rgb(0 0 0 / 30%)' 
         }}>
-            <FormControl variant="standard" sx={{ m: 1, minWidth: 250 }}>
-                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Login</FormLabel>
+            <FormControl variant="standard" sx={{ m: 1, minWidth: 350 }}>
+                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color:"#f48c06",fontSize: '1.5rem'  }}>Login</FormLabel>
                 <FormControl variant="standard" sx={{ m: 1 }}>
                     <TextField required onChange={handleUserName} id="standard-basic" label="Username" variant="standard" />
                 </FormControl>
-                <FormControl variant="standard" sx={{ m: 1 }}>
+                <FormControl variant="standard" sx={{ m: 1, marginTop:'20px' }}>
                     <TextField required onChange={handlePassword} id="standard-basic" label="Password" variant="standard" />
                 </FormControl>
                 {errorMessage &&
                     <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>Login failed!</FormLabel>
                 }
-                <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center' }}>
+                <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center' ,height: '50px',marginTop: '50px' }}>
                     <ButtonLight onClick={handleClick} text="LOG IN" />
                 </FormControl>
             </FormControl>
