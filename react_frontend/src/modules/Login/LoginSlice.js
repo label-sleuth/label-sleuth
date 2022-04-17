@@ -20,9 +20,7 @@ export const authenticateSlice = createSlice({
     name: 'authenticate',
     initialState,
     reducers: {      
-        clearErrorMessage: (state, _) => {
-            state.errorMessage = ''
-          }
+        clearState: () => initialState
     },
     extraReducers: {
         [getAuthenticated.pending]: (state) => {
@@ -40,7 +38,7 @@ export const authenticateSlice = createSlice({
 })
 
 export const {
-    clearErrorMessage
+    clearState
   } = authenticateSlice.actions
 
 export const authenticateReducer = authenticateSlice.reducer

@@ -55,7 +55,7 @@ const ExistingWorkspace = () => {
                     />
                 </FormControl>
                 <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center' }}>
-                    <ButtonLight onClick={handleClick} text="Go" />
+                    <ButtonLight onClick={handleClick} text="Upload" />
                 </FormControl>
             </FormControl>
         </Box>

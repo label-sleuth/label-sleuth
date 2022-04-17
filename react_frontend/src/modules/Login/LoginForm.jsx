@@ -4,11 +4,9 @@ import { useNavigate } from "react-router-dom";
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
-import Fab from '@mui/material/Box';
 import Box from '@mui/material/Box';
 import ButtonLight from "../../components/buttons/ButtonLight"
-import AddIcon from "@mui/icons-material/Add";
-import { getAuthenticated, clearErrorMessage } from './LoginSlice';
+import { getAuthenticated, clearState } from './LoginSlice';
 
 const LoginForm = () => {
 
@@ -17,28 +15,31 @@ const LoginForm = () => {
     const { token, errorMessage } = useSelector((state) => state.authenticate)
 
     useEffect(() => {
-        if (token && !errorMessage) {
+        if (token) {
             navigate('/workspaces')
         }
- 
-    }, [dispatch, token, errorMessage])
+        
+    }, [ navigate, token ])
 
-    const [username, setUserName] = useState(''); // selected option
+    useEffect(() => {
+        if (errorMessage) {
+            dispatch(clearState())
+        }
+        
+    }, [ dispatch, errorMessage])
+
+    const [username, setUserName] = useState(''); 
     const handleUserName = (e) => {
         setUserName(e.target.value);
     };
-    const [password, setPassword] = useState(''); // selected option
+    const [password, setPassword] = useState(''); 
     const handlePassword = (e) => {
         setPassword(e.target.value);
     };
 
-    const isEnabled = password && username;
-
     const handleClick = () => {
         dispatch(getAuthenticated({ username: username, password: password }))
     }
-
-
 
     return (
         <Box sx={{
