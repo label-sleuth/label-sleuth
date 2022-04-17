@@ -26,7 +26,7 @@ const ExistingWorkspace = () => {
         // dispatch(addDocuments({   }))
         navigate('/')
     }
-    const [selectedValue, setSelectedValue] = useState(''); // selected option
+    const [selectedValue, setSelectedValue] = useState('');
     const handleChange = (value) => {
         setSelectedValue(value);
     };
@@ -36,8 +36,8 @@ const ExistingWorkspace = () => {
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <FormControl variant="standard" sx={{ m: 1, minWidth: 300, width:300 }}>
-                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color:"#f48c06" }}>Load new documents</FormLabel>
+            <FormControl variant="standard" sx={{ m: 1, minWidth: 300, width: 300 }}>
+                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: "#f48c06" }}>Load new documents</FormLabel>
                 <FormLabel sx={{ m: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontStyle: 'italic', fontSize: 12 }} className={classes["text-upload"]}> Upload a CSV file with "text" column and optionally a "document_id" column</FormLabel>
 
                 <FormControl required variant="standard" sx={{ m: 1 }}>

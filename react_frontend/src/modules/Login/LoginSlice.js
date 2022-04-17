@@ -19,7 +19,7 @@ export const getAuthenticated = createAsyncThunk('workspaces/getAuthenticated', 
 export const authenticateSlice = createSlice({
     name: 'authenticate',
     initialState,
-    reducers: {      
+    reducers: {
         clearState: () => initialState
     },
     extraReducers: {
@@ -39,6 +39,6 @@ export const authenticateSlice = createSlice({
 
 export const {
     clearState
-  } = authenticateSlice.actions
+} = authenticateSlice.actions
 
 export const authenticateReducer = authenticateSlice.reducer

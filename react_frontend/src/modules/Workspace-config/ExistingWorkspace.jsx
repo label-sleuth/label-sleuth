@@ -7,7 +7,6 @@ import ControlledSelect from "../../components/Dropdown"
 import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
 import ButtonLight from "../../components/buttons/ButtonLight";
-import classes from "./workspace-config.module.css"
 
 const ExistingWorkspace = () => {
 
@@ -25,7 +24,7 @@ const ExistingWorkspace = () => {
         dispatch(getWorkspaces())
     }, [dispatch])
 
-    const [value, setValue] = useState(''); // selected option
+    const [value, setValue] = useState('');
     const handleChange = (value) => {
         setValue(value);
     };
@@ -40,8 +39,8 @@ const ExistingWorkspace = () => {
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FormControl variant="standard" sx={{ m: 1, minWidth: 300 }}>
-                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color:"#f48c06" }}>Select an existing workspace</FormLabel>
-                <FormControl required variant="standard" sx={{ m: 1, marginTop:'50px' }}>
+                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: "#f48c06" }}>Select an existing workspace</FormLabel>
+                <FormControl required variant="standard" sx={{ m: 1, marginTop: '50px' }}>
                     <ControlledSelect
                         label="Select workspace"
                         value={value}
@@ -49,7 +48,7 @@ const ExistingWorkspace = () => {
                         onChange={handleChange}
                     />
                 </FormControl>
-                <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center',height: '100px',marginTop: '100px' }}>
+                <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center', height: '100px', marginTop: '100px' }}>
                     <ButtonLight onClick={handleClick} text="Go" />
                 </FormControl>
             </FormControl>
