@@ -7,11 +7,14 @@ import theme from './theme.jsx';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
+import store from './store';
 
 ReactDOM.render(
   <ThemeProvider theme={theme}>
     <BrowserRouter>
-      <App />
+      <Provider store={store}>
+        <App />
+      </Provider>
     </BrowserRouter>
   </ThemeProvider>,
   document.getElementById('root')

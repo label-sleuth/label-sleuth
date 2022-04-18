@@ -14,14 +14,19 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Paper from '@mui/material/Paper';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchElements, fetchCategories, updateCurCategory } from './DataSlice.jsx';
 import InputBase from '@mui/material/InputBase';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
+import CircularProgress from '@mui/material/CircularProgress';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
+import SearchBar from "material-ui-search-bar";
+import Element from "./Element"
 import CardContent from '@mui/material/CardContent';
 import FormHelperText from '@mui/material/FormHelperText';
 import FormControl from '@mui/material/FormControl';
@@ -169,7 +174,7 @@ const StackBarContainer = styled('div')(({ theme }) => ({
 
 const useStyles = makeStyles((theme) => ({
   line: {
-      borderBlockColor: "red"
+    borderBlockColor: "red"
   }
 }));
 
@@ -222,9 +227,9 @@ function WorkspaceSelectFormControl() {
       // value={age}
       // onChange={handleChange}
       >
-        <MenuItem value={10}>Workspace 1</MenuItem>
-        <MenuItem value={20}>Workspace 2</MenuItem>
-        <MenuItem value={30}>Workspace 3</MenuItem>
+        <MenuItem value={10}>fairytale-bias-val-split</MenuItem>
+        <MenuItem value={20}>wiki_animals</MenuItem>
+        <MenuItem value={30}>storybook-bias</MenuItem>
       </Select>
       {/* <FormHelperText>With label + helper text</FormHelperText> */}
     </FormControl>
@@ -249,18 +254,24 @@ function ModelFormControl() {
   );
 }
 
-function LabelFormControl() {
+function CategoryFormControl(props) {
+
+  const workspace = useSelector(state => state.workspace)
+  const dispatch = useDispatch()
+
   return (
     <FormControl sx={{ marginTop: 1, minWidth: 150, padding: 2 }}>
       <Select
         id="label-select"
         sx={{ height: 30 }}
-      // value={age}
-      // onChange={handleChange}
+        value={workspace.curCategory}
+        onChange={(e) => dispatch(updateCurCategory(e.target.value))}
       >
-        <MenuItem value={10}>wanton</MenuItem>
-        <MenuItem value={20}>sushi</MenuItem>
-        <MenuItem value={30}>sashimi</MenuItem>
+        {
+          workspace.categories.map((e) => {
+            return (<MenuItem value={e.id}>{e.category_name}</MenuItem>)
+          })
+        }
       </Select>
       {/* <FormHelperText>With label + helper text</FormHelperText> */}
     </FormControl>
@@ -271,6 +282,7 @@ function LabelFormControl() {
 function Workspace() {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
+
   const init_focused_states = {
     L0: false,
     L1: false,
@@ -279,8 +291,13 @@ function Workspace() {
     L4: false,
     L5: false
   }
+
   const [focusedIndex, setFocusedIndex] = React.useState(0);
-  const [focusedState, setFocusedState] = React.useState({...init_focused_states, L0: true});
+  const [searchInput, setSearchInput] = React.useState("");
+  const [searchResult, setSearchResult] = React.useState([]);
+  const [focusedState, setFocusedState] = React.useState({ ...init_focused_states, L0: true });
+  const [labeledState, setLabeledState] = React.useState({});
+  const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
 
 
   const handleDrawerOpen = () => {
@@ -291,12 +308,12 @@ function Workspace() {
     setOpen(false);
   };
 
-  const handleKeyEvent = (event) => {
+  const handleKeyEvent = (event, len_elements) => {
 
     console.log("key pressed")
 
     if (event.key === "ArrowDown") {
-      if (focusedIndex < 4) {
+      if (focusedIndex < len_elements) {
         var id = "L" + (focusedIndex + 1);
         var old_id = "L" + (focusedIndex);
         var new_state = init_focused_states
@@ -327,12 +344,11 @@ function Workspace() {
   //   document.addEventListener('keydown', handleKeyEvent)
   // }, []);
 
-  const handleDoubleClick = (event, id) => {
+  const handleClick = (event, id) => {
 
     console.log(focusedState)
 
     if (event.detail == 1) {
-      console.log("handle double click")
       setFocusedIndex(id)
       // document.getElementById("L"+id).focus();
       const LineId = "L" + id
@@ -343,6 +359,33 @@ function Workspace() {
   }
 
   const classes = useStyles();
+  const workspace = useSelector(state => state.workspace)
+
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    dispatch(fetchElements()).then(() => dispatch(fetchCategories()))
+  }, [])
+
+  const handleSearch = () => {
+    // const elements = workspace.elements
+    const elements = [
+      "This assignment satisfies learning objective 3 (LO3) as specified in the syllabus. You will apply the interaction theories, design principles, design methods",
+      "Please read chapters 1, 3, and 4 of the Klimczak book before attempting to work on this aspect of your project",
+      "Also useful are the readings/notes on Needfinding, Personas, Scenario-Based Design, and the MethodsCards",
+      "Synthesize what you have learned in Week 1 into at least one persona for your key stakeholder(s)",
+      "Please read chapters 1, 3, and 4 of the Klimczak book before attempting to work on this aspect of your project"
+    ]
+    console.log(`searching`)
+    setSearchResult([])
+    var results = []
+    elements.map((e) => {
+      if (e.includes(searchInput)) {
+        results.push(e)
+      }
+    })
+    setSearchResult(results)
+  }
 
 
   return (
@@ -401,22 +444,22 @@ function Workspace() {
               <HSBar
                 // showTextIn
                 data={[
-                  { value: 30, color: "#99d98c" },
-                  { value: 20, color: "#ff758f" },
-                  { value: 20, color: "#f9f7f3" }]} />
+                  { value: 100 * (numLabel['pos'] / (1.0 * 131)), color: "#99d98c" },
+                  { value: 100 * (numLabel['neg'] / (1.0 * 131)), color: "#ff758f" },
+                  { value: 10, color: "#f9f7f3" }]} />
             </StackBarContainer>
             <Stack spacing={0} sx={{ marginBottom: 2 }}>
               <ClassContainer>
                 <Typography><strong>Positive</strong></Typography>
-                <Typography><strong>30</strong></Typography>
+                <Typography><strong>{numLabel['pos']}</strong></Typography>
               </ClassContainer>
               <ClassContainer>
                 <Typography><strong>Negative</strong></Typography>
-                <Typography><strong>20</strong></Typography>
+                <Typography><strong>{numLabel['neg']}</strong></Typography>
               </ClassContainer>
               <ClassContainer>
                 <Typography><strong>Total</strong></Typography>
-                <Typography><strong>70</strong></Typography>
+                <Typography><strong>{workspace.elements.length}</strong></Typography>
               </ClassContainer>
             </Stack>
             <Divider />
@@ -429,7 +472,7 @@ function Workspace() {
             </ModelName>
             <ModelFormControl />
             <Divider />
-            <Box sx={{ marginTop: 2, marginBottom: 2 }}>
+            {/* <Box sx={{ marginTop: 2, marginBottom: 2 }}>
               <Typography sx={{ textAlign: "center" }}><strong>Dataset information</strong></Typography>
               <ClassContainer sx={{ marginTop: 2 }}>
                 <Typography><strong>Total instance</strong></Typography>
@@ -443,7 +486,7 @@ function Workspace() {
                 <Typography><strong>Negative</strong></Typography>
                 <Typography><strong>8</strong></Typography>
               </ClassContainer>
-            </Box>
+            </Box> */}
             <Box>
               <Accordion sx={{ backgroundColor: "grey" }}>
                 <AccordionSummary
@@ -479,7 +522,7 @@ function Workspace() {
         <WorkspaceHeader>
           <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
             <Typography><strong>Label:</strong></Typography>
-            <LabelFormControl />
+            <CategoryFormControl />
           </Box>
           <ToolBar>
             <ButtonGroup variant="contained" aria-label="split button" sx={{ mr: 2 }}>
@@ -502,53 +545,30 @@ function Workspace() {
           </IconButton>
           <Typography sx={{ fontSize: 20 }}>
             <strong>
-              Document 1
+              storybook_sentence_val_split-assipattle_and_the_mester_stoorworm
             </strong>
           </Typography>
           <IconButton>
             <ChevronRightIcon />
           </IconButton>
         </TitleBar>
-        <Line tabIndex="-1" onKeyDown={handleKeyEvent} focused={focusedState.L0} id="L0" className={classes.line} onClick={(e) => handleDoubleClick(e, 0)}>
-          <Typography paragraph>
-            Amet nisl suscipit adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra
-            nibh cras. Metus vulputate eu scelerisque felis imperdiet proin fermentum
-            leo. Mauris commodo quis imperdiet massa tincidunt. Cras tincidunt lobortis
-            feugiat vivamus at augue. At augue eget arcu dictum varius duis at
-            consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-            sapien faucibus et molestie ac.
-          </Typography>
-        </Line>
-        <Line tabIndex="-1" onKeyDown={handleKeyEvent} focused={focusedState.L1} id="L1" className={classes.line} onClick={(e) => handleDoubleClick(e, 1)}>
-          <Typography paragraph>
-            Rhoncus dolor purus non enim praesent elementum facilisis leo vel. Risus at ultrices mi tempus
-            imperdiet. Semper risus in hendrerit gravida rutrum quisque non tellus.
-          </Typography>
-        </Line>
-        <Line tabIndex="-1" onKeyDown={handleKeyEvent} focused={focusedState.L2} id="L2" className={classes.line} onClick={(e) => handleDoubleClick(e, 2)}>
-          <Typography paragraph>
-            Risus at ultrices mi tempus imperdiet. Semper risus in hendrerit gravida rutrum quisque non tellus.
-            Convallis convallis tellus id interdum velit laoreet id donec ultrices.
-            Odio morbi quis commodo odio aenean sed adipiscing.
-          </Typography>
-        </Line>
-        <Line tabIndex="-1" onKeyDown={handleKeyEvent} focused={focusedState.L3} id="L3" className={classes.line} onClick={(e) => handleDoubleClick(e, 3)}>
-          <Typography paragraph>
-            Amet nisl suscipit adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra
-            nibh cras. Metus vulputate eu scelerisque felis imperdiet proin fermentum
-            leo. Mauris commodo quis imperdiet massa tincidunt. Cras tincidunt lobortis
-            feugiat vivamus at augue. At augue eget arcu dictum varius duis at
-            consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-            sapien faucibus et molestie ac.
-          </Typography>
-        </Line>
-        <Line tabIndex="-1" onKeyDown={handleKeyEvent} focused={focusedState.L4} id="L4" className={classes.line} onClick={(e) => handleDoubleClick(e, 4)}>
-          <Typography paragraph>
-            Cras tincidunt lobortis feugiat vivamus at augue. At augue eget arcu dictum varius duis at
-            consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-            sapien faucibus et molestie ac.
-          </Typography>
-        </Line>
+        <Box>
+          {
+            workspace.ready ? workspace['elements'].map((element, index) => {
+              const len_elements = workspace['elements'].length
+              return (<Element keyEventHandler={(e) => handleKeyEvent(e, len_elements)} focusedState={focusedState} id={index} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id={element['id']} text={element['text']} labeledState={labeledState} LabelStateHandler={setLabeledState} />)
+            }) :
+              <CircularProgress color="secondary" />
+          }
+        </Box>
+        {/* Temporary */}
+        <Box>
+          <Element keyEventHandler={(e) => handleKeyEvent(e, 5)} focusedState={focusedState} id={0} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id="id1" text="This assignment satisfies learning objective 3 (LO3) as specified in the syllabus. You will apply the interaction theories, design principles, design methods" labeledState={labeledState} LabelStateHandler={setLabeledState} />
+          <Element keyEventHandler={(e) => handleKeyEvent(e, 5)} focusedState={focusedState} id={1} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id="id2" text="Please read chapters 1, 3, and 4 of the Klimczak book before attempting to work on this aspect of your project." labeledState={labeledState} LabelStateHandler={setLabeledState} />
+          <Element keyEventHandler={(e) => handleKeyEvent(e, 5)} focusedState={focusedState} id={2} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id="id3" text="Also useful are the readings/notes on Needfinding, Personas, Scenario-Based Design, and the MethodsCards." labeledState={labeledState} LabelStateHandler={setLabeledState} />
+          <Element keyEventHandler={(e) => handleKeyEvent(e, 5)} focusedState={focusedState} id={3} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id="id4" text="Synthesize what you have learned in Week 1 into at least one persona for your key stakeholder(s)." labeledState={labeledState} LabelStateHandler={setLabeledState} />
+          <Element keyEventHandler={(e) => handleKeyEvent(e, 5)} focusedState={focusedState} id={4} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id="id5" text="Note that “log-in functionality” is a trivial task for a mobile app or website, whereas “pointing” or “following along” during co-reading is a non-trivial task." labeledState={labeledState} LabelStateHandler={setLabeledState} />
+        </Box>
 
         <Drawer
           sx={{
@@ -571,21 +591,32 @@ function Workspace() {
           // variant="permanent"
           onClose={handleDrawerClose}
         >
-          <Paper
+          {/* <Paper
             component="form"
             sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto", marginTop: 5 }}
-          >
-            <InputBase
-              sx={{ ml: 1, flex: 1 }}
-              placeholder="Search word"
-              inputProps={{ 'aria-label': 'search word' }}
-            />
-            <IconButton type="submit" sx={{ p: '10px' }} aria-label="search">
-              <SearchIcon />
-            </IconButton>
-          </Paper>
+          > */}
+          <SearchBar
+            style={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto", marginTop: 30 }}
+            value={searchInput}
+            onRequestSearch={() => handleSearch()}
+            onChange={(newValue) => setSearchInput(newValue)}
+            onCancelSearch={() => setSearchInput("")}
+          />
+          {/* </Paper> */}
 
-          <SearchPanel>
+          {
+            searchResult.map((r) => {
+              return (
+                <SearchPanel>
+                  <Typography>
+                    {r}
+                  </Typography>
+                </SearchPanel>
+              )
+            })
+          }
+
+          {/* <SearchPanel>
             <Typography>
               Cras tincidunt lobortis feugiat vivamus at augue. At augue eget arcu dictum varius duis at
               consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
@@ -599,7 +630,7 @@ function Workspace() {
               consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
               sapien faucibus et molestie ac.
             </Typography>
-          </SearchPanel>
+          </SearchPanel> */}
         </Drawer>
       </Box>
 
