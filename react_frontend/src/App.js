@@ -7,8 +7,8 @@ function App() {
   return (
     <div>
       <Routes>
-        {modules.map(module => (
-          <Route {...module.routeProps} />
+        {modules.map((module, i) => (
+          <Route {...module.routeProps} key={i} />
         ))}
       </Routes>
     </div>

@@ -8,10 +8,10 @@ import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
 import ButtonLight from "../../components/buttons/ButtonLight"
 import TextField from '@mui/material/TextField';
-import ControlledSelect from "../../components/Dropdown"
 import { addDocuments } from './workspaceConfigSlice'
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ComboBoxWithInputText from "../../components/combobox/ComboBoxWithInputText"
 
 const ExistingWorkspace = () => {
 
@@ -32,13 +32,13 @@ const ExistingWorkspace = () => {
         navigate('/')
     }
     const [selectedValue, setSelectedValue] = useState('');
-    const handleChange = (value) => {
-        setSelectedValue(value);
+
+    const handleChange = (e) => {
+        console.log(e.target.value)
+        setSelectedValue(e.target.value);
     };
-
+ 
     if (loading) return <p>Loading...</p>
-    const options = datasets.map((item) => ({ value: item.dataset_id, title: item.dataset_id }))
-
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FormControl variant="standard" sx={{ m: 1, minWidth: 300, width: 300 }}>
@@ -52,12 +52,7 @@ const ExistingWorkspace = () => {
                     />
                 </FormControl>
                 <FormControl required variant="standard" sx={{ m: 1 }}>
-                    <ControlledSelect
-                        label="Select dataset"
-                        value={selectedValue}
-                        options={options}
-                        onChange={handleChange}
-                    />
+                    <ComboBoxWithInputText options={datasets} label="Dataset" handleChange={handleChange}  /> 
                 </FormControl>
                 <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center', marginTop: '45px' }}>
                     <ButtonLight onClick={handleClick} text="Upload" />
