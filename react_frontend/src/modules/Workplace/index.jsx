@@ -10,6 +10,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import './styles.css'
 import Divider from '@mui/material/Divider';
+import Highlighter from "react-highlight-words";
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -358,6 +359,16 @@ function Workspace() {
     }
   }
 
+  const handleSearchPanelClick = (id) => {
+    console.log(`Search panel clicked, id: ${id}`)
+    setFocusedIndex(id)
+    // document.getElementById("L"+id).focus();
+    const LineId = "L" + id
+    var new_state = init_focused_states
+    new_state[LineId] = true
+    setFocusedState(new_state)
+  }
+
   const classes = useStyles();
   const workspace = useSelector(state => state.workspace)
 
@@ -370,17 +381,17 @@ function Workspace() {
   const handleSearch = () => {
     // const elements = workspace.elements
     const elements = [
-      "This assignment satisfies learning objective 3 (LO3) as specified in the syllabus. You will apply the interaction theories, design principles, design methods",
-      "Please read chapters 1, 3, and 4 of the Klimczak book before attempting to work on this aspect of your project",
-      "Also useful are the readings/notes on Needfinding, Personas, Scenario-Based Design, and the MethodsCards",
-      "Synthesize what you have learned in Week 1 into at least one persona for your key stakeholder(s)",
-      "Please read chapters 1, 3, and 4 of the Klimczak book before attempting to work on this aspect of your project"
+      {id: 0, text: "This assignment satisfies learning objective 3 (LO3) as specified in the syllabus. You will apply the interaction theories, design principles, design methods"},
+      {id: 1, text: "Please read chapters 1, 3, and 4 of the Klimczak book before attempting to work on this aspect of your project"},
+      {id: 2, text: "Also useful are the readings/notes on Needfinding, Personas, Scenario-Based Design, and the MethodsCards"},
+      {id: 3, text: "Synthesize what you have learned in Week 1 into at least one persona for your key stakeholder(s)"},
+      {id: 4, text: "Note that “log-in functionality” is a trivial task for a mobile app or website, whereas “pointing” or “following along” during co-reading is a non-trivial task."}
     ]
     console.log(`searching`)
     setSearchResult([])
     var results = []
     elements.map((e) => {
-      if (e.includes(searchInput)) {
+      if (e['text'].includes(searchInput)) {
         results.push(e)
       }
     })
@@ -607,10 +618,13 @@ function Workspace() {
           {
             searchResult.map((r) => {
               return (
-                <SearchPanel>
-                  <Typography>
-                    {r}
-                  </Typography>
+                <SearchPanel onClick={() => handleSearchPanelClick(r.id)} style={{cursor: "pointer"}}> 
+                  <Highlighter
+                    // highlightClassName="YourHighlightClass"
+                    searchWords={[searchInput]}
+                    autoEscape={true}
+                    textToHighlight={r.text}
+                  />
                 </SearchPanel>
               )
             })
