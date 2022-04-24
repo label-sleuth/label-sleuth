@@ -1,16 +1,34 @@
-import logo from './logo.svg';
 import './App.css';
 import { Routes, Route } from 'react-router-dom';
-import modules from './modules';
+import Login from './modules/Login/index';
+import WorkspaceConfig from './modules/Workspace-config/index';
+import Workspace from './modules/Workplace/index';
+import { PrivateRoute } from './features/PrivateRoute'
 
 function App() {
+
   return (
     <div>
       <Routes>
-        {modules.map((module, i) => (
-          <Route {...module.routeProps} key={i} />
-        ))}
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/workspaces"
+          element={
+            <PrivateRoute>
+              <WorkspaceConfig />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/workspace"
+          element={
+            <PrivateRoute>
+              <Workspace />
+            </PrivateRoute>
+          }
+        />
       </Routes>
+
     </div>
   );
 }

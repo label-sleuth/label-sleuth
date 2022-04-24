@@ -4,7 +4,7 @@ import { authenticateReducer } from '../modules/Login/LoginSlice'
 
 export default configureStore({
   reducer: {
-    workspaces: workspacesReducer,
     authenticate: authenticateReducer,
+    workspaces: workspacesReducer,
   }
 })

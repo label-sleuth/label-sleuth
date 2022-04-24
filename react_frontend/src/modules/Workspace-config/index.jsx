@@ -15,7 +15,7 @@ import { clearState } from '../Login/LoginSlice';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const Workspaces = () => {
+const WorkspaceConfig = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
@@ -26,6 +26,9 @@ const Workspaces = () => {
   const logout = (e) => {
     e.preventDefault()
     dispatch(clearState())
+    if(localStorage.getItem('token')){
+      localStorage.removeItem('token')
+    }
     navigate('/login')
   }
 
@@ -58,11 +61,11 @@ const Workspaces = () => {
   )
 };
 
-const workspaces = {
-  routeProps: {
-    path: "/workspaces",
-    element: <Workspaces />
-  },
-  name: 'workspaces'
-}
-export default workspaces;
+// const workspaces = {
+//   routeProps: {
+//     path: "/workspaces",
+//     element: <Workspaces />
+//   },
+//   name: 'workspaces'
+// }
+export default WorkspaceConfig;

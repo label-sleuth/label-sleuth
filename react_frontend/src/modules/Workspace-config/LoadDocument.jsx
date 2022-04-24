@@ -24,20 +24,28 @@ const ExistingWorkspace = () => {
         dispatch(getDatasets())
     }, [dispatch])
 
-    const handleClick = () => {
-        if(!selectedValue){
-            return notify("Please fill out all the required fields!")
-        }
-        // dispatch(addDocuments({   }))
-        navigate('/')
-    }
     const [selectedValue, setSelectedValue] = useState('');
 
     const handleChange = (e) => {
-        console.log(e.target.value)
         setSelectedValue(e.target.value);
     };
- 
+    
+    const [selectedFile, setSelectedFile] = useState('');
+    
+    const handleFileChange = (e) =>{
+      setSelectedFile(e.target.files[0])
+    }
+
+    const handleLoadDoc = () => {
+        let dataset_name = datasets[selectedValue].dataset_id
+        if(!dataset_name){
+            return notify("Please fill out all the required fields!")
+        }
+        let formData = new FormData()
+        formData.append(dataset_name, selectedFile)
+        dispatch(addDocuments({ formData}))
+        navigate('/login')
+    }
     if (loading) return <p>Loading...</p>
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -49,13 +57,15 @@ const ExistingWorkspace = () => {
                     <TextField
                         name="upload-file"
                         type="file"
+                        accept=".csv"
+                        onChange={handleFileChange}
                     />
                 </FormControl>
                 <FormControl required variant="standard" sx={{ m: 1 }}>
                     <ComboBoxWithInputText options={datasets} label="Dataset" handleChange={handleChange}  /> 
                 </FormControl>
                 <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center', marginTop: '45px' }}>
-                    <ButtonLight onClick={handleClick} text="Upload" />
+                    <ButtonLight onClick={handleLoadDoc} text="Upload" />
                 </FormControl>
             </FormControl>
         </Box>

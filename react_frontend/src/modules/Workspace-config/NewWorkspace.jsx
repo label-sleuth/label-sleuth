@@ -13,13 +13,12 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const ExistingWorkspace = () => {
     const notify = (message) => toast(message);
-    const { datasets, loading } = useSelector((state) => state.workspaces)
+    const { datasets } = useSelector((state) => state.workspaces)
 
     let navigate = useNavigate();
     const dispatch = useDispatch()
 
     useEffect(() => {
-        // if (loading) return <p>Loading...</p>
         dispatch(getDatasets())
     }, [dispatch])
 
@@ -32,14 +31,12 @@ const ExistingWorkspace = () => {
         setTextValue(e.target.value);
     };
 
-    const isEnabled = selectedValue && textValue;
-
     const handleClick = () => {
         if(!selectedValue || !textValue){
             return notify("Please fill out all the required fields!")
         }
         dispatch(createWorkspace({ workspace_id: textValue, dataset_id: selectedValue }))
-        navigate('/')
+        navigate('/workspace')
     }
 
     const options = datasets.map((item) => ({ value: item.dataset_id, title: item.dataset_id }))

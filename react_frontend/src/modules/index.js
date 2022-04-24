@@ -2,8 +2,9 @@ import Workplace from "./Workplace";
 import Workspaces from "./Workspace-config";
 import Login from "./Login/index";
 
-export default [
-    Workplace,
-    Workspaces,
+const reducers = [
     Login,
-];
+    Workspaces,
+    Workplace,
+]
+export default reducers;

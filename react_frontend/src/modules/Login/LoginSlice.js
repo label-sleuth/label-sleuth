@@ -5,13 +5,17 @@ import { client } from '../../api/client'
 const initialState = {
     token: '',
     loading: false,
-    errorMessage: ''
+    errorMessage: '',
+    isAuthenticated: false,
 }
 
 const auth_url = `${BASE_URL}/${ADUTHENTICATE_API}`
 
 export const getAuthenticated = createAsyncThunk('workspaces/getAuthenticated', async (params) => {
     const { data } = await client.post(auth_url, params)
+    if(data.token){
+        localStorage.setItem("token", data.token)
+    }
     return data
 })
 
@@ -29,10 +33,12 @@ export const authenticateSlice = createSlice({
         [getAuthenticated.fulfilled]: (state, { payload }) => {
             state.loading = false
             state.token = payload.token
+            state.isAuthenticated = true
         },
         [getAuthenticated.rejected]: (state, { error }) => {
             state.errorMessage = error.message
             state.loading = false
+            state.isAuthenticated = false
         },
     },
 })

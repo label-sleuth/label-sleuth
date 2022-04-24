@@ -13,7 +13,6 @@ import 'react-toastify/dist/ReactToastify.css';
 const ExistingWorkspace = () => {
     const notify = (message) => toast(message);
     const { workspaces, loading } = useSelector((state) => state.workspaces)
-    const workspace = useSelector((state) => state.workspace)
 
     let navigate = useNavigate();
     const dispatch = useDispatch()
@@ -35,7 +34,7 @@ const ExistingWorkspace = () => {
         if(!value){
             return notify("Please select workspace!")
         }
-        navigate('/')
+        navigate('/workspace')
     };
 
     const options = workspaces.map((item) => ({ value: item, title: item }))

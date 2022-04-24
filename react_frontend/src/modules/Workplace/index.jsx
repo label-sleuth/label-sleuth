@@ -268,7 +268,7 @@ function LabelFormControl() {
 }
 
 
-function Workspace() {
+export default function Workspace() {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
   const init_focused_states = {
@@ -608,10 +608,3 @@ function Workspace() {
   );
 }
 
-export default {
-  routeProps: {
-    path: "/",
-    element: <Workspace />
-  },
-  name: 'workspace'
-};

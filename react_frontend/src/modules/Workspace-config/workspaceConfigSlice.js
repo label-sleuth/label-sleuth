@@ -13,7 +13,6 @@ const initialState = {
 const getWorkspaces_url = `${BASE_URL}/${GET_WORKSPACES_API}`
 const getDatasets_url = `${BASE_URL}/${GET_DATASETS_API}`
 const createWorkset_url = `${BASE_URL}/${CREATE_WORKSPACE_API}`
-const add_documents_url = `${BASE_URL}/${ADD_DOCUMENTS_API}`
 
 export const getWorkspaces = createAsyncThunk('workspaces/getWorkspaces', async () => {
   const { data } = await client.get(getWorkspaces_url)
@@ -24,7 +23,9 @@ export const createWorkspace = createAsyncThunk('workspaces/createWorkspace', as
   const { data } = await client.post(createWorkset_url, params)
   return data
 })
-export const addDocuments = createAsyncThunk('workspaces/addDocuments', async (params) => {
+export const addDocuments = createAsyncThunk(`workspaces/getDatasets/dataset_name/addDocuments`, async (params) => {
+  const {dataset_name} = params
+  const add_documents_url = `${BASE_URL}/${getDatasets_url}/wiki_animals/${ADD_DOCUMENTS_API}`
   const { data } = await client.post(add_documents_url, params)
   return data
 })
