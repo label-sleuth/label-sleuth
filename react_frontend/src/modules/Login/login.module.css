@@ -1,0 +1,19 @@
+
+.container{
+    height: 99vh;
+    position: absolute;
+    display: flex;
+    flex-wrap: wrap;
+    left: 0;
+    right: 0;
+    border:1px solid rgb(246, 250, 252);
+    border-radius: 10px;
+    background-color: rgb(246, 250, 252);
+    background-color: white;
+    overflow: auto;
+    justify-content: center;
+    align-items: center;
+    
+}
+ 
+

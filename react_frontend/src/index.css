@@ -5,6 +5,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* background-image: url("./assets/workspace-config/background.jpg");
+  background-repeat: no-repeat; */
 }
 
 code {

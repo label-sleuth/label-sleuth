@@ -321,7 +321,7 @@ function CategoryFormControl(props) {
 }
 
 
-function Workspace() {
+export default function Workspace() {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
 
@@ -674,10 +674,3 @@ function Workspace() {
   );
 }
 
-export default {
-  routeProps: {
-    path: "/",
-    element: <Workspace />
-  },
-  name: 'workspace'
-};
