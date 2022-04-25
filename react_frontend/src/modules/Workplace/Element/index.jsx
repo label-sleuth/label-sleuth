@@ -4,7 +4,7 @@ import Stack from '@mui/material/Stack';
 import { IconButton } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
 import { useDispatch, useSelector } from 'react-redux';
-import { setElementLabel } from '../DataSlice'
+import { setElementLabel, getElementToLabel, setFocusedState, setLabelState } from '../DataSlice'
 import CloseIcon from '@mui/icons-material/Close';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import { styled, useTheme } from '@mui/material/styles';
@@ -12,18 +12,20 @@ import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import { makeStyles } from '@mui/styles';
 
 const Line = styled(Box)((props) => ({
-    ...(props.focused && {
-        borderRadius: 16,
+    ...(props.focused == true ? {
         border: "thin solid",
         borderColor: "#f48c06"
+    } : {
+        border: "thin solid",
+        borderColor: "white"
     }),
     outline: "None",
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    display: 'flex',
     justifyContent: 'center',
-    paddingLeft: 5,
+    padding: "10px 25px",
     cursor: "pointer",
-    paddingTop: 3,
-    marginBottom: 25
 }))
 
 const useStyles = makeStyles((theme) => ({
@@ -34,13 +36,13 @@ const useStyles = makeStyles((theme) => ({
         color: "red"
     },
     questionicon: {
-        color: "grey"
+        color: "#fb8500"
     }
 }));
 
 export default function Sentence(props) {
 
-    const { keyEventHandler, focusedState, id, numLabel, numLabelHandler, clickEventHandler, text, label, labeledState, LabelStateHandler, element_id } = props
+    const { keyEventHandler, focusedState, id, numLabel, numLabelHandler, clickEventHandler, text, element_id } = props
 
     const dispatch = useDispatch()
 
@@ -50,12 +52,17 @@ export default function Sentence(props) {
 
     return (
         <Box sx={{ flexDirection: 'row' }}>
-            <ArrowRightIcon />
-            <Line tabIndex="-1" onKeyDown={keyEventHandler} focused={focusedState['L' + id]} id={"L" + id} onClick={(e) => clickEventHandler(e, id)}>
+            <Line tabIndex="-1" onKeyDown={keyEventHandler} focused={workspace.focusedState['L' + id]} id={"L" + id} onClick={(e) => clickEventHandler(e, id)}>
+
+                <Typography paragraph style={(workspace.labelState['L' + id] == 'pos') ? { color: "blue" } : (workspace.labelState['L' + id] == 'neg') ? { color: "red" } : (workspace.labelState['L' + id] == 'ques') ? { color: "#fb8500" } : {}}>
+                    {text}
+                </Typography>
+
                 {focusedState['L' + id] == true &&
                     <Stack direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
                         <IconButton onClick={() => {
-                            var newState = labeledState
+                            var newState = { ...workspace.labelState }
+
                             if (newState['L' + id] != "pos") {
                                 if (newState['L' + id] == "neg") {
                                     numLabelHandler({ "pos": numLabel['pos'] + 1, "neg": numLabel['neg'] - 1 })
@@ -63,14 +70,20 @@ export default function Sentence(props) {
                                     numLabelHandler({ ...numLabel, "pos": numLabel['pos'] + 1 })
                                 }
                             }
+                            console.log(`newState: `, newState)
                             newState['L' + id] = "pos"
-                            LabelStateHandler(newState)
-                            dispatch(setElementLabel({ element_id: element_id, label: true }))
+                            dispatch(setLabelState(newState))
+
+                            dispatch(setElementLabel({ element_id: element_id, label: "true" })).then(() => {
+                                if (workspace.num_cur_batch == 10) {
+                                    dispatch(getElementToLabel())
+                                }
+                            })
                         }}>
                             <CheckIcon className={classes.checkicon} />
                         </IconButton>
                         <IconButton onClick={() => {
-                            var newState = labeledState
+                            var newState = { ...workspace.labelState }
                             if (newState['L' + id] != "neg") {
                                 if (newState['L' + id] == "pos") {
                                     numLabelHandler({ "pos": numLabel['pos'] - 1, "neg": numLabel['neg'] + 1 })
@@ -79,22 +92,26 @@ export default function Sentence(props) {
                                 }
                             }
                             newState['L' + id] = "neg"
-                            LabelStateHandler(newState)
+                            dispatch(setLabelState(newState))
+
+                            dispatch(setElementLabel({ element_id: element_id, label: "false" })).then(() => {
+                                if (workspace.num_cur_batch == 10) {
+                                    dispatch(getElementToLabel())
+                                }
+                            })
                         }}>
                             <CloseIcon className={classes.crossicon} />
                         </IconButton>
                         <IconButton onClick={() => {
-                            var newState = labeledState
+                            var newState = workspace.labelState
                             newState['L' + id] = "ques"
-                            LabelStateHandler(newState)
+                            dispatch(setLabelState(newState))
                         }}>
                             <QuestionMarkIcon className={classes.questionicon} />
                         </IconButton>
                     </Stack>
                 }
-                <Typography paragraph style={(labeledState['L' + id] == 'pos') ? { color: "blue" } : (labeledState['L' + id] == 'neg') ? { color: "red" } : (labeledState['L' + id] == 'ques') ? { color: "grey" } : {}}>
-                    {text}
-                </Typography>
+
             </Line>
         </Box>
 

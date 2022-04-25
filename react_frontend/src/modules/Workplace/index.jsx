@@ -16,7 +16,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Paper from '@mui/material/Paper';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchElements, fetchCategories, updateCurCategory } from './DataSlice.jsx';
+import { fetchElements, fetchCategories, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState } from './DataSlice.jsx';
 import InputBase from '@mui/material/InputBase';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -52,6 +52,8 @@ import MailIcon from '@mui/icons-material/Mail';
 import { FamilyRestroomRounded } from '@mui/icons-material';
 
 const drawerWidth = 260;
+
+const rightDrawerWidth = 400;
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -170,6 +172,45 @@ const StackBarContainer = styled('div')(({ theme }) => ({
   padding: theme.spacing(0, 2),
   // necessary for content to be below app bar
   ...theme.mixins.toolbar,
+}));
+
+const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
+  ({ theme, open }) => ({
+    flexGrow: 1,
+    padding: theme.spacing(3),
+    transition: theme.transitions.create('margin', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+    marginRight: 0,
+    ...(open && {
+      transition: theme.transitions.create('margin', {
+        easing: theme.transitions.easing.easeOut,
+        duration: theme.transitions.duration.enteringScreen,
+      }),
+      marginRight: rightDrawerWidth,
+    }),
+  }),
+);
+
+const AppBar = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme, open }) => ({
+  transition: theme.transitions.create(['margin', 'width'], {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  ...(open && {
+    width: `calc(100% - ${rightDrawerWidth}px)`,
+    transition: theme.transitions.create(['margin', 'width'], {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+    marginRight: rightDrawerWidth,
+  }),
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
 }));
 
 
@@ -293,11 +334,10 @@ function Workspace() {
     L5: false
   }
 
-  const [focusedIndex, setFocusedIndex] = React.useState(0);
+  // const [focusedIndex, setFocusedIndex] = React.useState(0);
   const [searchInput, setSearchInput] = React.useState("");
   const [searchResult, setSearchResult] = React.useState([]);
-  const [focusedState, setFocusedState] = React.useState({ ...init_focused_states, L0: true });
-  const [labeledState, setLabeledState] = React.useState({});
+  // const [focusedState, setFocusedState] = React.useState({ ...init_focused_states, L0: true });
   const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
 
 
@@ -306,37 +346,30 @@ function Workspace() {
   };
 
   const handleDrawerClose = () => {
+    console.log(`Close`)
     setOpen(false);
   };
+
+  const SwitchDrawer = () => {
+    setOpen(!open)
+  }
 
   const handleKeyEvent = (event, len_elements) => {
 
     console.log("key pressed")
 
     if (event.key === "ArrowDown") {
-      if (focusedIndex < len_elements) {
-        var id = "L" + (focusedIndex + 1);
-        var old_id = "L" + (focusedIndex);
-        var new_state = init_focused_states
-        new_state[old_id] = false
-        new_state[id] = true
-        console.log(`arrow down focused index: ${focusedIndex}`)
-        setFocusedState(new_state)
-        setFocusedIndex(focusedIndex + 1)
-        console.log(`arrow down focused index updated: ${focusedIndex}`)
+      if (workspace.focusedIndex < len_elements) {
+
+        dispatch(setFocusedState(workspace.focusedIndex + 1))
+
       }
     } else if (event.key === "ArrowUp") {
 
-      if (focusedIndex > 0) {
-        var id = "L" + (focusedIndex - 1);
-        var old_id = "L" + (focusedIndex);
-        var new_state = init_focused_states
-        new_state[old_id] = false
-        new_state[id] = true
-        console.log(`arrow up focused index: ${focusedIndex}`)
-        setFocusedIndex(focusedIndex - 1)
-        setFocusedState(new_state)
-        console.log(`arrow up focused index updated: ${focusedIndex}`)
+      if (workspace.focusedIndex > 0) {
+
+        dispatch(setFocusedState(workspace.focusedIndex - 1))
+
       }
     }
   }
@@ -347,26 +380,18 @@ function Workspace() {
 
   const handleClick = (event, id) => {
 
-    console.log(focusedState)
-
     if (event.detail == 1) {
-      setFocusedIndex(id)
-      // document.getElementById("L"+id).focus();
-      const LineId = "L" + id
-      var new_state = init_focused_states
-      new_state[LineId] = true
-      setFocusedState(new_state)
+
+      dispatch(setFocusedState(id))
+
     }
   }
 
   const handleSearchPanelClick = (id) => {
     console.log(`Search panel clicked, id: ${id}`)
-    setFocusedIndex(id)
-    // document.getElementById("L"+id).focus();
-    const LineId = "L" + id
-    var new_state = init_focused_states
-    new_state[LineId] = true
-    setFocusedState(new_state)
+
+    dispatch(setFocusedState(id))
+
   }
 
   const classes = useStyles();
@@ -375,18 +400,19 @@ function Workspace() {
   const dispatch = useDispatch();
 
   React.useEffect(() => {
-    dispatch(fetchElements()).then(() => dispatch(fetchCategories()))
+    dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories())))
   }, [])
 
   const handleSearch = () => {
-    // const elements = workspace.elements
-    const elements = [
-      {id: 0, text: "This assignment satisfies learning objective 3 (LO3) as specified in the syllabus. You will apply the interaction theories, design principles, design methods"},
-      {id: 1, text: "Please read chapters 1, 3, and 4 of the Klimczak book before attempting to work on this aspect of your project"},
-      {id: 2, text: "Also useful are the readings/notes on Needfinding, Personas, Scenario-Based Design, and the MethodsCards"},
-      {id: 3, text: "Synthesize what you have learned in Week 1 into at least one persona for your key stakeholder(s)"},
-      {id: 4, text: "Note that “log-in functionality” is a trivial task for a mobile app or website, whereas “pointing” or “following along” during co-reading is a non-trivial task."}
-    ]
+    const elements = workspace.elements
+
+    // const elements = [
+    //   {id: 0, text: "This assignment satisfies learning objective 3 (LO3) as specified in the syllabus. You will apply the interaction theories, design principles, design methods"},
+    //   {id: 1, text: "Please read chapters 1, 3, and 4 of the Klimczak book before attempting to work on this aspect of your project"},
+    //   {id: 2, text: "Also useful are the readings/notes on Needfinding, Personas, Scenario-Based Design, and the MethodsCards"},
+    //   {id: 3, text: "Synthesize what you have learned in Week 1 into at least one persona for your key stakeholder(s)"},
+    //   {id: 4, text: "Note that “log-in functionality” is a trivial task for a mobile app or website, whereas “pointing” or “following along” during co-reading is a non-trivial task."}
+    // ]
     console.log(`searching`)
     setSearchResult([])
     var results = []
@@ -530,7 +556,7 @@ function Workspace() {
       </Box>
 
       <Box component="main" sx={{ flexGrow: 1, p: 3, width: `calc(100% - ${drawerWidth}px)` }}>
-        <WorkspaceHeader>
+        <AppBar open={open}>
           <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
             <Typography><strong>Label:</strong></Typography>
             <CategoryFormControl />
@@ -545,48 +571,53 @@ function Workspace() {
                 <ArrowDropDownIcon />
               </Button>
             </ButtonGroup>
-            <IconButton onClick={handleDrawerOpen}>
-              <SearchIcon />
-            </IconButton>
+            {
+              !open &&
+              <IconButton onClick={handleDrawerOpen}>
+                <SearchIcon />
+              </IconButton>
+            }
           </ToolBar>
-        </WorkspaceHeader>
-        <TitleBar>
-          <IconButton>
-            <ChevronLeftIcon />
-          </IconButton>
-          <Typography sx={{ fontSize: 20 }}>
-            <strong>
-              storybook_sentence_val_split-assipattle_and_the_mester_stoorworm
-            </strong>
-          </Typography>
-          <IconButton>
-            <ChevronRightIcon />
-          </IconButton>
-        </TitleBar>
-        <Box>
-          {
-            workspace.ready ? workspace['elements'].map((element, index) => {
-              const len_elements = workspace['elements'].length
-              return (<Element keyEventHandler={(e) => handleKeyEvent(e, len_elements)} focusedState={focusedState} id={index} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id={element['id']} text={element['text']} labeledState={labeledState} LabelStateHandler={setLabeledState} />)
-            }) :
-              <CircularProgress color="secondary" />
-          }
-        </Box>
-        {/* Temporary */}
-        <Box>
-          <Element keyEventHandler={(e) => handleKeyEvent(e, 5)} focusedState={focusedState} id={0} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id="id1" text="This assignment satisfies learning objective 3 (LO3) as specified in the syllabus. You will apply the interaction theories, design principles, design methods" labeledState={labeledState} LabelStateHandler={setLabeledState} />
-          <Element keyEventHandler={(e) => handleKeyEvent(e, 5)} focusedState={focusedState} id={1} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id="id2" text="Please read chapters 1, 3, and 4 of the Klimczak book before attempting to work on this aspect of your project." labeledState={labeledState} LabelStateHandler={setLabeledState} />
-          <Element keyEventHandler={(e) => handleKeyEvent(e, 5)} focusedState={focusedState} id={2} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id="id3" text="Also useful are the readings/notes on Needfinding, Personas, Scenario-Based Design, and the MethodsCards." labeledState={labeledState} LabelStateHandler={setLabeledState} />
-          <Element keyEventHandler={(e) => handleKeyEvent(e, 5)} focusedState={focusedState} id={3} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id="id4" text="Synthesize what you have learned in Week 1 into at least one persona for your key stakeholder(s)." labeledState={labeledState} LabelStateHandler={setLabeledState} />
-          <Element keyEventHandler={(e) => handleKeyEvent(e, 5)} focusedState={focusedState} id={4} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id="id5" text="Note that “log-in functionality” is a trivial task for a mobile app or website, whereas “pointing” or “following along” during co-reading is a non-trivial task." labeledState={labeledState} LabelStateHandler={setLabeledState} />
-        </Box>
+        </AppBar>
+        <Main open={open}>
+          <TitleBar>
+            <IconButton onClick={() => {
+              if (workspace.curDocId > 0) {
+                dispatch(fetchPrevDocElements())
+              }
+            }}>
+              <ChevronLeftIcon />
+            </IconButton>
+            <Typography sx={{ fontSize: 20 }}>
+              <strong>
+                storybook_sentence_val_split-black_arts
+              </strong>
+            </Typography>
+            <IconButton onClick={() => {
+              if (workspace.curDocId < workspace.documents.length - 1) {
+                console.log(`click next`)
+                dispatch(fetchNextDocElements())
+              }
+            }}>
+              <ChevronRightIcon />
+            </IconButton>
+          </TitleBar>
+          <Box>
+            {
+              workspace.curCategory != null && workspace['elements'].map((element, index) => {
+                const len_elements = workspace['elements'].length
+                return (<Element keyEventHandler={(e) => handleKeyEvent(e, len_elements)} focusedState={workspace.focusedState} id={index} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id={element['id']} text={element['text']} />)
+              })
+            }
+          </Box>
+        </Main>
 
         <Drawer
           sx={{
-            width: 400,
+            width: rightDrawerWidth,
             flexShrink: 0,
             '& .MuiDrawer-paper': {
-              width: 400,
+              width: rightDrawerWidth,
               boxSizing: 'border-box',
             }
           }}
@@ -596,7 +627,7 @@ function Workspace() {
               backgroundColor: "#f8f9fa",
             }
           }}
-
+          variant="persistent"
           anchor="right"
           open={open}
           // variant="permanent"
@@ -606,19 +637,25 @@ function Workspace() {
             component="form"
             sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto", marginTop: 5 }}
           > */}
-          <SearchBar
-            style={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto", marginTop: 30 }}
-            value={searchInput}
-            onRequestSearch={() => handleSearch()}
-            onChange={(newValue) => setSearchInput(newValue)}
-            onCancelSearch={() => setSearchInput("")}
-          />
+          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItem: 'center', marginTop: 3 }} >
+            <IconButton onClick={handleDrawerClose}>
+              <ChevronLeftIcon />
+            </IconButton>
+            <SearchBar
+              style={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto" }}
+              value={searchInput}
+              onRequestSearch={() => handleSearch()}
+              onChange={(newValue) => setSearchInput(newValue)}
+              onCancelSearch={() => setSearchInput("")}
+            />
+          </Box>
+
           {/* </Paper> */}
 
           {
             searchResult.map((r) => {
               return (
-                <SearchPanel onClick={() => handleSearchPanelClick(r.id)} style={{cursor: "pointer"}}> 
+                <SearchPanel onClick={() => handleSearchPanelClick(r.index_in_doc)} style={{ cursor: "pointer" }}>
                   <Highlighter
                     // highlightClassName="YourHighlightClass"
                     searchWords={[searchInput]}
@@ -629,22 +666,6 @@ function Workspace() {
               )
             })
           }
-
-          {/* <SearchPanel>
-            <Typography>
-              Cras tincidunt lobortis feugiat vivamus at augue. At augue eget arcu dictum varius duis at
-              consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-              sapien faucibus et molestie ac.
-            </Typography>
-          </SearchPanel>
-
-          <SearchPanel>
-            <Typography>
-              Cras tincidunt lobortis feugiat vivamus at augue. At augue eget arcu dictum varius duis at
-              consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-              sapien faucibus et molestie ac.
-            </Typography>
-          </SearchPanel> */}
         </Drawer>
       </Box>
 
