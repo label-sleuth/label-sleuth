@@ -1,6 +1,6 @@
 import { CoPresentOutlined } from '@mui/icons-material'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { BASE_URL,  WORKSPACE_API  } from "../../config"
+import { BASE_URL,  WORKSPACE_API  } from "../../config_cloud"
 
 const initialState = {
     workspace: "CC1",
@@ -19,7 +19,7 @@ const initialState = {
     searchResult: []
 }
 
-const token = localStorage.getItem('token')
+const token = "Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q"
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
 export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async (request, { getState }) => {
