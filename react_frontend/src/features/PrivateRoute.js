@@ -3,5 +3,5 @@ import {useAuth}  from '../customHooks/useAuth'
 
 export function PrivateRoute({ children }) {
     const auth = useAuth();
-    return auth ? children : <Navigate to="/login" />;
+    return auth ? children : <Navigate to="/" />;
   }

@@ -1,59 +1,54 @@
-
 import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux'
-import { useNavigate } from "react-router-dom";
-import { getWorkspaces } from './workspaceConfigSlice'
+import { getDatasetsAPI } from './workspaceConfigSlice'
 import classes from "./workspace-config.module.css"
-import ExistingWorkspace from "./ExistingWorkspace"
-import NewWorkspace from "./NewWorkspace"
-import LoadDocument from "./LoadDocument"
+import ExistingWorkspace from "./ExistingWorkspaceForm"
+import NewWorkspace from "./NewWorkspaceForm"
+import LoadDocument from "./LoadDocumentForm"
 import workspaceConfigIcon from "../../assets/workspace-config/existing_workspace.png"
 import uploadDocIcon from "../../assets/workspace-config/upload.png"
 import ButtonAppBar from "../../components/bars/upperBar/ButtonAppBar"
 import new_workspace_icon from "../../assets/workspace-config/create_new_workspace.png"
-import { clearState } from '../Login/LoginSlice';
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useDispatch } from 'react-redux'
+import useLoadDoc from './useLoadDoc';
+import useNewWorkspace from './useNewWorkspace';
+import useLogOut from '../../customHooks/useLogOut';
+import useExistWorkspace from './useExistWorkspace';
 
 const WorkspaceConfig = () => {
   const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const loadDocProps = useLoadDoc()
+  const { options } = loadDocProps
+  const newWorkProps = useNewWorkspace()
+  const existingWorkProps = useExistWorkspace()
+  const { logout } = useLogOut()
 
   useEffect(() => {
-    dispatch(getWorkspaces())
+    dispatch(getDatasetsAPI())
   }, [dispatch])
-
-  const logout = (e) => {
-    e.preventDefault()
-    dispatch(clearState())
-    if(localStorage.getItem('token')){
-      localStorage.removeItem('token')
-    }
-    navigate('/login')
-  }
 
   return (
     <>
       <ButtonAppBar logout={logout} />
-      <ToastContainer position="top-center"/>
+      <ToastContainer position="top-center" />
       <div className={classes.container}>
         <div className={classes.hexagon}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
             <img alt="existing workspace" src={workspaceConfigIcon} style={{ width: '25%' }} />
           </div>
-          <ExistingWorkspace />
+          <ExistingWorkspace {...existingWorkProps} />
         </div>
         <div className={classes.hexagon}>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <img alt="new workspace" src={new_workspace_icon} style={{ width: '20%' }} />
           </div>
-          <NewWorkspace />
+          <NewWorkspace  {...newWorkProps} options={options} />
         </div>
         <div className={classes.hexagon}>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-20px' }}>
             <img alt="load document" src={uploadDocIcon} style={{ width: '35%' }} />
           </div>
-          <LoadDocument />
+          <LoadDocument {...loadDocProps} />
         </div>
       </div>
     </>
@@ -61,11 +56,4 @@ const WorkspaceConfig = () => {
   )
 };
 
-// const workspaces = {
-//   routeProps: {
-//     path: "/workspaces",
-//     element: <Workspaces />
-//   },
-//   name: 'workspaces'
-// }
 export default WorkspaceConfig;
