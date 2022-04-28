@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { BASE_URL,  WORKSPACE_API  } from "../../config"
 
 const initialState = {
     workspace: "CC1",
@@ -16,16 +17,19 @@ const initialState = {
     labelState: []
 }
 
+const token = localStorage.getItem('token')
+const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
+
 export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async (request, { getState }) => {
 
     const state = getState()
 
-    var url = new URL(`https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud/workspace/${state.workspace.workspace}/documents`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/documents`)
 
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q'
+            'Authorization': `Bearer ${token}`
         },
         method: "GET"
     }).then( response => response.json())
@@ -37,12 +41,12 @@ export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel',
 
     const state = getState()
 
-    var url = new URL(`https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud/workspace/${state.workspace.workspace}/active_learning?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/active_learning?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q'
+            'Authorization': `Bearer ${token}`
         },
         method: "GET"
     }).then( response => response.json())
@@ -56,12 +60,12 @@ export const fetchNextDocElements = createAsyncThunk('workspace/fetchNextDoc', a
 
     const curDocument = state.workspace.documents[state.workspace.curDocId+1]['document_id']
 
-    var url = new URL(`https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud/workspace/${state.workspace.workspace}/document/${curDocument}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}`)
 
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q'
+            'Authorization': `Bearer ${token}`
         },
         method: "GET"
     }).then( response => response.json())
@@ -75,12 +79,12 @@ export const fetchPrevDocElements = createAsyncThunk('workspace/fetchPrevDoc', a
 
     const curDocument = state.workspace.documents[state.workspace.curDocId-1]['document_id']
 
-    var url = new URL(`https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud/workspace/${state.workspace.workspace}/document/${curDocument}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}`)
 
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q'
+            'Authorization': `Bearer ${token}`
         },
         method: "GET"
     }).then( response => response.json())
@@ -94,12 +98,12 @@ export const fetchElements = createAsyncThunk('workspace/fetchElements', async (
 
     const curDocument = state.workspace.documents[state.workspace.curDocId]['document_id']
 
-    var url = new URL(`https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud/workspace/${state.workspace.workspace}/document/${curDocument}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}`)
 
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q'
+            'Authorization': `Bearer ${token}`
         },
         method: "GET"
     }).then( response => response.json())
@@ -111,12 +115,12 @@ export const fetchCategories = createAsyncThunk('workspace/get_all_categories', 
 
     const state = getState()
 
-    var url = new URL(`https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud/workspace/${state.workspace.workspace}/categories`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/categories`)
 
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q'
+            'Authorization': `Bearer ${token}`
         },
         method: "GET"
     }).then( response => response.json())
@@ -132,12 +136,12 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
 
     console.log(`element id: ${element_id}, label: ${label}, curCategory: ${state.workspace.curCategory}`)
 
-    var url = new URL(`https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud/workspace/${state.workspace.workspace}/element/${element_id}?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/element/${element_id}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q'
+            'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
             'category_name': state.workspace.curCategory,

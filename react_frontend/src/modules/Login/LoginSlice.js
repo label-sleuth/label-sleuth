@@ -13,6 +13,7 @@ const auth_url = `${BASE_URL}/${ADUTHENTICATE_API}`
 
 export const getAuthenticated = createAsyncThunk('workspaces/getAuthenticated', async (params) => {
     const { data } = await client.post(auth_url, params)
+    console.log(data)
     if(data.token){
         localStorage.setItem("token", data.token)
     }
