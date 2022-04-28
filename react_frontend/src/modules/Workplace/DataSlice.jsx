@@ -1,3 +1,4 @@
+import { CoPresentOutlined } from '@mui/icons-material'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { BASE_URL,  WORKSPACE_API  } from "../../config"
 
@@ -14,7 +15,8 @@ const initialState = {
     elementsToLabel: [],
     focusedIndex: 0,
     focusedState: [],
-    labelState: []
+    labelState: [],
+    searchResult: []
 }
 
 const token = localStorage.getItem('token')
@@ -47,6 +49,25 @@ export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
+        },
+        method: "GET"
+    }).then( response => response.json())
+
+    return data
+})
+
+export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async (request, { getState }) => {
+    const state = getState()
+
+    const { keyword } = request
+    console.log(`searchKeywords called, key: `, keyword)
+    
+    var url = new URL(`https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud//workspace/${state.workspace.workspace}/query?qry_string=${keyword}&category_name=${state.workspace.curCategory}&sample_start_idx=0`)
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q'
         },
         method: "GET"
     }).then( response => response.json())
@@ -231,12 +252,19 @@ const DataSlice = createSlice({
         },
         [fetchDocuments.fulfilled]: (state, action) => {
             const data = action.payload
-            console.log(`curDocument: ${data['documents'][0]['document_id']}`)
             return {
                 ...state,
                 documents: data['documents'],
                 curDocName: data['documents'][0]['document_id'],
                 curDocId: 0
+            }
+        },
+        [searchKeywords.fulfilled]: (state, action) => {
+            const data = action.payload
+
+            return {
+                ...state,
+                searchResult: data.elements
             }
         },
         [fetchNextDocElements.fulfilled]: (state, action) => {

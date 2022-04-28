@@ -13,6 +13,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route
           path="/workspaces"
+          exact
           element={
             <PrivateRoute>
               <WorkspaceConfig />
@@ -21,10 +22,9 @@ function App() {
         />
         <Route
           path="/workspace"
+          exact
           element={
-            <PrivateRoute>
               <Workspace />
-            </PrivateRoute>
           }
         />
       </Routes>
