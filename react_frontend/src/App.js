@@ -10,9 +10,10 @@ function App() {
   return (
     <div>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" exact element={<Login />} />
         <Route
           path="/workspaces"
+          exact
           element={
             <PrivateRoute>
               <WorkspaceConfig />
@@ -21,10 +22,9 @@ function App() {
         />
         <Route
           path="/workspace"
+          exact
           element={
-            <PrivateRoute>
               <Workspace />
-            </PrivateRoute>
           }
         />
       </Routes>
