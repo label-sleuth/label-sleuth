@@ -10,13 +10,15 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import './styles.css'
 import Divider from '@mui/material/Divider';
+import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import Highlighter from "react-highlight-words";
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Paper from '@mui/material/Paper';
+import SearchPanel from './SearchPanel'
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchElements, fetchCategories, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState, searchKeywords } from './DataSlice.jsx';
+import { fetchElements, getElementToLabel, prevPrediction, nextPrediction, fetchCategories, getPositiveElementForCategory, checkModelUpdate, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState, searchKeywords, fetchCertainDocument } from './DataSlice.jsx';
 import InputBase from '@mui/material/InputBase';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -139,15 +141,6 @@ const ModelName = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
   margin: theme.spacing(2, 0),
   padding: theme.spacing(0, 2),
-  // necessary for content to be below app bar
-  // ...theme.mixins.toolbar,
-}));
-
-const SearchPanel = styled(Paper)(({ theme }) => ({
-  padding: 10,
-  marginTop: 25,
-  marginLeft: 50,
-  marginRight: 50
   // necessary for content to be below app bar
   // ...theme.mixins.toolbar,
 }));
@@ -307,8 +300,12 @@ function CategoryFormControl(props) {
         id="label-select"
         sx={{ height: 30 }}
         value={workspace.curCategory}
-        onChange={(e) => dispatch(updateCurCategory(e.target.value))}
-      >
+        onChange={(e) => {
+          dispatch(updateCurCategory(e.target.value))
+          dispatch(getPositiveElementForCategory()).then(() => {
+            dispatch(getElementToLabel())
+          })
+        }}>
         {
           workspace.categories.map((e) => {
             return (<MenuItem value={e.id}>{e.category_name}</MenuItem>)
@@ -337,6 +334,7 @@ export default function Workspace() {
   // const [focusedIndex, setFocusedIndex] = React.useState(0);
   const [searchInput, setSearchInput] = React.useState("");
   const [searchResult, setSearchResult] = React.useState([]);
+  const [drawerContent, setDrawerContent] = React.useState("");
   // const [focusedState, setFocusedState] = React.useState({ ...init_focused_states, L0: true });
   const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
 
@@ -374,6 +372,36 @@ export default function Workspace() {
     }
   }
 
+  const handleNextLabelClick = () => {
+
+    dispatch(nextPrediction())
+
+    const splits = workspace.elementsToLabel[workspace.indexPrediction]['id'].split("-")
+    const docid = workspace.elementsToLabel[workspace.indexPrediction]['docid']
+    const eid = parseInt(splits[splits.length-1])
+    
+    if (docid != workspace.curDocId) {
+      dispatch(fetchCertainDocument({ docid, eid }))
+    } else {
+      dispatch(setFocusedState(eid))
+    }
+  }
+
+  const handlePrevLabelClick = () => {
+
+    dispatch(prevPrediction())
+
+    const splits = workspace.elementsToLabel[workspace.indexPrediction]['id'].split("-")
+    const docid = workspace.elementsToLabel[workspace.indexPrediction]['docid']
+    const eid = parseInt(splits[splits.length-1])
+    
+    if (docid != workspace.curDocId) {
+      dispatch(fetchCertainDocument({ docid, eid }))
+    } else {
+      dispatch(setFocusedState(eid))
+    }
+  }
+
   // React.useEffect(() => {
   //   document.addEventListener('keydown', handleKeyEvent)
   // }, []);
@@ -387,13 +415,6 @@ export default function Workspace() {
     }
   }
 
-  const handleSearchPanelClick = (id) => {
-    console.log(`Search panel clicked, id: ${id}`)
-
-    dispatch(setFocusedState(id))
-
-  }
-
   const classes = useStyles();
   const workspace = useSelector(state => state.workspace)
 
@@ -401,7 +422,27 @@ export default function Workspace() {
 
   React.useEffect(() => {
     dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories())))
-  }, [])
+
+    const interval = setInterval(() => {
+
+      console.log(`curCategory value: ${workspace.curCategory}`)
+      
+      if (workspace.curCategory != null) {
+        const old_model_version = workspace.model_version
+        dispatch(checkModelUpdate()).then(() => {
+          if (old_model_version != workspace.model_version) {
+            console.log(`model version changed to: ${workspace.model_version}`)
+            dispatch(fetchElements())
+          }
+        })
+      } else {
+      }
+
+    }, 5000);
+  
+    return () => clearInterval(interval);
+
+  }, [workspace.curCategory])
 
 
   const handleSearch = () => {
@@ -448,10 +489,10 @@ export default function Workspace() {
                 </Typography>
               </Box>
             </AccountInfo>
-            <WorkspaceSelect>
+            {/* <WorkspaceSelect>
               <Typography>Workspace:</Typography>
               <WorkspaceSelectFormControl />
-            </WorkspaceSelect>
+            </WorkspaceSelect> */}
             <Divider />
             <StackBarContainer>
               {/* <PieChart
@@ -549,19 +590,31 @@ export default function Workspace() {
           </Box>
           <ToolBar>
             <ButtonGroup variant="contained" aria-label="split button" sx={{ mr: 2 }}>
-              <Button >Next to label (2/20)</Button>
-              <Button>
+              <Button >Next to label ({ workspace.curCategory == null ? 0 : workspace.indexPrediction+1}/{workspace.elementsToLabel.length})</Button>
+              <Button onClick={handlePrevLabelClick}>
                 <ArrowDropUpIcon />
               </Button>
-              <Button>
+              <Button onClick={handleNextLabelClick}>
                 <ArrowDropDownIcon />
               </Button>
             </ButtonGroup>
             {
               !open &&
-              <IconButton onClick={handleDrawerOpen}>
-                <SearchIcon />
-              </IconButton>
+              <Box>
+                <IconButton onClick={() => {
+                  setDrawerContent("search")
+                  handleDrawerOpen() 
+                }}>
+                  <SearchIcon />
+                </IconButton>
+                <IconButton onClick={() => {
+                  setDrawerContent("rcmd")
+                  dispatch(getElementToLabel())
+                  handleDrawerOpen() 
+                }}>
+                  <FeaturedPlayListIcon />
+                </IconButton>
+              </Box>
             }
           </ToolBar>
         </AppBar>
@@ -576,7 +629,7 @@ export default function Workspace() {
             </IconButton>
             <Typography sx={{ fontSize: 20 }}>
               <strong>
-                storybook_sentence_val_split-black_arts
+                {workspace.curDocName}
               </strong>
             </Typography>
             <IconButton onClick={() => {
@@ -592,7 +645,7 @@ export default function Workspace() {
             {
               workspace.curCategory != null && workspace['elements'].map((element, index) => {
                 const len_elements = workspace['elements'].length
-                return (<Element keyEventHandler={(e) => handleKeyEvent(e, len_elements)} focusedState={workspace.focusedState} id={index} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id={element['id']} text={element['text']} />)
+                return (<Element keyEventHandler={(e) => handleKeyEvent(e, len_elements)} focusedState={workspace.focusedState} id={index} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id={element['id']} prediction={workspace.predictionForDocCat} text={element['text']} />)
               })
             }
           </Box>
@@ -619,39 +672,49 @@ export default function Workspace() {
           // variant="permanent"
           onClose={handleDrawerClose}
         >
-          {/* <Paper
-            component="form"
-            sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto", marginTop: 5 }}
-          > */}
-          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItem: 'center', marginTop: 3 }} >
-            <IconButton onClick={handleDrawerClose}>
-              <ChevronLeftIcon />
-            </IconButton>
-            <SearchBar
-              style={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto" }}
-              value={searchInput}
-              onRequestSearch={() => handleSearch()}
-              onChange={(newValue) => setSearchInput(newValue)}
-              onCancelSearch={() => setSearchInput("")}
-            />
-          </Box>
-
-          {/* </Paper> */}
-
           {
-            workspace.searchResult.map((r) => {
-              return (
-                <SearchPanel style={{ cursor: "pointer" }}>
-                  <Highlighter
-                    // highlightClassName="YourHighlightClass"
-                    searchWords={[searchInput]}
-                    autoEscape={true}
-                    textToHighlight={r.text}
-                  />
-                </SearchPanel>
-              )
-            })
+            drawerContent == 'search' &&
+            <Box>
+              <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItem: 'center', marginTop: 3 }} >
+                <IconButton onClick={handleDrawerClose}>
+                  <ChevronLeftIcon />
+                </IconButton>
+                <SearchBar
+                  style={{ p: '2px 2px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto" }}
+                  value={searchInput}
+                  onRequestSearch={() => handleSearch()}
+                  onChange={(newValue) => setSearchInput(newValue)}
+                  onCancelSearch={() => setSearchInput("")}
+                />
+              </Box>
+              {
+                workspace.searchResult.map((r) => {
+                  return (
+                    <SearchPanel numLabel={numLabel}  prediction={ r.model_predictions.length > 0 ? r.model_predictions[Object.keys(r.model_predictions)[Object.keys(r.model_predictions).length-1]] : null } element_id={r.id} numLabelHandler={setNumLabel} text={r.text} searchInput={searchInput} docid={r.docid} id={r.id} />
+                  )
+                })
+              }
+           </Box>
           }
+          {
+            drawerContent == 'rcmd' &&
+            <Box>
+              <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItem: 'center', marginTop: 3 }} >
+                <IconButton onClick={handleDrawerClose}>
+                  <ChevronLeftIcon />
+                </IconButton>
+              </Box>
+
+              <Box>
+                {workspace.elementsToLabel.map((r) => {
+                  return (
+                    <SearchPanel numLabel={numLabel} prediction={r.model_predictions[workspace.curCategory]} element_id={r.id} numLabelHandler={setNumLabel} text={r.text} searchInput={searchInput} docid={r.docid} id={r.id} />
+                  )
+                })}
+              </Box>
+           </Box>
+          }
+
         </Drawer>
       </Box>
 
