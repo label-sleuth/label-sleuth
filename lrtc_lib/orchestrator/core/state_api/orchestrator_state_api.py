@@ -206,37 +206,7 @@ def add_iteration(workspace_id: str, category_name: str, model_info: ModelInfo):
     workspace.categories[category_name].active_learning_iterations.append(iteration)
     _save_workspace(workspace)
 
-@withlock
-def get_latest_iteration_by_status(workspace_id: str, category_name: str, iteration_status: IterationStatus):
-    workspace = _load_workspace(workspace_id)
-    iterations = workspace.categories[category_name].active_learning_iterations
-    for iteration in reversed(iterations):
-        if iteration.status == iteration_status:
-            return iteration
-    raise Exception(f"workspace {workspace_id} category {category_name} has no iteration in status {iteration_status}")
 
-#
-# @withlock
-# def get_latest_model_by_state(workspace_id: str, category_name: str, model_status: ModelStatus):
-#     workspace = _load_workspace(workspace_id)
-#     assert workspace.category_to_models, f"No models found in workspace_id {workspace_id}"
-#     models = workspace.category_to_models[category_name]
-#     assert models, f"No models found in workspace_id {workspace_id} for category {category_name}"
-#     for model_name, model_params in reversed(models.items()):
-#         if model_params.model_status == model_status:
-#             return model_params
-#
-#
-# @withlock
-# def get_latest_model_id_by_al_status(workspace_id: str, category_name: str,
-#                                      al_status: IterationStatus):
-#     workspace = _load_workspace(workspace_id)
-#     models = workspace.category_to_model_to_recommendations_status[category_name]
-#     for model_id, model_al_status in reversed(models.items()):
-#         if model_al_status == al_status:
-#             return model_id
-#     return None
-#
 #
 # @withlock
 # def get_model_status(workspace_id: str, category_name: str, model_id):

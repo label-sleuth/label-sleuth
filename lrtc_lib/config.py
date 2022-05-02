@@ -16,9 +16,6 @@ from lrtc_lib.training_set_selector.train_set_selector_api import TrainingSetSel
 
 # FIRST_MODEL_MIN_POSITIVE_THRESHOLD = 5
 # CHANGED_ELEMENTS_THRESHOLD = 5
-# SYNC_MODE_ELEMENTS_TO_LABEL = 200
-# INFO_GAIN_STOP_WORDS = 'english'
-# SHOW_TRANSLATION = False
 # MODEL_POLICY = ModelPolicy(ModelTypesInternal.M_SVM)
 # TRAINING_SET_SELECTION_STRATEGY = TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO
 # ACTIVE_LEARNING_STRATEGY = ActiveLearningStrategies.HARD_MINING
@@ -28,12 +25,9 @@ from lrtc_lib.training_set_selector.train_set_selector_api import TrainingSetSel
 class Configuration:
     first_model_positive_threshold: int
     changed_element_threshold: int
-    sync_mode_elements_to_label: int
-    info_gain_stop_words: str
     model_policy: ModelPolicy
     training_set_selection_strategy: TrainingSetSelectionStrategy
     active_learning_strategy: ActiveLearningStrategies
-    local_finetune: bool
     users: List[dict]
     precision_evaluation_size: int
     apply_labels_to_duplicate_texts: bool

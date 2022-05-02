@@ -24,19 +24,19 @@ class HFTransformers(ModelAPI):
         super().__init__(models_background_jobs_manager, gpu_support=True)
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
+        self.model_dir = model_dir
         self.pretrained_model_name = pretrained_model
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.max_seq_length = 128
         self.tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model_name)
 
-
     def _train(self, model_id, train_data, train_params: dict):
         device = "cuda:0" if GPU_AVAILABLE else "cpu"
         texts = [element["text"] for element in train_data]
         labels = [element["label"] for element in train_data]
         train_dataset = self.process_inputs(texts, labels)
-        training_args = TrainingArguments(output_dir=MODEL_DIR,
+        training_args = TrainingArguments(output_dir=self.model_dir,
                                           overwrite_output_dir=True,
                                           num_train_epochs=5, #TODO add parameter
                                           per_device_train_batch_size=self.batch_size,
@@ -67,7 +67,7 @@ class HFTransformers(ModelAPI):
         return [Prediction(label=score > 0.5, score=score) for score in scores]
 
     def get_models_dir(self):
-        return MODEL_DIR
+        return self.model_dir
 
     def process_inputs(self, texts, labels):
         tokenized = []
