@@ -19,6 +19,9 @@ wcwidth==0.2.5
 waitress==2.0.0
 ruamel.yaml==0.15.87
 torch==1.10.2
+tqdm==4.62.3
+transformers==4.16.2
+
 
 # secondary dependencies
 blis==0.7.5
@@ -39,7 +42,6 @@ joblib==1.1.0
 kiwisolver==1.3.2
 MarkupSafe==2.0.1
 matplotlib==3.5.1
-mip==1.13.0
 murmurhash==1.0.6
 six==1.15.0
 packaging==21.3
@@ -64,8 +66,6 @@ srsly==2.4.2
 thinc==8.0.13
 threadpoolctl==3.0.0
 tokenizers==0.11.4
-tqdm==4.62.3
-transformers==4.16.2
 typer==0.4.1
 typing_extensions==4.0.1
 urllib3==1.26.8
