@@ -9,7 +9,10 @@ from lrtc_lib.models.core.model_api import Prediction
 
 
 class RandomSampling(ActiveLearner):
-
+    """
+    This module assigns random (but reproducible) scores for the given examples. Thus, using this active learning module
+    equates to randomly selecting the next examples for labeling.
+    """
     def get_recommended_items_for_labeling(self, workspace_id, dataset_name, category_name,
                                            candidate_text_elements: Sequence[TextElement],
                                            candidate_text_element_predictions: Sequence[Prediction], sample_size=1):

@@ -8,6 +8,10 @@ from lrtc_lib.active_learning.core.active_learning_api import ActiveLearner
 
 
 class RetrospectiveLearner(ActiveLearner):
+    """
+    This active learning module suggests examples that the model predicts as positive with high confidence. Thus,
+    the scores given to examples by the active learner are identical to the model score for the positive class.
+    """
     def get_recommended_items_for_labeling(self, workspace_id, dataset_name, category_name,
                                            candidate_text_elements: Sequence[TextElement],
                                            candidate_text_element_predictions: Sequence[Prediction], sample_size=1):
@@ -22,7 +26,3 @@ class RetrospectiveLearner(ActiveLearner):
                               candidate_text_element_predictions: Sequence[Prediction], workspace_id: str,
                               dataset_name: str, category_name: str) -> Sequence[float]:
         return [pred.score for pred in candidate_text_element_predictions]
-
-
-
-

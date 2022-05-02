@@ -67,7 +67,7 @@ def filename_to_uri(filename):
     uri = filename
     return uri
 
-def build_text_elements_from_df_and_labels(df, labels_dict):
+def build_text_elements_from_dataframe_and_labels(df, labels_dict):
     # text element fields are extracted from the dataframe, with the exception of the labels, which are stored elsewhere
     element_data_columns = TextElement.get_field_names() - {'category_to_label'}
     element_dicts = df[element_data_columns].to_dict('records')

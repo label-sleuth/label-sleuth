@@ -6,6 +6,11 @@ from lrtc_lib.models.core.model_api import Prediction
 
 
 class HardMiningLearner(ActiveLearner):
+    """
+    This active learning module suggests "hard" examples, i.e. examples that the model is most uncertain about.
+    The highest active learning scores are given to examples which were given model scores closest to the
+    decision threshold of 0.5.
+    """
     def get_recommended_items_for_labeling(self, workspace_id, dataset_name, category_name,
                                            candidate_text_elements: Sequence[TextElement],
                                            candidate_text_element_predictions: Sequence[Prediction], sample_size=1):

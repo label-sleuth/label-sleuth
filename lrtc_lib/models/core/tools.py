@@ -1,7 +1,7 @@
 import logging
 import re
 import string
-
+import threading
 from collections import defaultdict
 from enum import Enum
 
@@ -15,35 +15,31 @@ class RepresentationType(Enum):
 
 BATCH_SIZE = 1000
 spacy_models = defaultdict(lambda: None)
+spacy_model_lock = threading.Lock()
 
 
 def get_glove_representation(sentences, language=Languages.ENGLISH):
     import spacy
     model_name = language.spacy_model_name
-    if spacy_models[model_name] is None:
-        logging.info(f"Loading spacy model {model_name} from disk")
-        spacy_models[model_name] = spacy.load(model_name)
+
+    with spacy_model_lock:
+        if spacy_models[model_name] is None:
+            logging.info(f"Loading spacy model {model_name} from disk")
+            spacy_models[model_name] = spacy.load(model_name)
 
     spacy_model = spacy_models[model_name]
     sentences = remove_stop_words_and_punctuation(sentences, language=language)
-    # num_tokens_before = [len(sent.split()) for sent in sentences]
-    # logging.info('removing out-of-vocabulary tokens')
-    sentences = [' '.join(token for token in sent.split() if spacy_model.vocab.has_vector(token))
-                 for sent in sentences]
-    # proportion_tokens_after = [len(sent.split())/prev_length for sent, prev_length in zip(sentences, num_tokens_before)
-    #                            if prev_length > 0]
-    # logging.info(f"number of tokens went down to {'{:.1%}'.format(sum(proportion_tokens_after)/len(sentences))}")
-
+    # remove out-of-vocabulary tokens
+    sentences = [' '.join(token for token in sent.split() if spacy_model.vocab.has_vector(token)) for sent in sentences]
+    # the vector obtained by *make_doc(X).vector* is an average of the representations for the individual tokens in X
     embeddings = [spacy_model.make_doc(sent).vector for sent in sentences]
-
     logging.info(f"Done getting GloVe representations for {len(embeddings)} sentences")
     return embeddings
 
 
 def remove_stop_words_and_punctuation(sentences, language=Languages.ENGLISH):
     # remove punctuation
-    punctuation = string.punctuation + '•●'
-    sentences = [t.translate(t.maketrans(punctuation, ' ' * len(punctuation))) for t in sentences]
+    sentences = remove_punctuation(sentences)
     # remove stop words
     regex = r"\b(" + "|".join(language.stop_words) + r")\b"
     sentences = [re.sub(regex, r"", text) for text in sentences]
@@ -56,4 +52,3 @@ def remove_punctuation(sentences):
     punctuation = string.punctuation + '•●'
     sentences = [t.translate(t.maketrans(punctuation, ' ' * len(punctuation))) for t in sentences]
     return sentences
-

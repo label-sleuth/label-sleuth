@@ -8,8 +8,8 @@ from typing import List, Tuple
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
-from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, BINARY_LABELS, LabelType
-from lrtc_lib.definitions import MODEL_FACTORY
+from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, LabelType
+from lrtc_lib.factories import MODEL_FACTORY
 from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
@@ -42,7 +42,7 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
     all_pos_scores = []
     for i in range(num_folds):
         fold_train_data = np.concatenate([part for j, part in enumerate(train_splits) if j != i])
-        mid = model.train(fold_train_data, {'Language': language})
+        mid,_ = model.train(fold_train_data, {'Language': language})
         logging.info(f'*** waiting for cross-validation model {mid} ***')
         while model.get_model_status(mid) == ModelStatus.TRAINING:  # TODO find proper fix
             time.sleep(0.1)

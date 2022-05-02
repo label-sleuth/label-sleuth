@@ -5,12 +5,13 @@ from typing import List
 
 import lrtc_lib.data_access.data_access_factory as data_access_factory
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label
+from lrtc_lib.data_access.data_access_api import DataAccessApi
 from lrtc_lib.data_access.file_based.utils import URI_SEP
-import lrtc_lib.data_access.core.data_access_in_memory_logic as logic
+
 from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
 
-data_access: FileBasedDataAccess = data_access_factory.get_data_access()
+data_access: DataAccessApi = data_access_factory.get_data_access()
 
 
 def generate_simple_doc(dataset_name, doc_id=0, add_duplicate=False):
@@ -125,7 +126,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         text_elements_expected.sort(key=lambda t: t.uri)
         self.assertListEqual(text_elements_expected, text_elements_found)
 
-        del logic.ds_in_memory[dataset_name]
+        del data_access.ds_in_memory[dataset_name]
         # test again after clearing from memory
         text_elements_found = data_access.get_all_text_elements(dataset_name)
         text_elements_found.sort(key=lambda t: t.uri)
@@ -174,7 +175,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         texts_and_labels_dict = dict(texts_and_labels_list)
 
         sample_and_check_that_labels_match(selected_doc, texts_and_labels_dict)
-        del logic.ds_in_memory[dataset_name]
+        del data_access.ds_in_memory[dataset_name]
         # check again after clearing from memory
         sample_and_check_that_labels_match(selected_doc, texts_and_labels_dict)
         data_access.delete_dataset(dataset_name)
@@ -365,7 +366,7 @@ class TestDataAccessInMemory(unittest.TestCase):
         self.assertEqual(uri_to_labels[uris[0]], all_elements[0].category_to_label)
         self.assertEqual(uri_to_labels[uris[1]], all_elements[1].category_to_label)
 
-        del logic.ds_in_memory[dataset_name]
+        del data_access.ds_in_memory[dataset_name]
         # test again after clearing from memory
         all_elements = data_access.get_text_elements_by_uris(workspace_id, dataset_name, uris)
         self.assertEqual(len(uris), len(all_elements))

@@ -2,15 +2,16 @@ import os
 import random
 import numpy as np
 
+from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.models.core.model_api import ModelAPI, ModelStatus, Prediction
 
-MODEL_DIR = os.path.join(ROOT_DIR, "output", "models", "random")
-
 
 class RandomModel(ModelAPI):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, models_background_jobs_manager: ModelsBackgroundJobsManager,
+                 model_dir=os.path.join(ROOT_DIR, "output", "models", "random")):
+        super().__init__(models_background_jobs_manager)
+        self.model_dir = model_dir
         self.model_id_to_random_seed = {}
         self.random_seed = -1
 
@@ -31,7 +32,7 @@ class RandomModel(ModelAPI):
         return ModelStatus.ERROR
 
     def get_models_dir(self):
-        return MODEL_DIR
+        return self.model_dir
 
     def delete_model(self, model_id):
         if model_id in self.model_id_to_random_seed:

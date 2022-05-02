@@ -1,0 +1,6 @@
+from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
+from lrtc_lib.models.core.models_factory import ModelFactory
+from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
+
+MODEL_FACTORY = ModelFactory(ModelsBackgroundJobsManager())
+ACTIVE_LEARNING_FACTORY = ActiveLearningFactory()

@@ -7,6 +7,11 @@ from lrtc_lib.active_learning.core.active_learning_api import ActiveLearner
 
 
 class HybridLearner(ActiveLearner):
+    """
+    Using this module, it possible to combine different active learning strategies. Two source AL modules are used to
+    initialize the HybridLearner, and active learning scores for each example are calculated by multiplying the
+    active learning scores given by the two source modules.
+    """
     def __init__(self, active_learner1, active_learner2):
         self.active_learner1 = active_learner1
         self.active_learner2 = active_learner2
@@ -25,11 +30,10 @@ class HybridLearner(ActiveLearner):
                               candidate_text_element_predictions: Sequence[Prediction], workspace_id: str,
                               dataset_name: str, category_name: str) -> Sequence[float]:
         scores1 = self.active_learner1.get_per_element_score(candidate_text_elements,
-                                                             candidate_text_element_predictions, workspace_id,
-                                                             dataset_name, category_name)
+                                                             candidate_text_element_predictions,
+                                                             workspace_id, dataset_name, category_name)
         scores2 = self.active_learner2.get_per_element_score(candidate_text_elements,
-                                                             candidate_text_element_predictions, workspace_id,
-                                                             dataset_name, category_name)
-        score = scores1*scores2
-        return score
-
+                                                             candidate_text_element_predictions,
+                                                             workspace_id, dataset_name, category_name)
+        scores = scores1*scores2
+        return scores

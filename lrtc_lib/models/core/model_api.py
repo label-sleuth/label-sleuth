@@ -1,8 +1,10 @@
 import shutil
 import traceback
+from collections import defaultdict
+from concurrent.futures._base import Future
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict
+from typing import Dict, Tuple
 import abc
 import jsonpickle
 import logging
@@ -12,6 +14,7 @@ import threading
 import uuid
 from typing import Mapping, Sequence
 
+from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.models.core.languages import Languages, Language
 
 import lrtc_lib.definitions as definitions
@@ -45,10 +48,15 @@ class Prediction:
 
 
 class ModelAPI(object, metaclass=abc.ABCMeta):
-    def __init__(self):
-        self.cache = LRUCache(definitions.INFER_CACHE_SIZE)
+    def __init__(self, models_background_jobs_manager: ModelsBackgroundJobsManager, gpu_support=False):
 
-    def train(self, train_data: Sequence[Mapping], train_params: dict) -> str:
+        self.models_background_jobs_manager = models_background_jobs_manager
+        self.gpu_support = gpu_support
+        self.model_locks = defaultdict(lambda: threading.Lock())
+        self.cache = LRUCache(definitions.INFER_CACHE_SIZE)
+        self.cache_lock = threading.Lock()
+
+    def train(self, train_data: Sequence[Mapping], train_params: dict, done_callback = None) -> Tuple[str,Future]:
         """
         start training in a background thread and returns a unique model identifier that will be used for inference.
         :param train_data: a list of dictionaries with at least the "text" and "label" fields, additional fields can be
@@ -58,15 +66,13 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         :rtype: model_id unique id
         """
         model_id = f"{self.__class__.__name__}_{str(uuid.uuid1())}"
-        args = (train_data, train_params)
         self.mark_train_as_started(model_id)
         self.save_metadata(model_id, train_params)
 
-        logging.info(f"starting background thread to train model id {model_id} of type {self.__class__.__name__}")
-        # TODO move to Threadpool to avoid too many trainings at the same time
-        training_process = threading.Thread(target=self.train_and_update_status, args=(model_id, *args))
-        training_process.start()
-        return model_id
+        future = self.models_background_jobs_manager.add_training(model_id, self.train_and_update_status,
+                                                                  train_args=(model_id, train_data, train_params),
+                                                                  use_gpu=self.gpu_support, done_callback=done_callback)
+        return model_id, future
 
     def train_and_update_status(self, model_id, *args):
         try:
@@ -74,16 +80,17 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
             self.mark_train_as_completed(model_id)
         except Exception:
             logging.exception(f'model {model_id} failed with exception')
-            logging.error(traceback.format_exc())
             self.mark_train_as_error(model_id)
+            raise
 
-        return
+        return model_id
 
-    def _disk_store_key_to_in_memory_cache_key(self,model_id, disk_key):
-        return (model_id,disk_key)
+    #TODO function just returns its arguments...
+    def _disk_store_key_to_in_memory_cache_key(self, model_id, disk_key):
+        return (model_id, disk_key)
 
 
-    def _load_model_prediction_store_to_cache(self,model_id):
+    def _load_model_prediction_store_to_cache(self, model_id):
         logging.debug("start loading cache from disk")
         model_predictions_store = load_model_prediction_store_from_disk(self.get_model_prediction_store_file(model_id), self.get_prediction_class())
         logging.debug("done loading cache from disk")
@@ -92,6 +99,9 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                 self.cache.set(self._disk_store_key_to_in_memory_cache_key(model_id, key), model_predictions_store[key])
         return model_predictions_store
 
+    def infer_async(self, model_id, items_to_infer: Sequence[Mapping], done_callback=None):
+        self.models_background_jobs_manager.add_inference(model_id, self.infer, infer_args=(model_id,items_to_infer),
+                                                          use_gpu=self.gpu_support, done_callback=done_callback)
 
     def infer(self, model_id, items_to_infer: Sequence[Mapping], use_cache=True) -> Sequence[Prediction]:
         """
@@ -104,15 +114,18 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         """
         if not use_cache:
             logging.info(
-                f"Running infer without cache for {len(items_to_infer)} values in {self.__class__.__name__}")
+                f"Running infer without cache for {len(items_to_infer)} values in {self.__class__.__name__} "
+                f"model id {model_id}")
             return self._infer(model_id, items_to_infer)
-        if not hasattr(self, "lock"):
-            self.lock = threading.Lock()
-        with self.lock:
+
+        # lock for a specific model_id
+        with self.model_locks[model_id]:
             in_memory_cache_keys = [(model_id, tuple(sorted(item.items()))) for item in items_to_infer]
             model_predictions_store_keys = [tuple(sorted(item.items())) for item in items_to_infer]
             # try to get the predictions from the in-memory cache.
-            infer_res = [self.cache.get(cache_key) for cache_key in in_memory_cache_keys]
+            # lock on a global cache lock so if another thread is writing the cache, current thread will read after
+            with self.cache_lock:
+                infer_res = [self.cache.get(cache_key) for cache_key in in_memory_cache_keys]
             indices_not_in_cache = [i for i, v in enumerate(infer_res) if v is None]
 
             if len(indices_not_in_cache) > 0:  # not in memory cache, loading model prediction store
@@ -140,14 +153,14 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                 text_to_prediction = {frozenset(unique_item.items()): item_predictions for unique_item, item_predictions
                                       in zip(uniques_to_infer, new_predictions)}
 
-                # update cache, model prediction store and infer results with the inferred elements
-                for idx, entry in zip(indices_not_in_cache, missing_items_to_infer):
-                    prediction = text_to_prediction[frozenset(entry.items())]
-                    infer_res[idx] = prediction
-                    self.cache.set(in_memory_cache_keys[idx], prediction)
-                    model_predictions_store[model_predictions_store_keys[idx]] = prediction
+                with self.cache_lock:
+                    # update cache, model prediction store and infer results with the inferred elements
+                    for idx, entry in zip(indices_not_in_cache, missing_items_to_infer):
+                        prediction = text_to_prediction[frozenset(entry.items())]
+                        infer_res[idx] = prediction
+                        self.cache.set(in_memory_cache_keys[idx], prediction)
+                        model_predictions_store[model_predictions_store_keys[idx]] = prediction
                 save_model_prediction_store_to_disk(self.get_model_prediction_store_file(model_id), model_predictions_store)  # update disk cache
-
             return infer_res
 
 

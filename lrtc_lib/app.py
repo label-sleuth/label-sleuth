@@ -1,8 +1,7 @@
 #Immidiate action items:
-# 0.
-# 1. ModelAPI should not use the same lock for all models as we want to be able to get the predictions of previous models while a new model is training
-# 2. improve /async_support/_post_method and stuff... # consider using one threadpool and one process pool for all thread/processes we run?
-#
+# Unit tests using pytest
+# Code cleaning
+# Documentation
 
 ###TODOs
 #
@@ -39,7 +38,6 @@ from lrtc_lib.orchestrator import orchestrator_api
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ActiveLearningIteration, IterationStatus
 
 from lrtc_lib import definitions
-from lrtc_lib.async_support.orchestrator_background_jobs_manager import start_orchestrator_background_job_manager
 
 from lrtc_lib.core.information_gain_utils import information_gain
 from lrtc_lib.config import CONFIGURATION
@@ -52,13 +50,9 @@ print(getpass.getuser())
 executor = ThreadPoolExecutor(20)
 
 
-def init_properties():
-    start_orchestrator_background_job_manager(orchestrator_api._update_recommendation,
-                                              orchestrator_api._post_train_method,
-                                              orchestrator_api._post_active_learning_func)
 
 
-init_properties()
+
 app = Flask(__name__)
 auth = HTTPTokenAuth(scheme='Bearer')
 

@@ -197,7 +197,7 @@ class FileBasedDataAccess(DataAccessApi):
 
         :param dataset_name: the name of the dataset from which the TextElement should be retrieved.
         """
-        return utils.build_text_elements_from_df_and_labels(self._get_ds_in_memory(dataset_name), labels_dict={})
+        return utils.build_text_elements_from_dataframe_and_labels(self._get_ds_in_memory(dataset_name), labels_dict={})
 
     def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize,
                              sample_start_idx: int = 0, query_regex: str = None, remove_duplicates=False,
@@ -340,7 +340,7 @@ class FileBasedDataAccess(DataAccessApi):
         corpus_df = self._get_ds_in_memory(dataset_name)
         uris = list(uris)
         corpus_df = corpus_df.loc[corpus_df['uri'].isin(uris)]
-        text_elements_by_uri = {te.uri: te for te in utils.build_text_elements_from_df_and_labels(corpus_df, labels_dict={})}
+        text_elements_by_uri = {te.uri: te for te in utils.build_text_elements_from_dataframe_and_labels(corpus_df, labels_dict={})}
         text_elements = [text_elements_by_uri.get(uri) for uri in uris]
 
         with self._get_lock_object_for_workspace(workspace_id):
@@ -457,7 +457,7 @@ class FileBasedDataAccess(DataAccessApi):
                                          random_state=random_state
                                          )[sample_start_idx:sample_start_idx + sample_size]
 
-        results_dict['results'] = utils.build_text_elements_from_df_and_labels(corpus_df, labels_dict)
+        results_dict['results'] = utils.build_text_elements_from_dataframe_and_labels(corpus_df, labels_dict)
         return results_dict
 
     def _save_labels_data(self, dataset_name, workspace_id):

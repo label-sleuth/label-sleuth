@@ -7,6 +7,7 @@ import numpy as np
 import sklearn.svm
 from sklearn.feature_extraction.text import CountVectorizer
 
+from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_api import ModelAPI, Prediction
@@ -17,8 +18,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(f
 # TODO remove unsupported types (multi-label etc.)
 class SVM(ModelAPI):
     def __init__(self, representation_type: RepresentationType,
-                 model_dir=os.path.join(ROOT_DIR, "output", "models", "svm"), kernel="linear"):
-        super().__init__()
+                 models_background_jobs_manager: ModelsBackgroundJobsManager,
+                 kernel="linear", model_dir=os.path.join(ROOT_DIR, "output", "models", "svm")):
+        super().__init__(models_background_jobs_manager)
         os.makedirs(model_dir, exist_ok=True)
         self.model_dir = model_dir
 
@@ -105,7 +107,8 @@ if __name__ == '__main__':
                   {"text": "dont know", "label": False},
                   {"text": "what else", "label": False}]
 
-    model_id = model.train(train_data, {})
+
+    model_id,_ = model.train(train_data, {})
     print(model_id)
     import uuid
     import time

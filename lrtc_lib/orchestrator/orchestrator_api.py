@@ -1,7 +1,9 @@
+import functools
 import logging
 import sys
 import time
-from collections import Counter, defaultdict, OrderedDict
+
+from collections import Counter, defaultdict
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime
 from typing import Mapping, List, Sequence, Tuple
@@ -15,7 +17,8 @@ from lrtc_lib.config import CONFIGURATION
 from lrtc_lib.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE
 from lrtc_lib.data_access.label_import_utils import process_labels_dataframe
 from lrtc_lib.data_access.processors.csv_processor import CsvFileProcessor
-from lrtc_lib.definitions import ACTIVE_LEARNING_FACTORY, MODEL_FACTORY
+from lrtc_lib.definitions import ACTIVE_LEARNING_SUGGESTION_COUNT
+from lrtc_lib.factories import ACTIVE_LEARNING_FACTORY, MODEL_FACTORY
 from lrtc_lib.models.core.model_api import ModelStatus, Prediction
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
@@ -25,7 +28,6 @@ from lrtc_lib.training_set_selector.training_set_selector_factory import get_tra
 
 
 # constants
-MAX_VALUE = 1000000
 NUMBER_OF_MODELS_TO_KEEP = 2
 TRAIN_COUNTS_STR_KEY = "train_counts"
 
@@ -65,7 +67,7 @@ def delete_workspace(workspace_id: str):
         workspace = orchestrator_state_api.get_workspace(workspace_id)
         try:
             for category_name in workspace.categories.keys():
-                delete_category_models(workspace_id, category_name)
+                _delete_category_models(workspace_id, category_name)
             orchestrator_state_api.delete_workspace_state(workspace_id)
         except Exception as e:
             logging.exception(f"error deleting workspace {workspace_id}")
@@ -77,15 +79,15 @@ def delete_workspace(workspace_id: str):
             raise e
 
 
-def delete_category_models(workspace_id, category_name):
+def delete_category(workspace_id: str, category_name: str):
+    _delete_category_models(workspace_id, category_name)
+    orchestrator_state_api.delete_category_from_workspace(workspace_id, category_name)
+
+
+def _delete_category_models(workspace_id, category_name):
     workspace = orchestrator_state_api.get_workspace(workspace_id)
     for idx in range(len(workspace.categories[category_name].active_learning_iterations)):
         delete_model(workspace_id, category_name, idx)
-
-
-def delete_category(workspace_id: str, category_name: str):
-    delete_category_models(workspace_id, category_name)
-    orchestrator_state_api.delete_category_from_workspace(workspace_id, category_name)
 
 
 def query(workspace_id: str, dataset_name: str, category_name: str, query_regex: str, sample_size: int = sys.maxsize,
@@ -99,44 +101,274 @@ def query(workspace_id: str, dataset_name: str, category_name: str, query_regex:
     :param query_regex: string
     :param unlabeled_only: if True, filters out labeled elements
     :param sample_size: maximum items to return
-    :param sample_start_idx: get elements starting from this index (for paging)
+    :param sample_start_idx: get elements starting from this index (for pagination)
     :param remove_duplicates: if True, remove duplicate elements
     :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
     value is the total number of TextElements in the dataset matched by the query.
     {'results': [TextElement], 'hit_count': int}
     """
-
     if unlabeled_only:
         return data_access.get_unlabeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                          category_name=category_name, sample_size=sample_size,
-                                                          sample_start_idx=sample_start_idx,
-                                                          remove_duplicates=remove_duplicates)
+                                                       category_name=category_name, sample_size=sample_size,
+                                                       sample_start_idx=sample_start_idx,
+                                                       remove_duplicates=remove_duplicates)
     else:
         return data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                sample_size=sample_size, sample_start_idx=sample_start_idx,
-                                                query_regex=query_regex, remove_duplicates=remove_duplicates)
+                                             sample_size=sample_size, sample_start_idx=sample_start_idx,
+                                             query_regex=query_regex, remove_duplicates=remove_duplicates)
 
 
 def get_documents(workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[Document]:
     """
-    :rtype: list of Document
+    get a list of Documents by their URIs
     :param workspace_id:
     :param dataset_name:
     :param uris:
+    :return: a list of Document objects
     """
     return data_access.get_documents(workspace_id, dataset_name, uris)
 
 
 def get_text_elements_by_uris(workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[TextElement]:
     """
+    get a list of TextElements by their URIs
     :param workspace_id:
     :param dataset_name:
     :param uris:
+    :return: a list of TextElement objects
     """
     return data_access.get_text_elements_by_uris(workspace_id, dataset_name, uris)
 
 
-def _update_recommendation(workspace_id, dataset_name, category_name, count, iteration_index: int):
+def get_elements_to_label(workspace_id: str, category_name: str, count: int, start_index: int = 0) \
+        -> Sequence[TextElement]:
+    """
+    returns a list of *count* elements recommended for labeling by the active learning module for the latest iteration
+    in READY status.
+    :param workspace_id:
+    :param category_name:
+    :param count: maximum number of elements to return
+    :param start_index: get elements starting from this index (for pagination)
+    :return: a list of *count* TextElement objects
+    """
+    # TODO check for latest model in AL results ready?
+
+    recommended_uris = orchestrator_state_api.get_current_category_recommendations(workspace_id, category_name)
+
+    if start_index > len(recommended_uris):
+        raise Exception(f"exceeded max recommended items. last element index is {len(recommended_uris) - 1}")
+    recommended_uris = recommended_uris[start_index:start_index + count]
+    dataset_name = get_dataset_name(workspace_id)
+    return get_text_elements_by_uris(workspace_id, dataset_name, recommended_uris)
+
+
+def set_labels(workspace_id: str, uri_to_label: Mapping[str, Mapping[str, Label]], apply_to_duplicate_texts=True,
+               update_label_counter=True):
+    """
+    set user labels for a set of element URIs.
+    :param workspace_id:
+    :param uri_to_label: maps URIs to a dictionary in the format of {"category_name": Label}, where Label is an
+    instance of data_structs.Label
+    :param apply_to_duplicate_texts: if True, also set the same labels for additional URIs that are duplicates of
+    the URIs provided.
+    :param update_label_counter: determines whether the label changes are reflected in the label change counters of the
+    categories. Since an increase in label change counts can trigger the training of a new model, in some specific
+    situations this parameter is set to False and the updating of the counter is delayed.
+    """
+    if update_label_counter:
+        # count the number of labels for each category
+        changes_per_cat = Counter([cat for uri, labels_dict in uri_to_label.items() for cat in labels_dict])
+        for cat, num_changes in changes_per_cat.items():
+            orchestrator_state_api.increase_label_change_count_since_last_train(workspace_id, cat, num_changes)
+    data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts)
+
+
+def unset_labels(workspace_id: str, category_name, uris: Sequence[str], apply_to_duplicate_texts=True):
+    """
+    unset labels of a given category for a set of element URIs.
+    :param workspace_id:
+    :param category_name:
+    :param uris:
+    :param apply_to_duplicate_texts: if True, also unset the same labels for additional URIs that are duplicates of
+    the URIs provided.
+    """
+    data_access.unset_labels(workspace_id, category_name, uris, apply_to_duplicate_texts=apply_to_duplicate_texts)
+
+
+# TODO refactor data access and use better names for each method
+def get_all_document_uris(workspace_id):
+    dataset_name = get_dataset_name(workspace_id)
+    return data_access.get_all_document_uris(dataset_name)
+
+
+def get_all_text_elements(dataset_name: str) -> List[TextElement]:
+    """
+    get all the text elements of the given dataset
+    :param dataset_name:
+    """
+    return data_access.get_all_text_elements(dataset_name=dataset_name)
+
+
+def get_all_labeled_text_elements(workspace_id, dataset_name, category) -> Mapping:
+    return data_access.get_labeled_text_elements(workspace_id, dataset_name, category, 10 ** 6, remove_duplicates=False)
+
+
+def get_text_elements(workspace_id, dataset_name, sample_size=sys.maxsize, random_state: int = 0) -> Mapping:
+    return data_access.get_text_elements(workspace_id, dataset_name, sample_size, remove_duplicates=False,
+                                         random_state=random_state)
+
+
+def get_unlabeled_text_elements(workspace_id, dataset_name, category, sample_size=sys.maxsize, random_state: int = 0) \
+        -> Mapping:
+    return data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category, sample_size,
+                                                   remove_duplicates=False, random_state=random_state)
+
+
+def get_label_counts(workspace_id: str, dataset_name: str, category_name: str, remove_duplicates=False):
+    """
+    get the number of elements that were labeled.
+    :param workspace_id:
+    :param dataset_name:
+    :param category_name:
+    :param remove_duplicates: whether to count all labeled elements or only unique instances
+    :return:
+    """
+    return data_access.get_label_counts(workspace_id, dataset_name, category_name, remove_duplicates=remove_duplicates)
+
+
+# iteration flow
+
+def run_iteration(workspace_id: str, category_name: str, model_type: ModelTypes, train_data, train_params=None):
+    """
+    This method initiates an Iteration, a flow that includes training a model, inferring the full corpus using
+    this model, choosing candidate elements for labeling using active learning, as well as calculating various
+    statistics.
+    For a specific workspace and category, an iteration is identified using an integer iteration index. As different
+    stages for the given iteration are completed, the IterationStatus for this iteration index is updated using the
+    orchestrator_state_api.
+    Since the training and inference stages of the iteration are submitted asynchronously in the background, the full
+    flow is composed of this method, along with the _train_done_callback and _infer_done_callback, which are launched
+    when the training and inference stages, respectively, are completed.
+
+    :param workspace_id:
+    :param category_name:
+    :param model_type:
+    :param train_data:
+    :param train_params:
+    :return: model_id
+    """
+    def _get_counts_per_label(text_elements):
+        """
+        reflect the more detailed description of training labels, e.g. how many of the elements have weak labels
+        """
+        label_names = [element.category_to_label[category_name].get_detailed_label_name()
+                       for element in text_elements]
+
+        return dict(Counter(label_names))
+
+    model_metadata = dict()
+    train_counts = _get_counts_per_label(train_data)
+    model_metadata[TRAIN_COUNTS_STR_KEY] = train_counts
+
+    logging.info(
+        f"workspace {workspace_id} training a model for category '{category_name}', model_metadata: {model_metadata}")
+    train_data = _convert_text_elements_to_train_data(train_data, category_name)
+
+    model = MODEL_FACTORY.get_model(model_type)
+
+    new_iteration_index = len(orchestrator_state_api.get_all_iterations(workspace_id,category_name))
+    logging.info(
+        f'starting iteration {new_iteration_index} in background for workspace {workspace_id} category {category_name} using {len(train_data)} items')
+    model_id,_ = model.train(train_data=train_data, train_params=train_params,
+                           done_callback=functools.partial(_train_done_callback, workspace_id, category_name, new_iteration_index))
+
+    model_status = model.get_model_status(model_id)
+    if train_params:
+        model_metadata = {**model_metadata, **train_params}
+    model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
+                           model_metadata=model_metadata, creation_date=datetime.now())
+    orchestrator_state_api.add_iteration(workspace_id=workspace_id, category_name=category_name, model_info=model_info)
+    return model_id
+
+
+
+def _train_done_callback(workspace_id, category_name, iteration_index, future):
+    try:
+        model_id = future.result()
+    except Exception:
+        logging.error(f"Train failed. Marking {workspace_id} category {category_name} iteration {iteration_index} as error")
+        orchestrator_state_api.update_model_state(workspace_id=workspace_id,
+                                                  category_name=category_name,
+                                                  iteration_index=iteration_index,
+                                                  new_status=ModelStatus.ERROR)
+        orchestrator_state_api.update_iteration_status(workspace_id, category_name,
+                                                       iteration_index,
+                                                       IterationStatus.ERROR)
+    else:
+        orchestrator_state_api.update_model_state(workspace_id=workspace_id,
+                                                  category_name=category_name,
+                                                  iteration_index=iteration_index,
+                                                  new_status=ModelStatus.READY)
+        orchestrator_state_api.update_iteration_status(workspace_id,category_name,
+                                                       iteration_index,IterationStatus.RUNNING_INFERENCE)
+        iterations = get_all_iterations_for_category(workspace_id, category_name)
+        iteration = iterations[iteration_index]
+        model_info = iteration.model
+
+        model = MODEL_FACTORY.get_model(model_info.model_type)
+        dataset_name = get_dataset_name(workspace_id)
+        elements = get_all_text_elements(dataset_name)
+        logging.info(f"Successfully trained model id {model_id} for workspace_id "
+                     f"{workspace_id} category {category_name} iteration {iteration_index}. "
+                     f"Running background inference for the full dataset ({len(elements)} items)")
+        model.infer_async(model_id,[{"text": element.text} for element in elements],
+                          callback=functools.partial(_infer_done_callback, workspace_id, category_name,
+                                                     iteration_index))
+
+
+def _infer_done_callback(workspace_id, category_name, iteration_index, future):
+    try:
+        predictions = future.result()
+    except Exception:
+        logging.exception(f"background inference on {workspace_id} category {category_name} iteration {iteration_index}"
+                          f" Failed. Marking iteration with Error")
+        orchestrator_state_api.update_iteration_status(workspace_id, category_name,
+                                                       iteration_index, IterationStatus.ERROR)
+        return
+
+    try:
+        logging.info(f"Successfully inferred all data for workspace_id "
+                     f"{workspace_id} category {category_name} iteration {iteration_index}, "
+                     f"calculating statistics and updating active learning recommendations")
+
+        _calculate_iteration_statistics(workspace_id, category_name, iteration_index, predictions)
+        orchestrator_state_api.update_iteration_status(workspace_id, category_name,
+                                                       iteration_index, IterationStatus.RUNNING_ACTIVE_LEARNING)
+
+        dataset_name = get_dataset_name(workspace_id)
+        _calculate_active_learning_recommendations(workspace_id, dataset_name, category_name, ACTIVE_LEARNING_SUGGESTION_COUNT,
+                               iteration_index)
+        orchestrator_state_api.update_iteration_status(workspace_id, category_name,
+                                                       iteration_index, IterationStatus.READY)
+        logging.info(f"Successfully finished iteration {iteration_index} "
+                     f"in workspace_id {workspace_id} category {category_name}.")
+
+    except Exception:
+        logging.exception(f"Iteration {iteration_index} on {workspace_id} category {category_name} Failed. "
+                          f"Marking iteration with Error")
+        orchestrator_state_api.update_iteration_status(workspace_id, category_name,
+                                                       iteration_index, IterationStatus.ERROR)
+    try:
+        _delete_old_models(workspace_id, category_name, iteration_index)
+    except Exception:
+        logging.exception(f"Failed to delete old models for {workspace_id} category {category_name} "
+                          f"after iteration {iteration_index} finished successfully ")
+
+
+
+
+
+def _calculate_active_learning_recommendations(workspace_id, dataset_name, category_name, count, iteration_index: int):
     """
     Using the AL strategy, update the workspace with next recommended elements for labeling
     :param workspace_id:
@@ -168,116 +400,22 @@ def _update_recommendation(workspace_id, dataset_name, category_name, count, ite
     #                                                      IterationStatus.DONE_ACTIVE_LEARNING?)
 
 
-def get_iteration_status(workspace_id, category_name, iteration_index):
-    return orchestrator_state_api.get_iteration_status(workspace_id, category_name, iteration_index)
-
-
-def get_elements_to_label(workspace_id: str, category_name: str, count: int, start_index: int = 0) -> Sequence[TextElement]:
+def _delete_old_models(workspace_id, category_name, iteration_index):
     """
-    returns a list of the top *count* elements recommended for labeling by the AL strategy.
-    The active learner is invoked only if the requested count of elements have not yet been added to the workspace.
+    Delete previous model files for a given workspace and category, keeping only the latest *NUMBER_OF_MODELS_TO_KEEP*
+    models for which an iteration flow has completed successfully.
     :param workspace_id:
     :param category_name:
-    :param count:
-    :param start_index:
+    :param iteration_index:
     """
-    # TODO check for latest model in AL results ready?
+    previous_iterations = orchestrator_state_api.get_all_iterations(workspace_id, category_name)[:iteration_index]
+    previous_ready_iteration_indices = [candidate_iteration_index for candidate_iteration_index, iteration
+                                        in enumerate(previous_iterations) if iteration.status == IterationStatus.READY]
 
-    recommended_uris = orchestrator_state_api.get_current_category_recommendations(workspace_id, category_name)
+    for candidate_iteration_index in previous_ready_iteration_indices[:-NUMBER_OF_MODELS_TO_KEEP]:
+        logging.info(f"keep only {NUMBER_OF_MODELS_TO_KEEP} models, deleting iteration {candidate_iteration_index}")
+        delete_model(workspace_id, category_name, candidate_iteration_index)
 
-    if start_index > len(recommended_uris):
-        raise Exception(f"exceeded max recommended items. last element index is {len(recommended_uris) - 1}")
-    recommended_uris = recommended_uris[start_index:start_index + count]
-    dataset_name = get_dataset_name(workspace_id)
-    return get_text_elements_by_uris(workspace_id, dataset_name, recommended_uris)
-
-
-def set_labels(workspace_id: str, uri_to_label: Mapping[str, Mapping[str, Label]], apply_to_duplicate_texts=True,
-               update_label_counter=True):
-    """
-    set labels for URIs.
-    :param workspace_id:
-    :param uri_to_label: Maps URIs to a dict in the format of {"category_name": Label},
-    where Label is an instance of data_structs.Label
-    :param apply_to_duplicate_texts: if True, also set the same labels for additional URIs that are duplicates of
-    the URIs provided.
-    :param update_label_counter:
-    """
-    if update_label_counter:
-        # count the number of labels for each category
-        changes_per_cat = Counter([cat for uri, labels_dict in uri_to_label.items() for cat in labels_dict])
-        for cat, num_changes in changes_per_cat.items():
-            orchestrator_state_api.increase_label_change_count_since_last_train(workspace_id, cat, num_changes)
-    data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts)
-
-
-def unset_labels(workspace_id: str, category_name, uris: Sequence[str], apply_to_duplicate_texts=True):
-    """
-    unset labels of a given category for URIs.
-    :param workspace_id:
-    :param category_name:
-    :param uris:
-    :param apply_to_duplicate_texts: if True, also unset the same labels for additional URIs that are duplicates of
-    the URIs provided.
-    """
-    data_access.unset_labels(workspace_id, category_name, uris, apply_to_duplicate_texts=apply_to_duplicate_texts)
-
-# TODO refactor data access and use better names for each method
-
-def get_all_labeled_text_elements(workspace_id, dataset_name, category) -> Mapping:
-    return data_access.get_labeled_text_elements(workspace_id, dataset_name, category, 10 ** 6,
-                                                    remove_duplicates=False)
-
- 
-def get_text_elements(workspace_id, dataset_name, sample_size=sys.maxsize, random_state: int = 0) -> Mapping:
-    return data_access.get_text_elements(workspace_id, dataset_name, sample_size, remove_duplicates=False,
-                                            random_state=random_state)
-
-
-def get_unlabeled_text_elements(workspace_id, dataset_name, category, sample_size=sys.maxsize, random_state: int = 0) -> Mapping:
-    return data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category, sample_size,
-                                                      remove_duplicates=False, random_state=random_state)
-
-
-def train(workspace_id: str, category_name: str, model_type: ModelTypes, train_data, train_params=None):
-    """
-    train a model for a category in the specified workspace
-    :param workspace_id:
-    :param category_name:
-    :param model_type:
-    :param train_data:
-    :param train_params:
-    :return: model_id
-    """
-    def _get_counts_per_label(text_elements):
-        """
-        reflect the more detailed description of training labels, e.g. how many of the elements have weak labels
-        """
-        label_names = [element.category_to_label[category_name].get_detailed_label_name()
-                       for element in text_elements]
-
-        return dict(Counter(label_names))
-
-    model_metadata = dict()
-    train_counts = _get_counts_per_label(train_data)
-    model_metadata[TRAIN_COUNTS_STR_KEY] = train_counts
-
-    logging.info(
-        f"workspace {workspace_id} training a model for category '{category_name}', model_metadata: {model_metadata}")
-    train_data = _convert_text_elements_to_train_data(train_data, category_name)
-
-    model = MODEL_FACTORY.get_model(model_type)
-    logging.info(f'start training using {len(train_data)} items')
-    model_id = model.train(train_data=train_data, train_params=train_params)
-    logging.info(f"new model id is {model_id}")
-
-    model_status = model.get_model_status(model_id)
-    if train_params:
-        model_metadata = {**model_metadata, **train_params}
-    model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
-                           model_metadata=model_metadata, creation_date=datetime.now())
-    orchestrator_state_api.add_iteration(workspace_id=workspace_id, category_name=category_name, model_info=model_info)
-    return model_id
 
 
 def get_all_iterations_for_category(workspace_id, category_name: str):
@@ -314,9 +452,6 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
         iterations = get_all_iterations_for_category(workspace_id, category_name)
         iteration = iterations[iteration_index]
 
-        # if iteration.status != IterationStatus.READY:
-        #     raise Exception(f"iteration {iteration_index} in workspace {workspace_id} category {category_name} is not "
-        #                     f"in status {IterationStatus.READY}. (current status is {iteration.status})")
         if iteration.model.model_status != ModelStatus.READY:
             raise Exception(f"model for iteration {iteration_index} in workspace {workspace_id} category {category_name}"
                             f" is not ready. (current status is {iteration.model.model_status})")
@@ -332,29 +467,6 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
     return predictions
 
 
-def get_all_text_elements(dataset_name: str) -> List[TextElement]:
-    """
-    get all the text elements of the given dataset
-    :param dataset_name:
-    """
-    return data_access.get_all_text_elements(dataset_name=dataset_name)
-
-
-def get_all_document_uris(workspace_id):
-    dataset_name = get_dataset_name(workspace_id)
-    return data_access.get_all_document_uris(dataset_name)
-
-
-def get_label_counts(workspace_id: str, dataset_name: str, category_name: str, remove_duplicates=False):
-    """
-    get the number of elements that were labeled.
-    :param workspace_id:
-    :param dataset_name:
-    :param category_name:
-    :param remove_duplicates: whether to count all labeled elements or only unique instances
-    :return:
-    """
-    return data_access.get_label_counts(workspace_id, dataset_name, category_name, remove_duplicates=remove_duplicates)
 
 
 def delete_model(workspace_id, category_name, iteration_index):
@@ -452,10 +564,9 @@ def get_all_iterations_by_status(workspace_id, category_name, iteration_status: 
     return orchestrator_state_api.get_all_iterations_by_status(workspace_id, category_name, iteration_status)
 
 
-def _post_train_method(workspace_id, category_name, iteration_index): #TODO refactor
+def _calculate_iteration_statistics(workspace_id, category_name, iteration_index, predictions):
     dataset_name = get_dataset_name(workspace_id)
     elements = get_all_text_elements(dataset_name)
-    predictions = infer(workspace_id, category_name, elements, iteration_index)
     dataset_size = len(predictions)
     positive_fraction = sum([pred.label==True for pred in predictions])/dataset_size
     post_train_statistics = {"positive_fraction": positive_fraction}
@@ -471,17 +582,6 @@ def _post_train_method(workspace_id, category_name, iteration_index): #TODO refa
 
     logging.info(f"post train measurements for iteration {iteration_index}: {post_train_statistics}")
     orchestrator_state_api.add_iteration_statistics(workspace_id, category_name, iteration_index, post_train_statistics)
-
-
-def _post_active_learning_func(workspace_id, category_name, iteration_index): #TODO refactor
-
-    previous_iterations = orchestrator_state_api.get_all_iterations(workspace_id, category_name)[:iteration_index]
-    previous_ready_iteration_indices = [candidate_iteration_index for candidate_iteration_index, iteration
-                                        in enumerate(previous_iterations) if iteration.status == IterationStatus.READY]
-
-    for candidate_iteration_index in previous_ready_iteration_indices[:-NUMBER_OF_MODELS_TO_KEEP]:
-        logging.info(f"keep only {NUMBER_OF_MODELS_TO_KEEP} models, deleting iteration {candidate_iteration_index}")
-        delete_model(workspace_id, category_name, candidate_iteration_index)
 
 
 def import_category_labels(workspace_id, labels_df_to_import: pd.DataFrame):
@@ -583,6 +683,10 @@ def add_documents_from_file(dataset_name, temp_filename):
     return document_statistics, workspaces_to_update
 
 
+def get_iteration_status(workspace_id, category_name, iteration_index):
+    return orchestrator_state_api.get_iteration_status(workspace_id, category_name, iteration_index)
+
+
 def infer_missing_elements(workspace_id, category, dataset_name, iteration_index):
     iteration_status = get_iteration_status(workspace_id, category, iteration_index)
     if iteration_status == IterationStatus.ERROR:
@@ -633,17 +737,17 @@ def train_if_recommended(workspace_id: str, category_name: str, force=False):
                 return None
             orchestrator_state_api.set_label_change_count_since_last_train(workspace_id, category_name, 0)
             logging.info(
+                f"workspace {workspace_id} category {category_name} "
                 f"{label_counts[LABEL_POSITIVE]} positive elements (>={CONFIGURATION.first_model_positive_threshold})"
                 f" {changes_since_last_model} elements changed since last model (>={CONFIGURATION.changed_element_threshold})"
                 f" training a new model")
             iteration_num = len(iterations_without_errors)
             model_type = CONFIGURATION.model_policy.get_model(iteration_num)
             train_set_selector = get_training_set_selector(selector=CONFIGURATION.training_set_selection_strategy)
-            train_data = train_set_selector.get_train_set(
-                workspace_id=workspace_id, train_dataset_name=dataset_name,
-                category_name=category_name)
-            model_id = train(workspace_id=workspace_id, category_name=category_name, model_type=model_type,
-                             train_data=train_data)
+            train_data = train_set_selector.get_train_set(workspace_id=workspace_id, train_dataset_name=dataset_name,
+                                                          category_name=category_name)
+            model_id = run_iteration(workspace_id=workspace_id, category_name=category_name, model_type=model_type,
+                                     train_data=train_data)
             return model_id
         else:
             logging.info(f"{label_counts[LABEL_POSITIVE]} positive elements (should be >={CONFIGURATION.first_model_positive_threshold}) AND"

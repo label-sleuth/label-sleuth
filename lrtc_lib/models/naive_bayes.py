@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 
+from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_api import ModelAPI, Prediction
@@ -16,11 +17,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(f
 
 
 class NaiveBayes(ModelAPI):
-    def __init__(self, representation_type, max_datapoints=10000,
-                 model_dir=os.path.join(ROOT_DIR, "output", "models", "custom_nb")):
-        super().__init__()
+    def __init__(self, representation_type: RepresentationType,
+                 models_background_jobs_manager: ModelsBackgroundJobsManager,
+                 max_datapoints=10000, model_dir=os.path.join(ROOT_DIR, "output", "models", "nb")):
+        super().__init__(models_background_jobs_manager)
+        os.makedirs(model_dir, exist_ok=True)
         self.model_dir = model_dir
-        os.makedirs(self.get_models_dir(), exist_ok=True)
+
         self.features_num = 0
         self.max_datapoints = max_datapoints
         self.infer_batch_size = max_datapoints
@@ -40,14 +43,12 @@ class NaiveBayes(ModelAPI):
 
     def _train(self, model_id, train_data, train_params):
         model = MultinomialNB() if self.representation_type == RepresentationType.BOW else GaussianNB()
-        # Train the model using the training sets
         language = self.get_language(model_id)
-        sentences = [sentence["text"] for sentence in train_data]
-        sentences = sentences[:self.max_datapoints]
-        labels = [sentence["label"] for sentence in train_data]
+        texts = [x['text'] for x in train_data]
+        texts = texts[:self.max_datapoints]
+        train_data_features, vectorizer = self.input_to_features(texts, language=language, train=True)
+        labels = [x['label'] for x in train_data]
         labels = labels[:self.max_datapoints]
-        train_data_features, vectorizer = self.input_to_features(sentences, language=language, train=True)
-
         model.fit(train_data_features, labels)
 
         with open(self.vectorizer_file_by_id(model_id), "wb") as fl:
@@ -62,7 +63,7 @@ class NaiveBayes(ModelAPI):
             model = pickle.load(fl)
         language = self.get_language(model_id)
 
-        items_to_infer = [x["text"] for x in items_to_infer]
+        items_to_infer = [x['text'] for x in items_to_infer]
         last_batch = 0
         predictions = []
         while last_batch < len(items_to_infer):
@@ -99,7 +100,7 @@ if __name__ == '__main__':
                   {"text": "dont know", "label": False},
                   ]
 
-    model_id = model.train(train_data, {})
+    model_id,_ = model.train(train_data, {})
     print(model_id)
     import uuid
     import time
