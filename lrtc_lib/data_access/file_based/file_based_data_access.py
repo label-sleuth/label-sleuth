@@ -15,36 +15,31 @@ from typing import Sequence, Iterable, Mapping, List, Tuple, Union
 
 import lrtc_lib.data_access.file_based.utils as utils
 from lrtc_lib.data_access.core.data_structs import Document, Label, TextElement
-from lrtc_lib.data_access.data_access_api import DataAccessApi, AlreadyExistException, DocumentStatistics, LabeledStatus
+from lrtc_lib.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, LabeledStatus
 
 
 class FileBasedDataAccess(DataAccessApi):
     """
-    Under the DataAccessInMemory implementation of DataAccessApi, information about labels and TextElements are stored both
-    in the file system and in memory, in the variables "ds_in_memory" and "labels_in_memory" below.
+    Under the FileBasedDataAccess implementation of DataAccessApi, information about labels and TextElements is stored
+    in the file system, as well as in memory, in the variables "ds_in_memory" and "labels_in_memory" below.
     Note that while label information changes over time (as labels are added, altered etc.), the TextElement information
-    inside "ds_in_memory" will generally not change after a dataset is loaded.
+    inside "ds_in_memory" only changes if new documents are added to the dataset.
 
     ===ds_in_memory===
-    maps dataset_name -> pandas DataFrame containing all the dataset sentences
+    maps dataset_name to a pandas DataFrame containing all the dataset text elements
 
     ===labels_in_memory===
-    maps workspace_id -> dataset name -> URIs -> categories -> labels and info
+    maps workspace_id -> dataset name -> URIs -> categories -> Label object
 
-    ===clusters_in_memory===
-    maps dataset to (clusters, uri_to_rep) where clusters is a dict of rep uri to list of uris
-    and uri_to_rep is a dict of uri to a representative uri of a cluster
     """
     workspace_to_labels_lock_objects = defaultdict(threading.Lock)
     ds_in_memory = defaultdict(pd.DataFrame)
     labels_in_memory = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(Label))))
-    clusters_in_memory = defaultdict(tuple)
     dataset_in_memory_lock = threading.RLock()
 
     def add_documents(self, dataset_name: str, documents: Iterable[Document]):
         """
         Add new documents to a given dataset; If dataset does not exist, create it.
-        It is assumed that the entire dataset is loaded in a single call for this function.
 
         In this implementation, the same data is stored in two formats:
             A. a json file per Document, containing data for the TextElement objects within that Document
@@ -58,7 +53,7 @@ class FileBasedDataAccess(DataAccessApi):
             doc_ids = {document.uri for document in documents}
             intersection = doc_ids.intersection(set(self.get_all_document_uris(dataset_name)))
             if len(intersection) > 0:
-                raise AlreadyExistException(f"{len(intersection)} documents are already in dataset {dataset_name}."
+                raise AlreadyExistsException(f"{len(intersection)} documents are already in dataset {dataset_name}."
                                             f" uris: ({intersection})", list(intersection))
 
         for doc in documents:
@@ -87,8 +82,8 @@ class FileBasedDataAccess(DataAccessApi):
         The dict keys are category names and values are Labels. For example: [(uri_1, {category_1: Label_cat_1}),
                                                                               (uri_2, {category_1: Label_cat_1,
                                                                                        category_2: Label_cat_2})]
-        :param apply_to_duplicate_texts: if True, also set the same labels for additional URIs that have the same text
-        as that of the URIs provided.
+        :param apply_to_duplicate_texts: if True, also set the same labels for additional URIs that are duplicates
+        of the URIs provided.
         """
 
         # Assuming all elements are from the same dataset, using the first element's dataset name
@@ -147,7 +142,7 @@ class FileBasedDataAccess(DataAccessApi):
         label information
         :param dataset_name: the name of the dataset from which the documents should be retrieved.
         :param uris: an Iterable of uris of Documents, represented as string.
-        :return: a List of Documents, from the given dataset_name, matching the uris provided, containing label
+        :return: a List of Document objects, from the given dataset_name, matching the uris provided, containing label
         information for the TextElements of these Documents, if available.
         """
         def load_doc(uri):
@@ -200,8 +195,8 @@ class FileBasedDataAccess(DataAccessApi):
         return utils.build_text_elements_from_dataframe_and_labels(self._get_ds_in_memory(dataset_name), labels_dict={})
 
     def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize,
-                             sample_start_idx: int = 0, query_regex: str = None, remove_duplicates=False,
-                             random_state: int = 0) -> Mapping:
+                          sample_start_idx: int = 0, query_regex: str = None, remove_duplicates=False,
+                          random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query,
         and add their labels information for workspace_id, if available.
@@ -209,7 +204,7 @@ class FileBasedDataAccess(DataAccessApi):
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param sample_size: how many TextElements should be sampled
-        :param sample_start_idx: get elements starting from this index (for paging) default is 0
+        :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
         :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
@@ -219,28 +214,26 @@ class FileBasedDataAccess(DataAccessApi):
         {'results': [TextElement], 'hit_count': int}
         """
         with self._get_lock_object_for_workspace(workspace_id):
-            results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                      sample_size=sample_size,
-                                                      filter_func=lambda df, labels: utils.filter_by_query(df, query_regex),
-                                                      sample_start_idx=sample_start_idx,
-                                                      remove_duplicates=remove_duplicates,
-                                                      random_state=random_state)
+            results_dict = \
+                self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+                                        filter_func=lambda df, labels: utils.filter_by_query(df, query_regex),
+                                        sample_size=sample_size, sample_start_idx=sample_start_idx,
+                                        remove_duplicates=remove_duplicates, random_state=random_state)
 
         return results_dict
 
     def get_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
-                                       sample_size: int = sys.maxsize, sample_start_idx: int = 0,
-                                       query_regex: str = None, remove_duplicates=False,
-                                       random_state: int = 0) -> Mapping:
+                                    sample_size: int = sys.maxsize, sample_start_idx: int = 0, query_regex: str = None,
+                                    remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, unlabeled for category_name in workspace_id, optionally
         limiting to those matching a query.
 
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which TextElements are sampled
-        :param category_name: the name of the category whose label information are the target of this sample
+        :param category_name: we demand that the elements are not labeled for this category
         :param sample_size: how many TextElements should be sampled
-        :param sample_start_idx: get elements starting from this index (for paging) default is 0
+        :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
         :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
@@ -254,24 +247,21 @@ class FileBasedDataAccess(DataAccessApi):
 
         with self._get_lock_object_for_workspace(workspace_id):
             results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                      sample_size=sample_size,
-                                                      sample_start_idx=sample_start_idx,
-                                                      filter_func=filter_func,
-                                                      remove_duplicates=remove_duplicates,
-                                                      random_state=random_state)
+                                                   filter_func=filter_func, sample_size=sample_size,
+                                                   sample_start_idx=sample_start_idx,
+                                                   remove_duplicates=remove_duplicates, random_state=random_state)
         return results_dict
 
     def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
                                      sample_size: int = sys.maxsize, query_regex: str = None,
-                                     remove_duplicates=False,
-                                     random_state: int = 0) -> Mapping:
+                                     remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, labeled for category_name in workspace_id,
         optionally limiting to those matching a query.
 
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which TextElements are sampled
-        :param category_name: the name of the category whose label information are the target of this sample
+        :param category_name: we demand that the elements are labeled for this category
         :param sample_size: how many TextElements should be sampled
         :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
@@ -283,12 +273,11 @@ class FileBasedDataAccess(DataAccessApi):
         """
         filter_func = lambda df, labels: \
             utils.filter_by_query_and_label_status(df, labels, category_name, LabeledStatus.LABELED, query_regex)
-        results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                  sample_size=sample_size,
-                                                  filter_func=filter_func,
-                                                  remove_duplicates=remove_duplicates,
-                                                  random_state=random_state)
 
+        with self._get_lock_object_for_workspace(workspace_id):
+            results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+                                                   filter_func=filter_func, sample_size=sample_size,
+                                                   remove_duplicates=remove_duplicates,random_state=random_state)
         return results_dict
 
     def get_label_counts(self, workspace_id: str, dataset_name: str, category_name: str, remove_duplicates=False) \
@@ -349,12 +338,15 @@ class FileBasedDataAccess(DataAccessApi):
         return text_elements
 
     def get_all_dataset_names(self) -> List[str]:
+        """
+        :return: a list of all available datset names
+        """
         path = utils.get_datasets_base_dir()
         return [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
 
     def delete_dataset(self, dataset_name):
         """
-        Delete dataset
+        Delete dataset by name
         :param dataset_name:
         """
         logging.info(f"Deleting dataset {dataset_name}")
@@ -425,13 +417,13 @@ class FileBasedDataAccess(DataAccessApi):
                 elem.category_to_label = labels_info_for_workspace[elem.uri].copy()
         return text_elements
 
-    def _get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int, filter_func,
-                              sample_start_idx=0, remove_duplicates=False, random_state: int = 0) -> Mapping:
+    def _get_text_elements(self, workspace_id: str, dataset_name: str, filter_func, sample_size: int,
+                           sample_start_idx=0, remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         :param workspace_id: if None no labels info would be used or output
         :param dataset_name:
         :param sample_size: number of elements to return. if None, return all elements without sampling
-        :param sample_start_idx: get elements starting from this index (for paging)
+        :param sample_start_idx: get elements starting from this index (for pagination)
         :param filter_func:
         :param remove_duplicates:
         :param random_state: provide an int seed to define a random state. Default is zero.

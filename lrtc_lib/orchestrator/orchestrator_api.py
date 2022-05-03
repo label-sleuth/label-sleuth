@@ -39,30 +39,31 @@ new_data_infer_thread_pool = ThreadPoolExecutor(1)
 
 def create_workspace(workspace_id: str, dataset_name: str):
     """
-    create a new workspace
+    Create a new workspace
     :param workspace_id:
     :param dataset_name:
     """
+    logging.info(f"Creating a new workspace '{workspace_id}' using dataset {dataset_name}")
     orchestrator_state_api.create_workspace(workspace_id, dataset_name)
-    logging.info(f"Creating workspace {workspace_id} using dataset {dataset_name}")
 
 
 def create_new_category(workspace_id: str, category_name: str, category_description: str):
     """
-    declare a new category in the given workspace
+    Declare a new category in the given workspace
     :param workspace_id:
     :param category_name:
     :param category_description:
     """
+    logging.info(f"Creating a new category '{category_name}' in workspace {workspace_id}")
     orchestrator_state_api.add_category_to_workspace(workspace_id, category_name, category_description)
 
 
 def delete_workspace(workspace_id: str):
     """
-    delete a given workspace
+    Delete a given workspace
     :param workspace_id:
     """
-    logging.info(f"deleting workspace {workspace_id}")
+    logging.info(f"Deleting workspace {workspace_id}")
     if workspace_exists(workspace_id):
         workspace = orchestrator_state_api.get_workspace(workspace_id)
         try:
@@ -80,11 +81,23 @@ def delete_workspace(workspace_id: str):
 
 
 def delete_category(workspace_id: str, category_name: str):
+    """
+    Delete the given category from the workspace
+    :param workspace_id:
+    :param category_name:
+    """
+    logging.info(f"Deleting category {category_name} from workspace {workspace_id}")
     _delete_category_models(workspace_id, category_name)
     orchestrator_state_api.delete_category_from_workspace(workspace_id, category_name)
 
 
 def delete_model(workspace_id, category_name, iteration_index):
+    """
+    Delete the model files for *iteration_index* of the given category, and mark the model as deleted.
+    :param workspace_id:
+    :param category_name:
+    :param iteration_index:
+    """
     iteration = get_all_iterations_for_category(workspace_id, category_name)[iteration_index]
     model_info = iteration.model
     if model_info.model_status == ModelStatus.DELETED:
@@ -92,8 +105,8 @@ def delete_model(workspace_id, category_name, iteration_index):
                         f"from workspace {workspace_id} in category {category_name}")
 
     train_and_infer = MODEL_FACTORY.get_model(model_info.model_type)
-    logging.info(f"marking iteration {iteration_index} model id {model_info.model_id} from workspace {workspace_id} in category {category_name} as deleted,"
-                 f" and deleting the model")
+    logging.info(f"marking iteration {iteration_index} model id {model_info.model_id} from workspace {workspace_id} "
+                 f"in category {category_name} as deleted, and deleting the model")
     orchestrator_state_api.mark_iteration_model_as_deleted(workspace_id, category_name, iteration_index)
     train_and_infer.delete_model(model_info.model_id)
 
@@ -104,10 +117,32 @@ def _delete_category_models(workspace_id, category_name):
         delete_model(workspace_id, category_name, idx)
 
 
+def get_documents(workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[Document]:
+    """
+    Get a list of Documents by their URIs
+    :param workspace_id:
+    :param dataset_name:
+    :param uris:
+    :return: a list of Document objects
+    """
+    return data_access.get_documents(workspace_id, dataset_name, uris)
+
+
+def get_text_elements_by_uris(workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[TextElement]:
+    """
+    Get a list of TextElements by their URIs
+    :param workspace_id:
+    :param dataset_name:
+    :param uris:
+    :return: a list of TextElement objects
+    """
+    return data_access.get_text_elements_by_uris(workspace_id, dataset_name, uris)
+
+
 def query(workspace_id: str, dataset_name: str, category_name: str, query_regex: str, sample_size: int = sys.maxsize,
           sample_start_idx: int = 0, unlabeled_only: bool = False, remove_duplicates=False) -> Mapping[str, object]:
     """
-    query a dataset using the given regex, returning up to *sample_size* elements that meet the query
+    Query a dataset using the given regex, returning up to *sample_size* elements that meet the query
 
     :param workspace_id:
     :param dataset_name:
@@ -132,32 +167,10 @@ def query(workspace_id: str, dataset_name: str, category_name: str, query_regex:
                                              query_regex=query_regex, remove_duplicates=remove_duplicates)
 
 
-def get_documents(workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[Document]:
-    """
-    get a list of Documents by their URIs
-    :param workspace_id:
-    :param dataset_name:
-    :param uris:
-    :return: a list of Document objects
-    """
-    return data_access.get_documents(workspace_id, dataset_name, uris)
-
-
-def get_text_elements_by_uris(workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[TextElement]:
-    """
-    get a list of TextElements by their URIs
-    :param workspace_id:
-    :param dataset_name:
-    :param uris:
-    :return: a list of TextElement objects
-    """
-    return data_access.get_text_elements_by_uris(workspace_id, dataset_name, uris)
-
-
 def get_elements_to_label(workspace_id: str, category_name: str, count: int, start_index: int = 0) \
         -> Sequence[TextElement]:
     """
-    returns a list of *count* elements recommended for labeling by the active learning module for the latest iteration
+    Returns a list of *count* elements recommended for labeling by the active learning module for the latest iteration
     in READY status.
     :param workspace_id:
     :param category_name:
@@ -165,8 +178,6 @@ def get_elements_to_label(workspace_id: str, category_name: str, count: int, sta
     :param start_index: get elements starting from this index (for pagination)
     :return: a list of *count* TextElement objects
     """
-    # TODO check for latest model in AL results ready?
-
     recommended_uris = orchestrator_state_api.get_current_category_recommendations(workspace_id, category_name)
 
     if start_index > len(recommended_uris):
@@ -179,7 +190,7 @@ def get_elements_to_label(workspace_id: str, category_name: str, count: int, sta
 def set_labels(workspace_id: str, uri_to_label: Mapping[str, Mapping[str, Label]], apply_to_duplicate_texts=True,
                update_label_counter=True):
     """
-    set user labels for a set of element URIs.
+    Set user labels for a set of element URIs.
     :param workspace_id:
     :param uri_to_label: maps URIs to a dictionary in the format of {"category_name": Label}, where Label is an
     instance of data_structs.Label
@@ -187,7 +198,7 @@ def set_labels(workspace_id: str, uri_to_label: Mapping[str, Mapping[str, Label]
     the URIs provided.
     :param update_label_counter: determines whether the label changes are reflected in the label change counters of the
     categories. Since an increase in label change counts can trigger the training of a new model, in some specific
-    situations this parameter is set to False and the updating of the counter is delayed.
+    situations this parameter is set to False and the updating of the counter is performed at a later time.
     """
     if update_label_counter:
         # count the number of labels for each category
@@ -199,7 +210,7 @@ def set_labels(workspace_id: str, uri_to_label: Mapping[str, Mapping[str, Label]
 
 def unset_labels(workspace_id: str, category_name, uris: Sequence[str], apply_to_duplicate_texts=True):
     """
-    unset labels of a given category for a set of element URIs.
+    Unset labels of a set of element URIs for a given category.
     :param workspace_id:
     :param category_name:
     :param uris:
@@ -209,23 +220,35 @@ def unset_labels(workspace_id: str, category_name, uris: Sequence[str], apply_to
     data_access.unset_labels(workspace_id, category_name, uris, apply_to_duplicate_texts=apply_to_duplicate_texts)
 
 
-# TODO refactor data access and use better names for each method
-def get_all_document_uris(workspace_id):
+def get_all_document_uris(workspace_id) -> List[str]:
+    """
+    Get a list of all document URIs in the dataset used by the given workspace.
+    :param workspace_id:
+    :return: a list of Document URIs
+    """
     dataset_name = get_dataset_name(workspace_id)
     return data_access.get_all_document_uris(dataset_name)
 
 
 def get_all_text_elements(dataset_name: str) -> List[TextElement]:
     """
-    get all the text elements of the given dataset
+    Get all the text elements of the given dataset
     :param dataset_name:
+    :return: a list of TextElement objects
     """
     return data_access.get_all_text_elements(dataset_name=dataset_name)
 
 
-def get_all_labeled_text_elements(workspace_id, dataset_name, category) -> Mapping:
+def get_all_labeled_text_elements(workspace_id, dataset_name, category) -> List[TextElement]:
+    """
+    Get all the text elements that were assigned user labels for the given category.
+    :param workspace_id:
+    :param dataset_name:
+    :param category:
+    :return: a list of TextElement objects
+    """
     return data_access.get_labeled_text_elements(workspace_id, dataset_name, category, sample_size=sys.maxsize,
-                                                 remove_duplicates=False)
+                                                 remove_duplicates=False)['results']
 
 
 def get_text_elements(workspace_id, dataset_name, sample_size=sys.maxsize, random_state: int = 0) -> Mapping:
@@ -286,8 +309,8 @@ def run_iteration(workspace_id: str, category_name: str, model_type: ModelTypes,
     logging.info(f'starting iteration {new_iteration_index} in background for workspace {workspace_id} '
                  f'category {category_name} using {len(train_data)} items')
 
-    train_data = _convert_text_elements_to_train_data(train_data, category_name)
     train_counts = _get_counts_per_label(train_data)
+    train_data = _convert_text_elements_to_train_data(train_data, category_name)
     model_metadata = {TRAIN_COUNTS_STR_KEY: train_counts}
     model = MODEL_FACTORY.get_model(model_type)
 
@@ -341,7 +364,7 @@ def _train_done_callback(workspace_id, category_name, iteration_index, future):
                  f"{workspace_id} category {category_name} iteration {iteration_index}. "
                  f"Running background inference for the full dataset ({len(elements)} items)")
     model.infer_async(model_id, items_to_infer=[{"text": element.text} for element in elements],
-                      callback=functools.partial(_infer_done_callback, workspace_id, category_name,
+                      done_callback=functools.partial(_infer_done_callback, workspace_id, category_name,
                                                  iteration_index))
     # Inference is performed in the background. Once the infer job is complete the iteration flow continues in the
     # *_infer_done_callback* method
@@ -366,8 +389,8 @@ def _infer_done_callback(workspace_id, category_name, iteration_index, future):
         return
 
     try:
-        logging.info(f"Successfully inferred all data for workspace_id "
-                     f"{workspace_id} category {category_name} iteration {iteration_index}, "
+        logging.info(f"Successfully inferred all data for workspace_id '{workspace_id}'"
+                     f" category '{category_name}' iteration {iteration_index}, "
                      f"calculating statistics and updating active learning recommendations")
 
         _calculate_iteration_statistics(workspace_id, category_name, iteration_index, predictions)
@@ -518,7 +541,7 @@ def get_dataset_name(workspace_id: str) -> str:
 
 def get_contradiction_report(workspace_id, category_name) -> List[Tuple[TextElement]]:
     dataset_name = get_dataset_name(workspace_id)
-    labeled_elements = get_all_labeled_text_elements(workspace_id, dataset_name, category_name)["results"]
+    labeled_elements = get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
     return get_suspected_labeling_contradictions_by_distance_with_diffs(labeled_elements, category_name)
 
 

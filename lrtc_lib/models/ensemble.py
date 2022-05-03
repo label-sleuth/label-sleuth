@@ -1,7 +1,5 @@
-import functools
 import logging
 import os
-import time
 from dataclasses import dataclass
 from typing import Iterable, Sequence, Mapping
 import numpy as np
@@ -14,16 +12,18 @@ from lrtc_lib.models.core.model_types import ModelTypes
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
+
 @dataclass
 class EnsemblePrediction(Prediction):
     model_type_to_prediction: dict
 
 
 class Ensemble(ModelAPI):
-    def __init__(self, model_types: Iterable[ModelTypes],models_background_jobs_manager: ModelsBackgroundJobsManager, aggregation=lambda x: np.mean(x, axis=0),
-                 model_dir=os.path.join(ROOT_DIR, "output", "models", "ensemble"), return_all_scores=True):
+    def __init__(self, model_types: Iterable[ModelTypes], models_background_jobs_manager: ModelsBackgroundJobsManager,
+                 aggregation=lambda x: np.mean(x, axis=0),
+                 model_dir=os.path.join(ROOT_DIR, "output", "models", "ensemble")):
         """
-        Create train and infer over multiple models
+        Create an ensemble model aggregating different model types
 
         :param model_types: an ordered iterable of model types, models and return values would keep this order
         :param aggregation: aggregation function, scores and labels would represent this aggregation
@@ -32,7 +32,6 @@ class Ensemble(ModelAPI):
         common uses:
         sum, average: lambda x: np.mean(x, axis=0), return the first policy's score:lambda x:x[0]
         :param model_dir:
-        :param return_all_scores: If true returns outputs of models with index of their number (corresponding to places in model_types argument)
         """
         super(Ensemble, self).__init__(models_background_jobs_manager)
 
@@ -43,17 +42,16 @@ class Ensemble(ModelAPI):
         self.model_types = model_types
         self.models = [MODEL_FACTORY.get_model(model_type) for model_type in model_types]
 
-
     def train(self, train_data, train_params, done_callback=None):
         model_ids_and_futures = [model.train(train_data, train_params) for model in self.models]
         ensemble_model_id =  ",".join(model_id for model_id, future in model_ids_and_futures)
         self.mark_train_as_started(ensemble_model_id)
         self.save_metadata(ensemble_model_id, train_params)
 
-        future = self.models_background_jobs_manager.add_training(ensemble_model_id, self.wait_and_update_status,
-                                              train_args=(ensemble_model_id,
-                                                          [future for model_id, future in model_ids_and_futures]),
-                                              use_gpu=self.gpu_support, done_callback=done_callback)
+        future = self.models_background_jobs_manager.add_training(
+            ensemble_model_id, self.wait_and_update_status,
+            train_args=(ensemble_model_id, [future for model_id, future in model_ids_and_futures]),
+            use_gpu=self.gpu_support, done_callback=done_callback)
         logging.info(f"training an ensemble model id {ensemble_model_id} using {len(train_data)} elements")
         return ensemble_model_id, future
 
@@ -70,38 +68,7 @@ class Ensemble(ModelAPI):
         return model_id
 
     def _train(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
-        # models_done = []
-        # def part_done_callback(models_done, future):
-        #     try:
-        #         model_id = future.result()
-        #         models_done.append(ModelStatus.READY)
-        #     except Exception:
-        #         models_done.append(ModelStatus.ERROR)
-        #
-        # [model.train(train_data, train_params,
-        #              functools.partial(self.part_done_callback, models_done))
-        # for model in self.models]
-        #
-        # while len(models_done) < len(self.models):
-        #     import time
-        #     time.sleep(1)
-        #     logging.info(f"busy waiting for all ensemble parts to train, {len(models_done)} done so far")
-        #     if len(models_done)==len(self.models) and all(element==ModelStatus.READY for element in models_done):
-        #         break
-        #     if  len(models_done)==len(self.models) and any(element==ModelStatus.ERROR for element in models_done):
-        #         raise Exception("One of the ensemble models failed. See error above")
-
-        import time
-        while self.get_model_status(model_id) != ModelStatus.READY:
-            time.sleep(1)
-            logging.info(f"busy waiting for all ensemble parts to train")
-            statuses = [model.get_model_status(m_id) for model, m_id in zip(self.models, model_id.split(","))]
-            if all(status == ModelStatus.READY for status in statuses):
-                break
-            if ModelStatus.ERROR in statuses:
-                raise Exception("One of the ensemble models failed")
-
-
+        pass
 
     def _infer(self, model_id, items_to_infer):
         type_to_predictions = {}
@@ -119,15 +86,6 @@ class Ensemble(ModelAPI):
         return [EnsemblePrediction(label=label, score=score, model_type_to_prediction=type_to_prediction)
                 for label, score, type_to_prediction in zip(labels, aggregated_scores, model_type_to_prediction_list)]
 
-    # def get_model_status(self, model_id):
-    #     statuses = [model.get_model_status(m_id) for model, m_id in zip(self.models, model_id.split(","))]
-    #     if ModelStatus.ERROR in statuses:
-    #         return ModelStatus.ERROR
-    #     elif ModelStatus.TRAINING in statuses:
-    #         return ModelStatus.TRAINING
-    #     else:
-    #         return ModelStatus.READY
-
     def get_models_dir(self):
         return self.model_dir
 
@@ -142,13 +100,13 @@ class Ensemble(ModelAPI):
 if __name__ == '__main__':
 
     model = Ensemble([ModelTypes.NB_OVER_BOW, ModelTypes.SVM_OVER_GLOVE],ModelsBackgroundJobsManager())
-    train_data = [{"text": "I love dogs", "label": 1},
-                  {"text": "I like to play with dogs", "label": 1},
-                  {"text": "dogs are better than cats", "label": 1},
-                  {"text": "cats cats cats", "label": 0},
-                  {"text": "play with cats", "label": 0},
-                  {"text": "dont know", "label": 0},
-                  {"text": "what else", "label": 0}]
+    train_data = [{"text": "I love dogs", "label": True},
+                  {"text": "I like to play with dogs", "label": True},
+                  {"text": "dogs are better than cats", "label": True},
+                  {"text": "cats cats cats", "label": False},
+                  {"text": "play with cats", "label": False},
+                  {"text": "dont know", "label": False},
+                  {"text": "what else", "label": False}]
     model_id,future = model.train(train_data, {})
     future.result()
     infer_list = []

@@ -9,7 +9,7 @@ from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label,
 from lrtc_lib.data_access.processors.data_processor_api import DataProcessorAPI
 
 
-class AlreadyExistException(Exception):
+class AlreadyExistsException(Exception):
     def __init__(self, message, documents):
         self.message = message
         self.documents = documents
@@ -54,8 +54,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def unset_labels(self, workspace_id: str, category_name, uris: Sequence[str],
-                   apply_to_duplicate_texts=False):
+    def unset_labels(self, workspace_id: str, category_name, uris: Sequence[str], apply_to_duplicate_texts=False):
         """
         Remove workspace labels for a certain category from a specified list of uris.
 
@@ -68,32 +67,20 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_documents(self, workspace_id: Union[str,None], dataset_name: str, uris: Iterable[str]) \
+    def get_documents(self, workspace_id: Union[None, str], dataset_name: str, uris: Iterable[str]) \
             -> List[Document]:
         """
-        Return a List of Document objects, from the given dataset_name, matching the uris provided.
+        Return a List of Documents, from the given dataset_name, matching the uris provided, and add the label
+        information for the workspace to the TextElements of these Documents, if available.
 
-        :param workspace_id
+        :param workspace_id: the workspace_id of the labeling effort. if None, documents are returned without
+        label information
         :param dataset_name: the name of the dataset from which the documents should be retrieved.
         :param uris: an Iterable of uris of Documents, represented as string.
-        :return: a List of Document, from the given dataset_name, matching the uris provided.
+        :return: a List of Document objects, from the given dataset_name, matching the uris provided, containing label
+        information for the TextElements of these Documents, if available.
         """
 
-
-    # @abc.abstractmethod
-    # def get_documents_with_labels_info(self, workspace_id: str, dataset_name: str, uris: Iterable[str]) \
-    #         -> List[Document]:
-    #     """
-    #     Return a List of Documents, from the given dataset_name, matching the uris provided, and add the label
-    #     information for the workspace to the TextElements of these Documents, if available.
-    #
-    #     :param workspace_id: the workspace_id of the labeling effort.
-    #     :param dataset_name: the name of the dataset from which the documents should be retrieved.
-    #     :param uris: an Iterable of uris of Documents, represented as string.
-    #     :return: a List of Documents, from the given dataset_name, matching the uris provided, containing label
-    #     information for the TextElements of these Documents, if available.
-    #     """
-    #
     @abc.abstractmethod
     def get_all_document_uris(self, dataset_name: str) -> List[str]:
         """
@@ -121,8 +108,9 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize, sample_start_idx=0,
-                             query_regex: str = None, remove_duplicates=False, random_state: int = 0) -> Mapping:
+    def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize,
+                          sample_start_idx: int = 0, query_regex: str = None, remove_duplicates=False,
+                          random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query,
         and add their labels information for workspace_id, if available.
@@ -130,7 +118,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param sample_size: how many TextElements should be sampled
-        :param sample_start_idx: get elements starting from this index (for paging)
+        :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
         :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
@@ -142,10 +130,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
-                                       sample_size: int = sys.maxsize,
-                                       sample_start_idx: int = 0,
-                                       query_regex: str = None, remove_duplicates=False,
-                                       random_state: int = 0) -> Mapping:
+                                    sample_size: int = sys.maxsize, sample_start_idx: int = 0, query_regex: str = None,
+                                    remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, unlabeled for category_name in workspace_id, optionally
         limiting to those matching a query.
@@ -154,7 +140,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param category_name: we demand that the elements are not labeled for this category
         :param sample_size: how many TextElements should be sampled
-        :param sample_start_idx: get elements starting from this index (for paging)
+        :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
         :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
@@ -166,8 +152,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
-                                     sample_size: int = sys.maxsize, query: str = None, remove_duplicates=False,
-                                     random_state: int = 0) -> Mapping:
+                                     sample_size: int = sys.maxsize, query_regex: str = None,
+                                     remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, labeled for category_name in workspace_id,
         optionally limiting to those matching a query.
@@ -176,7 +162,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param category_name: we demand that the elements are labeled for this category
         :param sample_size: how many TextElements should be sampled
-        :param query: a regular expression that should be matched in the sampled TextElements. If None, then no such
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
         filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
@@ -201,7 +187,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def delete_all_labels(self, workspace_id, dataset_name):
         """
-        Delete the labels info of the given workspace_id for the given dataset.
+        Delete the labels info of the given workspace_id for the given dataset (other labels info files are kept).
         :param workspace_id:
         :param dataset_name:
         """
@@ -219,16 +205,14 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_all_dataset_names(self) -> List[str]: #TODO rename to get_all_dataset_names()
+    def get_all_dataset_names(self) -> List[str]:
         """
-        Return a list of all available datset names
-        @return:
+        :return: a list of all available datset names
         """
 
     @abc.abstractmethod
     def delete_dataset(self, dataset_name):
         """
         Delete dataset by name
-        @param dataset_name:
-        @return:
+        :param dataset_name:
         """

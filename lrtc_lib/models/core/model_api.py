@@ -60,7 +60,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         """
         start training in a background thread and returns a unique model identifier that will be used for inference.
         :param train_data: a list of dictionaries with at least the "text" and "label" fields, additional fields can be
-        passed e.g. [{'text': 'text1', 'label': 1, 'additional_field': 'value1'}, {'text': 'text2', 'label': 0,
+        passed e.g. [{'text': 'text1', 'label': True, 'additional_field': 'value1'}, {'text': 'text2', 'label': False,
         'additional_field': 'value2'}]
         :param train_params: dictionary for additional train parameters (can be None)
         :rtype: model_id unique id

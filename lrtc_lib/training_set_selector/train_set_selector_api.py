@@ -9,8 +9,8 @@ from lrtc_lib.data_access.core.data_structs import TextElement
 class TrainingSetSelectionStrategy(Enum):
     """
     Given the current set of elements labeled by the user, a TrainingSetSelectionStrategy determines which examples
-    will be sent in practice to the model at training time. For example, additional _unlabeled_ elements may be given
-    to the model as weak negative examples.
+    will be sent in practice to the model at training time. For example, the strategy may specify that additional
+    _unlabeled_ elements will be given to the model as weak negative examples.
     """
     ALL_LABELED = 0
     ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO = 1

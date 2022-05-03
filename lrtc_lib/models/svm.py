@@ -65,8 +65,7 @@ class SVM(ModelAPI):
 
     def get_probs(self, model, features):
         distances = np.array(model.decision_function(features))  # get distances from hyperplanes (per class)
-        # Binary class may produce only 1 class instead of 2
-        if len(distances.shape) == 1:
+        if len(distances.shape) == 1: # binary classification
             distances = distances / 2 + 0.5
             distances = np.expand_dims(distances, 1)
             distances = np.concatenate([1 - distances, distances], axis=1)

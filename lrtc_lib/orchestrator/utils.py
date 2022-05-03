@@ -1,20 +1,21 @@
-from typing import Mapping, Sequence, Set
+from typing import Mapping, Sequence
 
-from sklearn.preprocessing import MultiLabelBinarizer
-
-from lrtc_lib.data_access.core.data_structs import URI_SEP
+from lrtc_lib.data_access.core.data_structs import TextElement
 
 
-def _convert_text_elements_to_train_data(data, category_name) -> Sequence[Mapping]:
+def _convert_text_elements_to_train_data(elements: Sequence[TextElement], category_name) -> Sequence[Mapping]:
     """
-    convert textual labels to integers and convert to expected inference input format
-    :param data:
+    Convert a list of text elements to the expected format for training a model.
+    :param elements: a list of TextElement objects
+    :param category_name:
+    :return: a list of dictionaries with at least the "text" and "label" fields, e.g. [{'text': 'text1', 'label': True,
+    'additional_field': 'value1'}, {'text': 'text2', 'label': False,  'additional_field': 'value2'}]
     """
-    labels = [element.category_to_label[category_name].label for element in data]
-    metadata = [element.category_to_label[category_name].metadata for element in data]
+    labels = [element.category_to_label[category_name].label for element in elements]
+    metadata = [element.category_to_label[category_name].metadata for element in elements]
 
     converted_data = [{"text": element.text, "label": label, **example_metadata}
-                      for element, label, example_metadata in zip(data, labels, metadata)]
+                      for element, label, example_metadata in zip(elements, labels, metadata)]
     return converted_data
 
 

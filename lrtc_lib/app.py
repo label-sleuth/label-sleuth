@@ -43,7 +43,7 @@ from lrtc_lib.core.information_gain_utils import information_gain
 from lrtc_lib.config import CONFIGURATION
 from lrtc_lib.configurations.users import users, tokens
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
-from lrtc_lib.data_access.data_access_api import AlreadyExistException, get_document_uri
+from lrtc_lib.data_access.data_access_api import AlreadyExistsException, get_document_uri
 
 print("user:")
 print(getpass.getuser())
@@ -179,7 +179,7 @@ def add_documents(dataset_name):
                         "num_docs": document_statistics.documents_loaded,
                         "num_sentences": document_statistics.text_elements_loaded,
                         "workspaces_to_update": workspaces_to_update})
-    except AlreadyExistException as e:
+    except AlreadyExistsException as e:
         return jsonify({"dataset_name": dataset_name, "error": "documents already exist", "documents": e.documents,
                         "error_code": 409})
     except Exception:
@@ -306,7 +306,7 @@ def get_all_positive_labeled_elements_for_category(workspace_id):
     category = request.args.get('category_name')
     elements = \
         orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id),
-                                                       category)["results"]
+                                                       category)
     positive_elements = [element for element in elements if element.category_to_label[category].label == LABEL_POSITIVE]
 
     elements_transformed = elements_back_to_front(workspace_id, positive_elements, category)
@@ -321,7 +321,7 @@ def get_label_and_model_disagreements(workspace_id):
     category = request.args.get('category_name')
     elements = \
         orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id),
-                                                       category)["results"]
+                                                       category)
     elements_transformed = elements_back_to_front(workspace_id, elements, category)
 
     res = {'disagree_elements':
@@ -335,7 +335,9 @@ def get_label_and_model_disagreements(workspace_id):
 @auth.login_required
 def get_labeled_elements_enriched_tokens(workspace_id):
     category = request.args.get('category_name')
-    elements = orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id), category)["results"]
+    elements = \
+        orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id),
+                                                       category)
     elements_transformed = elements_back_to_front(workspace_id, elements, category)
     res = dict()
     if elements:
