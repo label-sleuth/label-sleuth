@@ -7,7 +7,7 @@ const token = localStorage.getItem('token')
 
 const initialState = {
   workspaces: [],
-  workspace: '',
+  active_workspace: '',
   datasets: [],
   dataset: '',
   loading: false,
@@ -53,8 +53,8 @@ export const workspacesSlice = createSlice({
   name: 'workspaces',
   initialState,
   reducers: {
-    setActiveWorspace: (state, action) => {
-      state.workspace = action.payload
+    setActiveWorkspace: (state, action) => {
+      state.active_workspace = action.payload 
     },
   },
   extraReducers: {
@@ -102,7 +102,7 @@ export const workspacesSlice = createSlice({
   },
 })
 export const {
-  setActiveWorspace,
+  setActiveWorkspace,
 } = workspacesSlice.actions
 
 export const workspacesReducer = workspacesSlice.reducer
