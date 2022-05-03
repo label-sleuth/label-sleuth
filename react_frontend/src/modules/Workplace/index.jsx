@@ -10,13 +10,20 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import './styles.css'
 import Divider from '@mui/material/Divider';
+import LinearWithValueLabel from './ModelProgressBar'
+import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import Highlighter from "react-highlight-words";
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
+import CreateCategoryModal from './Modal';
 import Paper from '@mui/material/Paper';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import SearchPanel from './SearchPanel'
+import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchElements, fetchCategories, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState, searchKeywords } from './DataSlice.jsx';
+import { fetchElements, getElementToLabel, prevPrediction, nextPrediction, fetchCategories, getPositiveElementForCategory, checkModelUpdate, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState, searchKeywords, fetchCertainDocument } from './DataSlice.jsx';
 import InputBase from '@mui/material/InputBase';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -143,15 +150,6 @@ const ModelName = styled('div')(({ theme }) => ({
   // ...theme.mixins.toolbar,
 }));
 
-const SearchPanel = styled(Paper)(({ theme }) => ({
-  padding: 10,
-  marginTop: 25,
-  marginLeft: 50,
-  marginRight: 50
-  // necessary for content to be below app bar
-  // ...theme.mixins.toolbar,
-}));
-
 const WorkspaceSelect = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
@@ -260,6 +258,22 @@ const HistoryText = styled(Box)((props) => ({
   padding: 2.5
 }))
 
+function ElevationScroll(props) {
+  const { children, window } = props;
+  // Note that you normally won't need to set the window ref as useScrollTrigger
+  // will default to window.
+  // This is only being set here because the demo is in an iframe.
+  const trigger = useScrollTrigger({
+    disableHysteresis: true,
+    threshold: 0,
+    target: window ? window() : undefined,
+  });
+
+  return React.cloneElement(children, {
+    elevation: trigger ? 4 : 0,
+  });
+}
+
 function WorkspaceSelectFormControl() {
   return (
     <FormControl sx={{ marginTop: 1, minWidth: 120 }}>
@@ -296,6 +310,39 @@ function ModelFormControl() {
   );
 }
 
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+}
+
+// TabPanel.propTypes = {
+//   children: PropTypes.node,
+//   index: PropTypes.number.isRequired,
+//   value: PropTypes.number.isRequired,
+// };
+
+function a11yProps(index) {
+  return {
+    id: `simple-tab-${index}`,
+    'aria-controls': `simple-tabpanel-${index}`,
+  };
+}
+
 function CategoryFormControl(props) {
 
   const workspace = useSelector(state => state.workspace)
@@ -307,8 +354,18 @@ function CategoryFormControl(props) {
         id="label-select"
         sx={{ height: 30 }}
         value={workspace.curCategory}
-        onChange={(e) => dispatch(updateCurCategory(e.target.value))}
-      >
+        onChange={(e) => {
+          dispatch(updateCurCategory(e.target.value))
+          dispatch(fetchElements()).then(() => 
+          dispatch(getPositiveElementForCategory()).then(() => {
+            dispatch(getElementToLabel())
+          }))
+        }}>
+        {
+          workspace.new_categories.map((category) => {
+            return (<MenuItem value={category}>{category}</MenuItem>)
+          })
+        }
         {
           workspace.categories.map((e) => {
             return (<MenuItem value={e.id}>{e.category_name}</MenuItem>)
@@ -337,6 +394,7 @@ export default function Workspace() {
   // const [focusedIndex, setFocusedIndex] = React.useState(0);
   const [searchInput, setSearchInput] = React.useState("");
   const [searchResult, setSearchResult] = React.useState([]);
+  const [drawerContent, setDrawerContent] = React.useState("");
   // const [focusedState, setFocusedState] = React.useState({ ...init_focused_states, L0: true });
   const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
 
@@ -374,6 +432,49 @@ export default function Workspace() {
     }
   }
 
+  const handleNextLabelClick = () => {
+
+    dispatch(nextPrediction())
+
+    const element_id = workspace.elementsToLabel[workspace.indexPrediction]['id']
+    const splits = workspace.elementsToLabel[workspace.indexPrediction]['id'].split("-")
+    const docid = workspace.elementsToLabel[workspace.indexPrediction]['docid']
+    const eid = parseInt(splits[splits.length-1])
+    
+    if (docid != workspace.curDocId) {
+      dispatch(fetchCertainDocument({ docid, eid })).then(() => {
+
+        console.log(`element id: ${element_id}`)
+
+        console.log(workspace.elements)
+
+        document.getElementById('L'+eid).scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          // inline: "nearest"
+        })
+      })
+    } else {
+      dispatch(setFocusedState(eid))
+    }
+
+  }
+
+  const handlePrevLabelClick = () => {
+
+    dispatch(prevPrediction())
+
+    const splits = workspace.elementsToLabel[workspace.indexPrediction]['id'].split("-")
+    const docid = workspace.elementsToLabel[workspace.indexPrediction]['docid']
+    const eid = parseInt(splits[splits.length-1])
+    
+    if (docid != workspace.curDocId) {
+      dispatch(fetchCertainDocument({ docid, eid }))
+    } else {
+      dispatch(setFocusedState(eid))
+    }
+  }
+
   // React.useEffect(() => {
   //   document.addEventListener('keydown', handleKeyEvent)
   // }, []);
@@ -387,13 +488,6 @@ export default function Workspace() {
     }
   }
 
-  const handleSearchPanelClick = (id) => {
-    console.log(`Search panel clicked, id: ${id}`)
-
-    dispatch(setFocusedState(id))
-
-  }
-
   const classes = useStyles();
   const workspace = useSelector(state => state.workspace)
 
@@ -401,7 +495,27 @@ export default function Workspace() {
 
   React.useEffect(() => {
     dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories())))
-  }, [])
+
+    const interval = setInterval(() => {
+
+      console.log(`curCategory value: ${workspace.curCategory}`)
+      
+      if (workspace.curCategory != null) {
+        const old_model_version = workspace.model_version
+        dispatch(checkModelUpdate()).then(() => {
+          if (old_model_version != workspace.model_version) {
+            console.log(`model version changed to: ${workspace.model_version}`)
+            dispatch(fetchElements())
+          }
+        })
+      } else {
+      }
+
+    }, 5000);
+  
+    return () => clearInterval(interval);
+
+  }, [workspace.curCategory])
 
 
   const handleSearch = () => {
@@ -409,6 +523,13 @@ export default function Workspace() {
     dispatch(searchKeywords({keyword: searchInput}))
 
   }
+
+  const [tabValue, setTabValue] = React.useState(0);
+  const [modalOpen, setModalOpen] = React.useState(false)
+
+  const handleChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
 
 
   return (
@@ -448,10 +569,10 @@ export default function Workspace() {
                 </Typography>
               </Box>
             </AccountInfo>
-            <WorkspaceSelect>
+            {/* <WorkspaceSelect>
               <Typography>Workspace:</Typography>
               <WorkspaceSelectFormControl />
-            </WorkspaceSelect>
+            </WorkspaceSelect> */}
             <Divider />
             <StackBarContainer>
               {/* <PieChart
@@ -471,46 +592,57 @@ export default function Workspace() {
                   { value: 100 * (numLabel['neg'] / (1.0 * 131)), color: "#ff758f" },
                   { value: 10, color: "#f9f7f3" }]} />
             </StackBarContainer>
-            <Stack spacing={0} sx={{ marginBottom: 2 }}>
-              <ClassContainer>
-                <Typography><strong>Positive</strong></Typography>
-                <Typography><strong>{numLabel['pos']}</strong></Typography>
-              </ClassContainer>
-              <ClassContainer>
-                <Typography><strong>Negative</strong></Typography>
-                <Typography><strong>{numLabel['neg']}</strong></Typography>
-              </ClassContainer>
-              <ClassContainer>
-                <Typography><strong>Total</strong></Typography>
-                <Typography><strong>{workspace.elements.length}</strong></Typography>
-              </ClassContainer>
-            </Stack>
+            <Box sx={{ width: '100%' }}>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs value={tabValue} onChange={handleChange} aria-label="basic tabs example">
+                  <Tab label="Workspace" {...a11yProps(0)}/>
+                  <Tab label="This file" {...a11yProps(1)}/>
+                </Tabs>
+              </Box>
+              <TabPanel value={tabValue} index={0}>
+                <Stack spacing={0} sx={{ marginBottom: 2 }}>
+                  <ClassContainer>
+                    <Typography><strong>Positive</strong></Typography>
+                    <Typography><strong>{numLabel['pos']}</strong></Typography>
+                  </ClassContainer>
+                  <ClassContainer>
+                    <Typography><strong>Negative</strong></Typography>
+                    <Typography><strong>{numLabel['neg']}</strong></Typography>
+                  </ClassContainer>
+                  <ClassContainer>
+                    <Typography><strong>Total</strong></Typography>
+                    <Typography><strong>{workspace.elements.length}</strong></Typography>
+                  </ClassContainer>
+                </Stack>
+              </TabPanel>
+              <TabPanel value={tabValue} index={1}>
+                <Stack spacing={0} sx={{ marginBottom: 2 }}>
+                    <ClassContainer>
+                      <Typography><strong>Positive</strong></Typography>
+                      <Typography><strong>{numLabel['pos']}</strong></Typography>
+                    </ClassContainer>
+                    <ClassContainer>
+                      <Typography><strong>Negative</strong></Typography>
+                      <Typography><strong>{numLabel['neg']}</strong></Typography>
+                    </ClassContainer>
+                    <ClassContainer>
+                      <Typography><strong>Document</strong></Typography>
+                      <Typography><strong>{workspace.elements.length}</strong></Typography>
+                    </ClassContainer>
+                  </Stack>
+              </TabPanel>
+            </Box>
+
             <Divider />
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2 }}>
               <Typography><strong>Model information</strong></Typography>
             </Box>
             <ModelName>
               <Typography>Current classifier:</Typography>
-              <Typography>v.2 model</Typography>
+              <Typography>v.{workspace.model_version} model</Typography>
             </ModelName>
-            <ModelFormControl />
-            <Divider />
-            {/* <Box sx={{ marginTop: 2, marginBottom: 2 }}>
-              <Typography sx={{ textAlign: "center" }}><strong>Dataset information</strong></Typography>
-              <ClassContainer sx={{ marginTop: 2 }}>
-                <Typography><strong>Total instance</strong></Typography>
-                <Typography><strong>32</strong></Typography>
-              </ClassContainer>
-              <ClassContainer>
-                <Typography><strong>Positive</strong></Typography>
-                <Typography><strong>24</strong></Typography>
-              </ClassContainer>
-              <ClassContainer>
-                <Typography><strong>Negative</strong></Typography>
-                <Typography><strong>8</strong></Typography>
-              </ClassContainer>
-            </Box> */}
-            <Box>
+            <LinearWithValueLabel />
+            {/* <Box>
               <Accordion sx={{ backgroundColor: "grey" }}>
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon />}
@@ -520,12 +652,6 @@ export default function Workspace() {
                   <Typography>History</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  {/* <HistoryText>
-                  <Typography sx={{ whiteSpace: "normal" }} paragraph>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                    tempor incididunt ut labore et dolore magna aliqua.
-                  </Typography>
-                </HistoryText> */}
                   <Card>
                     <CardContent>
                       <Typography sx={{ whiteSpace: "normal" }} paragraph>
@@ -536,35 +662,60 @@ export default function Workspace() {
                   </Card>
                 </AccordionDetails>
               </Accordion>
-            </Box>
+            </Box> */}
           </Stack>
         </Drawer>
       </Box>
 
       <Box component="main" sx={{ flexGrow: 1, p: 3, width: `calc(100% - ${drawerWidth}px)` }}>
-        <AppBar open={open}>
-          <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
-            <Typography><strong>Label:</strong></Typography>
-            <CategoryFormControl />
-          </Box>
-          <ToolBar>
-            <ButtonGroup variant="contained" aria-label="split button" sx={{ mr: 2 }}>
-              <Button >Next to label (2/20)</Button>
-              <Button>
-                <ArrowDropUpIcon />
-              </Button>
-              <Button>
-                <ArrowDropDownIcon />
-              </Button>
-            </ButtonGroup>
-            {
-              !open &&
-              <IconButton onClick={handleDrawerOpen}>
-                <SearchIcon />
-              </IconButton>
-            }
-          </ToolBar>
-        </AppBar>
+      <ElevationScroll >
+          <AppBar open={open}>
+            <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
+              <Typography><strong>Category:</strong></Typography>
+              <CategoryFormControl />
+
+              <a>
+                <Typography sx={{cursor: "pointer"}} onClick={() => setModalOpen(true)} paragraph component="span" color="primary" variant="body1">
+                  create new category
+                </Typography>
+              </a>
+            </Box>
+            <ToolBar>
+              <ButtonGroup variant="contained" aria-label="split button" sx={{ mr: 2 }}>
+                <Button onClick={() => {
+                  dispatch(nextPrediction())
+                  dispatch(setFocusedState(workspace.indexPrediction))
+
+                  document.getElementById('L'+workspace.indexPrediction).scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                    // inline: "nearest"
+                  })
+                }}>
+                Next positive prediction
+                </Button>
+              </ButtonGroup>
+              {
+                !open &&
+                <Box>
+                  <IconButton onClick={() => {
+                    setDrawerContent("search")
+                    handleDrawerOpen() 
+                  }}>
+                    <SearchIcon />
+                  </IconButton>
+                  <IconButton onClick={() => {
+                    setDrawerContent("rcmd")
+                    dispatch(getElementToLabel())
+                    handleDrawerOpen() 
+                  }}>
+                    <FeaturedPlayListIcon />
+                  </IconButton>
+                </Box>
+              }
+            </ToolBar>
+          </AppBar>
+        </ElevationScroll>
         <Main open={open}>
           <TitleBar>
             <IconButton onClick={() => {
@@ -576,7 +727,7 @@ export default function Workspace() {
             </IconButton>
             <Typography sx={{ fontSize: 20 }}>
               <strong>
-                storybook_sentence_val_split-black_arts
+                {workspace.curDocName}
               </strong>
             </Typography>
             <IconButton onClick={() => {
@@ -590,9 +741,9 @@ export default function Workspace() {
           </TitleBar>
           <Box>
             {
-              workspace.curCategory != null && workspace['elements'].map((element, index) => {
+                workspace['elements'].length > 0 && workspace['elements'].map((element, index) => {
                 const len_elements = workspace['elements'].length
-                return (<Element keyEventHandler={(e) => handleKeyEvent(e, len_elements)} focusedState={workspace.focusedState} id={index} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id={element['id']} text={element['text']} />)
+                return (<Element id={'L'+index} keyEventHandler={(e) => handleKeyEvent(e, len_elements)} focusedState={workspace.focusedState} index={index} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id={element['id']} prediction={workspace.predictionForDocCat} text={element['text']} />)
               })
             }
           </Box>
@@ -619,42 +770,54 @@ export default function Workspace() {
           // variant="permanent"
           onClose={handleDrawerClose}
         >
-          {/* <Paper
-            component="form"
-            sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto", marginTop: 5 }}
-          > */}
-          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItem: 'center', marginTop: 3 }} >
-            <IconButton onClick={handleDrawerClose}>
-              <ChevronLeftIcon />
-            </IconButton>
-            <SearchBar
-              style={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto" }}
-              value={searchInput}
-              onRequestSearch={() => handleSearch()}
-              onChange={(newValue) => setSearchInput(newValue)}
-              onCancelSearch={() => setSearchInput("")}
-            />
-          </Box>
-
-          {/* </Paper> */}
-
           {
-            workspace.searchResult.map((r) => {
-              return (
-                <SearchPanel style={{ cursor: "pointer" }}>
-                  <Highlighter
-                    // highlightClassName="YourHighlightClass"
-                    searchWords={[searchInput]}
-                    autoEscape={true}
-                    textToHighlight={r.text}
-                  />
-                </SearchPanel>
-              )
-            })
+            drawerContent == 'search' &&
+            <Box>
+              <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItem: 'center', marginTop: 3 }} >
+                <IconButton onClick={handleDrawerClose}>
+                  <ChevronLeftIcon />
+                </IconButton>
+                <SearchBar
+                  style={{ p: '2px 2px', display: 'flex', alignItems: 'center', width: 300, margin: "0 auto" }}
+                  value={searchInput}
+                  onRequestSearch={() => handleSearch()}
+                  onChange={(newValue) => setSearchInput(newValue)}
+                  onCancelSearch={() => setSearchInput("")}
+                />
+              </Box>
+              {
+                workspace.searchResult.map((r) => {
+                  return (
+                    <SearchPanel numLabel={numLabel}  prediction={ r.model_predictions.length > 0 ? r.model_predictions[Object.keys(r.model_predictions)[Object.keys(r.model_predictions).length-1]] : null } element_id={r.id} numLabelHandler={setNumLabel} text={r.text} searchInput={searchInput} docid={r.docid} id={r.id} />
+                  )
+                })
+              }
+           </Box>
           }
+          {
+            drawerContent == 'rcmd' &&
+            <Box>
+              <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItem: 'center', marginTop: 3 }} >
+                <IconButton onClick={handleDrawerClose}>
+                  <ChevronLeftIcon />
+                </IconButton>
+                <Typography sx={{ textAlign: "center", marginRight: "auto", marginLeft: "auto", marginTop: 2, }}><strong>Recommend to label</strong></Typography>
+              </Box>
+
+              <Box>
+                {workspace.elementsToLabel.map((r) => {
+                  return (
+                    <SearchPanel numLabel={numLabel} prediction={r.model_predictions[workspace.curCategory]} element_id={r.id} numLabelHandler={setNumLabel} text={r.text} searchInput={searchInput} docid={r.docid} id={r.id} />
+                  )
+                })}
+              </Box>
+           </Box>
+          }
+
         </Drawer>
       </Box>
 
+      <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
 
     </Box>
   );
