@@ -15,7 +15,7 @@ ReactDOM.render(
   <Provider store={configureStore}>
     <ThemeProvider theme={theme}>
       <BrowserRouter>
-        <App  ToastContainer ={ToastContainer}  toast={toast} />
+        <App ToastContainer={ToastContainer} toast={toast} />
       </BrowserRouter>
     </ThemeProvider>
   </Provider>,

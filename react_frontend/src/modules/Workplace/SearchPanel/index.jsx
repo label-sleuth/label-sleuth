@@ -7,7 +7,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import IconButton from "@mui/material/IconButton";
 import Stack from '@mui/material/Stack';
 import { Typography } from "@mui/material";
-import { setFocusedState, fetchCertainDocument, setElementLabel, getElementToLabel } from '../DataSlice.jsx';
+import { setFocusedState, fetchCertainDocument, checkStatus, setElementLabel, getElementToLabel } from '../DataSlice.jsx';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from '@mui/styles';
 import { styled, useTheme } from '@mui/material/styles';
@@ -68,6 +68,10 @@ export default function SearchPanel(props) {
 
     const workspace = useSelector(state => state.workspace)
 
+    const splits = element_id.split("-")
+
+    const index = parseInt(splits[splits.length-1])
+
     const dispatch = useDispatch();
 
     const [ labelState, setLabelState ] = useState("")
@@ -79,16 +83,19 @@ export default function SearchPanel(props) {
     }, [prediction])
 
     const handleSearchPanelClick = (docid, eid) => {
-
-        const splits = eid.split("-")
-        eid = parseInt(splits[splits.length-1])
     
         console.log(`eid: ${eid}`)
+
+        const splits = element_id.split("-")
+
+        const index = parseInt(splits[splits.length-1])
         
         if (docid != workspace.curDocId) {
-          dispatch(fetchCertainDocument({ docid, eid }))
+          dispatch(fetchCertainDocument({ docid, eid })).then(() => {
+            dispatch(setFocusedState(index))
+          })
         } else {
-          dispatch(setFocusedState(eid))
+          dispatch(setFocusedState(index))
         }
     
       }
@@ -125,10 +132,14 @@ export default function SearchPanel(props) {
                             setLabelState(newState)
 
                             dispatch(setElementLabel({ element_id: element_id, docid: docid, label: "true" })).then(() => {
-                                // if (workspace.num_cur_batch == 10) {
-                                //     dispatch(getElementToLabel())
-                                // }
+                                dispatch(checkStatus())
                             })
+
+                            document.getElementById('L'+index).scrollIntoView({
+                                behavior: "smooth",
+                                block: "start",
+                                // inline: "nearest"
+                              })
                         }}>
                             <CheckIcon className={classes.checkicon} />
                         </IconButton> }
@@ -149,10 +160,14 @@ export default function SearchPanel(props) {
                             setLabelState(newState)
 
                             dispatch(setElementLabel({ element_id: element_id, docid: docid, label: "false" })).then(() => {
-                                // if (workspace.num_cur_batch == 10) {
-                                //     dispatch(getElementToLabel())
-                                // }
+                                dispatch(checkStatus())
                             })
+
+                            document.getElementById('L'+index).scrollIntoView({
+                                behavior: "smooth",
+                                block: "start",
+                                // inline: "nearest"
+                              })
                         }}>
                             <CloseIcon className={classes.crossicon} />
                         </IconButton> }
@@ -168,6 +183,12 @@ export default function SearchPanel(props) {
                                 }
 
                                 setLabelState(newState)
+
+                                document.getElementById('L'+index).scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "start",
+                                    // inline: "nearest"
+                                  })
                             }}>
                                 <QuestionMarkIcon className={classes.questionicon} />
                             </IconButton>

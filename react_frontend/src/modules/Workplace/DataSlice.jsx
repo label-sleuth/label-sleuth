@@ -19,7 +19,9 @@ const initialState = {
     searchResult: [],
     model_version: 0,
     indexPrediction: 0,
-    predictionForDocCat: []
+    predictionForDocCat: [],
+    modelUpdateProgress: 0,
+    new_categories: []
 }
 
 const token = "Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q"
@@ -103,7 +105,7 @@ export const fetchNextDocElements = createAsyncThunk('workspace/fetchNextDoc', a
 
     const curDocument = state.workspace.documents[state.workspace.curDocId+1]['document_id']
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -122,7 +124,7 @@ export const fetchPrevDocElements = createAsyncThunk('workspace/fetchPrevDoc', a
 
     const curDocument = state.workspace.documents[state.workspace.curDocId-1]['document_id']
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -141,7 +143,13 @@ export const fetchElements = createAsyncThunk('workspace/fetchElements', async (
 
     const curDocument = state.workspace.documents[state.workspace.curDocId]['document_id']
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}`)
+    var url = null;
+
+    if (state.workspace.curCategory == null) {
+        url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}`)
+    } else {
+        url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
+    }
 
     const data = await fetch(url, {
         headers: {
@@ -162,9 +170,7 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
 
     console.log(`call fetchCertainDocument, eid: ${eid}`)
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${docid}`)
-
-    console.log(`Here!`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${docid}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -241,21 +247,47 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
 
 })
 
+export const checkStatus = createAsyncThunk('workspace/get_labelling_status', async (request, { getState }) => {
+    const state = getState()
+
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/status?category_name=${state.workspace.curCategory}`)
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        method: "GET"
+    }).then( response => response.json())
+
+    return data
+})
+
 const DataSlice = createSlice({
     name: "workspace",
     initialState,
     reducers: {
         nextPrediction(state, action) {
-            const pred_index = state.indexPrediction
-            if (pred_index < state.elementsToLabel.length-1) {
-                return {
-                    ...state,
-                    indexPrediction: pred_index+1
+            console.log(`np data: `, state.elements)
+            
+            const pred_index = state.indexPrediction+1
+
+            var next_index = -1
+
+            for(var i = pred_index; i < state.elements.length; i++) {
+                const model_prediction = state.elements[i]['model_predictions'][Object.keys(state.elements[i]['model_predictions'])[Object.keys(state.elements[i]['model_predictions']).length - 1]]
+                if (model_prediction == 'true') {
+                    next_index = i
                 }
-            } else {
-                return {
-                    ...state
-                }
+            }
+
+            if (next_index == -1) {
+                next_index = 0
+            }
+
+            return {
+                ...state,
+                indexPrediction: next_index
             }
         },
         prevPrediction(state, action) {
@@ -305,11 +337,23 @@ const DataSlice = createSlice({
                 labelState: new_labeled_state
             }
         },
+        createNewCategory(state, action) {
+            const new_category_name = action.payload
+
+            var cat_list = [...state.new_categories]
+
+            cat_list.push(new_category_name)
+
+            return {
+                ...state,
+                new_categories: cat_list
+            }
+        }
     },
     extraReducers: {
         [fetchElements.fulfilled]: (state, action) => {
             const data = action.payload
-            console.log(data)
+            console.log(`fetchElements`, data)
 
             var initialFocusedState = {}
 
@@ -512,8 +556,6 @@ const DataSlice = createSlice({
                 }
             })
 
-
-
             if (DocId == -1) {
                 console.log(`No Doc found with docid: ${data['elements'][0]['docid']}`)
             }
@@ -531,8 +573,18 @@ const DataSlice = createSlice({
                 ready: true
             }
         },
+        [checkStatus.fulfilled]: (state, action) => {
+            const response = action.payload
+
+            const progress = response['progress']['all']
+
+            return {
+                ...state,
+                modelUpdateProgress: progress
+            }
+        }
     }
 })
 
 export default DataSlice.reducer;
-export const { updateCurCategory, prevPrediction, nextPrediction, setFocusedState, setLabelState } = DataSlice.actions;
+export const { updateCurCategory, createNewCategory, prevPrediction, nextPrediction, setFocusedState, setLabelState } = DataSlice.actions;

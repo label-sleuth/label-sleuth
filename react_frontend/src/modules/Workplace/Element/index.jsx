@@ -5,7 +5,7 @@ import Stack from '@mui/material/Stack';
 import { IconButton } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
 import { useDispatch, useSelector } from 'react-redux';
-import { setElementLabel, getElementToLabel, setFocusedState, setLabelState } from '../DataSlice'
+import { setElementLabel, getElementToLabel, setFocusedState, checkStatus, setLabelState } from '../DataSlice'
 import CloseIcon from '@mui/icons-material/Close';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import { styled, useTheme } from '@mui/material/styles';
@@ -51,12 +51,12 @@ const useStyles = makeStyles((theme) => ({
         color: "#fb8500"
     },
     focused: {
-        border: "medium solid",
-        borderColor: "#f48c06",
         outline: "None",
         alignItems: 'flex-start',
         flexDirection: 'row',
         marginBottom: 8,
+        background: '#D3D3D3',
+        fontWeight: 'bold',
         display: 'flex',
         justifyContent: 'center',
         padding: "10px 25px",
@@ -90,10 +90,10 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Sentence(props) {
 
-    const { keyEventHandler, focusedState, id, numLabel, numLabelHandler, clickEventHandler, text, element_id, prediction } = props
+    const { keyEventHandler, focusedState, index, numLabel, numLabelHandler, clickEventHandler, text, element_id, prediction } = props
 
     React.useEffect(()=> {
-        console.log(`id: ${element_id}, prediction: ${prediction}`)
+        console.log(`id: ${element_id}`)
     }, [prediction, focusedState])
     
     const dispatch = useDispatch()
@@ -104,74 +104,75 @@ export default function Sentence(props) {
 
     return (
         <Box sx={{ flexDirection: 'row' }}>
-            { (prediction.length > 0)  && 
-            <Box tabIndex="-1" className={ focusedState['L' + id] == true ? classes.focused : workspace.labelState['L' + id] != '' ? classes.normal : prediction[id] ? classes.predicted : classes.normal } onKeyDown={keyEventHandler} id={"L" + id} onClick={(e) => clickEventHandler(e, id)}>
+            <Box tabIndex="-1"  onMouseOver={() => dispatch(setFocusedState(index))} className={ focusedState['L' + index] == true ? classes.focused : workspace.labelState['L' + index] != '' ? classes.normal : prediction[index] ? classes.predicted : classes.normal } onKeyDown={keyEventHandler} id={"L" + index} onClick={(e) => clickEventHandler(e, index)}>
+                {
+                    focusedState['L' + index] != true ? 
+                    <Typography paragraph style={( workspace.labelState['L' + index] == 'pos') ? { color: "blue" } : (workspace.labelState['L' + index] == 'neg') ? { color: "red" } : (workspace.labelState['L' + index] == 'ques') ? { color: "#fb8500" } : {}}>
+                        {text}
+                    </Typography> 
+                    :
+                    <Typography paragraph style={( workspace.labelState['L' + index] == 'pos') ? { color: "blue" } : (workspace.labelState['L' + index] == 'neg') ? { color: "red" } : (workspace.labelState['L' + index] == 'ques') ? { color: "#fb8500" } : {}}>
+                        <strong>{text}</strong>
+                    </Typography> 
+                }
 
-                <Typography paragraph style={(workspace.labelState['L' + id] == 'pos') ? { color: "blue" } : (workspace.labelState['L' + id] == 'neg') ? { color: "red" } : (workspace.labelState['L' + id] == 'ques') ? { color: "#fb8500" } : {}}>
-                    {text}
-                </Typography>
-
-                {/* { (focusedState['L' + id] == true || prediction[id] == true) && */}
+                { workspace.curCategory != null &&
                     <Stack direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
-                        { (['pos'].includes(workspace.labelState['L' + id]) || ( workspace.labelState['L' + id] == '' && prediction[id] == true ) || (focusedState['L' + id] == true) ) && <IconButton onClick={() => {
+                        { (['pos'].includes(workspace.labelState['L' + index]) || ( workspace.labelState['L' + index] == '' && prediction[index] == true ) || (focusedState['L' + index] == true) ) && <IconButton onClick={() => {
                             var newState = { ...workspace.labelState }
 
-                            if (newState['L' + id] != "pos") {
-                                if (newState['L' + id] == "neg") {
+                            if (newState['L' + index] != "pos") {
+                                if (newState['L' + index] == "neg") {
                                     numLabelHandler({ "pos": numLabel['pos'] + 1, "neg": numLabel['neg'] - 1 })
                                 } else {
                                     numLabelHandler({ ...numLabel, "pos": numLabel['pos'] + 1 })
                                 }
-                                newState['L' + id] = "pos"
+                                newState['L' + index] = "pos"
                             } else {
                                 numLabelHandler({ ...numLabel, "pos": numLabel['pos'] - 1 })
-                                newState['L' + id] = ""
+                                newState['L' + index] = ""
                             }
 
 
                             dispatch(setLabelState(newState))
 
                             dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: "true" })).then(() => {
-                                if (workspace.num_cur_batch == 10) {
-                                    dispatch(getElementToLabel())
-                                }
+                                dispatch(checkStatus())
                             })
                         }}>
-                            <CheckIcon className={ ['', 'pos'].includes(workspace.labelState['L' + id]) ? classes.checkicon : classes.checkicon_predicted} />
+                            <CheckIcon className={ ['', 'pos'].includes(workspace.labelState['L' + index]) ? classes.checkicon : classes.checkicon_predicted} />
                         </IconButton> }
-                        { ( ['neg'].includes(workspace.labelState['L' + id]) || focusedState['L' + id] == true ) && <IconButton onClick={() => {
+                        { ( ['neg'].includes(workspace.labelState['L' + index]) || focusedState['L' + index] == true ) && <IconButton onClick={() => {
                             var newState = { ...workspace.labelState }
-                            if (newState['L' + id] != "neg") {
-                                if (newState['L' + id] == "pos") {
+                            if (newState['L' + index] != "neg") {
+                                if (newState['L' + index] == "pos") {
                                     numLabelHandler({ "pos": numLabel['pos'] - 1, "neg": numLabel['neg'] + 1 })
                                 } else {
                                     numLabelHandler({ ...numLabel, "neg": numLabel['neg'] + 1 })
                                 }
-                                newState['L' + id] = "neg"
+                                newState['L' + index] = "neg"
                             } else {
                                 numLabelHandler({ ...numLabel, "neg": numLabel['neg'] - 1 })
-                                newState['L' + id] = ""
+                                newState['L' + index] = ""
                             }
 
                             dispatch(setLabelState(newState))
 
                             dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: "false" })).then(() => {
-                                if (workspace.num_cur_batch == 10) {
-                                    dispatch(getElementToLabel())
-                                }
+                                dispatch(checkStatus())
                             })
                         }}>
                             <CloseIcon className={ classes.crossicon } />
                         </IconButton> }
                         {
-                            ( ['ques'].includes(workspace.labelState['L' + id]) || focusedState['L' + id] == true ) && 
+                            ( ['ques'].includes(workspace.labelState['L' + index]) || focusedState['L' + index] == true ) && 
                             <IconButton onClick={() => {
                                 var newState = { ...workspace.labelState }
 
-                                if (newState['L' + id] != "ques") {
-                                    newState['L' + id] = "ques"
+                                if (newState['L' + index] != "ques") {
+                                    newState['L' + index] = "ques"
                                 } else {
-                                    newState['L' + id] = ''
+                                    newState['L' + index] = ''
                                 }
 
                                 dispatch(setLabelState(newState))
@@ -180,9 +181,8 @@ export default function Sentence(props) {
                             </IconButton>
                         }
                     </Stack>
-                {/* } */}
+                }
             </Box>
-        }
         </Box>
 
     );
