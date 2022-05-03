@@ -1,4 +1,3 @@
-export const BASE_URL = 'http://127.0.0.1:8000'
 export const GET_WORKSPACES_API = 'workspaces'
 export const GET_DATASETS_API = 'datasets'
 export const WORKSPACE_API = 'workspace'

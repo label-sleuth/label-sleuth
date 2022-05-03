@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { BASE_URL, ADUTHENTICATE_API } from "../../config"
+import { ADUTHENTICATE_API } from "../../config"
 import { client } from '../../api/client'
 
 const initialState = {
@@ -8,6 +8,8 @@ const initialState = {
     errorMessage: '',
     isAuthenticated: false,
 }
+
+const BASE_URL = process.env.REACT_APP_API_URL
 
 const auth_url = `${BASE_URL}/${ADUTHENTICATE_API}`
 
