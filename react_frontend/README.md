@@ -12,11 +12,15 @@ Clone the repo to your local directory:\
 
 ### Step 2:
 Under the cloned directory, install the dependency:\
-    `sudo npm install`
+    `npm install`
 
 ### Step 3:
-Under the cloned directory, uun the app in the development mode:\
-    `npm start`
+Under the cloned directory, run the app in the development mode:\
+    `npm run start:dev`
+
+### Step 4:
+Under the cloned directory, run the app in the production mode:\
+    `npm run start:prod`
 
 ## Note:
 This project expects npm version '8.5.5' and node version '17.7.2' 
