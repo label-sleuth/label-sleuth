@@ -10,7 +10,7 @@ from typing import Mapping, List, Sequence, Tuple
 
 import pandas as pd
 
-import lrtc_lib.data_access.data_access_factory as data_access_factory
+
 from lrtc_lib.analysis_utils.labeling_reports import  \
     get_suspected_labeling_contradictions_by_distance_with_diffs, get_disagreements_using_cross_validation
 from lrtc_lib.config import CONFIGURATION
@@ -33,7 +33,6 @@ TRAIN_COUNTS_STR_KEY = "train_counts"
 
 
 # members
-data_access = data_access_factory.get_data_access()
 new_data_infer_thread_pool = ThreadPoolExecutor(1)
 
 

@@ -1,13 +1,12 @@
 import unittest
 
-from lrtc_lib.data_access.data_access_factory import get_data_access
+from lrtc_lib.factories import DATA_ACCESS as data_access
 from lrtc_lib.orchestrator import orchestrator_api
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.test_orchestrator_api import generate_simple_doc
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 
-data_access = get_data_access()
 
 class TestOrchestratorStateAPI(unittest.TestCase):
 

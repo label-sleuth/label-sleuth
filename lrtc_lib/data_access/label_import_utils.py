@@ -5,10 +5,9 @@ import sys
 from typing import Dict, Sequence
 
 import pandas as pd
-
+from lrtc_lib.factories import DATA_ACCESS as data_access
 from lrtc_lib.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement
 from lrtc_lib.data_access.data_access_api import get_document_uri
-from lrtc_lib.data_access.data_access_factory import get_data_access
 
 
 def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name, doc_uri=None) -> Sequence[TextElement]:
@@ -18,7 +17,6 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
     optionally a *doc_uri* that the texts belong to.
     The order of the returned elements DOES NOT match the order of the texts given as input.
     """
-    data_access = get_data_access()
     # TODO When we pass a doc_id, it is important not to remove duplicates. But is it really necessary to remove duplicates when we don't?
     remove_duplicates = False if doc_uri is not None else True
     regex = '|'.join(f'^{re.escape(t)}$' for t in texts)

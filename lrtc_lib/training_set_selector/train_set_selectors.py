@@ -4,13 +4,12 @@ import sys
 
 from collections import Counter
 from typing import Sequence, List
-
+from lrtc_lib.factories import DATA_ACCESS as data_access
 from lrtc_lib.data_access.core.data_structs import Label, LabelType, TextElement, BINARY_LABELS, LABEL_POSITIVE, \
     LABEL_NEGATIVE
-from lrtc_lib.data_access import data_access_factory
+
 from lrtc_lib.training_set_selector.train_set_selector_api import TrainSetSelectorAPI
 
-data_access = data_access_factory.get_data_access()
 
 
 class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
