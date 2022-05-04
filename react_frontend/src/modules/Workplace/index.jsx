@@ -9,6 +9,9 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import './styles.css'
+import sleuth_logo from './Asset/sleuth_logo.png';
+import search_icon from './Asset/search.svg';
+import recommend_icon from './Asset/query-queue.svg'
 import Divider from '@mui/material/Divider';
 import LinearWithValueLabel from './ModelProgressBar'
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
@@ -58,9 +61,8 @@ import InboxIcon from '@mui/icons-material/MoveToInbox';
 import MailIcon from '@mui/icons-material/Mail';
 import { FamilyRestroomRounded } from '@mui/icons-material';
 
-const drawerWidth = 260;
-
-const rightDrawerWidth = 400;
+const drawerWidth = 280;
+const rightDrawerWidth = 360;
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -87,7 +89,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: theme.spacing(0, 1),
+  padding: theme.spacing(0, 2),
   // necessary for content to be below app bar
   ...theme.mixins.toolbar,
 }));
@@ -100,13 +102,12 @@ const WorkspaceHeader = styled('div')(({ theme }) => ({
   // necessary for content to be below app bar
 }));
 
-const ClassContainer = styled('div')(({ theme }) => ({
+const StatsContainer = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  minHeight: "8px",
+  fontSize: 14,
   justifyContent: 'space-between',
-  padding: theme.spacing(0, 2),
-  marginBottom: 2
+  paddingTop: theme.spacing(1),
   // necessary for content to be below app bar
   // ...theme.mixins.toolbar,
 }));
@@ -115,7 +116,7 @@ const AccountInfo = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: theme.spacing(1, 2),
+  padding: theme.spacing(2, 2),
   // necessary for content to be below app bar
   // ...theme.mixins.toolbar,
 }));
@@ -133,7 +134,7 @@ const TitleBar = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: theme.spacing(1, 2),
+  padding: theme.spacing(1, 0),
   marginBottom: 10
   // necessary for content to be below app bar
   // ...theme.mixins.toolbar,
@@ -144,8 +145,7 @@ const ModelName = styled('div')(({ theme }) => ({
   flexDirection: "row",
   alignItems: 'start',
   justifyContent: 'space-between',
-  margin: theme.spacing(2, 0),
-  padding: theme.spacing(0, 2),
+  padding: theme.spacing(1, 2),
   // necessary for content to be below app bar
   // ...theme.mixins.toolbar,
 }));
@@ -165,11 +165,11 @@ const StackBarContainer = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  height: 80,
+  height: 20,
   margin: theme.spacing(0, 0),
   padding: theme.spacing(0, 2),
   // necessary for content to be below app bar
-  ...theme.mixins.toolbar,
+  // ...theme.mixins.toolbar,
 }));
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
@@ -349,10 +349,9 @@ function CategoryFormControl(props) {
   const dispatch = useDispatch()
 
   return (
-    <FormControl sx={{ marginTop: 1, minWidth: 150, padding: 2 }}>
+    <FormControl className="select_category">
       <Select
         id="label-select"
-        sx={{ height: 30 }}
         value={workspace.curCategory}
         onChange={(e) => {
           dispatch(updateCurCategory(e.target.value))
@@ -444,9 +443,9 @@ export default function Workspace() {
     if (docid != workspace.curDocId) {
       dispatch(fetchCertainDocument({ docid, eid })).then(() => {
 
-        console.log(`element id: ${element_id}`)
+        // console.log(`element id: ${element_id}`)
 
-        console.log(workspace.elements)
+        // console.log(workspace.elements)
 
         document.getElementById('L'+eid).scrollIntoView({
           behavior: "smooth",
@@ -531,12 +530,25 @@ export default function Workspace() {
     setTabValue(newValue);
   };
 
+  // placeholder for finding documents stats
+  let doc_stats = {
+    pos: Object.values(workspace.labelState).filter(function(d){ return d == 'pos'}).length,
+    neg: Object.values(workspace.labelState).filter(function(d){ return d == 'neg'}).length,
+    total: workspace.elements.length
+  };
+
+  // placeholder for finding total stats
+  let total_stats = {
+    pos: numLabel.pos,
+    neg: numLabel.neg,
+    total: workspace.documents.length * 10
+  };
 
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
 
-      <Box>
+      <Box className="left_nav">
         <Drawer
           sx={{
             width: drawerWidth,
@@ -544,29 +556,28 @@ export default function Workspace() {
             '& .MuiDrawer-paper': {
               width: drawerWidth,
               boxSizing: 'border-box',
+              backgroundColor: '#161616',
+              color: '#fff'
             },
           }}
           variant="permanent"
           // open={open}
           anchor="left">
           <DrawerHeader>
-            <Typography variant="h6" component="div">
-              Sleuth
-            </Typography>
-            <IconButton>
+            <h2><img className="sleuth_logo" src={sleuth_logo} alt="temporary sleuth logo"/>Sleuth</h2>
+            {/* <IconButton>
               <LogoutIcon />
-            </IconButton>
+            </IconButton> */}
           </DrawerHeader>
+          <p className="sleuth_desc">A tool that allows humans to work effectively with partial-automation ML models, making data annotation more efficient and more effective in the NLP domain.</p>
           <Divider />
           <Stack>
-            <AccountInfo>
+            <AccountInfo className="account_info">
               <Box sx={{ flexDirection: 'column' }}>
-                <Typography sx={{ fontSize: 20 }}>
-                  Jack
-                </Typography>
-                <Typography sx={{ fontSize: 15 }}>
-                  jack@gmail.com
-                </Typography>
+                <label>ID</label>
+                <p><b>Dakuo Wang</b></p>
+                <label>User Since</label>
+                <p>December 5, 2021</p>
               </Box>
             </AccountInfo>
             {/* <WorkspaceSelect>
@@ -574,6 +585,8 @@ export default function Workspace() {
               <WorkspaceSelectFormControl />
             </WorkspaceSelect> */}
             <Divider />
+            <label className="hsbar_label">Model Update Freq.: 10 <i className="fa fa-info-circle"><span>Model in current workspace will be automatically every time you reach multiples of 10 entries.</span></i></label>
+            <p className="hsbar_label">Labeled (Current: {(numLabel.pos + numLabel.neg)%10}/10)</p>
             <StackBarContainer>
               {/* <PieChart
               data={[
@@ -586,60 +599,62 @@ export default function Workspace() {
               animate={true}
             /> */}
               <HSBar
-                // showTextIn
+                height={10}
                 data={[
-                  { value: 100 * (numLabel['pos'] / (1.0 * 131)), color: "#99d98c" },
-                  { value: 100 * (numLabel['neg'] / (1.0 * 131)), color: "#ff758f" },
-                  { value: 10, color: "#f9f7f3" }]} />
+                  { value: numLabel.pos + 0.01, color: "#8ccad9" },
+                  { value: numLabel.neg + 0.01, color: "#ff758f" },
+                  { value: 10.01 + 10 * (Math.floor((numLabel.pos + numLabel.neg) / 10)) - (numLabel.pos + numLabel.neg), color: "#393939" }]} />
             </StackBarContainer>
-            <Box sx={{ width: '100%' }}>
-              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={tabValue} onChange={handleChange} aria-label="basic tabs example">
+            <Box sx={{ width: '100%', padding: theme.spacing(0, 2) }}>
+              <Box sx={{ borderBottom: 1, borderColor: '#393939' }}>
+                <Tabs 
+                  value={tabValue}
+                  onChange={handleChange}
+                  aria-label="workspace toggle tab"
+                  variant="fullWidth">
                   <Tab label="Workspace" {...a11yProps(0)}/>
-                  <Tab label="This file" {...a11yProps(1)}/>
+                  <Tab label="Document" {...a11yProps(1)}/>
                 </Tabs>
               </Box>
-              <TabPanel value={tabValue} index={0}>
-                <Stack spacing={0} sx={{ marginBottom: 2 }}>
-                  <ClassContainer>
+              <TabPanel className="entries_tab" value={tabValue} index={0}>
+                <Stack spacing={0}>
+                  <label>Labeled Entries for Entire Workspace:</label>
+                  <StatsContainer>
                     <Typography><strong>Positive</strong></Typography>
-                    <Typography><strong>{numLabel['pos']}</strong></Typography>
-                  </ClassContainer>
-                  <ClassContainer>
+                    <Typography sx={{ color: numLabel.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{numLabel.pos}</strong></Typography>
+                  </StatsContainer>
+                  <StatsContainer>
                     <Typography><strong>Negative</strong></Typography>
-                    <Typography><strong>{numLabel['neg']}</strong></Typography>
-                  </ClassContainer>
-                  <ClassContainer>
+                    <Typography sx={{ color: numLabel.neg > 0 ? "#ff758f" : "#fff" }}><strong>{numLabel.neg}</strong></Typography>
+                  </StatsContainer>
+                  <StatsContainer>
                     <Typography><strong>Total</strong></Typography>
-                    <Typography><strong>{workspace.elements.length}</strong></Typography>
-                  </ClassContainer>
+                    <Typography><strong>{numLabel.neg + numLabel.pos}/{total_stats.total}</strong></Typography>
+                  </StatsContainer>
                 </Stack>
               </TabPanel>
-              <TabPanel value={tabValue} index={1}>
-                <Stack spacing={0} sx={{ marginBottom: 2 }}>
-                    <ClassContainer>
+              <TabPanel className="entries_tab" value={tabValue} index={1}>
+                <Stack spacing={0}>
+                    <label>Labeled Entries for Current Doc:</label>
+                    <StatsContainer>
                       <Typography><strong>Positive</strong></Typography>
-                      <Typography><strong>{numLabel['pos']}</strong></Typography>
-                    </ClassContainer>
-                    <ClassContainer>
+                      <Typography sx={{ color: doc_stats.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{doc_stats.pos}</strong></Typography>
+                    </StatsContainer>
+                    <StatsContainer>
                       <Typography><strong>Negative</strong></Typography>
-                      <Typography><strong>{numLabel['neg']}</strong></Typography>
-                    </ClassContainer>
-                    <ClassContainer>
-                      <Typography><strong>Document</strong></Typography>
-                      <Typography><strong>{workspace.elements.length}</strong></Typography>
-                    </ClassContainer>
+                      <Typography sx={{ color: doc_stats.neg > 0 ? "#ff758f" : "#fff" }}><strong>{doc_stats.neg}</strong></Typography>
+                    </StatsContainer>
+                    <StatsContainer>
+                      <Typography><strong>Total</strong></Typography>
+                      <Typography><strong>{doc_stats.pos + doc_stats.neg}/{workspace.elements.length}</strong></Typography>
+                    </StatsContainer>
                   </Stack>
               </TabPanel>
             </Box>
-
-            <Divider />
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2 }}>
-              <Typography><strong>Model information</strong></Typography>
-            </Box>
+            <label className="model_info">Model Information</label>
             <ModelName>
               <Typography>Current classifier:</Typography>
-              <Typography>v.{workspace.model_version} model</Typography>
+              <Typography><strong>v.{workspace.model_version}_Model</strong></Typography>
             </ModelName>
             <LinearWithValueLabel />
             {/* <Box>
@@ -668,21 +683,17 @@ export default function Workspace() {
       </Box>
 
       <Box component="main" sx={{ flexGrow: 1, p: 3, width: `calc(100% - ${drawerWidth}px)` }}>
-      <ElevationScroll >
-          <AppBar open={open}>
+      <ElevationScroll>
+          <AppBar className="elevation_scroll" open={open}>
             <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
               <Typography><strong>Category:</strong></Typography>
               <CategoryFormControl />
-
-              <a>
-                <Typography sx={{cursor: "pointer"}} onClick={() => setModalOpen(true)} paragraph component="span" color="primary" variant="body1">
-                  create new category
-                </Typography>
+              <a className="create_new_category" onClick={() => setModalOpen(true)} >
+               <span>New Category</span>
               </a>
             </Box>
             <ToolBar>
-              <ButtonGroup variant="contained" aria-label="split button" sx={{ mr: 2 }}>
-                <Button onClick={() => {
+                <Button className="btn" onClick={() => {
                   dispatch(nextPrediction())
                   dispatch(setFocusedState(workspace.indexPrediction))
 
@@ -692,31 +703,31 @@ export default function Workspace() {
                     // inline: "nearest"
                   })
                 }}>
-                Next positive prediction
+                Next Positive Prediction <i className="fa fa-forward"></i>
                 </Button>
-              </ButtonGroup>
               {
                 !open &&
-                <Box>
-                  <IconButton onClick={() => {
+                <Box sx={{ml: '10px'}}>
+                  <IconButton className="top_nav_icons" onClick={() => {
                     setDrawerContent("search")
                     handleDrawerOpen() 
                   }}>
-                    <SearchIcon />
+                    <img src={search_icon} alt="search"/>
                   </IconButton>
-                  <IconButton onClick={() => {
+                  <IconButton className="top_nav_icons" onClick={() => {
                     setDrawerContent("rcmd")
                     dispatch(getElementToLabel())
                     handleDrawerOpen() 
                   }}>
-                    <FeaturedPlayListIcon />
+                    <img src={recommend_icon} alt="recommendation"/>
                   </IconButton>
                 </Box>
               }
             </ToolBar>
           </AppBar>
         </ElevationScroll>
-        <Main open={open}>
+
+        <Main className="main_content" open={open}>
           <TitleBar>
             <IconButton onClick={() => {
               if (workspace.curDocId > 0) {
@@ -725,10 +736,11 @@ export default function Workspace() {
             }}>
               <ChevronLeftIcon />
             </IconButton>
-            <Typography sx={{ fontSize: 20 }}>
-              <strong>
+            <Typography className="document_name" sx={{ fontSize: 20, textAlign: 'center' }}>
+              <h4>
                 {workspace.curDocName}
-              </strong>
+              </h4>
+              <em>File type: PDF | Text Entries: {workspace.elements.length}</em>
             </Typography>
             <IconButton onClick={() => {
               if (workspace.curDocId < workspace.documents.length - 1) {
@@ -801,7 +813,7 @@ export default function Workspace() {
                 <IconButton onClick={handleDrawerClose}>
                   <ChevronLeftIcon />
                 </IconButton>
-                <Typography sx={{ textAlign: "center", marginRight: "auto", marginLeft: "auto", marginTop: 2, }}><strong>Recommend to label</strong></Typography>
+                <p style={{ width: '100%', textAlign: "center", }}><strong>Recommend to label</strong></p>
               </Box>
 
               <Box>

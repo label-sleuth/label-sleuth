@@ -1,0 +1,354 @@
+/* general */
+b {
+    font-weight: 400;
+}
+
+label {
+    display: block;
+    font-size: 12px;
+    line-height: 14px;
+    color: gray;
+}
+
+button {
+    text-transform: none !important;
+    border-radius: 2px !important;
+}
+
+.fa-info-circle {
+    display: relative;
+    z-index: 998;
+}
+
+.fa-info-circle > span {
+    font-family: 'IBM Plex Sans', sans-serif;
+    position: absolute;
+    width: 170px;
+    margin-left: -90px;
+    margin-top: 30px;
+    padding: 6px 9px;
+    border-radius: 2px;
+    font-size: 12px;
+    line-height: 16px;
+    background: gray;
+    color: #fff;
+    z-index: 999;
+    display: none;
+}
+
+.fa-info-circle > span:after {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    margin-left: -15px;
+    content: '';
+    width: 0;
+    height: 0;
+    border-bottom: solid 10px gray;
+    border-left: solid 15px transparent;
+    border-right: solid 15px transparent;
+}
+
+.fa-info-circle:hover > span {
+    display: inline-block;
+}
+
+.btn {
+    height: 32px;
+    background: #393939 !important;
+    border-radius: 2px !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 16px !important;
+    color: #fff !important;
+    font-size: 14px;
+}
+
+.btn i {
+    margin-left: 8px;
+}
+
+.btn:hover {
+    background: #161616 !important;
+    cursor: pointer;
+}
+
+/* mui overwrite */
+.MuiDivider-root {
+    border-color: #393939 !important;
+}
+
+.MuiTabs-root {
+    min-height: 0 !important;
+    height: 40px !important;
+}
+
+button.MuiTab-fullWidth {
+    padding: 6px 9px !important;
+    color: gray;
+}
+
+.MuiList-root,
+.MuiPaper-rounded {
+    border-radius: 1px !important;
+    border: solid 1px #f4f4f4;
+    border-top: none;
+    box-shadow: 0 5px 10px #f4f4f4 !important;
+}
+
+ul.MuiList-padding {
+    padding: 0 !important;
+}
+
+.MuiButtonGroup-root {
+    box-shadow: none !important;
+}
+
+.MuiInput-input {
+    font-family: 'IBM Plex Sans', sans-serif !important;
+    font-weight: 400 !important;
+    padding: 0 !important;
+}
+
+/* left nav */
+.sleuth_logo {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+}
+
+.sleuth_desc {
+    margin-top: -10px;
+    margin-bottom: 20px;
+    padding: 0 16px;
+    font-size: 14px;
+    line-height: 18px;
+}
+
+/* user acount information */
+.account_info label {
+    display: block;
+    font-size: 12px;
+    line-height: 14px;
+    color: gray;
+    margin-top: 8px;
+}
+
+.account_info p {
+    font-size: 14px;
+    line-height: 20px;
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+/* hsbar */
+.hsbar_label {
+    display: block;
+    margin: 0 16px 0 16px;
+}
+
+label.hsbar_label {
+    font-size: 12px;
+    line-height: 14px;
+    color: gray;
+    margin-top: 20px;
+}
+
+p.hsbar_label {
+    font-size: 14px;
+    line-height: 18px;
+    margin-top: 8px;
+}
+
+/* tabs */
+.entries_tab {
+    padding: 16px !important;
+    background: #393939;
+    border-radius: 0 0 2px 2px;
+    margin-bottom: 20px;
+}
+
+.entries_tab > div{
+    padding: 0 !important;
+}
+
+/* model info */
+.model_info {
+    padding: 20px 16px 0 16px;
+}
+
+.model_percentage {
+    text-align: right;
+    color: #fff !important;
+    font-size: 12px !important;
+}
+
+.MuiLinearProgress-root {
+    background-color: #393939 !important;
+}
+
+/* content top */
+.elevation_scroll {
+    position: fixed;
+    top: 0;
+    left: 280px;
+    right: 0;
+    background: #f4f4f4;
+    border-bottom: solid 1px #d6d6d6;
+    height: 100px;
+    padding: 0 32px 0 52px;
+    z-index: 999;
+}
+
+.main_content {
+    margin-top: 75px;
+}
+
+.create_new_category {
+    height: 32px;
+    background: #393939;
+    border-radius: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 16px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.create_new_category:hover {
+    cursor: pointer;
+    background: #161616;
+}
+
+.select_category > div > div,
+.MuiOutlinedInput-notchedOutline,
+.MuiOutlinedInput-root {
+    border: none !important;
+}
+
+.select_category > div{
+    margin-left: 10px;
+    height: 32px;
+    border: none;
+    border-radius: 0 !important;
+    background: #fff;
+    border-bottom: solid 1px gray !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.select_category > div:hover {
+    background: #dedede !important;
+}
+
+.select_category input {
+    border: none !important;
+    padding: 0 16px;
+}
+
+.top_nav_icons {
+    width: 32px;
+    height: 32px;
+    padding: 5px !important;
+    background: none !important;
+    border-radius: 2px !important;
+}
+
+.top_nav_icons img {
+    width: 100%;
+    height: 100%;
+}
+
+.top_nav_icons:hover {
+    background: #d6d6d6 !important;
+}
+
+/* document */
+.document_name h4 {
+    margin: 0;
+    line-height: 16px;
+}
+
+.document_name em {
+    font-size: 14px !important;
+    line-height: 14px;
+    color: gray;
+}
+
+/* document text */
+
+.data_text {
+    flex: none;
+    width: calc(100% - 140px);
+    margin: 0 !important;
+    font-size: 15px;
+    line-height: 20px;
+}
+
+.nodata_text {
+    flex: none;
+    width: 100%;
+    margin: 0 !important;
+    font-size: 15px;
+    line-height: 20px;
+}
+
+.text_predict,
+.text_normal,
+.text_focus {
+    color: #161616 !important;
+    border: solid 2px transparent;
+    outline: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.text_predict {
+    border: dotted 2px #a3d8e5;
+}
+
+.text_confused {
+    border: dotted 2px #d6d6d6 !important;
+    color: #161616 !important;
+    border: solid 2px transparent;
+    outline: none;
+    padding: 10px;
+    margin: 10px;
+}
+
+.text_confused p {
+    margin: 15px 0;
+    font-size: 14px !important;
+    line-height: 18px !important;
+}
+
+.text_normal:hover,
+.text_predict:hover,
+.text_focus {
+    background: #f4f4f4;
+    color: #000 !important;
+}
+
+.checking_buttons img,
+.recommend_buttons img {
+    width: 24px;
+    height: 24px
+}
+
+.checking_buttons button:hover {
+    background: #fff !important;
+}
+
+.recommend_buttons button:hover {
+    background: #f4f4f4 !important;
+}
+
+mark {
+    background: #a3d8e5 !important;
+}

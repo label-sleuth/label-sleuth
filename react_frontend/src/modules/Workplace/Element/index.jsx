@@ -12,6 +12,14 @@ import { styled, useTheme } from '@mui/material/styles';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import { makeStyles } from '@mui/styles';
 
+import checking from './../Asset/checking.svg'
+import check from './../Asset/check.svg'
+import check_predict from './../Asset/check_predict.svg'
+import crossing from './../Asset/crossing.svg'
+import cross from './../Asset/cross.svg'
+import questioning from './../Asset/questioning.svg'
+import question from './../Asset/question.svg'
+
 const Line = styled(Box)((props) => ({
     ...(props.focused == true ? {
         border: "thin solid",
@@ -39,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
         color: "rgba(0, 255, 0)"
     },
     checkicon_predicted: {
-        color: "rgba(0, 255, 0, 0.7)",
+        color: "pink",
     },
     crossicon: {
         color: "rgba(255, 0, 0)"
@@ -48,9 +56,12 @@ const useStyles = makeStyles((theme) => ({
         color: "rgba(255, 0, 0, 0.7)",
     },
     questionicon: {
-        color: "#fb8500"
+        color: "#cfae44"
     },
     focused: {
+        borderWidth: 1,
+        borderStyle: 'solid',
+        borderColor: "transparent",
         outline: "None",
         alignItems: 'flex-start',
         flexDirection: 'row',
@@ -60,11 +71,12 @@ const useStyles = makeStyles((theme) => ({
         display: 'flex',
         justifyContent: 'center',
         padding: "10px 25px",
-        cursor: "pointer"
+        cursor: "normal"
     },
     predicted: {
-        border: "medium dotted",
-        borderColor: "green",
+        borderWidth: 1,
+        borderStyle: 'dotted',
+        borderColor: "#3092ab",
         outline: "None",
         alignItems: 'flex-start',
         flexDirection: 'row',
@@ -72,11 +84,12 @@ const useStyles = makeStyles((theme) => ({
         display: 'flex',
         justifyContent: 'center',
         padding: "10px 25px",
-        cursor: "pointer"
+        cursor: "normal"
     }, 
     normal: {
-        border: "medium solid",
-        borderColor: "white",
+        borderWidth: 1,
+        borderStyle: 'solid',
+        borderColor: "transparent",
         outline: "None",
         alignItems: 'flex-start',
         flexDirection: 'row',
@@ -84,16 +97,22 @@ const useStyles = makeStyles((theme) => ({
         display: 'flex',
         justifyContent: 'center',
         padding: "10px 25px",
-        cursor: "pointer"
+        cursor: "normal"
     }
 }));
+
+const text_colors = {
+    'pos': {color: '#3092ab'},
+    'neg': {color: '#bd3951'},
+    'ques': {color: '#cfae44'}
+}
 
 export default function Sentence(props) {
 
     const { keyEventHandler, focusedState, index, numLabel, numLabelHandler, clickEventHandler, text, element_id, prediction } = props
 
     React.useEffect(()=> {
-        console.log(`id: ${element_id}`)
+        console.log(`id: ${index}`)
     }, [prediction, focusedState])
     
     const dispatch = useDispatch()
@@ -101,23 +120,21 @@ export default function Sentence(props) {
     const workspace = useSelector(state => state.workspace)
 
     const classes = useStyles()
+    console.log(workspace);
+    // let space_color = text_colors[workspace.labelState['L' + index]];
 
-    return (
-        <Box sx={{ flexDirection: 'row' }}>
-            <Box tabIndex="-1"  onMouseOver={() => dispatch(setFocusedState(index))} className={ focusedState['L' + index] == true ? classes.focused : workspace.labelState['L' + index] != '' ? classes.normal : prediction[index] ? classes.predicted : classes.normal } onKeyDown={keyEventHandler} id={"L" + index} onClick={(e) => clickEventHandler(e, index)}>
-                {
-                    focusedState['L' + index] != true ? 
-                    <Typography paragraph style={( workspace.labelState['L' + index] == 'pos') ? { color: "blue" } : (workspace.labelState['L' + index] == 'neg') ? { color: "red" } : (workspace.labelState['L' + index] == 'ques') ? { color: "#fb8500" } : {}}>
-                        {text}
-                    </Typography> 
-                    :
-                    <Typography paragraph style={( workspace.labelState['L' + index] == 'pos') ? { color: "blue" } : (workspace.labelState['L' + index] == 'neg') ? { color: "red" } : (workspace.labelState['L' + index] == 'ques') ? { color: "#fb8500" } : {}}>
-                        <strong>{text}</strong>
-                    </Typography> 
-                }
+    if(workspace.curCategory == null){
+        return (
+            <Box tabIndex="-1"  onMouseOver={() => dispatch(setFocusedState(index))} className="text_normal" onKeyDown={keyEventHandler} id={"L" + index} onClick={(e) => clickEventHandler(e, index)}>
+                <p className="nodata_text" style={(text_colors[workspace.labelState['L' + index]])}>{text}</p> 
+            </Box>
+        )
+    } else {
+        return (
+            <Box tabIndex="-1"  onMouseOver={() => dispatch(setFocusedState(index))} className={ workspace["focusedIndex"] == index ? "text_focus" : prediction[index] ? "text_predict" : "text_normal" } onKeyDown={keyEventHandler} id={"L" + index} onClick={(e) => clickEventHandler(e, index)}>
+                <p className="data_text" style={(text_colors[workspace.labelState['L' + index]])}>{text}</p> 
 
-                { workspace.curCategory != null &&
-                    <Stack direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
+                    <Stack className="checking_buttons" direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
                         { (['pos'].includes(workspace.labelState['L' + index]) || ( workspace.labelState['L' + index] == '' && prediction[index] == true ) || (focusedState['L' + index] == true) ) && <IconButton onClick={() => {
                             var newState = { ...workspace.labelState }
 
@@ -140,7 +157,14 @@ export default function Sentence(props) {
                                 dispatch(checkStatus())
                             })
                         }}>
-                            <CheckIcon className={ ['', 'pos'].includes(workspace.labelState['L' + index]) ? classes.checkicon : classes.checkicon_predicted} />
+
+                            { workspace.focusedIndex == index ?
+                                <img src={checking} alt="checking"/>
+                                : workspace.labelState['L' + index] == 'pos' ?
+                                <img src={check} alt="checked"/>
+                                : <img src={check_predict} alt="predicted checking"/>
+                            }
+
                         </IconButton> }
                         { ( ['neg'].includes(workspace.labelState['L' + index]) || focusedState['L' + index] == true ) && <IconButton onClick={() => {
                             var newState = { ...workspace.labelState }
@@ -162,7 +186,11 @@ export default function Sentence(props) {
                                 dispatch(checkStatus())
                             })
                         }}>
-                            <CloseIcon className={ classes.crossicon } />
+                            { workspace.focusedIndex == index ?
+                                <img src={crossing} alt="crossinging"/>
+                                : <img src={cross} alt="crossed"/>
+                            }
+
                         </IconButton> }
                         {
                             ( ['ques'].includes(workspace.labelState['L' + index]) || focusedState['L' + index] == true ) && 
@@ -177,13 +205,16 @@ export default function Sentence(props) {
 
                                 dispatch(setLabelState(newState))
                             }}>
-                                <QuestionMarkIcon className={classes.questionicon} />
+                               { workspace.focusedIndex == index ?
+                                <img src={questioning} alt="questioning"/>
+                                : <img src={question} alt="questioned"/>
+                                }
+
                             </IconButton>
                         }
                     </Stack>
-                }
-            </Box>
-        </Box>
 
-    );
+            </Box>
+        )
+    }
 }
