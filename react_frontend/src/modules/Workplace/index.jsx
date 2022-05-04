@@ -569,7 +569,7 @@ export default function Workspace() {
               <LogoutIcon />
             </IconButton> */}
           </DrawerHeader>
-          <p className="sleuth_desc">A tool that allows human to work effectively with partial-automation ML models, making data annotation more efficient and more effective in the NLP domain.</p>
+          <p className="sleuth_desc">A tool that allows humans to work effectively with partial-automation ML models, making data annotation more efficient and more effective in the NLP domain.</p>
           <Divider />
           <Stack>
             <AccountInfo className="account_info">
