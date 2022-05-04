@@ -22,5 +22,16 @@ Under the cloned directory, run the app in the development mode:\
 Under the cloned directory, run the app in the production mode:\
     `npm run start:prod`
 
+## Run the application with Docker
+ 
+### Step 1: 
+Under the cloned directory, build the docker image:\
+    `docker build -t sleuth . `
+
+### Step 2: 
+Under the cloned directory, run the docker image:\
+    `docker run -p 3000:3000 -d sleuth`
+
+
 ## Note:
 This project expects npm version '8.5.5' and node version '17.7.2' 
