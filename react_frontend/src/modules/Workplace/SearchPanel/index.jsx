@@ -13,6 +13,14 @@ import { makeStyles } from '@mui/styles';
 import { styled, useTheme } from '@mui/material/styles';
 import { useState } from "react";
 
+import checking from './../Asset/checking.svg'
+import check from './../Asset/check.svg'
+import check_predict from './../Asset/check_predict.svg'
+import crossing from './../Asset/crossing.svg'
+import cross from './../Asset/cross.svg'
+import questioning from './../Asset/questioning.svg'
+import question from './../Asset/question.svg'
+
 const useStyles = makeStyles((theme) => ({
     checkicon: {
         color: "rgba(0, 255, 0)"
@@ -100,19 +108,22 @@ export default function SearchPanel(props) {
     
       }
 
+      console.log(labelState);
+
     return (
-        <Paper labelState={labelState} className={ (prediction == 'true' && labelState == '')  ? classes.predicted_true : (prediction == 'false' && labelState == '') ? classes.predicted_false : classes.normal } onClick={() => handleSearchPanelClick(docid, id)}>
+        <Paper labelState={labelState} className="text_confused" onClick={() => handleSearchPanelClick(docid, id)}>
             
-            <Typography sx={{ marginBottom: 2, color: "#adb5bd", textAlign: "center" }}>{docid}</Typography>
-            
+            <label>{docid}</label>
+            <p>
             <Highlighter 
                 searchWords={[searchInput]}
                 autoEscape={true}
                 textToHighlight={text}
-                className={classes.textSpan}
+                unhighlightTag={"p"}
             />
+            </p>
 
-            <Stack direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
+            <Stack className="recommend_buttons" direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
                 { ['', 'pos'].includes(labelState) && <IconButton onClick={() => {
 
                             var newState = labelState
@@ -141,7 +152,11 @@ export default function SearchPanel(props) {
                                 // inline: "nearest"
                               })
                         }}>
-                            <CheckIcon className={classes.checkicon} />
+                            { labelState == 'pos' ?
+                                <img src={check} alt="checked"/>
+                                : <img src={checking} alt="checking"/>
+                            }
+
                         </IconButton> }
                         { ['', 'neg'].includes(labelState) && <IconButton onClick={() => {
                             var newState = labelState
@@ -169,7 +184,11 @@ export default function SearchPanel(props) {
                                 // inline: "nearest"
                               })
                         }}>
-                            <CloseIcon className={classes.crossicon} />
+                            { labelState == 'neg' ?
+                                <img src={cross} alt="crossed"/>
+                                : <img src={crossing} alt="crossing"/>
+                            }
+
                         </IconButton> }
                         {
                             ['', 'ques'].includes(labelState) && 
@@ -190,7 +209,11 @@ export default function SearchPanel(props) {
                                     // inline: "nearest"
                                   })
                             }}>
-                                <QuestionMarkIcon className={classes.questionicon} />
+                                { labelState == 'ques' ?
+                                <img src={question} alt="questioned"/>
+                                : <img src={questioning} alt="questioning"/>
+                                }
+
                             </IconButton>
                         }
             </Stack>

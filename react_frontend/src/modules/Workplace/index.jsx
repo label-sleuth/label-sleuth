@@ -10,6 +10,8 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import './styles.css'
 import sleuth_logo from './Asset/sleuth_logo.png';
+import search_icon from './Asset/search.svg';
+import recommend_icon from './Asset/query-queue.svg'
 import Divider from '@mui/material/Divider';
 import LinearWithValueLabel from './ModelProgressBar'
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
@@ -132,7 +134,7 @@ const TitleBar = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: theme.spacing(1, 2),
+  padding: theme.spacing(1, 0),
   marginBottom: 10
   // necessary for content to be below app bar
   // ...theme.mixins.toolbar,
@@ -599,7 +601,7 @@ export default function Workspace() {
               <HSBar
                 height={10}
                 data={[
-                  { value: numLabel.pos + 0.01, color: "#99d98c" },
+                  { value: numLabel.pos + 0.01, color: "#8ccad9" },
                   { value: numLabel.neg + 0.01, color: "#ff758f" },
                   { value: 10.01 + 10 * (Math.floor((numLabel.pos + numLabel.neg) / 10)) - (numLabel.pos + numLabel.neg), color: "#393939" }]} />
             </StackBarContainer>
@@ -619,7 +621,7 @@ export default function Workspace() {
                   <label>Labeled Entries for Entire Workspace:</label>
                   <StatsContainer>
                     <Typography><strong>Positive</strong></Typography>
-                    <Typography sx={{ color: numLabel.pos > 0 ? "#99d98c" : "#fff" }}><strong>{numLabel.pos}</strong></Typography>
+                    <Typography sx={{ color: numLabel.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{numLabel.pos}</strong></Typography>
                   </StatsContainer>
                   <StatsContainer>
                     <Typography><strong>Negative</strong></Typography>
@@ -636,7 +638,7 @@ export default function Workspace() {
                     <label>Labeled Entries for Current Doc:</label>
                     <StatsContainer>
                       <Typography><strong>Positive</strong></Typography>
-                      <Typography sx={{ color: doc_stats.pos > 0 ? "#99d98c" : "#fff" }}><strong>{doc_stats.pos}</strong></Typography>
+                      <Typography sx={{ color: doc_stats.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{doc_stats.pos}</strong></Typography>
                     </StatsContainer>
                     <StatsContainer>
                       <Typography><strong>Negative</strong></Typography>
@@ -701,29 +703,30 @@ export default function Workspace() {
                     // inline: "nearest"
                   })
                 }}>
-                Next positive prediction <i className="fa fa-forward"></i>
+                Next Positive Prediction <i className="fa fa-forward"></i>
                 </Button>
               {
                 !open &&
-                <Box>
-                  <IconButton onClick={() => {
+                <Box sx={{ml: '10px'}}>
+                  <IconButton className="top_nav_icons" onClick={() => {
                     setDrawerContent("search")
                     handleDrawerOpen() 
                   }}>
-                    <SearchIcon />
+                    <img src={search_icon} alt="search"/>
                   </IconButton>
-                  <IconButton onClick={() => {
+                  <IconButton className="top_nav_icons" onClick={() => {
                     setDrawerContent("rcmd")
                     dispatch(getElementToLabel())
                     handleDrawerOpen() 
                   }}>
-                    <FeaturedPlayListIcon />
+                    <img src={recommend_icon} alt="recommendation"/>
                   </IconButton>
                 </Box>
               }
             </ToolBar>
           </AppBar>
         </ElevationScroll>
+
         <Main className="main_content" open={open}>
           <TitleBar>
             <IconButton onClick={() => {
@@ -733,10 +736,11 @@ export default function Workspace() {
             }}>
               <ChevronLeftIcon />
             </IconButton>
-            <Typography sx={{ fontSize: 20 }}>
-              <strong>
+            <Typography className="document_name" sx={{ fontSize: 20, textAlign: 'center' }}>
+              <h4>
                 {workspace.curDocName}
-              </strong>
+              </h4>
+              <em>File type: PDF | Text Entries: {workspace.elements.length}</em>
             </Typography>
             <IconButton onClick={() => {
               if (workspace.curDocId < workspace.documents.length - 1) {
@@ -809,7 +813,7 @@ export default function Workspace() {
                 <IconButton onClick={handleDrawerClose}>
                   <ChevronLeftIcon />
                 </IconButton>
-                <Typography sx={{ textAlign: "center", marginRight: "auto", marginLeft: "auto", marginTop: 2, }}><strong>Recommend to label</strong></Typography>
+                <p style={{ width: '100%', textAlign: "center", }}><strong>Recommend to label</strong></p>
               </Box>
 
               <Box>

@@ -4,6 +4,7 @@ b {
 }
 
 label {
+    display: block;
     font-size: 12px;
     line-height: 14px;
     color: gray;
@@ -11,6 +12,7 @@ label {
 
 button {
     text-transform: none !important;
+    border-radius: 2px !important;
 }
 
 .fa-info-circle {
@@ -101,6 +103,12 @@ ul.MuiList-padding {
 
 .MuiButtonGroup-root {
     box-shadow: none !important;
+}
+
+.MuiInput-input {
+    font-family: 'IBM Plex Sans', sans-serif !important;
+    font-weight: 400 !important;
+    padding: 0 !important;
 }
 
 /* left nav */
@@ -232,7 +240,115 @@ p.hsbar_label {
     align-items: center;
 }
 
+.select_category > div:hover {
+    background: #dedede !important;
+}
+
 .select_category input {
     border: none !important;
     padding: 0 16px;
+}
+
+.top_nav_icons {
+    width: 32px;
+    height: 32px;
+    padding: 5px !important;
+    background: none !important;
+    border-radius: 2px !important;
+}
+
+.top_nav_icons img {
+    width: 100%;
+    height: 100%;
+}
+
+.top_nav_icons:hover {
+    background: #d6d6d6 !important;
+}
+
+/* document */
+.document_name h4 {
+    margin: 0;
+    line-height: 16px;
+}
+
+.document_name em {
+    font-size: 14px !important;
+    line-height: 14px;
+    color: gray;
+}
+
+/* document text */
+
+.data_text {
+    flex: none;
+    width: calc(100% - 140px);
+    margin: 0 !important;
+    font-size: 15px;
+    line-height: 20px;
+}
+
+.nodata_text {
+    flex: none;
+    width: 100%;
+    margin: 0 !important;
+    font-size: 15px;
+    line-height: 20px;
+}
+
+.text_predict,
+.text_normal,
+.text_focus {
+    color: #161616 !important;
+    border: solid 2px transparent;
+    outline: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.text_predict {
+    border: dotted 2px #a3d8e5;
+}
+
+.text_confused {
+    border: dotted 2px #d6d6d6 !important;
+    color: #161616 !important;
+    border: solid 2px transparent;
+    outline: none;
+    padding: 10px;
+    margin: 10px;
+}
+
+.text_confused p {
+    margin: 15px 0;
+    font-size: 14px !important;
+    line-height: 18px !important;
+}
+
+.text_normal:hover,
+.text_predict:hover,
+.text_focus {
+    background: #f4f4f4;
+    color: #000 !important;
+}
+
+.checking_buttons img,
+.recommend_buttons img {
+    width: 24px;
+    height: 24px
+}
+
+.checking_buttons button:hover {
+    background: #fff !important;
+}
+
+.recommend_buttons button:hover {
+    background: #f4f4f4 !important;
+}
+
+mark {
+    background: #a3d8e5 !important;
 }
