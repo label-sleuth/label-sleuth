@@ -4,7 +4,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { useDispatch, useSelector } from 'react-redux';
-import { createNewCategory } from '../DataSlice';
+import { createNewCategory, createCategoryOnServer, fetchCategories } from '../DataSlice';
 import TextField from '@mui/material/TextField';
 
 
@@ -54,6 +54,7 @@ export default function CreateCategoryModal(props) {
             <Button variant="contained" onClick={() => {
                 console.log(`button called`)
                 dispatch(createNewCategory(text))
+                dispatch(createCategoryOnServer({ category: text })).then(() => fetchCategories())
                 setOpen(false)
             }} sx={{ marginLeft: 3 }}>Create</Button>
           </Box>

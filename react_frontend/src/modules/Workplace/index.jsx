@@ -26,7 +26,7 @@ import Tab from '@mui/material/Tab';
 import SearchPanel from './SearchPanel'
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchElements, getElementToLabel, prevPrediction, nextPrediction, fetchCategories, getPositiveElementForCategory, checkModelUpdate, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState, searchKeywords, fetchCertainDocument } from './DataSlice.jsx';
+import { fetchElements, createCategoryOnServer, labelInfoGain, getElementToLabel, checkStatus, prevPrediction, nextPrediction, fetchCategories, getPositiveElementForCategory, checkModelUpdate, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState, searchKeywords, fetchCertainDocument } from './DataSlice.jsx';
 import InputBase from '@mui/material/InputBase';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -357,7 +357,11 @@ function CategoryFormControl(props) {
           dispatch(updateCurCategory(e.target.value))
           dispatch(fetchElements()).then(() => 
           dispatch(getPositiveElementForCategory()).then(() => {
-            dispatch(getElementToLabel())
+            dispatch(getElementToLabel()).then(() => {
+              dispatch(checkStatus()).then(() => {
+                
+              })
+            })
           }))
         }}>
         {
@@ -441,7 +445,7 @@ export default function Workspace() {
     const eid = parseInt(splits[splits.length-1])
     
     if (docid != workspace.curDocId) {
-      dispatch(fetchCertainDocument({ docid, eid })).then(() => {
+      dispatch(fetchCertainDocument({ docid, eid, switchStatus: "switch" })).then(() => {
 
         // console.log(`element id: ${element_id}`)
 
@@ -468,7 +472,7 @@ export default function Workspace() {
     const eid = parseInt(splits[splits.length-1])
     
     if (docid != workspace.curDocId) {
-      dispatch(fetchCertainDocument({ docid, eid }))
+      dispatch(fetchCertainDocument({ docid, eid, switchStatus: "switch" }))
     } else {
       dispatch(setFocusedState(eid))
     }
@@ -525,9 +529,11 @@ export default function Workspace() {
 
   const [tabValue, setTabValue] = React.useState(0);
   const [modalOpen, setModalOpen] = React.useState(false)
+  const [tabStatus, setTabStatus] = React.useState(0)
 
   const handleChange = (event, newValue) => {
     setTabValue(newValue);
+    setTabStatus(newValue)
   };
 
   // placeholder for finding documents stats
@@ -585,8 +591,7 @@ export default function Workspace() {
               <WorkspaceSelectFormControl />
             </WorkspaceSelect> */}
             <Divider />
-            <label className="hsbar_label">Model Update Freq.: 10 <i className="fa fa-info-circle"><span>Model in current workspace will be automatically every time you reach multiples of 10 entries.</span></i></label>
-            <p className="hsbar_label">Labeled (Current: {(numLabel.pos + numLabel.neg)%10}/10)</p>
+            <p className="hsbar_label">Labeled (Current: { tabStatus == 0 ? (workspace['pos_label_num'] + workspace['neg_label_num']) : (numLabel.pos + numLabel.neg)}/ { tabStatus == 0 ? total_stats.total : 10 })</p>
             <StackBarContainer>
               {/* <PieChart
               data={[
@@ -600,10 +605,16 @@ export default function Workspace() {
             /> */}
               <HSBar
                 height={10}
-                data={[
+                data={ tabStatus == 0 ? [
+                  { value: workspace['pos_label_num'] + 0.01, color: "#8ccad9" },
+                  { value: workspace['neg_label_num'] + 0.01, color: "#ff758f" },
+                  { value: total_stats.total - (workspace['pos_label_num'] + workspace['neg_label_num'] + 0.01), color: "#393939" }
+                ] : 
+                [
                   { value: numLabel.pos + 0.01, color: "#8ccad9" },
                   { value: numLabel.neg + 0.01, color: "#ff758f" },
-                  { value: 10.01 + 10 * (Math.floor((numLabel.pos + numLabel.neg) / 10)) - (numLabel.pos + numLabel.neg), color: "#393939" }]} />
+                  { value: workspace['elements'].length - (numLabel.pos + numLabel.neg), color: "#393939" }
+                ]} />
             </StackBarContainer>
             <Box sx={{ width: '100%', padding: theme.spacing(0, 2) }}>
               <Box sx={{ borderBottom: 1, borderColor: '#393939' }}>
@@ -616,24 +627,29 @@ export default function Workspace() {
                   <Tab label="Document" {...a11yProps(1)}/>
                 </Tabs>
               </Box>
-              <TabPanel className="entries_tab" value={tabValue} index={0}>
+              <TabPanel className="entries_tab" value={tabValue} index={0} onClick={() => {
+                setTabStatus('workspace')
+              }}>
                 <Stack spacing={0}>
                   <label>Labeled Entries for Entire Workspace:</label>
                   <StatsContainer>
                     <Typography><strong>Positive</strong></Typography>
-                    <Typography sx={{ color: numLabel.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{numLabel.pos}</strong></Typography>
+                    <Typography sx={{ color: workspace['pos_label_num'] > 0 ? "#8ccad9" : "#fff" }}><strong>{workspace['pos_label_num']}</strong></Typography>
                   </StatsContainer>
                   <StatsContainer>
                     <Typography><strong>Negative</strong></Typography>
-                    <Typography sx={{ color: numLabel.neg > 0 ? "#ff758f" : "#fff" }}><strong>{numLabel.neg}</strong></Typography>
+                    <Typography sx={{ color: workspace['neg_label_num'] > 0 ? "#ff758f" : "#fff" }}><strong>{workspace['neg_label_num']}</strong></Typography>
                   </StatsContainer>
                   <StatsContainer>
                     <Typography><strong>Total</strong></Typography>
-                    <Typography><strong>{numLabel.neg + numLabel.pos}/{total_stats.total}</strong></Typography>
+                    <Typography><strong>{workspace['pos_label_num'] + workspace['neg_label_num']}/{total_stats.total}</strong></Typography>
                   </StatsContainer>
                 </Stack>
               </TabPanel>
-              <TabPanel className="entries_tab" value={tabValue} index={1}>
+              <TabPanel className="entries_tab" value={tabValue} index={1} onClick={() => {
+                console.log(`tab document`)
+                setTabStatus('document')
+              }}>
                 <Stack spacing={0}>
                     <label>Labeled Entries for Current Doc:</label>
                     <StatsContainer>
@@ -651,10 +667,18 @@ export default function Workspace() {
                   </Stack>
               </TabPanel>
             </Box>
-            <label className="model_info">Model Information</label>
+            <label className="hsbar_label">Model Update Freq.: 5 <i className="fa fa-info-circle"><span>Model in current workspace will be automatically updated every time when you label 5 new positive sentences.</span></i></label>
+            {/* <label className="model_info">Model Information</label> */}
             <ModelName>
               <Typography>Current classifier:</Typography>
-              <Typography><strong>v.{workspace.model_version}_Model</strong></Typography>
+              {
+                workspace.model_version > 0 ? <Typography><strong>v.{workspace.model_version}_Model</strong></Typography>
+                : <Typography><strong>No model</strong></Typography>
+              }              
+            </ModelName>
+            <ModelName>
+              <Typography>Model status: </Typography>
+              <Typography>{workspace['modelStatus']}</Typography>
             </ModelName>
             <LinearWithValueLabel />
             {/* <Box>
@@ -731,6 +755,7 @@ export default function Workspace() {
           <TitleBar>
             <IconButton onClick={() => {
               if (workspace.curDocId > 0) {
+                setNumLabel({pos: 0, neg: 0})
                 dispatch(fetchPrevDocElements())
               }
             }}>
@@ -744,7 +769,7 @@ export default function Workspace() {
             </Typography>
             <IconButton onClick={() => {
               if (workspace.curDocId < workspace.documents.length - 1) {
-                console.log(`click next`)
+                setNumLabel({pos: 0, neg: 0})
                 dispatch(fetchNextDocElements())
               }
             }}>

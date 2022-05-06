@@ -1,9 +1,9 @@
-import { CoPresentOutlined } from '@mui/icons-material'
+import { CoPresentOutlined, NotificationsTwoTone, SignalCellularNullSharp } from '@mui/icons-material'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { BASE_URL,  WORKSPACE_API  } from "../../config_cloud"
 
 const initialState = {
-    workspace: "CC1",
+    workspace: "demo-dakuo",
     curDocId: 0,
     curDocName: "",
     documents: [],
@@ -21,7 +21,12 @@ const initialState = {
     indexPrediction: 0,
     predictionForDocCat: [],
     modelUpdateProgress: 0,
-    new_categories: []
+    new_categories: [],
+    modelStatus: "Not ready",
+    pos_label_num: 0,
+    neg_label_num: 0,
+    pos_label_num_doc: 0,
+    neg_label_num_doc: 0
 }
 
 const token = "Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q"
@@ -75,6 +80,32 @@ export const getPositiveElementForCategory = createAsyncThunk('workspace/getPosi
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
+    }).then( response => response.json())
+
+    return data
+})
+
+export const createCategoryOnServer = createAsyncThunk('workspace/createCategoryOnServer', async (request, { getState }) => {
+
+    const state = getState()
+
+    const { category } = request
+
+    console.log(`category on server: ${category}`)
+
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/category`)
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            'category_name': category,
+            'category_description': "",
+            'update_counter': true
+        }),
+        method: "POST"
     }).then( response => response.json())
 
     return data
@@ -166,7 +197,7 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
 
     const state = getState()
 
-    const { docid, eid } = request
+    const { docid, eid, switchStatus } = request
 
     console.log(`call fetchCertainDocument, eid: ${eid}`)
 
@@ -184,7 +215,24 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
         return data
     })
 
-    return { data, eid }
+    return { data, eid, switchStatus }
+})
+
+export const labelInfoGain = createAsyncThunk('workspace/labeled_info_gain', async (request, { getState }) => {
+
+    const state = getState()
+
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/labeled_info_gain?category_name=${state.workspace.curCategory}`)
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        method: "GET"
+    }).then( response => response.json())
+
+    return data
 })
 
 export const fetchCategories = createAsyncThunk('workspace/get_all_categories', async (request, { getState }) => {
@@ -348,7 +396,7 @@ const DataSlice = createSlice({
                 ...state,
                 new_categories: cat_list
             }
-        }
+        },
     },
     extraReducers: {
         [fetchElements.fulfilled]: (state, action) => {
@@ -515,7 +563,11 @@ const DataSlice = createSlice({
 
             const model_num = data['models'].length
 
-            const latest_model_version = data['models'][model_num-1]['iteration']
+            var latest_model_version = 0
+
+            if (data['models'].length > 0) {
+                latest_model_version = data['models'][model_num-1]['iteration']
+            }
 
             return {
                 ...state,
@@ -528,6 +580,7 @@ const DataSlice = createSlice({
             const response = action.payload
             const data = response['data']
             const eid = response['eid']
+            const status = response['switchStatus']
 
             var initialFocusedState = {}
 
@@ -539,10 +592,22 @@ const DataSlice = createSlice({
 
             initialFocusedState['L'+eid] = true
 
-            var initialLabelState = {}
+            var initialLabelState = null
 
-            for (var i = 0; i < data['elements'].length; i++) {
-                initialLabelState['L'+i] = ""
+            console.log(`status: ${status}`)
+
+            if (status == 'switch') {
+
+                initialLabelState = {}
+
+                console.log(`switch status`)
+
+                for (var i = 0; i < data['elements'].length; i++) {
+                    initialLabelState['L'+i] = ""
+                }
+            } else {
+                console.log(`search status`)
+                initialLabelState = { ...state['labelState'] }
             }
 
             var DocId = -1
@@ -578,9 +643,35 @@ const DataSlice = createSlice({
 
             const progress = response['progress']['all']
 
+            const notifications = response['notifications']
+
+            var status = state['modelStatus']
+
+            var pos_label = state['pos_label_num']
+
+            var neg_label = state['neg_label_num']
+
+
+            if ( notifications.length != 0 ) {
+                status = notifications[notifications.length-1]['text']
+            }
+
+            if ( 'true' in response['labeling_counts'] ) {
+                pos_label = response['labeling_counts']['true']
+            }
+
+            if ( 'false' in response['labeling_counts'] ) {
+                neg_label = response['labeling_counts']['false']
+            }
+
+            console.log(`true: ${pos_label}, false: ${neg_label}`)
+
             return {
                 ...state,
-                modelUpdateProgress: progress
+                modelUpdateProgress: progress,
+                modelStatus: status,
+                pos_label_num: pos_label,
+                neg_label_num: neg_label
             }
         }
     }
