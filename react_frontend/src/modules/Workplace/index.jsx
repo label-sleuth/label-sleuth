@@ -504,11 +504,13 @@ export default function Workspace() {
       console.log(`curCategory value: ${workspace.curCategory}`)
       
       if (workspace.curCategory != null) {
-        const old_model_version = workspace.model_version
         dispatch(checkModelUpdate()).then(() => {
-          if (old_model_version != workspace.model_version) {
+          console.log(`old version: ${workspace.last_model_version}, new version: ${workspace.model_version}`)
+          if (workspace.last_model_version != workspace.model_version) {
             console.log(`model version changed to: ${workspace.model_version}`)
-            dispatch(fetchElements())
+            dispatch(fetchElements()).then(() => {
+              dispatch(getElementToLabel())
+            })
           }
         })
       } else {
@@ -519,6 +521,12 @@ export default function Workspace() {
     return () => clearInterval(interval);
 
   }, [workspace.curCategory])
+
+  React.useEffect(() => {
+
+    dispatch(fetchElements()).then(() => dispatch(getElementToLabel()))
+
+  }, [workspace.model_version])
 
 
   const handleSearch = () => {

@@ -17,6 +17,7 @@ const initialState = {
     focusedState: [],
     labelState: [],
     searchResult: [],
+    last_model_version: 0,
     model_version: 0,
     indexPrediction: 0,
     predictionForDocCat: [],
@@ -413,8 +414,22 @@ const DataSlice = createSlice({
 
             var initialLabelState = {}
 
+            var pos_label = 0
+
+            var neg_label = 0
+
             for (var i = 0; i < data['elements'].length; i++) {
-                initialLabelState['L'+i] = ""
+                if (state.curCategory in data['elements'][i]['user_labels']) {
+                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
+                        initialLabelState['L'+i] = 'pos'
+                        pos_label += 1
+                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
+                        initialLabelState['L'+i] = 'neg'
+                        neg_label += 1
+                    }
+                } else {
+                    initialLabelState['L'+i] = ""
+                }
             }
 
             return {
@@ -423,7 +438,9 @@ const DataSlice = createSlice({
                 focusedState: initialFocusedState,
                 focusedIndex: 0,
                 labelState: initialLabelState,
-                ready: true
+                ready: true,
+                pos_label_num_doc: pos_label,
+                neg_label_num_doc: neg_label
             }
         },
         [fetchCategories.fulfilled]: (state, action) => {
@@ -491,8 +508,22 @@ const DataSlice = createSlice({
 
             var initialLabelState = {}
 
+            var pos_label = 0
+
+            var neg_label = 0
+
             for (var i = 0; i < data['elements'].length; i++) {
-                initialLabelState['L'+i] = ""
+                if (state.curCategory in data['elements'][i]['user_labels']) {
+                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
+                        initialLabelState['L'+i] = 'pos'
+                        pos_label += 1
+                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
+                        initialLabelState['L'+i] = 'neg'
+                        neg_label += 1
+                    }
+                } else {
+                    initialLabelState['L'+i] = ""
+                }
             }
 
             return {
@@ -503,7 +534,9 @@ const DataSlice = createSlice({
                 focusedState: initialFocusedState,
                 focusedIndex: 0,
                 labelState: initialLabelState,
-                ready: true
+                ready: true,
+                pos_label_num_doc: pos_label,
+                neg_label_num_doc: neg_label
             }
         },
         [fetchPrevDocElements.fulfilled]: (state, action) => {
@@ -519,8 +552,22 @@ const DataSlice = createSlice({
 
             var initialLabelState = {}
 
+            var pos_label = 0
+
+            var neg_label = 0
+
             for (var i = 0; i < data['elements'].length; i++) {
-                initialLabelState['L'+i] = ""
+                if (state.curCategory in data['elements'][i]['user_labels']) {
+                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
+                        initialLabelState['L'+i] = 'pos'
+                        pos_label += 1
+                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
+                        initialLabelState['L'+i] = 'neg'
+                        neg_label += 1
+                    }
+                } else {
+                    initialLabelState['L'+i] = ""
+                }
             }
 
             return {
@@ -531,7 +578,9 @@ const DataSlice = createSlice({
                 focusedState: initialFocusedState,
                 focusedIndex: 0,
                 labelState: initialLabelState,
-                ready: true
+                ready: true,
+                pos_label_num_doc: pos_label,
+                neg_label_num_doc: neg_label
             }
         },
         [setElementLabel.fulfilled]: (state, action) => {
@@ -559,19 +608,26 @@ const DataSlice = createSlice({
         },
         [checkModelUpdate.fulfilled]: (state, action) => {
 
+            const last_model_version = state.model_version
+
             const data = action.payload
+
+            console.log(`check model update: `, data)
 
             const model_num = data['models'].length
 
             var latest_model_version = 0
 
-            if (data['models'].length > 0) {
+            if (model_num > 0) {
+                
                 latest_model_version = data['models'][model_num-1]['iteration']
+                console.log(`latest model version: ${latest_model_version}`)
             }
 
             return {
                 ...state,
-                model_version: latest_model_version
+                model_version: latest_model_version,
+                last_model_version: last_model_version
             }
 
         },
