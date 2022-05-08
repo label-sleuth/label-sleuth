@@ -15,18 +15,18 @@ function App() {
           path="/workspaces"
           exact
           element={
-            <PrivateRoute>
+            // <PrivateRoute>
               <WorkspaceConfig />
-            </PrivateRoute>
+            // </PrivateRoute>
           }
         />
         <Route
           path="/workspace"
           exact
           element={
-            <PrivateRoute>
+            // <PrivateRoute>
               <Workplace />
-            </PrivateRoute>
+            // </PrivateRoute>
 
           }
         />

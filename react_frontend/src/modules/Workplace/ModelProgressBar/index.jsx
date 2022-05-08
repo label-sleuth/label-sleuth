@@ -7,12 +7,12 @@ import Box from '@mui/material/Box';
 
 function LinearProgressWithLabel(props) {
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', pl: '16px', pr: '16px'}}>
       <Box sx={{ width: '100%', mr: 1 }}>
         <LinearProgress variant="determinate" {...props} />
       </Box>
       <Box sx={{ minWidth: 35 }}>
-        <Typography variant="body2" color="text.secondary">{`${Math.round(
+        <Typography className="model_percentage" variant="body2" color="text.secondary">{`${Math.round(
           props.value,
         )}%`}</Typography>
       </Box>
