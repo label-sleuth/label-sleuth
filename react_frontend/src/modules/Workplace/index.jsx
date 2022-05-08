@@ -7,17 +7,14 @@ import Typography from '@mui/material/Typography';
 import './styles.css'
 import sleuth_logo from './Asset/sleuth_logo.png';
 import search_icon from './Asset/search.svg';
-import recommend_icon from './Asset/query-queue.svg';
-import info_icon from './Asset/help.svg';
+import recommend_icon from './Asset/query-queue.svg'
+import info_icon from './Asset/help.svg'
+import Presentation from './Presentation';
 import Divider from '@mui/material/Divider';
 import LinearWithValueLabel from './ModelProgressBar'
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import IconButton from '@mui/material/IconButton';
 import CreateCategoryModal from './Modal';
-import Presentation from './Presentation';
-import Paper from '@mui/material/Paper';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
 import SearchPanel from './SearchPanel'
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useDispatch, useSelector } from 'react-redux';
