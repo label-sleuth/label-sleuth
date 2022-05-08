@@ -8,6 +8,8 @@ import './styles.css'
 import sleuth_logo from './Asset/sleuth_logo.png';
 import search_icon from './Asset/search.svg';
 import recommend_icon from './Asset/query-queue.svg'
+import info_icon from './Asset/help.svg'
+import Presentation from './Presentation';
 import Divider from '@mui/material/Divider';
 import LinearWithValueLabel from './ModelProgressBar'
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
@@ -42,6 +44,12 @@ import Tab from '@mui/material/Tab';
 
 const drawerWidth = 280;
 const rightDrawerWidth = 360;
+
+var modalStatus = 0;
+
+const open_introSlides = function(){
+  document.getElementById("presentation").style.display = "flex";
+}
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -472,6 +480,7 @@ export default function Workspace() {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
 
+      <Presentation />
       <Box className="left_nav">
         <Drawer
           sx={{
@@ -488,7 +497,7 @@ export default function Workspace() {
           // open={open}
           anchor="left">
           <DrawerHeader>
-            <h2><img className="sleuth_logo" src={sleuth_logo} alt="temporary sleuth logo"/>Sleuth</h2>
+            <h2><img className="sleuth_logo" src={sleuth_logo} alt="temporary sleuth logo"/>Sleuth<span className="moreinfo" onClick={open_introSlides}><img src={info_icon} alt="more info"/></span></h2>
             {/* <IconButton>
               <LogoutIcon />
             </IconButton> */}
