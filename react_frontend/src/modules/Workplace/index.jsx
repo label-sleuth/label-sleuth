@@ -26,6 +26,8 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import SearchBar from "material-ui-search-bar";
 import Element from "./Element"
+import Stack from '@mui/material/Stack';
+import HSBar from "react-horizontal-stacked-bar-chart";
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { makeStyles } from '@mui/styles';
@@ -35,6 +37,8 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import WorkspaceInfo from './workspace-info/WorkspaceInfo';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 
 const drawerWidth = 280;
 const rightDrawerWidth = 360;
@@ -185,6 +189,33 @@ const AppBar = styled(Box, {
   alignItems: 'center',
   justifyContent: 'space-between',
 }));
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+}
+
+function a11yProps(index) {
+  return {
+    id: `simple-tab-${index}`,
+    'aria-controls': `simple-tabpanel-${index}`,
+  };
+}
 
 
 const useStyles = makeStyles((theme) => ({

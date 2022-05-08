@@ -30,8 +30,9 @@ const initialState = {
     neg_label_num_doc: 0
 }
 
-const BASE_URL = process.env.REACT_APP_API_URL
-const token = localStorage.getItem('token')
+const BASE_URL = "https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud"
+// const token = localStorage.getItem('token')
+const token = "Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q"
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
 export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async (request, { getState }) => {
@@ -392,11 +393,13 @@ const DataSlice = createSlice({
 
             var cat_list = [...state.new_categories]
 
+            console.log(`createNewCategory called`)
+
             if (!cat_list.includes(new_category_name)) {
                 console.log(`does not contain new category`)
                 cat_list.push(new_category_name)
             } else {
-                console.log(`does not contain new category`)
+                console.log(`already contain new category`)
             }
 
             return {
@@ -451,6 +454,7 @@ const DataSlice = createSlice({
         },
         [fetchCategories.fulfilled]: (state, action) => {
             const data = action.payload
+
             return {
                 ...state,
                 categories: data['categories']
