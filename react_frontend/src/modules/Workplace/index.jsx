@@ -20,6 +20,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import CreateCategoryModal from './Modal';
+import Presentation from './Presentation';
 import Paper from '@mui/material/Paper';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -63,6 +64,10 @@ import { FamilyRestroomRounded } from '@mui/icons-material';
 
 const drawerWidth = 280;
 const rightDrawerWidth = 360;
+
+const introSlides = function(){
+  console.log("meep");
+}
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -562,6 +567,7 @@ export default function Workspace() {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
 
+      <Presentation />
       <Box className="left_nav">
         <Drawer
           sx={{
@@ -578,7 +584,7 @@ export default function Workspace() {
           // open={open}
           anchor="left">
           <DrawerHeader>
-            <h2><img className="sleuth_logo" src={sleuth_logo} alt="temporary sleuth logo"/>Sleuth</h2>
+            <h2><img className="sleuth_logo" src={sleuth_logo} alt="temporary sleuth logo"/>Sleuth<span onClick={introSlides}>hi</span></h2>
             {/* <IconButton>
               <LogoutIcon />
             </IconButton> */}
