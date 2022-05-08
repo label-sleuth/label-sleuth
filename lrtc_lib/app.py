@@ -39,11 +39,13 @@ from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ActiveLe
 
 from lrtc_lib import definitions
 
-from lrtc_lib.core.information_gain_utils import information_gain
+from lrtc_lib.analysis_utils.analyze_tokens import ngrams_by_info_gain
 from lrtc_lib.config import CONFIGURATION
 from lrtc_lib.configurations.users import users, tokens
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
 from lrtc_lib.data_access.data_access_api import AlreadyExistsException, get_document_uri
+from lrtc_lib.models.core.languages import Languages
+
 
 print("user:")
 print(getpass.getuser())
@@ -183,7 +185,7 @@ def add_documents(dataset_name):
         return jsonify({"dataset_name": dataset_name, "error": "documents already exist", "documents": e.documents,
                         "error_code": 409})
     except Exception:
-        logging.exception(f"failed to load or add documents to dataset {dataset_name}")
+        logging.exception(f"failed to load or add documents to dataset '{dataset_name}'")
         return jsonify({"dataset_name": dataset_name, "error": traceback.format_exc(), "error_code": 400})
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
@@ -204,7 +206,7 @@ def create_workspace():
     dataset_name = post_data["dataset_id"]
 
     if orchestrator_api.workspace_exists(workspace_id):
-        raise Exception(f"workspace {workspace_id} already exists")
+        raise Exception(f"workspace '{workspace_id}' already exists")
     orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
     all_document_ids = orchestrator_api.get_all_document_uris(workspace_id)
@@ -340,10 +342,18 @@ def get_labeled_elements_enriched_tokens(workspace_id):
                                                        category)
     elements_transformed = elements_back_to_front(workspace_id, elements, category)
     res = dict()
-    if elements:
+    if elements and len(elements) > 0:
         boolean_labels = [category in element['user_labels'] and element['user_labels'][category] == LABEL_POSITIVE
                           for element in elements_transformed]
-        res['info_gain'] = information_gain(elements, boolean_labels)
+        try:
+            texts = [element.text for element in elements]
+            enriched_ngrams_and_weights = ngrams_by_info_gain(texts, boolean_labels, ngram_max_length=2,
+                                                              language=Languages.ENGLISH)
+        except Exception as e:
+            logging.warning(f"Failed to calculate enriched tokens from {len(elements)} elements: error {e}")
+            enriched_ngrams_and_weights = {}
+        formatted_res = [{'text': ngram, 'weight': weight} for ngram, weight in enriched_ngrams_and_weights]
+        res['info_gain'] = formatted_res[:30]
     return jsonify(res)
 
 
@@ -593,7 +603,7 @@ def force_train_for_category(workspace_id):
     model_id = orchestrator_api.train_if_recommended(workspace_id, category_name, force=True)
 
     labeling_counts = orchestrator_api.get_label_counts(workspace_id, dataset_name, category_name)
-    logging.info(f"force training a new model in workspace {workspace_id} for category {category_name}, "
+    logging.info(f"force training a new model in workspace '{workspace_id}' for category '{category_name}', "
                  f"model id: {model_id}")
 
     return jsonify({

@@ -36,8 +36,7 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
 
     num_folds = 4
     random.Random(0).shuffle(all_train_text_elements)
-    all_train_data = _convert_text_elements_to_train_data(
-        all_train_text_elements, category_name)
+    all_train_data = _convert_text_elements_to_train_data(all_train_text_elements, category_name)
     train_splits = np.array_split(np.array(all_train_data), num_folds)
     all_pos_scores = []
     for i in range(num_folds):
@@ -64,7 +63,7 @@ def get_disagreements_using_cross_validation(workspace_id, dataset_name, categor
     sorted_scores_and_elements = sorted(disagreement_scores_and_elements, key=lambda x: abs(x[0] - 0.5),
                                         reverse=True)
     sorted_disagreement_elements = [x[1] for x in sorted_scores_and_elements]
-    logging.info(f"creating suspicious labels report for category {category_name} in workspace {workspace_id} "
+    logging.info(f"creating suspicious labels report for category '{category_name}' in workspace '{workspace_id}' "
                  f"took {'{:.2f}'.format(time.time() - start_time)}")
     return sorted_disagreement_elements
 

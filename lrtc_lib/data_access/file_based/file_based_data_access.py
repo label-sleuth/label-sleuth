@@ -15,7 +15,8 @@ from typing import Sequence, Iterable, Mapping, List, Union
 
 import lrtc_lib.data_access.file_based.utils as utils
 from lrtc_lib.data_access.core.data_structs import Document, Label, TextElement
-from lrtc_lib.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, LabeledStatus
+from lrtc_lib.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, \
+    LabeledStatus
 
 
 class FileBasedDataAccess(DataAccessApi):
@@ -60,7 +61,7 @@ class FileBasedDataAccess(DataAccessApi):
             doc_ids = {document.uri for document in documents}
             intersection = doc_ids.intersection(set(self.get_all_document_uris(dataset_name)))
             if len(intersection) > 0:
-                raise AlreadyExistsException(f"{len(intersection)} documents are already in dataset {dataset_name}."
+                raise AlreadyExistsException(f"{len(intersection)} documents are already in dataset '{dataset_name}'."
                                             f" uris: ({intersection})", list(intersection))
 
         for doc in documents:
@@ -356,7 +357,7 @@ class FileBasedDataAccess(DataAccessApi):
         Delete dataset by name
         :param dataset_name:
         """
-        logging.info(f"Deleting dataset {dataset_name}")
+        logging.info(f"Deleting dataset '{dataset_name}'")
         dataset_dir = self._get_dataset_base_dir(dataset_name)
         if os.path.isdir(dataset_dir):
             shutil.rmtree(dataset_dir)
@@ -371,10 +372,10 @@ class FileBasedDataAccess(DataAccessApi):
         with self.dataset_in_memory_lock:
             if dataset_name not in self.ds_in_memory:
                 if self._dataset_exists(dataset_name):
-                    logging.info(f"reading dataset {dataset_name} csv file")
+                    logging.info(f"reading dataset '{dataset_name}' csv file")
                     dataset_file_path = self._get_dataset_dump_filename(dataset_name)
                     df = pd.read_csv(dataset_file_path)
-                    logging.info(f"csv file for {dataset_name} read successfully")
+                    logging.info(f"csv file for dataset '{dataset_name}' read successfully")
                     # convert value of TextElement fields to their proper formats
                     df = df.where(pd.notnull(df), None)
                     for field in ['span', 'metadata']:
@@ -483,7 +484,6 @@ class FileBasedDataAccess(DataAccessApi):
 
     def _dataset_exists(self, dataset_name):
         return os.path.exists(self._get_dataset_dump_filename(dataset_name))
-
 
     def _get_dataset_base_dir(self,dataset_name):
         return os.path.join(self._get_datasets_base_dir(), dataset_name)
