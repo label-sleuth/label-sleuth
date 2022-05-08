@@ -53,7 +53,7 @@ export default function CreateCategoryModal(props) {
             <TextField id="outlined-basic" label="Outlined" variant="outlined" onChange={handleTextFieldChange} />
             <Button variant="contained" onClick={() => {
                 console.log(`button called`)
-                dispatch(createNewCategory(text))
+                // dispatch(createNewCategory(text))
                 dispatch(createCategoryOnServer({ category: text })).then(() => fetchCategories())
                 setOpen(false)
             }} sx={{ marginLeft: 3 }}>Create</Button>
