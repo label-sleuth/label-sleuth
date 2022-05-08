@@ -5,23 +5,17 @@ import Drawer from '@mui/material/Drawer';
 import CssBaseline from '@mui/material/CssBaseline';
 import Typography from '@mui/material/Typography';
 import './styles.css'
-<<<<<<< HEAD
-=======
 import sleuth_logo from './Asset/sleuth_logo.png';
 import search_icon from './Asset/search.svg';
 import recommend_icon from './Asset/query-queue.svg'
 import Divider from '@mui/material/Divider';
 import LinearWithValueLabel from './ModelProgressBar'
->>>>>>> main
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import IconButton from '@mui/material/IconButton';
 import CreateCategoryModal from './Modal';
 import SearchPanel from './SearchPanel'
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useDispatch, useSelector } from 'react-redux';
-<<<<<<< HEAD
-import { fetchElements, getElementToLabel, prevPrediction, nextPrediction, fetchCategories, getPositiveElementForCategory, checkModelUpdate, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState, searchKeywords, fetchCertainDocument } from './DataSlice.jsx';
-=======
 import { fetchElements, createCategoryOnServer, labelInfoGain, getElementToLabel, checkStatus, prevPrediction, nextPrediction, fetchCategories, getPositiveElementForCategory, checkModelUpdate, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState, searchKeywords, fetchCertainDocument } from './DataSlice.jsx';
 import InputBase from '@mui/material/InputBase';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -29,7 +23,6 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import CircularProgress from '@mui/material/CircularProgress';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InputLabel from '@mui/material/InputLabel';
->>>>>>> main
 import MenuItem from '@mui/material/MenuItem';
 import SearchBar from "material-ui-search-bar";
 import Element from "./Element"
@@ -67,8 +60,6 @@ const closedMixin = (theme) => ({
   },
 });
 
-<<<<<<< HEAD
-=======
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -105,7 +96,6 @@ const AccountInfo = styled('div')(({ theme }) => ({
   // ...theme.mixins.toolbar,
 }));
 
->>>>>>> main
 const ToolBar = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -125,8 +115,6 @@ const TitleBar = styled('div')(({ theme }) => ({
   // ...theme.mixins.toolbar,
 }));
 
-<<<<<<< HEAD
-=======
 const ModelName = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: "row",
@@ -159,7 +147,6 @@ const StackBarContainer = styled('div')(({ theme }) => ({
   // ...theme.mixins.toolbar,
 }));
 
->>>>>>> main
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     flexGrow: 1,
