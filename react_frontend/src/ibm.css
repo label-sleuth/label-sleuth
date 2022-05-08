@@ -364,6 +364,7 @@ mark {
     align-items: center;
     background: rgb(50,50,50,0.8);
     z-index: 9999;
+    display: none;
 }
 
 #presentation > div {
