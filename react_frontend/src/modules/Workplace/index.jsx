@@ -2,11 +2,7 @@ import * as React from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import MuiAppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import List from '@mui/material/List';
 import CssBaseline from '@mui/material/CssBaseline';
-import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import './styles.css'
 import sleuth_logo from './Asset/sleuth_logo.png';
@@ -16,10 +12,7 @@ import info_icon from './Asset/help.svg';
 import Divider from '@mui/material/Divider';
 import LinearWithValueLabel from './ModelProgressBar'
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
-import Highlighter from "react-highlight-words";
 import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import LogoutIcon from '@mui/icons-material/Logout';
 import CreateCategoryModal from './Modal';
 import Presentation from './Presentation';
 import Paper from '@mui/material/Paper';
@@ -36,32 +29,17 @@ import CircularProgress from '@mui/material/CircularProgress';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
 import SearchBar from "material-ui-search-bar";
 import Element from "./Element"
-import CardContent from '@mui/material/CardContent';
-import FormHelperText from '@mui/material/FormHelperText';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
-import ListItemButton from '@mui/material/ListItemButton';
-import Accordion from '@mui/material/Accordion';
-import ListItemIcon from '@mui/material/ListItemIcon';
 import { makeStyles } from '@mui/styles';
 import SearchIcon from '@mui/icons-material/Search';
-import { PieChart } from 'react-minimal-pie-chart';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
-import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import ListItemText from '@mui/material/ListItemText';
-import HSBar from "react-horizontal-stacked-bar-chart";
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
-import { FamilyRestroomRounded } from '@mui/icons-material';
+import WorkspaceInfo from './workspace-info/WorkspaceInfo';
 
 const drawerWidth = 280;
 const rightDrawerWidth = 360;
@@ -225,23 +203,7 @@ const useStyles = makeStyles((theme) => ({
     borderBlockColor: "red"
   }
 }));
-
-// const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
-//   ({ theme, open }) => ({
-//     width: drawerWidth,
-//     flexShrink: 0,
-//     whiteSpace: 'nowrap',
-//     boxSizing: 'border-box',
-//     ...(open && {
-//       ...openedMixin(theme),
-//       '& .MuiDrawer-paper': openedMixin(theme),
-//     }),
-//     ...(!open && {
-//       ...closedMixin(theme),
-//       '& .MuiDrawer-paper': closedMixin(theme),
-//     }),
-//   }),
-// );
+ 
 
 const Line = styled(Box)((props) => ({
   ...(props.focused && {
@@ -257,14 +219,6 @@ const Line = styled(Box)((props) => ({
   marginBottom: 15
 }))
 
-const HistoryText = styled(Box)((props) => ({
-  borderRadius: 16,
-  border: "thin solid black",
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginBottom: 3,
-  padding: 2.5
-}))
 
 function ElevationScroll(props) {
   const { children, window } = props;
@@ -280,75 +234,6 @@ function ElevationScroll(props) {
   return React.cloneElement(children, {
     elevation: trigger ? 4 : 0,
   });
-}
-
-function WorkspaceSelectFormControl() {
-  return (
-    <FormControl sx={{ marginTop: 1, minWidth: 120 }}>
-      <Select
-        id="workspace-select"
-        sx={{ height: "70%" }}
-      // value={age}
-      // onChange={handleChange}
-      >
-        <MenuItem value={10}>fairytale-bias-val-split</MenuItem>
-        <MenuItem value={20}>wiki_animals</MenuItem>
-        <MenuItem value={30}>storybook-bias</MenuItem>
-      </Select>
-      {/* <FormHelperText>With label + helper text</FormHelperText> */}
-    </FormControl>
-  );
-}
-
-function ModelFormControl() {
-  return (
-    <FormControl sx={{ marginTop: 1, minWidth: 60, paddingLeft: 2, paddingRight: 2 }}>
-      <Select
-        id="model-select"
-        sx={{ height: "70%" }}
-      // value={age}
-      // onChange={handleChange}
-      >
-        <MenuItem value={10}>Model 1</MenuItem>
-        <MenuItem value={20}>Model 2</MenuItem>
-        <MenuItem value={30}>Model 3</MenuItem>
-      </Select>
-      {/* <FormHelperText>With label + helper text</FormHelperText> */}
-    </FormControl>
-  );
-}
-
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
-    </div>
-  );
-}
-
-// TabPanel.propTypes = {
-//   children: PropTypes.node,
-//   index: PropTypes.number.isRequired,
-//   value: PropTypes.number.isRequired,
-// };
-
-function a11yProps(index) {
-  return {
-    id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
-  };
 }
 
 function CategoryFormControl(props) {
@@ -419,9 +304,6 @@ export default function Workspace() {
     setOpen(false);
   };
 
-  const SwitchDrawer = () => {
-    setOpen(!open)
-  }
 
   const handleKeyEvent = (event, len_elements) => {
 

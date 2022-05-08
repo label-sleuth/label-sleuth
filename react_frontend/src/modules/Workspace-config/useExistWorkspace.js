@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux'
-import { getWorkspaces } from './workspaceConfigSlice'
+import { getWorkspaces, setActiveWorkspace } from './workspaceConfigSlice'
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -30,6 +30,7 @@ const useExistWorkspace = () => {
         if (!value) {
             return notify("Please select workspace!")
         }
+        dispatch(setActiveWorkspace(value))
         navigate('/workspace')
     };
 
