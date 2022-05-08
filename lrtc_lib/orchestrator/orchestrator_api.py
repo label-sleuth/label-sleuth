@@ -44,6 +44,10 @@ def create_workspace(workspace_id: str, dataset_name: str):
     :param dataset_name:
     """
     logging.info(f"Creating a new workspace '{workspace_id}' using dataset {dataset_name}")
+    if dataset_name not in data_access.get_all_dataset_names():
+        message = f"{dataset_name} does not exist. Cannot create workspace {workspace_id}"
+        logging.error(message)
+        raise Exception(message)
     orchestrator_state_api.create_workspace(workspace_id, dataset_name)
 
 

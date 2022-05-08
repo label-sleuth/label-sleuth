@@ -4,46 +4,8 @@ import re
 import pandas as pd
 from lrtc_lib.data_access.core.data_structs import TextElement, URI_SEP
 from lrtc_lib.data_access.data_access_api import LabeledStatus
-from lrtc_lib.definitions import ROOT_DIR
-
-doc_dir_name = 'doc_dump'
-sentences_filename = 'dataset_sentences.csv'
-labels_filename = 'workspace_labels.json'
-
-def get_all_dataset_names():
-    all_datasets = sorted(x for x in os.listdir(get_datasets_base_dir()) if not x.startswith('.'))
-    return all_datasets
 
 
-def get_dataset_base_dir(dataset_name):
-    return os.path.join(get_datasets_base_dir(), dataset_name)
-
-
-def get_datasets_base_dir():
-    data_access_dumps_path = os.path.join(ROOT_DIR, 'output', 'data_access_dumps')
-    os.makedirs(data_access_dumps_path, exist_ok=True)
-    return os.path.join(data_access_dumps_path)
-
-
-def get_documents_dump_dir(dataset_name):
-    return os.path.join(get_dataset_base_dir(dataset_name), doc_dir_name)
-
-
-def get_dataset_dump_filename(dataset_name):
-    return os.path.join(get_dataset_base_dir(dataset_name), sentences_filename)
-
-
-def get_labels_dump_dir():
-    return os.path.join(ROOT_DIR, 'output', 'user_labels')
-
-
-def get_workspace_labels_dump_filename(workspace_id, dataset_name):
-    workspace_dir = get_workspace_labels_dir(workspace_id)
-    return os.path.join(workspace_dir, str(dataset_name) + '_' + labels_filename)
-
-
-def get_workspace_labels_dir(workspace_id):
-    return os.path.join(get_labels_dump_dir(), str(workspace_id))
 
 
 def get_dataset_name_from_uri(uri):

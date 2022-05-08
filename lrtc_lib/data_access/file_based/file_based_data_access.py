@@ -11,7 +11,7 @@ import pandas as pd
 
 from pathlib import Path
 from collections import Counter, defaultdict
-from typing import Sequence, Iterable, Mapping, List, Tuple, Union
+from typing import Sequence, Iterable, Mapping, List, Union
 
 import lrtc_lib.data_access.file_based.utils as utils
 from lrtc_lib.data_access.core.data_structs import Document, Label, TextElement
@@ -32,10 +32,17 @@ class FileBasedDataAccess(DataAccessApi):
     maps workspace_id -> dataset name -> URIs -> categories -> Label object
 
     """
+    doc_dir_name = 'doc_dump'
+    sentences_filename = 'dataset_sentences.csv'
+    labels_filename = 'workspace_labels.json'
+
     workspace_to_labels_lock_objects = defaultdict(threading.Lock)
     ds_in_memory = defaultdict(pd.DataFrame)
     labels_in_memory = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(Label))))
     dataset_in_memory_lock = threading.RLock()
+
+    def __init__(self,output_dir):
+        self.output_dir = output_dir
 
     def add_documents(self, dataset_name: str, documents: Iterable[Document]):
         """
@@ -45,7 +52,7 @@ class FileBasedDataAccess(DataAccessApi):
             A. a json file per Document, containing data for the TextElement objects within that Document
             B. a single csv file, containing data for the TextElement objects from all Documents for this dataset
         """
-        doc_dump_dir = utils.get_documents_dump_dir(dataset_name)
+        doc_dump_dir = self._get_documents_dump_dir(dataset_name)
         sentences = []
         if not os.path.exists(doc_dump_dir):
             os.makedirs(doc_dump_dir)
@@ -153,7 +160,7 @@ class FileBasedDataAccess(DataAccessApi):
             doc = jsonpickle.decode(doc_encoded)
             return doc
 
-        doc_dump_dir = utils.get_documents_dump_dir(dataset_name)
+        doc_dump_dir = self._get_documents_dump_dir(dataset_name)
         docs = [load_doc(uri) for uri in uris]
         if workspace_id is not None:
             with self._get_lock_object_for_workspace(workspace_id):
@@ -170,7 +177,7 @@ class FileBasedDataAccess(DataAccessApi):
         :return: a List of all Document uris in the given dataset_name.
         """
         uris = []
-        doc_dump_dir = utils.get_documents_dump_dir(dataset_name)
+        doc_dump_dir = self._get_documents_dump_dir(dataset_name)
         for filename in os.listdir(doc_dump_dir):
             filename, file_extension = os.path.splitext(filename)
             uris.append(utils.filename_to_uri(filename))
@@ -311,10 +318,10 @@ class FileBasedDataAccess(DataAccessApi):
         :param workspace_id:
         :param dataset_name:
         """
-        labels_file = utils.get_workspace_labels_dump_filename(workspace_id, dataset_name)
+        labels_file = self._get_workspace_labels_dump_filename(workspace_id, dataset_name)
         if os.path.isfile(labels_file):
             os.remove(labels_file)
-        workspace_dumps_dir = utils.get_workspace_labels_dir(workspace_id)
+        workspace_dumps_dir = self._get_workspace_labels_dir(workspace_id)
         if os.path.exists(workspace_dumps_dir) and len(os.listdir(workspace_dumps_dir)) == 0:
             os.rmdir(workspace_dumps_dir)
 
@@ -341,7 +348,7 @@ class FileBasedDataAccess(DataAccessApi):
         """
         :return: a list of all available datset names
         """
-        path = utils.get_datasets_base_dir()
+        path = self._get_datasets_base_dir()
         return [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
 
     def delete_dataset(self, dataset_name):
@@ -350,7 +357,7 @@ class FileBasedDataAccess(DataAccessApi):
         :param dataset_name:
         """
         logging.info(f"Deleting dataset {dataset_name}")
-        dataset_dir = utils.get_dataset_base_dir(dataset_name)
+        dataset_dir = self._get_dataset_base_dir(dataset_name)
         if os.path.isdir(dataset_dir):
             shutil.rmtree(dataset_dir)
         if dataset_name in self.ds_in_memory:
@@ -365,7 +372,7 @@ class FileBasedDataAccess(DataAccessApi):
             if dataset_name not in self.ds_in_memory:
                 if self._dataset_exists(dataset_name):
                     logging.info(f"reading dataset {dataset_name} csv file")
-                    dataset_file_path = utils.get_dataset_dump_filename(dataset_name)
+                    dataset_file_path = self._get_dataset_dump_filename(dataset_name)
                     df = pd.read_csv(dataset_file_path)
                     logging.info(f"csv file for {dataset_name} read successfully")
                     # convert value of TextElement fields to their proper formats
@@ -380,7 +387,7 @@ class FileBasedDataAccess(DataAccessApi):
 
     def _get_labels(self, workspace_id, dataset_name):
         if workspace_id not in self.labels_in_memory or dataset_name not in self.labels_in_memory[workspace_id]:
-            file_path = utils.get_workspace_labels_dump_filename(workspace_id, dataset_name)
+            file_path = self._get_workspace_labels_dump_filename(workspace_id, dataset_name)
             if os.path.isfile(file_path):
                 # Read dict from disk
                 with open(file_path) as f:
@@ -408,7 +415,7 @@ class FileBasedDataAccess(DataAccessApi):
         else:
             self.ds_in_memory[dataset_name] = new_sentences_df
         self.ds_in_memory[dataset_name] = self._add_text_unique_ids(self.ds_in_memory[dataset_name])
-        self.ds_in_memory[dataset_name].to_csv(utils.get_dataset_dump_filename(dataset_name), index=False)
+        self.ds_in_memory[dataset_name].to_csv(self._get_dataset_dump_filename(dataset_name), index=False)
 
     def _add_labels_info_for_text_elements(self, workspace_id, dataset_name, text_elements: List[TextElement]):
         labels_info_for_workspace = self._get_labels(workspace_id, dataset_name)
@@ -453,7 +460,7 @@ class FileBasedDataAccess(DataAccessApi):
         return results_dict
 
     def _save_labels_data(self, dataset_name, workspace_id):
-        file_path = utils.get_workspace_labels_dump_filename(workspace_id, dataset_name)
+        file_path = self._get_workspace_labels_dump_filename(workspace_id, dataset_name)
         os.makedirs(Path(file_path).parent, exist_ok=True)
         labels = self.labels_in_memory[workspace_id][dataset_name]
         simplified_labels = {k: {str(category): label.to_dict() for category, label in v.items()}
@@ -475,7 +482,32 @@ class FileBasedDataAccess(DataAccessApi):
         return df
 
     def _dataset_exists(self, dataset_name):
-        return os.path.exists(utils.get_dataset_dump_filename(dataset_name))
+        return os.path.exists(self._get_dataset_dump_filename(dataset_name))
+
+
+    def _get_dataset_base_dir(self,dataset_name):
+        return os.path.join(self._get_datasets_base_dir(), dataset_name)
+
+    def _get_datasets_base_dir(self):
+        data_access_dumps_path = os.path.join(self.output_dir, 'data_access_dumps')
+        os.makedirs(data_access_dumps_path, exist_ok=True)
+        return os.path.join(data_access_dumps_path)
+
+    def _get_documents_dump_dir(self, dataset_name):
+        return os.path.join(self._get_dataset_base_dir(dataset_name), self.doc_dir_name)
+
+    def _get_dataset_dump_filename(self, dataset_name):
+        return os.path.join(self._get_dataset_base_dir(dataset_name), self.sentences_filename)
+
+    def _get_labels_dump_dir(self):
+        return os.path.join(self.output_dir, 'user_labels')
+
+    def _get_workspace_labels_dump_filename(self, workspace_id, dataset_name):
+        workspace_dir = self._get_workspace_labels_dir(workspace_id)
+        return os.path.join(workspace_dir, str(dataset_name) + '_' + self.labels_filename)
+
+    def _get_workspace_labels_dir(self, workspace_id):
+        return os.path.join(self._get_labels_dump_dir(), str(workspace_id))
 
 
 if __name__ == '__main__':
