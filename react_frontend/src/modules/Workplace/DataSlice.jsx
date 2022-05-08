@@ -1,6 +1,6 @@
 import { CoPresentOutlined, NotificationsTwoTone, SignalCellularNullSharp } from '@mui/icons-material'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { BASE_URL,  WORKSPACE_API  } from "../../config_cloud"
+import { WORKSPACE_API  } from "../../config"
 
 const initialState = {
     workspace: "demo-dakuo",
@@ -30,7 +30,8 @@ const initialState = {
     neg_label_num_doc: 0
 }
 
-const token = "Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q"
+const BASE_URL = process.env.REACT_APP_API_URL
+const token = localStorage.getItem('token')
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
 export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async (request, { getState }) => {
