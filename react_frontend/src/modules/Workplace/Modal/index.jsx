@@ -54,7 +54,7 @@ export default function CreateCategoryModal(props) {
             <Button variant="contained" onClick={() => {
                 console.log(`button called`)
                 // dispatch(createNewCategory(text))
-                dispatch(createCategoryOnServer({ category: text })).then(() => fetchCategories())
+                dispatch(createCategoryOnServer({ category: text })).then(() => fetchCategories().then(() => dispatch(createNewCategory(text))) )
                 setOpen(false)
             }} sx={{ marginLeft: 3 }}>Create</Button>
           </Box>

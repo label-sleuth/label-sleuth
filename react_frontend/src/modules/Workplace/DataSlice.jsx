@@ -391,7 +391,12 @@ const DataSlice = createSlice({
 
             var cat_list = [...state.new_categories]
 
-            cat_list.push(new_category_name)
+            if (!cat_list.includes(new_category_name)) {
+                console.log(`does not contain new category`)
+                cat_list.push(new_category_name)
+            } else {
+                console.log(`does not contain new category`)
+            }
 
             return {
                 ...state,

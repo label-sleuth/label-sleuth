@@ -2,7 +2,7 @@ import './App.css';
 import { Routes, Route } from 'react-router-dom';
 import Login from './modules/Login/index';
 import WorkspaceConfig from './modules/Workspace-config/index';
-import Workspace from './modules/Workplace/index';
+import Workplace from './modules/Workplace';
 import { PrivateRoute } from './features/PrivateRoute'
 
 function App() {
@@ -15,16 +15,19 @@ function App() {
           path="/workspaces"
           exact
           element={
-            <PrivateRoute>
+            // <PrivateRoute>
               <WorkspaceConfig />
-            </PrivateRoute>
+            // </PrivateRoute>
           }
         />
         <Route
           path="/workspace"
           exact
           element={
-              <Workspace />
+            // <PrivateRoute>
+              <Workplace />
+            // </PrivateRoute>
+
           }
         />
       </Routes>
