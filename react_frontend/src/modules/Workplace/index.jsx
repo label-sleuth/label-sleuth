@@ -476,12 +476,6 @@ export default function Workspace() {
       
       if (workspace.curCategory != null) {
         dispatch(checkModelUpdate()).then(() => {
-          console.log("model_updated")
-          if(workspace.model_version !== workspace.last_model_version){
-            console.log(workspace.model_version);
-            console.log(workspace.last_model_version);
-            fire();
-          }
         })
       } else {
       }
@@ -496,6 +490,9 @@ export default function Workspace() {
   React.useEffect(() => {
 
     console.log(`model updated, data retrieved, model version: ${workspace.model_version}`)
+    if(workspace.model_version > 0){
+      fire();
+    }
 
     dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
 
