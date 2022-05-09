@@ -17,8 +17,7 @@ const initialState = {
     focusedState: [],
     labelState: [],
     searchResult: [],
-    last_model_version: 0,
-    model_version: 0,
+    model_version: -1,
     indexPrediction: 0,
     predictionForDocCat: [],
     modelUpdateProgress: 0,
@@ -609,8 +608,6 @@ const DataSlice = createSlice({
 
             const data = action.payload
 
-            console.log(`getElementToLabel: `, data)
-
             return {
                 ...state,
                 elementsToLabel: data['elements'],
@@ -619,26 +616,22 @@ const DataSlice = createSlice({
         },
         [checkModelUpdate.fulfilled]: (state, action) => {
 
-            const last_model_version = state.model_version
-
             const data = action.payload
-
-            console.log(`check model update: `, data)
 
             const model_num = data['models'].length
 
-            var latest_model_version = 0
+            var latest_model_version = -1
 
             if (model_num > 0) {
                 
                 latest_model_version = data['models'][model_num-1]['iteration']
-                console.log(`latest model version: ${latest_model_version}`)
             }
+
+            console.log(`latest model version: ${latest_model_version}`)
 
             return {
                 ...state,
-                model_version: latest_model_version,
-                last_model_version: last_model_version
+                model_version: latest_model_version
             }
 
         },
@@ -717,7 +710,6 @@ const DataSlice = createSlice({
             var pos_label = state['pos_label_num']
 
             var neg_label = state['neg_label_num']
-
 
             if ( notifications.length != 0 ) {
                 status = notifications[notifications.length-1]['text']
