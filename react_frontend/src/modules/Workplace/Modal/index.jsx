@@ -13,9 +13,9 @@ const style = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 400,
+  width: 350,
   bgcolor: 'background.paper',
-  border: '2px solid #000',
+  border: 'none',
   boxShadow: 24,
   p: 4,
 };
@@ -49,15 +49,14 @@ export default function CreateCategoryModal(props) {
           <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ marginBottom: 2 }}>
             Please enter new category:
           </Typography>
-          <Box>
-            <TextField id="outlined-basic" label="Outlined" variant="outlined" onChange={handleTextFieldChange} />
-            <Button variant="contained" onClick={() => {
+          <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+            <TextField id="outlined-basic" className="new_modal_name" label="New Model Name" onChange={handleTextFieldChange} />
+            <Button onClick={() => {
                 console.log(`button called`)
                 // dispatch(createNewCategory(text))
                 dispatch(createCategoryOnServer({ category: text })).then(() => fetchCategories())
-                dispatch(createNewCategory(text))
                 setOpen(false)
-            }} sx={{ marginLeft: 3 }}>Create</Button>
+            }} className="btn" sx={{ marginLeft: 3 }}>Create</Button>
           </Box>
 
         </Box>
