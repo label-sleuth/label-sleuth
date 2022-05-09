@@ -1,5 +1,6 @@
 import { CoPresentOutlined, NotificationsTwoTone, SignalCellularNullSharp } from '@mui/icons-material'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import fileDownload from 'js-file-download'
 import { WORKSPACE_API  } from "../../config"
 
 const initialState = {
@@ -225,6 +226,23 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
     })
 
     return { data, eid, switchStatus }
+})
+
+export const downloadLabeling = createAsyncThunk('workspace/downloadLabeling', async (request, { getState }) => {
+
+    const state = getState()
+
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/export_labels`)
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'text/csv;charset=UTF-8',
+            'Authorization': `Bearer ${token}`
+        },
+        method: "GET"
+    }).then( res => res.text())
+
+    return data
 })
 
 export const labelInfoGain = createAsyncThunk('workspace/labeled_info_gain', async (request, { getState }) => {
@@ -531,6 +549,10 @@ const DataSlice = createSlice({
                 ...state,
                 predictionForDocCat: predictionForDocCat
             }
+        },
+        [downloadLabeling.fulfilled]: (state, action) => {
+            const data = action.payload
+            fileDownload(data, 'labeling-data.csv')
         },
         [fetchNextDocElements.fulfilled]: (state, action) => {
             const data = action.payload

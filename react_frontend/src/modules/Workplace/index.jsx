@@ -20,7 +20,7 @@ import CreateCategoryModal from './Modal';
 import SearchPanel from './SearchPanel'
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchElements, createCategoryOnServer, labelInfoGain, getElementToLabel, checkStatus, prevPrediction, nextPrediction, fetchCategories, getPositiveElementForCategory, checkModelUpdate, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState, searchKeywords, fetchCertainDocument } from './DataSlice.jsx';
+import { fetchElements, createCategoryOnServer, downloadLabeling, labelInfoGain, getElementToLabel, checkStatus, prevPrediction, nextPrediction, fetchCategories, getPositiveElementForCategory, checkModelUpdate, updateCurCategory, fetchDocuments, fetchPrevDocElements, fetchNextDocElements, setFocusedState, searchKeywords, fetchCertainDocument } from './DataSlice.jsx';
 import InputBase from '@mui/material/InputBase';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -268,7 +268,7 @@ function ElevationScroll(props) {
 
 function CategoryFormControl(props) {
 
-  const { setNumLabelGlobal } = props
+  const { numLabelGlobalHandler, numLabelHandler } = props
 
   const workspace = useSelector(state => state.workspace)
   const dispatch = useDispatch()
@@ -284,7 +284,8 @@ function CategoryFormControl(props) {
           dispatch(fetchElements()).then(() => 
             dispatch(getElementToLabel()).then(() => {
               dispatch(checkStatus()).then(() => {
-                setNumLabelGlobal({pos: workspace.pos_label_num, neg: workspace.neg_label_num})
+                numLabelGlobalHandler({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })
+                numLabelHandler({pos: workspace.pos_label_num, neg: workspace.neg_label_num})
               })
             }))
 
@@ -576,7 +577,7 @@ export default function Workspace() {
               <WorkspaceSelectFormControl />
             </WorkspaceSelect> */}
             <Divider />
-            <p className="hsbar_label">Labeled (Current: { tabStatus == 0 ? (numLabelGlobal.pos + numLabelGlobal.neg) : (numLabel.pos + numLabel.neg)} / { tabStatus == 0 ? total_stats.total : 10 })</p>
+            <p className="hsbar_label">Labeled (Current: { tabStatus == 0 ? (numLabelGlobal.pos + numLabelGlobal.neg) : (doc_stats.pos + doc_stats.neg)} / { tabStatus == 0 ? total_stats.total : 10 })</p>
             <StackBarContainer>
               {/* <PieChart
               data={[
@@ -596,9 +597,9 @@ export default function Workspace() {
                   { value: total_stats.total - (workspace['pos_label_num'] + workspace['neg_label_num'] + 0.01), color: "#393939" }
                 ] : 
                 [
-                  { value: numLabel.pos + 0.01, color: "#8ccad9" },
-                  { value: numLabel.neg + 0.01, color: "#ff758f" },
-                  { value: workspace['elements'].length - (numLabel.pos + numLabel.neg), color: "#393939" }
+                  { value: doc_stats.pos + 0.01, color: "#8ccad9" },
+                  { value: doc_stats.neg + 0.01, color: "#ff758f" },
+                  { value: workspace['elements'].length - (doc_stats.pos + doc_stats.neg), color: "#393939" }
                 ]} />
             </StackBarContainer>
             <Box sx={{ width: '100%', padding: theme.spacing(0, 2) }}>
@@ -619,11 +620,11 @@ export default function Workspace() {
                   <label>Labeled Entries for Entire Workspace:</label>
                   <StatsContainer>
                     <Typography><strong>Positive</strong></Typography>
-                    <Typography sx={{ color: workspace['pos_label_num'] > 0 ? "#8ccad9" : "#fff" }}><strong>{numLabelGlobal.pos}</strong></Typography>
+                    <Typography sx={{ color: numLabelGlobal.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{numLabelGlobal.pos}</strong></Typography>
                   </StatsContainer>
                   <StatsContainer>
                     <Typography><strong>Negative</strong></Typography>
-                    <Typography sx={{ color: workspace['neg_label_num'] > 0 ? "#ff758f" : "#fff" }}><strong>{numLabelGlobal.neg}</strong></Typography>
+                    <Typography sx={{ color: numLabelGlobal.neg > 0 ? "#ff758f" : "#fff" }}><strong>{numLabelGlobal.neg}</strong></Typography>
                   </StatsContainer>
                   <StatsContainer>
                     <Typography><strong>Total</strong></Typography>
@@ -663,6 +664,8 @@ export default function Workspace() {
             </ModelName>
             <LinearWithValueLabel />
             <div class="modelStatus">{workspace['modelStatus']}</div>
+
+            <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download labeling </Button>
             {/* <Box>
               <Accordion sx={{ backgroundColor: "grey" }}>
                 <AccordionSummary
@@ -693,7 +696,7 @@ export default function Workspace() {
           <AppBar className="elevation_scroll" open={open}>
             <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
               <Typography><strong>Category:</strong></Typography>
-              <CategoryFormControl numLabelGlobalHandler={setNumLabelGlobal}/>
+              <CategoryFormControl numLabelGlobalHandler={setNumLabelGlobal} NumLabelHandler={setNumLabel}/>
               <a className="create_new_category" onClick={() => setModalOpen(true)} >
                <span>New Category</span>
               </a>
@@ -737,8 +740,8 @@ export default function Workspace() {
           <TitleBar>
             <IconButton onClick={() => {
               if (workspace.curDocId > 0) {
-                setNumLabel({pos: 0, neg: 0})
-                dispatch(fetchPrevDocElements()).then(() => dispatch(getPositiveElementForCategory()))
+                // setNumLabel({pos: 0, neg: 0})
+                dispatch(fetchPrevDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel( {pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc} )))
               }
             }}>
               <ChevronLeftIcon />
@@ -751,8 +754,8 @@ export default function Workspace() {
             </Typography>
             <IconButton onClick={() => {
               if (workspace.curDocId < workspace.documents.length - 1) {
-                setNumLabel({pos: 0, neg: 0})
-                dispatch(fetchNextDocElements()).then(() => dispatch(getPositiveElementForCategory()))
+                // setNumLabel({pos: 0, neg: 0})
+                dispatch(fetchNextDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel( {pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc} )) )
               }
             }}>
               <ChevronRightIcon />
