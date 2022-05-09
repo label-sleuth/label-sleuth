@@ -7,7 +7,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import IconButton from "@mui/material/IconButton";
 import Stack from '@mui/material/Stack';
 import { Typography } from "@mui/material";
-import { setFocusedState, fetchCertainDocument, setLabelState, checkStatus, setElementLabel, getElementToLabel } from '../DataSlice.jsx';
+import { setFocusedState, fetchCertainDocument, setLabelState, checkStatus, setElementLabel, getElementToLabel, increaseIdInBatch } from '../DataSlice.jsx';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from '@mui/styles';
 import { styled, useTheme } from '@mui/material/styles';
@@ -166,11 +166,11 @@ export default function SearchPanel(props) {
                                 dispatch(setLabelState(initialLabelState))
                             }
 
+                            dispatch(increaseIdInBatch())
+
                             dispatch(setElementLabel({ element_id: element_id, docid: docid, label: "true" })).then(() => {
                                 dispatch(checkStatus())
                             })
-
-                            console.log(`order 1`)
 
                             if (docid != workspace.curDocName) {
                                 dispatch(fetchCertainDocument({ docid, id, switchStatus: "search" })).then(() => {
@@ -227,6 +227,8 @@ export default function SearchPanel(props) {
 
                                 dispatch(setLabelState(initialLabelState))
                             }
+
+                            dispatch(increaseIdInBatch())
 
                             dispatch(setElementLabel({ element_id: element_id, docid: docid, label: "false" })).then(() => {
                                 dispatch(checkStatus())

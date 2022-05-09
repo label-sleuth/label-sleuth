@@ -26,7 +26,9 @@ const initialState = {
     pos_label_num: 0,
     neg_label_num: 0,
     pos_label_num_doc: 0,
-    neg_label_num_doc: 0
+    neg_label_num_doc: 0,
+    training_batch: 5,
+    cur_completed_id_in_batch: 0
 }
 
 //const BASE_URL = "https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud"
@@ -411,6 +413,13 @@ const DataSlice = createSlice({
                 new_categories: cat_list
             }
         },
+        increaseIdInBatch(state, action) {
+            const cur_id_in_batch = state.cur_completed_id_in_batch
+            return {
+                ...state,
+                cur_completed_id_in_batch: cur_id_in_batch+1
+            }
+        }
     },
     extraReducers: {
         [fetchElements.fulfilled]: (state, action) => {
@@ -725,14 +734,24 @@ const DataSlice = createSlice({
 
             const notifications = response['notifications']
 
-            var status = state['modelStatus']
+            var status = null
+
+            var new_id_in_batch = state.cur_completed_id_in_batch
 
             var pos_label = state['pos_label_num']
 
             var neg_label = state['neg_label_num']
 
-            if ( notifications.length != 0 ) {
-                status = notifications[notifications.length-1]['text']
+            if (state.cur_completed_id_in_batch < state.training_batch - 1 ) {
+                status = "New model is not ready"
+            } else if (state.cur_completed_id_in_batch == state.training_batch - 1) {
+                status = "New model is almost ready"
+            } else {
+                status = "New model is ready"
+            }
+
+            if (state.cur_completed_id_in_batch == state.training_batch) {
+                new_id_in_batch = 0
             }
 
             if ( 'true' in response['labeling_counts'] ) {
@@ -743,11 +762,11 @@ const DataSlice = createSlice({
                 neg_label = response['labeling_counts']['false']
             }
 
-            console.log(`true: ${pos_label}, false: ${neg_label}`)
 
             return {
                 ...state,
                 modelUpdateProgress: progress,
+                cur_completed_id_in_batch: new_id_in_batch,
                 modelStatus: status,
                 pos_label_num: pos_label,
                 neg_label_num: neg_label
@@ -757,4 +776,4 @@ const DataSlice = createSlice({
 })
 
 export default DataSlice.reducer;
-export const { updateCurCategory, createNewCategory, prevPrediction, nextPrediction, setFocusedState, setLabelState } = DataSlice.actions;
+export const { updateCurCategory, increaseIdInBatch, createNewCategory, prevPrediction, nextPrediction, setFocusedState, setLabelState } = DataSlice.actions;

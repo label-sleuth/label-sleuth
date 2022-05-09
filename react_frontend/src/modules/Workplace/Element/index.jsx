@@ -5,7 +5,7 @@ import Stack from '@mui/material/Stack';
 import { IconButton } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
 import { useDispatch, useSelector } from 'react-redux';
-import { setElementLabel, getElementToLabel, setFocusedState, checkStatus, setLabelState } from '../DataSlice'
+import { setElementLabel, getElementToLabel, setFocusedState, checkStatus, setLabelState, increaseIdInBatch } from '../DataSlice'
 import CloseIcon from '@mui/icons-material/Close';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import { styled, useTheme } from '@mui/material/styles';
@@ -156,6 +156,8 @@ export default function Sentence(props) {
 
                             dispatch(setLabelState(newState))
 
+                            dispatch(increaseIdInBatch())
+
                             dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: "true" })).then(() => {
                                 dispatch(checkStatus())
                             })
@@ -184,6 +186,8 @@ export default function Sentence(props) {
                             }
 
                             dispatch(setLabelState(newState))
+
+                            dispatch(increaseIdInBatch())
 
                             dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: "false" })).then(() => {
                                 dispatch(checkStatus())
