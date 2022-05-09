@@ -794,10 +794,14 @@ const DataSlice = createSlice({
 
             if ( 'true' in response['labeling_counts'] ) {
                 pos_label = response['labeling_counts']['true']
+            } else {
+                pos_label = 0
             }
 
             if ( 'false' in response['labeling_counts'] ) {
                 neg_label = response['labeling_counts']['false']
+            } else {
+                neg_label = 0
             }
 
 
