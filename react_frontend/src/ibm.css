@@ -448,3 +448,25 @@ mark {
 [labelstate="ques"] p{
     color: #CFAE44;
 }
+
+.modelStatus {
+    padding: 0 16px;
+    font-style: italic;
+    color: #0080ff;
+}
+
+.confetti_test {
+    position: fixed;
+    left: 50vw;
+    top: 50vw;
+}
+
+.confetti_canvas {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 279px;
+    z-index: 9999;
+    background: #161616;
+}
