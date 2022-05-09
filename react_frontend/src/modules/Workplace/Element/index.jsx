@@ -112,15 +112,18 @@ export default function Sentence(props) {
     const { keyEventHandler, focusedState, index, numLabel, numLabelHandler, clickEventHandler, text, element_id, prediction } = props
 
     React.useEffect(()=> {
-        console.log(`id: ${index}`)
-    }, [prediction, focusedState])
+       
+    }, [focusedState])
+
+    React.useEffect(()=> {
+       console.log(`prediction updated, element id: ${element_id}`)
+    }, [prediction])
     
     const dispatch = useDispatch()
 
     const workspace = useSelector(state => state.workspace)
 
     const classes = useStyles()
-    console.log(workspace);
     // let space_color = text_colors[workspace.labelState['L' + index]];
 
     if(workspace.curCategory == null){

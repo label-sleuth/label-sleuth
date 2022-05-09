@@ -323,6 +323,10 @@ export default function Workspace() {
   const [drawerContent, setDrawerContent] = React.useState("");
   // const [focusedState, setFocusedState] = React.useState({ ...init_focused_states, L0: true });
   const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
+  const [tabValue, setTabValue] = React.useState(0);
+  const [modalOpen, setModalOpen] = React.useState(false)
+  const [tabStatus, setTabStatus] = React.useState(0)
+  const [numLabelGlobal, setNumLabelGlobal] = React.useState({pos: 0, neg: 0})
 
 
   const handleDrawerOpen = () => {
@@ -463,22 +467,8 @@ export default function Workspace() {
   const dispatch = useDispatch();
 
   React.useEffect(() => {
-
-    dispatch(fetchElements()).then(() => dispatch(getElementToLabel()))
-
-  }, [workspace.model_version])
-
-  const [tabValue, setTabValue] = React.useState(0);
-  const [modalOpen, setModalOpen] = React.useState(false)
-  const [tabStatus, setTabStatus] = React.useState(0)
-
-  const handleChange = (event, newValue) => {
-    setTabValue(newValue);
-    setTabStatus(newValue)
-  };
-
-  React.useEffect(() => {
-    dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories())))
+    
+    dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories()).then(() => setNumLabelGlobal({pos: workspace.pos_label_num, neg: workspace.neg_label_num})) ))
 
     const interval = setInterval(() => {
 
@@ -486,14 +476,7 @@ export default function Workspace() {
       
       if (workspace.curCategory != null) {
         dispatch(checkModelUpdate()).then(() => {
-          console.log(`old version: ${workspace.last_model_version}, new version: ${workspace.model_version}`)
-          if (workspace.last_model_version != workspace.model_version) {
-            fire();
-            console.log(`model version changed to: ${workspace.model_version}`)
-            dispatch(fetchElements()).then(() => {
-              dispatch(getElementToLabel())
-            })
-          }
+          console.log("model_updated")
         })
       } else {
       }
@@ -504,10 +487,25 @@ export default function Workspace() {
 
   }, [workspace.curCategory])
 
+
+  React.useEffect(() => {
+
+    console.log(`model updated, data retrieved, model version: ${workspace.model_version}`)
+
+    dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
+
+  }, [workspace.model_version])
+
+
   const handleSearch = () => {
     dispatch(searchKeywords({keyword: searchInput}))
 
   }
+
+  const handleChange = (event, newValue) => {
+    setTabValue(newValue);
+    setTabStatus(newValue)
+  };
 
   // placeholder for finding documents stats
   let doc_stats = {
@@ -523,9 +521,9 @@ export default function Workspace() {
     total: workspace.documents.length * 10
   };
 
-  if(workspace.model_version !== workspace.last_model_version){
-    fire();
-  }
+  // if(workspace.model_version !== workspace.last_model_version){
+  //   fire();
+  // }
   
   return (
     <Box sx={{ display: 'flex' }}>
@@ -576,7 +574,7 @@ export default function Workspace() {
               <WorkspaceSelectFormControl />
             </WorkspaceSelect> */}
             <Divider />
-            <p className="hsbar_label">Labeled (Current: { tabStatus == 0 ? (workspace['pos_label_num'] + workspace['neg_label_num']) : (numLabel.pos + numLabel.neg)}/ { tabStatus == 0 ? total_stats.total : 10 })</p>
+            <p className="hsbar_label">Labeled (Current: { tabStatus == 0 ? (workspace['pos_label_num'] + workspace['neg_label_num']) : (numLabel.pos + numLabel.neg)} / { tabStatus == 0 ? total_stats.total : 10 })</p>
             <StackBarContainer>
               {/* <PieChart
               data={[
@@ -657,7 +655,7 @@ export default function Workspace() {
             <ModelName>
               <Typography>Current Model:</Typography>
               {
-                workspace.model_version > 0 ? <Typography><strong>v.{workspace.model_version}_Model</strong></Typography>
+                workspace.model_version > -1 ? <Typography><strong>v.{workspace.model_version}_Model</strong></Typography>
                 : <Typography><strong>None</strong></Typography>
               }              
             </ModelName>
