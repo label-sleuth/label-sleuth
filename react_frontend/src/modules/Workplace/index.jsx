@@ -419,7 +419,7 @@ export default function Workspace() {
       refAnimationInstance.current({
         ...opts,
         origin: { y: 0.7 },
-        particleCount: Math.floor(50 * particleRatio),
+        particleCount: Math.floor(100 * particleRatio),
         colors: ["#BE3092", "#166CFF", "#8ECCF3", "#88A8FB"]
       });
   }, []);
