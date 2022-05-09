@@ -3,7 +3,7 @@ from typing import Mapping, Sequence
 from lrtc_lib.data_access.core.data_structs import TextElement
 
 
-def _convert_text_elements_to_train_data(elements: Sequence[TextElement], category_name) -> Sequence[Mapping]:
+def convert_text_elements_to_train_data(elements: Sequence[TextElement], category_name) -> Sequence[Mapping]:
     """
     Convert a list of text elements to the expected format for training a model.
     :param elements: a list of TextElement objects

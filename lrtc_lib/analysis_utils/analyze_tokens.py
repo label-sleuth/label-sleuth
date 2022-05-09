@@ -51,3 +51,11 @@ def extract_ngrams(texts, ngram_max_length, language=Languages.ENGLISH):
              for x in zip(*[text.lower().split()[i:] for i in range(n)])]
         )
     return unigrams + ngrams
+
+
+def get_token_overlap(text_a, text_b) -> float:
+    a_tokens = set(text_a.lower().split())
+    b_tokens = set(text_b.lower().split())
+    intersection = a_tokens.intersection(b_tokens)
+    overlap = len(intersection) / min(len(a_tokens), len(b_tokens))
+    return overlap

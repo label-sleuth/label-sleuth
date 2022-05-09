@@ -726,7 +726,7 @@ def get_suspicious_elements(workspace_id):
         res = {'elements': elements_transformed}
         return jsonify(res)
     except Exception:
-        logging.exception("Failed to generate suspicious elements repot")
+        logging.exception("Failed to generate suspicious elements report")
         res = {'elements': []}
         return jsonify(res)
 

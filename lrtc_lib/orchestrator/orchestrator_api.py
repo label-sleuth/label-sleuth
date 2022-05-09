@@ -24,7 +24,7 @@ from lrtc_lib.models.core.model_api import ModelStatus, Prediction
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ModelInfo, IterationStatus, Category
-from lrtc_lib.orchestrator.utils import _convert_text_elements_to_train_data
+from lrtc_lib.orchestrator.utils import convert_text_elements_to_train_data
 from lrtc_lib.training_set_selector.training_set_selector_factory import get_training_set_selector
 
 
@@ -323,7 +323,7 @@ def run_iteration(workspace_id: str, category_name: str, model_type: ModelTypes,
                  f"category '{category_name}' using {len(train_data)} items")
 
     train_counts = _get_counts_per_label(train_data)
-    train_data = _convert_text_elements_to_train_data(train_data, category_name)
+    train_data = convert_text_elements_to_train_data(train_data, category_name)
     model_metadata = {TRAIN_COUNTS_STR_KEY: train_counts}
     model = MODEL_FACTORY.get_model(model_type)
 
@@ -378,7 +378,7 @@ def _train_done_callback(workspace_id, category_name, iteration_index, future):
                  f"({len(elements)} items)")
     model.infer_async(model_id, items_to_infer=[{"text": element.text} for element in elements],
                       done_callback=functools.partial(_infer_done_callback, workspace_id, category_name,
-                                                 iteration_index))
+                                                      iteration_index))
     # Inference is performed in the background. Once the infer job is complete the iteration flow continues in the
     # *_infer_done_callback* method
 
@@ -597,13 +597,14 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
 def get_contradiction_report(workspace_id, category_name) -> List[Tuple[TextElement]]:
     dataset_name = get_dataset_name(workspace_id)
     labeled_elements = get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
-    return get_suspected_labeling_contradictions_by_distance_with_diffs(labeled_elements, category_name)
+    return get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements)
 
 
 def get_suspicious_elements_report(workspace_id, category_name, model_type: ModelTypes = ModelTypes.SVM_ENSEMBLE) \
         -> List[TextElement]:
     dataset_name = get_dataset_name(workspace_id)
-    return get_disagreements_using_cross_validation(workspace_id, dataset_name, category_name, model_type)
+    labeled_elements = get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
+    return get_disagreements_using_cross_validation(workspace_id, category_name, labeled_elements, model_type)
 
 
 def sample_elements_by_prediction(workspace_id, category, sample_size: int = sys.maxsize, unlabeled_only=False,
