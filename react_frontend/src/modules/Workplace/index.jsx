@@ -736,7 +736,7 @@ export default function Workspace() {
             <IconButton onClick={() => {
               if (workspace.curDocId > 0) {
                 setNumLabel({pos: 0, neg: 0})
-                dispatch(fetchPrevDocElements())
+                dispatch(fetchPrevDocElements()).then(() => dispatch(getPositiveElementForCategory()))
               }
             }}>
               <ChevronLeftIcon />
@@ -750,7 +750,7 @@ export default function Workspace() {
             <IconButton onClick={() => {
               if (workspace.curDocId < workspace.documents.length - 1) {
                 setNumLabel({pos: 0, neg: 0})
-                dispatch(fetchNextDocElements())
+                dispatch(fetchNextDocElements()).then(() => dispatch(getPositiveElementForCategory()))
               }
             }}>
               <ChevronRightIcon />

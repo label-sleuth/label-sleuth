@@ -75,7 +75,11 @@ export const getPositiveElementForCategory = createAsyncThunk('workspace/getPosi
 
     const state = getState()
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/positive_elements?category_name=${state.workspace.curCategory}`)
+    const curDocument = state.workspace.documents[state.workspace.curDocId]['document_id']
+
+    //var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/positive_elements?category_name=${state.workspace.curCategory}`)
+
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -480,23 +484,39 @@ const DataSlice = createSlice({
         [getPositiveElementForCategory.fulfilled]: (state, action) => {
             const data = action.payload
 
+            var elements = data['elements']
+
             // var doc_elements = [ ... state.elements ]
 
             var predictionForDocCat = Array(state.elements.length-1).fill(false)
 
             console.log(`positive elements: `, data['positive_elements'])
 
-            data['positive_elements'].map((e, i) => {
-                const docid = e['docid']
-                var eids = e['id'].split('-')
-                const eid = parseInt(eids[eids.length-1])
+            elements.map((e, i) => {
+                // const docid = e['docid']
+                // var eids = e['id'].split('-')
+                // const eid = parseInt(eids[eids.length-1])
 
-                if(docid == state.curDocName) {
-                    // console.log(`eid: ${eid}, i: ${i}`)
+                // if(docid == state.curDocName) {
+                //     // console.log(`eid: ${eid}, i: ${i}`)
 
-                    predictionForDocCat[eid] = true
+                //     predictionForDocCat[eid] = true
+                // }
+
+                if (state.curCategory in e['model_predictions']) {
+                    const pred = e['model_predictions'][state.curCategory]
+
+                    if (pred == 'true') {
+                        predictionForDocCat[i] = true
+                    } else {
+                        predictionForDocCat[i] = false
+                    }
                 }
+
+                
             })
+
+            console.log(`prediction on doc: `, predictionForDocCat)
 
             return {
                 ...state,

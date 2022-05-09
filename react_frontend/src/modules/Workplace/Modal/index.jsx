@@ -55,6 +55,7 @@ export default function CreateCategoryModal(props) {
                 console.log(`button called`)
                 // dispatch(createNewCategory(text))
                 dispatch(createCategoryOnServer({ category: text })).then(() => fetchCategories())
+                dispatch(createNewCategory(text))
                 setOpen(false)
             }} className="btn" sx={{ marginLeft: 3 }}>Create</Button>
           </Box>
