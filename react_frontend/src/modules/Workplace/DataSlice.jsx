@@ -752,6 +752,8 @@ const DataSlice = createSlice({
         [checkStatus.fulfilled]: (state, action) => {
             const response = action.payload
 
+            console.log(`checkStatus: `, response['labeling_counts'])
+
             const progress = response['progress']['all']
 
             const notifications = response['notifications']
@@ -798,6 +800,8 @@ const DataSlice = createSlice({
                 neg_label = response['labeling_counts']['false']
             }
 
+
+            console.log(`pos_label: ${pos_label}, neg_label: ${neg_label}`)
 
             return {
                 ...state,

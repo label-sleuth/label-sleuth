@@ -281,13 +281,14 @@ function CategoryFormControl(props) {
         onChange={(e) => {
           dispatch(updateCurCategory(e.target.value))
 
-          dispatch(fetchElements()).then(() => 
-            dispatch(getElementToLabel()).then(() => {
-              dispatch(checkStatus()).then(() => {
-                numLabelGlobalHandler({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })
-                numLabelHandler({pos: workspace.pos_label_num, neg: workspace.neg_label_num})
-              })
-            }))
+          // dispatch(fetchElements()).then(() => 
+          //   dispatch(getElementToLabel()).then(() => {
+          //     // dispatch(checkStatus()).then(() => {
+          //     //   console.log(`global pos: ${workspace.pos_label_num}, neg: ${workspace.neg_label_num}`)
+          //     //   numLabelGlobalHandler({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
+          //     //   numLabelHandler({pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc})
+          //     // })
+          //   }))
 
         }}>
         {
@@ -311,6 +312,9 @@ export default function Workspace() {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
 
+  const classes = useStyles();
+  const workspace = useSelector(state => state.workspace)
+
   const init_focused_states = {
     L0: false,
     L1: false,
@@ -329,7 +333,7 @@ export default function Workspace() {
   const [tabValue, setTabValue] = React.useState(0);
   const [modalOpen, setModalOpen] = React.useState(false)
   const [tabStatus, setTabStatus] = React.useState(0)
-  const [numLabelGlobal, setNumLabelGlobal] = React.useState({pos: 0, neg: 0})
+  const [numLabelGlobal, setNumLabelGlobal] = React.useState({pos: workspace.pos_label_num, neg: workspace.neg_label_num})
 
 
   const handleDrawerOpen = () => {
@@ -466,14 +470,17 @@ export default function Workspace() {
     }
   }
 
-  const classes = useStyles();
-  const workspace = useSelector(state => state.workspace)
-
   const dispatch = useDispatch();
 
   React.useEffect(() => {
 
-    dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories()).then(() => setNumLabelGlobal({pos: workspace.pos_label_num, neg: workspace.neg_label_num})) ))
+    dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories()).then(() => {
+      dispatch(checkStatus()).then(() => {
+        dispatch(getElementToLabel()).then(() => {
+
+        })
+      })
+    }) ))
 
     const interval = setInterval(() => {
 
@@ -491,6 +498,9 @@ export default function Workspace() {
 
   }, [workspace.curCategory])
 
+  React.useEffect(() => {
+    setNumLabelGlobal({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
+  }, [workspace.pos_label_num])
 
   React.useEffect(() => {
 
@@ -665,7 +675,7 @@ export default function Workspace() {
             <LinearWithValueLabel />
             <div class="modelStatus">{workspace['modelStatus']}</div>
 
-            <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download labeling </Button>
+            <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
             {/* <Box>
               <Accordion sx={{ backgroundColor: "grey" }}>
                 <AccordionSummary
@@ -696,7 +706,7 @@ export default function Workspace() {
           <AppBar className="elevation_scroll" open={open}>
             <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
               <Typography><strong>Category:</strong></Typography>
-              <CategoryFormControl numLabelGlobalHandler={setNumLabelGlobal} NumLabelHandler={setNumLabel}/>
+              <CategoryFormControl numLabelGlobalHandler={setNumLabelGlobal} numLabelHandler={setNumLabel}/>
               <a className="create_new_category" onClick={() => setModalOpen(true)} >
                <span>New Category</span>
               </a>
