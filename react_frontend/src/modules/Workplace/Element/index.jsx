@@ -109,7 +109,7 @@ const text_colors = {
 
 export default function Sentence(props) {
 
-    const { keyEventHandler, focusedState, index, numLabel, numLabelHandler, clickEventHandler, text, element_id, prediction } = props
+    const { keyEventHandler, focusedState, numLabelGlobal, numLabelGlobalHandler, index, numLabel, numLabelHandler, clickEventHandler, text, element_id, prediction } = props
 
     React.useEffect(()=> {
        

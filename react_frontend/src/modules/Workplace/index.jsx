@@ -369,6 +369,8 @@ export default function Workspace() {
     if (docid != workspace.curDocId) {
       dispatch(fetchCertainDocument({ docid, eid, switchStatus: "switch" })).then(() => {
 
+        dispatch(getPositiveElementForCategory())
+
         // console.log(`element id: ${element_id}`)
 
         // console.log(workspace.elements)
@@ -394,7 +396,7 @@ export default function Workspace() {
     const eid = parseInt(splits[splits.length-1])
     
     if (docid != workspace.curDocId) {
-      dispatch(fetchCertainDocument({ docid, eid, switchStatus: "switch" }))
+      dispatch(fetchCertainDocument({ docid, eid, switchStatus: "switch" })).then(() => dispatch(getPositiveElementForCategory()))
     } else {
       dispatch(setFocusedState(eid))
     }
@@ -419,7 +421,7 @@ export default function Workspace() {
   const dispatch = useDispatch();
 
   React.useEffect(() => {
-    
+
     dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories()).then(() => setNumLabelGlobal({pos: workspace.pos_label_num, neg: workspace.neg_label_num})) ))
 
     const interval = setInterval(() => {
@@ -705,7 +707,7 @@ export default function Workspace() {
             {
                 workspace['elements'].length > 0 && workspace['elements'].map((element, index) => {
                 const len_elements = workspace['elements'].length
-                return (<Element id={'L'+index} keyEventHandler={(e) => handleKeyEvent(e, len_elements)} focusedState={workspace.focusedState} index={index} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id={element['id']} prediction={workspace.predictionForDocCat} text={element['text']} />)
+                return (<Element id={'L'+index} keyEventHandler={(e) => handleKeyEvent(e, len_elements)} focusedState={workspace.focusedState} index={index} numLabelGlobal={numLabelGlobal} numLabelGlobalHandler={setNumLabelGlobal} numLabel={numLabel} numLabelHandler={setNumLabel} clickEventHandler={handleClick} element_id={element['id']} prediction={workspace.predictionForDocCat} text={element['text']} />)
               })
             }
           </Box>
