@@ -6,7 +6,7 @@ import Workplace from './modules/Workplace';
 import { PrivateRoute } from './features/PrivateRoute'
 
 function App() {
-
+  
   return (
     <div>
       <Routes>

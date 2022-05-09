@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { useCallback, useRef } from "react";
+import ReactCanvasConfetti from "react-canvas-confetti";
 import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
@@ -399,6 +401,52 @@ export default function Workspace() {
   // React.useEffect(() => {
   //   document.addEventListener('keydown', handleKeyEvent)
   // }, []);
+  
+  const refAnimationInstance = useRef(null);
+
+  const getInstance = useCallback((instance) => {
+    refAnimationInstance.current = instance;
+  }, []);
+
+  const makeShot = useCallback((particleRatio, opts) => {
+    refAnimationInstance.current &&
+      refAnimationInstance.current({
+        ...opts,
+        origin: { y: 0.7 },
+        particleCount: Math.floor(50 * particleRatio),
+        colors: ["#BE3092", "#166CFF", "#8ECCF3", "#88A8FB"]
+      });
+  }, []);
+
+  const fire = useCallback(() => {
+
+    makeShot(0.25, {
+      spread: 26,
+      startVelocity: 55
+    });
+
+    makeShot(0.2, {
+      spread: 60
+    });
+
+    makeShot(0.35, {
+      spread: 100,
+      decay: 0.91,
+      scalar: 0.8
+    });
+
+    makeShot(0.1, {
+      spread: 120,
+      startVelocity: 25,
+      decay: 0.92,
+      scalar: 1.2
+    });
+
+    makeShot(0.1, {
+      spread: 120,
+      startVelocity: 45
+    });
+  }, [makeShot]);
 
   const handleClick = (event, id) => {
 
@@ -415,6 +463,21 @@ export default function Workspace() {
   const dispatch = useDispatch();
 
   React.useEffect(() => {
+
+    dispatch(fetchElements()).then(() => dispatch(getElementToLabel()))
+
+  }, [workspace.model_version])
+
+  const [tabValue, setTabValue] = React.useState(0);
+  const [modalOpen, setModalOpen] = React.useState(false)
+  const [tabStatus, setTabStatus] = React.useState(0)
+
+  const handleChange = (event, newValue) => {
+    setTabValue(newValue);
+    setTabStatus(newValue)
+  };
+
+  React.useEffect(() => {
     dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories())))
 
     const interval = setInterval(() => {
@@ -425,6 +488,7 @@ export default function Workspace() {
         dispatch(checkModelUpdate()).then(() => {
           console.log(`old version: ${workspace.last_model_version}, new version: ${workspace.model_version}`)
           if (workspace.last_model_version != workspace.model_version) {
+            fire();
             console.log(`model version changed to: ${workspace.model_version}`)
             dispatch(fetchElements()).then(() => {
               dispatch(getElementToLabel())
@@ -440,27 +504,10 @@ export default function Workspace() {
 
   }, [workspace.curCategory])
 
-  React.useEffect(() => {
-
-    dispatch(fetchElements()).then(() => dispatch(getElementToLabel()))
-
-  }, [workspace.model_version])
-
-
   const handleSearch = () => {
-
     dispatch(searchKeywords({keyword: searchInput}))
 
   }
-
-  const [tabValue, setTabValue] = React.useState(0);
-  const [modalOpen, setModalOpen] = React.useState(false)
-  const [tabStatus, setTabStatus] = React.useState(0)
-
-  const handleChange = (event, newValue) => {
-    setTabValue(newValue);
-    setTabStatus(newValue)
-  };
 
   // placeholder for finding documents stats
   let doc_stats = {
@@ -476,12 +523,22 @@ export default function Workspace() {
     total: workspace.documents.length * 10
   };
 
+  if(workspace.model_version !== workspace.last_model_version){
+    fire();
+  }
+  
   return (
     <Box sx={{ display: 'flex' }}>
+      {/* <button className="confetti_test" onClick={fire} >Fire Confetti</button> */}
       <CssBaseline />
 
       <Presentation />
-      <Box className="left_nav">
+      <Box className="left_nav" sx={{ 
+          backgroundColor: '#161616',
+          width: drawerWidth,
+          height: '100vh'
+          }}>
+        <ReactCanvasConfetti refConfetti={getInstance} className="confetti_canvas"/>
         <Drawer
           sx={{
             width: drawerWidth,
@@ -489,8 +546,9 @@ export default function Workspace() {
             '& .MuiDrawer-paper': {
               width: drawerWidth,
               boxSizing: 'border-box',
-              backgroundColor: '#161616',
-              color: '#fff'
+              color: '#fff',
+              zIndex: '10000',
+              background: 'transparent'
             },
           }}
           variant="permanent"
@@ -597,17 +655,14 @@ export default function Workspace() {
             <label className="hsbar_label">Model Update Freq.: 5 <i className="fa fa-info-circle"><span>Model in current workspace will be automatically updated every time when you label 5 new positive sentences.</span></i></label>
             {/* <label className="model_info">Model Information</label> */}
             <ModelName>
-              <Typography>Current classifier:</Typography>
+              <Typography>Current Model:</Typography>
               {
                 workspace.model_version > 0 ? <Typography><strong>v.{workspace.model_version}_Model</strong></Typography>
-                : <Typography><strong>No model</strong></Typography>
+                : <Typography><strong>None</strong></Typography>
               }              
             </ModelName>
-            <ModelName>
-              <Typography>Model status: </Typography>
-              <Typography>{workspace['modelStatus']}</Typography>
-            </ModelName>
             <LinearWithValueLabel />
+            <div class="modelStatus">{workspace['modelStatus']}</div>
             {/* <Box>
               <Accordion sx={{ backgroundColor: "grey" }}>
                 <AccordionSummary
