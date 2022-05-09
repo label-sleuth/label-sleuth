@@ -3,7 +3,7 @@ import logging
 import random
 import time
 from collections import defaultdict
-from typing import List, Tuple
+from typing import List, Mapping, Tuple
 
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
@@ -74,15 +74,28 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
     return sorted_disagreement_elements
 
 
-def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements):
+def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements) -> Mapping[str, List]:
+    """
+    Enrich the output of possibly inconsistent element pairs from *get_suspected_labeling_contradictions_by_distance*
+    with sets of tokens that differentiate the pair of elements, to enable highlighting the similarities/differences
+    between the texts in each pair.
+
+    :param category_name:
+    :param labeled_elements:
+    :return: a dictionary containing:
+    {'pairs': the list of text element pairs from get_suspected_labeling_contradictions_by_distance,
+    i.e. [[pair_1_element_a, pair_1_element_b], [pair_2_element_a, pair_2_element_b], ...],
+    'diffs': a list of tuples with the tokens unique to the first and the second element of each pair, respectively,
+    i.e. [(pair_1_element_a_unique_tokens_set, pair_1_element_b_unique_tokens_set), ...]
+    """
     pairs = get_suspected_labeling_contradictions_by_distance(category_name, labeled_elements)
-    pairs_with_diff = []
+    diffs = []
     for pair in pairs:
         set1 = set(pair[0].text.split())
         set2 = set(pair[1].text.split())
-        intesect = set1.intersection(set2)
-        pairs_with_diff.append((pair[0], set1-intesect, pair[1], set2-intesect))
-    return pairs_with_diff
+        intersect = set1.intersection(set2)
+        diffs.append((set1 - intersect, set2 - intersect))
+    return {'pairs': pairs, 'diffs': diffs}
 
 
 def get_suspected_labeling_contradictions_by_distance(category_name, labeled_elements: List[TextElement],
@@ -94,8 +107,8 @@ def get_suspected_labeling_contradictions_by_distance(category_name, labeled_ele
     Where the similarity between the pair of opposite-label elements is high, we suspect that one of the pair elements
     may have been given the wrong label.
 
-    :param labeled_elements:
     :param category_name:
+    :param labeled_elements:
     :param embedding_func: a function that receives a list of texts and a language, and returns a list of embedding
     vectors for those texts.
     :param language:

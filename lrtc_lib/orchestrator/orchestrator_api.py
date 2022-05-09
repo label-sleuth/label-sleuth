@@ -594,7 +594,7 @@ def infer(workspace_id: str, category_name: str, elements_to_infer: Sequence[Tex
     return predictions
 
 
-def get_contradiction_report(workspace_id, category_name) -> List[Tuple[TextElement]]:
+def get_contradiction_report(workspace_id, category_name) -> Mapping[str, List]:
     dataset_name = get_dataset_name(workspace_id)
     labeled_elements = get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
     return get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements)

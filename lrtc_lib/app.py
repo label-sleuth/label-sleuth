@@ -736,11 +736,12 @@ def get_suspicious_elements(workspace_id):
 def get_contradicting_elements(workspace_id):
     category = request.args.get('category_name')
     try:
-        contradiction_element_tuples = orchestrator_api.get_contradiction_report(workspace_id, category)
-        elements_transformed = [elements_back_to_front(workspace_id, [tup[0], tup[2]], category)
-                                for tup in contradiction_element_tuples]
-        diffs = [[list(tup[1]), list(tup[3])] for tup in contradiction_element_tuples]
-        res = {'pairs': elements_transformed, 'diffs': diffs}
+        contradiction_elements_dict = orchestrator_api.get_contradiction_report(workspace_id, category)
+        element_pairs_transformed = [elements_back_to_front(workspace_id, element_pair, category)
+                                     for element_pair in contradiction_elements_dict['pairs']]
+        diffs = [[list(element_a_unique_token_set), list(element_b_unique_token_set)]
+                 for element_a_unique_token_set, element_b_unique_token_set in contradiction_elements_dict['diffs']]
+        res = {'pairs': element_pairs_transformed, 'diffs': diffs}
         return jsonify(res)
     except Exception:
         logging.exception("Failed to generate contradiction report")
