@@ -734,6 +734,8 @@ const DataSlice = createSlice({
 
             const notifications = response['notifications']
 
+            console.log(`notifications: `, notifications)
+
             var status = null
 
             var new_id_in_batch = state.cur_completed_id_in_batch
@@ -742,12 +744,24 @@ const DataSlice = createSlice({
 
             var neg_label = state['neg_label_num']
 
-            if (state.cur_completed_id_in_batch < state.training_batch - 1 ) {
-                status = "New model is not ready"
-            } else if (state.cur_completed_id_in_batch == state.training_batch - 1) {
-                status = "New model is almost ready"
-            } else {
-                status = "New model is ready"
+            // if (state.cur_completed_id_in_batch < state.training_batch - 1 ) {
+            //     status = "New model is not ready"
+            // } else if (state.cur_completed_id_in_batch == state.training_batch - 1) {
+            //     status = "New model is almost ready"
+            // } else {
+            //     status = "New model is ready"
+            // }
+
+            if ( progress < 80 ) {
+                status = 'New model is not ready'
+            }
+
+            if ( progress == 80 ) {
+                status = 'New model is almost ready'
+            }
+
+            if ( progress == 100 ) {
+                status = 'New model is ready'
             }
 
             if (state.cur_completed_id_in_batch == state.training_batch) {

@@ -268,6 +268,8 @@ function ElevationScroll(props) {
 
 function CategoryFormControl(props) {
 
+  const { setNumLabelGlobal } = props
+
   const workspace = useSelector(state => state.workspace)
   const dispatch = useDispatch()
 
@@ -278,14 +280,14 @@ function CategoryFormControl(props) {
         value={workspace.curCategory}
         onChange={(e) => {
           dispatch(updateCurCategory(e.target.value))
+
           dispatch(fetchElements()).then(() => 
-          dispatch(getPositiveElementForCategory()).then(() => {
             dispatch(getElementToLabel()).then(() => {
               dispatch(checkStatus()).then(() => {
-                
+                setNumLabelGlobal({pos: workspace.pos_label_num, neg: workspace.neg_label_num})
               })
-            })
-          }))
+            }))
+
         }}>
         {
           workspace.new_categories.map((category) => {
@@ -574,7 +576,7 @@ export default function Workspace() {
               <WorkspaceSelectFormControl />
             </WorkspaceSelect> */}
             <Divider />
-            <p className="hsbar_label">Labeled (Current: { tabStatus == 0 ? (workspace['pos_label_num'] + workspace['neg_label_num']) : (numLabel.pos + numLabel.neg)} / { tabStatus == 0 ? total_stats.total : 10 })</p>
+            <p className="hsbar_label">Labeled (Current: { tabStatus == 0 ? (numLabelGlobal.pos + numLabelGlobal.neg) : (numLabel.pos + numLabel.neg)} / { tabStatus == 0 ? total_stats.total : 10 })</p>
             <StackBarContainer>
               {/* <PieChart
               data={[
@@ -617,15 +619,15 @@ export default function Workspace() {
                   <label>Labeled Entries for Entire Workspace:</label>
                   <StatsContainer>
                     <Typography><strong>Positive</strong></Typography>
-                    <Typography sx={{ color: workspace['pos_label_num'] > 0 ? "#8ccad9" : "#fff" }}><strong>{workspace['pos_label_num']}</strong></Typography>
+                    <Typography sx={{ color: workspace['pos_label_num'] > 0 ? "#8ccad9" : "#fff" }}><strong>{numLabelGlobal.pos}</strong></Typography>
                   </StatsContainer>
                   <StatsContainer>
                     <Typography><strong>Negative</strong></Typography>
-                    <Typography sx={{ color: workspace['neg_label_num'] > 0 ? "#ff758f" : "#fff" }}><strong>{workspace['neg_label_num']}</strong></Typography>
+                    <Typography sx={{ color: workspace['neg_label_num'] > 0 ? "#ff758f" : "#fff" }}><strong>{numLabelGlobal.neg}</strong></Typography>
                   </StatsContainer>
                   <StatsContainer>
                     <Typography><strong>Total</strong></Typography>
-                    <Typography><strong>{workspace['pos_label_num'] + workspace['neg_label_num']}/{total_stats.total}</strong></Typography>
+                    <Typography><strong>{numLabelGlobal.pos + numLabelGlobal.neg}/{total_stats.total}</strong></Typography>
                   </StatsContainer>
                 </Stack>
               </TabPanel>
@@ -691,7 +693,7 @@ export default function Workspace() {
           <AppBar className="elevation_scroll" open={open}>
             <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
               <Typography><strong>Category:</strong></Typography>
-              <CategoryFormControl />
+              <CategoryFormControl numLabelGlobalHandler={setNumLabelGlobal}/>
               <a className="create_new_category" onClick={() => setModalOpen(true)} >
                <span>New Category</span>
               </a>
@@ -805,7 +807,7 @@ export default function Workspace() {
               {
                 workspace.searchResult.map((r) => {
                   return (
-                    <SearchPanel numLabel={numLabel}  prediction={ r.model_predictions.length > 0 ? r.model_predictions[Object.keys(r.model_predictions)[Object.keys(r.model_predictions).length-1]] : null } element_id={r.id} numLabelHandler={setNumLabel} text={r.text} searchInput={searchInput} docid={r.docid} id={r.id} />
+                    <SearchPanel numLabelGlobal={numLabelGlobal} numLabelGlobalHandler={setNumLabelGlobal} numLabel={numLabel}  prediction={ r.model_predictions.length > 0 ? r.model_predictions[Object.keys(r.model_predictions)[Object.keys(r.model_predictions).length-1]] : null } element_id={r.id} numLabelHandler={setNumLabel} text={r.text} searchInput={searchInput} docid={r.docid} id={r.id} />
                   )
                 })
               }
@@ -824,7 +826,7 @@ export default function Workspace() {
               <Box>
                 {workspace.elementsToLabel.map((r) => {
                   return (
-                    <SearchPanel numLabel={numLabel} prediction={r.model_predictions[workspace.curCategory]} element_id={r.id} numLabelHandler={setNumLabel} text={r.text} searchInput={searchInput} docid={r.docid} id={r.id} />
+                    <SearchPanel numLabelGlobal={numLabelGlobal} numLabelGlobalHandler={setNumLabelGlobal} numLabel={numLabel} prediction={r.model_predictions[workspace.curCategory]} element_id={r.id} numLabelHandler={setNumLabel} text={r.text} searchInput={searchInput} docid={r.docid} id={r.id} />
                   )
                 })}
               </Box>

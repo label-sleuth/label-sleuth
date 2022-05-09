@@ -144,23 +144,27 @@ export default function Sentence(props) {
                             if (newState['L' + index] != "pos") {
                                 if (newState['L' + index] == "neg") {
                                     numLabelHandler({ "pos": numLabel['pos'] + 1, "neg": numLabel['neg'] - 1 })
+                                    numLabelGlobalHandler({ "pos": numLabelGlobal['pos'] + 1, "neg": numLabelGlobal['neg'] - 1 })
                                 } else {
                                     numLabelHandler({ ...numLabel, "pos": numLabel['pos'] + 1 })
+                                    numLabelGlobalHandler({ ...numLabelGlobal, "pos": numLabelGlobal['pos'] + 1 })
                                 }
                                 newState['L' + index] = "pos"
+
+                                dispatch(increaseIdInBatch())
+    
+                                dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: "true" })).then(() => {
+                                    dispatch(checkStatus())
+                                })
+
                             } else {
                                 numLabelHandler({ ...numLabel, "pos": numLabel['pos'] - 1 })
+                                numLabelGlobalHandler({ ...numLabelGlobal, "pos": numLabelGlobal['pos'] - 1 })
                                 newState['L' + index] = ""
                             }
 
-
                             dispatch(setLabelState(newState))
 
-                            dispatch(increaseIdInBatch())
-
-                            dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: "true" })).then(() => {
-                                dispatch(checkStatus())
-                            })
                         }}>
 
                             { workspace.focusedIndex == index ?
@@ -176,22 +180,27 @@ export default function Sentence(props) {
                             if (newState['L' + index] != "neg") {
                                 if (newState['L' + index] == "pos") {
                                     numLabelHandler({ "pos": numLabel['pos'] - 1, "neg": numLabel['neg'] + 1 })
+                                    numLabelGlobalHandler({ "pos": numLabelGlobal['pos'] - 1, "neg": numLabelGlobal['neg'] + 1 })
                                 } else {
                                     numLabelHandler({ ...numLabel, "neg": numLabel['neg'] + 1 })
+                                    numLabelGlobalHandler({ ...numLabelGlobal, "neg": numLabelGlobal['neg'] + 1 })
                                 }
                                 newState['L' + index] = "neg"
+
+                                dispatch(increaseIdInBatch())
+    
+                                dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: "false" })).then(() => {
+                                    dispatch(checkStatus())
+                                })
+
                             } else {
                                 numLabelHandler({ ...numLabel, "neg": numLabel['neg'] - 1 })
+                                numLabelGlobalHandler({ ...numLabelGlobal, "neg": numLabelGlobal['neg'] - 1 })
                                 newState['L' + index] = ""
                             }
 
                             dispatch(setLabelState(newState))
 
-                            dispatch(increaseIdInBatch())
-
-                            dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: "false" })).then(() => {
-                                dispatch(checkStatus())
-                            })
                         }}>
                             { workspace.focusedIndex == index ?
                                 <img src={crossing} alt="crossinging"/>

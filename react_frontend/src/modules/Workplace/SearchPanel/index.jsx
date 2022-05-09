@@ -72,7 +72,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function SearchPanel(props) {
 
-    const { text, searchInput, docid, id ,numLabel, numLabelHandler, element_id, prediction } = props
+    const { text, searchInput, docid, id ,numLabel, numLabelHandler, numLabelGlobal, numLabelGlobalHandler, element_id, prediction } = props
 
     const workspace = useSelector(state => state.workspace)
 
@@ -137,12 +137,21 @@ export default function SearchPanel(props) {
                             if (newState != "pos") {
                                 if (newState == "neg") {
                                     numLabelHandler({ "pos": numLabel['pos'] + 1, "neg": numLabel['neg'] - 1 })
+                                    numLabelGlobalHandler({ "pos": numLabelGlobal['pos'] + 1, "neg": numLabelGlobal['neg'] - 1 })
                                 } else {
                                     numLabelHandler({ ...numLabel, "pos": numLabel['pos'] + 1 })
+                                    numLabelGlobalHandler({ ...numLabelGlobal, "pos": numLabelGlobal['pos'] + 1})
                                 }
                                 newState = "pos"
+
+                                dispatch(increaseIdInBatch())
+
+                                dispatch(setElementLabel({ element_id: element_id, docid: docid, label: "true" })).then(() => {
+                                    dispatch(checkStatus())
+                                })
                             } else {
                                 numLabelHandler({ ...numLabel, "pos": numLabel['pos'] - 1 })
+                                numLabelGlobalHandler({...numLabelGlobal, "pos": numLabelGlobal['pos'] - 1})
                                 newState = ""
                             }
 
@@ -155,22 +164,18 @@ export default function SearchPanel(props) {
                                     initialLabelState['L'+i] = ""
                                 }
 
-                                initialLabelState['L' + index] = 'pos'
+                                initialLabelState['L' + index] = newState
 
                                 dispatch(setLabelState(initialLabelState))
                             } else {
                                 var initialLabelState = { ...workspace.labelState }
 
-                                initialLabelState['L' + index] = 'pos'
+                                initialLabelState['L' + index] = newState
 
                                 dispatch(setLabelState(initialLabelState))
                             }
 
-                            dispatch(increaseIdInBatch())
 
-                            dispatch(setElementLabel({ element_id: element_id, docid: docid, label: "true" })).then(() => {
-                                dispatch(checkStatus())
-                            })
 
                             if (docid != workspace.curDocName) {
                                 dispatch(fetchCertainDocument({ docid, id, switchStatus: "search" })).then(() => {
@@ -199,12 +204,22 @@ export default function SearchPanel(props) {
                             if (newState != "neg") {
                                 if (newState == "pos") {
                                     numLabelHandler({ "pos": numLabel['pos'] - 1, "neg": numLabel['neg'] + 1 })
+                                    numLabelGlobalHandler({ "pos": numLabelGlobal['pos'] - 1, "neg": numLabelGlobal['neg'] + 1 })
                                 } else {
                                     numLabelHandler({ ...numLabel, "neg": numLabel['neg'] + 1 })
+                                    numLabelGlobalHandler({...numLabelGlobal, "neg": numLabelGlobal['neg'] + 1})
                                 }
                                 newState = "neg"
+
+                                dispatch(increaseIdInBatch())
+
+                                dispatch(setElementLabel({ element_id: element_id, docid: docid, label: "false" })).then(() => {
+                                    dispatch(checkStatus())
+                                })
+
                             } else {
                                 numLabelHandler({ ...numLabel, "neg": numLabel['neg'] - 1 })
+                                numLabelGlobalHandler({...numLabelGlobal, "neg": numLabelGlobal['neg'] - 1})
                                 newState = ""
                             }
 
@@ -217,22 +232,16 @@ export default function SearchPanel(props) {
                                     initialLabelState['L'+i] = ""
                                 }
 
-                                initialLabelState['L' + index] = 'neg'
+                                initialLabelState['L' + index] = newState
 
                                 dispatch(setLabelState(initialLabelState))
                             } else {
                                 var initialLabelState = { ...workspace.labelState }
 
-                                initialLabelState['L' + index] = 'neg'
+                                initialLabelState['L' + index] = newState
 
                                 dispatch(setLabelState(initialLabelState))
                             }
-
-                            dispatch(increaseIdInBatch())
-
-                            dispatch(setElementLabel({ element_id: element_id, docid: docid, label: "false" })).then(() => {
-                                dispatch(checkStatus())
-                            })
 
                             if (docid != workspace.curDocName) {
                                 dispatch(fetchCertainDocument({ docid, id, switchStatus: "search" })).then(() => {
