@@ -113,11 +113,11 @@ export default function SearchPanel(props) {
       console.log(labelState);
 
     return (
-        <Paper labelState={labelState} className="text_confused"  sx={{ cursor: "pointer" }} onClick={(e) => {
+        <Paper labelState={labelState} className="text_confused"  sx={{ cursor: "pointer", position: 'relative'}} onClick={(e) => {
 
             handleSearchPanelClick(docid, id)}}>
             
-            <label>{docid}</label>
+            <label className="rec_doc_id">{docid}</label>
             <p>
             <Highlighter 
                 searchWords={[searchInput]}

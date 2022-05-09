@@ -285,6 +285,7 @@ p.hsbar_label {
     width: calc(100% - 140px);
     margin: 0 !important;
     font-size: 15px;
+    min-height: 24px;
     line-height: 20px;
 }
 
@@ -309,6 +310,14 @@ p.hsbar_label {
     margin-bottom: 10px;
 }
 
+.text_predict > div > button,
+.text_normal > div > button,
+.text_focus > div > button {
+    padding: 0 !important;
+    margin-left: 5px;
+    margin-bottom: -24px;
+}
+
 .text_predict {
     border: dotted 2px #a3d8e5;
 }
@@ -318,7 +327,7 @@ p.hsbar_label {
     color: #161616 !important;
     border: solid 2px transparent;
     outline: none;
-    padding: 10px;
+    padding: 20px 10px 10px 10px;
     margin: 10px;
 }
 
@@ -337,8 +346,13 @@ p.hsbar_label {
 
 .checking_buttons img,
 .recommend_buttons img {
-    width: 24px;
-    height: 24px
+    width: 25px;
+    height: 25px
+}
+
+.recommend_buttons button {
+    padding: 0 !important;
+    margin-left: 5px;
 }
 
 .checking_buttons button:hover {
@@ -401,4 +415,36 @@ mark {
 
 .moreinfo:hover {
     cursor: pointer;
+}
+
+.new_modal_name > div > input{
+    margin: 0 !important;
+    padding: 0 6px !important;
+    background: #f1f1f1;
+    height: 30px !important;
+    border-bottom: solid 1px #707070;
+}
+
+#outlined-basic-label {
+    display: none;
+}
+
+.rec_doc_id {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 3px 6px;
+    background: #e2e2e2;
+}
+
+[labelstate="neg"] p{
+    color: #BD3951;
+}
+
+[labelstate="pos"] p{
+    color: #3092AB;
+}
+
+[labelstate="ques"] p{
+    color: #CFAE44;
 }
