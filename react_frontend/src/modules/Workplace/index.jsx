@@ -477,6 +477,11 @@ export default function Workspace() {
       if (workspace.curCategory != null) {
         dispatch(checkModelUpdate()).then(() => {
           console.log("model_updated")
+          if(workspace.model_version !== workspace.last_model_version){
+            console.log(workspace.model_version);
+            console.log(workspace.last_model_version);
+            fire();
+          }
         })
       } else {
       }
@@ -520,10 +525,6 @@ export default function Workspace() {
     neg: numLabel.neg,
     total: workspace.documents.length * 10
   };
-
-  // if(workspace.model_version !== workspace.last_model_version){
-  //   fire();
-  // }
   
   return (
     <Box sx={{ display: 'flex' }}>
