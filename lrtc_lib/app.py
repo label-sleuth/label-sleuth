@@ -669,9 +669,18 @@ def get_predictions_enriched_tokens(workspace_id):
                                                                     required_label=LABEL_NEGATIVE)
 
     elements = true_elements + false_elements
-    targets = [1] * len(true_elements) + [0] * len(false_elements)
+    boolean_labels = [LABEL_POSITIVE] * len(true_elements) + [LABEL_NEGATIVE] * len(false_elements)
 
-    res['info_gain'] = information_gain(elements, targets)
+    try:
+        texts = [element.text for element in elements]
+        enriched_ngrams_and_weights = ngrams_by_info_gain(texts, boolean_labels, ngram_max_length=2,
+                                                          language=Languages.ENGLISH)
+    except Exception as e:
+        logging.warning(f"Failed to calculate enriched tokens from {len(elements)} elements: error {e}")
+        enriched_ngrams_and_weights = {}
+
+    formatted_res = [{'text': ngram, 'weight': weight} for ngram, weight in enriched_ngrams_and_weights]
+    res['info_gain'] = formatted_res[:30]
     return jsonify(res)
 
 
