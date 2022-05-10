@@ -22,8 +22,9 @@ class HybridLearner(ActiveLearner):
 
         scores = self.get_per_element_score(candidate_text_elements, candidate_text_element_predictions, workspace_id,
                                             dataset_name, category_name)
-        indices = np.argpartition(scores, -sample_size)[-sample_size:]
-        res = np.array(candidate_text_elements)[indices]
+        sorted_indices = np.argsort(scores)[::-1]
+        top_indices = sorted_indices[:sample_size]
+        res = np.array(candidate_text_elements)[top_indices]
         return res.tolist()
 
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
@@ -35,5 +36,6 @@ class HybridLearner(ActiveLearner):
         scores2 = self.active_learner2.get_per_element_score(candidate_text_elements,
                                                              candidate_text_element_predictions,
                                                              workspace_id, dataset_name, category_name)
-        scores = scores1*scores2
+        scores = [(s1 + s2) / 2 for s1, s2 in zip(scores1,scores2)]
+
         return scores
