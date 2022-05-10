@@ -13,10 +13,10 @@ class TestDiskCache(unittest.TestCase):
                  ('SVM_mid', (('text', 'parking lot'),))
                  : Prediction(False, 0.4)
                  }
-        cache_file_path = os.path.join(tempfile.TemporaryDirectory().name,"cache.json")
+        temp_dir = tempfile.TemporaryDirectory()
+        cache_file_path = os.path.join(temp_dir.name,"cache.json")
         save_model_prediction_store_to_disk(cache_file_path, cache)
         loaded = load_model_prediction_store_from_disk(cache_file_path, Prediction)
 
-
-
+        temp_dir.cleanup()
         self.assertEqual(cache,loaded)

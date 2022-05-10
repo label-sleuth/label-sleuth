@@ -18,8 +18,8 @@ def string_to_score(item):
 class TestModelAPI(unittest.TestCase):
 
     def setUp(self):
-        self.model_dir = tempfile.TemporaryDirectory().name
-        self.model_api = RandomModel(ModelsBackgroundJobsManager(),model_dir=self.model_dir)
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.model_api = RandomModel(ModelsBackgroundJobsManager(),model_dir=self.temp_dir.name)
         self.model_id, future = self.model_api.train([], {})
         future.result()
         all_nums = list(range(1, 10))
@@ -51,4 +51,4 @@ class TestModelAPI(unittest.TestCase):
         self.model_api._infer.assert_not_called()
 
     def tearDown(self):
-        shutil.rmtree(self.model_dir)
+        self.temp_dir.cleanup()

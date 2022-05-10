@@ -3,7 +3,6 @@ import unittest
 from collections import Counter
 from typing import List
 import tempfile
-import shutil
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label
 from lrtc_lib.data_access.file_based.utils import URI_SEP
 
@@ -59,12 +58,12 @@ class TestFileBasedDataAccess(unittest.TestCase):
     data_access = None
     @classmethod
     def setUpClass(cls):
-        cls.data_temp_dir = tempfile.TemporaryDirectory().name
-        cls.data_access = FileBasedDataAccess(cls.data_temp_dir)
+        cls.data_temp_dir = tempfile.TemporaryDirectory()
+        cls.data_access = FileBasedDataAccess(cls.data_temp_dir.name)
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(cls.data_temp_dir)
+        cls.data_temp_dir.cleanup()
 
     def test_add_documents_and_get_documents(self):
         dataset_name = self.test_add_documents_and_get_documents.__name__ + '_dump'
