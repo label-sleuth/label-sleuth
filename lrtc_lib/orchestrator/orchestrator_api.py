@@ -118,7 +118,7 @@ def delete_model(workspace_id, category_name, iteration_index):
 
 def _delete_category_models(workspace_id, category_name):
     workspace = orchestrator_state_api.get_workspace(workspace_id)
-    for idx in range(len(workspace.categories[category_name].active_learning_iterations)):
+    for idx in range(len(workspace.categories[category_name].iterations)):
         delete_model(workspace_id, category_name, idx)
 
 
@@ -522,7 +522,7 @@ def train_if_recommended(workspace_id: str, category_name: str, force=False) -> 
         workspace = orchestrator_state_api.get_workspace(workspace_id)
         dataset_name = workspace.dataset_name
 
-        iterations = workspace.categories[category_name].active_learning_iterations
+        iterations = workspace.categories[category_name].iterations
         iterations_without_errors = [iteration for iteration in iterations if iteration.status != IterationStatus.ERROR]
 
         label_counts = data_access.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
@@ -763,8 +763,8 @@ def add_documents_from_file(dataset_name, temp_filename):
                     uri_to_label = {te.uri: te.category_to_label for te in labeled_elements}
                     data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts=True)
 
-                if len(category.active_learning_iterations) > 0:
-                    iteration_index = len(category.active_learning_iterations)-1
+                if len(category.iterations) > 0:
+                    iteration_index = len(category.iterations)-1
                     new_data_infer_thread_pool.submit(_infer_missing_elements, workspace_id, category, dataset_name,
                                                       iteration_index)
                     total_infer_jobs += 1

@@ -34,7 +34,7 @@ class ModelInfo:
 
 
 @dataclass
-class ActiveLearningIteration:  # TODO do we have a better name for this Iteration? change name throughout documentation
+class Iteration:
     model: ModelInfo
     status: IterationStatus
     iteration_statistics: Dict = field(default_factory=dict)
@@ -46,7 +46,7 @@ class Category:
     name: str
     description: str
     label_change_count_since_last_train: int = 0
-    active_learning_iterations: List[ActiveLearningIteration] = field(default_factory=list)
+    iterations: List[Iteration] = field(default_factory=list)
 
 
 @dataclass
@@ -159,7 +159,7 @@ class OrchestratorStateApi():
             workspace = self._load_workspace(workspace_id)
             category = workspace.categories[category_name]
 
-            for iteration in reversed(category.active_learning_iterations):
+            for iteration in reversed(category.iterations):
                 if iteration.status == IterationStatus.READY:
                     return iteration.active_learning_recommendations
             return []
@@ -169,7 +169,7 @@ class OrchestratorStateApi():
                                         recommended_items: Sequence[str]):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            workspace.categories[category_name].active_learning_iterations[iteration_index].active_learning_recommendations \
+            workspace.categories[category_name].iterations[iteration_index].active_learning_recommendations \
                 = recommended_items
             self._save_workspace(workspace)
 
@@ -204,37 +204,37 @@ class OrchestratorStateApi():
     def add_iteration(self, workspace_id: str, category_name: str, model_info: ModelInfo):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            iteration = ActiveLearningIteration(model=model_info, status=IterationStatus.TRAINING)
-            workspace.categories[category_name].active_learning_iterations.append(iteration)
+            iteration = Iteration(model=model_info, status=IterationStatus.TRAINING)
+            workspace.categories[category_name].iterations.append(iteration)
             self._save_workspace(workspace)
 
 
     def get_iteration_status(self, workspace_id, category_name, iteration_index) -> IterationStatus:
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            return workspace.categories[category_name].active_learning_iterations[iteration_index].status
+            return workspace.categories[category_name].iterations[iteration_index].status
 
 
 
     def update_iteration_status(self, workspace_id, category_name, iteration_index, new_status: IterationStatus):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            workspace.categories[category_name].active_learning_iterations[iteration_index].status = new_status
+            workspace.categories[category_name].iterations[iteration_index].status = new_status
             self._save_workspace(workspace)
 
 
 
-    def get_all_iterations(self, workspace_id, category_name) -> List[ActiveLearningIteration]:
+    def get_all_iterations(self, workspace_id, category_name) -> List[Iteration]:
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            return workspace.categories[category_name].active_learning_iterations
+            return workspace.categories[category_name].iterations
 
 
 
-    def get_all_iterations_by_status(self, workspace_id, category_name, status: IterationStatus) -> List[ActiveLearningIteration]:
+    def get_all_iterations_by_status(self, workspace_id, category_name, status: IterationStatus) -> List[Iteration]:
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            return [iteration for iteration in workspace.categories[category_name].active_learning_iterations
+            return [iteration for iteration in workspace.categories[category_name].iterations
                     if iteration.status == status]
 
 
@@ -242,7 +242,7 @@ class OrchestratorStateApi():
     def add_iteration_statistics(self, workspace_id, category_name, iteration_index, statistics_dict: dict):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            iteration = workspace.categories[category_name].active_learning_iterations[iteration_index]
+            iteration = workspace.categories[category_name].iterations[iteration_index]
             iteration.iteration_statistics.update(statistics_dict)
             self._save_workspace(workspace)
 
@@ -250,7 +250,7 @@ class OrchestratorStateApi():
     def update_model_status(self, workspace_id: str, category_name: str, iteration_index: int, new_status: ModelStatus):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            iterations = workspace.categories[category_name].active_learning_iterations
+            iterations = workspace.categories[category_name].iterations
             assert len(iterations) > iteration_index,\
                 f"Iteration '{iteration_index}' doesn't exist in workspace '{workspace_id}'"
             iterations[iteration_index].model.model_status = new_status
@@ -261,7 +261,7 @@ class OrchestratorStateApi():
     def mark_iteration_model_as_deleted(self, workspace_id, category_name, iteration_index):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            iteration = workspace.categories[category_name].active_learning_iterations[iteration_index]
+            iteration = workspace.categories[category_name].iterations[iteration_index]
             iteration.model.model_status = ModelStatus.DELETED
             iteration.status = IterationStatus.MODEL_DELETED
             self._save_workspace(workspace)

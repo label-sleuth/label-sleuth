@@ -35,7 +35,7 @@ from flask_cors import CORS, cross_origin
 from flask_httpauth import HTTPTokenAuth
 
 from lrtc_lib.orchestrator import orchestrator_api
-from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ActiveLearningIteration, IterationStatus
+from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import Iteration, IterationStatus
 
 from lrtc_lib import definitions
 
@@ -616,7 +616,7 @@ def force_train_for_category(workspace_id):
     })
 
 
-def extract_iteration_information_list(iterations: Sequence[ActiveLearningIteration]):
+def extract_iteration_information_list(iterations: Sequence[Iteration]):
     res_list = \
         [{'model_id': iteration_index,#iteration.model.model_id,
           'model_status': iteration.model.model_status.name,
