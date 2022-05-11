@@ -2,6 +2,9 @@ from collections import OrderedDict
 
 
 class LRUCache:
+    """
+    Basic caching implementation, using a Least Recently Used (LRU) approach for discarding items when the cache is full
+    """
 
     def __init__(self, capacity):
         self.capacity = capacity

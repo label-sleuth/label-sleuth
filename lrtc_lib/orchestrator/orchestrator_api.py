@@ -20,8 +20,9 @@ from lrtc_lib.data_access.processors.csv_processor import CsvFileProcessor
 from lrtc_lib.definitions import ACTIVE_LEARNING_SUGGESTION_COUNT
 from lrtc_lib.factories import DATA_ACCESS as data_access
 from lrtc_lib.factories import ACTIVE_LEARNING_FACTORY, MODEL_FACTORY
-from lrtc_lib.models.core.model_api import ModelStatus, Prediction
+from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
+from lrtc_lib.models.core.prediction import Prediction
 from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ModelInfo, IterationStatus, Category
 from lrtc_lib.orchestrator.utils import convert_text_elements_to_train_data
@@ -108,11 +109,11 @@ def delete_model(workspace_id, category_name, iteration_index):
         raise Exception(f"trying to delete model id {model_info.model_id} which is already in {ModelStatus.DELETED}"
                         f"from workspace '{workspace_id}' in category '{category_name}'")
 
-    train_and_infer = MODEL_FACTORY.get_model(model_info.model_type)
+    model = MODEL_FACTORY.get_model(model_info.model_type)
     logging.info(f"marking iteration {iteration_index} model id {model_info.model_id} from workspace '{workspace_id}' "
                  f"in category '{category_name}' as deleted, and deleting the model")
     orchestrator_state_api.mark_iteration_model_as_deleted(workspace_id, category_name, iteration_index)
-    train_and_infer.delete_model(model_info.model_id)
+    model.delete_model(model_info.model_id)
 
 
 def _delete_category_models(workspace_id, category_name):
@@ -542,7 +543,7 @@ def train_if_recommended(workspace_id: str, category_name: str, force=False) -> 
                 f" {changes_since_last_model} elements changed since last model (>={CONFIGURATION.changed_element_threshold})"
                 f" training a new model")
             iteration_num = len(iterations_without_errors)
-            model_type = CONFIGURATION.model_policy.get_model(iteration_num)
+            model_type = CONFIGURATION.model_policy.get_model_type(iteration_num)
             train_set_selector = get_training_set_selector(selector=CONFIGURATION.training_set_selection_strategy)
             train_data = train_set_selector.get_train_set(workspace_id=workspace_id, train_dataset_name=dataset_name,
                                                           category_name=category_name)
@@ -737,8 +738,8 @@ def export_workspace_labels(workspace_id) -> pd.DataFrame:
 def export_model(workspace_id, category_name, iteration_index):
     iteration = orchestrator_state_api.get_all_iterations(workspace_id, category_name)[iteration_index]
 
-    train_and_infer = MODEL_FACTORY.get_model(iteration.model.model_type)
-    exported_model_dir = train_and_infer.export_model(iteration.model.model_id)
+    model = MODEL_FACTORY.get_model(iteration.model.model_type)
+    exported_model_dir = model.export_model(iteration.model.model_id)
     return exported_model_dir
 
 

@@ -2,7 +2,7 @@ from typing import Sequence
 import numpy as np
 from lrtc_lib.active_learning.core.active_learning_api import ActiveLearner
 from lrtc_lib.data_access.core.data_structs import TextElement
-from lrtc_lib.models.core.model_api import Prediction
+from lrtc_lib.models.core.prediction import Prediction
 
 
 class HardMiningLearner(ActiveLearner):

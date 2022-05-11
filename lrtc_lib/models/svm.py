@@ -10,7 +10,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.models.core.languages import Languages
-from lrtc_lib.models.core.model_api import ModelAPI, Prediction
+from lrtc_lib.models.core.model_api import ModelAPI
+from lrtc_lib.models.core.prediction import Prediction
 from lrtc_lib.models.core.tools import RepresentationType, get_glove_representation
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -29,14 +30,13 @@ class SVM(ModelAPI):
 
     def _train(self, model_id, train_data, train_params):
         if self.kernel == "linear":
-            svm_implementation = sklearn.svm.LinearSVC()
+            model = sklearn.svm.LinearSVC()
         elif self.kernel == "rbf":
             logging.warning("Using some arbitrary low gamma, gamma and C values might be better with tuning")
-            svm_implementation = sklearn.svm.SVC(gamma=1e-08)
+            model = sklearn.svm.SVC(gamma=1e-08)
         else:
             raise ValueError("Unknown kernel type")
 
-        model = svm_implementation
         language = self.get_language(model_id)
         texts = [x['text'] for x in train_data]
         train_data_features, vectorizer = self.input_to_features(texts, language=language, train=True)

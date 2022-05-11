@@ -4,26 +4,22 @@ from lrtc_lib.models.core.model_types import ModelTypes
 
 
 class ModelPolicy(object, metaclass=abc.ABCMeta):
+    """
+    Base class for implementing a model policy, that determines which type of classification model will be used.
+    Policies can be static, i.e. always return the same model type, or dynamic, i.e. a different model type is returned
+    depending on the current iteration.
+    """
 
-    def __init__(self, model: ModelTypes = None):
-        self.static_model = model
-
-    def get_model(self, iteration_num: int) -> ModelTypes:
+    @abc.abstractmethod
+    def get_model_type(self, iteration_num: int) -> ModelTypes:
         """
-
+        Given *iteration_num*, return the type of classification model to be used
         :param iteration_num:
-        :return: ignores input and returns the static model defined in the initialization
+        :return: a member of the ModelTypes enum
         """
-        model = self.static_model
-        if model is None:
-            raise ValueError('no model was provided in the initialization')
-        return model
 
-    def get_name(self):
-        if self.__class__.__name__ != ModelPolicy.__name__:
-            name = 'Policy'
-            for i in range(3):
-                name += f'-{self.get_model(i+1).name}'
-            return name
-        else:
-            return f'Static-{self.static_model.name}'
+    @abc.abstractmethod
+    def get_name(self) -> str:
+        """
+        :return: a name that describes the policy
+        """

@@ -4,7 +4,8 @@ import numpy as np
 
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.models.core.model_api import ModelAPI, ModelStatus, Prediction
+from lrtc_lib.models.core.model_api import ModelAPI, ModelStatus
+from lrtc_lib.models.core.prediction import Prediction
 
 
 class RandomModel(ModelAPI):

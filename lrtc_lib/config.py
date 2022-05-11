@@ -1,6 +1,7 @@
 import json
-import os
 import logging
+import os
+
 from dataclasses import dataclass
 from typing import List
 
@@ -8,7 +9,8 @@ import dacite
 
 from lrtc_lib.active_learning.core.active_learning_strategies import ActiveLearningStrategies
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.models.core.model_policies import ModelPolicies, ModelPolicy
+from lrtc_lib.models.core.model_policies import ModelPolicies
+from lrtc_lib.models.policy.model_policy import ModelPolicy
 from lrtc_lib.training_set_selector.train_set_selector_api import TrainingSetSelectionStrategy
 
 
@@ -33,7 +35,6 @@ class Configuration:
     apply_labels_to_duplicate_texts: bool
 
 
-
 converters = {
     ModelPolicy: lambda x: getattr(ModelPolicies, x),
     TrainingSetSelectionStrategy: lambda x: getattr(TrainingSetSelectionStrategy, x),
@@ -50,7 +51,7 @@ def load_config():
         data_class=Configuration, data=raw_cfg,
         config=dacite.Config(type_hooks=converters),
     )
-    logging.info(f"loaded configurations: {config}")
+    logging.info(f"loaded configuration: {config}")
     return config
 
 

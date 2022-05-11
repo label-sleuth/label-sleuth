@@ -52,7 +52,7 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
         left_out_data = train_splits[i]
         fold_train_data = \
             np.concatenate([part for j, part in enumerate(train_splits) if j != i])
-        model_id, future = model.train(fold_train_data, {'Language': language})
+        model_id, future = model.train(fold_train_data, train_params={'Language': language})
         logging.info(f'Suspicious labels report fold {i}: training cross-validation model {model_id}')
         future.result(timeout=60)
         logging.info(f'Suspicious labels report fold {i}: done waiting for cross-validation model {model_id}, '

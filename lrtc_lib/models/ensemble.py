@@ -1,14 +1,17 @@
 import logging
 import os
+
 from dataclasses import dataclass
 from typing import Iterable, Sequence, Mapping
+
 import numpy as np
 
-from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.factories import MODEL_FACTORY
-from lrtc_lib.models.core.model_api import ModelAPI, ModelStatus, Prediction
+from lrtc_lib.models.core.model_api import ModelAPI
+from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.models.core.model_types import ModelTypes
+from lrtc_lib.models.core.prediction import Prediction
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
@@ -33,7 +36,7 @@ class Ensemble(ModelAPI):
         sum, average: lambda x: np.mean(x, axis=0), return the first policy's score:lambda x:x[0]
         :param model_dir:
         """
-        super(Ensemble, self).__init__(models_background_jobs_manager)
+        super().__init__(models_background_jobs_manager)
 
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)

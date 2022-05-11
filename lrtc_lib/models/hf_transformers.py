@@ -1,12 +1,15 @@
 import gc
 import os
+
 import torch
 import tqdm
+
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, InputFeatures, Trainer, TrainingArguments
 
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.definitions import ROOT_DIR, GPU_AVAILABLE
-from lrtc_lib.models.core.model_api import ModelAPI, Prediction
+from lrtc_lib.models.core.model_api import ModelAPI
+from lrtc_lib.models.core.prediction import Prediction
 
 
 class HFTransformers(ModelAPI):

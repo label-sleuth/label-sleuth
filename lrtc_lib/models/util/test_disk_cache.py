@@ -1,7 +1,7 @@
 import unittest
 import tempfile
 import os
-from lrtc_lib.models.core.model_api import Prediction
+from lrtc_lib.models.core.prediction import Prediction
 from lrtc_lib.models.util.disk_cache import save_model_prediction_store_to_disk, load_model_prediction_store_from_disk
 
 
