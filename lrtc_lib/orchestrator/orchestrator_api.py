@@ -19,11 +19,11 @@ from lrtc_lib.data_access.label_import_utils import process_labels_dataframe
 from lrtc_lib.data_access.processors.csv_processor import CsvFileProcessor
 from lrtc_lib.definitions import ACTIVE_LEARNING_SUGGESTION_COUNT
 from lrtc_lib.factories import DATA_ACCESS as data_access
+from lrtc_lib.factories import ORCHESTRATOR_STATE_API as orchestrator_state_api
 from lrtc_lib.factories import ACTIVE_LEARNING_FACTORY, MODEL_FACTORY
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.prediction import Prediction
-from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ModelInfo, IterationStatus, Category
 from lrtc_lib.orchestrator.utils import convert_text_elements_to_train_data
 from lrtc_lib.training_set_selector.training_set_selector_factory import get_training_set_selector

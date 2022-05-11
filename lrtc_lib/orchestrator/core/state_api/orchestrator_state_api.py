@@ -1,6 +1,7 @@
 import os
 import functools
 import threading
+from collections import defaultdict
 
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -9,12 +10,8 @@ from typing import Dict, List, Sequence
 
 import jsonpickle
 
-from lrtc_lib.definitions import WORKSPACE_DATA_DIR
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
-
-workspaces = dict()  # in-memory cache for Workspace objects
-workspaces_lock = threading.RLock()  # lock for all methods that access or manipulate the workspaces
 
 
 class IterationStatus(Enum):
@@ -59,196 +56,213 @@ class Workspace:
     categories: Dict[str, Category] = field(default_factory=dict)
 
 
-def withlock(func):  # TODO lock per workspace
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        with workspaces_lock:
-            return func(*args, **kwargs)
-
-    return wrapper
 
 
-# Workspace
-
-@withlock
-def create_workspace(workspace_id: str, dataset_name: str):
-    illegal_chars = "".join(x for x in workspace_id if not x.isalnum() and x not in "_-")
-    assert len(illegal_chars) == 0, f"Workspace id '{workspace_id}' contains illegal characters: '{illegal_chars}'"
-
-    workspace = Workspace(workspace_id=workspace_id, dataset_name=dataset_name)
-
-    if _filename_from_workspace_id(workspace_id) in os.listdir(WORKSPACE_DATA_DIR):
-        raise Exception(f"workspace name '{workspace_id}' already exists")
-    _save_workspace(workspace)
 
 
-@withlock
-def get_workspace(workspace_id) -> Workspace:
-    return _load_workspace(workspace_id)
+
+class OrchestratorStateApi():
+    workspaces = dict()  # in-memory cache for Workspace objects
+    workspaces_lock = defaultdict(threading.RLock)  # lock for all methods that access or manipulate the workspaces
+    
+    def __init__(self,workspaces_dir):
+        self.workspace_dir = workspaces_dir
+        os.makedirs(self.workspace_dir,exist_ok=True)
 
 
-@withlock
-def workspace_exists(workspace_id: str) -> bool:
-    return os.path.exists(os.path.join(WORKSPACE_DATA_DIR, _filename_from_workspace_id(workspace_id)))
+    # Workspace
+    def create_workspace(self, workspace_id: str, dataset_name: str):
+        with self.workspaces_lock[workspace_id]:
+            illegal_chars = "".join(x for x in workspace_id if not x.isalnum() and x not in "_-")
+            assert len(illegal_chars) == 0, f"Workspace id '{workspace_id}' contains illegal characters: '{illegal_chars}'"
+
+            workspace = Workspace(workspace_id=workspace_id, dataset_name=dataset_name)
+
+            if self._filename_from_workspace_id(workspace_id) in os.listdir(self.workspace_dir):
+                raise Exception(f"workspace name '{workspace_id}' already exists")
+            self._save_workspace(workspace)
 
 
-@withlock
-def delete_workspace_state(workspace_id: str):
-    os.remove(os.path.join(WORKSPACE_DATA_DIR, _filename_from_workspace_id(workspace_id)))
-    if workspace_id in workspaces:
-        del workspaces[workspace_id]
 
 
-@withlock
-def get_all_workspaces() -> Sequence[Workspace]:
-    all_workspaces = []
-    for file in os.listdir(WORKSPACE_DATA_DIR):
-        if file.startswith('.') or not file.endswith('.json'):
-            continue
-        workspace_id, _ = os.path.splitext(file)
-        workspace = _load_workspace(workspace_id)
-        all_workspaces.append(workspace)
-    return all_workspaces
+    def get_workspace(self,workspace_id) -> Workspace:
+        with self.workspaces_lock[workspace_id]:
+            return self._load_workspace(workspace_id)
 
 
-def _load_workspace(workspace_id) -> Workspace:
-    cached_workspace = workspaces.get(workspace_id)
-    if cached_workspace:
-        return cached_workspace
-    with open(os.path.join(WORKSPACE_DATA_DIR, _filename_from_workspace_id(workspace_id))) as json_file:
-        workspace = json_file.read()
-    workspace = jsonpickle.decode(workspace)
-    workspaces[workspace_id] = workspace
-    return workspace
+    def workspace_exists(self,workspace_id: str) -> bool:
+        with self.workspaces_lock[workspace_id]:
+            return os.path.exists(os.path.join(self.workspace_dir, self._filename_from_workspace_id(workspace_id)))
 
 
-def _save_workspace(workspace: Workspace):
-    workspace_encoded = jsonpickle.encode(workspace)
-    with open(os.path.join(WORKSPACE_DATA_DIR, _filename_from_workspace_id(workspace.workspace_id)), 'w') as f:
-        f.write(workspace_encoded)
+    def delete_workspace_state(self,workspace_id: str):
+        with self.workspaces_lock[workspace_id]:
+            os.remove(os.path.join(self.workspace_dir, self._filename_from_workspace_id(workspace_id)))
+            if workspace_id in self.workspaces:
+                del self.workspaces[workspace_id]
 
 
-def _filename_from_workspace_id(workspace_id: str):
-    return workspace_id + ".json"
+    def get_all_workspaces(self) -> Sequence[Workspace]:
+        all_workspaces = []
+        for file in os.listdir(self.workspace_dir):
+            if file.startswith('.') or not file.endswith('.json'):
+                continue
+            workspace_id, _ = os.path.splitext(file)
+            workspace = self._load_workspace(workspace_id)
+            all_workspaces.append(workspace)
+        return all_workspaces
 
 
-# Category
-
-@withlock
-def add_category_to_workspace(workspace_id: str, category_name: str, category_description: str):
-    workspace = _load_workspace(workspace_id)
-    if category_name in workspace.categories:
-        raise Exception(f"Category '{category_name}' already exists in workspace '{workspace_id}'")
-    workspace.categories[category_name] = Category(name=category_name, description=category_description)
-    _save_workspace(workspace)
-
-
-@withlock
-def delete_category_from_workspace(workspace_id: str, category_name: str):
-    workspace = _load_workspace(workspace_id)
-    workspace.categories.pop(category_name)
-    _save_workspace(workspace)
+    def _load_workspace(self, workspace_id) -> Workspace:
+        with self.workspaces_lock[workspace_id]:
+            cached_workspace = self.workspaces.get(workspace_id)
+            if cached_workspace:
+                return cached_workspace
+            with open(os.path.join(self.workspace_dir, self._filename_from_workspace_id(workspace_id))) as json_file:
+                workspace = json_file.read()
+            workspace = jsonpickle.decode(workspace)
+            self.workspaces[workspace_id] = workspace
+            return workspace
 
 
-@withlock
-def get_current_category_recommendations(workspace_id: str, category_name: str) -> Sequence[str]:
-    workspace = _load_workspace(workspace_id)
-    category = workspace.categories[category_name]
-
-    for iteration in reversed(category.active_learning_iterations):
-        if iteration.status == IterationStatus.READY:
-            return iteration.active_learning_recommendations
-    return []
+    def _save_workspace(self,workspace: Workspace):
+        workspace_encoded = jsonpickle.encode(workspace)
+        with open(os.path.join(self.workspace_dir, self._filename_from_workspace_id(workspace.workspace_id)), 'w') as f:
+            f.write(workspace_encoded)
 
 
-@withlock
-def update_category_recommendations(workspace_id: str, category_name: str, iteration_index: int,
-                                    recommended_items: Sequence[str]):
-    workspace = _load_workspace(workspace_id)
-    workspace.categories[category_name].active_learning_iterations[iteration_index].active_learning_recommendations \
-        = recommended_items
-    _save_workspace(workspace)
+    def _filename_from_workspace_id(self, workspace_id: str):
+        return workspace_id + ".json"
 
 
-@withlock
-def get_label_change_count_since_last_train(workspace_id: str, category_name: str) -> int:
-    workspace = _load_workspace(workspace_id)
-    return workspace.categories[category_name].label_change_count_since_last_train
+    # Category
+
+    def add_category_to_workspace(self, workspace_id: str, category_name: str, category_description: str):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            if category_name in workspace.categories:
+                raise Exception(f"Category '{category_name}' already exists in workspace '{workspace_id}'")
+            workspace.categories[category_name] = Category(name=category_name, description=category_description)
+            self._save_workspace(workspace)
 
 
-@withlock
-def set_label_change_count_since_last_train(workspace_id: str, category_name: str, number_of_changes: int):
-    workspace = _load_workspace(workspace_id)
-    workspace.categories[category_name].label_change_count_since_last_train = number_of_changes
-    _save_workspace(workspace)
+
+    def delete_category_from_workspace(self, workspace_id: str, category_name: str):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            workspace.categories.pop(category_name)
+            self._save_workspace(workspace)
 
 
-@withlock
-def increase_label_change_count_since_last_train(workspace_id: str, category_name: str, number_of_new_changes: int):
-    workspace = _load_workspace(workspace_id)
-    workspace.categories[category_name].label_change_count_since_last_train = \
-        workspace.categories[category_name].label_change_count_since_last_train + number_of_new_changes
-    _save_workspace(workspace)
+    def get_current_category_recommendations(self, workspace_id: str, category_name: str) -> Sequence[str]:
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            category = workspace.categories[category_name]
+
+            for iteration in reversed(category.active_learning_iterations):
+                if iteration.status == IterationStatus.READY:
+                    return iteration.active_learning_recommendations
+            return []
 
 
-# Iteration
-
-@withlock
-def add_iteration(workspace_id: str, category_name: str, model_info: ModelInfo):
-    workspace = _load_workspace(workspace_id)
-    iteration = ActiveLearningIteration(model=model_info, status=IterationStatus.TRAINING)
-    workspace.categories[category_name].active_learning_iterations.append(iteration)
-    _save_workspace(workspace)
-
-
-@withlock
-def get_iteration_status(workspace_id, category_name, iteration_index) -> IterationStatus:
-    workspace = _load_workspace(workspace_id)
-    return workspace.categories[category_name].active_learning_iterations[iteration_index].status
+    def update_category_recommendations(self, workspace_id: str, category_name: str, iteration_index: int,
+                                        recommended_items: Sequence[str]):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            workspace.categories[category_name].active_learning_iterations[iteration_index].active_learning_recommendations \
+                = recommended_items
+            self._save_workspace(workspace)
 
 
-@withlock
-def update_iteration_status(workspace_id, category_name, iteration_index, new_status: IterationStatus):
-    workspace = _load_workspace(workspace_id)
-    workspace.categories[category_name].active_learning_iterations[iteration_index].status = new_status
-    _save_workspace(workspace)
+
+    def get_label_change_count_since_last_train(self, workspace_id: str, category_name: str) -> int:
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            return workspace.categories[category_name].label_change_count_since_last_train
 
 
-@withlock
-def get_all_iterations(workspace_id, category_name) -> List[ActiveLearningIteration]:
-    workspace = _load_workspace(workspace_id)
-    return workspace.categories[category_name].active_learning_iterations
+
+    def set_label_change_count_since_last_train(self, workspace_id: str, category_name: str, number_of_changes: int):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            workspace.categories[category_name].label_change_count_since_last_train = number_of_changes
+            self._save_workspace(workspace)
 
 
-@withlock
-def get_all_iterations_by_status(workspace_id, category_name, status: IterationStatus) -> List[ActiveLearningIteration]:
-    workspace = _load_workspace(workspace_id)
-    return [iteration for iteration in workspace.categories[category_name].active_learning_iterations
-            if iteration.status == status]
+
+    def increase_label_change_count_since_last_train(self, workspace_id: str, category_name: str, number_of_new_changes: int):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            workspace.categories[category_name].label_change_count_since_last_train = \
+                workspace.categories[category_name].label_change_count_since_last_train + number_of_new_changes
+            self._save_workspace(workspace)
 
 
-@withlock
-def add_iteration_statistics(workspace_id, category_name, iteration_index, statistics_dict: dict):
-    workspace = _load_workspace(workspace_id)
-    iteration = workspace.categories[category_name].active_learning_iterations[iteration_index]
-    iteration.iteration_statistics.update(statistics_dict)
-    _save_workspace(workspace)
+    # Iteration
 
 
-@withlock
-def update_model_state(workspace_id: str, category_name: str, iteration_index: int, new_status: ModelStatus):
-    workspace = _load_workspace(workspace_id)
-    iterations = workspace.categories[category_name].active_learning_iterations
-    assert len(iterations) > iteration_index,\
-        f"Iteration '{iteration_index}' doesn't exist in workspace '{workspace_id}'"
-    iterations[iteration_index].model.model_status = new_status
-    _save_workspace(workspace)
+    def add_iteration(self, workspace_id: str, category_name: str, model_info: ModelInfo):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            iteration = ActiveLearningIteration(model=model_info, status=IterationStatus.TRAINING)
+            workspace.categories[category_name].active_learning_iterations.append(iteration)
+            self._save_workspace(workspace)
 
 
-@withlock
-def mark_iteration_model_as_deleted(workspace_id, category_name, iteration_index):
-    workspace = _load_workspace(workspace_id)
-    iteration = workspace.categories[category_name].active_learning_iterations[iteration_index]
-    iteration.model.model_status = ModelStatus.DELETED
-    iteration.status = IterationStatus.MODEL_DELETED
-    _save_workspace(workspace)
+    def get_iteration_status(self, workspace_id, category_name, iteration_index) -> IterationStatus:
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            return workspace.categories[category_name].active_learning_iterations[iteration_index].status
+
+
+
+    def update_iteration_status(self, workspace_id, category_name, iteration_index, new_status: IterationStatus):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            workspace.categories[category_name].active_learning_iterations[iteration_index].status = new_status
+            self._save_workspace(workspace)
+
+
+
+    def get_all_iterations(self, workspace_id, category_name) -> List[ActiveLearningIteration]:
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            return workspace.categories[category_name].active_learning_iterations
+
+
+
+    def get_all_iterations_by_status(self, workspace_id, category_name, status: IterationStatus) -> List[ActiveLearningIteration]:
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            return [iteration for iteration in workspace.categories[category_name].active_learning_iterations
+                    if iteration.status == status]
+
+
+
+    def add_iteration_statistics(self, workspace_id, category_name, iteration_index, statistics_dict: dict):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            iteration = workspace.categories[category_name].active_learning_iterations[iteration_index]
+            iteration.iteration_statistics.update(statistics_dict)
+            self._save_workspace(workspace)
+
+
+
+    def update_model_state(self, workspace_id: str, category_name: str, iteration_index: int, new_status: ModelStatus):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            iterations = workspace.categories[category_name].active_learning_iterations
+            assert len(iterations) > iteration_index,\
+                f"Iteration '{iteration_index}' doesn't exist in workspace '{workspace_id}'"
+            iterations[iteration_index].model.model_status = new_status
+            self._save_workspace(workspace)
+
+
+
+    def mark_iteration_model_as_deleted(self, workspace_id, category_name, iteration_index):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            iteration = workspace.categories[category_name].active_learning_iterations[iteration_index]
+            iteration.model.model_status = ModelStatus.DELETED
+            iteration.status = IterationStatus.MODEL_DELETED
+            self._save_workspace(workspace)
