@@ -4,7 +4,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { useDispatch, useSelector } from 'react-redux';
-import { createNewCategory, createCategoryOnServer, fetchCategories } from '../DataSlice';
+import { createNewCategory, createCategoryOnServer, fetchCategories } from '../../DataSlice';
 import TextField from '@mui/material/TextField';
 
 

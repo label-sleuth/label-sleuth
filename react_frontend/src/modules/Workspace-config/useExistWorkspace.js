@@ -31,6 +31,7 @@ const useExistWorkspace = () => {
             return notify("Please select workspace!")
         }
         dispatch(setActiveWorkspace(value))
+        window.localStorage.setItem('workspaceId', JSON.stringify(value));
         navigate('/workspace')
     };
 
