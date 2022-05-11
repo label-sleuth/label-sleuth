@@ -30,7 +30,7 @@ import tempfile
 import traceback
 from concurrent.futures.thread import ThreadPoolExecutor
 
-from flask import Flask, jsonify, request, send_file, make_response
+from flask import Flask, jsonify, request, send_file, make_response, send_from_directory
 from flask_cors import CORS, cross_origin
 from flask_httpauth import HTTPTokenAuth
 
@@ -54,8 +54,7 @@ executor = ThreadPoolExecutor(20)
 
 
 
-
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='', static_folder='../frontend/build')
 auth = HTTPTokenAuth(scheme='Bearer')
 
 cors = CORS(app)
@@ -128,6 +127,11 @@ def verify_token(token):
     if not token:
         return False
     return token in tokens
+
+
+@app.route("/", defaults={'path':''})
+def serve(path):
+    return send_from_directory(app.static_folder, 'index.html')
 
 
 @app.route('/users/authenticate', methods=['POST'])
