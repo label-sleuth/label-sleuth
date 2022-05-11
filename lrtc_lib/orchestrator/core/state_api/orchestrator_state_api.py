@@ -62,15 +62,15 @@ class Workspace:
 
 
 class OrchestratorStateApi():
-    workspaces = dict()  # in-memory cache for Workspace objects
-    workspaces_lock = defaultdict(threading.RLock)  # lock for all methods that access or manipulate the workspaces
+     # lock for all methods that access or manipulate the workspaces
     
     def __init__(self,workspaces_dir):
         self.workspace_dir = workspaces_dir
         os.makedirs(self.workspace_dir,exist_ok=True)
+        self.workspaces = dict()  # in-memory cache for Workspace objects
+        self.workspaces_lock = defaultdict(threading.RLock)
 
-
-    # Workspace
+        # Workspace
     def create_workspace(self, workspace_id: str, dataset_name: str):
         with self.workspaces_lock[workspace_id]:
             illegal_chars = "".join(x for x in workspace_id if not x.isalnum() and x not in "_-")
@@ -247,7 +247,7 @@ class OrchestratorStateApi():
             self._save_workspace(workspace)
 
 
-
+    #TODO rename to status
     def update_model_state(self, workspace_id: str, category_name: str, iteration_index: int, new_status: ModelStatus):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
