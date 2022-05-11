@@ -359,13 +359,13 @@ def _train_done_callback(workspace_id, category_name, iteration_index, future):
     except Exception:
         logging.error(f"Train failed. Marking worspace '{workspace_id}' category '{category_name}' "
                       f"iteration {iteration_index} as error")
-        orchestrator_state_api.update_model_state(workspace_id=workspace_id, category_name=category_name,
+        orchestrator_state_api.update_model_status(workspace_id=workspace_id, category_name=category_name,
                                                   iteration_index=iteration_index, new_status=ModelStatus.ERROR)
         orchestrator_state_api.update_iteration_status(workspace_id, category_name, iteration_index,
                                                        IterationStatus.ERROR)
         return
 
-    orchestrator_state_api.update_model_state(workspace_id=workspace_id, category_name=category_name,
+    orchestrator_state_api.update_model_status(workspace_id=workspace_id, category_name=category_name,
                                               iteration_index=iteration_index, new_status=ModelStatus.READY)
     orchestrator_state_api.update_iteration_status(workspace_id, category_name, iteration_index,
                                                    IterationStatus.RUNNING_INFERENCE)

@@ -247,8 +247,7 @@ class OrchestratorStateApi():
             self._save_workspace(workspace)
 
 
-    #TODO rename to status
-    def update_model_state(self, workspace_id: str, category_name: str, iteration_index: int, new_status: ModelStatus):
+    def update_model_status(self, workspace_id: str, category_name: str, iteration_index: int, new_status: ModelStatus):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
             iterations = workspace.categories[category_name].active_learning_iterations

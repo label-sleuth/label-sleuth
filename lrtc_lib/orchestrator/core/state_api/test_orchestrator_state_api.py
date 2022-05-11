@@ -124,6 +124,6 @@ class TestOrchestratorStateAPI(unittest.TestCase):
                                                             ModelTypes.SVM_OVER_GLOVE, {}))
         self.assertEqual(ModelStatus.TRAINING,
                          self.orchestrator_state_api.get_all_iterations(workspace_id,"category_2")[1].model.model_status)
-        self.orchestrator_state_api.update_model_state(workspace_id,"category_2",1,ModelStatus.READY)
+        self.orchestrator_state_api.update_model_status(workspace_id,"category_2",1,ModelStatus.READY)
         self.assertEqual(ModelStatus.READY,
                          self.orchestrator_state_api.get_all_iterations(workspace_id,"category_2")[1].model.model_status)
