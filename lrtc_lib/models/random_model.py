@@ -9,9 +9,13 @@ from lrtc_lib.models.core.prediction import Prediction
 
 
 class RandomModel(ModelAPI):
+    """
+    Mock classification model that does not train, and returns random classification predictions.
+    """
     def __init__(self, models_background_jobs_manager: ModelsBackgroundJobsManager,
                  model_dir=os.path.join(ROOT_DIR, "output", "models", "random")):
         super().__init__(models_background_jobs_manager)
+        os.makedirs(model_dir, exist_ok=True)
         self.model_dir = model_dir
         self.model_id_to_random_seed = {}
         self.random_seed = -1

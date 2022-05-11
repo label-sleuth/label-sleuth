@@ -1,6 +1,8 @@
 import gc
 import os
 
+from typing import List
+
 import torch
 import tqdm
 
@@ -28,8 +30,7 @@ class HFTransformers(ModelAPI):
         :param model_dir:
         """
         super().__init__(models_background_jobs_manager, gpu_support=True)
-        if not os.path.isdir(model_dir):
-            os.makedirs(model_dir)
+        os.makedirs(model_dir, exist_ok=True)
         self.model_dir = model_dir
         self.pretrained_model_name = pretrained_model
         self.batch_size = batch_size
@@ -74,7 +75,7 @@ class HFTransformers(ModelAPI):
     def get_models_dir(self):
         return self.model_dir
 
-    def process_train_inputs(self, texts, labels):
+    def process_train_inputs(self, texts, labels) -> List[InputFeatures]:
         """
         Tokenize the train texts and return training data in a format expected by the transformers library.
         If the desired transformer model requires different inputs than input_ids+attention_mask+token_type_ids, this
@@ -93,29 +94,3 @@ class HFTransformers(ModelAPI):
                                           token_type_ids=inputs['token_type_ids'],
                                           label=label))
         return features
-
-
-if __name__ == '__main__':
-    model = HFTransformers(ModelsBackgroundJobsManager(), batch_size=32, num_train_epochs=2)
-
-    train_data = [{"text": "I love dogs", "label": True},
-                  {"text": "I like to play with dogs", "label": True},
-                  {"text": "dogs are better than cats", "label": True},
-                  {"text": "cats cats cats", "label": False},
-                  {"text": "play with cats", "label": False},
-                  {"text": "dont know", "label": False},
-                  {"text": "what else", "label": False}]
-
-
-    import uuid
-
-    model_id, future = model.train(train_data, {})
-    print(model_id)
-    infer_list = []
-    for x in range(3):
-        infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})
-    infer_list.append({"text":"I really love dogs"})
-
-    future.result()
-    res = model.infer(model_id, infer_list, {})
-    print(res)

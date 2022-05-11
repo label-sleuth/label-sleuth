@@ -16,7 +16,7 @@ from lrtc_lib.models.core.tools import RepresentationType, get_glove_representat
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
-# TODO remove unsupported types (multi-label etc.)
+
 class SVM(ModelAPI):
     def __init__(self, representation_type: RepresentationType,
                  models_background_jobs_manager: ModelsBackgroundJobsManager,
@@ -24,7 +24,6 @@ class SVM(ModelAPI):
         super().__init__(models_background_jobs_manager)
         os.makedirs(model_dir, exist_ok=True)
         self.model_dir = model_dir
-
         self.kernel = kernel
         self.representation_type = representation_type
 
@@ -39,7 +38,7 @@ class SVM(ModelAPI):
 
         language = self.get_language(model_id)
         texts = [x['text'] for x in train_data]
-        train_data_features, vectorizer = self.input_to_features(texts, language=language, train=True)
+        train_data_features, vectorizer = self.input_to_features(texts, language=language)
         labels = np.array([x['label'] for x in train_data])
 
         model.fit(train_data_features, labels)
@@ -57,25 +56,26 @@ class SVM(ModelAPI):
         language = self.get_language(model_id)
 
         features_all_texts, _ = self.input_to_features([x['text'] for x in items_to_infer], language=language,
-                                                       train=False, vectorizer=vectorizer)
+                                                       vectorizer=vectorizer)
         labels = model.predict(features_all_texts).tolist()
         # The True label is in the second position as sorted([True, False]) is [False, True]
         scores = [probs[1] for probs in self.get_probs(model, features_all_texts)]
         return [Prediction(label=label, score=score) for label, score in zip(labels, scores)]
 
-    def get_probs(self, model, features):
+    @staticmethod
+    def get_probs(model, features):
         distances = np.array(model.decision_function(features))  # get distances from hyperplanes (per class)
         if len(distances.shape) == 1: # binary classification
             distances = distances / 2 + 0.5
             distances = np.expand_dims(distances, 1)
             distances = np.concatenate([1 - distances, distances], axis=1)
-        prob = np.exp(distances) / np.sum(np.exp(distances), axis=1,
-                                          keepdims=True)  # softmax to convert distances to probabilities
+        # softmax to convert distances to probabilities
+        prob = np.exp(distances) / np.sum(np.exp(distances), axis=1, keepdims=True)
         return prob
 
-    def input_to_features(self, texts, language=Languages.ENGLISH, vectorizer=None, train=False):
+    def input_to_features(self, texts, language=Languages.ENGLISH, vectorizer=None):
         if self.representation_type == RepresentationType.BOW:
-            if train:
+            if vectorizer is None:
                 vectorizer = CountVectorizer(analyzer="word", tokenizer=None, preprocessor=None, stop_words=None,
                                              lowercase=True, max_features=10000)
                 train_data_features = vectorizer.fit_transform(texts)
@@ -93,30 +93,3 @@ class SVM(ModelAPI):
 
     def get_models_dir(self):
         return self.model_dir
-
-
-if __name__ == '__main__':
-    model = SVM(representation_type=RepresentationType.GLOVE)
-
-    train_data = [{"text": "I love dogs", "label": True},
-                  {"text": "I like to play with dogs", "label": True},
-                  {"text": "dogs are better than cats", "label": True},
-                  {"text": "cats cats cats", "label": False},
-                  {"text": "play with cats", "label": False},
-                  {"text": "dont know", "label": False},
-                  {"text": "what else", "label": False}]
-
-
-    model_id,_ = model.train(train_data, {})
-    print(model_id)
-    import uuid
-    import time
-    time.sleep(10)
-    infer_list = []
-    infer_list.append({"text": "I really love dogs"})
-    for x in range(3):
-        infer_list.append({"text": "hello " + str(uuid.uuid4()) + str(x)})
-    infer_list.append({"text":"I really love dogs"})
-    res = model.infer(model_id, infer_list)
-    print(res)
-
