@@ -1,7 +1,6 @@
-from typing import Sequence
-
-import numpy as np
 import random
+
+from typing import Sequence
 
 from lrtc_lib.active_learning.core.active_learning_api import ActiveLearner
 from lrtc_lib.data_access.core.data_structs import TextElement
@@ -13,17 +12,6 @@ class RandomSampling(ActiveLearner):
     This module assigns random (but reproducible) scores for the given examples. Thus, using this active learning module
     equates to randomly selecting the next examples for labeling.
     """
-    def get_recommended_items_for_labeling(self, workspace_id, dataset_name, category_name,
-                                           candidate_text_elements: Sequence[TextElement],
-                                           candidate_text_element_predictions: Sequence[Prediction], sample_size=1):
-
-        scores = self.get_per_element_score(candidate_text_elements, candidate_text_element_predictions, workspace_id,
-                                            dataset_name, category_name)
-        sample_size = min(sample_size, len(scores)-1)
-        indices = np.sort(np.argpartition(scores, sample_size)[:sample_size])
-        unlabeled = np.array(candidate_text_elements)[indices]
-        return unlabeled.tolist()
-
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
                               candidate_text_element_predictions: Sequence[Prediction], workspace_id: str,
                               dataset_name: str, category_name: str) -> Sequence[float]:

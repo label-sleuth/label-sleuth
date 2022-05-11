@@ -1,5 +1,8 @@
 import abc
+
 from typing import Sequence
+
+import numpy as np
 
 from lrtc_lib.data_access.core.data_structs import TextElement
 from lrtc_lib.models.core.prediction import Prediction
@@ -9,7 +12,6 @@ class ActiveLearner:
     """
     Base class for implementing an active learning module.
     """
-    @abc.abstractmethod
     def get_recommended_items_for_labeling(self, workspace_id: str, dataset_name: str, category_name: str,
                                            candidate_text_elements: Sequence[TextElement],
                                            candidate_text_element_predictions: Sequence[Prediction],
@@ -24,6 +26,12 @@ class ActiveLearner:
         :param candidate_text_element_predictions:
         :param sample_size: number of suggested elements to return
         """
+        scores = self.get_per_element_score(candidate_text_elements, candidate_text_element_predictions,
+                                            workspace_id, dataset_name, category_name)
+        sorted_indices = np.argsort(scores)[::-1]
+        top_indices = sorted_indices[:sample_size]
+        recommended_items = np.array(candidate_text_elements)[np.array(top_indices)].tolist()
+        return recommended_items
 
     @abc.abstractmethod
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
