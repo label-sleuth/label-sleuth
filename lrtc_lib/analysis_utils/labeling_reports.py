@@ -10,7 +10,6 @@ from sklearn.neighbors import NearestNeighbors
 
 from lrtc_lib.analysis_utils.analyze_tokens import get_token_overlap
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, TextElement
-from lrtc_lib.factories import MODEL_FACTORY
 from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.tools import get_glove_representation, remove_stop_words_and_punctuation
@@ -21,7 +20,7 @@ MIN_TOKEN_OVERLAP_THRESHOLD = 0.4
 
 
 def get_disagreements_using_cross_validation(workspace_id, category_name, labeled_elements: List[TextElement],
-                                             model_type=ModelTypes.SVM_ENSEMBLE, num_folds=4,
+                                             model_factory, model_type=ModelTypes.SVM_ENSEMBLE, num_folds=4,
                                              language=Languages.ENGLISH):
     """
     This method uses cross-validation in order to identify elements where the user label might be incorrect.
@@ -33,6 +32,7 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
     :param workspace_id:
     :param category_name:
     :param labeled_elements:
+    :param model_factory:
     :param model_type: the type of model used for training and inference.
     :param num_folds: determines the number of partitions of the labeled elements, and thus the number of models
     that will be trained.
@@ -41,7 +41,7 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
     model predictions
     """
     start_time = time.time()
-    model = MODEL_FACTORY.get_model(model_type)
+    model = model_factory.get_model(model_type)
 
     all_scores = []
     random.Random(0).shuffle(labeled_elements)

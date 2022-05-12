@@ -18,9 +18,14 @@
 # Eyal suggested to add more active learning strategies
 import logging
 from typing import Sequence
-
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
+
+from lrtc_lib.factories import ORCHESTRATOR_STATE_API, DATA_ACCESS, ACTIVE_LEARNING_FACTORY, \
+    MODEL_FACTORY
+from lrtc_lib.orchestrator.orchestrator_api import OrchestratorApi
+
+
 import getpass
 import os
 
@@ -34,7 +39,7 @@ from flask import Flask, jsonify, request, send_file, make_response, send_from_d
 from flask_cors import CORS, cross_origin
 from flask_httpauth import HTTPTokenAuth
 
-from lrtc_lib.orchestrator import orchestrator_api
+
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import Iteration, IterationStatus
 
 from lrtc_lib import definitions
@@ -42,7 +47,7 @@ from lrtc_lib import definitions
 from lrtc_lib.analysis_utils.analyze_tokens import ngrams_by_info_gain
 from lrtc_lib.config import CONFIGURATION
 from lrtc_lib.configurations.users import users, tokens
-from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
+from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label
 from lrtc_lib.data_access.data_access_api import AlreadyExistsException, get_document_uri
 from lrtc_lib.models.core.languages import Languages
 
@@ -59,7 +64,7 @@ auth = HTTPTokenAuth(scheme='Bearer')
 
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-
+orchestrator_api = OrchestratorApi(ORCHESTRATOR_STATE_API,DATA_ACCESS,ACTIVE_LEARNING_FACTORY,MODEL_FACTORY)
 
 ## move to common :
 
@@ -494,7 +499,7 @@ def set_element_label(workspace_id, element_id):
         else:
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
 
-        uri_with_updated_label = {element_id: {category_name: orchestrator_api.Label(value)}}
+        uri_with_updated_label = {element_id: {category_name: Label(value)}}
         orchestrator_api.set_labels(workspace_id, uri_with_updated_label,
                                     apply_to_duplicate_texts=CONFIGURATION.apply_labels_to_duplicate_texts,
                                     update_label_counter=update_counter)

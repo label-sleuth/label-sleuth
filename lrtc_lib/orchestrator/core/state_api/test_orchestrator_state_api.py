@@ -2,10 +2,7 @@ import unittest
 import tempfile
 from datetime import datetime
 
-from lrtc_lib.data_access.core.data_structs import Label, LABEL_NEGATIVE, TextElement, URI_SEP, Document
-from lrtc_lib.factories import DATA_ACCESS as data_access
-from lrtc_lib.orchestrator import orchestrator_api
-from lrtc_lib.orchestrator.core.state_api import orchestrator_state_api
+from lrtc_lib.data_access.core.data_structs import TextElement, URI_SEP, Document
 from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, ModelInfo, IterationStatus

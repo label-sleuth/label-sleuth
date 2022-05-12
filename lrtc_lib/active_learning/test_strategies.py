@@ -5,16 +5,11 @@ from lrtc_lib.active_learning.strategies.hard_example_mining import HardMiningLe
 from lrtc_lib.active_learning.strategies.hybrid_learner import HybridLearner
 from lrtc_lib.active_learning.strategies.random_sampling import RandomSampling
 from lrtc_lib.active_learning.strategies.retrospective import RetrospectiveLearner
-from lrtc_lib.factories import DATA_ACCESS as data_access
 
-
-from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
-from lrtc_lib.active_learning.core.active_learning_strategies import ActiveLearningStrategies
 from lrtc_lib.data_access.file_based.utils import URI_SEP
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label, LABEL_NEGATIVE
 from lrtc_lib.models.core.prediction import Prediction
-from lrtc_lib.orchestrator import orchestrator_api
-from lrtc_lib.models.core.model_types import ModelTypes
+
 
 
 
@@ -35,19 +30,6 @@ def generate_simple_doc(dataset_name, category_name,num_sentences, doc_id=0):
 
     doc = Document(uri=dataset_name + URI_SEP + str(doc_id), text_elements=text_elements, metadata={})
     return doc
-
-
-def prepare_workspace_with_trained_model(workspace_id):
-    orchestrator_api.delete_workspace(workspace_id)
-    dataset_name = 'ds'
-    category_name = f'cat_{random.random()}'
-    data_access.delete_dataset(dataset_name)
-    docs = [generate_simple_doc(dataset_name, category_name, i) for i in range(200)]
-    data_access.add_documents(dataset_name, docs)
-    orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
-    orchestrator_api.create_new_category(workspace_id, category_name, '')
-    orchestrator_api.train(workspace_id, category_name, ModelTypes.RAND, docs[0].text_elements, None)
-    return dataset_name, category_name
 
 
 class TestActiveLearningStrategies(unittest.TestCase):
