@@ -125,12 +125,12 @@ export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async
     const { keyword } = request
     console.log(`searchKeywords called, key: `, keyword)
 
-    var url = new URL(`https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud//workspace/${state.workspace.workspace}/query?qry_string=${keyword}&category_name=${state.workspace.curCategory}&sample_start_idx=0`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/query?qry_string=${keyword}&category_name=${state.workspace.curCategory}&sample_start_idx=0`)
 
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q'
+            'Authorization': `Bearer ${token}`
         },
         method: "GET"
     }).then(response => response.json())
