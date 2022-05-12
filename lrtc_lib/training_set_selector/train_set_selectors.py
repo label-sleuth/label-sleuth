@@ -5,7 +5,7 @@ import sys
 from collections import Counter
 from typing import Sequence, List
 
-from lrtc_lib.factories import DATA_ACCESS as data_access
+from lrtc_lib.services import DATA_ACCESS as data_access
 from lrtc_lib.data_access.core.data_structs import Label, LabelType, TextElement, BINARY_LABELS, LABEL_POSITIVE, \
     LABEL_NEGATIVE
 from lrtc_lib.training_set_selector.train_set_selector_api import TrainSetSelectorAPI

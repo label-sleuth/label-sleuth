@@ -5,7 +5,7 @@ import sys
 from typing import Dict, Sequence
 
 import pandas as pd
-from lrtc_lib.factories import DATA_ACCESS as data_access
+from lrtc_lib.services import DATA_ACCESS as data_access
 from lrtc_lib.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement
 from lrtc_lib.data_access.data_access_api import get_document_uri
 

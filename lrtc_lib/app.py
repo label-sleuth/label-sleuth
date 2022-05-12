@@ -21,7 +21,7 @@ from typing import Sequence
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
-from lrtc_lib.factories import ORCHESTRATOR_STATE_API, DATA_ACCESS, ACTIVE_LEARNING_FACTORY, \
+from lrtc_lib.services import ORCHESTRATOR_STATE_API, DATA_ACCESS, ACTIVE_LEARNING_FACTORY, \
     MODEL_FACTORY
 from lrtc_lib.orchestrator.orchestrator_api import OrchestratorApi
 

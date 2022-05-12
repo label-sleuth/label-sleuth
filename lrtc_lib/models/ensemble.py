@@ -8,7 +8,7 @@ from typing import Iterable, Mapping, Sequence, Tuple
 import numpy as np
 
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.factories import MODEL_FACTORY
+from lrtc_lib.services import MODEL_FACTORY
 from lrtc_lib.models.core.model_api import ModelAPI
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.models.core.model_types import ModelTypes
