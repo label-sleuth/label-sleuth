@@ -1,7 +1,7 @@
 import { CoPresentOutlined, NotificationsTwoTone, SignalCellularNullSharp } from '@mui/icons-material'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
-import { WORKSPACE_API  } from "../../config"
+import { WORKSPACE_API } from "../../config"
 
 const initialState = {
     workspace: "demo-dakuo",
@@ -33,15 +33,13 @@ const initialState = {
 }
 
 //const BASE_URL = "https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud"
-// const token = localStorage.getItem('token')
+const token = localStorage.getItem('token')
 const BASE_URL = process.env.REACT_APP_API_URL
-const token = "Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q"
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
 export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async (request, { getState }) => {
 
     const state = getState()
-
     var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/documents`)
 
     const data = await fetch(url, {
@@ -50,7 +48,7 @@ export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -67,7 +65,7 @@ export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel',
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -90,7 +88,7 @@ export const getPositiveElementForCategory = createAsyncThunk('workspace/getPosi
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -116,7 +114,7 @@ export const createCategoryOnServer = createAsyncThunk('workspace/createCategory
             'update_counter': true
         }),
         method: "POST"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -126,7 +124,7 @@ export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async
 
     const { keyword } = request
     console.log(`searchKeywords called, key: `, keyword)
-    
+
     var url = new URL(`https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud//workspace/${state.workspace.workspace}/query?qry_string=${keyword}&category_name=${state.workspace.curCategory}&sample_start_idx=0`)
 
     const data = await fetch(url, {
@@ -135,7 +133,7 @@ export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async
             'Authorization': 'Bearer Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q'
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -144,7 +142,7 @@ export const fetchNextDocElements = createAsyncThunk('workspace/fetchNextDoc', a
 
     const state = getState()
 
-    const curDocument = state.workspace.documents[state.workspace.curDocId+1]['document_id']
+    const curDocument = state.workspace.documents[state.workspace.curDocId + 1]['document_id']
 
     var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
 
@@ -154,7 +152,7 @@ export const fetchNextDocElements = createAsyncThunk('workspace/fetchNextDoc', a
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -163,7 +161,7 @@ export const fetchPrevDocElements = createAsyncThunk('workspace/fetchPrevDoc', a
 
     const state = getState()
 
-    const curDocument = state.workspace.documents[state.workspace.curDocId-1]['document_id']
+    const curDocument = state.workspace.documents[state.workspace.curDocId - 1]['document_id']
 
     var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
 
@@ -173,7 +171,7 @@ export const fetchPrevDocElements = createAsyncThunk('workspace/fetchPrevDoc', a
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -198,7 +196,7 @@ export const fetchElements = createAsyncThunk('workspace/fetchElements', async (
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -219,7 +217,7 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => {
+    }).then(response => {
         var data = response.json()
         data['eid'] = eid
         return data
@@ -240,7 +238,7 @@ export const downloadLabeling = createAsyncThunk('workspace/downloadLabeling', a
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( res => res.text())
+    }).then(res => res.text())
 
     return data
 })
@@ -257,7 +255,7 @@ export const labelInfoGain = createAsyncThunk('workspace/labeled_info_gain', asy
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -274,7 +272,7 @@ export const fetchCategories = createAsyncThunk('workspace/get_all_categories', 
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -291,7 +289,7 @@ export const checkModelUpdate = createAsyncThunk('workspace/check_model_update',
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 
@@ -316,7 +314,7 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
             'update_counter': true
         }),
         method: "PUT"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 
@@ -333,7 +331,7 @@ export const checkStatus = createAsyncThunk('workspace/get_labelling_status', as
             'Authorization': `Bearer ${token}`
         },
         method: "GET"
-    }).then( response => response.json())
+    }).then(response => response.json())
 
     return data
 })
@@ -342,14 +340,17 @@ const DataSlice = createSlice({
     name: "workspace",
     initialState,
     reducers: {
+        setWorkspace(state, action) {
+            state.workspace = action.payload
+        },
         nextPrediction(state, action) {
             console.log(`np data: `, state.elements)
-            
-            const pred_index = state.indexPrediction+1
+
+            const pred_index = state.indexPrediction + 1
 
             var next_index = -1
 
-            for(var i = pred_index; i < state.elements.length; i++) {
+            for (var i = pred_index; i < state.elements.length; i++) {
                 const model_prediction = state.elements[i]['model_predictions'][Object.keys(state.elements[i]['model_predictions'])[Object.keys(state.elements[i]['model_predictions']).length - 1]]
                 if (model_prediction == 'true') {
                     next_index = i
@@ -370,7 +371,7 @@ const DataSlice = createSlice({
             if (pred_index > 0) {
                 return {
                     ...state,
-                    indexPrediction: pred_index-1
+                    indexPrediction: pred_index - 1
                 }
             } else {
                 return {
@@ -393,10 +394,10 @@ const DataSlice = createSlice({
 
             for (var i = 0; i < state['elements'].length; i++) {
                 const new_key = 'L' + i
-                initialFocusedState['L'+i] = {...initialFocusedState, new_key: false }
+                initialFocusedState['L' + i] = { ...initialFocusedState, new_key: false }
             }
 
-            initialFocusedState['L'+id] = true
+            initialFocusedState['L' + id] = true
 
             return {
                 ...state,
@@ -435,7 +436,7 @@ const DataSlice = createSlice({
             const cur_id_in_batch = state.cur_completed_id_in_batch
             return {
                 ...state,
-                cur_completed_id_in_batch: cur_id_in_batch+1
+                cur_completed_id_in_batch: cur_id_in_batch + 1
             }
         }
     },
@@ -447,7 +448,7 @@ const DataSlice = createSlice({
             var initialFocusedState = {}
 
             for (var i = 0; i < data['elements'].length; i++) {
-                initialFocusedState['L'+i] = false
+                initialFocusedState['L' + i] = false
             }
 
             initialFocusedState['L0'] = true
@@ -461,14 +462,14 @@ const DataSlice = createSlice({
             for (var i = 0; i < data['elements'].length; i++) {
                 if (state.curCategory in data['elements'][i]['user_labels']) {
                     if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
-                        initialLabelState['L'+i] = 'pos'
+                        initialLabelState['L' + i] = 'pos'
                         pos_label += 1
                     } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
-                        initialLabelState['L'+i] = 'neg'
+                        initialLabelState['L' + i] = 'neg'
                         neg_label += 1
                     }
                 } else {
-                    initialLabelState['L'+i] = ""
+                    initialLabelState['L' + i] = ""
                 }
             }
 
@@ -515,7 +516,7 @@ const DataSlice = createSlice({
 
             // var doc_elements = [ ... state.elements ]
 
-            var predictionForDocCat = Array(state.elements.length-1).fill(false)
+            var predictionForDocCat = Array(state.elements.length - 1).fill(false)
 
             console.log(`positive elements: `, data['positive_elements'])
 
@@ -540,7 +541,7 @@ const DataSlice = createSlice({
                     }
                 }
 
-                
+
             })
 
             console.log(`prediction on doc: `, predictionForDocCat)
@@ -562,7 +563,7 @@ const DataSlice = createSlice({
             var initialFocusedState = {}
 
             for (var i = 0; i < data['elements'].length; i++) {
-                initialFocusedState['L'+i] = false
+                initialFocusedState['L' + i] = false
             }
 
             initialFocusedState['L0'] = true
@@ -576,22 +577,22 @@ const DataSlice = createSlice({
             for (var i = 0; i < data['elements'].length; i++) {
                 if (state.curCategory in data['elements'][i]['user_labels']) {
                     if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
-                        initialLabelState['L'+i] = 'pos'
+                        initialLabelState['L' + i] = 'pos'
                         pos_label += 1
                     } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
-                        initialLabelState['L'+i] = 'neg'
+                        initialLabelState['L' + i] = 'neg'
                         neg_label += 1
                     }
                 } else {
-                    initialLabelState['L'+i] = ""
+                    initialLabelState['L' + i] = ""
                 }
             }
 
             return {
                 ...state,
                 elements: data['elements'],
-                curDocId: state.curDocId+1,
-                curDocName: state['documents'][state.curDocId+1]['document_id'],
+                curDocId: state.curDocId + 1,
+                curDocName: state['documents'][state.curDocId + 1]['document_id'],
                 focusedState: initialFocusedState,
                 focusedIndex: 0,
                 labelState: initialLabelState,
@@ -606,7 +607,7 @@ const DataSlice = createSlice({
             var initialFocusedState = {}
 
             for (var i = 0; i < data['elements'].length; i++) {
-                initialFocusedState['L'+i] = false
+                initialFocusedState['L' + i] = false
             }
 
             initialFocusedState['L0'] = true
@@ -620,22 +621,22 @@ const DataSlice = createSlice({
             for (var i = 0; i < data['elements'].length; i++) {
                 if (state.curCategory in data['elements'][i]['user_labels']) {
                     if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
-                        initialLabelState['L'+i] = 'pos'
+                        initialLabelState['L' + i] = 'pos'
                         pos_label += 1
                     } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
-                        initialLabelState['L'+i] = 'neg'
+                        initialLabelState['L' + i] = 'neg'
                         neg_label += 1
                     }
                 } else {
-                    initialLabelState['L'+i] = ""
+                    initialLabelState['L' + i] = ""
                 }
             }
 
             return {
                 ...state,
                 elements: data['elements'],
-                curDocId: state.curDocId-1,
-                curDocName: state['documents'][state.curDocId-1]['document_id'],
+                curDocId: state.curDocId - 1,
+                curDocName: state['documents'][state.curDocId - 1]['document_id'],
                 focusedState: initialFocusedState,
                 focusedIndex: 0,
                 labelState: initialLabelState,
@@ -674,8 +675,8 @@ const DataSlice = createSlice({
             var latest_model_version = -1
 
             if (model_num > 0) {
-                
-                latest_model_version = data['models'][model_num-1]['iteration']
+
+                latest_model_version = data['models'][model_num - 1]['iteration']
             }
 
             console.log(`latest model version: ${latest_model_version}`)
@@ -696,12 +697,12 @@ const DataSlice = createSlice({
             var initialFocusedState = {}
 
             for (var i = 0; i < data['elements'].length; i++) {
-                initialFocusedState['L'+i] = false
+                initialFocusedState['L' + i] = false
             }
 
             console.log(`data['eid]: ${eid}`)
 
-            initialFocusedState['L'+eid] = true
+            initialFocusedState['L' + eid] = true
 
             var initialLabelState = null
 
@@ -714,7 +715,7 @@ const DataSlice = createSlice({
                 console.log(`switch status`)
 
                 for (var i = 0; i < data['elements'].length; i++) {
-                    initialLabelState['L'+i] = ""
+                    initialLabelState['L' + i] = ""
                 }
             } else {
                 console.log(`search status`)
@@ -776,15 +777,15 @@ const DataSlice = createSlice({
             //     status = "New model is ready"
             // }
 
-            if ( progress < 80 ) {
+            if (progress < 80) {
                 status = 'New model is not ready'
             }
 
-            if ( progress == 80 ) {
+            if (progress == 80) {
                 status = 'New model is almost ready'
             }
 
-            if ( progress == 100 ) {
+            if (progress == 100) {
                 status = 'New model is ready'
             }
 
@@ -792,13 +793,13 @@ const DataSlice = createSlice({
                 new_id_in_batch = 0
             }
 
-            if ( 'true' in response['labeling_counts'] ) {
+            if ('true' in response['labeling_counts']) {
                 pos_label = response['labeling_counts']['true']
             } else {
                 pos_label = 0
             }
 
-            if ( 'false' in response['labeling_counts'] ) {
+            if ('false' in response['labeling_counts']) {
                 neg_label = response['labeling_counts']['false']
             } else {
                 neg_label = 0
@@ -820,4 +821,11 @@ const DataSlice = createSlice({
 })
 
 export default DataSlice.reducer;
-export const { updateCurCategory, increaseIdInBatch, createNewCategory, prevPrediction, nextPrediction, setFocusedState, setLabelState } = DataSlice.actions;
+export const { updateCurCategory,
+    increaseIdInBatch,
+    createNewCategory,
+    prevPrediction,
+    nextPrediction,
+    setWorkspace,
+    setFocusedState,
+    setLabelState } = DataSlice.actions;

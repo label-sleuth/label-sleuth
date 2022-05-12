@@ -1,25 +1,19 @@
 import * as React from 'react';
 import Highlighter from "react-highlight-words";
 import Paper from '@mui/material/Paper';
-import CloseIcon from '@mui/icons-material/Close';
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
-import CheckIcon from '@mui/icons-material/Check';
 import IconButton from "@mui/material/IconButton";
 import Stack from '@mui/material/Stack';
-import { Typography } from "@mui/material";
-import { setFocusedState, fetchCertainDocument, setLabelState, checkStatus, setElementLabel, getElementToLabel, increaseIdInBatch } from '../DataSlice.jsx';
+import { setFocusedState, fetchCertainDocument, setLabelState, checkStatus, setElementLabel, increaseIdInBatch } from '../../DataSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from '@mui/styles';
-import { styled, useTheme } from '@mui/material/styles';
 import { useState } from "react";
+import check from '../../Asset/check.svg'
+import checking from '../../Asset/checking.svg'
+import crossing from '../../Asset/crossing.svg'
+import cross from '../../Asset/cross.svg'
+import questioning from '../../Asset/questioning.svg'
+import question from '../../Asset/question.svg'
 
-import checking from './../Asset/checking.svg'
-import check from './../Asset/check.svg'
-import check_predict from './../Asset/check_predict.svg'
-import crossing from './../Asset/crossing.svg'
-import cross from './../Asset/cross.svg'
-import questioning from './../Asset/questioning.svg'
-import question from './../Asset/question.svg'
 
 const useStyles = makeStyles((theme) => ({
     checkicon: {

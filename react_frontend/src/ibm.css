@@ -63,6 +63,7 @@ button {
     padding: 0 16px !important;
     color: #fff !important;
     font-size: 14px;
+    margin-right: 30px !important;
 }
 
 .btn i {
@@ -105,11 +106,11 @@ ul.MuiList-padding {
     box-shadow: none !important;
 }
 
-.MuiInput-input {
+/* .MuiInput-input {
     font-family: 'IBM Plex Sans', sans-serif !important;
     font-weight: 400 !important;
     padding: 0 !important;
-}
+} */
 
 /* left nav */
 .sleuth_logo {
@@ -222,11 +223,11 @@ p.hsbar_label {
     background: #161616;
 }
 
-.select_category > div > div,
+/* .select_category > div > div,
 .MuiOutlinedInput-notchedOutline,
 .MuiOutlinedInput-root {
     border: none !important;
-}
+} */
 
 .select_category > div{
     margin-left: 10px;

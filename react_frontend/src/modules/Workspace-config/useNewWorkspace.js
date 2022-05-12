@@ -20,6 +20,7 @@ const useNewWorkspace = () => {
         }
         dispatch(createWorkspace({ workspace_id: textValue, dataset_id: selectedValue }))
         dispatch(setActiveWorkspace(textValue))
+        window.localStorage.setItem('workspaceId', JSON.stringify(textValue));
         navigate('/workspace')
     }
 
