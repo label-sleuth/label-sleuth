@@ -64,7 +64,8 @@ auth = HTTPTokenAuth(scheme='Bearer')
 
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-orchestrator_api = OrchestratorApi(ORCHESTRATOR_STATE_API,DATA_ACCESS,ACTIVE_LEARNING_FACTORY,MODEL_FACTORY)
+orchestrator_api = OrchestratorApi(ORCHESTRATOR_STATE_API, DATA_ACCESS, ACTIVE_LEARNING_FACTORY, MODEL_FACTORY,
+                                   CONFIGURATION)
 
 ## move to common :
 
