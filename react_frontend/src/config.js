@@ -1,4 +1,4 @@
-export const BASE_URL = 'https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud'
+
 export const GET_WORKSPACES_API = 'workspaces'
 export const GET_DATASETS_API = 'datasets'
 export const WORKSPACE_API = 'workspace'
