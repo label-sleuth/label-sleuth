@@ -77,9 +77,9 @@ function CategoryFormControl(props) {
 
   const options = workspace.categories.map((item) => ({ value: item.category_name, title: item.category_name }))
 
-  const handleCategorySelect = (val) => {
-    dispatch(updateCurCategory(val))
-    setSelVal(val)
+  const handleCategorySelect = (value) => {
+    dispatch(updateCurCategory(value))
+    setSelVal(value)
   }
 
   return (
