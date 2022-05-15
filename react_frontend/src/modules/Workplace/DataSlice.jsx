@@ -29,7 +29,8 @@ const initialState = {
     pos_label_num_doc: 0,
     neg_label_num_doc: 0,
     training_batch: 5,
-    cur_completed_id_in_batch: 0
+    cur_completed_id_in_batch: 0,
+    workspaceLength:0,
 }
 
 //const BASE_URL = "https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud"
@@ -411,6 +412,14 @@ const DataSlice = createSlice({
             return {
                 ...state,
                 labelState: new_labeled_state
+            }
+        },
+        setWorkspaceLength(state, action) {
+            const workspace_length = action.payload
+
+            return {
+                ...state,
+                workspaceLength: workspace_length
             }
         },
         createNewCategory(state, action) {
@@ -828,4 +837,5 @@ export const { updateCurCategory,
     nextPrediction,
     setWorkspace,
     setFocusedState,
+    setWorkspaceLength,
     setLabelState } = DataSlice.actions;
