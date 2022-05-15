@@ -94,7 +94,6 @@ const Sidebar = ({ open, setOpen }) => {
                 variant="persistent"
                 anchor="right"
                 open={open}
-                // variant="permanent"
                 onClose={handleDrawerClose}
             >
                 {
