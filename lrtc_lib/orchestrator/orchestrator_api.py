@@ -7,12 +7,12 @@ import time
 from collections import Counter, defaultdict
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime
-from typing import Mapping, List, Sequence, Tuple, Union
+from typing import Mapping, List, Sequence, Union
 
 import pandas as pd
 
 from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
-from lrtc_lib.analysis_utils.labeling_reports import   get_suspected_labeling_contradictions_by_distance_with_diffs, \
+from lrtc_lib.analysis_utils.labeling_reports import get_suspected_labeling_contradictions_by_distance_with_diffs, \
     get_disagreements_using_cross_validation
 from lrtc_lib.config import Configuration
 from lrtc_lib.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE
@@ -285,7 +285,8 @@ class OrchestratorApi:
 
     # iteration flow
     
-    def run_iteration(self, workspace_id: str, category_name: str, model_type: ModelTypes, train_data, train_params=None) -> str:
+    def run_iteration(self, workspace_id: str, category_name: str, model_type: ModelTypes, train_data,
+                      train_params=None) -> str:
         """
         This method initiates an Iteration, a flow that includes training a model, inferring the full corpus using
         this model, choosing candidate elements for labeling using active learning, as well as calculating various
@@ -293,9 +294,9 @@ class OrchestratorApi:
         For a specific workspace and category, an iteration is identified using an integer iteration index. As different
         stages for the given iteration are completed, the IterationStatus for this iteration index is updated using the
         self.orchestrator_state.
-        Since the training and inference stages of the iteration are submitted asynchronously in the background, the full
-        flow is composed of this method, along with the _train_done_callback and _infer_done_callback, which are launched
-        when the training and inference stages, respectively, are completed.
+        Since the training and inference stages of the iteration are submitted asynchronously in the background, the
+        full flow is composed of this method, along with the _train_done_callback and _infer_done_callback, which are
+        launched when the training and inference stages, respectively, are completed.
     
         :param workspace_id:
         :param category_name:
@@ -323,17 +324,18 @@ class OrchestratorApi:
         model_metadata = {TRAIN_COUNTS_STR_KEY: train_counts}
         model = self.model_factory.get_model(model_type)
     
-        logging.info(
-            f"workspace '{workspace_id}' training a model for category '{category_name}', model_metadata: {model_metadata}")
+        logging.info(f"workspace '{workspace_id}' training a model for category '{category_name}', "
+                     f"model_metadata: {model_metadata}")
         model_id, _ = model.train(train_data=train_data, train_params=train_params,
-                                  done_callback=functools.partial(self._train_done_callback, workspace_id, category_name,
-                                                                  new_iteration_index))
+                                  done_callback=functools.partial(self._train_done_callback, workspace_id,
+                                                                  category_name, new_iteration_index))
         model_status = model.get_model_status(model_id)
         if train_params:
             model_metadata = {**model_metadata, **train_params}
         model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
                                model_metadata=model_metadata, creation_date=datetime.now())
-        self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_name=category_name, model_info=model_info)
+        self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_name=category_name,
+                                              model_info=model_info)
     
         # The model id is returned almost immediately, but the training is performed in the background. Once training is
         # complete the iteration flow continues in the *_train_done_callback* method
@@ -354,23 +356,23 @@ class OrchestratorApi:
             logging.error(f"Train failed. Marking worspace '{workspace_id}' category '{category_name}' "
                           f"iteration {iteration_index} as error")
             self.orchestrator_state.update_model_status(workspace_id=workspace_id, category_name=category_name,
-                                                       iteration_index=iteration_index, new_status=ModelStatus.ERROR)
+                                                        iteration_index=iteration_index, new_status=ModelStatus.ERROR)
             self.orchestrator_state.update_iteration_status(workspace_id, category_name, iteration_index,
-                                                           IterationStatus.ERROR)
+                                                            IterationStatus.ERROR)
             return
     
         self.orchestrator_state.update_model_status(workspace_id=workspace_id, category_name=category_name,
-                                                   iteration_index=iteration_index, new_status=ModelStatus.READY)
+                                                    iteration_index=iteration_index, new_status=ModelStatus.READY)
         self.orchestrator_state.update_iteration_status(workspace_id, category_name, iteration_index,
-                                                       IterationStatus.RUNNING_INFERENCE)
+                                                        IterationStatus.RUNNING_INFERENCE)
         iteration = self.get_all_iterations_for_category(workspace_id, category_name)[iteration_index]
         model_info = iteration.model
         model = self.model_factory.get_model(model_info.model_type)
         dataset_name = self.get_dataset_name(workspace_id)
         elements = self.get_all_text_elements(dataset_name)
-        logging.info(f"Successfully trained model id {model_id} for workspace '{workspace_id}' category '{category_name}' "
-                     f"iteration {iteration_index}. Running background inference for the full dataset "
-                     f"({len(elements)} items)")
+        logging.info(f"Successfully trained model id {model_id} for workspace '{workspace_id}' category "
+                     f"'{category_name}' iteration {iteration_index}. Running background inference for the full "
+                     f"dataset ({len(elements)} items)")
         model.infer_async(model_id, items_to_infer=[{"text": element.text} for element in elements],
                           done_callback=functools.partial(self._infer_done_callback, workspace_id, category_name,
                                                           iteration_index))
@@ -379,8 +381,8 @@ class OrchestratorApi:
     
     def _infer_done_callback(self, workspace_id, category_name, iteration_index, future):
         """
-        Once model inference for Iteration *iteration_index* over the full dataset is complete, the flow of the iteration
-        continues here. As part of this this stage the recommendations of the active learning module are calculated.
+        Once model inference for Iteration *iteration_index* over the full dataset is complete, the flow of the
+        iteration continues here. As part of this stage the active learning module recommendations are calculated.
         :param workspace_id:
         :param category_name:
         :param iteration_index:
@@ -392,7 +394,7 @@ class OrchestratorApi:
             logging.exception(f"Background inference on workspace '{workspace_id}' category '{category_name}' "
                               f"iteration {iteration_index} Failed. Marking iteration with Error")
             self.orchestrator_state.update_iteration_status(workspace_id, category_name, iteration_index,
-                                                           IterationStatus.ERROR)
+                                                            IterationStatus.ERROR)
             return
     
         try:
@@ -403,12 +405,12 @@ class OrchestratorApi:
             self._calculate_iteration_statistics(workspace_id, category_name, iteration_index, predictions)
     
             self.orchestrator_state.update_iteration_status(workspace_id, category_name,
-                                                           iteration_index, IterationStatus.RUNNING_ACTIVE_LEARNING)
+                                                            iteration_index, IterationStatus.RUNNING_ACTIVE_LEARNING)
             dataset_name = self.get_dataset_name(workspace_id)
             self._calculate_active_learning_recommendations(workspace_id, dataset_name, category_name,
-                                                       ACTIVE_LEARNING_SUGGESTION_COUNT, iteration_index)
+                                                            ACTIVE_LEARNING_SUGGESTION_COUNT, iteration_index)
             self.orchestrator_state.update_iteration_status(workspace_id, category_name, iteration_index,
-                                                           IterationStatus.READY)
+                                                            IterationStatus.READY)
             logging.info(f"Successfully finished iteration {iteration_index} "
                          f"in workspace '{workspace_id}' category '{category_name}'.")
     
@@ -416,7 +418,7 @@ class OrchestratorApi:
             logging.exception(f"Iteration {iteration_index} on workspace '{workspace_id}' category '{category_name}' "
                               f"Failed. Marking iteration with Error")
             self.orchestrator_state.update_iteration_status(workspace_id, category_name, iteration_index,
-                                                           IterationStatus.ERROR)
+                                                            IterationStatus.ERROR)
         try:
             self._delete_old_models(workspace_id, category_name, iteration_index)
         except Exception:
@@ -447,12 +449,13 @@ class OrchestratorApi:
              if iteration.status == IterationStatus.READY]
         if len(previous_ready_iteration_indices) > 0:
             previous_model_predictions = self.infer(workspace_id, category_name, elements,
-                                               iteration_index=previous_ready_iteration_indices[-1])
+                                                    iteration_index=previous_ready_iteration_indices[-1])
             num_identical = sum(x.label == y.label for x, y in zip(predictions, previous_model_predictions))
             post_train_statistics["changed_fraction"] = (dataset_size-num_identical)/dataset_size
     
         logging.info(f"post train measurements for iteration {iteration_index}: {post_train_statistics}")
-        self.orchestrator_state.add_iteration_statistics(workspace_id, category_name, iteration_index, post_train_statistics)
+        self.orchestrator_state.add_iteration_statistics(workspace_id, category_name, iteration_index,
+                                                         post_train_statistics)
 
     def _calculate_active_learning_recommendations(self, workspace_id, dataset_name, category_name, count,
                                                    iteration_index: int):
@@ -471,8 +474,8 @@ class OrchestratorApi:
             workspace_id=workspace_id, dataset_name=dataset_name, category_name=category_name,
             candidate_text_elements=unlabeled, candidate_text_element_predictions=predictions, sample_size=count)
         self.orchestrator_state.update_category_recommendations(workspace_id=workspace_id, category_name=category_name,
-                                                               iteration_index=iteration_index,
-                                                               recommended_items=[x.uri for x in new_recommendations])
+                                                                iteration_index=iteration_index,
+                                                                recommended_items=[x.uri for x in new_recommendations])
     
         logging.info(f"active learning recommendations for iteration index {iteration_index} "
                      f"of category '{category_name}' are ready")
@@ -527,8 +530,8 @@ class OrchestratorApi:
                          and label_counts[LABEL_POSITIVE] >= self.config.first_model_positive_threshold
                          and changes_since_last_model >= self.config.changed_element_threshold):
                 if len(iterations_without_errors) > 0 and iterations_without_errors[-1].status != IterationStatus.READY:
-                    logging.info(f"workspace '{workspace_id}' category '{category_name}' new elements criterion was met "
-                                 f"but previous AL not yet ready, not initiating a new training")
+                    logging.info(f"workspace '{workspace_id}' category '{category_name}' new elements criterion was "
+                                 f"met but previous AL not yet ready, not initiating a new training")
                     return None
                 self.orchestrator_state.set_label_change_count_since_last_train(workspace_id, category_name, 0)
                 logging.info(
@@ -620,12 +623,13 @@ class OrchestratorApi:
     
         estimated_precision = len(positive_elements)/len(text_elements)
         self.orchestrator_state.add_iteration_statistics(workspace_id, category, iteration_index,
-                                                        {"estimated_precision": estimated_precision,
-                                                         "estimated_precision_num_elements": len(ids)})
+                                                         {"estimated_precision": estimated_precision,
+                                                          "estimated_precision_num_elements": len(ids)})
     
         # since we don't want a new model to train while labeling in precision evaluation mode, we only update the
         # labeling counts after evaluation is finished
-        self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, category, changed_elements_count)
+        self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, category,
+                                                                             changed_elements_count)
         return estimated_precision
 
     def get_progress(self, workspace_id: str, dataset_name: str, category: str):
@@ -638,7 +642,7 @@ class OrchestratorApi:
                 max(0, min(round(changed_since_last_model_count / self.config.changed_element_threshold * 100), 100)),
                 max(0, min(round(category_label_counts[LABEL_POSITIVE] /
                                  self.config.first_model_positive_threshold * 100), 100)))
-            }
+                    }
         else:
             return {"all": 0}
 
@@ -675,7 +679,6 @@ class OrchestratorApi:
                 categories_created.append(category_name)
     
             logging.info(f'{category_name}: adding labels for {len(uri_to_label)} uris')
-            #TODO something with the structure doesn't make sense - it is category to uri to category to label
             self.set_labels(workspace_id, uri_to_label,
                             apply_to_duplicate_texts=self.config.apply_labels_to_duplicate_texts,
                             update_label_counter=True)
@@ -749,8 +752,8 @@ class OrchestratorApi:
     
                     if len(category.iterations) > 0:
                         iteration_index = len(category.iterations)-1
-                        new_data_infer_thread_pool.submit(self._infer_missing_elements, workspace_id, category, dataset_name,
-                                                          iteration_index)
+                        new_data_infer_thread_pool.submit(self._infer_missing_elements, workspace_id, category,
+                                                          dataset_name, iteration_index)
                         total_infer_jobs += 1
         logging.info(f"done adding documents to {dataset_name} upload statistics: {document_statistics}."
                      f"{total_infer_jobs} infer jobs were submitted in the background")
@@ -760,24 +763,24 @@ class OrchestratorApi:
         iteration_status = self.get_iteration_status(workspace_id, category, iteration_index)
         if iteration_status == IterationStatus.ERROR:
             logging.error(
-                f"cannot run inference for category '{category}' in workspace '{workspace_id}' after new documents were "
-                f"loaded to dataset '{dataset_name}' using model {iteration_index}, as the iteration status is ERROR")
+                f"Cannot run inference for category '{category}' in workspace '{workspace_id}' after new documents were"
+                f" loaded to dataset '{dataset_name}' using model {iteration_index}, as the iteration status is ERROR")
             return
         # if *model_id* is currently training, wait for training to complete
         start_time = time.time()
         while iteration_status != IterationStatus.READY:
             wait_time = time.time() - start_time
             if wait_time > 15 * 60:
-                logging.error(f"timeout reached when waiting to run inference with the last model "
-                              f"for category '{category}' in workspace '{workspace_id}' after new documents were loaded "
-                              f"to dataset '{dataset_name}' using model {iteration_index}")
+                logging.error(f"Timeout reached when waiting to run inference with the last model for category "
+                              f"'{category}' in workspace '{workspace_id}' after new documents were loaded to "
+                              f"dataset '{dataset_name}' using model {iteration_index}")
                 return
             logging.info(f"waiting for iteration {iteration_index} to complete in order to infer newly added documents"
                          f" for category '{category}' in workspace '{workspace_id}'")
             time.sleep(30)
             iteration_status = self.get_iteration_status(workspace_id, category, iteration_index)
     
-        logging.info(f"running inference with the latest model for category '{category}' in workspace '{workspace_id}' "
+        logging.info(f"Running inference with the latest model for category '{category}' in workspace '{workspace_id}' "
                      f"after new documents were loaded to dataset '{dataset_name}' using model {iteration_index}")
         # Currently there is no indication to the user that inference is running on the new documents, and there is no
         # indication for when this inferences ends. Can be added and reflected in the UI in the future

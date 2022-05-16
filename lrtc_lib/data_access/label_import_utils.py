@@ -29,7 +29,7 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
 
 
 def process_labels_dataframe(workspace_id, dataset_name, labels_df_to_import: pd.DataFrame) \
-        -> Dict[str, Dict[str, Label]]:
+        -> Dict[str, Dict[str, Dict[str, Label]]]:
     logging.warning("Currently label metadata and label_type are ignored")
     # replace punctuation with underscores in category names
     punctuation = string.punctuation.replace("'", "") + string.whitespace
