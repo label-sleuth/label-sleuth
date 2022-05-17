@@ -4,9 +4,11 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+import pandas as pd
+
 from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
 from lrtc_lib.config import CONFIGURATION
-from lrtc_lib.data_access.core.data_structs import Document, LABEL_POSITIVE, Label, LABEL_NEGATIVE, DisplayFields
+from lrtc_lib.data_access.core.data_structs import DisplayFields, Document, Label, LABEL_NEGATIVE, LABEL_POSITIVE
 from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from lrtc_lib.data_access.test_file_based_data_access import generate_corpus
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
@@ -21,9 +23,8 @@ def add_random_labels_to_document(doc: Document, min_num_sentences_to_label: int
     text_elements_to_label = random.sample(doc.text_elements, min(min_num_sentences_to_label, len(doc.text_elements)))
     for elem in text_elements_to_label:
         categories_to_label = random.sample(categories, random.randint(0, len(categories)))
-        elem.category_to_label = \
-            {cat: Label(label=LABEL_POSITIVE) if cat in categories_to_label else Label(label=LABEL_NEGATIVE)
-             for cat in categories}
+        elem.category_to_label.update({cat: Label(label=random.sample([LABEL_POSITIVE, LABEL_NEGATIVE], 1)[0])
+                                       for cat in categories_to_label})
     return text_elements_to_label
 
 
@@ -31,7 +32,7 @@ class TestOrchestratorAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp_dir = tempfile.TemporaryDirectory()
-        cls.model_factory =  ModelFactory(ModelsBackgroundJobsManager())
+        cls.model_factory = ModelFactory(ModelsBackgroundJobsManager())
         cls.active_learning_factory = ActiveLearningFactory()
         cls.data_access = FileBasedDataAccess(os.path.join(cls.temp_dir.name, "output"))
         cls.orchestrator_state = OrchestratorStateApi(os.path.join(cls.temp_dir.name, "output", "workspaces"))
@@ -42,20 +43,75 @@ class TestOrchestratorAPI(unittest.TestCase):
     def tearDownClass(cls):
         cls.temp_dir.cleanup()
 
+    @patch.object(OrchestratorApi, 'set_labels')
+    def test_import_category_labels(self, mock_set_labels):
+        workspace_id = self.test_import_category_labels.__name__
+        dataset_name = f'{workspace_id}_dump'
+        categories = [f'{workspace_id}_cat_' + str(i) for i in range(8)]
+
+        # create mock dataframe to be imported
+        docs = generate_corpus(self.data_access, dataset_name, 5)
+        self.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
+        elements_for_import = []
+        for doc in docs:
+            elements_for_import.extend(
+                add_random_labels_to_document(doc, 1, categories))
+        categories_with_labels = {cat for e in elements_for_import for cat in e.category_to_label.keys()}
+        dicts_for_import = [{DisplayFields.uri: e.uri, DisplayFields.text: e.text, DisplayFields.category_name: cat,
+                             DisplayFields.label: e.category_to_label[cat].label}
+                            for e in elements_for_import for cat in e.category_to_label.keys()
+                            if len(e.category_to_label) > 0]
+        df_for_import = pd.DataFrame(dicts_for_import)
+
+        # create only one of the categories
+        self.orchestrator_api.create_new_category(workspace_id, next(iter(categories_with_labels)), 'description')
+
+        with patch.object(OrchestratorApi, 'create_new_category') as mock_create_new_category:
+            info_dict = self.orchestrator_api.import_category_labels(workspace_id, df_for_import)
+
+        self.assertEqual(len(info_dict['categories']), len(categories_with_labels))
+
+        # check the correct number of categories are being created
+        self.assertEqual(mock_create_new_category.call_count, len(categories_with_labels) - 1)
+        self.assertEqual(len(info_dict['categoriesCreated']), len(categories_with_labels) - 1)
+
+        # check that the correct label info was sent to set_labels()
+        label_dicts_sent = [set_labels_call.args[1] for set_labels_call in mock_set_labels.call_args_list]
+
+        uris_imported = {d[DisplayFields.uri] for d in dicts_for_import}
+        uris_sent = {uri for d in label_dicts_sent for uri in d.keys()}
+        self.assertEqual(uris_imported, uris_sent)
+
+        self.assertEqual(info_dict['total'], len(df_for_import))
+
+        # check that all the (uri, category_name, label) combinations indeed came from the imported dataframe
+        label_tuples_imported = \
+            set(df_for_import[[DisplayFields.uri, DisplayFields.category_name, DisplayFields.label]].itertuples(
+                name=None, index=False))
+        label_tuples_sent = set()
+        for d in label_dicts_sent:
+            for uri, cat_to_label in d.items():
+                for cat, label_obj in cat_to_label.items():
+                    label_tuples_sent.add((uri, cat, label_obj.label))
+        self.assertEqual(label_tuples_imported, label_tuples_sent)
+
     def test_export_and_import_workspace_labels(self):
         dataset_name = self.test_export_and_import_workspace_labels.__name__ + '_dump'
-        docs = generate_corpus(self.data_access, dataset_name)
+        doc = generate_corpus(self.data_access, dataset_name)[0]
         categories = ['cat_' + str(i) for i in range(3)]
 
-        self.orchestrator_api.create_workspace(workspace_id='mock_workspace', dataset_name=dataset_name)
+        self.orchestrator_api.create_workspace(workspace_id='mock_workspace_1', dataset_name=dataset_name)
         for cat in categories:
-            self.orchestrator_api.create_new_category('mock_workspace', cat, 'some_description')
-        labeled_elements_for_export = add_random_labels_to_document(docs[0], 5, categories)
+            self.orchestrator_api.create_new_category('mock_workspace_1', cat, 'some_description')
+        labeled_elements_for_export = add_random_labels_to_document(doc, 5, categories)
+        labeled_elements_for_export = [e for e in labeled_elements_for_export if e.category_to_label != {}]
 
-        # use export_workspace_labels() to turn labeled_elements into a dataframe for export
-        with patch.object(FileBasedDataAccess, 'get_labeled_text_elements') as mock_get_labeled_elements_func:
-            mock_get_labeled_elements_func.return_value = {'results': labeled_elements_for_export}
-            exported_df = self.orchestrator_api.export_workspace_labels('mock_workspace')
+        def mock_get_labeled_text_elements(wid, ds, category, *args, **kwargs):
+            return {'results': [e for e in labeled_elements_for_export if category in e.category_to_label]}
+
+        # use export_workspace_labels() to turn labeled_elements_for_export into a dataframe for export
+        with patch.object(FileBasedDataAccess, 'get_labeled_text_elements', side_effect=mock_get_labeled_text_elements):
+            exported_df = self.orchestrator_api.export_workspace_labels('mock_workspace_1')
 
         for column in exported_df.columns:
             self.assertIn(column, DisplayFields.__dict__.values())

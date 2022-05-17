@@ -11,8 +11,9 @@ from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIV
 
 
 def generate_simple_doc(dataset_name, doc_id=0, add_duplicate=False):
-    sentences = ['Document Title is Super Interesting '+str(doc_id), 'First sentence is not that attractive. '+str(doc_id),
-                 'The second one is a bit better. '+str(doc_id), 'Last sentence offers a promising view for the future! '+str(doc_id)]
+    sentences = [f'Document Title is Super Interesting {doc_id}', f'First sentence is not that attractive. {doc_id}',
+                 f'The second one is a bit better. {doc_id}',
+                 f'Last sentence offers a promising view for the future! {doc_id}']
     if add_duplicate:
         sentences.append('Document Title is Super Interesting '+str(doc_id))
     text_elements = []
