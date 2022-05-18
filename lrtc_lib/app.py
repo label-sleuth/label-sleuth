@@ -1,21 +1,3 @@
-#Immidiate action items:
-# Unit tests using pytest
-# Code cleaning
-# Documentation
-
-###TODOs
-#
-
-
-# handle GPU lock for train/infer of hf_transformers
-# https://flask.palletsprojects.com/en/2.1.x/tutorial/tests/
-# when loading documents, use ast.literal_eval to import element_metadata if exists
-# import_category_labels, import also element_metadata and label_type (if exists)?
-# Change Document uri to doc_id, change TextElement uri to element_id?
-# handle stream of csv as text and not file? Ask Dakuo
-# BUG: when a new model is ready during precision evaluation, the score will be attched to the new model instead of the evaluated model
-# check the list of new features in sleuth-channel https://ibm.ent.box.com/file/913021100270
-# Eyal suggested to add more active learning strategies
 import logging
 from typing import Sequence
 logging.basicConfig(level=logging.INFO,
