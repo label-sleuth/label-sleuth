@@ -1,4 +1,3 @@
-import os
 import torch
 
 INFER_CACHE_SIZE = 10000000

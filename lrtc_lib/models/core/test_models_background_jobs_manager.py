@@ -1,15 +1,7 @@
 import functools
-import random
 import unittest
 from unittest.mock import MagicMock
 
-from lrtc_lib.active_learning.strategies.hard_example_mining import HardMiningLearner
-from lrtc_lib.active_learning.strategies.hybrid_learner import HybridLearner
-from lrtc_lib.active_learning.strategies.random_sampling import RandomSampling
-from lrtc_lib.active_learning.strategies.retrospective import RetrospectiveLearner
-
-from lrtc_lib.data_access.file_based.utils import URI_SEP
-from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label, LABEL_NEGATIVE
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.models.core.prediction import Prediction
 

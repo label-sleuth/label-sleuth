@@ -3,7 +3,7 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 
-from typing import Iterable, Sequence, Mapping, List, Tuple, Union
+from typing import Iterable, Sequence, Mapping, List, Union
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label, URI_SEP
 
 

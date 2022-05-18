@@ -21,12 +21,13 @@ class HFTransformers(ModelAPI):
     def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
                  pretrained_model="bert-base-uncased", batch_size=32, learning_rate=5e-5, num_train_epochs=5):
         """
+        :param output_dir:
+        :param models_background_jobs_manager:
         :param pretrained_model: the name of a transfomer model from huggingface.co, or a path to a directory containing
         a pytorch model created using the huggingface transformers library
         :param batch_size:
         :param learning_rate:
         :param num_train_epochs:
-        :param model_dir:
         """
         super().__init__(models_background_jobs_manager, gpu_support=True)
         self.model_dir = os.path.join(output_dir, "transformers")

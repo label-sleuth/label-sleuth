@@ -28,11 +28,13 @@ class Ensemble(ModelAPI):
         """
         Create an ensemble model aggregating different model types
 
+        :param output_dir:
         :param model_types: a list of model types
+        :param model_factory:
+        :param models_background_jobs_manager:
         :param aggregation_func: function to aggregate the predictions of the different models. The function gets an
         array of scores (where dimension 0 is the model types and dimension 1 is the list of elements), and returns a
         vector of aggregated scores. Defaults to mean score aggregation.
-        :param model_dir:
         """
         super().__init__(models_background_jobs_manager)
         self.model_dir = os.path.join(output_dir, "ensemble")
