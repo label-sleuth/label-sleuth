@@ -93,7 +93,7 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
                          f"less than {self.max_negative_ratio} negatives per positive")
             positives = [element for element in train_data
                          if element.category_to_label[category_name].label == self.pos_label]
-            shuffled_elements = get_elements_by_selection_order(workspace_id, train_dataset_name)
+            shuffled_elements = get_elements_by_selection_order(workspace_id, train_dataset_name, self.data_access)
             negatives_to_keep = [element for element in shuffled_elements if category_name in element.category_to_label
                                  and element.category_to_label[category_name].label == self.neg_label][:max_neg_count]
             train_data = positives + negatives_to_keep
