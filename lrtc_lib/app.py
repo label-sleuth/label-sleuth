@@ -1,10 +1,15 @@
 import logging
 from typing import Sequence
+
+from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
+from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
+from lrtc_lib.definitions import ROOT_DIR
+from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
+from lrtc_lib.models.core.models_factory import ModelFactory
+
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
-from lrtc_lib.services import ORCHESTRATOR_STATE_API, DATA_ACCESS, ACTIVE_LEARNING_FACTORY, \
-    MODEL_FACTORY
 from lrtc_lib.orchestrator.orchestrator_api import OrchestratorApi
 
 
@@ -22,7 +27,7 @@ from flask_cors import CORS, cross_origin
 from flask_httpauth import HTTPTokenAuth
 
 
-from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import Iteration, IterationStatus
+from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import Iteration, IterationStatus, OrchestratorStateApi
 
 from lrtc_lib import definitions
 
@@ -46,7 +51,10 @@ auth = HTTPTokenAuth(scheme='Bearer')
 
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-orchestrator_api = OrchestratorApi(ORCHESTRATOR_STATE_API, DATA_ACCESS, ACTIVE_LEARNING_FACTORY, MODEL_FACTORY,
+orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(ROOT_DIR,"output","workspaces")),
+                                   FileBasedDataAccess(os.path.join(ROOT_DIR,"output")),
+                                   ActiveLearningFactory(),
+                                   ModelFactory(ModelsBackgroundJobsManager()),
                                    CONFIGURATION)
 
 ## move to common :
