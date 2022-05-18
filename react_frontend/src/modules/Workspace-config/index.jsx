@@ -35,7 +35,7 @@ const WorkspaceConfig = () => {
       <div className={classes.container}>
         <div/>
         <div>
-          <h2 style={{display: 'flex', alignItems: 'center'}}><img src={workspace_logo} style={{height: '30px', marginRight: '5px', marginBottom: '3px'}}/>Workspace</h2>
+          <h2 style={{display: 'flex', alignItems: 'center', marginTop: 0}}><img src={workspace_logo} style={{height: '28px', marginLeft: '3px', marginRight: '5px'}}/>Workspace</h2>
           <ExistingWorkspace {...existingWorkProps} />
           <p style={{
             marginTop: '10px',

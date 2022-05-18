@@ -15,7 +15,7 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
         <Box className={classes.wrapper} style={{borderRight: 'none'}}>
             <div className={classes.sleuth_header}>
                 <img alt="dataset" src={data_icon} style={{ width: '16px', height: '16px', marginRight: '6px' }} />
-                <h4 style={{ fontSize: '16px', fontWeight: '400', margin: 0, paddingTop: '2px'}}>New Data</h4>
+                <h4 style={{ fontSize: '16px', fontWeight: '400', margin: 0, paddingTop: '2px'}}>New Documents</h4>
             </div>
             <div style={{borderRight: 'solid 1px #8d8d8d'}}>
                 <h2 style={{padding: '25px', margin: 0}}>Upload</h2>
@@ -23,9 +23,9 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                     <FormLabel style={{
                         paddingLeft: '25px',
                         paddingRight: '25px',
-                        fontSize: '14px',
-                        marginBottom: '6px'
-                    }}>Update New Data File</FormLabel>
+                        fontSize: '13px',
+                        marginBottom: '5px'
+                    }}>Upload New File</FormLabel>
                     <FormControl 
                         encType="multipart/form-data" 
                         required
@@ -45,24 +45,17 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                                     borderRadius: 0
                                 }
                             }}
-                            InputLabelProps={{ 
-                                shrink: true,
-                                style: {
-                                    fontSize: '18px',
-                                    marginTop: '-8px'
-                                }
-                            }}
                         />
                     </FormControl>
                     <FormLabel sx={{margin: '5px 25px', fontStyle: 'italic', fontSize: 12 }} className={classes["text-upload"]}> Upload a CSV file with "text" column and optionally a "document_id" column</FormLabel>
 
                     
-                    <FormControl required variant="standard"  style={{margin: '10px 25px'}}>
+                    <FormControl required variant="standard"  style={{margin: '35px 25px 10px 25px'}}>
                         <ComboBoxWithInputText 
                             options={datasets}
-                            label="Dataset"
+                            label="As New Dataset / Add to Existing"
                             handleInputChange={handleInputChange}
-                            placeholder="Placeholder" />
+                            placeholder="e.g. New_Upload_Name" />
                     </FormControl>
                     <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>
                         <ButtonIBM onClick={handleLoadDoc} text="Upload" />

@@ -36,6 +36,7 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
       onBlur(e.target.value);
     }
   };
+  
   return (
     <>
       <InputLabel 
@@ -51,12 +52,14 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
         id="demo-simple-select-helper"
         value={localValue}
         label={label}
+        displayEmpty
+        renderValue={value !== "" ? undefined : () => placeholder}
         onChange={handleChange}
         onBlur={handleBlur}
         onFocus={handleFocus}
         MenuProps={MenuProps}
         notched={true}
-        className={classes.dropdown}
+        className={value !== "" ? classes.dropdown : classes.dropdown_gray}
       >
         {options?.map(option => {
         return (

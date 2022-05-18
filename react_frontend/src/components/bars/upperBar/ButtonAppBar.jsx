@@ -11,7 +11,7 @@ import sleuth_logo from "../../../assets/sleuth_logo.png";
 export default function ButtonAppBar({logout}) {
   return (
     <Box sx={{ flexGrow: 1  }}>
-      <AppBar position="static">
+      <AppBar position="static" style={{boxShadow: 'none'}}>
         <Toolbar
           style={{
             background: '#161616',

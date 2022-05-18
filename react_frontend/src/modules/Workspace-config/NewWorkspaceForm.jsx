@@ -37,7 +37,7 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                                 marginTop: '-8px'
                             }
                          }}
-                        placeholder="New_Sleuth_Data"
+                        placeholder="e.g. New_Sleuth_Data"
                     />
                 </FormControl>
                 <FormControl required variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px'}}>
@@ -46,6 +46,7 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                         value={selectedValue}
                         options={options}
                         onChange={handleDatasetChange}
+                        placeholder="Choose from List"
                     />
                 </FormControl>
                 <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>

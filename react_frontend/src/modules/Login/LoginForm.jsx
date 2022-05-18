@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Box from '@mui/material/Box';
 import ButtonIBM from "../../components/buttons/ButtonIBM"
 import { getAuthenticated, clearState } from './LoginSlice';
@@ -81,6 +83,7 @@ const LoginForm = () => {
                     <FormControl sx={{ paddingLeft: '25px', paddingTop: '15px', paddingBottom: '10px', marginBottom: '10px', background: '#fff'}}>
                         <TextField 
                             required
+                            type="password"
                             onChange={handlePassword}
                             label="Password"
                             variant="standard"

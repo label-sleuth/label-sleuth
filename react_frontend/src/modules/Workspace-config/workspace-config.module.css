@@ -3,7 +3,7 @@
     position: fixed;
     left: 0;
     right: 0;
-    top: 50px;
+    top: 49px;
     bottom: 0;
     display: flex;
     flex-wrap: wrap;
@@ -15,8 +15,8 @@
  
 .newdata {
     height: 100%;
-    background: #dedede;
-    padding: 0 50px;
+    background: #eeeeee;
+    padding: 0 5vw;
     display: flex;
     flex-direction: column;
     align-items: center;
