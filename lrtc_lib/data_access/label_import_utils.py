@@ -5,12 +5,13 @@ import sys
 from typing import Dict, Sequence
 
 import pandas as pd
-from lrtc_lib.services import DATA_ACCESS as data_access
+
 from lrtc_lib.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement
 from lrtc_lib.data_access.data_access_api import get_document_uri
 
 
-def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name, doc_uri=None) -> Sequence[TextElement]:
+def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name, data_access, doc_uri=None) \
+        -> Sequence[TextElement]:
     """
     The user may import a large number of labeled instances, and these will not necessarily be given with a text
     element uri. Thus, the goal here is to efficiently query for a group of text elements using only the texts, and
@@ -21,14 +22,14 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
     remove_duplicates = False if doc_uri is not None else True
     regex = '|'.join(f'^{re.escape(t)}$' for t in texts)
     elements = data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                sample_size=sys.maxsize, query_regex=regex,
-                                                remove_duplicates=remove_duplicates)['results']
+                                             sample_size=sys.maxsize, query_regex=regex,
+                                             remove_duplicates=remove_duplicates)['results']
     if doc_uri is not None:
         elements = [e for e in elements if get_document_uri(e.uri) == doc_uri]
     return elements
 
 
-def process_labels_dataframe(workspace_id, dataset_name, labels_df_to_import: pd.DataFrame) \
+def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_to_import: pd.DataFrame) \
         -> Dict[str, Dict[str, Dict[str, Label]]]:
     logging.warning("Currently label metadata and label_type are ignored")
     # replace punctuation with underscores in category names
@@ -60,7 +61,8 @@ def process_labels_dataframe(workspace_id, dataset_name, labels_df_to_import: pd
         for doc_id, label_to_texts in doc_id_to_label_to_texts.items():
             doc_uri = f'{dataset_name}-{doc_id}' if doc_id is not None else None # TODO if we change uri and doc id etc, we should change this field here
             for label, texts in label_to_texts.items():
-                elements_to_label = get_element_group_by_texts(texts, workspace_id, dataset_name, doc_uri=doc_uri)
+                elements_to_label = get_element_group_by_texts(texts, workspace_id, dataset_name, data_access,
+                                                               doc_uri=doc_uri)
                 uri_to_label.update({e.uri: {category_name: Label(label=label)} for e in elements_to_label})
         category_to_uri_to_label[category_name] = uri_to_label
     return category_to_uri_to_label

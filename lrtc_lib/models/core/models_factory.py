@@ -32,6 +32,7 @@ class ModelFactory(object):
                 if model_type not in self.loaded_models:
                     self.loaded_models[model_type] = \
                         Ensemble(model_types=[ModelTypes.SVM_OVER_BOW, ModelTypes.SVM_OVER_GLOVE],
+                                 model_factory=self,
                                  models_background_jobs_manager=self.models_background_jobs_manager)
 
             elif model_type == ModelTypes.SVM_OVER_GLOVE:

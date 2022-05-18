@@ -161,7 +161,8 @@ class TestOrchestratorAPI(unittest.TestCase):
         mock_get_label_change_count.return_value = sum(label_counts.values())
 
         train_set_selector_cls = \
-            get_training_set_selector(self.orchestrator_api.config.training_set_selection_strategy).__class__
+            get_training_set_selector(self.data_access,
+                                      self.orchestrator_api.config.training_set_selection_strategy).__class__
         with patch.object(train_set_selector_cls, 'get_train_set'):
             self.orchestrator_api.train_if_recommended(workspace_id, category_name)
         mock_run_iteration.assert_called()

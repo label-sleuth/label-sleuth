@@ -8,10 +8,10 @@ from typing import Iterable, Mapping, Sequence, Tuple
 import numpy as np
 
 from lrtc_lib.definitions import ROOT_DIR
-from lrtc_lib.services import MODEL_FACTORY
 from lrtc_lib.models.core.model_api import ModelAPI
-from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.models.core.model_types import ModelTypes
+from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
+from lrtc_lib.models.core.models_factory import ModelFactory
 from lrtc_lib.models.core.prediction import Prediction
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -23,7 +23,8 @@ class EnsemblePrediction(Prediction):
 
 
 class Ensemble(ModelAPI):
-    def __init__(self, model_types: Iterable[ModelTypes], models_background_jobs_manager: ModelsBackgroundJobsManager,
+    def __init__(self, model_types: Iterable[ModelTypes], model_factory: ModelFactory,
+                 models_background_jobs_manager: ModelsBackgroundJobsManager,
                  aggregation_func=lambda x: np.mean(x, axis=0),
                  model_dir=os.path.join(ROOT_DIR, "output", "models", "ensemble")):
         """
@@ -41,7 +42,7 @@ class Ensemble(ModelAPI):
         self.aggregation_func = aggregation_func
         self.model_dir = model_dir
         self.model_types = model_types
-        self.models = [MODEL_FACTORY.get_model(model_type) for model_type in model_types]
+        self.models = [model_factory.get_model(model_type) for model_type in model_types]
 
     def train(self, train_data, train_params, done_callback=None) -> Tuple[str, Future]:
         """

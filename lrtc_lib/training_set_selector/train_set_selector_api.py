@@ -19,6 +19,10 @@ class TrainingSetSelectionStrategy(Enum):
 
 
 class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
+
+    def __init__(self, data_access):
+        self.data_access = data_access
+
     @abc.abstractmethod
     def get_train_set(self, workspace_id: str, train_dataset_name: str, category_name: str) -> Sequence[TextElement]:
         """

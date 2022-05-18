@@ -541,7 +541,8 @@ class OrchestratorApi:
                     f"(>={self.config.changed_element_threshold}). Training a new model")
                 iteration_num = len(iterations_without_errors)
                 model_type = self.config.model_policy.get_model_type(iteration_num)
-                train_set_selector = get_training_set_selector(selector=self.config.training_set_selection_strategy)
+                train_set_selector = get_training_set_selector(self.data_access,
+                                                               strategy=self.config.training_set_selection_strategy)
                 train_data = train_set_selector.get_train_set(workspace_id=workspace_id,
                                                               train_dataset_name=dataset_name,
                                                               category_name=category_name)
@@ -665,7 +666,7 @@ class OrchestratorApi:
         logging.info(f"Importing {len(labels_df_to_import)} unique labeled elements into workspace '{workspace_id}'"
                      f"from {len(labels_df_to_import[DisplayFields.category_name].unique())} categories")
         dataset_name = self.get_dataset_name(workspace_id)
-        imported_categories_to_uris_and_labels = process_labels_dataframe(workspace_id, dataset_name,
+        imported_categories_to_uris_and_labels = process_labels_dataframe(workspace_id, dataset_name, self.data_access,
                                                                           labels_df_to_import)
     
         existing_categories = self.get_all_categories(workspace_id)

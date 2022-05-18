@@ -5,7 +5,6 @@ import sys
 from collections import Counter
 from typing import Sequence, List
 
-from lrtc_lib.services import DATA_ACCESS as data_access
 from lrtc_lib.data_access.core.data_structs import Label, LabelType, TextElement, BINARY_LABELS, LABEL_POSITIVE, \
     LABEL_NEGATIVE
 from lrtc_lib.training_set_selector.train_set_selector_api import TrainSetSelectorAPI
@@ -27,9 +26,10 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
     def get_data_and_counts_for_labeled(self, workspace_id, dataset_name, category_name, remove_duplicates=False):
         if dataset_name is None:
             return None, None
-        labeled_elements = data_access.get_labeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                                 category_name=category_name, sample_size=sys.maxsize,
-                                                                 remove_duplicates=remove_duplicates)["results"]
+        labeled_elements = \
+            self.data_access.get_labeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+                                                       category_name=category_name, sample_size=sys.maxsize,
+                                                       remove_duplicates=remove_duplicates)["results"]
         labels = [element.category_to_label[category_name].label for element in labeled_elements]
         counts = Counter(labels)
 
@@ -52,11 +52,13 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
     examples labeled by the user exceeds the maximal ratio, only a sample of the user-labeled negative examples
     will be sent to the model.
     """
-    def __init__(self, required_negative_ratio=None, max_negative_ratio=10**6):
+    def __init__(self, data_access, required_negative_ratio=None, max_negative_ratio=10**6):
         """
+        :param data_access
         :param required_negative_ratio: required number of negative samples per positive
         :param max_negative_ratio: maximal allowed number of negative samples per positive
         """
+        super().__init__(data_access)
         self.negative_ratio = required_negative_ratio
         self.max_negative_ratio = max_negative_ratio
         self.neg_label = LABEL_NEGATIVE
@@ -103,10 +105,10 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
         return train_data
 
     def get_weak_negative_candidates(self, workspace_id, dataset_name, category_name) -> List[TextElement]:
-        return get_elements_by_selection_order(workspace_id, dataset_name)
+        return get_elements_by_selection_order(workspace_id, dataset_name, self.data_access)
 
 
-def get_elements_by_selection_order(workspace_id, dataset_name):
+def get_elements_by_selection_order(workspace_id, dataset_name, data_access):
     dataset_uris = sorted(data_access.get_all_text_elements_uris(dataset_name))
     random_seed = sum([ord(c) for c in dataset_name])
     random.Random(random_seed).shuffle(dataset_uris)
