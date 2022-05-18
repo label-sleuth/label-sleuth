@@ -8,7 +8,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
-from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.model_api import ModelAPI
 from lrtc_lib.models.core.prediction import Prediction
@@ -18,12 +17,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(f
 
 
 class NaiveBayes(ModelAPI):
-    def __init__(self, representation_type: RepresentationType,
+    def __init__(self, output_dir, representation_type: RepresentationType,
                  models_background_jobs_manager: ModelsBackgroundJobsManager,
-                 max_datapoints=10000, model_dir=os.path.join(ROOT_DIR, "output", "models", "nb")):
+                 max_datapoints=10000):
         super().__init__(models_background_jobs_manager)
-        os.makedirs(model_dir, exist_ok=True)
-        self.model_dir = model_dir
+        self.model_dir = os.path.join(output_dir,"nb")
+        os.makedirs(self.model_dir, exist_ok=True)
         self.features_num = 0
         self.max_datapoints = max_datapoints
         self.infer_batch_size = max_datapoints

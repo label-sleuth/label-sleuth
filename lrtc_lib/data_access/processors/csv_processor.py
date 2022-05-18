@@ -7,7 +7,6 @@ import pandas as pd
 from typing import List
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, DisplayFields, URI_SEP
 from lrtc_lib.data_access.processors.data_processor_api import DataProcessorAPI
-from lrtc_lib.definitions import ROOT_DIR
 
 
 def get_columns(df, column_names):
@@ -28,13 +27,13 @@ class CsvFileProcessor(DataProcessorAPI):
 
     """
 
-    def __init__(self, dataset_name: str, temp_file_name: str, text_col: str = DisplayFields.text,
+    def __init__(self, dataset_name: str, temp_file_path: str, text_col: str = DisplayFields.text,
                  metadata_column_name_prefix = DisplayFields.csv_metadata_column_prefix,
                  doc_id_col: str = DisplayFields.doc_id, encoding: str = 'utf-8'):
         """
 
         :param dataset_name: the name of the processed dataset
-        :param temp_file_name: the temporary file used to store the csv before processing
+        :param temp_file_path: the temporary file used to store the csv before processing
         :param text_col: the name of the column which holds the text of the TextElement. Default is 'text'.
         :param metadata_column_name_prefix: prefix of metadata columns that should be saved with the text element
         :param doc_id_col: column name by which text elements should be grouped into docs.
@@ -43,14 +42,14 @@ class CsvFileProcessor(DataProcessorAPI):
 
         """
         self.dataset_name = dataset_name
-        self.temp_file_name = temp_file_name
+        self.temp_file_path = temp_file_path
         self.text_col = text_col
         self.metadata_column_name_prefix = metadata_column_name_prefix
         self.doc_id_col = doc_id_col
         self.encoding = encoding
 
     def get_raw_data_path(self) -> str:
-        return os.path.join(ROOT_DIR, "output", "temp", "csv_upload", self.temp_file_name)
+        return self.temp_file_path
 
     def build_documents(self) -> List[Document]:
         """

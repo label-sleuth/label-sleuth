@@ -3,7 +3,6 @@ import random
 import numpy as np
 
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
-from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.models.core.model_api import ModelAPI, ModelStatus
 from lrtc_lib.models.core.prediction import Prediction
 
@@ -12,11 +11,11 @@ class RandomModel(ModelAPI):
     """
     Mock classification model that does not train, and returns random classification predictions.
     """
-    def __init__(self, models_background_jobs_manager: ModelsBackgroundJobsManager,
-                 model_dir=os.path.join(ROOT_DIR, "output", "models", "random")):
+    def __init__(self,output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager):
         super().__init__(models_background_jobs_manager)
-        os.makedirs(model_dir, exist_ok=True)
-        self.model_dir = model_dir
+        self.model_dir = os.path.join(output_dir, "random")
+        os.makedirs(self.model_dir, exist_ok=True)
+
         self.model_id_to_random_seed = {}
         self.random_seed = -1
 

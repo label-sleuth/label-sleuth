@@ -10,8 +10,9 @@ class ModelFactory(object):
     """
     Given a model type, this factory returns the relevant implementation of ModelAPI
     """
-    def __init__(self, models_background_jobs_manager: ModelsBackgroundJobsManager):
+    def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager):
         self.loaded_models = {}
+        self.output_dir = output_dir
         self.models_background_jobs_manager = models_background_jobs_manager
 
     def get_model(self, model_type: ModelTypes) -> ModelAPI:
@@ -19,43 +20,46 @@ class ModelFactory(object):
             if model_type == ModelTypes.RAND:
                 if model_type not in self.loaded_models:
                     from lrtc_lib.models.random_model import RandomModel
-                    self.loaded_models[model_type] = RandomModel(self.models_background_jobs_manager)
+                    self.loaded_models[model_type] = RandomModel(self.output_dir, self.models_background_jobs_manager)
 
             elif model_type == ModelTypes.HF_BERT:
                 if model_type not in self.loaded_models:
                     from lrtc_lib.models.hf_transformers import HFTransformers
                     self.loaded_models[model_type] = \
-                        HFTransformers(self.models_background_jobs_manager, pretrained_model='bert-base-uncased')
+                        HFTransformers(self.output_dir, self.models_background_jobs_manager,
+                                       pretrained_model='bert-base-uncased')
 
             elif model_type == ModelTypes.SVM_ENSEMBLE:
                 from lrtc_lib.models.ensemble import Ensemble
                 if model_type not in self.loaded_models:
                     self.loaded_models[model_type] = \
-                        Ensemble(model_types=[ModelTypes.SVM_OVER_BOW, ModelTypes.SVM_OVER_GLOVE],
+                        Ensemble(self.output_dir, model_types=[ModelTypes.SVM_OVER_BOW, ModelTypes.SVM_OVER_GLOVE],
                                  model_factory=self,
                                  models_background_jobs_manager=self.models_background_jobs_manager)
 
             elif model_type == ModelTypes.SVM_OVER_GLOVE:
                 from lrtc_lib.models.svm import SVM
                 if model_type not in self.loaded_models:
-                    self.loaded_models[model_type] = SVM(RepresentationType.GLOVE, self.models_background_jobs_manager)
+                    self.loaded_models[model_type] = SVM(self.output_dir, RepresentationType.GLOVE,
+                                                         self.models_background_jobs_manager)
 
             elif model_type == ModelTypes.SVM_OVER_BOW:
                 from lrtc_lib.models.svm import SVM
                 if model_type not in self.loaded_models:
-                    self.loaded_models[model_type] = SVM(RepresentationType.BOW, self.models_background_jobs_manager)
+                    self.loaded_models[model_type] = SVM(self.output_dir, RepresentationType.BOW,
+                                                         self.models_background_jobs_manager)
 
             elif model_type == ModelTypes.NB_OVER_GLOVE:
                 from lrtc_lib.models.naive_bayes import NaiveBayes
                 if model_type not in self.loaded_models:
                     self.loaded_models[model_type] = \
-                        NaiveBayes(RepresentationType.GLOVE, self.models_background_jobs_manager)
+                        NaiveBayes(self.output_dir, RepresentationType.GLOVE, self.models_background_jobs_manager)
 
             elif model_type == ModelTypes.NB_OVER_BOW:
                 from lrtc_lib.models.naive_bayes import NaiveBayes
                 if model_type not in self.loaded_models:
                     self.loaded_models[model_type] = \
-                        NaiveBayes(RepresentationType.BOW, self.models_background_jobs_manager)
+                        NaiveBayes(self.output_dir, RepresentationType.BOW, self.models_background_jobs_manager)
             else:
                 raise Exception(f"Model type {model_type.name} is not supported by {self.__class__.__name__}")
 

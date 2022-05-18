@@ -9,7 +9,7 @@ import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, InputFeatures, Trainer, TrainingArguments
 
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
-from lrtc_lib.definitions import ROOT_DIR, GPU_AVAILABLE
+from lrtc_lib.definitions import GPU_AVAILABLE
 from lrtc_lib.models.core.model_api import ModelAPI
 from lrtc_lib.models.core.prediction import Prediction
 
@@ -18,9 +18,8 @@ class HFTransformers(ModelAPI):
     """
     Basic implementation for a pytorch-based transformer model that relies on the huggingface transformers library.
     """
-    def __init__(self, models_background_jobs_manager: ModelsBackgroundJobsManager,
-                 pretrained_model="bert-base-uncased", batch_size=32, learning_rate=5e-5, num_train_epochs=5,
-                 model_dir=os.path.join(ROOT_DIR, "output", "models", "transformers")):
+    def __init__(self,output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
+                 pretrained_model="bert-base-uncased", batch_size=32, learning_rate=5e-5, num_train_epochs=5):
         """
         :param pretrained_model: the name of a transfomer model from huggingface.co, or a path to a directory containing
         a pytorch model created using the huggingface transformers library
@@ -30,8 +29,8 @@ class HFTransformers(ModelAPI):
         :param model_dir:
         """
         super().__init__(models_background_jobs_manager, gpu_support=True)
-        os.makedirs(model_dir, exist_ok=True)
-        self.model_dir = model_dir
+        self.model_dir = os.path.join(output_dir, "transformers")
+        os.makedirs(self.model_dir, exist_ok=True)
         self.pretrained_model_name = pretrained_model
         self.batch_size = batch_size
         self.learning_rate = learning_rate

@@ -56,7 +56,7 @@ def add_labels_to_doc(doc: Document, category: str):
 
 
 class TestFileBasedDataAccess(unittest.TestCase):
-    data_access = None
+
     @classmethod
     def setUpClass(cls):
         cls.data_temp_dir = tempfile.TemporaryDirectory()
@@ -68,23 +68,23 @@ class TestFileBasedDataAccess(unittest.TestCase):
 
     def test_add_documents_and_get_documents(self):
         dataset_name = self.test_add_documents_and_get_documents.__name__ + '_dump'
-        doc = generate_corpus(TestFileBasedDataAccess.data_access,dataset_name)[0]
-        doc_in_memory = TestFileBasedDataAccess.data_access.get_documents(None,dataset_name, [doc.uri])[0]
+        doc = generate_corpus(self.data_access,dataset_name)[0]
+        doc_in_memory = self.data_access.get_documents(None,dataset_name, [doc.uri])[0]
         # compare all fields
         diffs = [(field, getattr(doc_in_memory, field), getattr(doc, field)) for field in
                  Document.__annotations__ if not getattr(doc_in_memory, field) == getattr(doc, field)]
         self.assertEqual(0, len(diffs))
-        TestFileBasedDataAccess.data_access.delete_dataset(dataset_name)
+        self.data_access.delete_dataset(dataset_name)
 
     def test_set_labels_and_get_documents(self):
         workspace_id = 'test_set_labels'
         dataset_name = self.test_set_labels_and_get_documents.__name__ + '_dump'
         categories = ['cat_' + str(i) for i in range(3)]
-        doc = generate_corpus(TestFileBasedDataAccess.data_access,dataset_name)[0]
+        doc = generate_corpus(self.data_access,dataset_name)[0]
         uri_to_label = add_random_labels_to_document(doc, 5, categories)
-        TestFileBasedDataAccess.data_access.set_labels(workspace_id, uri_to_label)
+        self.data_access.set_labels(workspace_id, uri_to_label)
 
-        doc_with_labels_info = TestFileBasedDataAccess.data_access.get_documents(workspace_id, dataset_name, [doc.uri])
+        doc_with_labels_info = self.data_access.get_documents(workspace_id, dataset_name, [doc.uri])
         texts_and_labels_dict = dict(uri_to_label)
         for text in doc_with_labels_info[0].text_elements:
             if text.uri in texts_and_labels_dict:

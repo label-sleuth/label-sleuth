@@ -8,7 +8,6 @@ from typing import List
 import dacite
 
 from lrtc_lib.active_learning.core.active_learning_strategies import ActiveLearningStrategies
-from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.models.core.model_policies import ModelPolicies
 from lrtc_lib.models.policy.model_policy import ModelPolicy
 from lrtc_lib.training_set_selector.train_set_selector_api import TrainingSetSelectionStrategy
@@ -42,9 +41,9 @@ converters = {
 }
 
 
-def load_config():
+def load_config(config_path):
     # If this code is executed without an exception then we have a valid Configuration object
-    with open(os.path.join(ROOT_DIR, 'config.json'),) as f:
+    with open(config_path) as f:
         raw_cfg = json.load(f)
 
     config = dacite.from_dict(
@@ -54,10 +53,3 @@ def load_config():
     logging.info(f"loaded configuration: {config}")
     return config
 
-
-CONFIGURATION = load_config()
-
-if __name__ == '__main__':
-    for user in CONFIGURATION.users:
-        print(f"{user}")
-    print(CONFIGURATION.precision_evaluation_size)

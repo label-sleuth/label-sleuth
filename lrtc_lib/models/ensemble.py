@@ -7,7 +7,6 @@ from typing import Iterable, Mapping, Sequence, Tuple
 
 import numpy as np
 
-from lrtc_lib.definitions import ROOT_DIR
 from lrtc_lib.models.core.model_api import ModelAPI
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
@@ -23,10 +22,9 @@ class EnsemblePrediction(Prediction):
 
 
 class Ensemble(ModelAPI):
-    def __init__(self, model_types: Iterable[ModelTypes], model_factory: ModelFactory,
+    def __init__(self, output_dir, model_types: Iterable[ModelTypes], model_factory: ModelFactory,
                  models_background_jobs_manager: ModelsBackgroundJobsManager,
-                 aggregation_func=lambda x: np.mean(x, axis=0),
-                 model_dir=os.path.join(ROOT_DIR, "output", "models", "ensemble")):
+                 aggregation_func=lambda x: np.mean(x, axis=0)):
         """
         Create an ensemble model aggregating different model types
 
@@ -37,10 +35,9 @@ class Ensemble(ModelAPI):
         :param model_dir:
         """
         super().__init__(models_background_jobs_manager)
-
-        os.makedirs(model_dir, exist_ok=True)
+        self.model_dir = os.path.join(output_dir, "ensemble")
+        os.makedirs(self.model_dir, exist_ok=True)
         self.aggregation_func = aggregation_func
-        self.model_dir = model_dir
         self.model_types = model_types
         self.models = [model_factory.get_model(model_type) for model_type in model_types]
 

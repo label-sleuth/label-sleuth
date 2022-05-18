@@ -1,0 +1,18 @@
+{
+    "first_model_positive_threshold": 3,
+    "changed_element_threshold": 3,
+
+    "training_set_selection_strategy": "ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO",
+    "model_policy": "STATIC_SVM_ENSEMBLE",
+    "active_learning_strategy": "HARD_MINING",
+    "local_finetune": false,
+    "users":[
+        {
+        "username" : "test_only",
+        "token" :"dummy_bearer",
+        "password" :"test_only"
+        }
+    ],
+    "precision_evaluation_size": 5,
+    "apply_labels_to_duplicate_texts": true
+}

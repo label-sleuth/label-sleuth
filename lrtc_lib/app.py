@@ -10,17 +10,18 @@ from io import BytesIO, StringIO
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
+import dacite
 import pandas as pd
 
 from flask import Flask, jsonify, request, send_file, make_response, send_from_directory
 from flask_cors import CORS, cross_origin
 from flask_httpauth import HTTPTokenAuth
 
+from lrtc_lib.app_utils import extract_iteration_information_list
+from lrtc_lib.config import load_config
 from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
 from lrtc_lib.analysis_utils.analyze_tokens import ngrams_by_info_gain
-from lrtc_lib.config import CONFIGURATION
-from lrtc_lib.configurations.users import users, tokens
-from lrtc_lib.definitions import ROOT_DIR
+from lrtc_lib.configurations.users import User
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label
 from lrtc_lib.data_access.data_access_api import AlreadyExistsException, get_document_uri
 from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
@@ -36,13 +37,17 @@ print(getpass.getuser())
 
 executor = ThreadPoolExecutor(20)
 app = Flask(__name__, static_url_path='', static_folder='../frontend/build')
+ROOT_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
 auth = HTTPTokenAuth(scheme='Bearer')
+CONFIGURATION=load_config(os.path.join(ROOT_DIR,"config.json"))
 cors = CORS(app)
+users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in CONFIGURATION.users}
+tokens = [user.token for user in users.values()]
 app.config['CORS_HEADERS'] = 'Content-Type'
-orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(ROOT_DIR, "output", "workspaces")),
-                                   FileBasedDataAccess(os.path.join(ROOT_DIR, "output")),
+orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(ROOT_DIR,"output","workspaces")),
+                                   FileBasedDataAccess(os.path.join(ROOT_DIR,"output")),
                                    ActiveLearningFactory(),
-                                   ModelFactory(ModelsBackgroundJobsManager()),
+                                   ModelFactory(os.path.join(ROOT_DIR,"output","models"),ModelsBackgroundJobsManager()),
                                    CONFIGURATION)
 
 
@@ -183,9 +188,9 @@ def add_documents(dataset_name):
         temp_dir = os.path.join(ROOT_DIR, "output", "temp", "csv_upload")
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
         os.makedirs(temp_dir, exist_ok=True)
+        temp_file_path = os.path.join(temp_dir,temp_file_name)
         df.to_csv(os.path.join(temp_dir, temp_file_name))
-        document_statistics, workspaces_to_update = orchestrator_api.add_documents_from_file(dataset_name, temp_file_name)
-
+        document_statistics, workspaces_to_update = orchestrator_api.add_documents_from_file(dataset_name, temp_file_path)
         return jsonify({"dataset_name": dataset_name,
                         "num_docs": document_statistics.documents_loaded,
                         "num_sentences": document_statistics.text_elements_loaded,
@@ -199,7 +204,6 @@ def add_documents(dataset_name):
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
             os.remove(os.path.join(temp_dir, temp_file_name))
-
 
 """
 Workspace endpoints. Each workspace is associated with a particular dataset at creation time.

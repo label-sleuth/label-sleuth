@@ -19,7 +19,7 @@ class TestModelAPI(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.model_api = RandomModel(ModelsBackgroundJobsManager(),model_dir=self.temp_dir.name)
+        self.model_api = RandomModel(self.temp_dir.name, ModelsBackgroundJobsManager())
         self.model_id, future = self.model_api.train([], {})
         future.result()
         all_nums = list(range(1, 10))

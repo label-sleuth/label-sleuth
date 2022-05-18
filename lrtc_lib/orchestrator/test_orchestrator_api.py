@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pandas as pd
 
 from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
-from lrtc_lib.config import CONFIGURATION
+from lrtc_lib.config import load_config
 from lrtc_lib.data_access.core.data_structs import DisplayFields, Document, Label, LABEL_NEGATIVE, LABEL_POSITIVE
 from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from lrtc_lib.data_access.test_file_based_data_access import generate_corpus
@@ -32,12 +32,12 @@ class TestOrchestratorAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp_dir = tempfile.TemporaryDirectory()
-        cls.model_factory = ModelFactory(ModelsBackgroundJobsManager())
+        cls.model_factory = ModelFactory(cls.temp_dir.name, ModelsBackgroundJobsManager())
         cls.active_learning_factory = ActiveLearningFactory()
         cls.data_access = FileBasedDataAccess(os.path.join(cls.temp_dir.name, "output"))
         cls.orchestrator_state = OrchestratorStateApi(os.path.join(cls.temp_dir.name, "output", "workspaces"))
         cls.orchestrator_api = OrchestratorApi(cls.orchestrator_state, cls.data_access, cls.active_learning_factory,
-                                               cls.model_factory, CONFIGURATION)
+                                               cls.model_factory,load_config("./lrtc_lib/config_integration_tests.json"))
 
     @classmethod
     def tearDownClass(cls):

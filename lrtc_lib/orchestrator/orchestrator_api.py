@@ -730,10 +730,10 @@ class OrchestratorApi:
         exported_model_dir = model.export_model(iteration.model.model_id)
         return exported_model_dir
     
-    def add_documents_from_file(self, dataset_name, temp_filename):
+    def add_documents_from_file(self, dataset_name, temp_file_path):
         global new_data_infer_thread_pool
         logging.info(f"adding documents to dataset '{dataset_name}'")
-        documents = CsvFileProcessor(dataset_name, temp_filename).build_documents()
+        documents = CsvFileProcessor(dataset_name, temp_file_path).build_documents()
         document_statistics = self.data_access.add_documents(dataset_name, documents)
         workspaces_to_update = []
         total_infer_jobs = 0
