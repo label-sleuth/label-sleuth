@@ -5,9 +5,11 @@ import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
-import ButtonLight from "../../components/buttons/ButtonLight"
+import ButtonIBM from "../../components/buttons/ButtonIBM"
 import { getAuthenticated, clearState } from './LoginSlice';
 import 'react-toastify/dist/ReactToastify.css';
+import classes from "./login.module.css";
+import sleuth_logo from "../../assets/sleuth_logo.png"
 
 const LoginForm = () => {
     
@@ -37,31 +39,76 @@ const LoginForm = () => {
     }
 
     return (
-        <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '5px',
-            width: 450,
-            height: 450,
-            backgroundColor: 'f48c06',
-            boxShadow: '0 0 20px 5px rgb(0 0 0 / 30%)'
-        }}>
-            <FormControl variant="standard" sx={{ m: 1, minWidth: 350 }}>
-                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: "#f48c06", fontSize: '1.5rem' }}>Login</FormLabel>
-                <FormControl variant="standard" sx={{ m: 1 }}>
-                    <TextField required onChange={handleUserName} id="standard-basic" label="Username" variant="standard" />
+        <Box>
+            <div className={classes.sleuth_header}>
+                <img alt="existing workspace" src={sleuth_logo} style={{ width: '16px', height: '16px', marginRight: '6px' }} />
+                <h4 style={{ fontSize: '16px', fontWeight: '600', margin: 0, paddingTop: '2px'}}>Sleuth</h4>
+            </div>
+            <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '1px',
+                width: 'auto',
+                height: 'auto',
+                padding: '0',
+                background: '#f4f4f4',
+                borderLeft: 'solid 1px #eaeaea',
+                borderTop: 'solid 1px #eaeaea',
+                borderRight: 'solid 1px #b8b8b8',
+                borderBottom: 'solid 1px #b8b8b8',
+            }}>
+                <FormControl variant="standard" sx={{ m: 1, minWidth: 350, padding: 0, margin: 0 }}>
+                    <FormLabel sx={{ color: "#393939", fontWeight: '600', fontSize: '1.5rem', padding: '25px' }}>Login</FormLabel>
+                    <FormControl sx={{ paddingLeft: '25px', paddingTop: '15px', paddingBottom: '10px', background: '#fff', borderBottom: 'solid 1px #eaeaea'}}>
+                        <TextField 
+                            required 
+                            onChange={handleUserName} 
+                            label="Username" 
+                            variant="standard"
+                            InputProps={{disableUnderline: true}}
+                            inputProps={{
+                                sx: {
+                                    "&::placeholder": {
+                                        color: "#b5b5b5"
+                                    }
+                                }
+                            }}
+                            InputLabelProps={{ shrink: true }}
+                            placeholder="sleuth@ibm.com"
+                        />
+                    </FormControl>
+                    <FormControl sx={{ paddingLeft: '25px', paddingTop: '15px', paddingBottom: '10px', marginBottom: '10px', background: '#fff'}}>
+                        <TextField 
+                            required
+                            onChange={handlePassword}
+                            label="Password"
+                            variant="standard"
+                            InputProps={{
+                                disableUnderline: true
+                            }}
+                            inputProps={{
+                                sx: {
+                                    "&::placeholder": {
+                                      color: "#b5b5b5"
+                                    }
+                                }
+                            }}
+                            InputLabelProps={{ shrink: true }}
+                            placeholder="***"
+                        />
+                    </FormControl>
+                    {errorMessage &&
+                        <label className={classes.login_error}><b style={{fontWeight: 600}}>Login Error:</b> An Unexpected Error Occurred</label>
+                    }
+                    <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>
+                        <ButtonIBM onClick={handleLogin} text="Log In" />
+                    </div>
                 </FormControl>
-                <FormControl variant="standard" sx={{ m: 1, marginTop: '20px' }}>
-                    <TextField required onChange={handlePassword} id="standard-basic" label="Password" variant="standard" />
-                </FormControl>
-                {errorMessage &&
-                    <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>Login failed!</FormLabel>
-                }
-                <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center', height: '50px', marginTop: '50px' }}>
-                    <ButtonLight onClick={handleLogin} text="LOG IN" />
-                </FormControl>
-            </FormControl>
+            </Box>
+            <label className={classes.reach_out}>
+                Having trouble? Contact <a href="https://research.ibm.com/" target='_blank' style={{ fontWeight: '600', textDecoration: 'underline', color: '#2162FE'}}>IBM Sleuth Team</a>.
+            </label>
         </Box>
     );
 };

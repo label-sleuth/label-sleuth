@@ -14,6 +14,7 @@ import useLoadDoc from './useLoadDoc';
 import useNewWorkspace from './useNewWorkspace';
 import useLogOut from '../../customHooks/useLogOut';
 import useExistWorkspace from './useExistWorkspace';
+import workspace_logo from "../../assets/workspace-config/tag--edit.svg"
 
 const WorkspaceConfig = () => {
   const dispatch = useDispatch()
@@ -32,22 +33,19 @@ const WorkspaceConfig = () => {
       <ButtonAppBar logout={logout} />
       <ToastContainer position="top-center" />
       <div className={classes.container}>
-        <div className={classes.hexagon}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-            <img alt="existing workspace" src={workspaceConfigIcon} style={{ width: '25%' }} />
-          </div>
+        <div/>
+        <div>
+          <h2 style={{display: 'flex', alignItems: 'center'}}><img src={workspace_logo} style={{height: '30px', marginRight: '5px', marginBottom: '3px'}}/>Workspace</h2>
           <ExistingWorkspace {...existingWorkProps} />
-        </div>
-        <div className={classes.hexagon}>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <img alt="new workspace" src={new_workspace_icon} style={{ width: '20%' }} />
-          </div>
+          <p style={{
+            marginTop: '10px',
+            marginBottom: '10px',
+            marginLeft: '5px',
+            color: '#d5d5d5'
+          }}>--- or ---</p>
           <NewWorkspace  {...newWorkProps} options={options} />
         </div>
-        <div className={classes.hexagon}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-20px' }}>
-            <img alt="load document" src={uploadDocIcon} style={{ width: '35%' }} />
-          </div>
+        <div className={classes.newdata}>
           <LoadDocument {...loadDocProps} />
         </div>
       </div>

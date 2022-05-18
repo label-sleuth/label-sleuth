@@ -8,12 +8,35 @@
     right: 0;
     border:1px solid rgb(246, 250, 252);
     border-radius: 10px;
-    background-color: rgb(246, 250, 252);
-    background-color: white;
+    background-image: url('../../assets/sleuth_logo_background.png');
+    background-size: 80px 80px;
+    background-position: center;
+    mix-blend-mode: normal;
     overflow: auto;
     justify-content: center;
     align-items: center;
-    
 }
- 
 
+.sleuth_header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #161616;
+    color: #fff;
+    border-right: solid 1px #393939;
+}
+
+.login_error {
+    border-left: solid 3px #DA1D27;
+    color: #DA1D27;
+    font-size: 14px;
+    line-height: 20px;
+    margin: 15px;
+    padding: 3px 9px;
+    background: #ffd5d5;
+}
+
+.reach_out {
+    color: #2162FE;
+    padding: 6px 0;
+}
