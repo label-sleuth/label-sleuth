@@ -18,7 +18,7 @@ class HFTransformers(ModelAPI):
     """
     Basic implementation for a pytorch-based transformer model that relies on the huggingface transformers library.
     """
-    def __init__(self,output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
+    def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
                  pretrained_model="bert-base-uncased", batch_size=32, learning_rate=5e-5, num_train_epochs=5):
         """
         :param pretrained_model: the name of a transfomer model from huggingface.co, or a path to a directory containing

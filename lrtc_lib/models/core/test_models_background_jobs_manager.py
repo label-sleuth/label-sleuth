@@ -14,20 +14,24 @@ from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackground
 from lrtc_lib.models.core.prediction import Prediction
 
 
+DUMMY_PREDICTIONS = [Prediction(True, 0.54), Prediction(False, 0.22)]
 
-DUMMY_PREDICTIONS = [Prediction(True,0.54),Prediction(False,0.22)]
 
-def successful_train(mid,dummy_data):
+def successful_train(mid, dummy_data):
     return mid
 
-def train_failed_with_error(mid,dummy_data):
+
+def train_failed_with_error(mid, dummy_data):
     raise Exception("Train failed")
 
-def successful_infer(mid,dummy_data):
+
+def successful_infer(mid, dummy_data):
     return DUMMY_PREDICTIONS
 
-def infer_failed_with_error(mid,dummy_data):
+
+def infer_failed_with_error(mid, dummy_data):
     raise Exception("Inference failed")
+
 
 class TestActiveLearningStrategies(unittest.TestCase):
     def test_simple_training_job(self):
@@ -36,10 +40,11 @@ class TestActiveLearningStrategies(unittest.TestCase):
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
-        future = manager.add_training(mid,successful_train,(mid,dummy_train_data),False,done_callback=functools.partial(callback_mock,dummy_callback_data))
+        future = manager.add_training(mid, successful_train, (mid, dummy_train_data), False,
+                                      done_callback=functools.partial(callback_mock, dummy_callback_data))
         mid_return = future.result()
         callback_mock.assert_called_once_with(dummy_callback_data, future)
-        self.assertEqual(mid,mid_return)
+        self.assertEqual(mid, mid_return)
 
     def test_training_error(self):
         callback_mock = MagicMock(name='callback')
@@ -47,7 +52,8 @@ class TestActiveLearningStrategies(unittest.TestCase):
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
-        future = manager.add_training(mid,train_failed_with_error,(mid,dummy_train_data),False,done_callback=functools.partial(callback_mock,dummy_callback_data))
+        future = manager.add_training(mid, train_failed_with_error, (mid, dummy_train_data), False,
+                                      done_callback=functools.partial(callback_mock, dummy_callback_data))
         self.assertRaises(Exception, future.result)
         callback_mock.assert_called_once_with(dummy_callback_data, future)
 
@@ -57,10 +63,11 @@ class TestActiveLearningStrategies(unittest.TestCase):
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
-        future = manager.add_inference(mid,successful_infer,(mid,dummy_train_data),False,done_callback=functools.partial(callback_mock,dummy_callback_data))
+        future = manager.add_inference(mid, successful_infer, (mid, dummy_train_data), False,
+                                       done_callback=functools.partial(callback_mock, dummy_callback_data))
         predictions = future.result()
         callback_mock.assert_called_once_with(dummy_callback_data, future)
-        self.assertEqual(DUMMY_PREDICTIONS,predictions)
+        self.assertEqual(DUMMY_PREDICTIONS, predictions)
 
     def test_infer_error(self):
         callback_mock = MagicMock(name='callback')
@@ -68,6 +75,7 @@ class TestActiveLearningStrategies(unittest.TestCase):
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
-        future = manager.add_inference(mid,infer_failed_with_error,(mid,dummy_train_data),False,done_callback=functools.partial(callback_mock,dummy_callback_data))
+        future = manager.add_inference(mid, infer_failed_with_error, (mid, dummy_train_data), False,
+                                       done_callback=functools.partial(callback_mock, dummy_callback_data))
         self.assertRaises(Exception, future.result)
         callback_mock.assert_called_once_with(dummy_callback_data, future)

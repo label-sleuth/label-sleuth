@@ -39,15 +39,16 @@ executor = ThreadPoolExecutor(20)
 app = Flask(__name__, static_url_path='', static_folder='../frontend/build')
 ROOT_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
 auth = HTTPTokenAuth(scheme='Bearer')
-CONFIGURATION=load_config(os.path.join(ROOT_DIR,"config.json"))
+CONFIGURATION = load_config(os.path.join(ROOT_DIR, "config.json"))
 cors = CORS(app)
 users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in CONFIGURATION.users}
 tokens = [user.token for user in users.values()]
 app.config['CORS_HEADERS'] = 'Content-Type'
-orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(ROOT_DIR,"output","workspaces")),
-                                   FileBasedDataAccess(os.path.join(ROOT_DIR,"output")),
+orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(ROOT_DIR, "output", "workspaces")),
+                                   FileBasedDataAccess(os.path.join(ROOT_DIR, "output")),
                                    ActiveLearningFactory(),
-                                   ModelFactory(os.path.join(ROOT_DIR,"output","models"),ModelsBackgroundJobsManager()),
+                                   ModelFactory(os.path.join(ROOT_DIR, "output", "models"),
+                                                ModelsBackgroundJobsManager()),
                                    CONFIGURATION)
 
 
@@ -188,9 +189,10 @@ def add_documents(dataset_name):
         temp_dir = os.path.join(ROOT_DIR, "output", "temp", "csv_upload")
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
         os.makedirs(temp_dir, exist_ok=True)
-        temp_file_path = os.path.join(temp_dir,temp_file_name)
+        temp_file_path = os.path.join(temp_dir, temp_file_name)
         df.to_csv(os.path.join(temp_dir, temp_file_name))
-        document_statistics, workspaces_to_update = orchestrator_api.add_documents_from_file(dataset_name, temp_file_path)
+        document_statistics, workspaces_to_update = orchestrator_api.add_documents_from_file(dataset_name,
+                                                                                             temp_file_path)
         return jsonify({"dataset_name": dataset_name,
                         "num_docs": document_statistics.documents_loaded,
                         "num_sentences": document_statistics.text_elements_loaded,
@@ -204,6 +206,7 @@ def add_documents(dataset_name):
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
             os.remove(os.path.join(temp_dir, temp_file_name))
+
 
 """
 Workspace endpoints. Each workspace is associated with a particular dataset at creation time.
@@ -292,7 +295,7 @@ def create_category(workspace_id):
     :return success:
     """
     post_data = request.get_json(force=True)
-    post_data['id'] = post_data["category_name"] # old frontend expects the category name to be in id, remove after moving to new frontend
+    post_data['id'] = post_data["category_name"]  # TODO old frontend expects the category name to be in id, remove after moving to new frontend
     orchestrator_api.create_new_category(workspace_id, post_data["category_name"], post_data["category_description"])
 
     res = {'category': post_data}
@@ -409,7 +412,8 @@ def get_document_positive_predictions(workspace_id, document_id):
         elements = document.text_elements
 
         predictions = [pred.label for pred in orchestrator_api.infer(workspace_id, category_name, elements)]
-        positive_predicted_elements = [element for element, prediction in zip(elements, predictions) if prediction == LABEL_POSITIVE]
+        positive_predicted_elements = [element for element, prediction in zip(elements, predictions)
+                                       if prediction == LABEL_POSITIVE]
 
         elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_name)
         elements_transformed = elements_transformed[start_idx: start_idx + size]
@@ -653,7 +657,7 @@ def export_predictions(workspace_id):
 def export_model(workspace_id):
     import zipfile
     category_name = request.args.get('category_name')
-    iteration_index = request.args.get('iteration_index', None) #TODO update in UI model_id -> iteration_index
+    iteration_index = request.args.get('iteration_index', None)  # TODO update in UI model_id -> iteration_index
     if iteration_index is None:
         iteration = \
             orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)[-1]
@@ -725,7 +729,6 @@ def get_contradicting_elements(workspace_id):
         logging.exception("Failed to generate contradiction report")
         res = {'pairs': []}
         return jsonify(res)
-
 
 
 """

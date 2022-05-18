@@ -28,7 +28,7 @@ class CsvFileProcessor(DataProcessorAPI):
     """
 
     def __init__(self, dataset_name: str, temp_file_path: str, text_col: str = DisplayFields.text,
-                 metadata_column_name_prefix = DisplayFields.csv_metadata_column_prefix,
+                 metadata_column_name_prefix: str = DisplayFields.csv_metadata_column_prefix,
                  doc_id_col: str = DisplayFields.doc_id, encoding: str = 'utf-8'):
         """
 

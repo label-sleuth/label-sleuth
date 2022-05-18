@@ -6,8 +6,6 @@ from lrtc_lib.data_access.core.data_structs import TextElement, URI_SEP
 from lrtc_lib.data_access.data_access_api import LabeledStatus
 
 
-
-
 def get_dataset_name_from_uri(uri):
     uri_split = uri.split(URI_SEP)
     return uri_split[0]
@@ -29,6 +27,7 @@ def filename_to_uri(filename):
     uri = filename
     return uri
 
+
 def build_text_elements_from_dataframe_and_labels(df, labels_dict):
     # text element fields are extracted from the dataframe, with the exception of the labels, which are stored elsewhere
     element_data_columns = TextElement.get_field_names() - {'category_to_label'}
@@ -41,6 +40,7 @@ def build_text_elements_from_dataframe_and_labels(df, labels_dict):
 def filter_by_labeled_status(df: pd.DataFrame, labels: pd.Series, category_name: str, labeled_status: LabeledStatus):
     """
     :param df:
+    :param labels:
     :param category_name:
     :param labeled_status: unlabeled, labeled or all
     :return:

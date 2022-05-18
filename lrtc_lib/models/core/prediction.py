@@ -19,4 +19,3 @@ class Prediction:
 
         if self.score < 0 or self.score > 1:
             raise Exception(f'Model score {self.score} is outside the range [0-1]')
-

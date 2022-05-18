@@ -37,7 +37,8 @@ class TestOrchestratorAPI(unittest.TestCase):
         cls.data_access = FileBasedDataAccess(os.path.join(cls.temp_dir.name, "output"))
         cls.orchestrator_state = OrchestratorStateApi(os.path.join(cls.temp_dir.name, "output", "workspaces"))
         cls.orchestrator_api = OrchestratorApi(cls.orchestrator_state, cls.data_access, cls.active_learning_factory,
-                                               cls.model_factory,load_config("./lrtc_lib/config_integration_tests.json"))
+                                               cls.model_factory,
+                                               load_config("./lrtc_lib/config_integration_tests.json"))
 
     @classmethod
     def tearDownClass(cls):

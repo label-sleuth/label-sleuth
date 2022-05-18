@@ -2,7 +2,7 @@ import logging
 import re
 import string
 import sys
-from typing import Dict, Sequence
+from typing import Dict, Iterable, Sequence
 
 import pandas as pd
 
@@ -11,7 +11,7 @@ from lrtc_lib.data_access.data_access_api import get_document_uri
 
 
 def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name, data_access, doc_uri=None) \
-        -> Sequence[TextElement]:
+        -> Iterable[TextElement]:
     """
     The user may import a large number of labeled instances, and these will not necessarily be given with a text
     element uri. Thus, the goal here is to efficiently query for a group of text elements using only the texts, and
@@ -59,7 +59,7 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
                                         for doc_id, df_for_doc in category_df.groupby(DisplayFields.doc_id)}
         uri_to_label = {}
         for doc_id, label_to_texts in doc_id_to_label_to_texts.items():
-            doc_uri = f'{dataset_name}-{doc_id}' if doc_id is not None else None # TODO if we change uri and doc id etc, we should change this field here
+            doc_uri = f'{dataset_name}-{doc_id}' if doc_id is not None else None  # TODO if we change uri and doc id etc, we should change this field here
             for label, texts in label_to_texts.items():
                 elements_to_label = get_element_group_by_texts(texts, workspace_id, dataset_name, data_access,
                                                                doc_uri=doc_uri)

@@ -12,7 +12,8 @@ def ngrams_by_info_gain(texts, relevant_labels, ngram_max_length, language=Langu
     cv = CountVectorizer(max_df=0.95, min_df=2, max_features=3000, ngram_range=(1, ngram_max_length),
                          stop_words=language.stop_words)
     x_vec = cv.fit_transform(texts)
-    res = dict(zip(cv.get_feature_names_out(), mutual_info_classif(x_vec, relevant_labels, discrete_features=True) * 100))
+    res = dict(zip(cv.get_feature_names_out(),
+                   mutual_info_classif(x_vec, relevant_labels, discrete_features=True) * 100))
     return sorted(res.items(), key=lambda x: x[1], reverse=True)
 
 

@@ -32,7 +32,7 @@ class Label:
         return str(self.label) if self.label_type == LabelType.Standard else f'{self.label_type.name}_{self.label}'
 
     def to_dict(self):
-        dict_for_json = {'label': self.label, 'metadata': self.metadata} # TODO this means label_type is not saved
+        dict_for_json = {'label': self.label, 'metadata': self.metadata}  # TODO this means label_type is not saved
         return dict_for_json
 
 
@@ -65,6 +65,6 @@ class DisplayFields(object):
     uri = 'uri'
     element_metadata = 'element_metadata'
     label = 'label'
-    label_metadata = 'label_metadata' #TODO currently not supported
+    label_metadata = 'label_metadata'  # TODO currently not supported
     label_type = 'label_type'
     csv_metadata_column_prefix = 'metadata_'

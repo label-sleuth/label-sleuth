@@ -11,7 +11,7 @@ class RandomModel(ModelAPI):
     """
     Mock classification model that does not train, and returns random classification predictions.
     """
-    def __init__(self,output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager):
+    def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager):
         super().__init__(models_background_jobs_manager)
         self.model_dir = os.path.join(output_dir, "random")
         os.makedirs(self.model_dir, exist_ok=True)

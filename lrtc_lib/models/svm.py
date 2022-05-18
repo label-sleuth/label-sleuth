@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(f
 
 
 class SVM(ModelAPI):
-    def __init__(self,output_dir, representation_type: RepresentationType,
+    def __init__(self, output_dir, representation_type: RepresentationType,
                  models_background_jobs_manager: ModelsBackgroundJobsManager, kernel="linear"):
         super().__init__(models_background_jobs_manager)
         self.model_dir = os.path.join(output_dir, "svm")
@@ -63,7 +63,7 @@ class SVM(ModelAPI):
     @staticmethod
     def get_probs(model, features):
         distances = np.array(model.decision_function(features))  # get distances from hyperplanes (per class)
-        if len(distances.shape) == 1: # binary classification
+        if len(distances.shape) == 1:  # binary classification
             distances = distances / 2 + 0.5
             distances = np.expand_dims(distances, 1)
             distances = np.concatenate([1 - distances, distances], axis=1)

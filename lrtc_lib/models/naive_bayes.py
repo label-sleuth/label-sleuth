@@ -21,7 +21,7 @@ class NaiveBayes(ModelAPI):
                  models_background_jobs_manager: ModelsBackgroundJobsManager,
                  max_datapoints=10000):
         super().__init__(models_background_jobs_manager)
-        self.model_dir = os.path.join(output_dir,"nb")
+        self.model_dir = os.path.join(output_dir, "nb")
         os.makedirs(self.model_dir, exist_ok=True)
         self.features_num = 0
         self.max_datapoints = max_datapoints

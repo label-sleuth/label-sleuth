@@ -42,7 +42,7 @@ class FileBasedDataAccess(DataAccessApi):
     labels_in_memory = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(Label))))
     dataset_in_memory_lock = threading.RLock()
 
-    def __init__(self,output_dir):
+    def __init__(self, output_dir):
         self.output_dir = output_dir
 
     def add_documents(self, dataset_name: str, documents: Iterable[Document]):
@@ -62,7 +62,7 @@ class FileBasedDataAccess(DataAccessApi):
             intersection = doc_ids.intersection(set(self.get_all_document_uris(dataset_name)))
             if len(intersection) > 0:
                 raise AlreadyExistsException(f"{len(intersection)} documents are already in dataset '{dataset_name}'."
-                                            f" uris: ({intersection})", list(intersection))
+                                             f" uris: ({intersection})", list(intersection))
 
         for doc in documents:
             # save doc to file
@@ -213,8 +213,8 @@ class FileBasedDataAccess(DataAccessApi):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
-        filtering is performed.
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
+        no such filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
@@ -242,8 +242,8 @@ class FileBasedDataAccess(DataAccessApi):
         :param category_name: we demand that the elements are not labeled for this category
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
-        filtering is performed.
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
+        no such filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
@@ -261,8 +261,8 @@ class FileBasedDataAccess(DataAccessApi):
         return results_dict
 
     def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
-                                     sample_size: int = sys.maxsize, query_regex: str = None,
-                                     remove_duplicates=False, random_state: int = 0) -> Mapping:
+                                  sample_size: int = sys.maxsize, query_regex: str = None,
+                                  remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, labeled for category_name in workspace_id,
         optionally limiting to those matching a query.
@@ -271,8 +271,8 @@ class FileBasedDataAccess(DataAccessApi):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param category_name: we demand that the elements are labeled for this category
         :param sample_size: how many TextElements should be sampled
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
-        filtering is performed.
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
+        no such filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
@@ -285,7 +285,7 @@ class FileBasedDataAccess(DataAccessApi):
         with self._get_lock_object_for_workspace(workspace_id):
             results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                    filter_func=filter_func, sample_size=sample_size,
-                                                   remove_duplicates=remove_duplicates,random_state=random_state)
+                                                   remove_duplicates=remove_duplicates, random_state=random_state)
         return results_dict
 
     def get_label_counts(self, workspace_id: str, dataset_name: str, category_name: str, remove_duplicates=False) \
@@ -337,7 +337,8 @@ class FileBasedDataAccess(DataAccessApi):
         corpus_df = self._get_ds_in_memory(dataset_name)
         uris = list(uris)
         corpus_df = corpus_df.loc[corpus_df['uri'].isin(uris)]
-        text_elements_by_uri = {te.uri: te for te in utils.build_text_elements_from_dataframe_and_labels(corpus_df, labels_dict={})}
+        text_elements_by_uri = {te.uri: te for te
+                                in utils.build_text_elements_from_dataframe_and_labels(corpus_df, labels_dict={})}
         text_elements = [text_elements_by_uri.get(uri) for uri in uris]
 
         with self._get_lock_object_for_workspace(workspace_id):
@@ -430,9 +431,9 @@ class FileBasedDataAccess(DataAccessApi):
         """
         :param workspace_id: if None no labels info would be used or output
         :param dataset_name:
+        :param filter_func:
         :param sample_size: number of elements to return. if None, return all elements without sampling
         :param sample_start_idx: get elements starting from this index (for pagination)
-        :param filter_func:
         :param remove_duplicates:
         :param random_state: provide an int seed to define a random state. Default is zero.
         """
@@ -470,28 +471,33 @@ class FileBasedDataAccess(DataAccessApi):
         with open(file_path, 'w') as f:
             f.write(labels_in_memory_encoded)
 
-    def _get_uris_with_the_same_text(self,dataset_name, uri):
-        ds_in_memory = self._get_ds_in_memory(dataset_name)
-        text_unique_id = ds_in_memory[ds_in_memory['uri'] == uri]['text_unique_id'].values[0]
-        return ds_in_memory[ds_in_memory['text_unique_id'] == text_unique_id]['uri']
-
-    def _add_text_unique_ids(self, df):
+    @staticmethod
+    def _add_text_unique_ids(df):
+        """
+        To facilitate extraction of duplicate elements, i.e. text elements that have the same text, we assign an id to
+        each unique text in the dataframe. Whenever new documents are added to the corpus, these ids are recalculated.
+        """
         unique_to_id = {}
         df['text_unique_id'] = df['text'].apply(
             lambda x: len(unique_to_id)-1 if x not in unique_to_id and not unique_to_id.update({x: len(unique_to_id)})
             else unique_to_id[x])
         return df
 
+    def _get_uris_with_the_same_text(self, dataset_name, uri):
+        ds_in_memory = self._get_ds_in_memory(dataset_name)
+        text_unique_id = ds_in_memory[ds_in_memory['uri'] == uri]['text_unique_id'].values[0]
+        return ds_in_memory[ds_in_memory['text_unique_id'] == text_unique_id]['uri']
+
     def _dataset_exists(self, dataset_name):
         return os.path.exists(self._get_dataset_dump_filename(dataset_name))
 
-    def _get_dataset_base_dir(self,dataset_name):
+    def _get_dataset_base_dir(self, dataset_name):
         return os.path.join(self._get_datasets_base_dir(), dataset_name)
 
     def _get_datasets_base_dir(self):
         data_access_dumps_path = os.path.join(self.output_dir, 'data_access_dumps')
         os.makedirs(data_access_dumps_path, exist_ok=True)
-        return os.path.join(data_access_dumps_path)
+        return data_access_dumps_path
 
     def _get_documents_dump_dir(self, dataset_name):
         return os.path.join(self._get_dataset_base_dir(dataset_name), self.doc_dir_name)
@@ -499,21 +505,9 @@ class FileBasedDataAccess(DataAccessApi):
     def _get_dataset_dump_filename(self, dataset_name):
         return os.path.join(self._get_dataset_base_dir(dataset_name), self.sentences_filename)
 
-    def _get_labels_dump_dir(self):
-        return os.path.join(self.output_dir, 'user_labels')
-
     def _get_workspace_labels_dump_filename(self, workspace_id, dataset_name):
         workspace_dir = self._get_workspace_labels_dir(workspace_id)
         return os.path.join(workspace_dir, str(dataset_name) + '_' + self.labels_filename)
 
     def _get_workspace_labels_dir(self, workspace_id):
-        return os.path.join(self._get_labels_dump_dir(), str(workspace_id))
-
-
-if __name__ == '__main__':
-    da = FileBasedDataAccess()
-    all_elements = da.get_all_text_elements("cnc_in_plus_out_train")
-    all_unique_texts = {x.text for x in all_elements}
-    orig_csv_path = '/tmp/multi_train.csv'
-    texts = {t for t in pd.read_csv(orig_csv_path)['Sentences']}
-    filtered_elements = [x.uri for x in all_elements if x.text in texts]
+        return os.path.join(self.output_dir, 'user_labels', str(workspace_id))

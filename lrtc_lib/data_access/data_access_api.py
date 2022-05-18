@@ -6,27 +6,29 @@ from enum import Enum
 from typing import Iterable, Sequence, Mapping, List, Tuple, Union
 from lrtc_lib.data_access.core.data_structs import Document, TextElement, Label, URI_SEP
 
-from lrtc_lib.data_access.processors.data_processor_api import DataProcessorAPI
-
 
 class AlreadyExistsException(Exception):
     def __init__(self, message, documents):
         self.message = message
         self.documents = documents
 
+
 @dataclass
 class DocumentStatistics:
     documents_loaded: int
     text_elements_loaded: int
+
 
 class LabeledStatus(Enum):
     UNLABELED = 0
     LABELED = 1
     ALL = 2
 
+
 def get_document_uri(uri):
     uri_split = uri.split(URI_SEP)
     return URI_SEP.join(uri_split[:2])
+
 
 class DataAccessApi(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -119,8 +121,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
-        filtering is performed.
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
+        no such filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
@@ -141,8 +143,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param category_name: we demand that the elements are not labeled for this category
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
-        filtering is performed.
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
+        no such filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
@@ -152,8 +154,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
-                                     sample_size: int = sys.maxsize, query_regex: str = None,
-                                     remove_duplicates=False, random_state: int = 0) -> Mapping:
+                                  sample_size: int = sys.maxsize, query_regex: str = None,
+                                  remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, labeled for category_name in workspace_id,
         optionally limiting to those matching a query.
@@ -162,8 +164,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param category_name: we demand that the elements are labeled for this category
         :param sample_size: how many TextElements should be sampled
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then no such
-        filtering is performed.
+        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
+        no such filtering is performed.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose

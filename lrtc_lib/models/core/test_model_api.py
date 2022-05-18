@@ -1,18 +1,12 @@
 import random
-import shutil
+import tempfile
 import unittest
 from unittest.mock import MagicMock
-import tempfile
+
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.models.random_model import RandomModel
 
 PREFIX = 'Fascinating sentence'
-
-
-def string_to_score(item):
-    s = sum([ord(str) for c in item.values() for str in c])
-    return s
-
 
 
 class TestModelAPI(unittest.TestCase):
@@ -31,7 +25,7 @@ class TestModelAPI(unittest.TestCase):
 
     def test_infer_no_cache(self):
         self.model_api.infer(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=False)
-        self.assertEqual(0,self.model_api.cache.get_current_size(),"cache size should be zero when use_cache=False")
+        self.assertEqual(0, self.model_api.cache.get_current_size(), "cache size should be zero when use_cache=False")
 
     def test_additional_fields_are_part_of_cache_key(self):
         self.model_api.infer(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
@@ -44,7 +38,8 @@ class TestModelAPI(unittest.TestCase):
 
     def test_inferred_elements_cached(self):
         self.model_api.infer(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
-        self.assertEqual(len(self.sentences1),self.model_api.cache.get_current_size(),"cache size should be equals to the size of the inferred sentences")
+        self.assertEqual(len(self.sentences1), self.model_api.cache.get_current_size(),
+                         "cache size should be equal to the size of the inferred sentences")
         self.model_api._infer = MagicMock(name='_infer')
 
         self.model_api.infer(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
