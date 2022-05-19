@@ -8,12 +8,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { nextPrediction, updateCurCategory, setFocusedState } from '../DataSlice.jsx';
 import FormControl from '@mui/material/FormControl';
 import Button from '@mui/material/Button';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { IconButton } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import ControlledSelect from '../../../components/combobox/ControlledSelect';
-import ReactTooltip from 'react-tooltip';
 import AddIcon from '@mui/icons-material/Add';
 
 const rightDrawerWidth = 360;
