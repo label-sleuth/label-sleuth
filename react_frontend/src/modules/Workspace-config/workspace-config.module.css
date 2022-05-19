@@ -41,7 +41,7 @@
     max-width: 400px;
     background-color: white;
     flex-basis: 50%;
-    border: 1px solid #f48c06;
+    border: 1px solid #393939;
     border-radius: 5px;
     display: flex;
     flex-flow: column;
@@ -74,7 +74,7 @@
 }
 
 .title-workspace-config{
-    color:'#f48c06'
+    color:'#393939'
 }
 
 .wrapper {

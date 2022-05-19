@@ -1,11 +1,11 @@
 .button-light{
-    color: #f48c06;
+    color: white;
     width: 50%;
     border: 0;
     height: 48px;
     padding: 0 30px;
-    background: linear-gradient(45deg, rgb(232 240 254) 30%, #61dafb 90%);
-    box-shadow: 0 3px 5px 2px rgb(255 105 135 / 30%);
+    background:  #393939 ;
+    /* box-shadow: 0 3px 5px 2px rgb(255 105 135 / 30%); */
     border-radius: 3px;
     justify-content: center;
     cursor: pointer;

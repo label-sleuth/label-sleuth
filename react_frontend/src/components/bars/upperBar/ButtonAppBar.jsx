@@ -21,6 +21,8 @@ export default function ButtonAppBar({logout}) {
             paddingRight: '12px',
             height: '48px'
           }}>
+      <AppBar position="static">
+        <Toolbar  sx={{ bgcolor: "#393939" }}>
           <IconButton
             size="medium"
             edge="start"
@@ -37,27 +39,3 @@ export default function ButtonAppBar({logout}) {
     </Box>
   );
 }
-
-// export default function ButtonAppBar({logout}) {
-//   return (
-//     <Box sx={{ flexGrow: 1  }}>
-//       <AppBar position="static">
-//         <Toolbar  sx={{ bgcolor: "#f48c06" }}>
-//           <IconButton
-//             size="large"
-//             edge="start"
-//             color="inherit"
-//             aria-label="menu"
-//             sx={{ mr: 2 }}
-//           >
-//             <MenuIcon />
-//           </IconButton>
-//           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-//           IBM Research - SLEUTH
-//           </Typography>
-//           <Button color="inherit" onClick={logout}>Logout</Button>
-//         </Toolbar>
-//       </AppBar>
-//     </Box>
-//   );
-// }

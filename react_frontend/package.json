@@ -40,7 +40,6 @@
     "build:development": "env-cmd -f .env.development react-scripts build",
     "build:production": "env-cmd -f .env.production react-scripts build"
   },
-  
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -60,4 +59,3 @@
     ]
   }
 }
-
