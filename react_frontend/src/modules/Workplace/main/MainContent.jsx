@@ -63,7 +63,7 @@ const MainContent = ({
 
   return (
     <>
-      <Main className="main_content" open={open}>
+      <Main sx={{  marginRight: '30px'  }} className="main_content" open={open}>
         <TitleBar>
           <IconButton onClick={() => {
             if (workspace.curDocId > 0) {
