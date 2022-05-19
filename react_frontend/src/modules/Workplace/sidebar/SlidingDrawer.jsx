@@ -1,4 +1,4 @@
-import * as React from 'react';
+import {useState, useRef} from 'react';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import '../styles.css'
@@ -12,13 +12,13 @@ import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 
 
-const RightSlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPanelClick }) => {
+const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPanelClick }) => {
 
     const dispatch = useDispatch()
-    const [searchInput, setSearchInput] = React.useState("");
+    const [searchInput, setSearchInput] = useState("");
     const workspace = useSelector(state => state.workspace)
-    const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
-    const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
+    const [numLabel, setNumLabel] =  useState({ pos: 0, neg: 0 })
+    const [numLabelGlobal, setNumLabelGlobal] = useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
     const rightDrawerWidth = 360;
 
 
@@ -34,7 +34,7 @@ const RightSlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSear
         setSearchInput(event.target.value)
     }
 
-    const textInput = React.useRef(null);
+    const textInput = useRef(null);
 
 
     return (
@@ -47,7 +47,6 @@ const RightSlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSear
                     boxSizing: 'border-box',
                 }
             }}
-
             PaperProps={{
                 sx: {
                     backgroundColor: "#f8f9fa !important",
@@ -83,7 +82,6 @@ const RightSlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSear
                                             ev.preventDefault();
                                         }
                                     }
-
                                 }}
                                 onChange={handleChange}
                                 inputRef={textInput}
@@ -97,27 +95,26 @@ const RightSlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSear
                                         <SearchIcon />
                                     </IconButton>}
                                 </>
-
-
                             }
                         </Paper>
                     </Box>
                     {
-                        workspace.searchResult.map((r) => {
+                        workspace.searchResult.map((r, i) => {
                             return (
-                                    <SearchPanel
-                                        numLabelGlobal={numLabelGlobal}
-                                        numLabelGlobalHandler={setNumLabelGlobal}
-                                        numLabel={numLabel}
-                                        prediction={r.model_predictions.length > 0 ? r.model_predictions[Object.keys(r.model_predictions)[Object.keys(r.model_predictions).length - 1]] : null}
-                                        element_id={r.id}
-                                        numLabelHandler={setNumLabel}
-                                        text={r.text}
-                                        searchInput={searchInput}
-                                        docid={r.docid}
-                                        id={r.id}
-                                        handleSearchPanelClick={handleSearchPanelClick}
-                                    />
+                                <SearchPanel
+                                    key={i}
+                                    numLabelGlobal={numLabelGlobal}
+                                    numLabelGlobalHandler={setNumLabelGlobal}
+                                    numLabel={numLabel}
+                                    prediction={r.model_predictions.length > 0 ? r.model_predictions[Object.keys(r.model_predictions)[Object.keys(r.model_predictions).length - 1]] : null}
+                                    element_id={r.id}
+                                    numLabelHandler={setNumLabel}
+                                    text={r.text}
+                                    searchInput={searchInput}
+                                    docid={r.docid}
+                                    id={r.id}
+                                    handleSearchPanelClick={handleSearchPanelClick}
+                                />
                             )
                         })
                     }
@@ -134,9 +131,10 @@ const RightSlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSear
                     </Box>
 
                     <Box>
-                        {workspace.elementsToLabel.map((r) => {
+                        {workspace.elementsToLabel.map((r,i) => {
                             return (
                                 <SearchPanel
+                                    key={i}
                                     numLabelGlobal={numLabelGlobal}
                                     numLabelGlobalHandler={setNumLabelGlobal}
                                     numLabel={numLabel}
@@ -158,5 +156,5 @@ const RightSlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSear
     );
 };
 
-export default RightSlidingDrawer;
+export default SlidingDrawer;
 

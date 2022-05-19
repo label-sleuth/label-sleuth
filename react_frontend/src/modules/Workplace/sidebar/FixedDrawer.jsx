@@ -1,4 +1,4 @@
-import * as React from 'react';
+
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import '../styles.css'
@@ -9,7 +9,7 @@ import { getElementToLabel } from '../DataSlice.jsx';
 import { useDispatch } from 'react-redux';
 
 
-const RightFixedDrower = ({ setDrawerContent, handleDrawerOpen }) => {
+const FixedDrawer = ({ setDrawerContent, handleDrawerOpen }) => {
     const dispatch = useDispatch()
 
     return (
@@ -39,4 +39,4 @@ const RightFixedDrower = ({ setDrawerContent, handleDrawerOpen }) => {
     );
 };
 
-export default RightFixedDrower;
+export default FixedDrawer;

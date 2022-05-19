@@ -1,12 +1,12 @@
-import * as React from 'react';
+import {useState} from 'react';
 import '../styles.css'
-import RightFixedDrower from './RightFixedDrower';
-import RightSlidingDrawer from './RightSlidingDrawer';
+import FixedDrower from './FixedDrawer';
+import SlidingDrawer from './SlidingDrawer';
 
 
 const Sidebar = ({ open, setOpen, handleSearchPanelClick }) => {
 
-    const [drawerContent, setDrawerContent] = React.useState("");
+    const [drawerContent, setDrawerContent] = useState("");
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -19,19 +19,18 @@ const Sidebar = ({ open, setOpen, handleSearchPanelClick }) => {
 
     return (
         <>
-            <RightFixedDrower
+            <FixedDrower
                 setDrawerContent={setDrawerContent}
                 drawerContent={setDrawerContent}
                 handleDrawerOpen={handleDrawerOpen}
             />
-            <RightSlidingDrawer
+            <SlidingDrawer
                 setDrawerContent={setDrawerContent}
                 drawerContent={drawerContent}
                 handleDrawerClose={handleDrawerClose}
                 open={open}
                 setOpen={setOpen}
                 handleSearchPanelClick={handleSearchPanelClick}
-
             />
         </>
     );
