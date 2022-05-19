@@ -63,7 +63,9 @@ const MainContent = ({
 
   return (
     <>
-      <Main sx={{  marginRight: '30px'  }} className="main_content" open={open}>
+      <Main className="main_content" open={open}>
+        <Box sx={{ display: 'flex', flexDirection:'column',  justifyContent: 'center', mr: 4 }}>
+        <Box>
         <TitleBar>
           <IconButton onClick={() => {
             if (workspace.curDocId > 0) {
@@ -85,7 +87,9 @@ const MainContent = ({
           }}>
             <ChevronRightIcon />
           </IconButton>
-        </TitleBar>
+        </TitleBar>          
+        </Box>
+
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
           <Pagination
             className="pagination-bar"
@@ -115,7 +119,9 @@ const MainContent = ({
               />
             )
           }
+        </Box>          
         </Box>
+
       </Main>
     </>
   );
