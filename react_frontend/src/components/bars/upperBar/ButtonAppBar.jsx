@@ -11,7 +11,7 @@ export default function ButtonAppBar({logout}) {
   return (
     <Box sx={{ flexGrow: 1  }}>
       <AppBar position="static">
-        <Toolbar  sx={{ bgcolor: "#f48c06" }}>
+        <Toolbar  sx={{ bgcolor: "#393939" }}>
           <IconButton
             size="large"
             edge="start"

@@ -1,6 +1,6 @@
 import React from 'react';
 import FormControl from '@mui/material/FormControl';
-import ControlledSelect from "../../components/Dropdown"
+import ControlledSelect from "../../components/combobox/ControlledSelect"
 import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
 import ButtonLight from "../../components/buttons/ButtonLight";
