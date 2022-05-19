@@ -12,8 +12,9 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ControlledSelect from '../../../components/Dropdown';
+import ControlledSelect from '../../../components/combobox/ControlledSelect';
 import ReactTooltip from 'react-tooltip';
+import AddIcon from '@mui/icons-material/Add';
 
 const rightDrawerWidth = 360;
 
@@ -83,7 +84,7 @@ function CategoryFormControl(props) {
   }
 
   return (
-    <FormControl variant="standard" sx={{ m: 2, minWidth: 150, maxWidth: 150, marginBottom: 3.5 }}>
+    <FormControl variant="standard" sx={{ m: 1, minWidth: 150, maxWidth: 150, marginBottom: 4 }}>
       <ControlledSelect
         id="label-select"
         value={selValue}
@@ -112,8 +113,8 @@ const UpperBar = ({ setNumLabel, setModalOpen, setNumLabelGlobal, open }) => {
         <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
           <Typography><strong>Category:</strong></Typography>
           <CategoryFormControl numLabelGlobalHandler={setNumLabelGlobal} numLabelHandler={setNumLabel} workspaceLength={workspaceLength} />
-          <IconButton onClick={handleAddCategory}>
-            <AddCircleIcon color="primary" />
+          <IconButton onClick={handleAddCategory} alt="Create new category">
+            <AddIcon  style={{ color: "white", backgroundColor:"#393939" }}  />
           </IconButton>
 
           {/* TODO 

@@ -7,14 +7,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import search_icon from '../Asset/search.svg';
 import recommend_icon from '../Asset/query-queue.svg'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import SearchBar from "material-ui-search-bar";
 import { getElementToLabel, searchKeywords } from '../DataSlice.jsx';
-import SearchPanel from '../sidebar/SearchPanel'
+import SearchPanel from './SearchPanel'
 import { InputBase, Paper } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
+import RightFixedDrower from './RightFixedDrower';
 
-const Sidebar = ({ open, setOpen }) => {
+export const defaultDrawerWidth = 360
+
+const Sidebar = ({ open, setOpen, handleSearchPanelClick }) => {
 
     const [drawerContent, setDrawerContent] = React.useState("");
     const dispatch = useDispatch()
@@ -23,11 +25,6 @@ const Sidebar = ({ open, setOpen }) => {
     const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
     const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
     const rightDrawerWidth = 360;
-
-    React.useEffect(()=>{
-        setDrawerContent("search")
-        handleDrawerOpen()
-    },[])
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -50,10 +47,13 @@ const Sidebar = ({ open, setOpen }) => {
         setSearchInput(event.target.value)
     }
 
+
     const textInput = React.useRef(null);
+
 
     return (
         <>
+            {/* <RightFixedDrower setDrawerContent={setDrawerContent}  drawerContent={setDrawerContent} handleDrawerOpen={handleDrawerOpen} /> */}
             <Drawer variant="permanent" anchor="right" PaperProps={{
                 sx: {
                     minWidth: 50,
@@ -74,6 +74,7 @@ const Sidebar = ({ open, setOpen }) => {
                         <img src={recommend_icon} alt="recommendation" />
                     </IconButton>
                 </Box>
+
             </Drawer>
             <Drawer
                 sx={{
@@ -88,7 +89,7 @@ const Sidebar = ({ open, setOpen }) => {
                 PaperProps={{
                     sx: {
                         backgroundColor: "#f8f9fa !important",
-                        right: 50
+                        right: 50,
                     }
                 }}
                 variant="persistent"
@@ -114,15 +115,18 @@ const Sidebar = ({ open, setOpen }) => {
                                     placeholder="Search"
                                     inputProps={{ 'aria-label': 'search' }}
                                     onKeyPress={(ev) => {
-                                        if (ev.key === 'Enter') {
-                                            handleSearch()
-                                            ev.preventDefault();
+                                        if (ev && ev.key) {
+                                            if (ev.key === 'Enter') {
+                                                handleSearch()
+                                                ev.preventDefault();
+                                            }
                                         }
+
                                     }}
                                     onChange={handleChange}
                                     inputRef={textInput}
                                 />
-                                {searchInput && textInput.current.value &&
+                                {searchInput && textInput.current && textInput.current.value &&
                                     <>
                                         <IconButton sx={{ p: '10px' }} aria-label="search" onClick={clearSearch} >
                                             <ClearIcon />
@@ -139,7 +143,23 @@ const Sidebar = ({ open, setOpen }) => {
                         {
                             workspace.searchResult.map((r) => {
                                 return (
-                                    <SearchPanel numLabelGlobal={numLabelGlobal} numLabelGlobalHandler={setNumLabelGlobal} numLabel={numLabel} prediction={r.model_predictions.length > 0 ? r.model_predictions[Object.keys(r.model_predictions)[Object.keys(r.model_predictions).length - 1]] : null} element_id={r.id} numLabelHandler={setNumLabel} text={r.text} searchInput={searchInput} docid={r.docid} id={r.id} />
+                                    <>
+
+                                    <SearchPanel
+                                        numLabelGlobal={numLabelGlobal}
+                                        numLabelGlobalHandler={setNumLabelGlobal}
+                                        numLabel={numLabel}
+                                        prediction={r.model_predictions.length > 0 ? r.model_predictions[Object.keys(r.model_predictions)[Object.keys(r.model_predictions).length - 1]] : null}
+                                        element_id={r.id}
+                                        numLabelHandler={setNumLabel}
+                                        text={r.text}
+                                        searchInput={searchInput}
+                                        docid={r.docid}
+                                        id={r.id}
+                                        handleSearchPanelClick={handleSearchPanelClick}
+                                    />                                    
+                                    </>
+
                                 )
                             })
                         }
@@ -158,7 +178,19 @@ const Sidebar = ({ open, setOpen }) => {
                         <Box>
                             {workspace.elementsToLabel.map((r) => {
                                 return (
-                                    <SearchPanel numLabelGlobal={numLabelGlobal} numLabelGlobalHandler={setNumLabelGlobal} numLabel={numLabel} prediction={r.model_predictions[workspace.curCategory]} element_id={r.id} numLabelHandler={setNumLabel} text={r.text} searchInput={searchInput} docid={r.docid} id={r.id} />
+                                    <SearchPanel
+                                        numLabelGlobal={numLabelGlobal}
+                                        numLabelGlobalHandler={setNumLabelGlobal}
+                                        numLabel={numLabel}
+                                        prediction={r.model_predictions[workspace.curCategory]}
+                                        element_id={r.id}
+                                        numLabelHandler={setNumLabel}
+                                        text={r.text}
+                                        searchInput={searchInput}
+                                        docid={r.docid}
+                                        id={r.id}
+                                        handleSearchPanelClick={handleSearchPanelClick}
+                                    />
                                 )
                             })}
                         </Box>

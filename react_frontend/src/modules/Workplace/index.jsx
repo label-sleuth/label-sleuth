@@ -14,7 +14,7 @@ import {
   checkModelUpdate,
   fetchDocuments,
   setFocusedState,
-  setWorkspace,
+  fetchCertainDocument,
 } from './DataSlice.jsx';
 import WorkspaceInfo from './information/WorkspaceInfo';
 import Sidebar from './sidebar/Sidebar';
@@ -23,35 +23,25 @@ import MainContent from './main/MainContent'
 
 
 const drawerWidth = 280;
-
-
 export default function Workspace() {
   const workspaceId  = JSON.parse(window.localStorage.getItem('workspaceId'))
   const [open, setOpen] = React.useState(false);
   const workspace = useSelector(state => state.workspace)
-  const {active_workspace} = useSelector(state => state.workspaces)
   const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
   const [modalOpen, setModalOpen] = React.useState(false)
   const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
-
-
+  const [searchedItem, setSearchedItem] = React.useState()
 
   const handleKeyEvent = (event, len_elements) => {
 
     console.log("key pressed")
-    
     if (event.key === "ArrowDown") {
       if (workspace.focusedIndex < len_elements) {
-
         dispatch(setFocusedState(workspace.focusedIndex + 1))
-
       }
     } else if (event.key === "ArrowUp") {
-
       if (workspace.focusedIndex > 0) {
-
         dispatch(setFocusedState(workspace.focusedIndex - 1))
-
       }
     }
   }
@@ -99,11 +89,8 @@ export default function Workspace() {
   }, [makeShot]);
 
   const handleClick = (event, id) => {
-
     if (event.detail == 1) {
-
       dispatch(setFocusedState(id))
-
     }
   }
 
@@ -119,19 +106,14 @@ export default function Workspace() {
     })))
 
     const interval = setInterval(() => {
-
       console.log(`curCategory value: ${workspace.curCategory}`)
-
       if (workspace.curCategory != null) {
         dispatch(checkModelUpdate()).then(() => {
         })
       } else {
       }
-
     }, 5000);
-
     return () => clearInterval(interval);
-
   }, [workspace.curCategory])
 
   React.useEffect(() => {
@@ -139,16 +121,29 @@ export default function Workspace() {
   }, [workspace.pos_label_num])
 
   React.useEffect(() => {
-
     console.log(`model updated, data retrieved, model version: ${workspace.model_version}`)
     if (workspace.model_version > 0) {
       fire();
     }
-
     dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
 
   }, [workspace.model_version])
 
+  
+  const handleSearchPanelClick =(docid, id) =>{
+    console.log("search elem clicked id....", id)
+    setSearchedItem(id)
+    const splits = id.split("-")
+    const index = parseInt(splits[splits.length-1])
+    if (docid != workspace.curDocName) {
+      dispatch(fetchCertainDocument({ docid, id, switchStatus: 'switch' })).then(() => {
+        dispatch(setFocusedState(index))
+      })
+    } else {
+      dispatch(setFocusedState(index))
+    }
+ }
+  
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -156,7 +151,9 @@ export default function Workspace() {
       <WorkspaceInfo workspaceId={workspaceId} />
       <Box component="main" sx={{ flexGrow: 1, p: 3, width: `calc(100% - ${drawerWidth}px)` }}>
         <UpperBar setNumLabel={setNumLabel} setModalOpen={setModalOpen} setNumLabelGlobal={setNumLabelGlobal} open={open} />
-        <Sidebar open={open} setOpen={setOpen} />
+        <Sidebar open={open} setOpen={setOpen} handleSearchPanelClick={handleSearchPanelClick} 
+ 
+ />
         <MainContent setNumLabel={setNumLabel}
           handleKeyEvent={handleKeyEvent}
           numLabelGlobal={numLabelGlobal}
@@ -164,6 +161,7 @@ export default function Workspace() {
           numLabel={numLabel}
           handleClick={handleClick}
           open={open}
+          searchedItem={searchedItem}
         />
 
       </Box>
