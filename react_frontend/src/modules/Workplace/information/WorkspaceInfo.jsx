@@ -108,8 +108,7 @@ export default function Workspace({workspaceId}) {
     const [tabStatus, setTabStatus] = React.useState(0)
     const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
     const refAnimationInstance = useRef(null);
-    const dispatch = useDispatch();
-
+    
 
     const getInstance = useCallback((instance) => {
         refAnimationInstance.current = instance;
@@ -154,6 +153,8 @@ export default function Workspace({workspaceId}) {
             startVelocity: 45
         });
     }, [makeShot]);
+
+    const dispatch = useDispatch();
 
     React.useEffect(() => {
 
