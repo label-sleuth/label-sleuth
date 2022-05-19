@@ -14,9 +14,32 @@
     font-size: 1rem;
     transition-duration: 0.4s;
 }
-  .button-light:hover {
+
+.button-light:hover {
     color: black;
 }
+
+.button-ibm{
+  color: #fff;
+  width: 50%;
+  border: 0;
+  height: 42px;
+  font-size: 16px;
+  padding: 0 30px;
+  font-weight: 400;
+  border-radius: 0 !important;
+  background: #393939;
+  justify-content: center;
+  cursor: pointer;
+  transition-duration: 0.4s;
+}
+
+.button-ibm:hover {
+  background: #161616;
+}
+
+
+
 .button {
     width: 100px;
     height: 100px;  

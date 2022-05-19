@@ -1,28 +1,29 @@
 import React from 'react';
 import FormControl from '@mui/material/FormControl';
-import ControlledSelect from "../../components/combobox/ControlledSelect"
-import FormLabel from '@mui/material/FormLabel';
+import ControlledSelect from "../../components/dropdown/Dropdown"
 import Box from '@mui/material/Box';
-import ButtonLight from "../../components/buttons/ButtonLight";
+import ButtonIBM from "../../components/buttons/ButtonIBM";
 import 'react-toastify/dist/ReactToastify.css';
+import classes from "./workspace-config.module.css";
 
 const ExistingWorkspaceForm = ({ handleChange, handleClick, workspaces, value, options }) => {
 
     return (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <FormControl variant="standard" sx={{ m: 1, minWidth: 300 }}>
-                <FormLabel sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: "#f48c06", marginTop: '-10px' }}>Select an existing workspace</FormLabel>
-                <FormControl required variant="standard" sx={{ m: 1, marginTop: '50px' }}>
+        <Box className={classes.wrapper} style={{borderBottom: 'solid 1px #8d8d8d'}}>
+            <h2 style={{padding: '25px', margin: 0}}>Continue</h2>
+            <FormControl variant="standard">
+                <FormControl required variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px'}}>
                     <ControlledSelect
-                        label="Select workspace"
+                        label="Continue with Existing Workspace"
                         value={value}
                         options={options}
                         onChange={handleChange}
+                        placeholder="Choose from List"
                     />
                 </FormControl>
-                <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center', height: '100px', marginTop: '100px' }}>
-                    <ButtonLight onClick={handleClick} text="Go" />
-                </FormControl>
+                <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>
+                    <ButtonIBM onClick={handleClick} text="Go" />
+                </div>
             </FormControl>
         </Box>
     );

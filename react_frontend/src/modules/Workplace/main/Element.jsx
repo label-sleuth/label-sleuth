@@ -41,7 +41,7 @@ export default function Sentence(props) {
         return (
             <Box tabIndex="-1" 
             onMouseOver={() => dispatch(setFocusedState(index))}
-             className={((workspace["focusedIndex"] == index) || ((searchedItemIndex % numOfElemPerPage) == index)) ? "text_focus" :  "text_normal"}
+             className={((workspace["focusedIndex"] == index) || ((searchedItemIndex % numOfElemPerPage) == index)) ? "text_focus" :  prediction[index] ? "text_predict" : "text_normal"}
               onKeyDown={keyEventHandler} id={"L" + index} onClick={(e) => clickEventHandler(e, index)}>
                 <p className="data_text" style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
 
