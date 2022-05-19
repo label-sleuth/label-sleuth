@@ -13,7 +13,7 @@ import Pagination from '../../../components/pagination/Pagination'
 import '../../../components/pagination/pagination.css'
 import useMainPagination from './useMainPagination'
 
-let numOfElemPerPage = 3;
+let numOfElemPerPage = 4;
 const rightDrawerWidth = 360;
 
 

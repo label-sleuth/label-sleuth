@@ -1,7 +1,6 @@
 import React from 'react';
 import FormControl from '@mui/material/FormControl';
-import ControlledSelect from "../../components/dropdown/Dropdown_Config"
-import FormLabel from '@mui/material/FormLabel';
+import ControlledSelect from "../../components/dropdown/Dropdown"
 import Box from '@mui/material/Box';
 import ButtonIBM from "../../components/buttons/ButtonIBM";
 import 'react-toastify/dist/ReactToastify.css';

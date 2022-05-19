@@ -21,8 +21,6 @@ export default function ButtonAppBar({logout}) {
             paddingRight: '12px',
             height: '48px'
           }}>
-      <AppBar position="static">
-        <Toolbar  sx={{ bgcolor: "#393939" }}>
           <IconButton
             size="medium"
             edge="start"
