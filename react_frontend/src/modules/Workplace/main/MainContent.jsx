@@ -80,15 +80,15 @@ const MainContent = ({setNumLabel, handleKeyEvent, numLabelGlobal, setNumLabelGl
                 return (
                 <Element key={index} id={'L' + index} keyEventHandler={(e) => handleKeyEvent(e, len_elements)} 
                 focusedState={workspace.focusedState}
-                 index={index}
-                  numLabelGlobal={numLabelGlobal}
-                   numLabelGlobalHandler={setNumLabelGlobal}
-                    numLabel={numLabel}
-                     numLabelHandler={setNumLabel}
-                      clickEventHandler={handleClick}
-                       element_id={element['id']}
-                        prediction={workspace.predictionForDocCat}
-                         text={element['text']} />)
+                index={index}
+                numLabelGlobal={numLabelGlobal}
+                numLabelGlobalHandler={setNumLabelGlobal}
+                numLabel={numLabel}
+                numLabelHandler={setNumLabel}
+                clickEventHandler={handleClick}
+                element_id={element['id']}
+                prediction={workspace.predictionForDocCat}
+                text={element['text']} />)
               })
             }
           </Box>

@@ -4,7 +4,7 @@ import fileDownload from 'js-file-download'
 import { WORKSPACE_API } from "../../config"
 
 const initialState = {
-    workspace: "demo-dakuo",
+    workspace: "demo-contractNLI",
     curDocId: 0,
     curDocName: "",
     documents: [],
@@ -34,7 +34,8 @@ const initialState = {
 }
 
 //const BASE_URL = "https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud"
-const token = localStorage.getItem('token')
+const token = "Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q"
+// const token = localStorage.getItem('token')
 const BASE_URL = process.env.REACT_APP_API_URL
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
@@ -42,6 +43,7 @@ export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async
 
     const state = getState()
     var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/documents`)
+    console.log(`url: ${url}`)
 
     const data = await fetch(url, {
         headers: {

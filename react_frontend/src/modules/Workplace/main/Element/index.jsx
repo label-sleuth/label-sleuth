@@ -15,64 +15,65 @@ import questioning from '../../Asset/questioning.svg'
 import question from '../../Asset/question.svg'
 
 
-const useStyles = makeStyles((theme) => ({
-    checkicon: {
-        color: "rgba(0, 255, 0)"
-    },
-    checkicon_predicted: {
-        color: "pink",
-    },
-    crossicon: {
-        color: "rgba(255, 0, 0)"
-    },
-    crossicon_predicted: {
-        color: "rgba(255, 0, 0, 0.7)",
-    },
-    questionicon: {
-        color: "#cfae44"
-    },
-    focused: {
-        borderWidth: 1,
-        borderStyle: 'solid',
-        borderColor: "transparent",
-        outline: "None",
-        alignItems: 'flex-start',
-        flexDirection: 'row',
-        marginBottom: 8,
-        background: '#D3D3D3',
-        fontWeight: 'bold',
-        display: 'flex',
-        justifyContent: 'center',
-        padding: "10px 25px",
-        cursor: "normal"
-    },
-    predicted: {
-        borderWidth: 1,
-        borderStyle: 'dotted',
-        borderColor: "#3092ab",
-        outline: "None",
-        alignItems: 'flex-start',
-        flexDirection: 'row',
-        marginBottom: 8,
-        display: 'flex',
-        justifyContent: 'center',
-        padding: "10px 25px",
-        cursor: "normal"
-    },
-    normal: {
-        borderWidth: 1,
-        borderStyle: 'solid',
-        borderColor: "transparent",
-        outline: "None",
-        alignItems: 'flex-start',
-        flexDirection: 'row',
-        marginBottom: 8,
-        display: 'flex',
-        justifyContent: 'center',
-        padding: "10px 25px",
-        cursor: "normal"
-    }
-}));
+// const useStyles = makeStyles((theme) => ({
+//     checkicon: {
+//         color: "rgba(0, 255, 0)"
+//     },
+//     checkicon_predicted: {
+//         color: "pink",
+//     },
+//     crossicon: {
+//         color: "rgba(255, 0, 0)"
+//     },
+//     crossicon_predicted: {
+//         color: "rgba(255, 0, 0, 0.7)",
+//     },
+//     questionicon: {
+//         color: "#cfae44"
+//     },
+//     focused: {
+//         borderWidth: 1,
+//         borderStyle: 'solid',
+//         borderColor: "transparent",
+//         outline: "None",
+//         alignItems: 'flex-start',
+//         flexDirection: 'row',
+//         marginBottom: 8,
+//         // background: '#D3D3D3',
+//         background: 'red',
+//         fontWeight: 'bold',
+//         display: 'flex',
+//         justifyContent: 'center',
+//         padding: "10px 25px",
+//         cursor: "normal"
+//     },
+//     predicted: {
+//         borderWidth: 1,
+//         borderStyle: 'dotted',
+//         borderColor: "#3092ab",
+//         outline: "None",
+//         alignItems: 'flex-start',
+//         flexDirection: 'row',
+//         marginBottom: 8,
+//         display: 'flex',
+//         justifyContent: 'center',
+//         padding: "10px 25px",
+//         cursor: "normal"
+//     },
+//     normal: {
+//         borderWidth: 1,
+//         borderStyle: 'solid',
+//         borderColor: "transparent",
+//         outline: "None",
+//         alignItems: 'flex-start',
+//         flexDirection: 'row',
+//         marginBottom: 8,
+//         display: 'flex',
+//         justifyContent: 'center',
+//         padding: "10px 25px",
+//         cursor: "normal"
+//     }
+// }));
 
 const text_colors = {
     'pos': { color: '#3092ab' },
@@ -84,31 +85,35 @@ export default function Sentence(props) {
 
     const { keyEventHandler, focusedState, numLabelGlobal, numLabelGlobalHandler, index, numLabel, numLabelHandler, clickEventHandler, text, element_id, prediction } = props
 
-    React.useEffect(() => {
+    // React.useEffect(() => {
 
-    }, [focusedState])
+    // }, [focusedState['L' + index]])
 
     React.useEffect(() => {
-        console.log(`prediction updated, element id: ${element_id}`)
-    }, [prediction])
+    }, [prediction['L' + index]])
 
     const dispatch = useDispatch()
 
     const workspace = useSelector(state => state.workspace)
 
+    const [isFocused, setFocused] = React.useState(false);
+
     if (workspace.curCategory == null) {
         return (
-            <Box tabIndex="-1" onMouseOver={() => dispatch(setFocusedState(index))} className="text_normal" onKeyDown={keyEventHandler} id={"L" + index} onClick={(e) => clickEventHandler(e, index)}>
+            // <Box tabIndex="-1" onMouseOver={() => dispatch(setFocusedState(index))} className="text_normal" onKeyDown={keyEventHandler} id={"L" + index} onClick={(e) => clickEventHandler(e, index)}>
+            //     <p className="nodata_text" style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
+            // </Box>
+            <Box tabIndex="-1" className="text_normal" onKeyDown={keyEventHandler} id={"L" + index} >
                 <p className="nodata_text" style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
             </Box>
         )
     } else {
         return (
-            <Box tabIndex="-1" onMouseOver={() => dispatch(setFocusedState(index))} className={workspace["focusedIndex"] == index ? "text_focus" : prediction[index] ? "text_predict" : "text_normal"} onKeyDown={keyEventHandler} id={"L" + index} onClick={(e) => clickEventHandler(e, index)}>
+            <Box tabIndex="-1" className={ prediction[index] ? "text_predict" : "text_normal" } onKeyDown={keyEventHandler} id={"L" + index} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}>
                 <p className="data_text" style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
 
                 <Stack className="checking_buttons" direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
-                    {(['pos'].includes(workspace.labelState['L' + index]) || (workspace.labelState['L' + index] == '' && prediction[index] == true) || (focusedState['L' + index] == true)) && <IconButton onClick={() => {
+                    {(['pos'].includes(workspace.labelState['L' + index]) || (workspace.labelState['L' + index] == '' && prediction[index] == true) || (isFocused == true)) && <IconButton onClick={() => {
                         var newState = { ...workspace.labelState }
 
                         if (newState['L' + index] != "pos") {
@@ -137,7 +142,7 @@ export default function Sentence(props) {
 
                     }}>
 
-                        {workspace.focusedIndex == index ?
+                        {isFocused ?
                             <img src={checking} alt="checking" />
                             : workspace.labelState['L' + index] == 'pos' ?
                                 <img src={check} alt="checked" />
@@ -145,7 +150,7 @@ export default function Sentence(props) {
                         }
 
                     </IconButton>}
-                    {(['neg'].includes(workspace.labelState['L' + index]) || focusedState['L' + index] == true) && <IconButton onClick={() => {
+                    {(['neg'].includes(workspace.labelState['L' + index]) || isFocused == true) && <IconButton onClick={() => {
                         var newState = { ...workspace.labelState }
                         if (newState['L' + index] != "neg") {
                             if (newState['L' + index] == "pos") {
@@ -172,14 +177,14 @@ export default function Sentence(props) {
                         dispatch(setLabelState(newState))
 
                     }}>
-                        {workspace.focusedIndex == index ?
+                        {isFocused ?
                             <img src={crossing} alt="crossinging" />
                             : <img src={cross} alt="crossed" />
                         }
 
                     </IconButton>}
                     {
-                        (['ques'].includes(workspace.labelState['L' + index]) || focusedState['L' + index] == true) &&
+                        (['ques'].includes(workspace.labelState['L' + index]) || isFocused == true) &&
                         <IconButton onClick={() => {
                             var newState = { ...workspace.labelState }
 
@@ -191,7 +196,7 @@ export default function Sentence(props) {
 
                             dispatch(setLabelState(newState))
                         }}>
-                            {workspace.focusedIndex == index ?
+                            {isFocused ?
                                 <img src={questioning} alt="questioning" />
                                 : <img src={question} alt="questioned" />
                             }

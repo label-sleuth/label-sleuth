@@ -311,6 +311,12 @@ p.hsbar_label {
     margin-bottom: 10px;
 }
 
+/* .text_normal:focus,
+.text_predict:focus {
+    background: #0080ff;
+    color: #000 !important;
+} */
+
 .text_predict > div > button,
 .text_normal > div > button,
 .text_focus > div > button {
@@ -344,6 +350,8 @@ p.hsbar_label {
     background: #f4f4f4;
     color: #000 !important;
 }
+
+
 
 .checking_buttons img,
 .recommend_buttons img {
