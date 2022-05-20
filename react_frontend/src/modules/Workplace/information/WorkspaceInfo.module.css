@@ -1,0 +1,108 @@
+.sleuth_title {
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+}
+
+.sleuthlogo {
+    width: 25px;
+    height: 25px;
+    margin-right: 8px;
+}
+
+.moreinfo,
+.logout,
+.workspace_nav {
+    width: 18px;
+    height: 18px;
+    margin-left: 5px;
+}
+
+.moreinfo:hover,
+.logout:hover,
+.workspace_nav:hover {
+    filter: opacity(0.5);
+    cursor: pointer;
+}
+
+.sleuth_desc {
+    margin-top: -10px;
+    margin-bottom: 20px;
+    padding: 0 16px;
+    font-size: 14px;
+    line-height: 18px;
+}
+
+.userid {
+    margin: 0;
+    padding: 0 16px;
+    font-size: 14px;
+    line-height: 18px;
+}
+
+.confetti_canvas {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 279px;
+    z-index: 9999;
+    background: #161616;
+}
+
+.account_info label {
+    display: block;
+    font-size: 12px;
+    line-height: 14px;
+    color: gray;
+    margin-top: 8px;
+}
+
+.account_info p {
+    font-size: 16px;
+    line-height: 20px;
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.tabroot button{
+    color: #393939;
+}
+
+.tabs {
+    font-size: 16px !important;
+}
+
+.entries_tab {
+    padding: 16px !important;
+    background: #393939;
+    border-radius: 0 0 2px 2px;
+    margin-bottom: 20px;
+}
+
+.entries_tab > div{
+    padding: 0 !important;
+}
+
+.label_hsbar_label {
+    display: block;
+    margin: 0 16px 0 16px;
+    font-size: 12px;
+    line-height: 14px;
+    color: gray;
+    margin-top: 20px;
+}
+
+.p_hsbar_label {
+    display: block;
+    margin: 0 16px 0 16px;
+    font-size: 14px;
+    line-height: 18px;
+    margin-top: 8px;
+}
+
+.modelStatus {
+    padding: 0 16px;
+    font-style: italic;
+    color: #0080ff;
+}

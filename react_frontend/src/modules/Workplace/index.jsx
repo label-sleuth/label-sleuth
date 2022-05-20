@@ -149,11 +149,10 @@ export default function Workspace() {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <WorkspaceInfo workspaceId={workspaceId} />
-      <Box component="main" sx={{ flexGrow: 1, p: 3, width: `calc(100% - ${drawerWidth}px)` }}>
+      <Box component="main" sx={{padding: 0}}>
         <UpperBar setNumLabel={setNumLabel} setModalOpen={setModalOpen} setNumLabelGlobal={setNumLabelGlobal} open={open} />
         <Sidebar open={open} setOpen={setOpen} handleSearchPanelClick={handleSearchPanelClick} 
- 
- />
+      />
         <MainContent setNumLabel={setNumLabel}
           handleKeyEvent={handleKeyEvent}
           numLabelGlobal={numLabelGlobal}
@@ -163,7 +162,6 @@ export default function Workspace() {
           open={open}
           searchedItem={searchedItem}
         />
-
       </Box>
       <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
     </Box>

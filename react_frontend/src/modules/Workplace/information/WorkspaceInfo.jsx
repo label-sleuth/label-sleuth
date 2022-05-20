@@ -5,10 +5,11 @@ import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import Typography from '@mui/material/Typography';
-import '../styles.css'
 import sleuth_logo from '../Asset/sleuth_logo.png';
-import info_icon from '../Asset/help.svg'
-import Divider from '@mui/material/Divider';
+import info_icon from '../../../assets/workspace/help.svg';
+import logout_icon from '../../../assets/workspace/logout.svg';
+import workspace_icon from '../../../assets/workspace/change_catalog.svg';
+// import Divider from '@mui/material/Divider';
 import LinearWithValueLabel from './ModelProgressBar'
 import IconButton from '@mui/material/IconButton';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,14 +20,14 @@ import { makeStyles } from '@mui/styles';
 import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import LogoutIcon from '@mui/icons-material/Logout';
+// import LogoutIcon from '@mui/icons-material/Logout';
 import useLogOut from '../../../customHooks/useLogOut';
 import Presentation from './Presentation';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { useNavigate } from 'react-router-dom';
+import classes from './WorkspaceInfo.module.css';
 
-
-const drawerWidth = 280;
+const drawerWidth = 280; // left navigation panel width
 
 const DrawerHeader = styled('div')(({ theme }) => ({
     display: 'flex',
@@ -35,6 +36,10 @@ const DrawerHeader = styled('div')(({ theme }) => ({
     padding: theme.spacing(0, 2),
     ...theme.mixins.toolbar,
 }));
+
+const Divider = styled('div')(() => ({
+    borderTop: 'solid 1px #393939'
+}))
 
 const StatsContainer = styled('div')(({ theme }) => ({
     display: 'flex',
@@ -50,7 +55,6 @@ const AccountInfo = styled('div')(({ theme }) => ({
     justifyContent: 'space-between',
     padding: theme.spacing(2, 2),
 }));
-
 
 const ModelName = styled('div')(({ theme }) => ({
     display: 'flex',
@@ -218,18 +222,21 @@ export default function Workspace({workspaceId}) {
     };
 
     const open_introSlides = function () {
-        document.getElementById("presentation").style.display = "flex";
+        console.log("this is where the tutorial starts");
+        // document.getElementById("presentation").style.display = "flex";
     }
+
+    console.log(workspace);
 
     return (
         <>
-            <Presentation />
-            <Box className="left_nav" sx={{
+            {/* <Presentation /> */}
+            <Box style={{
                 backgroundColor: '#161616',
                 width: drawerWidth,
                 height: '100vh'
             }}>
-                <ReactCanvasConfetti refConfetti={getInstance} className="confetti_canvas" />
+                <ReactCanvasConfetti refConfetti={getInstance} className={classes.confetti_canvas} />
                 <Drawer
                     sx={{
                         width: drawerWidth,
@@ -245,33 +252,34 @@ export default function Workspace({workspaceId}) {
                     variant="permanent"
                     // open={open}
                     anchor="left">
+
                     <DrawerHeader>
-                        <h2><img className="sleuth_logo" src={sleuth_logo} alt="temporary sleuth logo" />Sleuth<span className="moreinfo" onClick={open_introSlides}><img src={info_icon} alt="more info" /></span></h2>
-                        <IconButton onClick={logout}>
-                            <LogoutIcon style={{ filter: "invert(1)" }} />
-                        </IconButton>
+                        <h2 className={classes.sleuth_title}>
+                            <img src={sleuth_logo} className={classes.sleuthlogo} alt="Sleuth Logo" />
+                            Sleuth
+                            <img onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
+                        </h2>
+                        <img onClick={logout} className={classes.logout} src={logout_icon}/> 
                     </DrawerHeader>
-                    <p className="sleuth_desc">A tool that allows humans to work effectively with partial-automation ML models, making data annotation more efficient and more effective in the NLP domain.</p>
+
+                    <p className={classes.sleuth_desc}>A tool that allows humans to work effectively with partial-automation ML models, making data annotation more efficient and more effective in the NLP domain.</p>
+                    
                     <Divider />
-                    <DrawerHeader>
-                        {workspaceId} 
-                        <IconButton style={{color:"white"}} onClick={()=>{navigate('/workspaces')}} >
-                            <DoubleArrowIcon/>
-                        </IconButton>
+                    
+                    <DrawerHeader style={{padding: '12px 16px', alignItems: 'flex-end'}}>
+                        <div className={classes.account_info}>
+                            <label>User ID</label>
+                            <p><b>{localStorage.username}</b></p>
+                            <label>Workspace</label>
+                            <p><b>{workspaceId}</b></p>
+                        </div>
+                        <img onClick={()=>{navigate('/workspaces')}} className={classes.workspace_nav} src={workspace_icon} alt="Change to Another Workspace" style={{marginBottom: '10px'}}/> 
                     </DrawerHeader>
                     
                     <Divider />
-                    <Stack>
-                        <AccountInfo className="account_info">
-                            <Box sx={{ flexDirection: 'column' }}>
-                                <label>ID</label>
-                                <p><b>Dakuo Wang</b></p>
-                                <label>User Since</label>
-                                <p>December 5, 2021</p>
-                            </Box>
-                        </AccountInfo>
-                        <Divider />
-                        <p className="hsbar_label">Labeled (Current: {tabStatus == 0 ? (numLabelGlobal.pos + numLabelGlobal.neg) : (doc_stats.pos + doc_stats.neg)} / {tabStatus == 0 ? total_stats.total : 10})</p>
+                    
+                    <Stack style={{paddingTop: '12px'}}>
+                        <p className={classes.p_hsbar_label}>Labeled (Current: {tabStatus == 0 ? (numLabelGlobal.pos + numLabelGlobal.neg) : (doc_stats.pos + doc_stats.neg)} / {tabStatus == 0 ? total_stats.total : 10})</p>
                         <StackBarContainer>
                             <HSBar
                                 height={10}
@@ -289,15 +297,16 @@ export default function Workspace({workspaceId}) {
                         <Box sx={{ width: '100%', padding: theme.spacing(0, 2) }}>
                             <Box sx={{ borderBottom: 1, borderColor: '#393939' }}>
                                 <Tabs
+                                    className={classes.tabroot}
                                     value={tabValue}
                                     onChange={handleChange}
                                     aria-label="workspace toggle tab"
                                     variant="fullWidth">
-                                    <Tab label="Workspace" {...a11yProps(0)} />
-                                    <Tab label="Document" {...a11yProps(1)} />
+                                    <Tab label="Workspace" {...a11yProps(0)} className={classes.tabs}/>
+                                    <Tab label="Document" {...a11yProps(1)} className={classes.tabs}/>
                                 </Tabs>
                             </Box>
-                            <TabPanel className="entries_tab" value={tabValue} index={0} onClick={() => {
+                            <TabPanel className={classes.entries_tab} value={tabValue} index={0} onClick={() => {
                                 setTabStatus('workspace')
                             }}>
                                 <Stack spacing={0}>
@@ -316,7 +325,7 @@ export default function Workspace({workspaceId}) {
                                     </StatsContainer>
                                 </Stack>
                             </TabPanel>
-                            <TabPanel className="entries_tab" value={tabValue} index={1} onClick={() => {
+                            <TabPanel className={classes.entries_tab} value={tabValue} index={1} onClick={() => {
                                 console.log(`tab document`)
                                 setTabStatus('document')
                             }}>
@@ -337,8 +346,9 @@ export default function Workspace({workspaceId}) {
                                 </Stack>
                             </TabPanel>
                         </Box>
-                        <label className="hsbar_label">Model Update Freq.: 5 <i className="fa fa-info-circle"><span>Model in current workspace will be automatically updated every time when you label 5 new positive sentences.</span></i></label>
-                        {/* <label className="model_info">Model Information</label> */}
+                        <label className={classes.label_hsbar_label}>Model Update Frequency: 5
+                            <i className="fa fa-info-circle"><span>Model in current workspace will be automatically updated every time when you label 5 new positive sentences.</span></i>
+                        </label>
                         <ModelName>
                             <Typography>Current Model:</Typography>
                             {
@@ -347,7 +357,7 @@ export default function Workspace({workspaceId}) {
                             }
                         </ModelName>
                         <LinearWithValueLabel />
-                        <div className="modelStatus">{workspace['modelStatus']}</div>
+                        <div className={classes.modelStatus}>{workspace['modelStatus']}</div>
                         <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
                     </Stack>
                 </Drawer>
