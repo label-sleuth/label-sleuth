@@ -205,7 +205,9 @@ export const fetchElements = createAsyncThunk('workspace/fetchElements', async (
 })
 
 export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocument', async (request, { getState }) => {
-
+    // if(!state.workspace.curCategory){
+    //     throw Error("No category was selected!") 
+    // }
     const state = getState()
 
     const { docid, eid, switchStatus } = request

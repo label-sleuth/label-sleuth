@@ -109,11 +109,6 @@ export default function Workspace({workspaceId}) {
     const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
     const refAnimationInstance = useRef(null);
     
-    React.useEffect(()=>{
-        if(workspaceId){
-           dispatch(setWorkspace(workspaceId))
-        } 
-      },[workspaceId])
 
     const getInstance = useCallback((instance) => {
         refAnimationInstance.current = instance;

@@ -3,96 +3,30 @@ import { Box } from "@mui/system";
 import Stack from '@mui/material/Stack';
 import { IconButton } from "@mui/material";
 import { useDispatch, useSelector } from 'react-redux';
-import { setElementLabel, setFocusedState, checkStatus, setLabelState, increaseIdInBatch } from '../../DataSlice'
-import { styled } from '@mui/material/styles';
-import { makeStyles } from '@mui/styles';
-import checking from '../../Asset/checking.svg'
-import check from '../../Asset/check.svg'
-import check_predict from '../../Asset/check_predict.svg'
-import crossing from '../../Asset/crossing.svg'
-import cross from '../../Asset/cross.svg'
-import questioning from '../../Asset/questioning.svg'
-import question from '../../Asset/question.svg'
-
-
-// const useStyles = makeStyles((theme) => ({
-//     checkicon: {
-//         color: "rgba(0, 255, 0)"
-//     },
-//     checkicon_predicted: {
-//         color: "pink",
-//     },
-//     crossicon: {
-//         color: "rgba(255, 0, 0)"
-//     },
-//     crossicon_predicted: {
-//         color: "rgba(255, 0, 0, 0.7)",
-//     },
-//     questionicon: {
-//         color: "#cfae44"
-//     },
-//     focused: {
-//         borderWidth: 1,
-//         borderStyle: 'solid',
-//         borderColor: "transparent",
-//         outline: "None",
-//         alignItems: 'flex-start',
-//         flexDirection: 'row',
-//         marginBottom: 8,
-//         // background: '#D3D3D3',
-//         background: 'red',
-//         fontWeight: 'bold',
-//         display: 'flex',
-//         justifyContent: 'center',
-//         padding: "10px 25px",
-//         cursor: "normal"
-//     },
-//     predicted: {
-//         borderWidth: 1,
-//         borderStyle: 'dotted',
-//         borderColor: "#3092ab",
-//         outline: "None",
-//         alignItems: 'flex-start',
-//         flexDirection: 'row',
-//         marginBottom: 8,
-//         display: 'flex',
-//         justifyContent: 'center',
-//         padding: "10px 25px",
-//         cursor: "normal"
-//     },
-//     normal: {
-//         borderWidth: 1,
-//         borderStyle: 'solid',
-//         borderColor: "transparent",
-//         outline: "None",
-//         alignItems: 'flex-start',
-//         flexDirection: 'row',
-//         marginBottom: 8,
-//         display: 'flex',
-//         justifyContent: 'center',
-//         padding: "10px 25px",
-//         cursor: "normal"
-//     }
-// }));
-
+import { setElementLabel, setFocusedState, checkStatus, setLabelState, increaseIdInBatch } from '../DataSlice'
+import checking from '../Asset/checking.svg'
+import check from '../Asset/check.svg'
+import check_predict from '../Asset/check_predict.svg'
+import crossing from '../Asset/crossing.svg'
+import cross from '../Asset/cross.svg'
+import questioning from '../Asset/questioning.svg'
+import question from '../Asset/question.svg'
+ 
 const text_colors = {
     'pos': { color: '#3092ab' },
     'neg': { color: '#bd3951' },
     'ques': { color: '#cfae44' }
 }
 
+
 export default function Sentence(props) {
-
-    const { keyEventHandler, focusedState, numLabelGlobal, numLabelGlobalHandler, index, numLabel, numLabelHandler, clickEventHandler, text, element_id, prediction } = props
-
-    // React.useEffect(() => {
-
-    // }, [focusedState['L' + index]])
+    const dispatch = useDispatch()
+    const { numOfElemPerPage, searchedItemIndex, keyEventHandler, focusedState, numLabelGlobal, numLabelGlobalHandler, index, numLabel, numLabelHandler, clickEventHandler, text, element_id, prediction } = props
 
     React.useEffect(() => {
-    }, [prediction['L' + index]])
+        console.log(`prediction updated, element id: ${element_id}`)
+    }, [prediction, element_id])
 
-    const dispatch = useDispatch()
 
     const workspace = useSelector(state => state.workspace)
 
