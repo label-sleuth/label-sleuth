@@ -9,11 +9,14 @@ import Element from "./Element"
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useDispatch, useSelector } from 'react-redux';
-import Pagination from '../../../components/pagination/Pagination'
-import '../../../components/pagination/pagination.css'
-import useMainPagination from './useMainPagination'
+import Pagination from '../../../components/pagination/Pagination';
+import '../../../components/pagination/pagination.css';
+import useMainPagination from './useMainPagination';
+import classes from './MainContent.module.css';
+import left_icon from '../../../assets/workspace/doc_left.svg';
+import right_icon from '../../../assets/workspace/doc_right.svg'
 
-let numOfElemPerPage = 4;
+const numOfElemPerPage = 200;
 const rightDrawerWidth = 360;
 
 
@@ -25,7 +28,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
-    marginRight: 0,
+    margin: 0,
     ...(open && {
       transition: theme.transitions.create('margin', {
         easing: theme.transitions.easing.easeOut,
@@ -63,64 +66,61 @@ const MainContent = ({
 
   return (
     <>
-      <Main className="main_content" open={open}>
-        <Box sx={{ display: 'flex', flexDirection:'column',  justifyContent: 'center', mr: 4 }}>
-        <Box>
-        <TitleBar>
-          <IconButton onClick={() => {
-            if (workspace.curDocId > 0) {
-              dispatch(fetchPrevDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })))
-            }
-          }}>
-            <ChevronLeftIcon />
-          </IconButton>
-          <Typography className="document_name" sx={{ fontSize: 20, textAlign: 'center' }}>
-            <Typography variant="h6" component="h6">
-              {workspace.curDocName}
-            </Typography>
-            <em>File type: PDF | Text Entries: {workspace.elements.length}</em>
-          </Typography>
-          <IconButton onClick={() => {
-            if (workspace.curDocId < workspace.documents.length - 1) {
-              dispatch(fetchNextDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })))
-            }
-          }}>
-            <ChevronRightIcon />
-          </IconButton>
-        </TitleBar>          
-        </Box>
+      <Main className={classes.main_content} open={open}>
+        <div className={classes.doc_header}>
+            <button className={classes.doc_button} onClick={() => {
+              if (workspace.curDocId > 0) {
+                dispatch(fetchPrevDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })))
+              }
+            }}><img src={left_icon}/>
+            </button>
+            <div className={classes.doc_stats}>
+              <h6>{workspace.curDocName}</h6>
+              <em>Text Entries: {workspace.elements.length}</em>
+            </div>
+            <button className={classes.doc_button} onClick={() => {
+              if (workspace.curDocId < workspace.documents.length - 1) {
+                dispatch(fetchNextDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })))
+              }
+            }}><img src={right_icon}/>
+            </button>
+        </div>
+        <div className={classes.doc_content}>
+        <Box>          
+          </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'center',  mb: 1  }}>
-          <Pagination
-            className="pagination-bar"
-            currentPage={currentPage}
-            totalCount={workspace.elements.length}
-            pageSize={numOfElemPerPage}
-            onPageChange={page => setCurrentPage(page)}
-          />
-        </Box>
-        <Box>
-          {
-            currentContentData.map((element, index) =>
-              <Element 
-                searchedItemIndex={searchedItemIndex}
-                numOfElemPerPage ={numOfElemPerPage}
-                 key={index} id={'L' + index} keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
-                focusedState={workspace.focusedState}
-                index={index}
-                numLabelGlobal={numLabelGlobal}
-                numLabelGlobalHandler={setNumLabelGlobal}
-                numLabel={numLabel}
-                numLabelHandler={setNumLabel}
-                clickEventHandler={handleClick}
-                element_id={element['id']}
-                prediction={workspace.predictionForDocCat}
-                text={element['text']}
-              />
-            )
-          }
-        </Box>          
-        </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center',  mb: 1  }}>
+            <Pagination
+              className="pagination-bar"
+              currentPage={currentPage}
+              totalCount={workspace.elements.length}
+              pageSize={numOfElemPerPage}
+              onPageChange={page => setCurrentPage(page)}
+            />
+          </Box>
+          <Box>
+            {
+              currentContentData.map((element, index) =>
+                <Element 
+                  searchedItemIndex={searchedItemIndex}
+                  numOfElemPerPage ={numOfElemPerPage}
+                  key={index} id={'L' + index} keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
+                  focusedState={workspace.focusedState}
+                  index={index}
+                  numLabelGlobal={numLabelGlobal}
+                  numLabelGlobalHandler={setNumLabelGlobal}
+                  numLabel={numLabel}
+                  numLabelHandler={setNumLabel}
+                  clickEventHandler={handleClick}
+                  element_id={element['id']}
+                  prediction={workspace.predictionForDocCat}
+                  text={element['text']}
+                />
+              )
+            }
+          </Box>  
+        </div>
+          
 
       </Main>
     </>

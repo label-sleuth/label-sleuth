@@ -1,27 +1,17 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import '../styles.css'
+import add_icon from '../../../assets/workspace/add_icon.svg';
+import next_icon from '../../../assets/workspace/right_icon.svg';
+import classes from './UpperBar.module.css';
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useDispatch, useSelector } from 'react-redux';
 import { nextPrediction, updateCurCategory, setFocusedState } from '../DataSlice.jsx';
 import FormControl from '@mui/material/FormControl';
-import Button from '@mui/material/Button';
-import { IconButton } from '@mui/material';
-import ControlledSelect from '../../../components/combobox/ControlledSelect';
-import AddIcon from '@mui/icons-material/Add';
+import ControlledSelect from '../../../components/dropdown/Dropdown';
 
 const rightDrawerWidth = 360;
-
-const ToolBar = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: theme.spacing(1, 2),
-  // necessary for content to be below app bar
-  // ...theme.mixins.toolbar,
-}));
+const leftDrawerWidthh = 280;
 
 function ElevationScroll(props) {
   const { children, window } = props;
@@ -39,21 +29,19 @@ function ElevationScroll(props) {
   });
 }
 
-const AppBar = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'open',
-})(({ theme, open }) => ({
-  transition: theme.transitions.create(['margin', 'width'], {
+const AppBar = styled(Box, {shouldForwardProp: (prop) => prop !== 'open',})(({ theme, open }) => ({
+  transition: theme.transitions.create(['padding', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
   ...(open && {
-    width: `calc(100% - ${rightDrawerWidth}px)`,
-    transition: theme.transitions.create(['margin', 'width'], {
+    transition: theme.transitions.create(['padding', 'width'], {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
     }),
-    marginRight: rightDrawerWidth,
+    paddingRight: `${rightDrawerWidth + 20}px`,
   }),
+  width: `calc(100vw - ${leftDrawerWidthh + 48}px)`,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -80,14 +68,14 @@ function CategoryFormControl(props) {
   }
 
   return (
-    <FormControl variant="standard" sx={{ m: 1, minWidth: 150, maxWidth: 150, marginBottom: 4 }}>
+    <FormControl variant="standard" sx={{minWidth: '200px', marginBottom: '16px'}}>
       <ControlledSelect
         id="label-select"
         value={selValue}
         onChange={handleCategorySelect}
         options={options}
+        placholder="placeholder"
       />
-
     </FormControl>
   );
 }
@@ -105,39 +93,57 @@ const UpperBar = ({ setNumLabel, setModalOpen, setNumLabelGlobal, open }) => {
 
   return (
     <ElevationScroll>
-      <AppBar className="elevation_scroll" open={open}>
-        <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
+      <AppBar className={classes.elevation_scroll} open={open}>
+
+        <div className={classes.upper}>
+          <p>Category: </p>
+          <CategoryFormControl 
+            numLabelGlobalHandler={setNumLabelGlobal}
+            numLabelHandler={setNumLabel}
+            workspaceLength={workspaceLength}
+            placholder="placeholder"/>
+
+          <button onClick={handleAddCategory} alt="Create new category">
+            <img src={add_icon}/>
+          </button>
+                    {/* TODO 
+              <IconButton onClick={() => setModalOpen(false)} >
+                <EditIcon  color="success" />
+              </IconButton>
+              <IconButton onClick={() => setModalOpen(false)} >
+                <DeleteIcon  color="error" />
+              </IconButton>
+            */}
+        </div>
+
+
+        {/* <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
           <Typography><strong>Category:</strong></Typography>
-          <CategoryFormControl numLabelGlobalHandler={setNumLabelGlobal} numLabelHandler={setNumLabel} workspaceLength={workspaceLength} />
-          <IconButton onClick={handleAddCategory} alt="Create new category">
-            <AddIcon  style={{ color: "white", backgroundColor:"#393939" }}  />
+          <CategoryFormControl 
+            numLabelGlobalHandler={setNumLabelGlobal}
+            numLabelHandler={setNumLabel}
+            workspaceLength={workspaceLength}
+            placholder="placeholder"/>
+          <IconButton onClick={handleAddCategory} alt="Create new category" style={{margin: 0}}>
+            <AddIcon style={{ color: "white", backgroundColor:"#393939" }}  />
           </IconButton>
 
-          {/* TODO 
-                <IconButton onClick={() => setModalOpen(false)} >
-                  <EditIcon  color="success" />
-                </IconButton>
-                <IconButton onClick={() => setModalOpen(false)} >
-                  <DeleteIcon  color="error" />
-                </IconButton>
-             */}
 
-        </Box>
-        <ToolBar>
-          <Button className="btn" onClick={() => {
-            dispatch(nextPrediction())
-            dispatch(setFocusedState(workspace.indexPrediction))
 
-            document.getElementById('L' + workspace.indexPrediction).scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-              // inline: "nearest"
-            })
-          }}>
-            Next Positive Prediction <i className="fa fa-forward"></i>
-          </Button>
+        </Box> */}
+        <button 
+          className={classes.nextbtn} onClick={() => {
+          dispatch(nextPrediction())
+          dispatch(setFocusedState(workspace.indexPrediction))
 
-        </ToolBar>
+          document.getElementById('L' + workspace.indexPrediction).scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+            // inline: "nearest"
+          })
+        }}>
+          Next Prediction <img src={next_icon}/>
+        </button>
       </AppBar>
     </ElevationScroll>
   );

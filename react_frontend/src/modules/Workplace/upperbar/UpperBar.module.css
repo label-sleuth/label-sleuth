@@ -1,0 +1,55 @@
+.elevation_scroll {
+    position: fixed;
+    top: 0;
+    left: 280px;
+    right: 0;
+    background: #f4f4f4;
+    border-bottom: solid 1px #d6d6d6;
+    height: 80px;
+    padding: 0 25px;
+    z-index: 999;
+}
+
+.upper {
+    display: flex;
+    align-items: center;
+}
+
+.upper p {
+    font-weight: 600;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.upper button {
+    padding: 0;
+    height: 43px;
+    width: 43px;
+    border: none;
+    border-radius: 0 !important;
+    background: #393939;
+}
+
+.nextbtn {
+    padding: 0 9px 0 16px;
+    border: none;
+    height: 43px;
+    border-radius: 0 !important;
+    background: #393939;
+    display: flex;
+    color: #fff;
+    font-size: 16px;
+    align-items: center;
+}
+
+.upper button img,
+.nextbtn img {
+    width: 32px;
+    height: 32px;
+}
+
+.upper button:hover,
+.nextbtn:hover {
+    filter: brightness(1.5);
+    cursor: pointer;
+}

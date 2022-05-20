@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-
+import classes from "./ControlledSelect.module.css";
 import MenuItem from '@mui/material/MenuItem/MenuItem';
 import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 
 
-const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur }) => {
+const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, placeholder }) => {
   const ITEM_HEIGHT = 30;
   const ITEM_PADDING_TOP = 8;
   const MenuProps = {
@@ -42,15 +42,18 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur }) 
         labelId="demo-simple-select-helper-label"
         id="demo-simple-select-helper"
         value={localValue}
+        renderValue={value !== "" ? undefined : () => placeholder}
         label={label}
         onChange={handleChange}
         onBlur={handleBlur}
         onFocus={handleFocus}
         MenuProps={MenuProps}
+        className={classes.dropdown}
       >
         {options?.map(option => {
           return (
-            <MenuItem key={option.value} value={option.value}>
+            <MenuItem 
+              key={option.value} value={option.value}>
               {option.label ?? option.value}
             </MenuItem>
           );

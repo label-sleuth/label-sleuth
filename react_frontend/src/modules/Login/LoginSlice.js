@@ -3,6 +3,7 @@ import { ADUTHENTICATE_API } from "../../config"
 import { client } from '../../api/client'
 
 const initialState = {
+    username: '',
     token: '',
     loading: false,
     errorMessage: '',
@@ -15,13 +16,16 @@ const auth_url = `${BASE_URL}/${ADUTHENTICATE_API}`
 
 export const getAuthenticated = createAsyncThunk('workspaces/getAuthenticated', async (params) => {
     const { data } = await client.post(auth_url, params)
-    console.log(data)
+
+    localStorage.setItem("username", data.username || "")
+
     if(data.token){
         localStorage.setItem("token", data.token)
     }
+    console.log(data);
     return data
-    
 })
+
 
 
 export const authenticateSlice = createSlice({
