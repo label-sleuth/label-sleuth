@@ -1,0 +1,43 @@
+.text_confused {
+    border: dotted 2px #d6d6d6 !important;
+    color: #161616 !important;
+    border: solid 2px transparent;
+    outline: none;
+    padding: 20px 10px 10px 10px;
+    margin: 10px;
+    position: relative;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.text_confused button {
+    border-radius: 0 !important;
+}
+
+.text_confused p {
+    margin: 15px 0;
+    font-size: 14px !important;
+    line-height: 18px !important;
+}
+
+.rec_doc_id {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 3px 6px;
+    background: #e2e2e2;
+}
+
+.recommend_buttons img {
+    width: 25px;
+    height: 25px
+}
+
+.recommend_buttons button {
+    padding: 0 !important;
+    margin-left: 5px;
+}
+
+.recommend_buttons button:hover {
+    background: #f4f4f4 !important;
+}

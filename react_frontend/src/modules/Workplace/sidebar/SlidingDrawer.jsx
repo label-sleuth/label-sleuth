@@ -1,7 +1,6 @@
 import {useState, useRef} from 'react';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import '../styles.css'
 import IconButton from '@mui/material/IconButton';
 import { useDispatch, useSelector } from 'react-redux';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -124,7 +123,9 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                 drawerContent == 'rcmd' &&
                 <Box>
                     <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItem: 'center', marginTop: 3 }} >
-                        <IconButton onClick={handleDrawerClose}>
+                        <IconButton onClick={handleDrawerClose} style={{
+                            background: 'none', 
+                            borderRadius: 0}}>
                             <ChevronLeftIcon />
                         </IconButton>
                         <p style={{ width: '100%', textAlign: "center", marginRight: "20px" }}><strong>Recommend to label</strong></p>

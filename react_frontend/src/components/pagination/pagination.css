@@ -1,7 +1,9 @@
 .pagination-container {
     display: flex;
     list-style-type: none;
-    padding:0;
+    padding:8px;
+    background: #fff;
+    box-shadow: 0 1px 2px 0 #eaeaea;
 }
 .pagination-container .pagination-item {
     padding: 0 12px;

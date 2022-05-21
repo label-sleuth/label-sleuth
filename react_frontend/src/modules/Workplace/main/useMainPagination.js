@@ -1,5 +1,4 @@
 import * as React from 'react';
-import '../styles.css'
 import { useSelector } from 'react-redux';
 import '../../../components/pagination/pagination.css'
 

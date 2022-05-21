@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useCallback, useRef } from "react";
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
-import './styles.css'
 import CreateCategoryModal from './upperbar/Modal';
 import { useDispatch, useSelector } from 'react-redux';
 import {

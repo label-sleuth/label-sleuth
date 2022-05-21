@@ -2,7 +2,6 @@ import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import '../styles.css'
 import IconButton from '@mui/material/IconButton';
 import { getPositiveElementForCategory, fetchPrevDocElements, fetchNextDocElements } from '../DataSlice.jsx';
 import Element from "./Element"
@@ -16,7 +15,7 @@ import classes from './MainContent.module.css';
 import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
 
-const numOfElemPerPage = 200;
+const numOfElemPerPage = 100;
 const rightDrawerWidth = 360;
 
 
@@ -89,15 +88,14 @@ const MainContent = ({
         <Box>          
           </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'center',  mb: 1  }}>
+          <div className={classes.pagination}>
             <Pagination
-              className="pagination-bar"
               currentPage={currentPage}
               totalCount={workspace.elements.length}
               pageSize={numOfElemPerPage}
               onPageChange={page => setCurrentPage(page)}
             />
-          </Box>
+          </div>
           <Box>
             {
               currentContentData.map((element, index) =>

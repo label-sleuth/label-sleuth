@@ -62,15 +62,17 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
         className={value !== "" ? classes.dropdown : classes.dropdown_gray}
       >
         {options?.map(option => {
-        return (
-            <MenuItem 
-                style={{
-                    minHeight: '40px'
-                }}
-                key={option.value} value={option.value}>
-                {option.label ?? option.value}
-            </MenuItem>
-        );
+          if(option.value !== ""){
+            return (
+              <MenuItem 
+                  style={{
+                      minHeight: '40px'
+                  }}
+                  key={option.value} value={option.value}>
+                  {option.label ?? option.value}
+              </MenuItem>
+            );
+          }
         })}
       </Select>
     </>
