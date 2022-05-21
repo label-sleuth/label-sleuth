@@ -224,9 +224,7 @@ export default function Workspace({workspaceId}) {
     const open_introSlides = function () {
         console.log("this is where the tutorial starts");
         // document.getElementById("presentation").style.display = "flex";
-    }
-
-    console.log(workspace);
+    };
 
     return (
         <>
@@ -310,7 +308,7 @@ export default function Workspace({workspaceId}) {
                                 setTabStatus('workspace')
                             }}>
                                 <Stack spacing={0}>
-                                    <label>Labeled Entries for Entire Workspace:</label>
+                                    <label style={{fontSize: '12px', opacity: 0.5}}>Labeled for Entire Workspace:</label>
                                     <StatsContainer>
                                         <Typography><strong>Positive</strong></Typography>
                                         <Typography sx={{ color: numLabelGlobal.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{numLabelGlobal.pos}</strong></Typography>
@@ -330,7 +328,7 @@ export default function Workspace({workspaceId}) {
                                 setTabStatus('document')
                             }}>
                                 <Stack spacing={0}>
-                                    <label>Labeled Entries for Current Doc:</label>
+                                    <label style={{fontSize: '12px', opacity: 0.5}}>Labeled for Current Doc:</label>
                                     <StatsContainer>
                                         <Typography><strong>Positive</strong></Typography>
                                         <Typography sx={{ color: doc_stats.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{doc_stats.pos}</strong></Typography>
@@ -346,9 +344,7 @@ export default function Workspace({workspaceId}) {
                                 </Stack>
                             </TabPanel>
                         </Box>
-                        <label className={classes.label_hsbar_label}>Model Update Frequency: 5
-                            <i className="fa fa-info-circle"><span>Model in current workspace will be automatically updated every time when you label 5 new positive sentences.</span></i>
-                        </label>
+                        <label className={classes.label_hsbar_label}>Model auto-updates per 5 new labels.</label>
                         <ModelName>
                             <Typography>Current Model:</Typography>
                             {

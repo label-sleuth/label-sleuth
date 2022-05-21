@@ -1,0 +1,20 @@
+.new_modal_name > div > input{
+    margin: 0 !important;
+    padding: 0 6px !important;
+    background: #f1f1f1;
+    height: 30px !important;
+    border-bottom: solid 1px #707070;
+}
+
+.btn {
+    height: 32px;
+    background: #393939 !important;
+    border-radius: 2px !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 16px !important;
+    color: #fff !important;
+    font-size: 14px;
+    margin-right: 30px !important;
+}

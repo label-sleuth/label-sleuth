@@ -6,6 +6,7 @@ import Modal from '@mui/material/Modal';
 import { useDispatch, useSelector } from 'react-redux';
 import { createNewCategory, createCategoryOnServer, fetchCategories, setWorkspaceLength, updateCurCategory } from '../../DataSlice';
 import TextField from '@mui/material/TextField';
+import classes from './index.module.css';
 
 
 const style = {
@@ -49,7 +50,7 @@ export default function CreateCategoryModal(props) {
             Please enter new category:
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TextField id="outlined-basic" className="new_modal_name" label="New Model Name" onChange={handleTextFieldChange} />
+            <TextField id="outlined-basic" className={classes.new_modal_name} label="New Model Name" onChange={handleTextFieldChange} />
             <Button onClick={() => {
               console.log(`button called`)
               // dispatch(createNewCategory(text))
@@ -59,7 +60,7 @@ export default function CreateCategoryModal(props) {
               dispatch(setWorkspaceLength(workspace.categories.length + 1))
               dispatch(updateCurCategory(workspace.categories[workspace.categories.length - 1]))
               setOpen(false)
-            }} className="btn" sx={{ marginLeft: 3 }}>Create</Button>
+            }} className={classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
           </Box>
 
         </Box>

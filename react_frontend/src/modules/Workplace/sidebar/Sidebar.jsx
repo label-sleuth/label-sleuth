@@ -1,5 +1,4 @@
 import {useState} from 'react';
-import '../styles.css'
 import FixedDrower from './FixedDrawer';
 import SlidingDrawer from './SlidingDrawer';
 
@@ -13,17 +12,11 @@ const Sidebar = ({ open, setOpen, handleSearchPanelClick }) => {
     };
 
     const handleDrawerClose = () => {
-        console.log(`Close`)
         setOpen(false);
     };
 
     return (
         <>
-            <FixedDrower
-                setDrawerContent={setDrawerContent}
-                drawerContent={setDrawerContent}
-                handleDrawerOpen={handleDrawerOpen}
-            />
             <SlidingDrawer
                 setDrawerContent={setDrawerContent}
                 drawerContent={drawerContent}
@@ -31,6 +24,11 @@ const Sidebar = ({ open, setOpen, handleSearchPanelClick }) => {
                 open={open}
                 setOpen={setOpen}
                 handleSearchPanelClick={handleSearchPanelClick}
+            />
+            <FixedDrower
+                setDrawerContent={setDrawerContent}
+                drawerContent={setDrawerContent}
+                handleDrawerOpen={handleDrawerOpen}
             />
         </>
     );

@@ -22,7 +22,6 @@ export const getAuthenticated = createAsyncThunk('workspaces/getAuthenticated', 
     if(data.token){
         localStorage.setItem("token", data.token)
     }
-    console.log(data);
     return data
 })
 

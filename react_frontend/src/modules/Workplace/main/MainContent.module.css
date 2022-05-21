@@ -70,3 +70,14 @@
     padding: 0;
     opacity: 0.5;
 }
+
+.pagination {
+    text-align: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 30px;
+    top: auto;
+    display: flex;
+    justify-content: center;
+}

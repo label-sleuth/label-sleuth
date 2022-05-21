@@ -6,12 +6,13 @@ import Stack from '@mui/material/Stack';
 import { setFocusedState, fetchCertainDocument, setLabelState, checkStatus, setElementLabel, increaseIdInBatch } from '../DataSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { useState } from "react";
-import check from '../Asset/check.svg'
-import checking from '../Asset/checking.svg'
-import crossing from '../Asset/crossing.svg'
-import cross from '../Asset/cross.svg'
-import questioning from '../Asset/questioning.svg'
-import question from '../Asset/question.svg'
+import check from '../Asset/check.svg';
+import checking from '../Asset/checking.svg';
+import crossing from '../Asset/crossing.svg';
+import cross from '../Asset/cross.svg';
+import questioning from '../Asset/questioning.svg';
+import question from '../Asset/question.svg';
+import classes from './SearchPanel.module.css';
 
 
 export default function SearchPanel(props) {
@@ -27,13 +28,15 @@ export default function SearchPanel(props) {
         console.log('prediction: ', prediction)
     }, [prediction])
 
-    console.log(labelState);
-
     return (
-        <Paper  labelState={labelState} className="text_confused"  sx={{ cursor: "pointer", position: 'relative'}} onClick={(e) => {
-            handleSearchPanelClick(docid, id)}}
+        <Paper 
+            labelState={labelState}
+            className={classes.text_confused}
+            onClick={(e) => {
+                handleSearchPanelClick(docid, id)
+            }}
         >
-            <label className="rec_doc_id">{docid}</label>
+            <label className={classes.rec_doc_id}>{docid}</label>
             <p>
             <Highlighter 
                 searchWords={[searchInput]}
@@ -43,7 +46,7 @@ export default function SearchPanel(props) {
             />
             </p>
 
-            <Stack className="recommend_buttons" direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
+            <Stack className={classes.recommend_buttons} direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
                 { ['', 'pos'].includes(labelState) && <IconButton onClick={(e) => {
 
                             e.stopPropagation()

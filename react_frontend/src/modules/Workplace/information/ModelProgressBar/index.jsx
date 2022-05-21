@@ -12,7 +12,12 @@ function LinearProgressWithLabel(props) {
         <LinearProgress variant="determinate" {...props} />
       </Box>
       <Box sx={{ minWidth: 35 }}>
-        <Typography className="model_percentage" variant="body2" color="text.secondary">{`${Math.round(
+        <Typography variant="body2" color="text.secondary" 
+          style={{
+            textAlign: 'right',
+            color: '#fff',
+            fontSize: '12px'
+          }}>{`${Math.round(
           props.value,
         )}%`}</Typography>
       </Box>

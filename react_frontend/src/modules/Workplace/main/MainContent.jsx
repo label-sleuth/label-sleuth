@@ -2,7 +2,6 @@ import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import '../styles.css'
 import IconButton from '@mui/material/IconButton';
 import { getPositiveElementForCategory, fetchPrevDocElements, fetchNextDocElements } from '../DataSlice.jsx';
 import Element from "./Element"
@@ -89,15 +88,7 @@ const MainContent = ({
         <Box>          
           </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'center',  mb: 1  }}>
-            <Pagination
-              className="pagination-bar"
-              currentPage={currentPage}
-              totalCount={workspace.elements.length}
-              pageSize={numOfElemPerPage}
-              onPageChange={page => setCurrentPage(page)}
-            />
-          </Box>
+          
           <Box>
             {
               currentContentData.map((element, index) =>
@@ -122,8 +113,16 @@ const MainContent = ({
         </div>
           
 
+        <div className={classes.pagination}>
+            <Pagination
+              currentPage={currentPage}
+              totalCount={workspace.elements.length}
+              pageSize={numOfElemPerPage}
+              onPageChange={page => setCurrentPage(page)}
+            />
+        </div>
       </Main>
-    </>
+      </>
   );
 };
 
