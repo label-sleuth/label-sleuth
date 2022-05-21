@@ -29,6 +29,13 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/test"
+          exact
+          element={
+              <Workplace />
+          }
+        />
       </Routes>
     </div>
   );

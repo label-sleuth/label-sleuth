@@ -64,7 +64,6 @@ const MainContent = ({
   const { currentContentData, currentPage, setCurrentPage, searchedItemIndex } = useMainPagination(searchedItem, numOfElemPerPage)
 
   return (
-    <>
       <Main className={classes.main_content} open={open}>
         <div className={classes.doc_header}>
             <button className={classes.doc_button} onClick={() => {
@@ -121,7 +120,6 @@ const MainContent = ({
           
 
       </Main>
-    </>
   );
 };
 
