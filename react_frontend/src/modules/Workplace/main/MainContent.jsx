@@ -15,7 +15,7 @@ import classes from './MainContent.module.css';
 import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
 
-const numOfElemPerPage = 100;
+const numOfElemPerPage = 200;
 const rightDrawerWidth = 360;
 
 
@@ -64,6 +64,7 @@ const MainContent = ({
   const { currentContentData, currentPage, setCurrentPage, searchedItemIndex } = useMainPagination(searchedItem, numOfElemPerPage)
 
   return (
+    <>
       <Main className={classes.main_content} open={open}>
         <div className={classes.doc_header}>
             <button className={classes.doc_button} onClick={() => {
@@ -87,14 +88,7 @@ const MainContent = ({
         <Box>          
           </Box>
 
-          <div className={classes.pagination}>
-            <Pagination
-              currentPage={currentPage}
-              totalCount={workspace.elements.length}
-              pageSize={numOfElemPerPage}
-              onPageChange={page => setCurrentPage(page)}
-            />
-          </div>
+          
           <Box>
             {
               currentContentData.map((element, index) =>
@@ -119,7 +113,16 @@ const MainContent = ({
         </div>
           
 
+        <div className={classes.pagination}>
+            <Pagination
+              currentPage={currentPage}
+              totalCount={workspace.elements.length}
+              pageSize={numOfElemPerPage}
+              onPageChange={page => setCurrentPage(page)}
+            />
+        </div>
       </Main>
+      </>
   );
 };
 

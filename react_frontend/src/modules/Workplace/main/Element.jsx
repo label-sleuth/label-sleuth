@@ -3,14 +3,16 @@ import { Box } from "@mui/system";
 import Stack from '@mui/material/Stack';
 import { IconButton } from "@mui/material";
 import { useDispatch, useSelector } from 'react-redux';
-import { setElementLabel, setFocusedState, checkStatus, setLabelState, increaseIdInBatch } from '../DataSlice'
-import checking from '../Asset/checking.svg'
-import check from '../Asset/check.svg'
-import check_predict from '../Asset/check_predict.svg'
-import crossing from '../Asset/crossing.svg'
-import cross from '../Asset/cross.svg'
-import questioning from '../Asset/questioning.svg'
-import question from '../Asset/question.svg'
+import { setElementLabel, setFocusedState, checkStatus, setLabelState, increaseIdInBatch } from '../DataSlice';
+import checking from '../Asset/checking.svg';
+import check from '../Asset/check.svg';
+import check_predict from '../Asset/check_predict.svg';
+import crossing from '../Asset/crossing.svg';
+import cross from '../Asset/cross.svg';
+import questioning from '../Asset/questioning.svg';
+import question from '../Asset/question.svg';
+import none from '../Asset/none.svg';
+import classes from './Element.module.css';
  
 const text_colors = {
     'pos': { color: '#3092ab' },
@@ -34,20 +36,29 @@ export default function Sentence(props) {
 
     if (workspace.curCategory == null) {
         return (
-            // <Box tabIndex="-1" onMouseOver={() => dispatch(setFocusedState(index))} className="text_normal" onKeyDown={keyEventHandler} id={"L" + index} onClick={(e) => clickEventHandler(e, index)}>
-            //     <p className="nodata_text" style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
-            // </Box>
-            <Box tabIndex="-1" className="text_normal" onKeyDown={keyEventHandler} id={"L" + index} >
-                <p className="nodata_text" style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
+            <Box tabIndex="-1" className={classes.text_normal}>
+                <p className={classes.nodata_text}>{text}</p>
             </Box>
         )
     } else {
         return (
-            <Box tabIndex="-1" className={ prediction[index] ? "text_predict" : "text_normal" } onKeyDown={keyEventHandler} id={"L" + index} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}>
-                <p className="data_text" style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
+            <Box 
+                tabIndex="-1"
+                className={ prediction[index] ? classes.text_predict : classes.text_normal }
+                // onKeyDown={keyEventHandler}
+                id={"L" + index}
+                // onFocus={() => setFocused(true)}
+                // onBlur={() => setFocused(false)}
+            >
+                <p className={classes.data_text} style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
 
-                <Stack className="checking_buttons" direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
-                    {(['pos'].includes(workspace.labelState['L' + index]) || (workspace.labelState['L' + index] == '' && prediction[index] == true) || (isFocused == true)) && <IconButton onClick={() => {
+                <Stack 
+                    className={classes.checking_buttons}
+                    direction="row"
+                    spacing={0}
+                >
+                    <IconButton 
+                        onClick={() => {
                         var newState = { ...workspace.labelState }
 
                         if (newState['L' + index] != "pos") {
@@ -75,16 +86,15 @@ export default function Sentence(props) {
                         dispatch(setLabelState(newState))
 
                     }}>
-
-                        {isFocused ?
-                            <img src={checking} alt="checking" />
-                            : workspace.labelState['L' + index] == 'pos' ?
-                                <img src={check} alt="checked" />
-                                : <img src={check_predict} alt="predicted checking" />
+                        {workspace.labelState['L' + index] == 'pos' ? 
+                            <img className={classes.resultbtn} src={check} alt="checked" /> : 
+                            prediction[index] == true && workspace.labelState['L' + index] !== 'neg' && workspace.labelState['L' + index] !== 'ques'?
+                            <img className={classes.resultbtn} src={check_predict} alt="predicted checking" /> : 
+                            <img className={classes.hovbtn} src={checking} alt="checking" /> 
                         }
 
-                    </IconButton>}
-                    {(['neg'].includes(workspace.labelState['L' + index]) || isFocused == true) && <IconButton onClick={() => {
+                    </IconButton>
+                    <IconButton onClick={() => {
                         var newState = { ...workspace.labelState }
                         if (newState['L' + index] != "neg") {
                             if (newState['L' + index] == "pos") {
@@ -111,15 +121,13 @@ export default function Sentence(props) {
                         dispatch(setLabelState(newState))
 
                     }}>
-                        {isFocused ?
-                            <img src={crossing} alt="crossinging" />
-                            : <img src={cross} alt="crossed" />
+                        {workspace.labelState['L' + index] == 'neg' ? 
+                            <img className={classes.resultbtn} src={cross} alt="crossed" /> :
+                            <img className={classes.hovbtn} src={crossing} alt="crossinging" />
                         }
 
-                    </IconButton>}
-                    {
-                        (['ques'].includes(workspace.labelState['L' + index]) || isFocused == true) &&
-                        <IconButton onClick={() => {
+                    </IconButton>
+                    <IconButton onClick={() => {
                             var newState = { ...workspace.labelState }
 
                             if (newState['L' + index] != "ques") {
@@ -130,13 +138,12 @@ export default function Sentence(props) {
 
                             dispatch(setLabelState(newState))
                         }}>
-                            {isFocused ?
-                                <img src={questioning} alt="questioning" />
-                                : <img src={question} alt="questioned" />
+                            {workspace.labelState['L' + index] == 'ques' ? 
+                                <img className={classes.resultbtn} src={question} alt="questioned" /> :
+                                <img className={classes.hovbtn} src={questioning} alt="questioning" />
                             }
-
                         </IconButton>
-                    }
+                    
                 </Stack>
 
             </Box>
