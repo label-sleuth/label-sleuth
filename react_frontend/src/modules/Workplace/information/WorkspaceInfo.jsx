@@ -13,7 +13,7 @@ import workspace_icon from '../../../assets/workspace/change_catalog.svg';
 import LinearWithValueLabel from './ModelProgressBar'
 import IconButton from '@mui/material/IconButton';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchElements, downloadLabeling, getElementToLabel, checkStatus, fetchCategories, getPositiveElementForCategory, checkModelUpdate, fetchDocuments, setWorkspace } from '../DataSlice.jsx';
+import { fetchElements, downloadLabeling, getElementToLabel, checkStatus, fetchCategories, getPositiveElementForCategory, checkModelUpdate, fetchDocuments, setWorkspaceId } from '../DataSlice.jsx';
 import Stack from '@mui/material/Stack';
 import HSBar from "react-horizontal-stacked-bar-chart";
 import { makeStyles } from '@mui/styles';
@@ -113,7 +113,12 @@ export default function Workspace({workspaceId}) {
     const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
     const refAnimationInstance = useRef(null);
     
-
+    React.useEffect(()=>{
+        if(workspaceId){
+            dispatch(setWorkspaceId(workspaceId))
+        } 
+      },[workspaceId])
+      
     const getInstance = useCallback((instance) => {
         refAnimationInstance.current = instance;
     }, []);

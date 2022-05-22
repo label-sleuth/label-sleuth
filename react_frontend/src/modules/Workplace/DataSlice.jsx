@@ -4,7 +4,7 @@ import fileDownload from 'js-file-download'
 import { WORKSPACE_API } from "../../config"
 
 const initialState = {
-    workspace: "demo-contractNLI",
+    workspaceId: "",
     curDocId: 0,
     curDocName: "",
     documents: [],
@@ -34,15 +34,15 @@ const initialState = {
 }
 
 //const BASE_URL = "https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud"
-const token = "Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q"
-// const token = localStorage.getItem('token')
+// const token = "Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q"
+const token = localStorage.getItem('token')
 const BASE_URL = process.env.REACT_APP_API_URL
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
 export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async (request, { getState }) => {
 
     const state = getState()
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/documents`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/documents`)
     console.log(`url: ${url}`)
 
     const data = await fetch(url, {
@@ -60,7 +60,7 @@ export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel',
 
     const state = getState()
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/active_learning?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/active_learning?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -83,7 +83,7 @@ export const getPositiveElementForCategory = createAsyncThunk('workspace/getPosi
 
     //var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/positive_elements?category_name=${state.workspace.curCategory}`)
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -104,7 +104,7 @@ export const createCategoryOnServer = createAsyncThunk('workspace/createCategory
 
     console.log(`category on server: ${category}`)
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/category`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/category`)
 
     const data = await fetch(url, {
         headers: {
@@ -128,7 +128,7 @@ export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async
     const { keyword } = request
     console.log(`searchKeywords called, key: `, keyword)
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/query?qry_string=${keyword}&category_name=${state.workspace.curCategory}&sample_start_idx=0`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/query?qry_string=${keyword}&category_name=${state.workspace.curCategory}&sample_start_idx=0`)
 
     const data = await fetch(url, {
         headers: {
@@ -147,7 +147,7 @@ export const fetchNextDocElements = createAsyncThunk('workspace/fetchNextDoc', a
 
     const curDocument = state.workspace.documents[state.workspace.curDocId + 1]['document_id']
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -166,7 +166,7 @@ export const fetchPrevDocElements = createAsyncThunk('workspace/fetchPrevDoc', a
 
     const curDocument = state.workspace.documents[state.workspace.curDocId - 1]['document_id']
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -188,9 +188,9 @@ export const fetchElements = createAsyncThunk('workspace/fetchElements', async (
     var url = null;
 
     if (state.workspace.curCategory == null) {
-        url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}`)
+        url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${curDocument}`)
     } else {
-        url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
+        url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
     }
 
     const data = await fetch(url, {
@@ -214,7 +214,7 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
 
     console.log(`call fetchCertainDocument, eid: ${eid}`)
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/document/${docid}?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${docid}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -235,7 +235,7 @@ export const downloadLabeling = createAsyncThunk('workspace/downloadLabeling', a
 
     const state = getState()
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/export_labels`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/export_labels`)
 
     const data = await fetch(url, {
         headers: {
@@ -252,7 +252,7 @@ export const labelInfoGain = createAsyncThunk('workspace/labeled_info_gain', asy
 
     const state = getState()
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/labeled_info_gain?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/labeled_info_gain?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -269,7 +269,7 @@ export const fetchCategories = createAsyncThunk('workspace/get_all_categories', 
 
     const state = getState()
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/categories`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/categories`)
 
     const data = await fetch(url, {
         headers: {
@@ -286,7 +286,7 @@ export const checkModelUpdate = createAsyncThunk('workspace/check_model_update',
 
     const state = getState()
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/models?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/models?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -306,7 +306,7 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
 
     const { element_id, label, docid } = request
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/element/${element_id}?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/element/${element_id}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -328,7 +328,7 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
 export const checkStatus = createAsyncThunk('workspace/get_labelling_status', async (request, { getState }) => {
     const state = getState()
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspace}/status?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/status?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -345,8 +345,8 @@ const DataSlice = createSlice({
     name: "workspace",
     initialState,
     reducers: {
-        setWorkspace(state, action) {
-            state.workspace = action.payload
+        setWorkspaceId(state, action) {
+            state.workspaceId = action.payload
         },
         nextPrediction(state, action) {
             console.log(`np data: `, state.elements)
@@ -842,4 +842,5 @@ export const { updateCurCategory,
     setWorkspace,
     setFocusedState,
     setWorkspaceLength,
+    setWorkspaceId,
     setLabelState } = DataSlice.actions;
