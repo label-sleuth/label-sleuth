@@ -398,8 +398,7 @@ const DataSlice = createSlice({
             var initialFocusedState = {}
 
             for (var i = 0; i < state['elements'].length; i++) {
-                const new_key = 'L' + i
-                initialFocusedState['L' + i] = { ...initialFocusedState, new_key: false }
+                Object.assign({}, {[`L + ${i}`]: false});
             }
 
             initialFocusedState['L' + id] = true

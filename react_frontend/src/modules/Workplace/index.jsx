@@ -130,7 +130,6 @@ export default function Workspace() {
 
   
   const handleSearchPanelClick =(docid, id) =>{
-    console.log("search elem clicked id....", id)
     setSearchedItem(id)
     const splits = id.split("-")
     const index = parseInt(splits[splits.length-1])

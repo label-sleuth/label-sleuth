@@ -34,8 +34,7 @@ export default function SearchPanel(props) {
             className={classes.text_confused}
             sx={{ cursor: "pointer" }}
             onClick={(e) => {
-               console.log("handleSearchPanelClick.........")
-                // handleSearchPanelClick(docid, id)
+               handleSearchPanelClick(docid, id)
             }}
         >
             <label className={classes.rec_doc_id}>{docid}</label>
