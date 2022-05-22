@@ -23,13 +23,14 @@ import MainContent from './main/MainContent'
 
 const drawerWidth = 280;
 export default function Workspace() {
-  const workspaceId  = JSON.parse(window.localStorage.getItem('workspaceId'))
+  const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
   const [open, setOpen] = React.useState(false);
   const workspace = useSelector(state => state.workspace)
   const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
   const [modalOpen, setModalOpen] = React.useState(false)
   const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
   const [searchedItem, setSearchedItem] = React.useState()
+  const [searchedDoc, setSearchedDoc] = React.useState()
 
   const handleKeyEvent = (event, len_elements) => {
 
@@ -128,11 +129,22 @@ export default function Workspace() {
 
   }, [workspace.model_version])
 
-  
-  const handleSearchPanelClick =(docid, id) =>{
+
+  const handleSearchPanelClick = (docid, id) => {
     setSearchedItem(id)
     const splits = id.split("-")
-    const index = parseInt(splits[splits.length-1])
+    const index = parseInt(splits[splits.length - 1])
+    setSearchedItem(id)
+    setSearchedDoc(docid)
+
+    const element = document.getElementById('L' + index);
+
+    element && element.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+      inline: "nearest"
+    })
+
     if (docid != workspace.curDocName) {
       dispatch(fetchCertainDocument({ docid, id, switchStatus: 'switch' })).then(() => {
         dispatch(setFocusedState(index))
@@ -140,17 +152,17 @@ export default function Workspace() {
     } else {
       dispatch(setFocusedState(index))
     }
- }
-  
+  }
+
 
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <WorkspaceInfo workspaceId={workspaceId} />
-      <Box component="main" sx={{padding: 0}}>
+      <Box component="main" sx={{ padding: 0 }}>
         <UpperBar setNumLabel={setNumLabel} setModalOpen={setModalOpen} setNumLabelGlobal={setNumLabelGlobal} open={open} />
-        <Sidebar open={open} setOpen={setOpen} handleSearchPanelClick={handleSearchPanelClick} 
-      />
+        <Sidebar open={open} setOpen={setOpen} handleSearchPanelClick={handleSearchPanelClick}
+        />
         <MainContent setNumLabel={setNumLabel}
           handleKeyEvent={handleKeyEvent}
           numLabelGlobal={numLabelGlobal}

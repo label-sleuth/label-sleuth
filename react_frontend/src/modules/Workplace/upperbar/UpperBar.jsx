@@ -29,7 +29,7 @@ function ElevationScroll(props) {
   });
 }
 
-const AppBar = styled(Box, {shouldForwardProp: (prop) => prop !== 'open',})(({ theme, open }) => ({
+const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== 'open', })(({ theme, open }) => ({
   transition: theme.transitions.create(['padding', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
@@ -68,7 +68,7 @@ function CategoryFormControl(props) {
   }
 
   return (
-    <FormControl variant="standard" sx={{minWidth: '200px', marginBottom: '16px'}}>
+    <FormControl variant="standard" sx={{ minWidth: '200px', marginBottom: '16px' }}>
       <ControlledSelect
         id="label-select"
         value={selValue}
@@ -79,7 +79,6 @@ function CategoryFormControl(props) {
     </FormControl>
   );
 }
-
 
 const UpperBar = ({ setNumLabel, setModalOpen, setNumLabelGlobal, open }) => {
 
@@ -97,16 +96,16 @@ const UpperBar = ({ setNumLabel, setModalOpen, setNumLabelGlobal, open }) => {
 
         <div className={classes.upper}>
           <p>Category: </p>
-          <CategoryFormControl 
+          <CategoryFormControl
             numLabelGlobalHandler={setNumLabelGlobal}
             numLabelHandler={setNumLabel}
             workspaceLength={workspaceLength}
-            placholder="placeholder"/>
+            placholder="placeholder" />
 
           <button onClick={handleAddCategory} alt="Create new category">
-            <img src={add_icon}/>
+            <img src={add_icon} />
           </button>
-                    {/* TODO 
+          {/* TODO 
               <IconButton onClick={() => setModalOpen(false)} >
                 <EditIcon  color="success" />
               </IconButton>
@@ -115,34 +114,17 @@ const UpperBar = ({ setNumLabel, setModalOpen, setNumLabelGlobal, open }) => {
               </IconButton>
             */}
         </div>
-
-
-        {/* <Box sx={{ display: "flex", flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', }}>
-          <Typography><strong>Category:</strong></Typography>
-          <CategoryFormControl 
-            numLabelGlobalHandler={setNumLabelGlobal}
-            numLabelHandler={setNumLabel}
-            workspaceLength={workspaceLength}
-            placholder="placeholder"/>
-          <IconButton onClick={handleAddCategory} alt="Create new category" style={{margin: 0}}>
-            <AddIcon style={{ color: "white", backgroundColor:"#393939" }}  />
-          </IconButton>
-
-
-
-        </Box> */}
-        <button 
+        <button
           className={classes.nextbtn} onClick={() => {
-          dispatch(nextPrediction())
-          dispatch(setFocusedState(workspace.indexPrediction))
-
-          document.getElementById('L' + workspace.indexPrediction).scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-            // inline: "nearest"
-          })
-        }}>
-          Next Prediction <img src={next_icon}/>
+            dispatch(nextPrediction())
+            dispatch(setFocusedState(workspace.indexPrediction))
+            document.getElementById('L' + workspace.indexPrediction).scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+              // inline: "nearest"
+            })
+          }}>
+          Next Prediction <img src={next_icon} />
         </button>
       </AppBar>
     </ElevationScroll>

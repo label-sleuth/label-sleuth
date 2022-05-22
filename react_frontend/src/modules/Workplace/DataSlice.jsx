@@ -33,8 +33,6 @@ const initialState = {
     workspaceLength:0,
 }
 
-//const BASE_URL = "https://sleuth-ui-backend-dev.ris2-debater-event.us-east.containers.appdomain.cloud"
-// const token = "Via95malVX383mcS022JfIKAksd9admCVJASD94123FPQva943q"
 const token = localStorage.getItem('token')
 const BASE_URL = process.env.REACT_APP_API_URL
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`

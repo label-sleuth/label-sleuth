@@ -87,8 +87,6 @@ const MainContent = ({
         <div className={classes.doc_content}>
         <Box>          
           </Box>
-
-          
           <Box>
             {
               currentContentData.map((element, index) =>
@@ -111,8 +109,6 @@ const MainContent = ({
             }
           </Box>  
         </div>
-          
-
         <div className={classes.pagination}>
             <Pagination
               currentPage={currentPage}
