@@ -1,12 +1,8 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import { getPositiveElementForCategory, fetchPrevDocElements, fetchNextDocElements } from '../DataSlice.jsx';
 import Element from "./Element"
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useDispatch, useSelector } from 'react-redux';
 import Pagination from '../../../components/pagination/Pagination';
 import '../../../components/pagination/pagination.css';
@@ -17,7 +13,6 @@ import right_icon from '../../../assets/workspace/doc_right.svg'
 
 const numOfElemPerPage = 200;
 const rightDrawerWidth = 360;
-
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
@@ -37,15 +32,6 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
     }),
   }),
 );
-
-const TitleBar = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: theme.spacing(1, 0),
-  marginBottom: 10
-}));
-
 
 const MainContent = ({
   setNumLabel,
@@ -87,8 +73,6 @@ const MainContent = ({
         <div className={classes.doc_content}>
         <Box>          
           </Box>
-
-          
           <Box>
             {
               currentContentData.map((element, index) =>
@@ -111,8 +95,6 @@ const MainContent = ({
             }
           </Box>  
         </div>
-          
-
         <div className={classes.pagination}>
             <Pagination
               currentPage={currentPage}

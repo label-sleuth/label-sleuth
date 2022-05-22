@@ -9,7 +9,9 @@
     border-radius: 0 !important;
     box-shadow: none !important;
 }
-
+.text_confused:hover{
+    background: #f4f4f4;
+}
 .text_confused button {
     border-radius: 0 !important;
 }

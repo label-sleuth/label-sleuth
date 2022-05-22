@@ -32,8 +32,9 @@ export default function SearchPanel(props) {
         <Paper 
             labelState={labelState}
             className={classes.text_confused}
+            sx={{ cursor: "pointer" }}
             onClick={(e) => {
-                handleSearchPanelClick(docid, id)
+               handleSearchPanelClick(docid, id)
             }}
         >
             <label className={classes.rec_doc_id}>{docid}</label>
@@ -46,11 +47,11 @@ export default function SearchPanel(props) {
             />
             </p>
 
-            <Stack className={classes.recommend_buttons} direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
+            <Stack className="recommend_buttons" direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
                 { ['', 'pos'].includes(labelState) && <IconButton onClick={(e) => {
 
                             e.stopPropagation()
-
+                            
                             var newState = labelState
 
                             if (newState != "pos") {
@@ -64,6 +65,7 @@ export default function SearchPanel(props) {
                                 newState = "pos"
 
                                 dispatch(increaseIdInBatch())
+
                                 dispatch(setElementLabel({ element_id: element_id, docid: docid, label: "true" })).then(() => {
                                     dispatch(checkStatus())
                                 })
@@ -81,13 +83,19 @@ export default function SearchPanel(props) {
                                 for (var i = 0; i < workspace['elements'].length; i++) {
                                     initialLabelState['L'+i] = ""
                                 }
+
                                 initialLabelState['L' + index] = newState
+
                                 dispatch(setLabelState(initialLabelState))
                             } else {
                                 var initialLabelState = { ...workspace.labelState }
+
                                 initialLabelState['L' + index] = newState
+
                                 dispatch(setLabelState(initialLabelState))
                             }
+
+
 
                             if (docid != workspace.curDocName) {
                                 dispatch(fetchCertainDocument({ docid, id, switchStatus: "search" })).then(() => {
@@ -96,6 +104,12 @@ export default function SearchPanel(props) {
                               } else {
                                 dispatch(setFocusedState(index))
                               }
+
+                            document.getElementById('L'+index).scrollIntoView({
+                                behavior: "smooth",
+                                block: "start",
+                                // inline: "nearest"
+                              })
                         }}>
                             { labelState == 'pos' ?
                                 <img src={check} alt="checked"/>
@@ -118,6 +132,7 @@ export default function SearchPanel(props) {
                                 newState = "neg"
 
                                 dispatch(increaseIdInBatch())
+
                                 dispatch(setElementLabel({ element_id: element_id, docid: docid, label: "false" })).then(() => {
                                     dispatch(checkStatus())
                                 })
@@ -132,15 +147,19 @@ export default function SearchPanel(props) {
 
                             if ( workspace['curDocName'] != docid ) {
                                 var initialLabelState = {}
+
                                 for (var i = 0; i < workspace['elements'].length; i++) {
                                     initialLabelState['L'+i] = ""
                                 }
+
                                 initialLabelState['L' + index] = newState
+
                                 dispatch(setLabelState(initialLabelState))
                             } else {
                                 var initialLabelState = { ...workspace.labelState }
 
                                 initialLabelState['L' + index] = newState
+
                                 dispatch(setLabelState(initialLabelState))
                             }
 
@@ -151,6 +170,12 @@ export default function SearchPanel(props) {
                               } else {
                                 dispatch(setFocusedState(index))
                               }
+
+                            document.getElementById('L'+index).scrollIntoView({
+                                behavior: "smooth",
+                                block: "start",
+                                // inline: "nearest"
+                              })
                         }}>
                             { labelState == 'neg' ?
                                 <img src={cross} alt="crossed"/>
@@ -163,12 +188,15 @@ export default function SearchPanel(props) {
                             <IconButton onClick={(e) => {
 
                                 e.stopPropagation()
+
                                 var newState = labelState
+
                                 if (newState != "ques") {
                                     newState = "ques"
                                 } else {
                                     newState = ''
                                 }
+
                                 setLocalLabelState(newState)
 
                                 if ( workspace['curDocName'] != docid ) {
@@ -177,11 +205,15 @@ export default function SearchPanel(props) {
                                     for (var i = 0; i < workspace['elements'].length; i++) {
                                         initialLabelState['L'+i] = ""
                                     }
+    
                                     initialLabelState['L' + index] = 'ques'
+    
                                     dispatch(setLabelState(initialLabelState))
                                 } else {
                                     var initialLabelState = { ...workspace.labelState }
+    
                                     initialLabelState['L' + index] = 'ques'
+    
                                     dispatch(setLabelState(initialLabelState))
                                 }
 
@@ -192,6 +224,12 @@ export default function SearchPanel(props) {
                                   } else {
                                     dispatch(setFocusedState(index))
                                   }
+
+                                document.getElementById('L'+index).scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "start",
+                                    // inline: "nearest"
+                                  })
                             }}>
                                 { labelState == 'ques' ?
                                 <img src={question} alt="questioned"/>
