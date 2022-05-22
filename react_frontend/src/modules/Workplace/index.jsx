@@ -30,8 +30,8 @@ export default function Workspace() {
   const [modalOpen, setModalOpen] = React.useState(false)
   const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
   const [searchedItem, setSearchedItem] = React.useState()
-  const [searchedDoc, setSearchedDoc] = React.useState()
-
+  const [searchedDocId, setSearchedDocId] = React.useState()
+  const [searchedIndex, setSearchedIndex] = React.useState()
   const handleKeyEvent = (event, len_elements) => {
 
     console.log("key pressed")
@@ -131,14 +131,14 @@ export default function Workspace() {
 
 
   const handleSearchPanelClick = (docid, id) => {
-    setSearchedItem(id)
+
     const splits = id.split("-")
     const index = parseInt(splits[splits.length - 1])
+    setSearchedIndex(index)
     setSearchedItem(id)
-    setSearchedDoc(docid)
-
+    setSearchedDocId(docid) 
     const element = document.getElementById('L' + index);
-
+ 
     element && element.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -152,6 +152,7 @@ export default function Workspace() {
     } else {
       dispatch(setFocusedState(index))
     }
+
   }
 
 
