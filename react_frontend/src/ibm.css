@@ -299,27 +299,6 @@ p.hsbar_label {
     line-height: 20px;
 }
 
-.text_predict,
-.text_normal,
-.text_focus {
-    color: #161616 !important;
-    border: solid 2px transparent;
-    outline: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 10px;
-    margin-bottom: 10px;
-}
-
-.text_predict > div > button,
-.text_normal > div > button,
-.text_focus > div > button {
-    padding: 0 !important;
-    margin-left: 5px;
-    margin-bottom: -24px;
-}
-
 .text_predict {
     border: dotted 2px #a3d8e5;
 }
@@ -337,13 +316,6 @@ p.hsbar_label {
     margin: 15px 0;
     font-size: 14px !important;
     line-height: 18px !important;
-}
-
-.text_normal:hover,
-.text_predict:hover,
-.text_focus {
-    background: #f4f4f4;
-    color: #000 !important;
 }
 
 .checking_buttons img,
