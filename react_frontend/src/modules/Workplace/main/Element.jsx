@@ -27,7 +27,7 @@ export default function Sentence(props) {
     const workspace = useSelector(state => state.workspace)
 
     React.useEffect(() => {
-        console.log(`prediction updated, element id: ${element_id}`)
+        // console.log(`prediction updated, element id: ${element_id}`)
     }, [prediction, element_id])
 
     let mainElemStyle = classes["text_normal"]

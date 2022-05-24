@@ -11,7 +11,7 @@ import classes from './MainContent.module.css';
 import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
 
-const numOfElemPerPage = 200;
+const numOfElemPerPage = 500;
 const rightDrawerWidth = 360;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
@@ -47,7 +47,7 @@ const MainContent = ({
   const workspace = useSelector(state => state.workspace)
   const dispatch = useDispatch()
   const len_elements = workspace['elements'].length
-  const { currentContentData, currentPage, setCurrentPage, searchedItemIndex } = useMainPagination(searchedItem, numOfElemPerPage)
+  const { currentContentData, currentPage, setCurrentPage, searchedItemIndex ,lastPageIndex,firstPageIndex} = useMainPagination(searchedItem, numOfElemPerPage)
 
   return (
     <>
@@ -79,9 +79,9 @@ const MainContent = ({
                 <Element 
                   searchedItemIndex={searchedItemIndex}
                   numOfElemPerPage ={numOfElemPerPage}
-                  key={index} id={'L' + index} keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
+                  key={index} id={'L' + index+firstPageIndex} keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
                   focusedState={workspace.focusedState}
-                  index={index}
+                  index={index+firstPageIndex}
                   numLabelGlobal={numLabelGlobal}
                   numLabelGlobalHandler={setNumLabelGlobal}
                   numLabel={numLabel}

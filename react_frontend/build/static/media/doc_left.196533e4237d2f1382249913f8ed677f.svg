@@ -3,9 +3,7 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;" xml:space="preserve">
 <style type="text/css">
-	.st0{fill:#A3D8E5;}
-	.st1{fill:none;}
+	.st0{fill:#161616;}
 </style>
-<polygon class="st0" points="13,24 4,15 5.4,13.6 13,21.2 26.6,7.6 28,9 "/>
-<rect id="_Transparent_Rectangle_" class="st1" width="32" height="32"/>
+<path class="st0" d="M10.6,16l10-10L22,7.4L13.4,16l8.6,8.6L20.6,26L10.6,16z"/>
 </svg>
