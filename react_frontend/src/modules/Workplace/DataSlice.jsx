@@ -31,6 +31,8 @@ const initialState = {
     training_batch: 5,
     cur_completed_id_in_batch: 0,
     workspaceLength:0,
+    isDocLoaded: false,
+    isPageChanges: false,
 }
 
 const token = localStorage.getItem('token')
@@ -345,6 +347,12 @@ const DataSlice = createSlice({
     reducers: {
         setWorkspaceId(state, action) {
             state.workspaceId = action.payload
+        },
+        setDocIsLoaded(state, action) {
+            state.isDocLoaded = action.payload
+        },
+        setIsPageChanged(state, action) {
+            state.isPageChanges = action.payload
         },
         nextPrediction(state, action) {
             console.log(`np data: `, state.elements)
@@ -840,4 +848,6 @@ export const { updateCurCategory,
     setFocusedState,
     setWorkspaceLength,
     setWorkspaceId,
+    setDocIsLoaded,
+    setIsPageChanged,
     setLabelState } = DataSlice.actions;

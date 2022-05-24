@@ -26,14 +26,6 @@ object-assign
      */
 
 /**
- * A better abstraction over CSS.
- *
- * @copyright Oleg Isonen (Slobodskoi) / Isonen 2014-present
- * @website https://github.com/cssinjs/jss
- * @license MIT
- */
-
-/**
  * React Router v6.2.2
  *
  * Copyright (c) Remix Software Inc.

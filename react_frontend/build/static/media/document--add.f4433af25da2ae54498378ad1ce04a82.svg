@@ -6,6 +6,8 @@
 	.st0{fill:#FFFFFF;}
 	.st1{fill:none;}
 </style>
-<polygon class="st0" points="24,9.4 22.6,8 16,14.6 9.4,8 8,9.4 14.6,16 8,22.6 9.4,24 16,17.4 22.6,24 24,22.6 17.4,16 "/>
-<rect class="st1" width="32" height="32"/>
+<polygon class="st0" points="30,24 26,24 26,20 24,20 24,24 20,24 20,26 24,26 24,30 26,30 26,26 30,26 "/>
+<path class="st0" d="M16,28H8V4h8v6c0,1.1,0.9,2,2,2h6v4h2v-6c0-0.3-0.1-0.5-0.3-0.7l-7-7C18.5,2.1,18.3,2,18,2H8C6.9,2,6,2.9,6,4
+	v24c0,1.1,0.9,2,2,2h8V28z M18,4.4l5.6,5.6H18V4.4z"/>
+<rect id="_Transparent_Rectangle_" class="st1" width="32" height="32"/>
 </svg>
