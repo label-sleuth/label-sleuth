@@ -14,6 +14,7 @@ import {
   fetchDocuments,
   setFocusedState,
   fetchCertainDocument,
+  setElementLabel,
 } from './DataSlice.jsx';
 import WorkspaceInfo from './information/WorkspaceInfo';
 import Sidebar from './sidebar/Sidebar';
@@ -26,14 +27,19 @@ export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
   const [open, setOpen] = React.useState(false);
   const workspace = useSelector(state => state.workspace)
+  const focusedState = useSelector(state => state.workspace.focusedState)
   const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
   const [modalOpen, setModalOpen] = React.useState(false)
   const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
   const [searchedItem, setSearchedItem] = React.useState()
   const [searchedDocId, setSearchedDocId] = React.useState()
   const [searchedIndex, setSearchedIndex] = React.useState()
-  const handleKeyEvent = (event, len_elements) => {
+  const [element, setElemenent] = React.useState()
 
+
+
+  const handleKeyEvent = (event, len_elements) => {
+    
     console.log("key pressed")
     if (event.key === "ArrowDown") {
       if (workspace.focusedIndex < len_elements) {
@@ -130,6 +136,17 @@ export default function Workspace() {
   }, [workspace.model_version])
 
 
+  React.useEffect(() => {
+     if(focusedState){
+      element && element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+        inline: "nearest"
+      })
+     }
+  },[focusedState, element])
+
+
   const handleSearchPanelClick = (docid, id) => {
 
     const splits = id.split("-")
@@ -138,7 +155,7 @@ export default function Workspace() {
     setSearchedItem(id)
     setSearchedDocId(docid) 
     const element = document.getElementById('L' + index);
- 
+    setElemenent(element)
     element && element.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -154,7 +171,6 @@ export default function Workspace() {
     }
 
   }
-
 
   return (
     <Box sx={{ display: 'flex' }}>
