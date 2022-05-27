@@ -47,12 +47,6 @@ export default function Sentence(props) {
                             <img className={classes.hovbtn} src={crossing} alt="crossinging" />
                         }
                     </IconButton>
-                    <IconButton onClick={handleQuestLabelState}>
-                        {workspace.labelState['L' + index] == 'ques' ?
-                            <img className={classes.resultbtn} src={question} alt="questioned" /> :
-                            <img className={classes.hovbtn} src={questioning} alt="questioning" />
-                        }
-                    </IconButton>
                 </Stack>
             </Box>
     )

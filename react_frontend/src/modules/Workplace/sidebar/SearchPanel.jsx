@@ -61,12 +61,6 @@ export default function SearchPanel(props) {
                         <img className={classes.hovbtn} src={crossing} alt="crossinging" />
                     }
                 </IconButton>
-                <IconButton className={classes.resultbtn} onClick={handleQuestLabelState}>
-                    {labelState == 'ques' ?
-                        <img src={question} alt="questioned" /> :
-                        <img className={classes.hovbtn} src={questioning} alt="questioning" />
-                    }
-                </IconButton>
             </Stack>
         </Paper>
     )
