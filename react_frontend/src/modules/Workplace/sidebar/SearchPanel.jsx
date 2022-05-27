@@ -31,13 +31,13 @@ export default function SearchPanel(props) {
     return (
         <Paper 
             labelState={labelState}
-            className={classes.text_confused}
+            className={classes["text_confused"]}
             sx={{ cursor: "pointer" }}
             onClick={(e) => {
                handleSearchPanelClick(docid, id)
             }}
         >
-            <label className={classes.rec_doc_id}>{docid}</label>
+            <label className={classes["rec_doc_id"]}>{docid}</label>
             <p>
             <Highlighter 
                 searchWords={[searchInput]}

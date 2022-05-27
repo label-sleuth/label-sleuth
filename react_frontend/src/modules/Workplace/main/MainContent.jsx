@@ -47,41 +47,41 @@ const MainContent = ({
   const workspace = useSelector(state => state.workspace)
   const dispatch = useDispatch()
   const len_elements = workspace['elements'].length
-  const { currentContentData, currentPage, setCurrentPage, searchedItemIndex ,lastPageIndex,firstPageIndex} = useMainPagination(searchedItem, numOfElemPerPage)
+  const { currentContentData, currentPage, setCurrentPage, searchedItemIndex, lastPageIndex, firstPageIndex } = useMainPagination(searchedItem, numOfElemPerPage)
 
   return (
     <>
       <Main className={classes.main_content} open={open}>
         <div className={classes.doc_header}>
-            <button className={classes.doc_button} onClick={() => {
-              if (workspace.curDocId > 0) {
-                dispatch(fetchPrevDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })))
-              }
-            }}><img src={left_icon}/>
-            </button>
-            <div className={classes.doc_stats}>
-              <h6>{workspace.curDocName}</h6>
-              <em>Text Entries: {workspace.elements.length}</em>
-            </div>
-            <button className={classes.doc_button} onClick={() => {
-              if (workspace.curDocId < workspace.documents.length - 1) {
-                dispatch(fetchNextDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })))
-              }
-            }}><img src={right_icon}/>
-            </button>
+          <button className={classes.doc_button} onClick={() => {
+            if (workspace.curDocId > 0) {
+              dispatch(fetchPrevDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })))
+            }
+          }}><img src={left_icon} />
+          </button>
+          <div className={classes.doc_stats}>
+            <h6>{workspace.curDocName}</h6>
+            <em>Text Entries: {workspace.elements.length}</em>
+          </div>
+          <button className={classes.doc_button} onClick={() => {
+            if (workspace.curDocId < workspace.documents.length - 1) {
+              dispatch(fetchNextDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })))
+            }
+          }}><img src={right_icon} />
+          </button>
         </div>
         <div className={classes.doc_content}>
-        <Box>          
+          <Box>
           </Box>
           <Box>
             {
               currentContentData.map((element, index) =>
-                <Element 
+                <Element
                   searchedItemIndex={searchedItemIndex}
-                  numOfElemPerPage ={numOfElemPerPage}
-                  key={index} id={'L' + index+firstPageIndex} keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
+                  numOfElemPerPage={numOfElemPerPage}
+                  key={index+1} id={'L' + index + firstPageIndex+1} keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
                   focusedState={workspace.focusedState}
-                  index={index+firstPageIndex}
+                  index={index + firstPageIndex+1}
                   numLabelGlobal={numLabelGlobal}
                   numLabelGlobalHandler={setNumLabelGlobal}
                   numLabel={numLabel}
@@ -93,18 +93,18 @@ const MainContent = ({
                 />
               )
             }
-          </Box>  
+          </Box>
         </div>
         <div className={classes.pagination}>
-            <Pagination
-              currentPage={currentPage}
-              totalCount={workspace.elements.length}
-              pageSize={numOfElemPerPage}
-              onPageChange={page => setCurrentPage(page)}
-            />
+          <Pagination
+            currentPage={currentPage}
+            totalCount={workspace.elements.length}
+            pageSize={numOfElemPerPage}
+            onPageChange={page => setCurrentPage(page)}
+          />
         </div>
       </Main>
-      </>
+    </>
   );
 };
 

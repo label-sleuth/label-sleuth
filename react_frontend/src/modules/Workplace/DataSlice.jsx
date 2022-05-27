@@ -417,7 +417,7 @@ const DataSlice = createSlice({
         },
         setLabelState(state, action) {
             const new_labeled_state = action.payload
-
+            console.log("new_labeled_state......", new_labeled_state)
             return {
                 ...state,
                 labelState: new_labeled_state

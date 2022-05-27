@@ -30,7 +30,7 @@ function App() {
           }
         />
         <Route
-          path="/test"
+          path="/"
           exact
           element={
               <Workplace />
