@@ -32,7 +32,6 @@ const initialState = {
     cur_completed_id_in_batch: 0,
     workspaceLength:0,
     isDocLoaded: false,
-    isPageChanges: false,
     isCategoryLoaded: false,
 }
 
@@ -352,8 +351,8 @@ const DataSlice = createSlice({
         setIsCategoryLoaded(state, action) {
             state.isCategoryLoaded = action.payload
         },
-        setIsPageChanged(state, action) {
-            state.isPageChanges = action.payload
+        setIsDocLoaded(state, action) {
+            state.isDocLoaded = action.payload
         },
         nextPrediction(state, action) {
             console.log(`np data: `, state.elements)
@@ -850,5 +849,5 @@ export const { updateCurCategory,
     setWorkspaceLength,
     setWorkspaceId,
     setIsCategoryLoaded,
-    setIsPageChanged,
+    setIsDocLoaded,
     setLabelState } = DataSlice.actions;

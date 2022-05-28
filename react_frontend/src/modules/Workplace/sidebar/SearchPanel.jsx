@@ -14,40 +14,38 @@ import questioning from '../Asset/questioning.svg';
 import question from '../Asset/question.svg';
 import classes from './SearchPanel.module.css';
 
-
 export default function SearchPanel(props) {
 
-    const { text, searchInput, docid, id ,numLabel, numLabelHandler, numLabelGlobal, numLabelGlobalHandler, element_id, prediction, handleSearchPanelClick } = props
+    const { text, searchInput, docid, id, numLabel, numLabelHandler, numLabelGlobal, numLabelGlobalHandler, element_id, prediction, handleSearchPanelClick } = props
     const workspace = useSelector(state => state.workspace)
     const splits = element_id.split("-")
-    const index = parseInt(splits[splits.length-1])
+    const index = parseInt(splits[splits.length - 1])
     const dispatch = useDispatch();
-    const [ labelState, setLocalLabelState ] = useState("")
+    const [labelState, setLocalLabelState] = useState("")
 
     React.useEffect(() => {
         console.log('prediction: ', prediction)
     }, [prediction])
 
     return (
-        <Paper 
-            labelState={labelState}
+        <Paper
+            labelstate={labelState}
             className={classes["text_confused"]}
-            sx={{ cursor: "pointer" }}
-            onClick={(e) => {
-               handleSearchPanelClick(docid, id)
-            }}
+            sx={{ cursor: "pointer", padding: '0 !important' }}
         >
             <label className={classes["rec_doc_id"]}>{docid}</label>
-            <p>
-            <Highlighter 
-                searchWords={[searchInput]}
-                autoEscape={true}
-                textToHighlight={text}
-                unhighlightTag={"p"}
-            />
+            <p className={classes["elem_text"]} onClick={(e) => {
+                handleSearchPanelClick(docid, id)
+            }}>
+                <Highlighter
+                    searchWords={[searchInput]}
+                    autoEscape={true}
+                    textToHighlight={text}
+                    unhighlightTag={"p"}
+                />
             </p>
-
-            <Stack className="recommend_buttons" direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
+ 
+            <Stack className={classes["recommend_buttons"]} direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0 }}>
                 { ['', 'pos'].includes(labelState) && <IconButton onClick={(e) => {
 
                             e.stopPropagation()

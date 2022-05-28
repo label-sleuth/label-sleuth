@@ -16,6 +16,7 @@ import {
   fetchCertainDocument,
   setDocIsLoaded,
   setElementLabel,
+  setIsDocLoaded,
   setIsCategoryLoaded,
 } from './DataSlice.jsx';
 import WorkspaceInfo from './information/WorkspaceInfo';
@@ -118,6 +119,7 @@ export default function Workspace() {
         dispatch(checkModelUpdate()).then(() => {
         })
       } else {
+  
       }
     }, 5000);
     return () => clearInterval(interval);
@@ -162,9 +164,10 @@ export default function Workspace() {
     })
 
     if (docid != workspace.curDocName) {
+      dispatch(setIsDocLoaded(false))
       dispatch(fetchCertainDocument({ docid, id, switchStatus: 'switch' })).then(() => {
         dispatch(setFocusedState(index))
- 
+        dispatch(setIsDocLoaded(true))
       })
     } else {
       dispatch(setFocusedState(index))

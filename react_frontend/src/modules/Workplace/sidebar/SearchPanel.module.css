@@ -9,9 +9,9 @@
     border-radius: 0 !important;
     box-shadow: none !important;
 }
-.text_confused:hover{
+/* .text_confused:hover{
     background: #f4f4f4;
-}
+} */
 .text_confused button {
     border-radius: 0 !important;
 }
@@ -23,18 +23,22 @@
 }
 
 .rec_doc_id {
-    position: absolute;
+    display: flex;
     left: 0;
     top: 0;
     padding: 3px 6px;
     background: #e2e2e2;
 }
 
+.elem_text{
+    padding: 1px 10px 1px 10px;
+}
+
 .recommend_buttons img {
     width: 25px;
     height: 25px
 }
-
+ 
 .recommend_buttons button {
     padding: 0 !important;
     margin-left: 5px;

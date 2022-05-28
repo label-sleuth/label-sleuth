@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import '../../../components/pagination/pagination.css'
-import { setIsPageChanged } from '../DataSlice';
 
 const useMainPagination = (searchedItem, numOfElemPerPage) => {
 
@@ -11,7 +10,6 @@ const useMainPagination = (searchedItem, numOfElemPerPage) => {
     const [searchedItemIndex, setsearchedItemIndex] = React.useState()
     let [firstPageIndex, setFirstPageIndex] = React.useState()
     let [lastPageIndex, setLastPageIndex] = React.useState()
-    const dispatch = useDispatch()
 
     React.useEffect(() => {
         if (!searchedItem) {
@@ -23,7 +21,6 @@ const useMainPagination = (searchedItem, numOfElemPerPage) => {
             setsearchedItemIndex(index)
             let currPageNum = Math.ceil((index+1) / numOfElemPerPage)
             setCurrentPage(currPageNum)
-            dispatch(setIsPageChanged(true))
         }
 
     }, [workspace.curDocId, setCurrentPage, searchedItem, setsearchedItemIndex, numOfElemPerPage])
