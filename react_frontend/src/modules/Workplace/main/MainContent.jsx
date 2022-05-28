@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import { getPositiveElementForCategory, fetchPrevDocElements, fetchNextDocElements } from '../DataSlice.jsx';
+import { getPositiveElementForCategory, fetchPrevDocElements, fetchNextDocElements, setIsCategoryLoaded } from '../DataSlice.jsx';
 import Element from "./Element"
 import { useDispatch, useSelector } from 'react-redux';
 import Pagination from '../../../components/pagination/Pagination';
@@ -10,6 +10,8 @@ import useMainPagination from './useMainPagination';
 import classes from './MainContent.module.css';
 import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const numOfElemPerPage = 500;
 const rightDrawerWidth = 360;
@@ -45,6 +47,7 @@ const MainContent = ({
 }) => {
 
   const workspace = useSelector(state => state.workspace)
+  const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
   const dispatch = useDispatch()
   const len_elements = workspace['elements'].length
   const { currentContentData, currentPage, setCurrentPage, searchedItemIndex, lastPageIndex, firstPageIndex } = useMainPagination(searchedItem, numOfElemPerPage)
@@ -59,10 +62,17 @@ const MainContent = ({
             }
           }}><img src={left_icon} />
           </button>
+          {
+           !workspace.curDocName || (!isCategoryLoaded && workspace.curCategory !=null)?  
+            <Box>
+              <CircularProgress style={{ width: '25px',  height: '25px', color: '#393939'  }} />
+            </Box>
+            :
           <div className={classes.doc_stats}>
             <h6>{workspace.curDocName}</h6>
             <em>Text Entries: {workspace.elements.length}</em>
-          </div>
+          </div>            
+          }
           <button className={classes.doc_button} onClick={() => {
             if (workspace.curDocId < workspace.documents.length - 1) {
               dispatch(fetchNextDocElements()).then(() => dispatch(getPositiveElementForCategory()).then(() => setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })))
@@ -75,7 +85,7 @@ const MainContent = ({
           </Box>
           <Box>
             {
-              currentContentData.map((element, index) =>
+              isCategoryLoaded && currentContentData.map((element, index) =>
                 <Element
                   searchedItemIndex={searchedItemIndex}
                   numOfElemPerPage={numOfElemPerPage}

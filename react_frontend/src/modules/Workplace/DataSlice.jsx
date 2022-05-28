@@ -33,6 +33,7 @@ const initialState = {
     workspaceLength:0,
     isDocLoaded: false,
     isPageChanges: false,
+    isCategoryLoaded: false,
 }
 
 const token = localStorage.getItem('token')
@@ -348,8 +349,8 @@ const DataSlice = createSlice({
         setWorkspaceId(state, action) {
             state.workspaceId = action.payload
         },
-        setDocIsLoaded(state, action) {
-            state.isDocLoaded = action.payload
+        setIsCategoryLoaded(state, action) {
+            state.isCategoryLoaded = action.payload
         },
         setIsPageChanged(state, action) {
             state.isPageChanges = action.payload
@@ -417,7 +418,7 @@ const DataSlice = createSlice({
         },
         setLabelState(state, action) {
             const new_labeled_state = action.payload
-            console.log("new_labeled_state......", new_labeled_state)
+            
             return {
                 ...state,
                 labelState: new_labeled_state
@@ -848,6 +849,6 @@ export const { updateCurCategory,
     setFocusedState,
     setWorkspaceLength,
     setWorkspaceId,
-    setDocIsLoaded,
+    setIsCategoryLoaded,
     setIsPageChanged,
     setLabelState } = DataSlice.actions;
