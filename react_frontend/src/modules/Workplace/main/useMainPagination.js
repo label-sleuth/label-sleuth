@@ -1,32 +1,25 @@
 import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import '../../../components/pagination/pagination.css'
-import { setIsPageChanged } from '../DataSlice';
 
-const useMainPagination = (searchedItem, numOfElemPerPage) => {
+const useMainPagination = (searchedIndex, numOfElemPerPage) => {
 
     const workspace = useSelector(state => state.workspace)
     const len_elements = workspace['elements'].length
     const [currentPage, setCurrentPage] = React.useState(1);
-    const [searchedItemIndex, setsearchedItemIndex] = React.useState()
     let [firstPageIndex, setFirstPageIndex] = React.useState()
     let [lastPageIndex, setLastPageIndex] = React.useState()
-    const dispatch = useDispatch()
-
+ 
     React.useEffect(() => {
-        if (!searchedItem) {
+        if (!searchedIndex) {
             setCurrentPage(1)
         }
         else {
-            const splits = searchedItem.split("-")
-            const index = parseInt(splits[splits.length - 1])
-            setsearchedItemIndex(index)
-            let currPageNum = Math.ceil((index+1) / numOfElemPerPage)
+            let currPageNum = Math.ceil((searchedIndex+1) / numOfElemPerPage)
             setCurrentPage(currPageNum)
-            dispatch(setIsPageChanged(true))
         }
 
-    }, [workspace.curDocId, setCurrentPage, searchedItem, setsearchedItemIndex, numOfElemPerPage])
+    }, [workspace.curDocId, setCurrentPage, searchedIndex, numOfElemPerPage])
 
     const currentContentData = React.useMemo(() => {
         const firstPageIndex = (currentPage - 1) * numOfElemPerPage;
@@ -40,7 +33,6 @@ const useMainPagination = (searchedItem, numOfElemPerPage) => {
         currentContentData,
         setCurrentPage,
         currentPage,
-        searchedItemIndex,
         lastPageIndex,
         firstPageIndex
     }

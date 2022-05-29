@@ -9,9 +9,15 @@
     border-radius: 0 !important;
     box-shadow: none !important;
 }
+ 
 .text_confused:hover{
     background: #f4f4f4;
 }
+
+.text_confused:hover .hovbtn {
+display: inline-block;
+  }
+
 .text_confused button {
     border-radius: 0 !important;
 }
@@ -23,23 +29,69 @@
 }
 
 .rec_doc_id {
-    position: absolute;
+    display: flex;
     left: 0;
     top: 0;
     padding: 3px 6px;
     background: #e2e2e2;
 }
 
-.recommend_buttons img {
+.elem_text{
+    padding: 1px 10px 1px 10px;
+}
+
+.hovbtn {
+    margin: 0;
+    display: none;
+}
+
+.resultbtn {
+    margin-left: 5px;
+    margin-top:5px;
+    display:  inline-block;
+}
+ 
+.recommend_buttons {
+    justify-content: flex-end;
+}
+
+.recommend_buttons img{
     width: 25px;
     height: 25px
 }
 
 .recommend_buttons button {
+    background: none !important;
     padding: 0 !important;
-    margin-left: 5px;
+    border-radius: 0 !important;
 }
 
-.recommend_buttons button:hover {
-    background: #f4f4f4 !important;
+.recommend_buttons button:hover img {
+    background: #d5d5d5 !important;
+}
+
+.text_predict,
+.text_normal,
+.text_focus {
+    color: #161616 !important;
+    border: solid 2px transparent;
+    outline: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.text_predict {
+    border: dotted 2px #a3d8e5;
+}
+
+.search-results{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100px;
+    bottom: 0;
+    overflow-y: scroll;
 }

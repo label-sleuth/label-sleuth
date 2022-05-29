@@ -32,7 +32,7 @@ const initialState = {
     cur_completed_id_in_batch: 0,
     workspaceLength:0,
     isDocLoaded: false,
-    isPageChanges: false,
+    isCategoryLoaded: false,
 }
 
 const token = localStorage.getItem('token')
@@ -348,12 +348,15 @@ const DataSlice = createSlice({
         setWorkspaceId(state, action) {
             state.workspaceId = action.payload
         },
-        setDocIsLoaded(state, action) {
+        setIsCategoryLoaded(state, action) {
+            state.isCategoryLoaded = action.payload
+        },
+        setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
         },
-        setIsPageChanged(state, action) {
-            state.isPageChanges = action.payload
-        },
+        resetSearchResults(state, _) {
+            state.searchResult = []
+        }, 
         nextPrediction(state, action) {
             console.log(`np data: `, state.elements)
 
@@ -400,7 +403,7 @@ const DataSlice = createSlice({
         },
         setFocusedState(state, action) {
             const id = action.payload
-            console.log("setFocusedState id:::", id)
+
             var initialFocusedState = {}
 
             for (var i = 0; i < state['elements'].length; i++) {
@@ -417,7 +420,7 @@ const DataSlice = createSlice({
         },
         setLabelState(state, action) {
             const new_labeled_state = action.payload
-
+            
             return {
                 ...state,
                 labelState: new_labeled_state
@@ -848,6 +851,7 @@ export const { updateCurCategory,
     setFocusedState,
     setWorkspaceLength,
     setWorkspaceId,
-    setDocIsLoaded,
-    setIsPageChanged,
+    setIsCategoryLoaded,
+    setIsDocLoaded,
+    resetSearchResults,
     setLabelState } = DataSlice.actions;

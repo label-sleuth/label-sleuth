@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import FixedDrower from './FixedDrawer';
+import FixedDrawer from './FixedDrawer';
 import SlidingDrawer from './SlidingDrawer';
 
 
@@ -25,7 +25,7 @@ const Sidebar = ({ open, setOpen, handleSearchPanelClick }) => {
                 setOpen={setOpen}
                 handleSearchPanelClick={handleSearchPanelClick}
             />
-            <FixedDrower
+            <FixedDrawer
                 setDrawerContent={setDrawerContent}
                 drawerContent={setDrawerContent}
                 handleDrawerOpen={handleDrawerOpen}

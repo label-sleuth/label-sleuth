@@ -4,12 +4,12 @@ import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import { useDispatch, useSelector } from 'react-redux';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { searchKeywords } from '../DataSlice.jsx';
+import { resetSearchResults, searchKeywords } from '../DataSlice.jsx';
 import SearchPanel from './SearchPanel'
 import { InputBase, Paper } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
-
+import classes from './SearchPanel.module.css';
 
 const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPanelClick }) => {
 
@@ -26,7 +26,11 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
     }
 
     const clearSearch = () => {
-        textInput.current.value = "";
+        setSearchInput("")
+        dispatch(resetSearchResults())
+        if(textInput.current){
+            textInput.current.value=""
+        }
     }
 
     const handleChange = (event) => {
@@ -61,7 +65,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                 open && drawerContent == 'search' &&
 
                 <Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3 }} >
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom:"1px solid #e2e2e2", pb:2 }} >
                         <IconButton onClick={handleDrawerClose}>
                             <ChevronLeftIcon />
                         </IconButton>
@@ -85,7 +89,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                                 onChange={handleChange}
                                 inputRef={textInput}
                             />
-                            {searchInput && textInput.current && textInput.current.value &&
+                            {searchInput  &&
                                 <>
                                     <IconButton sx={{ p: '10px' }} aria-label="search" onClick={clearSearch} >
                                         <ClearIcon />
@@ -97,6 +101,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                             }
                         </Paper>
                     </Box>
+                    <Box className= {classes["search-results"]} >
                     {
                         workspace.searchResult.map((r, i) => {
                             return (
@@ -116,13 +121,15 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                                 />
                             )
                         })
-                    }
+                    }                        
+                    </Box>
+
                 </Box>
             }
             {
                 drawerContent == 'rcmd' &&
                 <Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItem: 'center', marginTop: 3 }} >
+                    <Box  sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom:"1px solid #e2e2e2", pb:2 }} >
                         <IconButton onClick={handleDrawerClose} style={{
                             background: 'none', 
                             borderRadius: 0}}>
@@ -131,7 +138,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                         <p style={{ width: '100%', textAlign: "center", marginRight: "20px" }}><strong>Recommend to label</strong></p>
                     </Box>
 
-                    <Box>
+                    <Box  className= {classes["search-results"]} >
                         {workspace.elementsToLabel.map((r,i) => {
                             return (
                                 <SearchPanel

@@ -14,37 +14,24 @@ import {
   fetchDocuments,
   setFocusedState,
   fetchCertainDocument,
-  setDocIsLoaded,
-  setElementLabel,
+  setIsDocLoaded,
+  setIsCategoryLoaded,
 } from './DataSlice.jsx';
 import WorkspaceInfo from './information/WorkspaceInfo';
 import Sidebar from './sidebar/Sidebar';
 import UpperBar from './upperbar/UpperBar';
 import MainContent from './main/MainContent'
-import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
-import LinearProgress from '@mui/material/LinearProgress';
 
-const drawerWidth = 280;
+
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
   const [open, setOpen] = React.useState(false);
   const workspace = useSelector(state => state.workspace)
   const focusedState = useSelector(state => state.workspace.focusedState)
-  const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
-  const isDPageChanged = useSelector(state => state.workspace.isDPageChanged)
   const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
   const [modalOpen, setModalOpen] = React.useState(false)
   const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
-  const [searchedItem, setSearchedItem] = React.useState()
-  const [searchedDocId, setSearchedDocId] = React.useState()
   const [searchedIndex, setSearchedIndex] = React.useState()
-  const [element, setElemenent] = React.useState()
-  const [openBackdrop, setOpenBackdrop] = React.useState(false);
-
-  const handleCloseBackdrop = () => {
-    setOpenBackdrop(false);
-  };
 
   const handleKeyEvent = (event, len_elements) => {
 
@@ -111,10 +98,13 @@ export default function Workspace() {
   const dispatch = useDispatch();
 
   React.useEffect(() => {
+    dispatch(setIsCategoryLoaded(false))
+    dispatch(setIsDocLoaded(false))
     dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories()).then(() => {
       dispatch(checkStatus()).then(() => {
         dispatch(getElementToLabel()).then(() => {
-
+          dispatch(setIsCategoryLoaded(true))
+          dispatch(setIsDocLoaded(true))
         })
       })
     })))
@@ -125,6 +115,7 @@ export default function Workspace() {
         dispatch(checkModelUpdate()).then(() => {
         })
       } else {
+  
       }
     }, 5000);
     return () => clearInterval(interval);
@@ -144,37 +135,26 @@ export default function Workspace() {
   }, [workspace.model_version])
 
 
-  React.useEffect(() => {
-    if (focusedState || isDocLoaded || isDPageChanged) {
-      element && element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      })
-    }
-
-  }, [focusedState, element, isDocLoaded, isDPageChanged])
-
-
   const handleSearchPanelClick = (docid, id) => {
 
     const splits = id.split("-")
     const index = parseInt(splits[splits.length - 1])
     setSearchedIndex(index)
-    setSearchedItem(id)
-    setSearchedDocId(docid)
     const element = document.getElementById('L' + index);
-    setElemenent(element)
+
     element && element.scrollIntoView({
       behavior: "smooth",
       block: "start",
       // inline: "nearest"
     })
 
+
     if (docid != workspace.curDocName) {
+      dispatch(setIsDocLoaded(false))
       dispatch(fetchCertainDocument({ docid, id, switchStatus: 'switch' })).then(() => {
         dispatch(setFocusedState(index))
-        dispatch( setDocIsLoaded(true))
-      })
+        dispatch(setIsDocLoaded(true))
+      }) 
     } else {
       dispatch(setFocusedState(index))
     }
@@ -188,18 +168,6 @@ export default function Workspace() {
       <Box component="main" sx={{ padding: 0 }}>
         <UpperBar setNumLabel={setNumLabel} setModalOpen={setModalOpen} setNumLabelGlobal={setNumLabelGlobal} open={open} />
         <Sidebar open={open} setOpen={setOpen} handleSearchPanelClick={handleSearchPanelClick} />
-
-        {!workspace.documents.length ?
-          <Backdrop
-            sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-            open={!openBackdrop}
-            onClick={handleCloseBackdrop}
-          >
-            <Box sx={{ width: '10%' }}>
-              <LinearProgress />
-            </Box>
-          </Backdrop> :
-
           <MainContent setNumLabel={setNumLabel}
             handleKeyEvent={handleKeyEvent}
             numLabelGlobal={numLabelGlobal}
@@ -207,8 +175,8 @@ export default function Workspace() {
             numLabel={numLabel}
             handleClick={handleClick}
             open={open}
-            searchedItem={searchedItem}
-          />}
+            searchedIndex={searchedIndex}
+          />
       </Box>
       <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
     </Box>

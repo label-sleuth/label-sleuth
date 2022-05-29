@@ -106,12 +106,6 @@ ul.MuiList-padding {
     box-shadow: none !important;
 }
 
-/* .MuiInput-input {
-    font-family: 'IBM Plex Sans', sans-serif !important;
-    font-weight: 400 !important;
-    padding: 0 !important;
-} */
-
 /* left nav */
 .sleuth_logo {
     width: 18px;
@@ -224,12 +218,6 @@ p.hsbar_label {
     background: #161616;
 }
 
-/* .select_category > div > div,
-.MuiOutlinedInput-notchedOutline,
-.MuiOutlinedInput-root {
-    border: none !important;
-} */
-
 .select_category > div{
     margin-left: 10px;
     height: 32px;
@@ -303,40 +291,6 @@ p.hsbar_label {
     border: dotted 2px #a3d8e5;
 }
 
-.text_confused {
-    border: dotted 2px #d6d6d6 !important;
-    color: #161616 !important;
-    border: solid 2px transparent;
-    outline: none;
-    padding: 20px 10px 10px 10px;
-    margin: 10px;
-}
-
-.text_confused p {
-    margin: 15px 0;
-    font-size: 14px !important;
-    line-height: 18px !important;
-}
-
-.checking_buttons img,
-.recommend_buttons img {
-    width: 25px;
-    height: 25px
-}
-
-.recommend_buttons button {
-    padding: 0 !important;
-    margin-left: 5px;
-}
-
-.checking_buttons button:hover {
-    background: #fff !important;
-}
-
-.recommend_buttons button:hover {
-    background: #f4f4f4 !important;
-}
-
 mark {
     background: #a3d8e5 !important;
 }
@@ -403,13 +357,13 @@ mark {
     display: none;
 }
 
-.rec_doc_id {
+/* .rec_doc_id {
     position: absolute;
     left: 0;
     top: 0;
     padding: 3px 6px;
     background: #e2e2e2;
-}
+} */
 
 [labelstate="neg"] p{
     color: #BD3951;
