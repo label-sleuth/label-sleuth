@@ -12,7 +12,7 @@ import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
 import CircularProgress from '@mui/material/CircularProgress';
 
-const numOfElemPerPage = 500;
+const numOfElemPerPage = 7;
 const rightDrawerWidth = 360;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
@@ -47,6 +47,7 @@ const MainContent = ({
 
   const workspace = useSelector(state => state.workspace)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
+  const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
   const dispatch = useDispatch()
   const len_elements = workspace['elements'].length
   const { currentContentData, currentPage, setCurrentPage, firstPageIndex } = useMainPagination(searchedIndex, numOfElemPerPage)
@@ -80,7 +81,7 @@ const MainContent = ({
           <button className={classes.doc_button} onClick={handleFetchPrevDoc}><img src={left_icon} />
           </button>
           {
-            (!workspace.curDocName) || (!isCategoryLoaded && workspace.curCategory != null) ?
+            (!workspace.curDocName) || (!isCategoryLoaded && workspace.curCategory != null) || (!isDocLoaded) ?
               <Box>
                 <CircularProgress style={{ width: '25px', height: '25px', color: '#393939' }} />
               </Box>

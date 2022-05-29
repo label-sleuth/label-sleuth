@@ -9,7 +9,7 @@ import SearchPanel from './SearchPanel'
 import { InputBase, Paper } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
-
+import classes from './SearchPanel.module.css';
 
 const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPanelClick }) => {
 
@@ -65,7 +65,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                 open && drawerContent == 'search' &&
 
                 <Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3 }} >
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom:"1px solid #e2e2e2", pb:2 }} >
                         <IconButton onClick={handleDrawerClose}>
                             <ChevronLeftIcon />
                         </IconButton>
@@ -101,6 +101,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                             }
                         </Paper>
                     </Box>
+                    <Box className= {classes["search-results"]} >
                     {
                         workspace.searchResult.map((r, i) => {
                             return (
@@ -120,7 +121,9 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                                 />
                             )
                         })
-                    }
+                    }                        
+                    </Box>
+
                 </Box>
             }
             {

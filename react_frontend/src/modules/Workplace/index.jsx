@@ -14,8 +14,6 @@ import {
   fetchDocuments,
   setFocusedState,
   fetchCertainDocument,
-  setDocIsLoaded,
-  setElementLabel,
   setIsDocLoaded,
   setIsCategoryLoaded,
 } from './DataSlice.jsx';
@@ -101,10 +99,12 @@ export default function Workspace() {
 
   React.useEffect(() => {
     dispatch(setIsCategoryLoaded(false))
+    dispatch(setIsDocLoaded(false))
     dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories()).then(() => {
       dispatch(checkStatus()).then(() => {
         dispatch(getElementToLabel()).then(() => {
           dispatch(setIsCategoryLoaded(true))
+          dispatch(setIsDocLoaded(true))
         })
       })
     })))

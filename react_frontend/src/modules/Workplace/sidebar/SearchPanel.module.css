@@ -86,3 +86,12 @@ display: inline-block;
 .text_predict {
     border: dotted 2px #a3d8e5;
 }
+
+.search-results{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100px;
+    bottom: 0;
+    overflow-y: scroll;
+}

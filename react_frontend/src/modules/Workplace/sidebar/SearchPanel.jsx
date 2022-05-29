@@ -50,7 +50,7 @@ export default function SearchPanel(props) {
                     onClick={handlePosLabelState}>
                     {labelState == 'pos' ?
                         <img src={check} alt="checked" /> :
-                        prediction && prediction[index] == true && workspace.labelState['L' + index] !== 'neg' && workspace.labelState['L' + index] !== 'ques' ?
+                        prediction && prediction[index] == true && labelState !== 'neg' && labelState !== 'ques' ?
                             <img src={check_predict} alt="predicted checking" /> :
                             <img className={classes.hovbtn} src={checking} alt="checking" />
                     }
