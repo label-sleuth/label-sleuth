@@ -17,7 +17,7 @@ import useElemStyles from "./useElemStyles";
 export default function Sentence(props) {
 
     const { index, text, prediction } = props
-    const workspace = useSelector(state => state.workspace)
+    const workspace = useSelector(state => state.workspace) 
     const { handlePosLabelState, handleNegLabelState, handleQuestLabelState } = useMainLabelState({ ...props })
     const { handleTextElemStyle,  text_colors } = useElemStyles({ ...props })
 

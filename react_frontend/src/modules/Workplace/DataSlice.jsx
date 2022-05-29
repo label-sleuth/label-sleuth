@@ -354,6 +354,9 @@ const DataSlice = createSlice({
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
         },
+        resetSearchResults(state, _) {
+            state.searchResult = []
+        }, 
         nextPrediction(state, action) {
             console.log(`np data: `, state.elements)
 
@@ -850,4 +853,5 @@ export const { updateCurCategory,
     setWorkspaceId,
     setIsCategoryLoaded,
     setIsDocLoaded,
+    resetSearchResults,
     setLabelState } = DataSlice.actions;

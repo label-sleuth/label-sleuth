@@ -4,7 +4,7 @@ import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import { useDispatch, useSelector } from 'react-redux';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { searchKeywords } from '../DataSlice.jsx';
+import { resetSearchResults, searchKeywords } from '../DataSlice.jsx';
 import SearchPanel from './SearchPanel'
 import { InputBase, Paper } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -27,6 +27,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
 
     const clearSearch = () => {
         setSearchInput("")
+        dispatch(resetSearchResults())
         if(textInput.current){
             textInput.current.value=""
         }
