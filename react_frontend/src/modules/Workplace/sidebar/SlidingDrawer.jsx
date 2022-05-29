@@ -26,7 +26,10 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
     }
 
     const clearSearch = () => {
-        textInput.current.value = "";
+        setSearchInput("")
+        if(textInput.current){
+            textInput.current.value=""
+        }
     }
 
     const handleChange = (event) => {
@@ -85,7 +88,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                                 onChange={handleChange}
                                 inputRef={textInput}
                             />
-                            {searchInput && textInput.current && textInput.current.value &&
+                            {searchInput  &&
                                 <>
                                     <IconButton sx={{ p: '10px' }} aria-label="search" onClick={clearSearch} >
                                         <ClearIcon />
