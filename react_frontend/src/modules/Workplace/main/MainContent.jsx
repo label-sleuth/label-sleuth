@@ -42,22 +42,22 @@ const MainContent = ({
   numLabel,
   handleClick,
   open,
-  searchedItem,
+  searchedIndex,
 }) => {
 
   const workspace = useSelector(state => state.workspace)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
   const dispatch = useDispatch()
   const len_elements = workspace['elements'].length
-  const { currentContentData, currentPage, setCurrentPage, searchedItemIndex, firstPageIndex } = useMainPagination(searchedItem, numOfElemPerPage)
-
+  const { currentContentData, currentPage, setCurrentPage, firstPageIndex } = useMainPagination(searchedIndex, numOfElemPerPage)
+  
   const getPosElemForCategory = () => {
-    dispatch(getPositiveElementForCategory().then(() =>{
+    dispatch(getPositiveElementForCategory().then(() => {
       setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })
     }))
   }
 
-  const handleFetchNextDoc = () =>{
+  const handleFetchNextDoc = () => {
     if (workspace.curDocId < workspace.documents.length - 1) {
       dispatch(fetchNextDocElements()).then(() => {
         getPosElemForCategory()
@@ -65,7 +65,7 @@ const MainContent = ({
     }
   }
 
-  const handleFetchPrevDoc = () =>{
+  const handleFetchPrevDoc = () => {
     if (workspace.curDocId > 0) {
       dispatch(fetchPrevDocElements()).then(() => {
         getPosElemForCategory()
@@ -80,15 +80,15 @@ const MainContent = ({
           <button className={classes.doc_button} onClick={handleFetchPrevDoc}><img src={left_icon} />
           </button>
           {
-           (!workspace.curDocName) || (!isCategoryLoaded && workspace.curCategory !=null ) ?  
-            <Box>
-              <CircularProgress style={{ width: '25px',  height: '25px', color: '#393939'  }} />
-            </Box>
-            :
-          <div className={classes.doc_stats}>
-            <h6>{workspace.curDocName}</h6>
-            <em>Text Entries: {workspace.elements.length}</em>
-          </div>            
+            (!workspace.curDocName) || (!isCategoryLoaded && workspace.curCategory != null) ?
+              <Box>
+                <CircularProgress style={{ width: '25px', height: '25px', color: '#393939' }} />
+              </Box>
+              :
+              <div className={classes.doc_stats}>
+                <h6>{workspace.curDocName}</h6>
+                <em>Text Entries: {workspace.elements.length}</em>
+              </div>
           }
           <button className={classes.doc_button} onClick={handleFetchNextDoc}><img src={right_icon} />
           </button>
@@ -97,16 +97,16 @@ const MainContent = ({
           <Box>
           </Box>
           <Box>
-            { 
-              isCategoryLoaded && currentContentData.map((element, index) => 
+            {
+              isCategoryLoaded && currentContentData.map((element, index) =>
                 <Element
-                  searchedItemIndex={searchedItemIndex}
+                  searchedIndex={searchedIndex}
                   numOfElemPerPage={numOfElemPerPage}
-                  key={index + firstPageIndex} 
-                  id={'L' + index + firstPageIndex} 
+                  key={index + firstPageIndex}
+                  // id={'L' + index + firstPageIndex}
                   keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
                   focusedState={workspace.focusedState}
-                  index={index +  firstPageIndex}
+                  index={index + firstPageIndex}
                   numLabelGlobal={numLabelGlobal}
                   numLabelGlobalHandler={setNumLabelGlobal}
                   numLabel={numLabel}

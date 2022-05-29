@@ -2,7 +2,7 @@ import {useEffect} from 'react';
 import { setElementLabel, checkStatus, setLabelState, increaseIdInBatch } from '../DataSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
-const useElemLabelState = ({numLabelGlobal, numLabelGlobalHandler, index, numLabel, numLabelHandler, element_id, prediction}) => {
+const useElemLabelState = ({numLabelGlobal, numLabelGlobalHandler, index, numLabel, numLabelHandler, element_id}) => {
 
     const workspace = useSelector(state => state.workspace)
     const dispatch = useDispatch()

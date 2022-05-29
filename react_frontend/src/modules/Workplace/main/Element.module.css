@@ -71,7 +71,8 @@
 }
 
 .text_normal:hover .hovbtn,
-.text_predict:hover .hovbtn {
+.text_predict:hover .hovbtn,
+.text_focus:hover .hovbtn{
     margin-left: 5px;
     display: inline-block;
 }

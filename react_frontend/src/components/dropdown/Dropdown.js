@@ -58,7 +58,7 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
         onBlur={handleBlur}
         onFocus={handleFocus}
         MenuProps={MenuProps}
-        notched={true}
+        notched= "true"
         className={value !== "" ? classes.dropdown : classes.dropdown_gray}
       >
         {options?.map(option => {

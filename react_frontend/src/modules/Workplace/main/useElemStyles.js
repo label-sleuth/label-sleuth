@@ -2,7 +2,7 @@
 import classes from './Element.module.css';
 import { useSelector } from 'react-redux';
 
-const useElemStyles = ({ index, prediction, searchedItemIndex, numOfElemPerPage}) => {
+const useElemStyles = ({ index, prediction }) => {
     
     const workspace = useSelector(state => state.workspace)
     let textElemStyle = classes["text_normal"]
@@ -15,9 +15,7 @@ const useElemStyles = ({ index, prediction, searchedItemIndex, numOfElemPerPage}
 
     const handleTextElemStyle = () => {
 
-        if ((workspace["focusedIndex"] == index
-        ) || ((searchedItemIndex % numOfElemPerPage) == index
-            )) {
+        if ( ((workspace["focusedIndex"] == index ))) {
             textElemStyle = classes["text_focus"]
         }
         else if (prediction[index]) {
