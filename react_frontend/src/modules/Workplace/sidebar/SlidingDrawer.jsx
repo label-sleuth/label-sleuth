@@ -129,7 +129,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
             {
                 drawerContent == 'rcmd' &&
                 <Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItem: 'center', marginTop: 3 }} >
+                    <Box  sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom:"1px solid #e2e2e2", pb:2 }} >
                         <IconButton onClick={handleDrawerClose} style={{
                             background: 'none', 
                             borderRadius: 0}}>
@@ -138,7 +138,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                         <p style={{ width: '100%', textAlign: "center", marginRight: "20px" }}><strong>Recommend to label</strong></p>
                     </Box>
 
-                    <Box>
+                    <Box  className= {classes["search-results"]} >
                         {workspace.elementsToLabel.map((r,i) => {
                             return (
                                 <SearchPanel
