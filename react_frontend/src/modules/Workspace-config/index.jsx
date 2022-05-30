@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { getDatasetsAPI } from './workspaceConfigSlice'
+import { cleanWorkplaceState } from '../Workplace/DataSlice'
 import classes from "./workspace-config.module.css"
 import ExistingWorkspace from "./ExistingWorkspaceForm"
 import NewWorkspace from "./NewWorkspaceForm"
@@ -26,6 +27,7 @@ const WorkspaceConfig = () => {
 
   useEffect(() => {
     dispatch(getDatasetsAPI())
+    dispatch(cleanWorkplaceState())
   }, [dispatch])
 
   return (
