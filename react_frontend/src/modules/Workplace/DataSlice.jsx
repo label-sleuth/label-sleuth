@@ -436,6 +436,9 @@ const DataSlice = createSlice({
                 ...state,
                 cur_completed_id_in_batch: cur_id_in_batch + 1
             }
+        },
+        cleanWorkplaceState(state, action) {
+            return initialState
         }
     },
     extraReducers: {
@@ -830,4 +833,5 @@ export const { updateCurCategory,
     setIsCategoryLoaded,
     setIsDocLoaded,
     resetSearchResults,
-    setLabelState } = DataSlice.actions;
+    setLabelState,
+    cleanWorkplaceState } = DataSlice.actions;
