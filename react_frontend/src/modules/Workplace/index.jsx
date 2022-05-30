@@ -98,16 +98,21 @@ export default function Workspace() {
   const dispatch = useDispatch();
 
   React.useEffect(() => {
-    dispatch(setIsCategoryLoaded(false))
-    dispatch(setIsDocLoaded(false))
-    dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories()).then(() => {
-      dispatch(checkStatus()).then(() => {
-        dispatch(getElementToLabel()).then(() => {
-          dispatch(setIsCategoryLoaded(true))
-          dispatch(setIsDocLoaded(true))
+    dispatch(setIsCategoryLoaded(false));
+    dispatch(setIsDocLoaded(false));
+    dispatch(checkModelUpdate());
+    dispatch(fetchDocuments()).then(() =>
+      dispatch(fetchElements()).then(() =>
+        dispatch(fetchCategories()).then(() => {
+          if (workspace.curCategory) {
+            dispatch(checkStatus());
+            dispatch(getElementToLabel());
+          }
+          dispatch(setIsCategoryLoaded(true));
+          dispatch(setIsDocLoaded(true));
         })
-      })
-    })))
+      )
+    );
 
     const interval = setInterval(() => {
       console.log(`curCategory value: ${workspace.curCategory}`)
@@ -115,7 +120,7 @@ export default function Workspace() {
         dispatch(checkModelUpdate()).then(() => {
         })
       } else {
-  
+
       }
     }, 5000);
     return () => clearInterval(interval);
