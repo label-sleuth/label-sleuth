@@ -6,7 +6,7 @@ import next_icon from '../../../assets/workspace/right_icon.svg';
 import classes from './UpperBar.module.css';
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useDispatch, useSelector } from 'react-redux';
-import { nextPrediction, updateCurCategory, setFocusedState } from '../DataSlice.jsx';
+import { updateCurCategory } from '../DataSlice.jsx';
 import FormControl from '@mui/material/FormControl';
 import ControlledSelect from '../../../components/dropdown/Dropdown';
 
@@ -117,18 +117,6 @@ const UpperBar = ({ setNumLabel, setModalOpen, setNumLabelGlobal, open }) => {
               </IconButton>
             */}
         </div>
-        <button
-          className={classes.nextbtn} onClick={() => {
-            dispatch(nextPrediction())
-            dispatch(setFocusedState(workspace.indexPrediction))
-            document.getElementById('L' + workspace.indexPrediction).scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-              // inline: "nearest"
-            })
-          }}>
-          Next Prediction <img src={next_icon} />
-        </button>
       </AppBar>
     </ElevationScroll>
   );
