@@ -357,29 +357,6 @@ const DataSlice = createSlice({
         resetSearchResults(state, _) {
             state.searchResult = []
         }, 
-        nextPrediction(state, action) {
-            console.log(`np data: `, state.elements)
-
-            const pred_index = state.indexPrediction + 1
-
-            var next_index = -1
-
-            for (var i = pred_index; i < state.elements.length; i++) {
-                const model_prediction = state.elements[i]['model_predictions'][Object.keys(state.elements[i]['model_predictions'])[Object.keys(state.elements[i]['model_predictions']).length - 1]]
-                if (model_prediction == 'true') {
-                    next_index = i
-                }
-            }
-
-            if (next_index == -1) {
-                next_index = 0
-            }
-
-            return {
-                ...state,
-                indexPrediction: next_index
-            }
-        },
         prevPrediction(state, action) {
             const pred_index = state.indexPrediction
             if (pred_index > 0) {
@@ -846,7 +823,6 @@ export const { updateCurCategory,
     increaseIdInBatch,
     createNewCategory,
     prevPrediction,
-    nextPrediction,
     setWorkspace,
     setFocusedState,
     setWorkspaceLength,
