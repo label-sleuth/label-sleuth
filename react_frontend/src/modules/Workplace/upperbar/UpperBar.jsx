@@ -60,7 +60,10 @@ function CategoryFormControl(props) {
 
   }, [workspace.categories.length, workspaceLength])
 
-  const options = workspace.categories.map((item) => ({ value: item.category_name, title: item.category_name }))
+  const options = workspace.categories
+    .map((item) => ({ value: item.category_name, title: item.category_name }))
+    .sort((a, b) => a.value.localeCompare(b.value));
+  // TODO: insert sorted when categories are added
 
   const handleCategorySelect = (value) => {
     dispatch(updateCurCategory(value))
