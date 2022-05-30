@@ -103,7 +103,7 @@ class OrchestratorApi:
         self._delete_category_models(workspace_id, category_name)
         self.orchestrator_state.delete_category_from_workspace(workspace_id, category_name)
 
-    def delete_model(self, workspace_id, category_name, iteration_index):
+    def delete_iteration_model(self, workspace_id, category_name, iteration_index):
         """
         Delete the model files for *iteration_index* of the given category, and mark the model as deleted.
         :param workspace_id:
@@ -125,7 +125,7 @@ class OrchestratorApi:
     def _delete_category_models(self, workspace_id, category_name):
         workspace = self.orchestrator_state.get_workspace(workspace_id)
         for idx in range(len(workspace.categories[category_name].iterations)):
-            self.delete_model(workspace_id, category_name, idx)
+            self.delete_iteration_model(workspace_id, category_name, idx)
     
     def get_documents(self, workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[Document]:
         """
@@ -488,14 +488,14 @@ class OrchestratorApi:
         :param category_name:
         :param iteration_index:
         """
-        previous_iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_name)[:iteration_index]
-        previous_ready_iteration_indices = \
-            [candidate_iteration_index for candidate_iteration_index, iteration in enumerate(previous_iterations)
+        iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_name)[:iteration_index+1]
+        ready_iteration_indices = \
+            [candidate_iteration_index for candidate_iteration_index, iteration in enumerate(iterations)
              if iteration.status == IterationStatus.READY]
     
-        for candidate_iteration_index in previous_ready_iteration_indices[:-NUMBER_OF_MODELS_TO_KEEP]:
+        for candidate_iteration_index in ready_iteration_indices[:-NUMBER_OF_MODELS_TO_KEEP]:
             logging.info(f"keep only {NUMBER_OF_MODELS_TO_KEEP} models, deleting iteration {candidate_iteration_index}")
-            self.delete_model(workspace_id, category_name, candidate_iteration_index)
+            self.delete_iteration_model(workspace_id, category_name, candidate_iteration_index)
     
     def get_all_iterations_for_category(self, workspace_id, category_name: str):
         """
@@ -783,7 +783,7 @@ class OrchestratorApi:
     
         logging.info(f"Running inference with the latest model for category '{category}' in workspace '{workspace_id}' "
                      f"after new documents were loaded to dataset '{dataset_name}' using model {iteration_index}")
-        # Currently there is no indication to the user that inference is running on the new documents, and there is no
+        # Currently, there is no indication to the user that inference is running on the new documents, and there is no
         # indication for when this inferences ends. Can be added and reflected in the UI in the future
         self.infer(workspace_id, category, self.get_all_text_elements(dataset_name), iteration_index)
         logging.info(f"completed inference with the latest model for category '{category}' in workspace "

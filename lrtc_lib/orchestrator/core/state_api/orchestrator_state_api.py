@@ -223,7 +223,7 @@ class OrchestratorStateApi:
     def mark_iteration_model_as_deleted(self, workspace_id, category_name, iteration_index):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            iteration = workspace.categories[category_name].iterations[iteration_index]
+            iteration = self.get_all_iterations(workspace_id,category_name)[iteration_index]
             iteration.model.model_status = ModelStatus.DELETED
             iteration.status = IterationStatus.MODEL_DELETED
             self._save_workspace(workspace)

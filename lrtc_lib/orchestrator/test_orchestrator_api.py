@@ -2,6 +2,7 @@ import os
 import random
 import tempfile
 import unittest
+from datetime import datetime
 from unittest.mock import patch
 
 import pandas as pd
@@ -11,10 +12,13 @@ from lrtc_lib.config import load_config
 from lrtc_lib.data_access.core.data_structs import DisplayFields, Document, Label, LABEL_NEGATIVE, LABEL_POSITIVE
 from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from lrtc_lib.data_access.test_file_based_data_access import generate_corpus
+from lrtc_lib.models.core.model_api import ModelStatus
+from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.models.core.models_factory import ModelFactory
-from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi
-from lrtc_lib.orchestrator.orchestrator_api import OrchestratorApi
+from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, Iteration, \
+    IterationStatus, ModelInfo
+from lrtc_lib.orchestrator.orchestrator_api import OrchestratorApi, NUMBER_OF_MODELS_TO_KEEP
 from lrtc_lib.training_set_selector.training_set_selector_factory import get_training_set_selector
 
 
@@ -38,7 +42,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         cls.orchestrator_state = OrchestratorStateApi(os.path.join(cls.temp_dir.name, "output", "workspaces"))
         cls.orchestrator_api = OrchestratorApi(cls.orchestrator_state, cls.data_access, cls.active_learning_factory,
                                                cls.model_factory,
-                                               load_config("./lrtc_lib/config_integration_tests.json"))
+                                               load_config("../config_integration_tests.json"))
 
     @classmethod
     def tearDownClass(cls):
@@ -167,3 +171,59 @@ class TestOrchestratorAPI(unittest.TestCase):
         with patch.object(train_set_selector_cls, 'get_train_set'):
             self.orchestrator_api.train_if_recommended(workspace_id, category_name)
         mock_run_iteration.assert_called()
+
+
+    def test_set_label_increases_change_count(self):
+        workspace_id = self.test_set_label_increases_change_count.__name__
+        dataset_name = f'{workspace_id}_dump'
+        category_name = f'{workspace_id}_cat'
+        generate_corpus(self.data_access, dataset_name)
+        self.orchestrator_api.create_workspace(workspace_id, dataset_name)
+        self.orchestrator_api.create_new_category(workspace_id, category_name, 'some_description')
+        text_elements = self.orchestrator_api.get_all_text_elements(dataset_name)
+        self.orchestrator_api.set_labels(workspace_id,{text_elements[0].uri:{category_name:Label(LABEL_POSITIVE)}})
+        num_changed = self.orchestrator_state.get_label_change_count_since_last_train(workspace_id,category_name)
+        self.assertEqual(1, num_changed, msg="we set a label for one element")
+        self.orchestrator_api.set_labels(workspace_id, {text_elements[0].uri: {category_name: Label(LABEL_POSITIVE)}})
+        num_changed = self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_name)
+        self.assertEqual(2, num_changed, msg="we set a label for "
+                                             "one element (same element should increase the change count)")
+
+
+
+    def test_set_label_without_increasing_change_count(self):
+        workspace_id = self.test_set_label_without_increasing_change_count.__name__
+        dataset_name = f'{workspace_id}_dump'
+        category_name = f'{workspace_id}_cat'
+        generate_corpus(self.data_access, dataset_name)
+        self.orchestrator_api.create_workspace(workspace_id, dataset_name)
+        self.orchestrator_api.create_new_category(workspace_id, category_name, 'some_description')
+        text_elements = self.orchestrator_api.get_all_text_elements(dataset_name)
+        self.orchestrator_api.set_labels(workspace_id,{text_elements[0].uri:{category_name:Label(LABEL_POSITIVE)}},
+                                         update_label_counter=False)
+        num_changed = self.orchestrator_state.get_label_change_count_since_last_train(workspace_id,category_name)
+        self.assertEqual(0, num_changed, msg="we set a label with update_label_counter=False "
+                                             "so number of changed element should be zero")
+
+    @patch.object(OrchestratorApi, 'delete_iteration_model')
+    @patch.object(OrchestratorStateApi, 'get_all_iterations')
+    def test_old_models_deletion(self, get_all_iterations,delete_iteration_model):
+        workspace_id = self.test_old_models_deletion.__name__
+        dataset_name = f'{workspace_id}_dump'
+        category_name = f'{workspace_id}_cat'
+        generate_corpus(self.data_access, dataset_name)
+        self.orchestrator_api.create_workspace(workspace_id, dataset_name)
+        self.orchestrator_api.create_new_category(workspace_id, category_name, 'some_description')
+        get_all_iterations.return_value = [Iteration(ModelInfo("x",ModelStatus.READY,datetime.now(),ModelTypes.RAND,{}),
+                                                     IterationStatus.READY,{},[])]*(NUMBER_OF_MODELS_TO_KEEP+1)
+        self.orchestrator_api._delete_old_models(workspace_id,category_name,NUMBER_OF_MODELS_TO_KEEP-1)
+
+        # _delete_old_models for iteration NUMBER_OF_MODELS_TO_KEEP-1 should not delete
+        # any model as there are only NUMBER_OF_MODELS_TO_KEEP iterations in status READY
+        delete_iteration_model.assert_not_called()
+
+        self.orchestrator_api._delete_old_models(workspace_id, category_name, NUMBER_OF_MODELS_TO_KEEP)
+
+        # _delete_old_models for iteration NUMBER_OF_MODELS_TO_KEEP should invoke delete_iteration_model for iteration 0
+        delete_iteration_model.assert_called_with(workspace_id,category_name,0)
+
