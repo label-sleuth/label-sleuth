@@ -1,31 +1,23 @@
 import io
 import os
-import random
 import tempfile
 import unittest
-from unittest import mock
-from unittest.mock import patch
-
 import dacite
-import pandas as pd
+
 import lrtc_lib.config
-
-
 from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
 from lrtc_lib.configurations.users import User
-
-from lrtc_lib.data_access.core.data_structs import DisplayFields, Document, Label, LABEL_NEGATIVE, LABEL_POSITIVE
 from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
-from lrtc_lib.data_access.test_file_based_data_access import generate_corpus
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.models.core.models_factory import ModelFactory
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi
 from lrtc_lib.orchestrator.orchestrator_api import OrchestratorApi
 import lrtc_lib.app as app
-from lrtc_lib.training_set_selector.training_set_selector_factory import get_training_set_selector
 
 HEADERS = {'Authorization': 'Bearer dummy_bearer',
            'Content-Type': 'application/json'}
+
+
 class TestAppIntegration(unittest.TestCase):
 
     @classmethod
@@ -37,36 +29,99 @@ class TestAppIntegration(unittest.TestCase):
         app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.CONFIGURATION.users}
 
         app.tokens = [user.token for user in app.users.values()]
-        app.ROOT_DIR = tempfile.TemporaryDirectory().name
+        cls.temp_dir = tempfile.TemporaryDirectory()
+        app.ROOT_DIR = cls.temp_dir.name
+        print(f"Integration tests, all output files will be written under {cls.temp_dir}")
 
-        app.orchestrator_api=OrchestratorApi(OrchestratorStateApi(os.path.join(app.ROOT_DIR,"output","workspaces")),
-                                   FileBasedDataAccess(os.path.join(app.ROOT_DIR,"output")),
-                                   ActiveLearningFactory(),
-                                   ModelFactory(os.path.join(app.ROOT_DIR,"output","models"),ModelsBackgroundJobsManager()),
-                                   app.CONFIGURATION)
+        app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(app.ROOT_DIR, "output", "workspaces")),
+                                               FileBasedDataAccess(os.path.join(app.ROOT_DIR, "output")),
+                                               ActiveLearningFactory(),
+                                               ModelFactory(os.path.join(app.ROOT_DIR, "output", "models"),
+                                                            ModelsBackgroundJobsManager()),
+                                               app.CONFIGURATION)
         cls.client = app.app.test_client()
-
-
-
 
     @classmethod
     def tearDownClass(cls):
-        pass
+        cls.temp_dir.cleanup()
 
     def test_full_flow(self):
         dataset_name = "my_test_dataset"
+        workspace_name = "my_test_workspace"
+        category_name = "my_category"
+        category_description = "my_category_description"
         data = {}
         data['file'] = (io.BytesIO(b'document_id,text\n'
                                    b'document1,this is the first text element of document one\n'
                                    b'document2,this is the second text element of document one\n'
                                    b'document2,this is the only text element in document two\n'
-                                   b'document3,"document 3 has three text elets, this is the first"\n'
-                                   b'document3,"document 3 has three text elets, this is the second"\n'
-                                   b'document3,"document 3 has three text elets, this is the third"\n'), 'my_file.csv')
-        res = self.client.post(f"/datasets/{dataset_name}/add_documents", data=data, headers=HEADERS,content_type='multipart/form-data')
+                                   b'document3,"document 3 has three text elements, this is the first"\n'
+                                   b'document3,"document 3 has three text elements, this is the second"\n'
+                                   b'document3,"document 3 has three text elements, this is the third"\n'),
+                        'my_file.csv')
+        res = self.client.post(f"/datasets/{dataset_name}/add_documents", data=data, headers=HEADERS,
+                               content_type='multipart/form-data')
 
-        self.assertEqual(200, res.status_code,msg="Failed to upload data")
-        res = self.client.post("/workspace",data='{{"workspace_id":"test_workspace","dataset_id":"{}"}}'.format(dataset_name), headers=HEADERS)
-        self.assertEqual(200, res.status_code,msg="Failed to create a workspace")
-        TestAppIntegration
-        print(res)
+        self.assertEqual(200, res.status_code, msg="Failed to upload a new dataset")
+        self.assertEqual(
+            {'dataset_name': 'my_test_dataset', 'num_docs': 3, 'num_sentences': 6, 'workspaces_to_update': []},
+            res.get_json(), msg="diff in upload dataset response")
+        res = self.client.post("/workspace",
+                               data='{{"workspace_id":"{}","dataset_id":"{}"}}'.format(workspace_name, dataset_name),
+                               headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to create a workspace")
+        self.assertEqual(
+            {"workspace": {'dataset_name': 'my_test_dataset', 'first_document_id': 'my_test_dataset-document1',
+                           'workspace_id': 'my_test_workspace'}}, res.get_json(),
+            msg="diff in create workspace response")
+        res = self.client.post(f"/workspace/{workspace_name}/category",
+                               data='{{"category_name":"{}","category_description":"{}"}}'.format(category_name,
+                                                                                                  category_description),
+                               headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to add a new category to workspace")
+        self.assertEqual({'category': {'category_description': 'my_category_description',
+                                       'category_name': 'my_category', 'id': 'my_category'}}, res.get_json(),
+                         msg="diff in create category response")
+
+        res = self.client.get(f"/workspace/{workspace_name}/documents", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get all documents uris")
+        documents = res.get_json()['documents']
+        self.assertEqual(3, len(documents),
+                         msg="Number of retrieved documents is different the number of documents loaded")
+        self.assertEqual({'documents': [{'document_id': 'my_test_dataset-document1'},
+                                        {'document_id': 'my_test_dataset-document2'},
+                                        {'document_id': 'my_test_dataset-document3'}]}, res.get_json(),
+                         msg="diff in get documents")
+        res = self.client.get(f"/workspace/{workspace_name}/document/{documents[-1]['document_id']}", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to add a document before labeling")
+        document3_elements = res.get_json()['elements']
+        self.assertEqual([
+            {'begin': 0, 'docid': 'my_test_dataset-document3', 'end': 53, 'id': 'my_test_dataset-document3-0',
+             'model_predictions': {}, 'text': 'document 3 has three text elements, this is the first',
+             'user_labels': {}},
+            {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 108, 'id': 'my_test_dataset-document3-1',
+             'model_predictions': {}, 'text': 'document 3 has three text elements, this is the second',
+             'user_labels': {}},
+            {'begin': 109, 'docid': 'my_test_dataset-document3', 'end': 162, 'id': 'my_test_dataset-document3-2',
+             'model_predictions': {}, 'text': 'document 3 has three text elements, this is the third',
+             'user_labels': {}}], document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
+
+        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}',
+                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, True), headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to set the first label for a category")
+        self.assertEqual({'category_name': 'my_category',
+                          'element': {'begin': 0, 'docid': 'my_test_dataset-document3', 'end': 53,
+                                      'id': 'my_test_dataset-document3-0', 'model_predictions': {},
+                                      'text': 'document 3 has three text elements, this is the first',
+                                      'user_labels': {'my_category': 'true'}}, 'workspace_id': 'my_test_workspace'},
+                         res.get_json(),msg = "diff in setting element's label response")
+        res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
+                              headers = HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
+        self.assertEqual({'labeling_counts': {'true': 1}, 'notifications': [], 'progress': {'all': 50}},
+                         res.get_json(),msg = "diffs in get status response after setting a label")
+
+        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}',
+                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, False), headers=HEADERS)
+
+        print("Done")
