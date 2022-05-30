@@ -6,6 +6,7 @@ import traceback
 
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
+from typing import List, Mapping
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -17,15 +18,13 @@ from flask import Flask, jsonify, request, send_file, make_response, send_from_d
 from flask_cors import CORS, cross_origin
 from flask_httpauth import HTTPTokenAuth
 
-from lrtc_lib.app_utils import extract_iteration_information_list
+from lrtc_lib.app_utils import extract_iteration_information_list, extract_enriched_ngrams_and_weights_list
 from lrtc_lib.config import load_config
 from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
-from lrtc_lib.analysis_utils.analyze_tokens import ngrams_by_info_gain
 from lrtc_lib.configurations.users import User
-from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label
+from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label, TextElement
 from lrtc_lib.data_access.data_access_api import AlreadyExistsException, get_document_uri
 from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
-from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.models.core.models_factory import ModelFactory
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import IterationStatus, OrchestratorStateApi
@@ -41,9 +40,9 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
 auth = HTTPTokenAuth(scheme='Bearer')
 CONFIGURATION = load_config(os.path.join(ROOT_DIR, "config.json"))
 cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in CONFIGURATION.users}
 tokens = [user.token for user in users.values()]
-app.config['CORS_HEADERS'] = 'Content-Type'
 orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(ROOT_DIR, "output", "workspaces")),
                                    FileBasedDataAccess(os.path.join(ROOT_DIR, "output")),
                                    ActiveLearningFactory(),
@@ -65,9 +64,16 @@ def start_server(port=8000):
     serve(app, port=port, threads=20)  # to enable running on a remote machine
 
 
-## move to common :
+def elements_back_to_front(workspace_id: str, elements: List[TextElement], category: str) -> List[Mapping]:
+    """
+    Converts TextElement objects from the backend into dictionaries in the form expected by the frontend, and adds
+    the model prediction for the elements if available.
+    :param workspace_id:
+    :param elements: a list of TextElements
+    :param category:
+    :return: a list of dictionaries with element information
+    """
 
-def elements_back_to_front(workspace_id, elements, category):
     element_uri_to_info = \
         {text_element.uri:
              {'id': text_element.uri,
@@ -75,7 +81,7 @@ def elements_back_to_front(workspace_id, elements, category):
               'begin': text_element.span[0][0],
               'end': text_element.span[0][1],
               'text': text_element.text,
-              'user_labels': {k: str(v.label).lower()  # current UI is using true and false as strings. change to boolean in the new UI
+              'user_labels': {k: str(v.label).lower()  # TODO current UI is using true and false as strings. change to boolean in the new UI
                               for k, v in text_element.category_to_label.items()},
               'model_predictions': {}
               }
@@ -91,20 +97,17 @@ def elements_back_to_front(workspace_id, elements, category):
     return [element_info for element_info in element_uri_to_info.values()]
 
 
-def get_element(workspace_id, element_id):
+def get_element(workspace_id, category_name, element_id):
     """
     get element
     :param workspace_id:
+    :param category_name:
     :param element_id:
     """
     dataset_name = orchestrator_api.get_dataset_name(workspace_id)
     element = orchestrator_api.get_text_elements_by_uris(workspace_id, dataset_name, [element_id])
-    category_name = request.args.get('category_name')
-    element_transformed = elements_back_to_front(workspace_id, element, category_name)
-    return element_transformed[0]
-
-
-## end of move to common
+    element_transformed = elements_back_to_front(workspace_id, element, category_name)[0]
+    return element_transformed
 
 
 def _build_cors_preflight_response():
@@ -281,7 +284,7 @@ def get_workspace_info(workspace_id):
 
 
 """
-Category endpoints.A category is defined in the context of a particular workspace. As a user works on the system, all
+Category endpoints. A category is defined in the context of a particular workspace. As a user works on the system, all
 the labels, classification models etc. are associated with a specific category.
 """
 
@@ -424,7 +427,8 @@ def get_document_positive_predictions(workspace_id, document_id):
 @app.route("/workspace/<workspace_id>/element/<eltid>", methods=['GET'])
 @auth.login_required
 def get_element_by_id(workspace_id, eltid):
-    return get_element(workspace_id, eltid)
+    category_name = request.args.get('category_name')
+    return get_element(workspace_id, category_name, eltid)
 
 
 @app.route("/workspace/<workspace_id>/query", methods=['GET'])
@@ -498,7 +502,7 @@ def set_element_label(workspace_id, element_id):
                                     apply_to_duplicate_texts=CONFIGURATION.apply_labels_to_duplicate_texts,
                                     update_label_counter=update_counter)
 
-    res = {'element': get_element(workspace_id, element_id), 'workspace_id': workspace_id,
+    res = {'element': get_element(workspace_id, category_name, element_id), 'workspace_id': workspace_id,
            'category_name': category_name}
     return jsonify(res)
 
@@ -784,21 +788,10 @@ def get_labeled_elements_enriched_tokens(workspace_id):
     elements = \
         orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id),
                                                        category)
-    elements_transformed = elements_back_to_front(workspace_id, elements, category)
     res = dict()
     if elements and len(elements) > 0:
-        boolean_labels = [category in element['user_labels'] and element['user_labels'][category] == LABEL_POSITIVE
-                          for element in elements_transformed]
-        try:
-            texts = [element.text for element in elements]
-            enriched_ngrams_and_weights = ngrams_by_info_gain(texts, boolean_labels, ngram_max_length=2,
-                                                              language=Languages.ENGLISH)
-        except Exception as e:
-            logging.warning(f"Failed to calculate enriched tokens from {len(elements)} elements: error {e}")
-            enriched_ngrams_and_weights = {}
-
-        formatted_res = [{'text': ngram, 'weight': weight} for ngram, weight in enriched_ngrams_and_weights]
-        res['info_gain'] = formatted_res[:30]
+        boolean_labels = [element.category_to_label[category].label == LABEL_POSITIVE for element in elements]
+        res['info_gain'] = extract_enriched_ngrams_and_weights_list(elements, boolean_labels)
     return jsonify(res)
 
 
@@ -822,18 +815,8 @@ def get_predictions_enriched_tokens(workspace_id):
                                                                    required_label=LABEL_POSITIVE)
     false_elements = orchestrator_api.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
                                                                     required_label=LABEL_NEGATIVE)
-
     elements = true_elements + false_elements
     boolean_labels = [LABEL_POSITIVE] * len(true_elements) + [LABEL_NEGATIVE] * len(false_elements)
 
-    try:
-        texts = [element.text for element in elements]
-        enriched_ngrams_and_weights = ngrams_by_info_gain(texts, boolean_labels, ngram_max_length=2,
-                                                          language=Languages.ENGLISH)
-    except Exception as e:
-        logging.warning(f"Failed to calculate enriched tokens from {len(elements)} elements: error {e}")
-        enriched_ngrams_and_weights = {}
-
-    formatted_res = [{'text': ngram, 'weight': weight} for ngram, weight in enriched_ngrams_and_weights]
-    res['info_gain'] = formatted_res[:30]
+    res['info_gain'] = extract_enriched_ngrams_and_weights_list(elements, boolean_labels)
     return jsonify(res)

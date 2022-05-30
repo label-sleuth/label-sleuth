@@ -1,5 +1,8 @@
+import logging
 from typing import Sequence
 
+from lrtc_lib.analysis_utils.analyze_tokens import ngrams_by_info_gain
+from lrtc_lib.models.core.languages import Languages
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import Iteration
 
 
@@ -20,3 +23,16 @@ def extract_iteration_information_list(iterations: Sequence[Iteration]):
         sorted(res_list, key=lambda item: item['creation_epoch']))]
 
     return res_sorted
+
+
+def extract_enriched_ngrams_and_weights_list(elements, boolean_labels):
+    try:
+        texts = [element.text for element in elements]
+        enriched_ngrams_and_weights = ngrams_by_info_gain(texts, boolean_labels, ngram_max_length=2,
+                                                          language=Languages.ENGLISH)
+    except Exception as e:
+        logging.warning(f"Failed to calculate enriched tokens from {len(elements)} elements: error {e}")
+        enriched_ngrams_and_weights = {}
+
+    ngrams_and_weights_list = [{'text': ngram, 'weight': weight} for ngram, weight in enriched_ngrams_and_weights]
+    return ngrams_and_weights_list[:30]

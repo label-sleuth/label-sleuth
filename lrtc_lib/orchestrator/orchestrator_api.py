@@ -24,8 +24,8 @@ from lrtc_lib.models.core.model_api import ModelStatus
 from lrtc_lib.models.core.model_types import ModelTypes
 from lrtc_lib.models.core.models_factory import ModelFactory
 from lrtc_lib.models.core.prediction import Prediction
-from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import ModelInfo, IterationStatus, Category, \
-    OrchestratorStateApi
+from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
+    ModelInfo, OrchestratorStateApi
 from lrtc_lib.orchestrator.utils import convert_text_elements_to_train_data
 from lrtc_lib.training_set_selector.training_set_selector_factory import get_training_set_selector
 
@@ -48,7 +48,12 @@ class OrchestratorApi:
         self.active_learning_factory = active_learning_factory
         self.model_factory = model_factory
         self.config = config
-            
+
+    def get_all_dataset_names(self):
+        return sorted(self.data_access.get_all_dataset_names())
+
+    # Workspace-related methods
+
     def create_workspace(self, workspace_id: str, dataset_name: str):
         """
         Create a new workspace
@@ -61,16 +66,6 @@ class OrchestratorApi:
             logging.error(message)
             raise Exception(message)
         self.orchestrator_state.create_workspace(workspace_id, dataset_name)
-
-    def create_new_category(self, workspace_id: str, category_name: str, category_description: str):
-        """
-        Declare a new category in the given workspace
-        :param workspace_id:
-        :param category_name:
-        :param category_description:
-        """
-        logging.info(f"Creating a new category '{category_name}' in workspace '{workspace_id}'")
-        self.orchestrator_state.add_category_to_workspace(workspace_id, category_name, category_description)
 
     def delete_workspace(self, workspace_id: str):
         """
@@ -93,6 +88,27 @@ class OrchestratorApi:
                 logging.exception(f"error clearing saved labels for workspace '{workspace_id}'")
                 raise e
 
+    def workspace_exists(self, workspace_id: str) -> bool:
+        return self.orchestrator_state.workspace_exists(workspace_id)
+
+    def list_workspaces(self):
+        return sorted([x.workspace_id for x in self.orchestrator_state.get_all_workspaces()])
+
+    def get_dataset_name(self, workspace_id: str) -> str:
+        return self.orchestrator_state.get_workspace(workspace_id).dataset_name
+
+    # Category-related methods
+
+    def create_new_category(self, workspace_id: str, category_name: str, category_description: str):
+        """
+        Declare a new category in the given workspace
+        :param workspace_id:
+        :param category_name:
+        :param category_description:
+        """
+        logging.info(f"Creating a new category '{category_name}' in workspace '{workspace_id}'")
+        self.orchestrator_state.add_category_to_workspace(workspace_id, category_name, category_description)
+
     def delete_category(self, workspace_id: str, category_name: str):
         """
         Delete the given category from the workspace
@@ -103,30 +119,11 @@ class OrchestratorApi:
         self._delete_category_models(workspace_id, category_name)
         self.orchestrator_state.delete_category_from_workspace(workspace_id, category_name)
 
-    def delete_iteration_model(self, workspace_id, category_name, iteration_index):
-        """
-        Delete the model files for *iteration_index* of the given category, and mark the model as deleted.
-        :param workspace_id:
-        :param category_name:
-        :param iteration_index:
-        """
-        iteration = self.get_all_iterations_for_category(workspace_id, category_name)[iteration_index]
-        model_info = iteration.model
-        if model_info.model_status == ModelStatus.DELETED:
-            raise Exception(f"Trying to delete model id {model_info.model_id} which is already in {ModelStatus.DELETED}"
-                            f"from workspace '{workspace_id}' in category '{category_name}'")
-    
-        model = self.model_factory.get_model(model_info.model_type)
-        logging.info(f"Marking iteration {iteration_index} model id {model_info.model_id} in "
-                     f"workspace '{workspace_id}' in category '{category_name}' as deleted, and deleting the model")
-        self.orchestrator_state.mark_iteration_model_as_deleted(workspace_id, category_name, iteration_index)
-        model.delete_model(model_info.model_id)
+    def get_all_categories(self, workspace_id: str) -> Mapping[str, Category]:
+        return self.orchestrator_state.get_workspace(workspace_id).categories
 
-    def _delete_category_models(self, workspace_id, category_name):
-        workspace = self.orchestrator_state.get_workspace(workspace_id)
-        for idx in range(len(workspace.categories[category_name].iterations)):
-            self.delete_iteration_model(workspace_id, category_name, idx)
-    
+    # Data access methods
+
     def get_documents(self, workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[Document]:
         """
         Get a list of Documents by their URIs
@@ -137,6 +134,23 @@ class OrchestratorApi:
         """
         return self.data_access.get_documents(workspace_id, dataset_name, uris)
 
+    def get_all_document_uris(self, workspace_id) -> List[str]:
+        """
+        Get a list of all document URIs in the dataset used by the given workspace.
+        :param workspace_id:
+        :return: a list of Document URIs
+        """
+        dataset_name = self.get_dataset_name(workspace_id)
+        return self.data_access.get_all_document_uris(dataset_name)
+
+    def get_all_text_elements(self, dataset_name: str) -> List[TextElement]:
+        """
+        Get all the text elements of the given dataset.
+        :param dataset_name:
+        :return: a list of TextElement objects
+        """
+        return self.data_access.get_all_text_elements(dataset_name=dataset_name)
+
     def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[TextElement]:
         """
         Get a list of TextElements by their URIs
@@ -146,6 +160,28 @@ class OrchestratorApi:
         :return: a list of TextElement objects
         """
         return self.data_access.get_text_elements_by_uris(workspace_id, dataset_name, uris)
+
+    def get_all_labeled_text_elements(self, workspace_id, dataset_name, category) -> List[TextElement]:
+        """
+        Get all the text elements that were assigned user labels for the given category.
+        :param workspace_id:
+        :param dataset_name:
+        :param category:
+        :return: a list of TextElement objects
+        """
+        return self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category, sample_size=sys.maxsize,
+                                                          remove_duplicates=False)['results']
+
+    def get_all_unlabeled_text_elements(self, workspace_id, dataset_name, category) -> List[TextElement]:
+        """
+        Get all the text elements that were not assigned user labels for the given category.
+        :param workspace_id:
+        :param dataset_name:
+        :param category:
+        :return: a list of TextElement objects
+        """
+        return self.data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category,
+                                                            sample_size=sys.maxsize, remove_duplicates=False)['results']
 
     def query(self, workspace_id: str, dataset_name: str, category_name: str, query_regex: str,
               sample_size: int = sys.maxsize, sample_start_idx: int = 0, unlabeled_only: bool = False,
@@ -174,25 +210,6 @@ class OrchestratorApi:
             return self.data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                       sample_size=sample_size, sample_start_idx=sample_start_idx,
                                                       query_regex=query_regex, remove_duplicates=remove_duplicates)
-
-    def get_elements_to_label(self, workspace_id: str, category_name: str, count: int, start_index: int = 0) \
-            -> Sequence[TextElement]:
-        """
-        Returns a list of *count* elements recommended for labeling by the active learning module for the latest
-        iteration in READY status.
-        :param workspace_id:
-        :param category_name:
-        :param count: maximum number of elements to return
-        :param start_index: get elements starting from this index (for pagination)
-        :return: a list of *count* TextElement objects
-        """
-        recommended_uris = self.orchestrator_state.get_current_category_recommendations(workspace_id, category_name)
-    
-        if start_index > len(recommended_uris):
-            raise Exception(f"exceeded max recommended items. last element index is {len(recommended_uris) - 1}")
-        recommended_uris = recommended_uris[start_index:start_index + count]
-        dataset_name = self.get_dataset_name(workspace_id)
-        return self.get_text_elements_by_uris(workspace_id, dataset_name, recommended_uris)
 
     def set_labels(self, workspace_id: str, uri_to_label: Mapping[str, Mapping[str, Label]],
                    apply_to_duplicate_texts=True, update_label_counter=True):
@@ -226,45 +243,6 @@ class OrchestratorApi:
         self.data_access.unset_labels(
             workspace_id, category_name, uris, apply_to_duplicate_texts=apply_to_duplicate_texts)
 
-    def get_all_document_uris(self, workspace_id) -> List[str]:
-        """
-        Get a list of all document URIs in the dataset used by the given workspace.
-        :param workspace_id:
-        :return: a list of Document URIs
-        """
-        dataset_name = self.get_dataset_name(workspace_id)
-        return self.data_access.get_all_document_uris(dataset_name)
-
-    def get_all_text_elements(self, dataset_name: str) -> List[TextElement]:
-        """
-        Get all the text elements of the given dataset.
-        :param dataset_name:
-        :return: a list of TextElement objects
-        """
-        return self.data_access.get_all_text_elements(dataset_name=dataset_name)
-
-    def get_all_labeled_text_elements(self, workspace_id, dataset_name, category) -> List[TextElement]:
-        """
-        Get all the text elements that were assigned user labels for the given category.
-        :param workspace_id:
-        :param dataset_name:
-        :param category:
-        :return: a list of TextElement objects
-        """
-        return self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category, sample_size=sys.maxsize,
-                                                          remove_duplicates=False)['results']
-
-    def get_all_unlabeled_text_elements(self, workspace_id, dataset_name, category) -> List[TextElement]:
-        """
-        Get all the text elements that were not assigned user labels for the given category.
-        :param workspace_id:
-        :param dataset_name:
-        :param category:
-        :return: a list of TextElement objects
-        """
-        return self.data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category,
-                                                            sample_size=sys.maxsize, remove_duplicates=False)['results']
-    
     def get_label_counts(self, workspace_id: str, dataset_name: str, category_name: str, remove_duplicates=False):
         """
         Get the number of elements that were labeled for the given category.
@@ -277,13 +255,67 @@ class OrchestratorApi:
         return self.data_access.get_label_counts(workspace_id, dataset_name, category_name,
                                                  remove_duplicates=remove_duplicates)
 
-    def workspace_exists(self, workspace_id: str) -> bool:
-        return self.orchestrator_state.workspace_exists(workspace_id)
+    # Iteration-related methods
 
-    def get_dataset_name(self, workspace_id: str) -> str:
-        return self.orchestrator_state.get_workspace(workspace_id).dataset_name
+    def get_all_iterations_for_category(self, workspace_id, category_name: str) -> List[Iteration]:
+        """
+        :param workspace_id:
+        :param category_name:
+        :return: dict from model_id to ModelInfo
+        """
+        return self.orchestrator_state.get_all_iterations(workspace_id, category_name)
 
-    # iteration flow
+    def get_all_iterations_by_status(self, workspace_id, category_name, iteration_status: IterationStatus) \
+            -> List[Iteration]:
+        return self.orchestrator_state.get_all_iterations_by_status(workspace_id, category_name, iteration_status)
+
+    def get_iteration_status(self, workspace_id, category_name, iteration_index) -> IterationStatus:
+        return self.orchestrator_state.get_iteration_status(workspace_id, category_name, iteration_index)
+
+    def delete_iteration_model(self, workspace_id, category_name, iteration_index):
+        """
+        Delete the model files for *iteration_index* of the given category, and mark the model as deleted.
+        :param workspace_id:
+        :param category_name:
+        :param iteration_index:
+        """
+        iteration = self.get_all_iterations_for_category(workspace_id, category_name)[iteration_index]
+        model_info = iteration.model
+        if model_info.model_status == ModelStatus.DELETED:
+            raise Exception(f"Trying to delete model id {model_info.model_id} which is already in {ModelStatus.DELETED}"
+                            f"from workspace '{workspace_id}' in category '{category_name}'")
+
+        model = self.model_factory.get_model(model_info.model_type)
+        logging.info(f"Marking iteration {iteration_index} model id {model_info.model_id} in "
+                     f"workspace '{workspace_id}' in category '{category_name}' as deleted, and deleting the model")
+        self.orchestrator_state.mark_iteration_model_as_deleted(workspace_id, category_name, iteration_index)
+        model.delete_model(model_info.model_id)
+
+    def _delete_category_models(self, workspace_id, category_name):
+        workspace = self.orchestrator_state.get_workspace(workspace_id)
+        for idx in range(len(workspace.categories[category_name].iterations)):
+            self.delete_iteration_model(workspace_id, category_name, idx)
+
+    def get_elements_to_label(self, workspace_id: str, category_name: str, count: int, start_index: int = 0) \
+            -> List[TextElement]:
+        """
+        Returns a list of *count* elements recommended for labeling by the active learning module for the latest
+        iteration in READY status.
+        :param workspace_id:
+        :param category_name:
+        :param count: maximum number of elements to return
+        :param start_index: get elements starting from this index (for pagination)
+        :return: a list of *count* TextElement objects
+        """
+        recommended_uris = self.orchestrator_state.get_current_category_recommendations(workspace_id, category_name)
+
+        if start_index > len(recommended_uris):
+            raise Exception(f"exceeded max recommended items. last element index is {len(recommended_uris) - 1}")
+        recommended_uris = recommended_uris[start_index:start_index + count]
+        dataset_name = self.get_dataset_name(workspace_id)
+        return self.get_text_elements_by_uris(workspace_id, dataset_name, recommended_uris)
+
+    # Iteration flow
     
     def run_iteration(self, workspace_id: str, category_name: str, model_type: ModelTypes, train_data,
                       train_params=None) -> str:
@@ -496,14 +528,6 @@ class OrchestratorApi:
         for candidate_iteration_index in ready_iteration_indices[:-NUMBER_OF_MODELS_TO_KEEP]:
             logging.info(f"keep only {NUMBER_OF_MODELS_TO_KEEP} models, deleting iteration {candidate_iteration_index}")
             self.delete_iteration_model(workspace_id, category_name, candidate_iteration_index)
-    
-    def get_all_iterations_for_category(self, workspace_id, category_name: str):
-        """
-        :param workspace_id:
-        :param category_name:
-        :return: dict from model_id to ModelInfo
-        """
-        return self.orchestrator_state.get_all_iterations(workspace_id, category_name)
 
     def train_if_recommended(self, workspace_id: str, category_name: str, force=False) -> Union[None, str]:
         """
@@ -592,6 +616,8 @@ class OrchestratorApi:
         predictions = model.infer(model_id=model_info.model_id, items_to_infer=list_of_dicts, use_cache=use_cache)
         return predictions
     
+    # Labeling/Evaluation reports
+
     def get_contradiction_report(self, workspace_id, category_name) -> Mapping[str, List]:
         dataset_name = self.get_dataset_name(workspace_id)
         labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
@@ -603,19 +629,6 @@ class OrchestratorApi:
         labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
         return get_disagreements_using_cross_validation(workspace_id, category_name, labeled_elements,
                                                         self.model_factory, model_type)
-
-    def sample_elements_by_prediction(self, workspace_id, category, sample_size: int = sys.maxsize,
-                                      unlabeled_only=False, required_label=LABEL_POSITIVE, random_state: int = 0):
-        dataset_name = self.get_dataset_name(workspace_id)
-        if unlabeled_only:
-            elements = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category)
-        else:
-            elements = self.get_all_text_elements(dataset_name)
-        predictions = self.infer(workspace_id, category, elements)
-        elements_with_matching_prediction = [text_element for text_element, prediction in zip(elements, predictions)
-                                             if prediction.label == required_label]
-        random.Random(random_state).shuffle(elements_with_matching_prediction)
-        return elements_with_matching_prediction[:sample_size]
 
     def estimate_precision(self, workspace_id, category, ids, changed_elements_count, iteration_index):
         dataset_name = self.get_dataset_name(workspace_id)
@@ -633,35 +646,35 @@ class OrchestratorApi:
                                                                              changed_elements_count)
         return estimated_precision
 
+    def sample_elements_by_prediction(self, workspace_id, category, sample_size: int = sys.maxsize,
+                                      unlabeled_only=False, required_label=LABEL_POSITIVE, random_state: int = 0):
+        dataset_name = self.get_dataset_name(workspace_id)
+        if unlabeled_only:
+            elements = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category)
+        else:
+            elements = self.get_all_text_elements(dataset_name)
+        predictions = self.infer(workspace_id, category, elements)
+        elements_with_matching_prediction = [text_element for text_element, prediction in zip(elements, predictions)
+                                             if prediction.label == required_label]
+        random.Random(random_state).shuffle(elements_with_matching_prediction)
+        return elements_with_matching_prediction[:sample_size]
+
     def get_progress(self, workspace_id: str, dataset_name: str, category: str):
         category_label_counts = self.get_label_counts(workspace_id, dataset_name, category)
         if category_label_counts[LABEL_POSITIVE]:
             changed_since_last_model_count = \
                 self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category)
-    
+
             return {"all": min(
                 max(0, min(round(changed_since_last_model_count / self.config.changed_element_threshold * 100), 100)),
                 max(0, min(round(category_label_counts[LABEL_POSITIVE] /
                                  self.config.first_model_positive_threshold * 100), 100)))
-                    }
+            }
         else:
             return {"all": 0}
 
-    def list_workspaces(self):
-        return sorted([x.workspace_id for x in self.orchestrator_state.get_all_workspaces()])
+    # Import/Export
 
-    def get_all_dataset_names(self):
-        return sorted(self.data_access.get_all_dataset_names())
-    
-    def get_all_categories(self, workspace_id: str) -> Mapping[str, Category]:
-        return self.orchestrator_state.get_workspace(workspace_id).categories
-
-    def get_iteration_status(self, workspace_id, category_name, iteration_index):
-        return self.orchestrator_state.get_iteration_status(workspace_id, category_name, iteration_index)
-
-    def get_all_iterations_by_status(self, workspace_id, category_name, iteration_status: IterationStatus):
-        return self.orchestrator_state.get_all_iterations_by_status(workspace_id, category_name, iteration_status)
-    
     def import_category_labels(self, workspace_id, labels_df_to_import: pd.DataFrame):
         logging.info(f"Importing {len(labels_df_to_import)} unique labeled elements into workspace '{workspace_id}'"
                      f"from {len(labels_df_to_import[DisplayFields.category_name].unique())} categories")

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from typing import List, Tuple, Mapping
@@ -17,16 +17,8 @@ class LabelType(Enum):
 @dataclass
 class Label:
     label: bool
-    metadata: Mapping
-    label_type: LabelType
-
-    def __init__(self, label: bool, metadata=None, label_type: LabelType = LabelType.Standard):
-
-        if metadata is None:
-            metadata = {}
-        self.label = label
-        self.metadata = metadata
-        self.label_type = label_type
+    metadata: Mapping = field(default_factory=dict)
+    label_type: LabelType = field(default=LabelType.Standard)
 
     def get_detailed_label_name(self):
         return str(self.label) if self.label_type == LabelType.Standard else f'{self.label_type.name}_{self.label}'
