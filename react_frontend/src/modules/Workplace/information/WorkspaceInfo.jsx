@@ -349,7 +349,6 @@ export default function Workspace({workspaceId}) {
                                 </Stack>
                             </TabPanel>
                         </Box>
-                        <label className={classes.label_hsbar_label}>Model auto-updates per 5 new labels.</label>
                         <ModelName>
                             <Typography>Current Model:</Typography>
                             {
