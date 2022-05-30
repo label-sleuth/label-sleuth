@@ -54,11 +54,12 @@ export default function CreateCategoryModal(props) {
             <Button onClick={() => {
               console.log(`button called`)
               // dispatch(createNewCategory(text))
-              dispatch(createCategoryOnServer({ category: text })).then(() => fetchCategories())
-              dispatch(createNewCategory(text))
+              const newCategoryName = text
+              dispatch(createCategoryOnServer({ category: newCategoryName })).then(() => fetchCategories())
+              dispatch(createNewCategory(newCategoryName))
               dispatch(fetchCategories())
               dispatch(setWorkspaceLength(workspace.categories.length + 1))
-              dispatch(updateCurCategory(workspace.categories[workspace.categories.length - 1]))
+              dispatch(updateCurCategory(newCategoryName))
               setOpen(false)
             }} className={classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
           </Box>
