@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateCurCategory } from '../DataSlice.jsx';
 import FormControl from '@mui/material/FormControl';
 import ControlledSelect from '../../../components/dropdown/Dropdown';
+import Tooltip from '@mui/material/Tooltip';
 
 const rightDrawerWidth = 360;
 const leftDrawerWidthh = 280;
@@ -96,16 +97,17 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
   return (
     <ElevationScroll>
       <AppBar className={classes.elevation_scroll} open={open}>
-
         <div className={classes.upper}>
           <p>Category: </p>
           <CategoryFormControl
             workspaceLength={workspaceLength}
             placholder="placeholder" />
 
-          <button onClick={handleAddCategory} alt="Create new category">
-            <img src={add_icon} />
-          </button>
+          <Tooltip title="Create a new category">
+            <button onClick={handleAddCategory} alt="Create new category">
+              <img src={add_icon} />
+            </button>
+          </Tooltip>
           {/* TODO 
               <IconButton onClick={() => setModalOpen(false)} >
                 <EditIcon  color="success" />

@@ -11,6 +11,7 @@ import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
 import CircularProgress from '@mui/material/CircularProgress';
 import useFetchPrevNextDoc from './customHooks/useFetchPrevNextDoc'
+import Tooltip from '@mui/material/Tooltip';
 
 const numOfElemPerPage = 500;
 const rightDrawerWidth = 360;
@@ -56,21 +57,30 @@ const MainContent = ({ handleKeyEvent, handleClick, open }) => {
     <>
       <Main className={classes.main_content} open={open}>
         <div className={classes.doc_header}>
-          <button className={classes.doc_button} onClick={handleFetchPrevDoc}><img src={left_icon} />
-          </button>
-          {
-            (!workspace.curDocName) || (!isCategoryLoaded && workspace.curCategory != null) || (!isDocLoaded) ?
-              <Box>
-                <CircularProgress style={{ width: '25px', height: '25px', color: '#393939' }} />
-              </Box>
-              :
-              <div className={classes.doc_stats}>
-                <h6>{workspace.curDocName}</h6>
-                <em>Text Entries: {workspace.elements.length}</em>
-              </div>
-          }
-          <button className={classes.doc_button} onClick={handleFetchNextDoc}><img src={right_icon} />
-          </button>
+        <Tooltip title="Go to the previous document" placement="right">
+            <button className={classes.doc_button} onClick={handleFetchPrevDoc}>
+              <img src={left_icon} />
+            </button>
+          </Tooltip>
+          {!workspace.curDocName ||
+          (!isCategoryLoaded && workspace.curCategory != null) ||
+          !isDocLoaded ? (
+            <Box>
+              <CircularProgress
+                style={{ width: "25px", height: "25px", color: "#393939" }}
+              />
+            </Box>
+          ) : (
+            <div className={classes.doc_stats}>
+              <h6>{workspace.curDocName}</h6>
+              <em>Text Entries: {workspace.elements.length}</em>
+            </div>
+          )}
+          <Tooltip title="Go to the next document" placement="left">
+            <button className={classes.doc_button} onClick={handleFetchNextDoc}>
+              <img src={right_icon} />
+            </button>
+          </Tooltip>
         </div>
         <div className={classes.doc_content}>
           <Box>
