@@ -37,8 +37,10 @@ const useLoadDoc = () => {
         let formData = new FormData()
         formData.append('file', file);
         formData.append('dataset_name', dataset_name)
-        dispatch(addDocuments(formData))
-        setIsSubmitted(true)
+        dispatch(addDocuments(formData)).then(() => {
+            setIsSubmitted(true)
+            notify("The new dataset has been created")
+        })
     }
 
     return {
