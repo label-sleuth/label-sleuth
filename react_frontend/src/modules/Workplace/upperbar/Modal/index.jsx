@@ -54,7 +54,7 @@ export default function CreateCategoryModal(props) {
             <Button onClick={() => {
               console.log(`button called`)
               // dispatch(createNewCategory(text))
-              const newCategoryName = text
+              const newCategoryName = text.trim()
               dispatch(createCategoryOnServer({ category: newCategoryName })).then(() => fetchCategories())
               dispatch(createNewCategory(newCategoryName))
               dispatch(fetchCategories())
