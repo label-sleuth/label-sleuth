@@ -37,7 +37,8 @@ class CsvFileProcessor(DataProcessorAPI):
         :param text_col: the name of the column which holds the text of the TextElement. Default is 'text'.
         :param metadata_column_name_prefix: prefix of metadata columns that should be saved with the text element
         :param doc_id_col: column name by which text elements should be grouped into docs.
-        If None all text elements would be put in a single dummy doc. Default is None.
+        If None all text elements would be put in a single dummy with the current time the format of '%d_%b_%Y_%H:%M'
+         as the doc_id. Default is None.
         :param encoding: the encoding to use to read the csv raw file(s). Default is `utf-8`.
 
         """
