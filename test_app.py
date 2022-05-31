@@ -25,7 +25,7 @@ class TestAppIntegration(unittest.TestCase):
         app.app.test_request_context("/")
         app.app.config['TESTING'] = True
         app.app.config['LOGIN_DISABLED'] = True
-        app.CONFIGURATION = lrtc_lib.config.load_config("./lrtc_lib/config_integration_tests.json")
+        app.CONFIGURATION = lrtc_lib.config.load_config("./lrtc_lib/config_tests.json")
         app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.CONFIGURATION.users}
 
         app.tokens = [user.token for user in app.users.values()]
