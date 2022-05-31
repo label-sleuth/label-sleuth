@@ -64,13 +64,13 @@ def start_server(port=8000):
     serve(app, port=port, threads=20)  # to enable running on a remote machine
 
 
-def elements_back_to_front(workspace_id: str, elements: List[TextElement], category: str) -> List[Mapping]:
+def elements_back_to_front(workspace_id: str, elements: List[TextElement], category_name: str) -> List[Mapping]:
     """
     Converts TextElement objects from the backend into dictionaries in the form expected by the frontend, and adds
     the model prediction for the elements if available.
     :param workspace_id:
     :param elements: a list of TextElements
-    :param category:
+    :param category_name:
     :return: a list of dictionaries with element information
     """
 
@@ -87,19 +87,19 @@ def elements_back_to_front(workspace_id: str, elements: List[TextElement], categ
               }
          for text_element in elements}
 
-    if category and len(elements) > 0 \
-            and len(orchestrator_api.get_all_iterations_by_status(workspace_id, category, IterationStatus.READY)) > 0:
-        predicted_labels = [pred.label for pred in orchestrator_api.infer(workspace_id, category, elements)]
+    if category_name and len(elements) > 0 \
+            and len(orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)) > 0:
+        predicted_labels = [pred.label for pred in orchestrator_api.infer(workspace_id, category_name, elements)]
         for text_element, prediction in zip(elements, predicted_labels):
             # the frontend expects string labels and not boolean
-            element_uri_to_info[text_element.uri]['model_predictions'][category] = str(prediction).lower()
+            element_uri_to_info[text_element.uri]['model_predictions'][category_name] = str(prediction).lower()
 
     return [element_info for element_info in element_uri_to_info.values()]
 
 
 def get_element(workspace_id, category_name, element_id):
     """
-    get element
+    get element by id
     :param workspace_id:
     :param category_name:
     :param element_id:
@@ -108,14 +108,6 @@ def get_element(workspace_id, category_name, element_id):
     element = orchestrator_api.get_text_elements_by_uris(workspace_id, dataset_name, [element_id])
     element_transformed = elements_back_to_front(workspace_id, element, category_name)[0]
     return element_transformed
-
-
-def _build_cors_preflight_response():
-    response = make_response()
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Headers", "*")
-    response.headers.add("Access-Control-Allow-Methods", "*")
-    return response
 
 
 def authenticate_response(user):
@@ -185,6 +177,15 @@ def get_all_dataset_ids():
 @cross_origin()
 @auth.login_required
 def add_documents(dataset_name):
+    """
+    Upload a csv file, and add its contents as a collection of documents in the dataset *dataset_name*.
+    If *dataset_name* does not already exist, it is created here. If it does exist, the process of adding documents also
+    includes updating labels and model predictions for all workspaces that use this dataset.
+
+    The uploaded csv file must follow the required format, using the relevant column names from DisplayFields.
+    Specifically, the file must include a 'text' column, and may optionally include a 'doc_id' column as well as
+    metadata columns starting with the 'metadata_' prefix.
+    """
     temp_dir = None
     try:
         csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
@@ -248,7 +249,6 @@ def create_workspace():
 def get_all_workspace_ids():
     """
     Get all existing workspaces
-    :return array of workspace ids as strings:
     """
     res = {'workspaces': orchestrator_api.list_workspaces()}
     return jsonify(res)
@@ -269,7 +269,7 @@ def delete_workspace(workspace_id):
 @auth.login_required
 def get_workspace_info(workspace_id):
     """
-    Get workspace info
+    Get workspace information
     :param workspace_id
     :return workspace_id, dataset_name, array of all document_ids, id of first document:
     """
@@ -309,9 +309,7 @@ def create_category(workspace_id):
 @auth.login_required
 def get_all_categories(workspace_id):
     """
-    :param workspace_id:
-    Get current state of classes
-    :return classes:
+    Get information about all existing categories in the workspace
     """
     categories = orchestrator_api.get_all_categories(workspace_id)
     category_dicts = [{'id': name, 'category_name': name, 'category_description': category.description}
@@ -325,7 +323,7 @@ def get_all_categories(workspace_id):
 @auth.login_required
 def rename_category(workspace_id, category_name):
     """
-    edit category - TODO implement
+    TODO implement
     :param workspace_id:
     :param category_name:
     :param category_name:
@@ -339,11 +337,10 @@ def rename_category(workspace_id, category_name):
 @auth.login_required
 def delete_category(workspace_id, category_name):
     """
-    :param workspace_id:
-    :param category_name:
-    :return success:
+    This call permanently deletes all data associated with the category, including user labels and models.
     """
     orchestrator_api.delete_category(workspace_id, category_name)
+    return jsonify({'category': category_name})
 
 
 """

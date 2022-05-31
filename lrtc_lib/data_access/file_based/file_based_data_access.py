@@ -135,8 +135,12 @@ class FileBasedDataAccess(DataAccessApi):
                     same_text_uris = self._get_uris_with_the_same_text(dataset_name, uri)
                     for same_text_uri in same_text_uris:
                         ds_labels[same_text_uri].pop(category_name)
+                        if len(ds_labels[same_text_uri]) == 0:
+                            ds_labels.pop(same_text_uri)
                 else:
                     ds_labels[uri].pop(category_name)
+                    if len(ds_labels[uri]) == 0:
+                        ds_labels.pop(uri)
             # Save updated labels dict to disk
             self._save_labels_data(dataset_name, workspace_id)
 
@@ -325,6 +329,18 @@ class FileBasedDataAccess(DataAccessApi):
         workspace_dumps_dir = self._get_workspace_labels_dir(workspace_id)
         if os.path.exists(workspace_dumps_dir) and len(os.listdir(workspace_dumps_dir)) == 0:
             os.rmdir(workspace_dumps_dir)
+
+    def delete_labels_for_category(self, workspace_id, dataset_name, category_name):
+        """
+        Delete the labels info associated with the given category.
+        :param workspace_id:
+        :param dataset_name:
+        :param category_name:
+        """
+        labeled_elements = self.get_labeled_text_elements(workspace_id, dataset_name, category_name,
+                                                          sample_size=sys.maxsize)['results']
+        if len(labeled_elements) > 0:
+            self.unset_labels(workspace_id, category_name, [e.uri for e in labeled_elements])
 
     def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Iterable[str]) -> List[TextElement]:
         """

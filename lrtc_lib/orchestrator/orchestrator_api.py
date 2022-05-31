@@ -111,11 +111,14 @@ class OrchestratorApi:
 
     def delete_category(self, workspace_id: str, category_name: str):
         """
-        Delete the given category from the workspace
+        Delete the given category from the workspace. This call permanently deletes all data associated with the
+        category, including user labels and models.
         :param workspace_id:
         :param category_name:
         """
         logging.info(f"Deleting category '{category_name}' from workspace '{workspace_id}'")
+        dataset_name = self.get_dataset_name(workspace_id)
+        self.data_access.delete_labels_for_category(workspace_id, dataset_name, category_name)
         self._delete_category_models(workspace_id, category_name)
         self.orchestrator_state.delete_category_from_workspace(workspace_id, category_name)
 

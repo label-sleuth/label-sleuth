@@ -193,8 +193,15 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param workspace_id:
         :param dataset_name:
         """
-        func_name = self.delete_all_labels.__name__
-        raise NotImplementedError('users must define ' + func_name + ' to use this base class')
+
+    @abc.abstractmethod
+    def delete_labels_for_category(self, workspace_id, dataset_name, category_name):
+        """
+        Delete the labels info associated with the given category.
+        :param workspace_id:
+        :param dataset_name:
+        :param category_name:
+        """
 
     @abc.abstractmethod
     def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Iterable[str]) -> List[TextElement]:
