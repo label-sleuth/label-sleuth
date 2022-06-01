@@ -115,4 +115,5 @@ class SVM_Ensemble(Ensemble):
     def __init__(self, output_dir, models_background_jobs_manager, model_factory):
         from lrtc_lib.models.core.catalog import ModelsCatalog
         super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
-                         model_factory=model_factory, model_types=[ModelsCatalog.SVM_OVER_BOW, ModelsCatalog.SVM_OVER_GLOVE])
+                         model_factory=model_factory, model_types=[ModelsCatalog.SVM_OVER_BOW,
+                                                                   ModelsCatalog.SVM_OVER_GLOVE])
