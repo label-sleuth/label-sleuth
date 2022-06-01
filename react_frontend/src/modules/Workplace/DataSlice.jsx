@@ -39,6 +39,10 @@ const token = localStorage.getItem('token')
 const BASE_URL = process.env.REACT_APP_API_URL
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
+const getCategoryQueryString = (curCategory) => {
+    return curCategory ? `category_name=${curCategory}` : null
+}
+
 export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async (request, { getState }) => {
 
     const state = getState()
