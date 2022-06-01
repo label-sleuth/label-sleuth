@@ -43,6 +43,16 @@ const getCategoryQueryString = (curCategory) => {
     return curCategory ? `category_name=${curCategory}` : null
 }
 
+const getQueryParamsString = (queryParams) => {
+    let queryParamsString = ''
+    queryParams.forEach(param => {
+        queryParamsString = param ? `${queryParamsString}${param}&` : queryParamsString
+    })
+    // add leading '?' removes last '&'
+    queryParamsString = '?' + queryParamsString.substring(0, queryParamsString.length-1)
+    return queryParamsString
+}
+
 export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async (request, { getState }) => {
 
     const state = getState()
