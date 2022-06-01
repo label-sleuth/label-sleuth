@@ -61,9 +61,29 @@ class ModelFactory(object):
                     self.loaded_models[model_type] = \
                         NaiveBayes(self.output_dir, RepresentationType.BOW, self.models_background_jobs_manager)
             else:
-                raise Exception(f"Model type {model_type.name} is not supported by {self.__class__.__name__}")
+                try:
+                    args = {'output_dir': self.output_dir,
+                            'model_factory': self,
+                            'manager': self.models_background_jobs_manager
+                            }
+
+                    self.loaded_models[model_type] = ModelFactory.import_by_reflection(model_type.name)(**args)
+#
+                except Exception:
+                    raise Exception(f"Model type {model_type} is not supported by {self.__class__.__name__}")
 
         except Exception:
             logging.exception(f"Could not get model type {model_type} from the model factory")
 
         return self.loaded_models[model_type]
+
+    @classmethod
+    def import_by_reflection(cls, name):
+        components = name.split('.')
+        mod = __import__(components[0])
+        for comp in components[1:]:
+            mod = getattr(mod, comp)
+        return mod
+
+
+
