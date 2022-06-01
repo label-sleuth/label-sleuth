@@ -2,7 +2,7 @@ import json
 import logging
 
 from dataclasses import dataclass
-from typing import List, Union
+from typing import List
 
 import dacite
 
@@ -34,7 +34,7 @@ class Configuration:
 
 
 converters = {
-    ModelPolicy: lambda x: ModelPolicies.get_policy_by_name(x),
+    ModelPolicy: lambda x: getattr(ModelPolicies, x),
     TrainingSetSelectionStrategy: lambda x: getattr(TrainingSetSelectionStrategy, x),
     ActiveLearningStrategies: lambda x: getattr(ActiveLearningStrategies, x)
 }

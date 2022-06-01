@@ -14,7 +14,7 @@ from lrtc_lib.data_access.core.data_structs import DisplayFields, Document, Labe
 from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from lrtc_lib.data_access.test_file_based_data_access import generate_corpus
 from lrtc_lib.models.core.model_api import ModelStatus
-from lrtc_lib.models.core.model_types import ModelTypes
+from lrtc_lib.models.core.catalog import ModelsCatalog
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from lrtc_lib.models.core.models_factory import ModelFactory
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, Iteration, \
@@ -215,8 +215,8 @@ class TestOrchestratorAPI(unittest.TestCase):
         generate_corpus(self.data_access, dataset_name)
         self.orchestrator_api.create_workspace(workspace_id, dataset_name)
         self.orchestrator_api.create_new_category(workspace_id, category_name, 'some_description')
-        get_all_iterations.return_value = [Iteration(ModelInfo("x",ModelStatus.READY,datetime.now(),ModelTypes.RAND,{}),
-                                                     IterationStatus.READY,{},[])]*(NUMBER_OF_MODELS_TO_KEEP+1)
+        get_all_iterations.return_value = [Iteration(ModelInfo("x", ModelStatus.READY, datetime.now(), ModelsCatalog.RAND, {}),
+                                                     IterationStatus.READY, {}, [])]*(NUMBER_OF_MODELS_TO_KEEP+1)
         self.orchestrator_api._delete_old_models(workspace_id,category_name,NUMBER_OF_MODELS_TO_KEEP-1)
 
         # _delete_old_models for iteration NUMBER_OF_MODELS_TO_KEEP-1 should not delete

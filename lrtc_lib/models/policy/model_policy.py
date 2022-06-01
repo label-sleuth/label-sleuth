@@ -1,6 +1,6 @@
 import abc
 
-from lrtc_lib.models.core.model_types import ModelTypes
+from lrtc_lib.models.core.model_type import ModelType
 
 
 class ModelPolicy(object, metaclass=abc.ABCMeta):
@@ -11,7 +11,7 @@ class ModelPolicy(object, metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def get_model_type(self, iteration_num: int) -> ModelTypes:
+    def get_model_type(self, iteration_num: int) -> ModelType:
         """
         Given *iteration_num*, return the type of classification model to be used
         :param iteration_num:

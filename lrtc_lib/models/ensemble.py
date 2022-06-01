@@ -8,9 +8,8 @@ from typing import Iterable, Mapping, Sequence, Tuple
 import numpy as np
 
 from lrtc_lib.models.core.model_api import ModelAPI
-from lrtc_lib.models.core.model_types import ModelTypes
+from lrtc_lib.models.core.model_type import ModelType
 from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
-from lrtc_lib.models.core.models_factory import ModelFactory
 from lrtc_lib.models.core.prediction import Prediction
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -22,7 +21,7 @@ class EnsemblePrediction(Prediction):
 
 
 class Ensemble(ModelAPI):
-    def __init__(self, output_dir, model_types: Iterable[ModelTypes], model_factory: ModelFactory,
+    def __init__(self, output_dir, model_types: Iterable[ModelType], model_factory,
                  models_background_jobs_manager: ModelsBackgroundJobsManager,
                  aggregation_func=lambda x: np.mean(x, axis=0)):
         """
@@ -110,3 +109,10 @@ class Ensemble(ModelAPI):
 
     def get_prediction_class(self):
         return EnsemblePrediction
+
+
+class SVM_Ensemble(Ensemble):
+    def __init__(self, output_dir, models_background_jobs_manager, model_factory):
+        from lrtc_lib.models.core.catalog import ModelsCatalog
+        super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+                         model_factory=model_factory, model_types=[ModelsCatalog.SVM_OVER_BOW, ModelsCatalog.SVM_OVER_GLOVE])

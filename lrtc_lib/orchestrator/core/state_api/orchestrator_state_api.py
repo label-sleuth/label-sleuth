@@ -10,7 +10,7 @@ from typing import Dict, List, Sequence
 import jsonpickle
 
 from lrtc_lib.models.core.model_api import ModelStatus
-from lrtc_lib.models.core.model_types import ModelTypes
+from lrtc_lib.models.core.catalog import ModelsCatalog
 
 
 class IterationStatus(Enum):
@@ -28,7 +28,7 @@ class ModelInfo:
     model_id: str
     model_status: ModelStatus
     creation_date: datetime
-    model_type: ModelTypes
+    model_type: ModelsCatalog
     model_metadata: dict
 
 

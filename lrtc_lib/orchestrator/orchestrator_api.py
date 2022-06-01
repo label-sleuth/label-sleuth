@@ -21,7 +21,7 @@ from lrtc_lib.data_access.label_import_utils import process_labels_dataframe
 from lrtc_lib.data_access.processors.csv_processor import CsvFileProcessor
 from lrtc_lib.definitions import ACTIVE_LEARNING_SUGGESTION_COUNT
 from lrtc_lib.models.core.model_api import ModelStatus
-from lrtc_lib.models.core.model_types import ModelTypes
+from lrtc_lib.models.core.catalog import ModelsCatalog
 from lrtc_lib.models.core.models_factory import ModelFactory
 from lrtc_lib.models.core.prediction import Prediction
 from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
@@ -320,7 +320,7 @@ class OrchestratorApi:
 
     # Iteration flow
     
-    def run_iteration(self, workspace_id: str, category_name: str, model_type: ModelTypes, train_data,
+    def run_iteration(self, workspace_id: str, category_name: str, model_type: ModelsCatalog, train_data,
                       train_params=None) -> str:
         """
         This method initiates an Iteration, a flow that includes training a model, inferring the full corpus using
@@ -627,7 +627,7 @@ class OrchestratorApi:
         return get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements)
 
     def get_suspicious_elements_report(self, workspace_id, category_name,
-                                       model_type: ModelTypes = ModelTypes.SVM_ENSEMBLE) -> List[TextElement]:
+                                       model_type: ModelsCatalog = ModelsCatalog.SVM_ENSEMBLE) -> List[TextElement]:
         dataset_name = self.get_dataset_name(workspace_id)
         labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
         return get_disagreements_using_cross_validation(workspace_id, category_name, labeled_elements,

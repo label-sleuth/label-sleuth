@@ -2,7 +2,7 @@ from typing import List
 
 import numpy as np
 
-from lrtc_lib.models.core.model_types import ModelTypes
+from lrtc_lib.models.core.model_type import ModelType
 from lrtc_lib.models.policy.model_policy import ModelPolicy
 
 
@@ -12,7 +12,7 @@ class ModelChangingPolicy(ModelPolicy):
     iterations, e.g. for the first 3 iterations use ModelTypes.NB_OVER_BOW, then switch to using ModelTypes.HF_BERT
     """
 
-    def __init__(self, model_types: List[ModelTypes], num_iterations_per_model: List[int]):
+    def __init__(self, model_types: List[ModelType], num_iterations_per_model: List[int]):
         """
         :param model_types: a list of the N model types to be used by the policy
         :param num_iterations_per_model: a corresponding list specifying the number of iterations for each of the
@@ -29,7 +29,7 @@ class ModelChangingPolicy(ModelPolicy):
         self.num_iterations_per_model = num_iterations_per_model
         self.switch_points = np.cumsum(num_iterations_per_model)
 
-    def get_model_type(self, iteration_num: int) -> ModelTypes:
+    def get_model_type(self, iteration_num: int) -> ModelType:
         for model_type, switch_point in zip(self.model_types, self.switch_points):
             if iteration_num < switch_point:
                 return model_type

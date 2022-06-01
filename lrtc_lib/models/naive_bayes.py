@@ -85,3 +85,15 @@ class NaiveBayes(ModelAPI):
 
     def get_models_dir(self):
         return self.model_dir
+
+
+class NaiveBayes_BOW(NaiveBayes):
+    def __init__(self, output_dir, models_background_jobs_manager):
+        super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+                         representation_type=RepresentationType.BOW)
+
+
+class NaiveBayes_GloVe(NaiveBayes):
+    def __init__(self, output_dir, models_background_jobs_manager):
+        super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+                         representation_type=RepresentationType.GLOVE)

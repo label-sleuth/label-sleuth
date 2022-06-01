@@ -91,3 +91,15 @@ class SVM(ModelAPI):
 
     def get_models_dir(self):
         return self.model_dir
+
+
+class SVM_BOW(SVM):
+    def __init__(self, output_dir, models_background_jobs_manager, **kwargs):
+        super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+                         representation_type=RepresentationType.BOW)
+
+
+class SVM_GloVe(SVM):
+    def __init__(self, output_dir, models_background_jobs_manager, **kwargs):
+        super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+                         representation_type=RepresentationType.GLOVE)

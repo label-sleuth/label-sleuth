@@ -11,7 +11,7 @@ from sklearn.neighbors import NearestNeighbors
 from lrtc_lib.analysis_utils.analyze_tokens import get_token_overlap
 from lrtc_lib.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, TextElement
 from lrtc_lib.models.core.languages import Languages
-from lrtc_lib.models.core.model_types import ModelTypes
+from lrtc_lib.models.core.catalog import ModelsCatalog
 from lrtc_lib.models.core.tools import get_glove_representation, remove_stop_words_and_punctuation
 from lrtc_lib.orchestrator.utils import convert_text_elements_to_train_data
 
@@ -20,7 +20,7 @@ MIN_TOKEN_OVERLAP_THRESHOLD = 0.4
 
 
 def get_disagreements_using_cross_validation(workspace_id, category_name, labeled_elements: List[TextElement],
-                                             model_factory, model_type=ModelTypes.SVM_ENSEMBLE, num_folds=4,
+                                             model_factory, model_type=ModelsCatalog.SVM_ENSEMBLE, num_folds=4,
                                              language=Languages.ENGLISH):
     """
     This method uses cross-validation in order to identify elements where the user label might be incorrect.
