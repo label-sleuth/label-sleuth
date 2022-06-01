@@ -147,7 +147,7 @@ export const fetchNextDocElements = createAsyncThunk('workspace/fetchNextDoc', a
 
     const curDocument = state.workspace.documents[state.workspace.curDocId + 1]['document_id']
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${encodeURIComponent(curDocument)}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
@@ -166,7 +166,7 @@ export const fetchPrevDocElements = createAsyncThunk('workspace/fetchPrevDoc', a
 
     const curDocument = state.workspace.documents[state.workspace.curDocId - 1]['document_id']
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${curDocument}?category_name=${state.workspace.curCategory}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${encodeURIComponent(curDocument)}?category_name=${state.workspace.curCategory}`)
 
     const data = await fetch(url, {
         headers: {
