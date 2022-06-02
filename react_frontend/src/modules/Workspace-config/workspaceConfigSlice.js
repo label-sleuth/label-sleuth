@@ -36,7 +36,7 @@ export const addDocuments = createAsyncThunk(`workspaces/getDatasets/dataset_nam
     'Content-Type': 'multipart/form-data',
     'Authorization': `Bearer ${token}`
   }
-  const { data } = axios.post(`${getDatasets_url}/${dataset_name}/${ADD_DOCUMENTS_API}`, formData, { headers });
+  const { data } = await axios.post(`${getDatasets_url}/${dataset_name}/${ADD_DOCUMENTS_API}`, formData, { headers });
   return data
 })
 
