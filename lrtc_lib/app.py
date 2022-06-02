@@ -36,11 +36,12 @@ print(getpass.getuser())
 
 executor = ThreadPoolExecutor(20)
 app = Flask(__name__, static_url_path='', static_folder='../frontend/build')
-ROOT_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
 auth = HTTPTokenAuth(scheme='Bearer')
-CONFIGURATION = load_config(os.path.join(ROOT_DIR, "config.json"))
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+ROOT_DIR = os.environ['SLEUTH_ROOT']
+CONFIGURATION = load_config(os.path.join(ROOT_DIR, "config.json"))
 users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in CONFIGURATION.users}
 tokens = [user.token for user in users.values()]
 orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(ROOT_DIR, "output", "workspaces")),
