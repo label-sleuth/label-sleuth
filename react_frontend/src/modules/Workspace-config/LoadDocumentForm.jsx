@@ -4,16 +4,15 @@ import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
 import ButtonIBM from "../../components/buttons/ButtonIBM"
+import LoadingButtonIBM from '../../components/buttons/LoadingButtonIBM';
 import TextField from '@mui/material/TextField';
-import LoadingButton from '@mui/lab/LoadingButton';
 import 'react-toastify/dist/ReactToastify.css';
 import ComboBoxWithInputText from "../../components/combobox/ComboBoxWithInputText";
 import data_icon from "../../assets/workspace-config/document--add.svg"
 import { useSelector } from 'react-redux';
 
-    const uploadingDocument = useSelector((state) => state.workspace.loading);
-
 const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, datasetName }) => {
+    const uploadingDataset = useSelector((state) => state.workspaces.uploadingDataset);
     return (
         <Box className={classes.wrapper} style={{borderRight: 'none'}}>
             <div className={classes.sleuth_header}>
@@ -62,7 +61,7 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                             value={datasetName} />
                     </FormControl>
                     <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>
-                        { uploadingDocument ? <LoadingButton loading/> : <ButtonIBM onClick={handleLoadDoc} text="Upload" />}
+                        { uploadingDataset ? <LoadingButtonIBM /> : <ButtonIBM onClick={handleLoadDoc} text="Upload" />}
                     </div>
                 </FormControl>
             </div>
