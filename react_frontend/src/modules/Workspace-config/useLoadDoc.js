@@ -10,9 +10,9 @@ const useLoadDoc = () => {
     const notify = (message) => toast(message);
     const { datasets } = useSelector((state) => state.workspaces)
     const dispatch = useDispatch()
-    const [dataset_name, set_dataset_name] = useState('');
+    const [datasetName, setDatasetName] = useState('');
     const handleInputChange = (e) => {
-        set_dataset_name(e.target.value);
+        setDatasetName(e.target.value);
     };
 
     let options = datasets && datasets.map((item) => ({ value: item.dataset_id, title: item.dataset_id }))
@@ -31,12 +31,12 @@ const useLoadDoc = () => {
     }, [dispatch, isSubmitted])
 
     const handleLoadDoc = () => {
-        if (!dataset_name || !file) {
+        if (!datasetName || !file) {
             return notify("Please fill out all the required fields!")
         }
         let formData = new FormData()
         formData.append('file', file);
-        formData.append('dataset_name', dataset_name)
+        formData.append('dataset_name', datasetName)
         dispatch(addDocuments(formData)).then(() => {
             setIsSubmitted(true)
             notify("The new dataset has been created")
