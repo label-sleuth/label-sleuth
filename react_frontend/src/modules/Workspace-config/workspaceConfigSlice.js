@@ -11,7 +11,8 @@ const initialState = {
   datasets: [],
   dataset: '',
   loading: false,
-  isDocumentAdded: false
+  isDocumentAdded: false,
+  uploadingDataset: false
 }
 
 const BASE_URL = process.env.REACT_APP_API_URL
@@ -89,13 +90,13 @@ export const workspacesSlice = createSlice({
       state.workspace = payload.workspace
     },
     [addDocuments.rejected]: (state) => {
-      state.loading = false
+      state.uploadingDataset = false
     },
     [addDocuments.pending]: (state) => {
-      state.loading = true
+      state.uploadingDataset = true
     },
     [addDocuments.fulfilled]: (state) => {
-      state.loading = false
+      state.uploadingDataset = false
       state.isDocumentAdded = true
     },
 
