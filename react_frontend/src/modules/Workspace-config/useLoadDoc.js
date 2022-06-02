@@ -21,15 +21,6 @@ const useLoadDoc = () => {
         setFile(e.target.files[0])
     }
 
-    const [isSubmitted, setIsSubmitted] = useState(false)
-
-    useEffect(() => {
-        if (isSubmitted) {
-            console.log("submitted..")
-            dispatch(getDatasetsAPI())
-        }
-    }, [dispatch, isSubmitted])
-
     const handleLoadDoc = () => {
         if (!datasetName || !file) {
             return notify("Please fill out all the required fields!")
@@ -38,7 +29,7 @@ const useLoadDoc = () => {
         formData.append('file', file);
         formData.append('dataset_name', datasetName)
         dispatch(addDocuments(formData)).then(() => {
-            setIsSubmitted(true)
+            dispatch(getDatasetsAPI())
             notify("The new dataset has been created")
         })
     }
