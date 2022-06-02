@@ -3,7 +3,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 
-export default function ComboBoxWithInputText({ options,  handleInputChange, label, placeholder }) {
+export default function ComboBoxWithInputText({ options,  handleInputChange, label, placeholder, value }) {
 
   return (
     <Stack spacing={3} sx={{ width: '100%' }}>
@@ -13,6 +13,7 @@ export default function ComboBoxWithInputText({ options,  handleInputChange, lab
         id="free-solo-demo"
         freeSolo
         options={options && options.map((option) => option.dataset_id)}
+        inputValue={value}
         renderInput={(params) => 
         <TextField 
           onChange={handleInputChange}

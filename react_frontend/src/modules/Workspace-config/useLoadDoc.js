@@ -29,6 +29,7 @@ const useLoadDoc = () => {
         formData.append('file', file);
         formData.append('dataset_name', datasetName)
         dispatch(addDocuments(formData)).then(() => {
+            setDatasetName('')       
             dispatch(getDatasetsAPI())
             notify("The new dataset has been created")
         })
@@ -39,7 +40,8 @@ const useLoadDoc = () => {
         handleFileChange,
         handleInputChange,
         options,
-        datasets
+        datasets,
+        datasetName
     }
 
 };

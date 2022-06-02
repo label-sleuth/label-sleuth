@@ -11,9 +11,9 @@ import ComboBoxWithInputText from "../../components/combobox/ComboBoxWithInputTe
 import data_icon from "../../assets/workspace-config/document--add.svg"
 import { useSelector } from 'react-redux';
 
-const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange }) => {
     const uploadingDocument = useSelector((state) => state.workspace.loading);
 
+const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, datasetName }) => {
     return (
         <Box className={classes.wrapper} style={{borderRight: 'none'}}>
             <div className={classes.sleuth_header}>
@@ -58,7 +58,8 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                             options={datasets}
                             label="As New Dataset / Add to Existing"
                             handleInputChange={handleInputChange}
-                            placeholder="e.g. New_Upload_Name" />
+                            placeholder="e.g. New_Upload_Name"
+                            value={datasetName} />
                     </FormControl>
                     <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>
                         { uploadingDocument ? <LoadingButton loading/> : <ButtonIBM onClick={handleLoadDoc} text="Upload" />}
