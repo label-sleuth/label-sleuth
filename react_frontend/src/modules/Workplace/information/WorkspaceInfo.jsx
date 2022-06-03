@@ -106,11 +106,8 @@ export default function Workspace({workspaceId}) {
     const theme = useTheme();
     const { logout } = useLogOut()
     const workspace = useSelector(state => state.workspace)
-
-    const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
     const [tabValue, setTabValue] = React.useState(0);
     const [tabStatus, setTabStatus] = React.useState(0)
-    const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
     const refAnimationInstance = useRef(null);
     
     React.useEffect(()=>{
@@ -192,10 +189,6 @@ export default function Workspace({workspaceId}) {
     }, [workspace.curCategory])
 
     React.useEffect(() => {
-        setNumLabelGlobal({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
-    }, [workspace.pos_label_num])
-
-    React.useEffect(() => {
 
         console.log(`model updated, data retrieved, model version: ${workspace.model_version}`)
         if (workspace.model_version > 0) {
@@ -219,10 +212,10 @@ export default function Workspace({workspaceId}) {
         total: workspace.elements.length
     };
 
-    // placeholder for finding total stats
-    let total_stats = {
-        pos: numLabel.pos,
-        neg: numLabel.neg,
+    // placeholder for finding workspace  stats
+    let workspace_stats = {
+        pos: workspace.pos_label_num,
+        neg: workspace.neg_label_num,
         total: workspace.documents.length * 10
     };
 
@@ -282,14 +275,14 @@ export default function Workspace({workspaceId}) {
                     <Divider />
                     
                     <Stack style={{paddingTop: '12px'}}>
-                        <p className={classes.p_hsbar_label}>Labeled (Current: {tabStatus == 0 ? (numLabelGlobal.pos + numLabelGlobal.neg) : (doc_stats.pos + doc_stats.neg)} / {tabStatus == 0 ? total_stats.total : 10})</p>
+                        <p className={classes.p_hsbar_label}>Labeled (Current: {tabStatus == 0 ? (workspace_stats.pos + workspace_stats.neg) : (doc_stats.pos + doc_stats.neg)} / {tabStatus == 0 ? workspace_stats.total : workspace.elements.length})</p>
                         <StackBarContainer>
                             <HSBar
                                 height={10}
                                 data={tabStatus == 0 ? [
-                                    { value: workspace['pos_label_num'] + 0.01, color: "#8ccad9" },
-                                    { value: workspace['neg_label_num'] + 0.01, color: "#ff758f" },
-                                    { value: total_stats.total - (workspace['pos_label_num'] + workspace['neg_label_num'] + 0.01), color: "#393939" }
+                                    { value: workspace_stats.pos + 0.01, color: "#8ccad9" },
+                                    { value: workspace_stats.neg + 0.01, color: "#ff758f" },
+                                    { value: workspace_stats.total - (workspace_stats.pos + workspace_stats.neg + 0.01), color: "#393939" }
                                 ] :
                                     [
                                         { value: doc_stats.pos + 0.01, color: "#8ccad9" },
@@ -316,15 +309,15 @@ export default function Workspace({workspaceId}) {
                                     <label style={{fontSize: '12px', opacity: 0.5}}>Labeled for Entire Workspace:</label>
                                     <StatsContainer>
                                         <Typography><strong>Positive</strong></Typography>
-                                        <Typography sx={{ color: numLabelGlobal.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{numLabelGlobal.pos}</strong></Typography>
+                                        <Typography sx={{ color: workspace_stats.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{workspace_stats.pos}</strong></Typography>
                                     </StatsContainer>
                                     <StatsContainer>
                                         <Typography><strong>Negative</strong></Typography>
-                                        <Typography sx={{ color: numLabelGlobal.neg > 0 ? "#ff758f" : "#fff" }}><strong>{numLabelGlobal.neg}</strong></Typography>
+                                        <Typography sx={{ color: workspace_stats.neg > 0 ? "#ff758f" : "#fff" }}><strong>{workspace_stats.neg}</strong></Typography>
                                     </StatsContainer>
                                     <StatsContainer>
                                         <Typography><strong>Total</strong></Typography>
-                                        <Typography><strong>{numLabelGlobal.pos + numLabelGlobal.neg}/{total_stats.total}</strong></Typography>
+                                        <Typography><strong>{workspace_stats.pos + workspace_stats.neg}/{workspace_stats.total}</strong></Typography>
                                     </StatsContainer>
                                 </Stack>
                             </TabPanel>
