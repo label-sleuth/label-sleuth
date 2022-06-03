@@ -749,16 +749,19 @@ const DataSlice = createSlice({
             }
         },
         [checkModelUpdate.fulfilled]: (state, action) => {
-
             const data = action.payload
-
-            const model_num = data['models'].length
-
-            var latest_model_version = -1
-
-            if (model_num > 0) {
-
-                latest_model_version = data['models'][model_num - 1]['iteration']
+            let latest_model_version = -1
+            let models = data['models']
+            let found = false
+            while (models.length && !found) {
+                let last_model = models[models.length-1]
+                if (last_model['active_learning_status'] === 'READY') {
+                    latest_model_version = last_model['iteration']
+                    found = true
+                }
+                else {
+                    models.pop()
+                }
             }
 
             console.log(`latest model version: ${latest_model_version}`)
