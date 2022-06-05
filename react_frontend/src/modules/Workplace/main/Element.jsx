@@ -7,18 +7,16 @@ import check from '../Asset/check.svg';
 import check_predict from '../Asset/check_predict.svg';
 import crossing from '../Asset/crossing.svg';
 import cross from '../Asset/cross.svg';
-import questioning from '../Asset/questioning.svg';
-import question from '../Asset/question.svg';
 import classes from './Element.module.css';
-import useMainLabelState from './useElemLabelState';
-import useElemStyles from "./useElemStyles";
+import useMainLabelState from './customHooks/useElemLabelState';
+import useElemStyles from "./customHooks/useElemStyles";
 
 
-export default function Sentence(props) {
+export default function Element(props) {
 
     const { index, text, prediction } = props
     const workspace = useSelector(state => state.workspace) 
-    const { handlePosLabelState, handleNegLabelState, handleQuestLabelState } = useMainLabelState({ ...props })
+    const { handlePosLabelState, handleNegLabelState } = useMainLabelState({ ...props })
     const { handleTextElemStyle,  text_colors } = useElemStyles({ ...props })
 
     return (
@@ -36,7 +34,7 @@ export default function Sentence(props) {
                         onClick={handlePosLabelState}>
                         {workspace.labelState['L' + index] == 'pos' ?
                             <img className={classes.resultbtn} src={check} alt="checked" /> :
-                            prediction[index] == true && workspace.labelState['L' + index] !== 'neg' && workspace.labelState['L' + index] !== 'ques' ?
+                            prediction[index] == true && workspace.labelState['L' + index] !== 'neg' ?
                                 <img className={classes.resultbtn} src={check_predict} alt="predicted checking" /> :
                                 <img className={classes.hovbtn} src={checking} alt="checking" />
                         }

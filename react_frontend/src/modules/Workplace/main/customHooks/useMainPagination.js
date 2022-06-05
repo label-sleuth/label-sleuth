@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
-import '../../../components/pagination/pagination.css'
+import '../../../../components/pagination/pagination.css'
 
 const useMainPagination = (searchedIndex, numOfElemPerPage) => {
 
@@ -9,20 +9,25 @@ const useMainPagination = (searchedIndex, numOfElemPerPage) => {
     const [currentPage, setCurrentPage] = React.useState(1);
     let [firstPageIndex, setFirstPageIndex] = React.useState()
     let [lastPageIndex, setLastPageIndex] = React.useState()
- 
+
     React.useEffect(() => {
         if (!searchedIndex) {
             setCurrentPage(1)
         }
         else {
-            let currPageNum = Math.ceil((searchedIndex+1) / numOfElemPerPage)
+            let currPageNum = Math.ceil(parseInt(searchedIndex) / parseInt(numOfElemPerPage))
             setCurrentPage(currPageNum)
         }
 
     }, [workspace.curDocId, setCurrentPage, searchedIndex, numOfElemPerPage])
 
     const currentContentData = React.useMemo(() => {
-        const firstPageIndex = (currentPage - 1) * numOfElemPerPage;
+        let firstPageIndex = 0;
+
+        if (currentPage > 0) {
+            firstPageIndex = (currentPage - 1) * numOfElemPerPage;
+        }
+
         const lastPageIndex = firstPageIndex + numOfElemPerPage;
         setFirstPageIndex(firstPageIndex)
         setLastPageIndex(lastPageIndex)

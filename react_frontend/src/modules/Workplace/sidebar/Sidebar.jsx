@@ -1,9 +1,9 @@
 import {useState} from 'react';
 import FixedDrawer from './FixedDrawer';
 import SlidingDrawer from './SlidingDrawer';
+ 
 
-
-const Sidebar = ({ open, setOpen, handleSearchPanelClick }) => {
+const Sidebar = ({ open, setOpen } ) => {
 
     const [drawerContent, setDrawerContent] = useState("");
 
@@ -22,8 +22,7 @@ const Sidebar = ({ open, setOpen, handleSearchPanelClick }) => {
                 drawerContent={drawerContent}
                 handleDrawerClose={handleDrawerClose}
                 open={open}
-                setOpen={setOpen}
-                handleSearchPanelClick={handleSearchPanelClick}
+                setOpen={setOpen}      
             />
             <FixedDrawer
                 setDrawerContent={setDrawerContent}

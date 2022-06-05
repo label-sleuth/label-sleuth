@@ -1,18 +1,18 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import { getPositiveElementForCategory, fetchPrevDocElements, fetchNextDocElements } from '../DataSlice.jsx';
+import { getPositiveElementForCategory, fetchPrevDocElements, fetchNextDocElements, setNumLabel } from '../DataSlice.jsx';
 import Element from "./Element"
 import { useDispatch, useSelector } from 'react-redux';
 import Pagination from '../../../components/pagination/Pagination';
 import '../../../components/pagination/pagination.css';
-import useMainPagination from './useMainPagination';
+import useMainPagination from './customHooks/useMainPagination';
 import classes from './MainContent.module.css';
 import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
 import CircularProgress from '@mui/material/CircularProgress';
 
-const numOfElemPerPage = 7;
+const numOfElemPerPage = 500;
 const rightDrawerWidth = 360;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
@@ -34,28 +34,26 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   }),
 );
 
-const MainContent = ({
-  setNumLabel,
-  handleKeyEvent,
-  numLabelGlobal,
-  setNumLabelGlobal,
-  numLabel,
-  handleClick,
-  open,
-  searchedIndex,
-}) => {
+const MainContent = ({ handleKeyEvent, handleClick, open }) => {
 
   const workspace = useSelector(state => state.workspace)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
   const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
+  const searchedIndex = useSelector(state => state.workspace.searchedIndex)
   const dispatch = useDispatch()
   const len_elements = workspace['elements'].length
   const { currentContentData, currentPage, setCurrentPage, firstPageIndex } = useMainPagination(searchedIndex, numOfElemPerPage)
-  
+
+  React.useEffect(() => {
+    if (isCategoryLoaded) {
+      setCurrentPage(1)
+    }
+  }, [setCurrentPage, isCategoryLoaded])
+
   const getPosElemForCategory = () => {
-    dispatch(getPositiveElementForCategory().then(() => {
+    dispatch(getPositiveElementForCategory()).then(() => {
       setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })
-    }))
+    })
   }
 
   const handleFetchNextDoc = () => {
@@ -104,14 +102,9 @@ const MainContent = ({
                   searchedIndex={searchedIndex}
                   numOfElemPerPage={numOfElemPerPage}
                   key={index + firstPageIndex}
-                  // id={'L' + index + firstPageIndex}
                   keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
                   focusedState={workspace.focusedState}
                   index={index + firstPageIndex}
-                  numLabelGlobal={numLabelGlobal}
-                  numLabelGlobalHandler={setNumLabelGlobal}
-                  numLabel={numLabel}
-                  numLabelHandler={setNumLabel}
                   clickEventHandler={handleClick}
                   element_id={element['id']}
                   prediction={workspace.predictionForDocCat}

@@ -13,9 +13,9 @@ import {
   checkModelUpdate,
   fetchDocuments,
   setFocusedState,
-  fetchCertainDocument,
   setIsDocLoaded,
   setIsCategoryLoaded,
+  setNumLabelGlobal,
 } from './DataSlice.jsx';
 import WorkspaceInfo from './information/WorkspaceInfo';
 import Sidebar from './sidebar/Sidebar';
@@ -27,11 +27,7 @@ export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
   const [open, setOpen] = React.useState(false);
   const workspace = useSelector(state => state.workspace)
-  const focusedState = useSelector(state => state.workspace.focusedState)
-  const [numLabel, setNumLabel] = React.useState({ pos: 0, neg: 0 })
   const [modalOpen, setModalOpen] = React.useState(false)
-  const [numLabelGlobal, setNumLabelGlobal] = React.useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
-  const [searchedIndex, setSearchedIndex] = React.useState()
 
   const handleKeyEvent = (event, len_elements) => {
 
@@ -140,48 +136,14 @@ export default function Workspace() {
   }, [workspace.model_version])
 
 
-  const handleSearchPanelClick = (docid, id) => {
-
-    const splits = id.split("-")
-    const index = parseInt(splits[splits.length - 1])
-    setSearchedIndex(index)
-    const element = document.getElementById('L' + index);
-
-    element && element.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-      // inline: "nearest"
-    })
-
-
-    if (docid != workspace.curDocName) {
-      dispatch(setIsDocLoaded(false))
-      dispatch(fetchCertainDocument({ docid, id, switchStatus: 'switch' })).then(() => {
-        dispatch(setFocusedState(index))
-        dispatch(setIsDocLoaded(true))
-      }) 
-    } else {
-      dispatch(setFocusedState(index))
-    }
-
-  }
-
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <WorkspaceInfo workspaceId={workspaceId} />
       <Box component="main" sx={{ padding: 0 }}>
-        <UpperBar setNumLabel={setNumLabel} setModalOpen={setModalOpen} setNumLabelGlobal={setNumLabelGlobal} open={open} />
-        <Sidebar open={open} setOpen={setOpen} handleSearchPanelClick={handleSearchPanelClick} />
-          <MainContent setNumLabel={setNumLabel}
-            handleKeyEvent={handleKeyEvent}
-            numLabelGlobal={numLabelGlobal}
-            setNumLabelGlobal={setNumLabelGlobal}
-            numLabel={numLabel}
-            handleClick={handleClick}
-            open={open}
-            searchedIndex={searchedIndex}
-          />
+        <UpperBar setModalOpen={setModalOpen} open={open} />
+        <Sidebar open={open} setOpen={setOpen} />
+        <MainContent handleKeyEvent={handleKeyEvent} handleClick={handleClick} open={open} />
       </Box>
       <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
     </Box>

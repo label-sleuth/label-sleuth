@@ -1,3 +1,4 @@
+.text_predict,
 .text_confused {
     border: dotted 2px #d6d6d6 !important;
     color: #161616 !important;
@@ -10,18 +11,26 @@
     box-shadow: none !important;
 }
  
+.text_predict {
+    border: dotted 2px #a3d8e5 !important;
+}
+
+.text_predict:hover,
 .text_confused:hover{
     background: #f4f4f4;
 }
 
+.text_predict:hover .hovbtn,
 .text_confused:hover .hovbtn {
 display: inline-block;
   }
 
+.text_predict button ,
 .text_confused button {
     border-radius: 0 !important;
 }
 
+.text_predict p, 
 .text_confused p {
     margin: 15px 0;
     font-size: 14px !important;
@@ -68,23 +77,6 @@ display: inline-block;
 
 .recommend_buttons button:hover img {
     background: #d5d5d5 !important;
-}
-
-.text_predict,
-.text_normal,
-.text_focus {
-    color: #161616 !important;
-    border: solid 2px transparent;
-    outline: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 10px;
-    margin-bottom: 10px;
-}
-
-.text_predict {
-    border: dotted 2px #a3d8e5;
 }
 
 .search-results{
