@@ -54,8 +54,9 @@ const useSearchElement = () => {
                 element = document.getElementById('L' + searchedIndex);
             }
             scrollIntoElementView(element)
+            setIsSearchActive(false)
         }
-    }, [isIsSearchActive, isDocLoaded, workspace.curCategory, focusedIndex, scrollIntoElementView])
+    }, [isIsSearchActive, isDocLoaded, workspace.curCategory, focusedIndex, scrollIntoElementView, setIsSearchActive])
 
 
     const handleSearchPanelClick = (e) => {
