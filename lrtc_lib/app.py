@@ -40,7 +40,7 @@ auth = HTTPTokenAuth(scheme='Bearer')
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-ROOT_DIR = os.environ['SLEUTH_ROOT']
+ROOT_DIR = os.environ.get('SLEUTH_ROOT', os.path.abspath(os.path.join(__file__, os.pardir)))
 CONFIGURATION = load_config(os.path.join(ROOT_DIR, "config.json"))
 users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in CONFIGURATION.users}
 tokens = [user.token for user in users.values()]
