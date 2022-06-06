@@ -1,44 +1,22 @@
-import {useState, useRef} from 'react';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
-import { useDispatch, useSelector } from 'react-redux';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { resetSearchResults, searchKeywords } from '../DataSlice.jsx';
 import SearchPanel from './SearchPanel'
 import { InputBase, Paper } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import classes from './SearchPanel.module.css';
+import useSearchLabelState from './customHooks/useSearchLabelState.js';
+import useSearchElement from './customHooks/useSearchElement'
+import { useSelector } from 'react-redux';
 
-const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPanelClick }) => {
+const SlidingDrawer = ({ open, drawerContent, handleDrawerClose }) => {
 
-    const dispatch = useDispatch()
-    const [searchInput, setSearchInput] = useState("");
-    const workspace = useSelector(state => state.workspace)
-    const [numLabel, setNumLabel] =  useState({ pos: 0, neg: 0 })
-    const [numLabelGlobal, setNumLabelGlobal] = useState({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
     const rightDrawerWidth = 360;
-
-
-    const handleSearch = (e) => {
-        dispatch(searchKeywords({ keyword: searchInput }))
-    }
-
-    const clearSearch = () => {
-        setSearchInput("")
-        dispatch(resetSearchResults())
-        if(textInput.current){
-            textInput.current.value=""
-        }
-    }
-
-    const handleChange = (event) => {
-        setSearchInput(event.target.value)
-    }
-
-    const textInput = useRef(null);
-
+    const workspace = useSelector(state => state.workspace)
+    const { handlePosLabelState, handleNegLabelState } = useSearchLabelState()
+    const { handleSearchPanelClick, handleSearch, clearSearchInput, handleSearchInputChange, textInput, searchInput} = useSearchElement()
 
     return (
         <Drawer
@@ -65,7 +43,7 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                 open && drawerContent == 'search' &&
 
                 <Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom:"1px solid #e2e2e2", pb:2 }} >
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom: "1px solid #e2e2e2", pb: 2 }} >
                         <IconButton onClick={handleDrawerClose}>
                             <ChevronLeftIcon />
                         </IconButton>
@@ -86,12 +64,12 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                                         }
                                     }
                                 }}
-                                onChange={handleChange}
+                                onChange={handleSearchInputChange}
                                 inputRef={textInput}
                             />
-                            {searchInput  &&
+                            {searchInput &&
                                 <>
-                                    <IconButton sx={{ p: '10px' }} aria-label="search" onClick={clearSearch} >
+                                    <IconButton sx={{ p: '10px' }} aria-label="search" onClick={clearSearchInput} >
                                         <ClearIcon />
                                     </IconButton>
                                     {<IconButton sx={{ p: '10px' }} aria-label="search" onClick={handleSearch} >
@@ -101,27 +79,26 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
                             }
                         </Paper>
                     </Box>
-                    <Box className= {classes["search-results"]} >
-                    {
-                        workspace.searchResult.map((r, i) => {
-                            return (
-                                <SearchPanel
-                                    key={i}
-                                    numLabelGlobal={numLabelGlobal}
-                                    numLabelGlobalHandler={setNumLabelGlobal}
-                                    numLabel={numLabel}
-                                    prediction={r.model_predictions.length > 0 ? r.model_predictions[Object.keys(r.model_predictions)[Object.keys(r.model_predictions).length - 1]] : null}
-                                    element_id={r.id}
-                                    numLabelHandler={setNumLabel}
-                                    text={r.text}
-                                    searchInput={searchInput}
-                                    docid={r.docid}
-                                    id={r.id}
-                                    handleSearchPanelClick={handleSearchPanelClick}
-                                />
-                            )
-                        })
-                    }                        
+                    <Box className={classes["search-results"]} >
+                        {
+                            workspace.searchResult.map((res, i) => {
+                                return (
+                                    <SearchPanel
+                                        key={i}
+                                        searchedIndex={i}
+                                        prediction={res.model_predictions[workspace.curCategory]}
+                                        text={res.text}
+                                        searchInput={searchInput}
+                                        id={res.id}
+                                        docid={res.docid}
+                                        labelValue={res.user_labels[workspace.curCategory]}
+                                        handleSearchPanelClick={handleSearchPanelClick}
+                                        handlePosLabelState={handlePosLabelState}
+                                        handleNegLabelState={handleNegLabelState}
+                                    />
+                                )
+                            })
+                        }
                     </Box>
 
                 </Box>
@@ -129,31 +106,31 @@ const SlidingDrawer = ({ open, drawerContent, handleDrawerClose, handleSearchPan
             {
                 drawerContent == 'rcmd' &&
                 <Box>
-                    <Box  sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom:"1px solid #e2e2e2", pb:2 }} >
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom: "1px solid #e2e2e2", pb: 2 }} >
                         <IconButton onClick={handleDrawerClose} style={{
-                            background: 'none', 
-                            borderRadius: 0}}>
+                            background: 'none',
+                            borderRadius: 0
+                        }}>
                             <ChevronLeftIcon />
                         </IconButton>
                         <p style={{ width: '100%', textAlign: "center", marginRight: "20px" }}><strong>Recommend to label</strong></p>
                     </Box>
 
-                    <Box  className= {classes["search-results"]} >
-                        {workspace.elementsToLabel.map((r,i) => {
+                    <Box className={classes["search-results"]} >
+                        {workspace.elementsToLabel.map((res, i) => {
                             return (
                                 <SearchPanel
                                     key={i}
-                                    numLabelGlobal={numLabelGlobal}
-                                    numLabelGlobalHandler={setNumLabelGlobal}
-                                    numLabel={numLabel}
-                                    prediction={r.model_predictions[workspace.curCategory]}
-                                    element_id={r.id}
-                                    numLabelHandler={setNumLabel}
-                                    text={r.text}
+                                    searchedIndex={i}
+                                    prediction={res.model_predictions[workspace.curCategory]}
+                                    text={res.text}
                                     searchInput={searchInput}
-                                    docid={r.docid}
-                                    id={r.id}
+                                    id={res.id}
+                                    docid={res.docid}
+                                    labelValue={res.user_labels[workspace.curCategory]}
                                     handleSearchPanelClick={handleSearchPanelClick}
+                                    handlePosLabelState={handlePosLabelState}
+                                    handleNegLabelState={handleNegLabelState}
                                 />
                             )
                         })}

@@ -83,7 +83,7 @@ function CategoryFormControl(props) {
   );
 }
 
-const UpperBar = ({ setNumLabel, setModalOpen, setNumLabelGlobal, open }) => {
+const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
 
   const workspace = useSelector(state => state.workspace)
   const dispatch = useDispatch()
@@ -100,8 +100,6 @@ const UpperBar = ({ setNumLabel, setModalOpen, setNumLabelGlobal, open }) => {
         <div className={classes.upper}>
           <p>Category: </p>
           <CategoryFormControl
-            numLabelGlobalHandler={setNumLabelGlobal}
-            numLabelHandler={setNumLabel}
             workspaceLength={workspaceLength}
             placholder="placeholder" />
 

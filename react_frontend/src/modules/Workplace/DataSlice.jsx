@@ -18,6 +18,7 @@ const initialState = {
     focusedState: [],
     labelState: [],
     searchResult: [],
+    searchPanelLabelState: [],
     model_version: -1,
     indexPrediction: 0,
     predictionForDocCat: [],
@@ -33,6 +34,10 @@ const initialState = {
     workspaceLength:0,
     isDocLoaded: false,
     isCategoryLoaded: false,
+    numLabel: { pos: 0, neg: 0 },
+    numLabelGlobal: {},
+    searchedIndex:0,
+    isSearchActive: false,
 }
 
 const token = localStorage.getItem('token')
@@ -390,6 +395,33 @@ const DataSlice = createSlice({
         resetSearchResults(state, _) {
             state.searchResult = []
         }, 
+        setSearchPanelLabelState(state, action) {
+            return {
+                ...state,
+                searchPanelLabelState: action.payload
+            }
+        }, 
+        setIsDocLoaded(state, action) {
+            state.isDocLoaded = action.payload
+        },
+        setNumLabel(state, action) {
+            return {
+                ...state,
+                numLabel: action.payload
+            }
+        },
+        setNumLabelGlobal(state, action) {
+            return {
+                ...state,
+                numLabelGlobal: action.payload
+            }
+        },
+        setSearchedIndex(state, action) {
+            state.searchedIndex = action.payload
+        },
+        setIsSearchActive(state, action) {
+            state.isSearchActive = action.payload
+        },
         prevPrediction(state, action) {
             const pred_index = state.indexPrediction
             if (pred_index > 0) {
@@ -537,10 +569,26 @@ const DataSlice = createSlice({
         },
         [searchKeywords.fulfilled]: (state, action) => {
             const data = action.payload
+            let initialSearchLabelState = {}
 
+            for (let i = 0; i < data['elements'].length; i++) {
+                if (state.curCategory in data['elements'][i]['user_labels']) {
+                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
+                        initialSearchLabelState['L' + i+'-'+data['elements'][i].id] = 'pos'
+                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
+                        initialSearchLabelState['L' + i+'-'+data['elements'][i].id] = 'neg'
+                    }
+                    else{
+                        initialSearchLabelState['L' + i+'-'+data['elements'][i].id] = ""
+                    }
+                } else {
+                    initialSearchLabelState['L' + i+'-'+data['elements'][i].id] = ""
+                }
+            }
             return {
                 ...state,
-                searchResult: data.elements
+                searchResult: data.elements,
+                searchPanelLabelState: initialSearchLabelState
             }
         },
         [getPositiveElementForCategory.fulfilled]: (state, action) => {
@@ -737,23 +785,40 @@ const DataSlice = createSlice({
             console.log(`data['eid]: ${eid}`)
 
             initialFocusedState['L' + eid] = true
+            
+            /* TODO - check if it is still needed */
 
-            var initialLabelState = null
+            // var initialLabelState = null
 
-            console.log(`status: ${status}`)
+            // console.log(`status: ${status}`)
 
-            if (status == 'switch') {
+            // if (status == 'switch') {
 
-                initialLabelState = {}
+            //     initialLabelState = {}
 
-                console.log(`switch status`)
+            //     console.log(`switch status`)
 
-                for (var i = 0; i < data['elements'].length; i++) {
+            //     for (var i = 0; i < data['elements'].length; i++) {
+            //         initialLabelState['L' + i] = ""
+            //     }
+            // } else {
+            //     console.log(`search status`)
+            //     initialLabelState = { ...state['labelState'] }
+            // }
+  
+            var initialLabelState = {}
+
+
+            for (var i = 0; i < data['elements'].length; i++) {
+                if (state.curCategory in data['elements'][i]['user_labels']) {
+                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
+                        initialLabelState['L' + i] = 'pos'
+                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
+                        initialLabelState['L' + i] = 'neg'
+                    }
+                } else {
                     initialLabelState['L' + i] = ""
                 }
-            } else {
-                console.log(`search status`)
-                initialLabelState = { ...state['labelState'] }
             }
 
             var DocId = -1
@@ -781,7 +846,7 @@ const DataSlice = createSlice({
                 focusedState: initialFocusedState,
                 focusedIndex: 0,
                 labelState: initialLabelState,
-                ready: true
+                ready: true,
             }
         },
         [checkStatus.fulfilled]: (state, action) => {
@@ -866,5 +931,11 @@ export const { updateCurCategory,
     setIsCategoryLoaded,
     setIsDocLoaded,
     resetSearchResults,
+    setSearchPanelLabelState,
     setLabelState,
-    cleanWorkplaceState } = DataSlice.actions;
+    cleanWorkplaceState,
+    setNumLabelGlobal,
+    setNumLabel,
+    setSearchedIndex,
+    setIsSearchActive,
+ } = DataSlice.actions;
