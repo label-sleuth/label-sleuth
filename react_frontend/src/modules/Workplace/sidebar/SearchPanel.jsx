@@ -11,6 +11,7 @@ import cross from '../Asset/cross.svg';
 import classes from './SearchPanel.module.css';
 import useSearchPanelStyles from './customHooks/useSearchPanelStyles';
 import check_predict from '../Asset/check_predict.svg';
+import { Box } from '@mui/material';
 
 export default function SearchPanel(props) {
 
@@ -21,17 +22,18 @@ export default function SearchPanel(props) {
     return (
         <Paper
             className={handleTextElemStyle()}
-            sx={{ cursor: "pointer", padding: '0 !important', mb: 2, ml: 1, mr: 0 }}
-            onClick={handleSearchPanelClick}
+            sx={{ cursor: "pointer", padding: '0 !important', mb: 2, ml: 1, mr: 0 }} 
         >
             <label className={classes["rec_doc_id"]}>{docid}</label>
+            <Box onClick={handleSearchPanelClick} >
             <p docid={docid} id={id} className={classes["elem_text"]} style={(text_colors[searchPanelLabelState['L' + searchedIndex + '-' + id]])}>
                 <Highlighter
                     searchWords={[searchInput]}
                     autoEscape={true}
                     textToHighlight={text}
                 />
-            </p>
+            </p>                
+            </Box>
             <Stack id={id} searchedindex={searchedIndex} className={classes["recommend_buttons"]} direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0, height: "25px", mr: 1, mb: 1 }}>
                 <IconButton className={classes.resultbtn} 
                     onClick={handlePosLabelState}>

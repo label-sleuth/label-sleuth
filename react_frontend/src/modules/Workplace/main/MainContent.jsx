@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import { getPositiveElementForCategory, fetchPrevDocElements, fetchNextDocElements, setNumLabel } from '../DataSlice.jsx';
 import Element from "./Element"
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import Pagination from '../../../components/pagination/Pagination';
 import '../../../components/pagination/pagination.css';
 import useMainPagination from './customHooks/useMainPagination';
@@ -11,6 +10,7 @@ import classes from './MainContent.module.css';
 import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
 import CircularProgress from '@mui/material/CircularProgress';
+import useFetchPrevNextDoc from './customHooks/useFetchPrevNextDoc'
 
 const numOfElemPerPage = 500;
 const rightDrawerWidth = 360;
@@ -34,15 +34,16 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   }),
 );
 
+
 const MainContent = ({ handleKeyEvent, handleClick, open }) => {
 
   const workspace = useSelector(state => state.workspace)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
   const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
   const searchedIndex = useSelector(state => state.workspace.searchedIndex)
-  const dispatch = useDispatch()
   const len_elements = workspace['elements'].length
   const { currentContentData, currentPage, setCurrentPage, firstPageIndex } = useMainPagination(searchedIndex, numOfElemPerPage)
+  const {handleFetchNextDoc, handleFetchPrevDoc} = useFetchPrevNextDoc()
 
   React.useEffect(() => {
     if (isCategoryLoaded) {
@@ -50,27 +51,6 @@ const MainContent = ({ handleKeyEvent, handleClick, open }) => {
     }
   }, [setCurrentPage, isCategoryLoaded])
 
-  const getPosElemForCategory = () => {
-    dispatch(getPositiveElementForCategory()).then(() => {
-      setNumLabel({ pos: workspace.pos_label_num_doc, neg: workspace.neg_label_num_doc })
-    })
-  }
-
-  const handleFetchNextDoc = () => {
-    if (workspace.curDocId < workspace.documents.length - 1) {
-      dispatch(fetchNextDocElements()).then(() => {
-        getPosElemForCategory()
-      })
-    }
-  }
-
-  const handleFetchPrevDoc = () => {
-    if (workspace.curDocId > 0) {
-      dispatch(fetchPrevDocElements()).then(() => {
-        getPosElemForCategory()
-      })
-    }
-  }
 
   return (
     <>

@@ -37,6 +37,7 @@ const initialState = {
     numLabel: { pos: 0, neg: 0 },
     numLabelGlobal: {},
     searchedIndex:0,
+    isSearchActive: false,
 }
 
 const token = localStorage.getItem('token')
@@ -418,6 +419,9 @@ const DataSlice = createSlice({
         setSearchedIndex(state, action) {
             state.searchedIndex = action.payload
         },
+        setIsSearchActive(state, action) {
+            state.isSearchActive = action.payload
+        },
         prevPrediction(state, action) {
             const pred_index = state.indexPrediction
             if (pred_index > 0) {
@@ -781,6 +785,8 @@ const DataSlice = createSlice({
             console.log(`data['eid]: ${eid}`)
 
             initialFocusedState['L' + eid] = true
+            
+            /* TODO - check if it is still needed */
 
             // var initialLabelState = null
 
@@ -931,4 +937,5 @@ export const { updateCurCategory,
     setNumLabelGlobal,
     setNumLabel,
     setSearchedIndex,
+    setIsSearchActive,
  } = DataSlice.actions;

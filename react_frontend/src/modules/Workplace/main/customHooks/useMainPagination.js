@@ -9,14 +9,20 @@ const useMainPagination = (searchedIndex, numOfElemPerPage) => {
     const [currentPage, setCurrentPage] = React.useState(1);
     let [firstPageIndex, setFirstPageIndex] = React.useState()
     let [lastPageIndex, setLastPageIndex] = React.useState()
+    let currPageNum = Math.ceil(parseInt(searchedIndex) / parseInt(numOfElemPerPage))
+    let currPageNumMod = parseInt(searchedIndex)% parseInt(numOfElemPerPage)
 
     React.useEffect(() => {
         if (!searchedIndex) {
             setCurrentPage(1)
         }
         else {
-            let currPageNum = Math.ceil(parseInt(searchedIndex) / parseInt(numOfElemPerPage))
-            setCurrentPage(currPageNum)
+            if(currPageNumMod == 0){
+                setCurrentPage(currPageNum+1)
+            }
+            else{
+                setCurrentPage(currPageNum)
+            }
         }
 
     }, [workspace.curDocId, setCurrentPage, searchedIndex, numOfElemPerPage])
@@ -25,7 +31,7 @@ const useMainPagination = (searchedIndex, numOfElemPerPage) => {
         let firstPageIndex = 0;
 
         if (currentPage > 0) {
-            firstPageIndex = (currentPage - 1) * numOfElemPerPage;
+            firstPageIndex = (currentPage-1) * numOfElemPerPage;
         }
 
         const lastPageIndex = firstPageIndex + numOfElemPerPage;

@@ -5,6 +5,7 @@ import {
     fetchCertainDocument,
     setIsDocLoaded,
     setSearchedIndex,
+    setIsSearchActive,
 } from '../../DataSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -12,7 +13,7 @@ const useSearchElement = () => {
 
     const workspace = useSelector(state => state.workspace)
     const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
-    const [isIsSearchActive, setIsSearchActive] = useState(false)
+    const isSearchActive = useSelector(state => state.workspace.isSearchActive)
     const focusedIndex = useSelector(state => state.workspace.focusedIndex)
     const searchedIndex = useSelector(state => state.workspace.searchedIndex)
     const dispatch = useDispatch()
@@ -45,7 +46,7 @@ const useSearchElement = () => {
     }
 
     useEffect(() => {
-        if (isIsSearchActive && isDocLoaded) {
+        if (isSearchActive && isDocLoaded) {
             let element
             if (workspace.curCategory) {
                 element = document.getElementById('L' + focusedIndex);
@@ -54,9 +55,9 @@ const useSearchElement = () => {
                 element = document.getElementById('L' + searchedIndex);
             }
             scrollIntoElementView(element)
-            setIsSearchActive(false)
+            dispatch(setIsSearchActive(false))
         }
-    }, [isIsSearchActive, isDocLoaded, workspace.curCategory, focusedIndex, scrollIntoElementView, setIsSearchActive])
+    }, [isSearchActive, isDocLoaded, workspace.curCategory, focusedIndex, scrollIntoElementView, setIsSearchActive])
 
 
     const handleSearchPanelClick = (e) => {
@@ -66,7 +67,7 @@ const useSearchElement = () => {
         const docid = id.slice(0, lastIndex);
         const index = id.slice(lastIndex + 1);
         dispatch(setSearchedIndex(index))
-        setIsSearchActive(true)
+        dispatch(setIsSearchActive(true))
         const element = document.getElementById('L' + index);
         scrollIntoElementView(element)
 

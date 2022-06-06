@@ -10,14 +10,24 @@ import cross from '../Asset/cross.svg';
 import classes from './Element.module.css';
 import useMainLabelState from './customHooks/useElemLabelState';
 import useElemStyles from "./customHooks/useElemStyles";
+import { useEffect } from "react";
 
 
 export default function Element(props) {
 
     const { index, text, prediction } = props
     const workspace = useSelector(state => state.workspace) 
+    const isSearchActive = useSelector(state => state.workspace.isSearchActive) 
     const { handlePosLabelState, handleNegLabelState } = useMainLabelState({ ...props })
     const { handleTextElemStyle,  text_colors } = useElemStyles({ ...props })
+
+
+useEffect(()=>{
+    if(!isSearchActive && workspace.curCategory){
+        handleTextElemStyle()
+    }
+  },[isSearchActive, workspace.curCategory])
+
 
     return (
         !workspace.curCategory?
