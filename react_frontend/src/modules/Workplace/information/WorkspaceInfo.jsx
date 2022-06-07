@@ -275,21 +275,6 @@ export default function Workspace({workspaceId}) {
                     <Divider />
                     
                     <Stack style={{paddingTop: '12px'}}>
-                        <p className={classes.p_hsbar_label}>Labeled (Current: {tabStatus == 0 ? (workspace_stats.pos + workspace_stats.neg) : (doc_stats.pos + doc_stats.neg)} / {tabStatus == 0 ? workspace_stats.total : workspace.elements.length})</p>
-                        <StackBarContainer>
-                            <HSBar
-                                height={10}
-                                data={tabStatus == 0 ? [
-                                    { value: workspace_stats.pos + 0.01, color: "#8ccad9" },
-                                    { value: workspace_stats.neg + 0.01, color: "#ff758f" },
-                                    { value: workspace_stats.total - (workspace_stats.pos + workspace_stats.neg + 0.01), color: "#393939" }
-                                ] :
-                                    [
-                                        { value: doc_stats.pos + 0.01, color: "#8ccad9" },
-                                        { value: doc_stats.neg + 0.01, color: "#ff758f" },
-                                        { value: workspace['elements'].length - (doc_stats.pos + doc_stats.neg), color: "#393939" }
-                                    ]} />
-                        </StackBarContainer>
                         <Box sx={{ width: '100%', padding: theme.spacing(0, 2) }}>
                             <Box sx={{ borderBottom: 1, borderColor: '#393939' }}>
                                 <Tabs
@@ -317,7 +302,7 @@ export default function Workspace({workspaceId}) {
                                     </StatsContainer>
                                     <StatsContainer>
                                         <Typography><strong>Total</strong></Typography>
-                                        <Typography><strong>{workspace_stats.pos + workspace_stats.neg}/{workspace_stats.total}</strong></Typography>
+                                        <Typography><strong>{workspace_stats.pos + workspace_stats.neg}</strong></Typography>
                                     </StatsContainer>
                                 </Stack>
                             </TabPanel>
@@ -337,7 +322,7 @@ export default function Workspace({workspaceId}) {
                                     </StatsContainer>
                                     <StatsContainer>
                                         <Typography><strong>Total</strong></Typography>
-                                        <Typography><strong>{doc_stats.pos + doc_stats.neg}/{workspace.elements.length}</strong></Typography>
+                                        <Typography><strong>{doc_stats.pos + doc_stats.neg}</strong></Typography>
                                     </StatsContainer>
                                 </Stack>
                             </TabPanel>
