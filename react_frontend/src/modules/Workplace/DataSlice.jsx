@@ -244,7 +244,7 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
     
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${docid}${queryParams}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/document/${encodeURIComponent(docid)}${queryParams}`)
 
     const data = await fetch(url, {
         headers: {
@@ -342,7 +342,7 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
     
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
-    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/element/${element_id}${queryParams}`)
+    var url = new URL(`${getWorkspace_url}/${state.workspace.workspaceId}/element/${encodeURIComponent(element_id)}${queryParams}`)
 
     const data = await fetch(url, {
         headers: {
