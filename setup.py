@@ -13,12 +13,12 @@ with open("README.md", "r") as fh:
 
 
 setuptools.setup(
-    name="Sleuth",
+    name="label-sleuth",
     version="RELEASE_VERSION".replace('v', ''),
-    author="IBM",
-    author_email="ilyashn@il.ibm.com",
-    url="https://github.com/ilyashnil/flash-react-app",
-    description="Sleuth",
+    author="IBM Research",
+    author_email="eyals@il.ibm.com",
+    url="https://github.com/label-sleuth/label-sleuth",
+    description="Label Sleuth",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements,
