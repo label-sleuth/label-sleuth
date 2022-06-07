@@ -187,8 +187,8 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                         infer_res[idx] = prediction
                         self.cache.set(in_memory_cache_keys[idx], prediction)
                         model_predictions_store[model_predictions_store_keys[idx]] = prediction
-                    save_model_prediction_store_to_disk(self.get_model_prediction_store_file(model_id),
-                                                        model_predictions_store)
+                save_model_prediction_store_to_disk(self.get_model_prediction_store_file(model_id),
+                                                    model_predictions_store)
             return infer_res
 
     def infer_async(self, model_id, items_to_infer: Sequence[Mapping], done_callback=None):

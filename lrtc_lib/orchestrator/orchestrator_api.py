@@ -505,7 +505,7 @@ class OrchestratorApi:
         """
         active_learner = self.active_learning_factory.get_active_learner(self.config.active_learning_strategy)
         unlabeled = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category_name)
-        predictions = self.infer(workspace_id, category_name, unlabeled)
+        predictions = self.infer(workspace_id, category_name, unlabeled, iteration_index)
         new_recommendations = active_learner.get_recommended_items_for_labeling(
             workspace_id=workspace_id, dataset_name=dataset_name, category_name=category_name,
             candidate_text_elements=unlabeled, candidate_text_element_predictions=predictions, sample_size=count)
@@ -602,13 +602,13 @@ class OrchestratorApi:
     
         iterations = self.get_all_iterations_for_category(workspace_id, category_name)
         if iteration_index is None:  # use latest ready model
-            iteration = [it for it in iterations if it.model.model_status == ModelStatus.READY][-1]
+            iteration = [it for it in iterations if it.status == IterationStatus.READY][-1]
         else:
             iteration = iterations[iteration_index]
-            if iteration.model.model_status != ModelStatus.READY:
-                raise Exception(f"model for iteration {iteration_index} in workspace '{workspace_id}' "
-                                f"category '{category_name}' is not ready. "
-                                f"(current status is {iteration.model.model_status})")
+            if iteration.status in [IterationStatus.TRAINING, IterationStatus.MODEL_DELETED, IterationStatus.ERROR]:
+                raise Exception(f"iteration {iteration_index} in workspace '{workspace_id}' "
+                                f"category '{category_name}' is not ready for inference. "
+                                f"(current status is {iteration.status}, model status is {iteration.model.model_status})")
     
         model_info = iteration.model
         if model_info.model_status != ModelStatus.READY:
