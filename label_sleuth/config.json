@@ -8,5 +8,12 @@
     "local_finetune": false,
     "precision_evaluation_size": 5,
     "apply_labels_to_duplicate_texts": true,
-    "login_required": false
+    "login_required": true,
+    "users":[
+        {
+        "username" : "admin",
+        "token" :"MA8dsj8rcMASmv9442mf8ASdkbm99kfsdjv3281aPPqqmv9qSA1",
+        "password" :"Xushchu,r"
+        }
+    ]
 }
