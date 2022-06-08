@@ -1,0 +1,48 @@
+name: Publish Python Code
+
+on:
+  push:
+    branches:
+      - "!*"
+    tags:
+      - "v*"
+
+jobs:
+  package:
+
+    runs-on: ubuntu-latest
+    env:
+      OS: ubuntu-latest
+      PYTHON: '3.8'
+
+    steps:
+    - name: Checkout the project
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@master
+      with:
+        python-version: ${{ env.PYTHON }}
+        cache: 'pip'
+
+    - name: Set env
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+    - name: fix release version
+      run: sed -i s/RELEASE_VERSION/${{ env.RELEASE_VERSION }}/ setup.py
+
+    - name: Install packages required for publishing
+      run: pip install build wheel twine setuptools
+
+    - name: Build the library
+      run: python -m build --wheel
+
+    - name: check the library
+      run: twine check dist/*
+
+# TODO upload to the package
+#    - name: Publish package
+#      uses: pypa/gh-action-pypi-publish@release/v1
+#      with:
+#        user: __token__
+#        password: ${{ secrets.PYPI_API_TOKEN }}
