@@ -1,0 +1,41 @@
+name: Test Python code
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - label_sleuth/**
+
+jobs:
+  pytest:
+
+    runs-on: ubuntu-latest
+    env:
+      OS: ubuntu-latest
+      PYTHON: '3.8'
+
+    steps:
+    - name: Checkout the project
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@master
+      with:
+        python-version: ${{ env.PYTHON }}
+        cache: 'pip'
+
+    - name: Install Requirements
+      run: pip install -r label_sleuth/requirements.txt
+
+    - name: Install the package that is required for testing and coverage calculation
+      run: pip install coverage
+
+    - name: Generate Report
+      run:  coverage run -m unittest
+
+# TODO publish coverage
+#    - name: Upload Coverage to Codecov
+#      uses: codecov/codecov-action@v2
+
