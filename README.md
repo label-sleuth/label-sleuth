@@ -1,4 +1,4 @@
-# SLEUTH Classification Framework
+# Label Sleuth Classification Framework
 
 TBD
 
@@ -50,7 +50,7 @@ pip install -r label_sleuth/requirements.txt
 </p>
 </details>
 
-4. Start SLEUTH server `python start_sleuth.py`
+4. Start Label Sleuth server `python -m label_sleuth.start_label_sleuth`
 
 ## Adapting to additional scenarios
 ### Implementing a new machine learning model
