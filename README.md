@@ -31,7 +31,7 @@ Currently, the framework requires Python 3.8
 conda create --yes -n sleuth_classification python=3.8
 conda activate sleuth_classification
 # Install requirements
-pip install -r lrtc_lib/requirements.txt
+pip install -r label_sleuth/requirements.txt
 ```
 </p>
 </details>
@@ -45,7 +45,7 @@ Assuming python 3.8 is already installed.
 
 - Install requirements:
 ```bash
-pip install -r lrtc_lib/requirements.txt
+pip install -r label_sleuth/requirements.txt
 ```
 </p>
 </details>

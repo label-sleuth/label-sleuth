@@ -2,7 +2,7 @@ import setuptools
 
 resources_dir = "frontend/build"
 
-requirements_file = 'lrtc_lib/requirements.txt'
+requirements_file = 'label_sleuth/requirements.txt'
 
 # read requirements from file
 with open(requirements_file) as fh:

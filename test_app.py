@@ -4,15 +4,15 @@ import tempfile
 import unittest
 import dacite
 
-import lrtc_lib.config
-from lrtc_lib.active_learning.core.active_learning_factory import ActiveLearningFactory
-from lrtc_lib.configurations.users import User
-from lrtc_lib.data_access.file_based.file_based_data_access import FileBasedDataAccess
-from lrtc_lib.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
-from lrtc_lib.models.core.models_factory import ModelFactory
-from lrtc_lib.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi
-from lrtc_lib.orchestrator.orchestrator_api import OrchestratorApi
-import lrtc_lib.app as app
+import label_sleuth.config
+from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
+from label_sleuth.configurations.users import User
+from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
+from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
+from label_sleuth.models.core.models_factory import ModelFactory
+from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi
+from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi
+import label_sleuth.app as app
 
 HEADERS = {'Authorization': 'Bearer dummy_bearer',
            'Content-Type': 'application/json'}
@@ -25,7 +25,7 @@ class TestAppIntegration(unittest.TestCase):
         app.app.test_request_context("/")
         app.app.config['TESTING'] = True
         app.app.config['LOGIN_DISABLED'] = True
-        app.CONFIGURATION = lrtc_lib.config.load_config("./lrtc_lib/config_tests.json")
+        app.CONFIGURATION = label_sleuth.config.load_config("./label_sleuth/config_tests.json")
         app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.CONFIGURATION.users}
 
         app.tokens = [user.token for user in app.users.values()]
