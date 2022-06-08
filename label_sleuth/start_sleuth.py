@@ -1,7 +1,7 @@
 import os
 from argparse import ArgumentParser
 
-os.environ['SLEUTH_ROOT'] = os.path.abspath(os.path.join(__file__, os.pardir, 'label_sleuth'))
+os.environ['SLEUTH_ROOT'] = os.path.abspath(os.path.join(__file__, os.pardir, ''))
 
 
 if __name__ == '__main__':
