@@ -116,7 +116,8 @@ def login_if_required(function):
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
         if CONFIGURATION.login_required:
-            return auth.login_required(function(*args, **kwargs))
+            wrapped_func = auth.login_required(function)
+            return wrapped_func(*args, **kwargs)
         else:
             return function(*args, **kwargs)
     return wrapper
