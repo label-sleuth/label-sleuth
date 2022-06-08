@@ -1,3 +1,4 @@
+import functools
 import getpass
 import logging
 import os
@@ -111,6 +112,16 @@ def get_element(workspace_id, category_name, element_id):
     return element_transformed
 
 
+def login_if_required(function):
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        if CONFIGURATION.login_required:
+            return auth.login_required(function(*args, **kwargs))
+        else:
+            return function(*args, **kwargs)
+    return wrapper
+
+
 def authenticate_response(user):
     return make_response(jsonify(user), 200)
 
@@ -162,7 +173,7 @@ workspace.
 
 
 @app.route("/datasets", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_all_dataset_ids():
     """
     Get all existing datasets
@@ -176,7 +187,7 @@ def get_all_dataset_ids():
 
 @app.route('/datasets/<dataset_name>/add_documents', methods=['POST'])
 @cross_origin()
-@auth.login_required
+@login_if_required
 def add_documents(dataset_name):
     """
     Upload a csv file, and add its contents as a collection of documents in the dataset *dataset_name*.
@@ -219,7 +230,7 @@ Workspace endpoints. Each workspace is associated with a particular dataset at c
 
 
 @app.route("/workspace", methods=['POST'])
-@auth.login_required
+@login_if_required
 def create_workspace():
     """
     Create workspace
@@ -246,7 +257,7 @@ def create_workspace():
 
 
 @app.route("/workspaces", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_all_workspace_ids():
     """
     Get all existing workspaces
@@ -256,7 +267,7 @@ def get_all_workspace_ids():
 
 
 @app.route("/workspace/<workspace_id>", methods=['DELETE'])
-@auth.login_required
+@login_if_required
 def delete_workspace(workspace_id):
     """
     This call permanently deletes all data associated with the workspaces, including all the categories, user labels
@@ -267,7 +278,7 @@ def delete_workspace(workspace_id):
 
 
 @app.route("/workspace/<workspace_id>", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_workspace_info(workspace_id):
     """
     Get workspace information
@@ -291,7 +302,7 @@ the labels, classification models etc. are associated with a specific category.
 
 
 @app.route("/workspace/<workspace_id>/category", methods=['POST'])
-@auth.login_required
+@login_if_required
 def create_category(workspace_id):
     """
     add a new category
@@ -307,7 +318,7 @@ def create_category(workspace_id):
 
 
 @app.route("/workspace/<workspace_id>/categories", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_all_categories(workspace_id):
     """
     Get information about all existing categories in the workspace
@@ -321,7 +332,7 @@ def get_all_categories(workspace_id):
 
 
 @app.route("/workspace/<workspace_id>/category/<category_name>", methods=['PUT'])
-@auth.login_required
+@login_if_required
 def rename_category(workspace_id, category_name):
     """
     TODO implement
@@ -335,7 +346,7 @@ def rename_category(workspace_id, category_name):
 
 
 @app.route("/workspace/<workspace_id>/category/<category_name>", methods=['DELETE'])
-@auth.login_required
+@login_if_required
 def delete_category(workspace_id, category_name):
     """
     This call permanently deletes all data associated with the category, including user labels and models.
@@ -352,7 +363,7 @@ but also category labels, model predictions etc. that are associated with a part
 
 
 @app.route("/workspace/<workspace_id>/documents", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_all_document_uris(workspace_id):
     """
     get all Documents
@@ -367,7 +378,7 @@ def get_all_document_uris(workspace_id):
 
 
 @app.route("/workspace/<workspace_id>/document/<document_id>", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_document_elements(workspace_id, document_id):
     """
     get all elements in a document
@@ -389,7 +400,7 @@ def get_document_elements(workspace_id, document_id):
 
 
 @app.route("/workspace/<workspace_id>/document/<document_id>/positive_predictions", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_document_positive_predictions(workspace_id, document_id):
     """
     get all elements in a document
@@ -423,14 +434,14 @@ def get_document_positive_predictions(workspace_id, document_id):
 
 
 @app.route("/workspace/<workspace_id>/element/<eltid>", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_element_by_id(workspace_id, eltid):
     category_name = request.args.get('category_name')
     return get_element(workspace_id, category_name, eltid)
 
 
 @app.route("/workspace/<workspace_id>/query", methods=['GET'])
-@auth.login_required
+@login_if_required
 def query(workspace_id):
     """
     get elements that match query string
@@ -465,7 +476,7 @@ Labeling-related endpoints.
 
 
 @app.route('/workspace/<workspace_id>/element/<element_id>', methods=['PUT'])
-@auth.login_required
+@login_if_required
 def set_element_label(workspace_id, element_id):
     """
     Update element label information. This endpoint either adds or removes a label for a given element, depending on
@@ -506,7 +517,7 @@ def set_element_label(workspace_id, element_id):
 
 
 @app.route("/workspace/<workspace_id>/positive_elements", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_all_positive_labeled_elements_for_category(workspace_id):
     category = request.args.get('category_name')
     elements = \
@@ -522,7 +533,7 @@ def get_all_positive_labeled_elements_for_category(workspace_id):
 
 @app.route('/workspace/<workspace_id>/import_labels', methods=['POST'])
 @cross_origin()
-@auth.login_required
+@login_if_required
 def import_labels(workspace_id):
     csv_data = StringIO(request.data.decode("utf-8"))  # TODO use request.data also in load_documents()
     df = pd.read_csv(csv_data, dtype={'labels': str})
@@ -530,7 +541,7 @@ def import_labels(workspace_id):
 
 
 @app.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
-@auth.login_required
+@login_if_required
 def export_labels(workspace_id):
     return orchestrator_api.export_workspace_labels(workspace_id).to_csv(index=False)
 
@@ -541,7 +552,7 @@ Models and Iterations
 
 
 @app.route("/workspace/<workspace_id>/status", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_labelling_status(workspace_id):
     """
     Once a certain amount of user labels for a given category has been reached, the get_labelling_status() call will
@@ -569,7 +580,7 @@ def get_labelling_status(workspace_id):
 
 
 @app.route("/workspace/<workspace_id>/models", methods=['GET'])
-@auth.login_required
+@login_if_required
 @cross_origin()
 def get_all_models_for_category(workspace_id):
     """
@@ -585,7 +596,7 @@ def get_all_models_for_category(workspace_id):
 
 
 @app.route("/workspace/<workspace_id>/active_learning", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_elements_to_label(workspace_id):
     """
     If at least one iteration has completed for the given category, return a list of *size* elements that were
@@ -612,7 +623,7 @@ def get_elements_to_label(workspace_id):
 
 
 @app.route("/workspace/<workspace_id>/force_train", methods=['GET'])
-@auth.login_required
+@login_if_required
 def force_train_for_category(workspace_id):
     """
     Used for manually triggering a new iteration.
@@ -641,7 +652,7 @@ def force_train_for_category(workspace_id):
 
 
 @app.route('/workspace/<workspace_id>/export_predictions', methods=['GET'])
-@auth.login_required
+@login_if_required
 def export_predictions(workspace_id):
     category_name = request.args.get('category_name')
     uri_filter = request.args.get('uri_filter', None)
@@ -655,7 +666,7 @@ def export_predictions(workspace_id):
 
 
 @app.route('/workspace/<workspace_id>/export_model', methods=['GET'])
-@auth.login_required
+@login_if_required
 def export_model(workspace_id):
     import zipfile
     category_name = request.args.get('category_name')
@@ -685,7 +696,7 @@ surface potential errors in the original labeling.
 
 
 @app.route("/workspace/<workspace_id>/disagree_elements", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_label_and_model_disagreements(workspace_id):
     category = request.args.get('category_name')
     elements = \
@@ -701,7 +712,7 @@ def get_label_and_model_disagreements(workspace_id):
 
 
 @app.route("/workspace/<workspace_id>/suspicious_elements", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_suspicious_elements(workspace_id):
     category = request.args.get('category_name')
     try:
@@ -716,7 +727,7 @@ def get_suspicious_elements(workspace_id):
 
 
 @app.route("/workspace/<workspace_id>/contradiction_elements", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_contradicting_elements(workspace_id):
     category = request.args.get('category_name')
     try:
@@ -739,7 +750,7 @@ Model evaluation
 
 
 @app.route("/workspace/<workspace_id>/evaluation_elements", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_elements_for_precision_evaluation(workspace_id):
     size = CONFIGURATION.precision_evaluation_size
     category = request.args.get('category_name')
@@ -754,7 +765,7 @@ def get_elements_for_precision_evaluation(workspace_id):
 
 
 @app.route('/workspace/<workspace_id>/estimate_precision', methods=['POST'])
-@auth.login_required
+@login_if_required
 @cross_origin()
 def run_precision_evaluation(workspace_id):
     """
@@ -780,7 +791,7 @@ Information on enriched tokens in a specific subset of elements, used for visual
 
 
 @app.route("/workspace/<workspace_id>/labeled_info_gain", methods=['GET'])
-@auth.login_required
+@login_if_required
 def get_labeled_elements_enriched_tokens(workspace_id):
     category = request.args.get('category_name')
     elements = \
@@ -794,7 +805,7 @@ def get_labeled_elements_enriched_tokens(workspace_id):
 
 
 @app.route("/workspace/<workspace_id>/predictions_info_gain", methods=['GET'])
-@auth.login_required
+@login_if_required
 @cross_origin()
 def get_predictions_enriched_tokens(workspace_id):
     """

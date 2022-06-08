@@ -14,8 +14,7 @@ from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Orch
 from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi
 import label_sleuth.app as app
 
-HEADERS = {'Authorization': 'Bearer dummy_bearer',
-           'Content-Type': 'application/json'}
+HEADERS = {'Content-Type': 'application/json'}
 
 
 class TestAppIntegration(unittest.TestCase):
@@ -25,7 +24,7 @@ class TestAppIntegration(unittest.TestCase):
         app.app.test_request_context("/")
         app.app.config['TESTING'] = True
         app.app.config['LOGIN_DISABLED'] = True
-        app.CONFIGURATION = label_sleuth.config.load_config("./label_sleuth/config_tests.json")
+        app.CONFIGURATION = label_sleuth.config.load_config("./label_sleuth/config_for_tests.json")
         app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.CONFIGURATION.users}
 
         app.tokens = [user.token for user in app.users.values()]

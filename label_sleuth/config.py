@@ -1,7 +1,7 @@
 import json
 import logging
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 import dacite
@@ -12,14 +12,6 @@ from label_sleuth.models.policy.model_policy import ModelPolicy
 from label_sleuth.training_set_selector.train_set_selector_api import TrainingSetSelectionStrategy
 
 
-# based on https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
-
-# FIRST_MODEL_MIN_POSITIVE_THRESHOLD = 5
-# CHANGED_ELEMENTS_THRESHOLD = 5
-# MODEL_POLICY = ModelPolicy(ModelTypesInternal.M_SVM)
-# TRAINING_SET_SELECTION_STRATEGY = TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO
-# ACTIVE_LEARNING_STRATEGY = ActiveLearningStrategies.HARD_MINING
-
 
 @dataclass
 class Configuration:
@@ -28,9 +20,10 @@ class Configuration:
     model_policy: ModelPolicy
     training_set_selection_strategy: TrainingSetSelectionStrategy
     active_learning_strategy: ActiveLearningStrategies
-    users: List[dict]
     precision_evaluation_size: int
     apply_labels_to_duplicate_texts: bool
+    login_required: bool
+    users: List[dict] = field(default_factory=list)
 
 
 converters = {
@@ -51,4 +44,3 @@ def load_config(config_path):
     )
     logging.info(f"loaded configuration: {config}")
     return config
-
