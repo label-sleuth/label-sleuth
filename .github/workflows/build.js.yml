@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths-ignore:
       - frontend/build/**
+      - label_sleuth/**
 
 jobs:
   build:
@@ -54,5 +55,5 @@ jobs:
         with:
           author_name: ${{ github.actor }}
           author_email: ${{ github.actor }}@users.noreply.github.com
-          message: 'Automatic react build'
+          message: 'Pushed latest compiled by github action bot following changes in /fronted'
           add: 'frontend/build/'
