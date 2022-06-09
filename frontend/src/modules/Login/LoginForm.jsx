@@ -10,6 +10,7 @@ import { getAuthenticated, clearState } from './LoginSlice';
 import 'react-toastify/dist/ReactToastify.css';
 import classes from "./login.module.css";
 import sleuth_logo from "../../assets/sleuth_logo.png"
+import { APP_NAME } from '../../config';
 
 const LoginForm = () => {
     
@@ -42,7 +43,7 @@ const LoginForm = () => {
         <Box>
             <div className={classes.sleuth_header}>
                 <img alt="existing workspace" src={sleuth_logo} style={{ width: '16px', height: '16px', marginRight: '6px' }} />
-                <h4 style={{ fontSize: '16px', fontWeight: '600', margin: 0, paddingTop: '2px'}}>Sleuth</h4>
+                <h4 style={{ fontSize: '16px', fontWeight: '600', margin: 0, paddingTop: '2px'}}>{APP_NAME}</h4>
             </div>
             <Box sx={{
                 display: 'flex',
