@@ -55,13 +55,14 @@ const getQueryParamsString = (queryParams) => {
     })
     // add leading '?' removes last '&'
     queryParamsString = '?' + queryParamsString.substring(0, queryParamsString.length-1)
-    return queryParamsString
+    // return an empty string if there are no query params
+    return queryParamsString === '?' ? '' : queryParamsString
 }
 
 export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async (request, { getState }) => {
 
     const state = getState()
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/documents`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/documents`
     console.log(`url: ${url}`)
 
     const data = await fetch(url, {
@@ -81,7 +82,7 @@ export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel',
     
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/active_learning${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/active_learning${queryParams}`
 
     const data = await fetch(url, {
         headers: {
@@ -106,7 +107,7 @@ export const getPositiveElementForCategory = createAsyncThunk('workspace/getPosi
 
     //var url = `${getWorkspace_url}/${state.workspace.workspace}/positive_elements?${getCategoryQueryString(state.workspace.curCategory)}`)
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/document/${encodeURIComponent(curDocument)}${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(curDocument)}${queryParams}`
 
     const data = await fetch(url, {
         headers: {
@@ -127,7 +128,7 @@ export const createCategoryOnServer = createAsyncThunk('workspace/createCategory
 
     console.log(`category on server: ${category}`)
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/category`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/category`
 
     const data = await fetch(url, {
         headers: {
@@ -155,7 +156,7 @@ export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async
         getCategoryQueryString(state.workspace.curCategory),
         `sample_start_idx=0`])
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/query${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/query${queryParams}`
 
     const data = await fetch(url, {
         headers: {
@@ -176,7 +177,7 @@ export const fetchNextDocElements = createAsyncThunk('workspace/fetchNextDoc', a
 
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
     
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/document/${encodeURIComponent(curDocument)}${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(curDocument)}${queryParams}`
 
     const data = await fetch(url, {
         headers: {
@@ -197,7 +198,7 @@ export const fetchPrevDocElements = createAsyncThunk('workspace/fetchPrevDoc', a
     
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/document/${encodeURIComponent(curDocument)}${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(curDocument)}${queryParams}`
 
     const data = await fetch(url, {
         headers: {
@@ -219,7 +220,7 @@ export const fetchElements = createAsyncThunk('workspace/fetchElements', async (
     var url = null;
     
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-    url = `${getWorkspace_url}/${state.workspace.workspaceId}/document/${encodeURIComponent(curDocument)}${queryParams}`
+    url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(curDocument)}${queryParams}`
     
     const data = await fetch(url, {
         headers: {
@@ -244,7 +245,7 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
     
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/document/${encodeURIComponent(docid)}${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(docid)}${queryParams}`
 
     const data = await fetch(url, {
         headers: {
@@ -265,7 +266,7 @@ export const downloadLabeling = createAsyncThunk('workspace/downloadLabeling', a
 
     const state = getState()
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/export_labels`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/export_labels`
 
     const data = await fetch(url, {
         headers: {
@@ -284,7 +285,7 @@ export const labelInfoGain = createAsyncThunk('workspace/labeled_info_gain', asy
     
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/labeled_info_gain${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/labeled_info_gain${queryParams}`
 
     const data = await fetch(url, {
         headers: {
@@ -301,7 +302,7 @@ export const fetchCategories = createAsyncThunk('workspace/get_all_categories', 
 
     const state = getState()
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/categories`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/categories`
 
     const data = await fetch(url, {
         headers: {
@@ -320,7 +321,7 @@ export const checkModelUpdate = createAsyncThunk('workspace/check_model_update',
 
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/models${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/models${queryParams}`
 
     const data = await fetch(url, {
         headers: {
@@ -342,7 +343,7 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
     
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
-    var url = `${getWorkspace_url}/${state.workspace.workspaceId}/element/${encodeURIComponent(element_id)}${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/element/${encodeURIComponent(element_id)}${queryParams}`
 
     const data = await fetch(url, {
         headers: {
@@ -366,7 +367,7 @@ export const checkStatus = createAsyncThunk('workspace/get_labelling_status', as
 
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
-    var url =  `${getWorkspace_url}/${state.workspace.workspaceId}/status${queryParams}`
+    var url =  `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/status${queryParams}`
 
     const data = await fetch(url, {
         headers: {
