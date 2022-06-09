@@ -49,7 +49,7 @@ jobs:
         env:
           CI: false
 
-      - name: Move static web site inside
+      - name: Move static web site inside label_sleuth
         run: mv frontend/build label_sleuth
 
       - name: Commit changes
