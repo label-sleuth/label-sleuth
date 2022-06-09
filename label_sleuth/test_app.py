@@ -6,6 +6,7 @@ import dacite
 
 import label_sleuth.config
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
+from label_sleuth.app import ROOT_DIR
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
@@ -24,7 +25,8 @@ class TestAppIntegration(unittest.TestCase):
         app.app.test_request_context("/")
         app.app.config['TESTING'] = True
         app.app.config['LOGIN_DISABLED'] = True
-        app.CONFIGURATION = label_sleuth.config.load_config("./label_sleuth/config_for_tests.json")
+        print(os.getcwd())
+        app.CONFIGURATION = label_sleuth.config.load_config(os.path.join(ROOT_DIR,"config_for_tests.json"))
         app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.CONFIGURATION.users}
 
         app.tokens = [user.token for user in app.users.values()]
