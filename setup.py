@@ -2,15 +2,15 @@ import setuptools
 import os
 
 
-def package_files(directory):
+def package_files(prefix, directory):
     paths = []
-    for (path, directories, filenames) in os.walk(directory):
+    for (path, directories, filenames) in os.walk(os.path.join(prefix, directory)):
         for filename in filenames:
-            paths.append(os.path.join('..', path, filename))
+            paths.append(os.path.join(path, filename)[len(prefix)+1:])
     return paths
 
 
-build_files = package_files("./build")
+build_files = package_files("label_sleuth", "build")
 
 requirements_file = 'label_sleuth/requirements.txt'
 
