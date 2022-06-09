@@ -27,6 +27,7 @@ class TestAppIntegration(unittest.TestCase):
         app.app.config['LOGIN_DISABLED'] = True
         print(os.getcwd())
         app.CONFIGURATION = label_sleuth.config.load_config(os.path.join(ROOT_DIR, "config_for_tests.json"))
+        app.orchestrator_api.config = app.CONFIGURATION
         app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.CONFIGURATION.users}
 
         app.tokens = [user.token for user in app.users.values()]
