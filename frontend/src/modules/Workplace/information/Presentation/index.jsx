@@ -1,7 +1,6 @@
 import * as React from 'react';
 import close_icon from './../../Asset/close.svg';
-
-var open_intro_modal = false;
+import { APP_NAME } from '../../../../config';
 
 const close_introSlides = function(){
   document.getElementById("presentation").style.display = "none";
@@ -13,7 +12,7 @@ export default function Presentation() {
       <div>
         <div className="exit_modal" onClick={close_introSlides}><img src={close_icon} alt="close info"/></div>
         <label>System for Learning to Understand Text with Human-in-the-loop</label>
-        <h2>SLEUTH</h2>
+        <h2>{APP_NAME}</h2>
         <p>Data is the new oil of the digital era - when it is processed, analyzed and utilized efficiently and instantly, it will have a much greater value. We have a number of pain points for the current process:</p>
         <ul>
           <li>Limited technical expertise</li>

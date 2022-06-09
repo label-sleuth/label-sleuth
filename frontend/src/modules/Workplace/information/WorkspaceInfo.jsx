@@ -17,9 +17,9 @@ import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import useLogOut from '../../../customHooks/useLogOut';
-import Presentation from './Presentation';
 import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
+import { APP_NAME } from '../../../config';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -246,7 +246,7 @@ export default function Workspace({workspaceId}) {
                     <DrawerHeader>
                         <h2 className={classes.sleuth_title}>
                             <img src={sleuth_logo} className={classes.sleuthlogo} alt="Sleuth Logo" />
-                            Sleuth
+                            {APP_NAME}
                             <img onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
                         </h2>
                         <img onClick={logout} className={classes.logout} src={logout_icon}/> 
