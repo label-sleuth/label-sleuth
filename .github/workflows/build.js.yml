@@ -17,17 +17,16 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-# TODO generate app for commits
-#      - uses: wow-actions/use-app-token@v1
-#        id: generate_token
-#        with:
-#          app_id: ${{ secrets.APP_ID }}
-#          private_key: ${{ secrets.PRIVATE_KEY }}
+      - uses: wow-actions/use-app-token@v1
+        id: generate_token
+        with:
+          app_id: ${{ secrets.APP_ID_PUSH_BOT }}
+          private_key: ${{ secrets.PRIVATE_KEY_PUSH_BOT }}
 
       - name: Checkout project
         uses: actions/checkout@v3
-#        with:
-#          token: ${{ steps.generate_token.outputs.token }}
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
@@ -50,11 +49,10 @@ jobs:
         env:
           CI: false
 
-# TODO commit changes
-#      - name: Commit changes
-#        uses: EndBug/add-and-commit@v8
-#        with:
-#          author_name: ${{ github.actor }}
-#          author_email: ${{ github.actor }}@users.noreply.github.com
-#          message: 'Automatic react build'
-#          add: 'frontend/build/'
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v8
+        with:
+          author_name: ${{ github.actor }}
+          author_email: ${{ github.actor }}@users.noreply.github.com
+          message: 'Automatic react build'
+          add: 'frontend/build/'
