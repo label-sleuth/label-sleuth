@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main ]
     paths-ignore:
-      - frontend/build/**
       - label_sleuth/**
 
 jobs:
@@ -50,10 +49,13 @@ jobs:
         env:
           CI: false
 
+      - name: Move static web site inside
+        run: mv frontend/build label_sleuth
+
       - name: Commit changes
         uses: EndBug/add-and-commit@v8
         with:
           author_name: ${{ github.actor }}
           author_email: ${{ github.actor }}@users.noreply.github.com
           message: 'Pushed latest compiled by github action bot following changes in /fronted'
-          add: 'frontend/build/'
+          add: 'label_sleuth/build/'

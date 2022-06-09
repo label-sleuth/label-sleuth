@@ -1,6 +1,6 @@
 import setuptools
 
-resources_dir = "frontend/build"
+resources_dir = "../frontend/build"
 
 requirements_file = 'label_sleuth/requirements.txt'
 
@@ -31,7 +31,8 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ],
-    package_data={"": ["LICENSE.txt",
+    package_data={"": ["../LICENSE",
+                       "config.json"
                        f"{resources_dir}/*.css",
                        f"{resources_dir}/*.js",
                        f"{resources_dir}/*.png",
