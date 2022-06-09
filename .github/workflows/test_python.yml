@@ -35,7 +35,6 @@ jobs:
     - name: Generate Report
       run:  coverage run -m unittest
 
-# TODO publish coverage
-#    - name: Upload Coverage to Codecov
-#      uses: codecov/codecov-action@v2
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v2
 
