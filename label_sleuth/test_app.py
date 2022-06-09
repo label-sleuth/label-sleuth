@@ -26,7 +26,7 @@ class TestAppIntegration(unittest.TestCase):
         app.app.config['TESTING'] = True
         app.app.config['LOGIN_DISABLED'] = True
         print(os.getcwd())
-        app.CONFIGURATION = label_sleuth.config.load_config(os.path.join(ROOT_DIR,"config_for_tests.json"))
+        app.CONFIGURATION = label_sleuth.config.load_config(os.path.join(ROOT_DIR, "config_for_tests.json"))
         app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.CONFIGURATION.users}
 
         app.tokens = [user.token for user in app.users.values()]
@@ -115,14 +115,32 @@ class TestAppIntegration(unittest.TestCase):
                                       'id': 'my_test_dataset-document3-0', 'model_predictions': {},
                                       'text': 'document 3 has three text elements, this is the first',
                                       'user_labels': {'my_category': 'true'}}, 'workspace_id': 'my_test_workspace'},
-                         res.get_json(),msg = "diff in setting element's label response")
+                         res.get_json(), msg="diff in setting element's label response")
         res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
-                              headers = HEADERS)
+                              headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
         self.assertEqual({'labeling_counts': {'true': 1}, 'notifications': [], 'progress': {'all': 50}},
-                         res.get_json(),msg = "diffs in get status response after setting a label")
+                         res.get_json(), msg="diffs in get status response after setting a label")
 
-        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}',
-                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, False), headers=HEADERS)
+        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[1]["id"]}',
+                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, True), headers=HEADERS)
+
+        self.assertEqual(200, res.status_code, msg="Failed to set the second label for category")
+        self.assertEqual({'category_name': 'my_category',
+                          'element': {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 108,
+                                      'id': 'my_test_dataset-document3-1', 'model_predictions': {},
+                                      'text': 'document 3 has three text elements, this is the second',
+                                      'user_labels': {'my_category': 'true'}}, 'workspace_id': 'my_test_workspace'},
+                         res.get_json())
+
+        res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the second label")
+        self.assertEqual({'labeling_counts': {'true': 2}, 'notifications': [], 'progress': {'all': 100}},
+                         res.get_json(), msg="diffs in get status response after setting the second label")
+
+        res = self.client.get(f"/workspace/{workspace_name}/models?category_name={category_name}",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get models list")
 
         print("Done")
