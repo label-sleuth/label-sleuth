@@ -1,6 +1,16 @@
 import setuptools
+import os
 
-resources_dir = "./build"
+
+def package_files(directory):
+    paths = []
+    for (path, directories, filenames) in os.walk(directory):
+        for filename in filenames:
+            paths.append(os.path.join('..', path, filename))
+    return paths
+
+
+build_files = package_files("./build")
 
 requirements_file = 'label_sleuth/requirements.txt'
 
@@ -31,11 +41,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ],
-    package_data={"": ["../LICENSE",
-                       "config.json"
-                       f"{resources_dir}/*.css",
-                       f"{resources_dir}/*.js",
-                       f"{resources_dir}/*.png",
-                       f"{resources_dir}/*.svg", ]},
+    package_data={"": ["../LICENSE", "config.json"] + build_files},
     include_package_data=True
 )
