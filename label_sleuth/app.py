@@ -36,7 +36,7 @@ print("user:")
 print(getpass.getuser())
 
 executor = ThreadPoolExecutor(20)
-app = Flask(__name__, static_url_path='', static_folder='../frontend/build')
+app = Flask(__name__, static_url_path='', static_folder='./build')
 auth = HTTPTokenAuth(scheme='Bearer')
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
