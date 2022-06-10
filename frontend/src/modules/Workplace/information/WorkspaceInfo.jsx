@@ -9,21 +9,15 @@ import sleuth_logo from '../Asset/sleuth_logo.png';
 import info_icon from '../../../assets/workspace/help.svg';
 import logout_icon from '../../../assets/workspace/logout.svg';
 import workspace_icon from '../../../assets/workspace/change_catalog.svg';
-// import Divider from '@mui/material/Divider';
 import LinearWithValueLabel from './ModelProgressBar'
-import IconButton from '@mui/material/IconButton';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchElements, downloadLabeling, getElementToLabel, checkStatus, fetchCategories, getPositiveElementForCategory, checkModelUpdate, fetchDocuments, setWorkspaceId } from '../DataSlice.jsx';
 import Stack from '@mui/material/Stack';
-import HSBar from "react-horizontal-stacked-bar-chart";
-import { makeStyles } from '@mui/styles';
 import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-// import LogoutIcon from '@mui/icons-material/Logout';
 import useLogOut from '../../../customHooks/useLogOut';
 import Presentation from './Presentation';
-import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
 
@@ -273,6 +267,7 @@ export default function Workspace({workspaceId}) {
                     </DrawerHeader>
                     
                     <Divider />
+                    {workspace.curCategory ? 
                     
                     <Stack style={{paddingTop: '12px'}}>
                         <Box sx={{ width: '100%', padding: theme.spacing(0, 2) }}>
@@ -338,6 +333,8 @@ export default function Workspace({workspaceId}) {
                         <div className={classes.modelStatus}>{workspace['modelStatus']}</div>
                         <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
                     </Stack>
+
+                    : null}
                 </Drawer>
             </Box>
         </>
