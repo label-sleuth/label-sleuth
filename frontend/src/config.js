@@ -11,3 +11,4 @@ export const LOGIN_PATH = '/login'
 export const WORKSPACE_CONFIG_PATH = '/workspace_config'
 export const WORKSPACE_PATH = '/workspace'
 
+export const AUTH_ENABLED = process.env.REACT_APP_AUTH_ENABLED === 'true' || false
