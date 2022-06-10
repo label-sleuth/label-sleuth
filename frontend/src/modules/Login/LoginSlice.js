@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { ADUTHENTICATE_API } from "../../config"
+import { AUTHENTICATE_API } from "../../config"
 import { client } from '../../api/client'
 
 const initialState = {
@@ -12,7 +12,7 @@ const initialState = {
 
 const BASE_URL = process.env.REACT_APP_API_URL
 
-const auth_url = `${BASE_URL}/${ADUTHENTICATE_API}`
+const auth_url = `${BASE_URL}/${AUTHENTICATE_API}`
 
 export const getAuthenticated = createAsyncThunk('workspaces/getAuthenticated', async (params) => {
     const { data } = await client.post(auth_url, params)
