@@ -61,7 +61,7 @@ const useSearchElement = () => {
 
 
     const handleSearchPanelClick = (e) => {
-
+        e.stopPropagation()
         let id = e.target.parentNode.parentNode.id;
         const lastIndex = id.lastIndexOf('-');
         const docid = id.slice(0, lastIndex);
@@ -89,6 +89,14 @@ const useSearchElement = () => {
         }
     }, [workspace.curCategory])
 
+    const handleSearchInputEnterKey = (ev) => {
+        if (ev && ev.key) {
+            if (ev.key === 'Enter') {
+                handleSearch()
+                ev.preventDefault();
+            }
+        }
+    }
 
     return {
         handleSearchPanelClick,
@@ -97,6 +105,7 @@ const useSearchElement = () => {
         clearSearchInput,
         searchInput,
         textInput,
+        handleSearchInputEnterKey
     }
 };
 

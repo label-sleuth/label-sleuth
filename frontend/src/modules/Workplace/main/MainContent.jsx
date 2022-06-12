@@ -96,7 +96,7 @@ const MainContent = ({ handleKeyEvent, handleClick, open }) => {
                   focusedState={workspace.focusedState}
                   index={index + firstPageIndex}
                   clickEventHandler={handleClick}
-                  element_id={element['id']}
+                  element_id={element.id}
                   prediction={workspace.predictionForDocCat}
                   text={element['text']}
                 />

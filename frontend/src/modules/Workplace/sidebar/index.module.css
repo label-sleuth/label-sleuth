@@ -87,3 +87,20 @@ display: inline-block;
     bottom: 0;
     overflow-y: scroll;
 }
+
+.top_nav_icons {
+    width: 32px;
+    height: 32px;
+    padding: 5px !important;
+    background: none !important;
+    border-radius: 2px !important;
+}
+
+.top_nav_icons img {
+    width: 100%;
+    height: 100%;
+}
+
+.top_nav_icons:hover {
+    background: #d6d6d6 !important;
+}
