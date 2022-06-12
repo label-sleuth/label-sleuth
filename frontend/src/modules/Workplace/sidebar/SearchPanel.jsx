@@ -1,56 +1,82 @@
-import * as React from 'react';
-import Highlighter from "react-highlight-words";
-import Paper from '@mui/material/Paper';
-import IconButton from "@mui/material/IconButton";
-import Stack from '@mui/material/Stack';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import { InputBase, Paper } from '@mui/material';
+import ClearIcon from '@mui/icons-material/Clear';
+import SearchIcon from '@mui/icons-material/Search';
+import classes from './index.module.css';
+import useLabelState from './customHooks/useLabelState.js';
 import { useSelector } from 'react-redux';
-import check from '../Asset/check.svg';
-import checking from '../Asset/checking.svg';
-import crossing from '../Asset/crossing.svg';
-import cross from '../Asset/cross.svg';
-import classes from './SearchPanel.module.css';
-import useSearchPanelStyles from './customHooks/useSearchPanelStyles';
-import check_predict from '../Asset/check_predict.svg';
-import { Box } from '@mui/material';
+import Element from './Element';
 
-export default function SearchPanel(props) {
+const SearchPanel = ({ handleDrawerClose,
+    newLabelState,
+    currLabelState,
+    handleSearchPanelClick,
+    handleSearchInputEnterKey,
+    handleSearch,
+    clearSearchInput,
+    handleSearchInputChange,
+    textInput,
+    searchInput,
+    updateMainLabelState,
+    updateLabelState
 
-    const { text, searchInput, docid, id, prediction, handleSearchPanelClick, handlePosLabelState, handleNegLabelState, searchedIndex } = props
-    const searchPanelLabelState = useSelector(state => state.workspace.searchPanelLabelState)
-    const { text_colors, handleTextElemStyle } = useSearchPanelStyles(prediction)
+}) => {
+
+    const workspace = useSelector(state => state.workspace)
+    const searchResult = workspace.searchResult
+    const { handlePosLabelState, handleNegLabelState } = useLabelState(newLabelState, updateMainLabelState, updateLabelState)
 
     return (
-        <Paper
-            className={handleTextElemStyle()}
-            sx={{ cursor: "pointer", padding: '0 !important', mb: 2, ml: 1, mr: 0 }} 
-        >
-            <label className={classes["rec_doc_id"]}>{docid}</label>
-            <Box onClick={handleSearchPanelClick} >
-            <p docid={docid} id={id} className={classes["elem_text"]} style={(text_colors[searchPanelLabelState['L' + searchedIndex + '-' + id]])}>
-                <Highlighter
-                    searchWords={[searchInput]}
-                    autoEscape={true}
-                    textToHighlight={text}
-                />
-            </p>                
+        <Box>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom: "1px solid #e2e2e2", pb: 2 }} >
+                <IconButton onClick={handleDrawerClose}>
+                    <ChevronLeftIcon />
+                </IconButton>
+                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 280, height: 40, marginLeft: 1 }}>
+                    <InputBase sx={{ ml: 1, flex: 1 }} placeholder="Search" inputProps={{ 'aria-label': 'search' }}
+                        onKeyPress={handleSearchInputEnterKey}
+                        onChange={handleSearchInputChange}
+                        inputRef={textInput}
+                    />
+                    {searchInput &&
+                        <>
+                            <IconButton sx={{ p: '10px' }} aria-label="search" onClick={clearSearchInput} >
+                                <ClearIcon />
+                            </IconButton>
+                            {<IconButton sx={{ p: '10px' }} aria-label="search" onClick={handleSearch} >
+                                <SearchIcon />
+                            </IconButton>}
+                        </>
+                    }
+                </Paper>
             </Box>
-            <Stack id={id} searchedindex={searchedIndex} className={classes["recommend_buttons"]} direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0, height: "25px", mr: 1, mb: 1 }}>
-                <IconButton className={classes.resultbtn} 
-                    onClick={handlePosLabelState}>
-                    {searchPanelLabelState['L' + searchedIndex + '-' + id] == 'pos' ?
-                        <img src={check} alt="checked" /> :
-                        prediction == 'true' && searchPanelLabelState['L' + searchedIndex + '-' + id] !== 'neg' ?
-                            <img src={check_predict} alt="predicted checking" /> :
-                            <img className={classes.hovbtn} src={checking} alt="checking" />
-                    }
-                </IconButton>
-                <IconButton className={classes.resultbtn}  positiveicon="false" onClick={handleNegLabelState}>
-                    {searchPanelLabelState['L' + searchedIndex + '-' + id] == 'neg' ?
-                        <img src={cross} alt="crossed" /> :
-                        <img className={classes.hovbtn} src={crossing} alt="crossinging" />
-                    }
-                </IconButton>
-            </Stack>
-        </Paper>
-    )
-}
+            <Box className={classes["search-results"]} >
+                {
+                    searchResult && searchResult.map((res, i) => {
+                        return (
+                            <Element
+                                key={i}
+                                searchedIndex={i}
+                                prediction={res.model_predictions[workspace.curCategory]}
+                                text={res.text}
+                                searchInput={searchInput}
+                                id={res.id}
+                                docid={res.docid}
+                                labelValue={res.user_labels[workspace.curCategory]}
+                                handleSearchPanelClick={handleSearchPanelClick}
+                                handlePosLabelState={handlePosLabelState}
+                                handleNegLabelState={handleNegLabelState}
+                                labelState={currLabelState}
+                            />
+                        )
+                    })
+                }
+            </Box>
+
+        </Box>
+    );
+};
+
+export default SearchPanel;

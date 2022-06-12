@@ -1,6 +1,6 @@
-import classes from '../SearchPanel.module.css';
+import classes from './index.module.css';
 
-const useSearchPanelStyles = (prediction) => {
+const PanelStyles = (prediction) => {
 
     const text_colors = {
         'pos': { color: '#3092ab' },
@@ -22,4 +22,4 @@ const useSearchPanelStyles = (prediction) => {
     }
 };
 
-export default useSearchPanelStyles;
+export default PanelStyles;

@@ -18,7 +18,7 @@ import {
   setNumLabelGlobal,
 } from './DataSlice.jsx';
 import WorkspaceInfo from './information/WorkspaceInfo';
-import Sidebar from './sidebar/Sidebar';
+import Sidebar from './sidebar/index';
 import UpperBar from './upperbar/UpperBar';
 import MainContent from './main/MainContent'
 

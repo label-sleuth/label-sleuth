@@ -18,7 +18,8 @@ const initialState = {
     focusedState: [],
     labelState: [],
     searchResult: [],
-    searchPanelLabelState: [],
+    searchLabelState: [],
+    recommendToLabelState: [],
     model_version: -1,
     indexPrediction: 0,
     predictionForDocCat: [],
@@ -38,6 +39,7 @@ const initialState = {
     numLabelGlobal: {},
     searchedIndex:0,
     isSearchActive: false,
+    activePanel: "",
 }
 
 const token = localStorage.getItem('token')
@@ -396,12 +398,18 @@ const DataSlice = createSlice({
         resetSearchResults(state, _) {
             state.searchResult = []
         }, 
-        setSearchPanelLabelState(state, action) {
+        setSearchLabelState(state, action) {
             return {
                 ...state,
-                searchPanelLabelState: action.payload
+                searchLabelState: action.payload
             }
         }, 
+        setRecommendToLabelState(state, action) {
+            return {
+                ...state,
+                recommendToLabelState: action.payload
+            }
+        },
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
         },
@@ -422,6 +430,9 @@ const DataSlice = createSlice({
         },
         setIsSearchActive(state, action) {
             state.isSearchActive = action.payload
+        },
+        setActivePanel(state, action) {
+            state.activePanel = action.payload
         },
         prevPrediction(state, action) {
             const pred_index = state.indexPrediction
@@ -589,7 +600,7 @@ const DataSlice = createSlice({
             return {
                 ...state,
                 searchResult: data.elements,
-                searchPanelLabelState: initialSearchLabelState
+                searchLabelState: initialSearchLabelState
             }
         },
         [getPositiveElementForCategory.fulfilled]: (state, action) => {
@@ -743,9 +754,26 @@ const DataSlice = createSlice({
 
             const data = action.payload
 
+            let initRecommendToLabelState = {}
+
+            for (let i = 0; i < data['elements'].length; i++) {
+                if (state.curCategory in data['elements'][i]['user_labels']) {
+                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
+                        initRecommendToLabelState['L' + i+'-'+data['elements'][i].id] = 'pos'
+                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
+                        initRecommendToLabelState['L' + i+'-'+data['elements'][i].id] = 'neg'
+                    }
+                    else{
+                        initRecommendToLabelState['L' + i+'-'+data['elements'][i].id] = ""
+                    }
+                } else {
+                    initRecommendToLabelState['L' + i+'-'+data['elements'][i].id] = ""
+                }
+            }
             return {
                 ...state,
                 elementsToLabel: data['elements'],
+                recommendToLabelState: initRecommendToLabelState,
                 ready: true
             }
         },
@@ -935,11 +963,13 @@ export const { updateCurCategory,
     setIsCategoryLoaded,
     setIsDocLoaded,
     resetSearchResults,
-    setSearchPanelLabelState,
+    setSearchLabelState,
+    setRecommendToLabelState,
     setLabelState,
     cleanWorkplaceState,
     setNumLabelGlobal,
     setNumLabel,
     setSearchedIndex,
     setIsSearchActive,
+    setActivePanel,
  } = DataSlice.actions;
