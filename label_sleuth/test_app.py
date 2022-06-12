@@ -3,18 +3,9 @@ import os
 import time
 import tempfile
 import unittest
-import dacite
 
-import label_sleuth.config
-from label_sleuth import config
-from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
-from label_sleuth.configurations.users import User
-from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
-from label_sleuth.models.core.models_factory import ModelFactory
-from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, IterationStatus
-from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi
-import label_sleuth.app as app
+from label_sleuth import app, config
+from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus
 
 HEADERS = {'Content-Type': 'application/json'}
 
@@ -24,18 +15,15 @@ class TestAppIntegration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp_dir = tempfile.TemporaryDirectory()
-
-        app.app.test_request_context("/")
-        app.app.config['TESTING'] = True
-        app.app.config['LOGIN_DISABLED'] = True
-        root_dir = os.path.abspath(os.path.join(__file__, os.pardir))
-        app.setup_app(config.load_config(os.path.join(root_dir, "config_for_tests.json")),cls.temp_dir.name)
-        # app.CONFIGURATION = label_sleuth.config.load_config(os.path.join(ROOT_DIR, "config_for_tests.json"))
-        # app.orchestrator_api.config = app.CONFIGURATION
-
+        path_to_test_config = os.path.abspath(os.path.join(__file__, os.pardir, "config_for_tests.json"))
+        app_for_test = app.create_app(config=config.load_config(path_to_test_config),
+                                      output_dir=os.path.join(cls.temp_dir.name, 'output'))
+        app_for_test.test_request_context("/")
+        app_for_test.config['TESTING'] = True
+        app_for_test.config['LOGIN_DISABLED'] = True
 
         print(f"Integration tests, all output files will be written under {cls.temp_dir}")
-        cls.client = app.app.test_client()
+        cls.client = app_for_test.test_client()
 
     @classmethod
     def tearDownClass(cls):
