@@ -1,9 +1,61 @@
 import logging
-from typing import Sequence
+from typing import List, Mapping, Sequence
+
+from flask import current_app
 
 from label_sleuth.analysis_utils.analyze_tokens import ngrams_by_info_gain
+from label_sleuth.data_access.core.data_structs import TextElement
+from label_sleuth.data_access.data_access_api import get_document_uri
 from label_sleuth.models.core.languages import Languages
-from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Iteration
+from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Iteration, IterationStatus
+
+
+def elements_back_to_front(workspace_id: str, elements: List[TextElement], category_name: str) -> List[Mapping]:
+    """
+    Converts TextElement objects from the backend into dictionaries in the form expected by the frontend, and adds
+    the model prediction for the elements if available.
+    :param workspace_id:
+    :param elements: a list of TextElements
+    :param category_name:
+    :return: a list of dictionaries with element information
+    """
+
+    element_uri_to_info = \
+        {text_element.uri:
+             {'id': text_element.uri,
+              'docid': get_document_uri(text_element.uri),
+              'begin': text_element.span[0][0],
+              'end': text_element.span[0][1],
+              'text': text_element.text,
+              'user_labels': {k: str(v.label).lower()  # TODO current UI is using true and false as strings. change to boolean in the new UI
+                              for k, v in text_element.category_to_label.items()},
+              'model_predictions': {}
+              }
+         for text_element in elements}
+
+    if category_name and len(elements) > 0 \
+            and len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name,
+                                                                              IterationStatus.READY)) > 0:
+        predicted_labels = [pred.label
+                            for pred in current_app.orchestrator_api.infer(workspace_id, category_name, elements)]
+        for text_element, prediction in zip(elements, predicted_labels):
+            # the frontend expects string labels and not boolean
+            element_uri_to_info[text_element.uri]['model_predictions'][category_name] = str(prediction).lower()
+
+    return [element_info for element_info in element_uri_to_info.values()]
+
+
+def get_element(workspace_id, category_name, element_id):
+    """
+    get element by id
+    :param workspace_id:
+    :param category_name:
+    :param element_id:
+    """
+    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    element = current_app.orchestrator_api.get_text_elements_by_uris(workspace_id, dataset_name, [element_id])
+    element_transformed = elements_back_to_front(workspace_id, element, category_name)[0]
+    return element_transformed
 
 
 def extract_iteration_information_list(iterations: Sequence[Iteration]):

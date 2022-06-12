@@ -1,4 +1,3 @@
-import functools
 import getpass
 import logging
 import os
@@ -7,7 +6,6 @@ import traceback
 
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
-from typing import List, Mapping
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -17,13 +15,14 @@ import pandas as pd
 
 from flask import Flask, jsonify, request, send_file, make_response, send_from_directory, current_app, Blueprint
 from flask_cors import CORS, cross_origin
-from flask_httpauth import HTTPTokenAuth
 
-from label_sleuth.app_utils import extract_iteration_information_list, extract_enriched_ngrams_and_weights_list
+from label_sleuth.app_utils import elements_back_to_front, extract_iteration_information_list, \
+    extract_enriched_ngrams_and_weights_list, get_element
+from label_sleuth.authentication import authenticate_response, login_if_required, verify_password
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.configurations.users import User
-from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label, TextElement
-from label_sleuth.data_access.data_access_api import AlreadyExistsException, get_document_uri
+from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label
+from label_sleuth.data_access.data_access_api import AlreadyExistsException
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.models_factory import ModelFactory
@@ -36,10 +35,9 @@ print(getpass.getuser())
 
 main_blueprint = Blueprint("main_blueprint", __name__)
 executor = ThreadPoolExecutor(20)
-auth = HTTPTokenAuth(scheme='Bearer')
 
 
-def create_app(config, output_dir):
+def create_app(config, output_dir) -> Flask:
     app = Flask(__name__, static_url_path='', static_folder='./build')
     CORS(app)
     app.config['CORS_HEADERS'] = 'Content-Type'
@@ -66,84 +64,6 @@ def start_server(app, port=8000):
 
     from waitress import serve
     serve(app, port=port, threads=20)  # to enable running on a remote machine
-
-
-def elements_back_to_front(workspace_id: str, elements: List[TextElement], category_name: str) -> List[Mapping]:
-    """
-    Converts TextElement objects from the backend into dictionaries in the form expected by the frontend, and adds
-    the model prediction for the elements if available.
-    :param workspace_id:
-    :param elements: a list of TextElements
-    :param category_name:
-    :return: a list of dictionaries with element information
-    """
-
-    element_uri_to_info = \
-        {text_element.uri:
-             {'id': text_element.uri,
-              'docid': get_document_uri(text_element.uri),
-              'begin': text_element.span[0][0],
-              'end': text_element.span[0][1],
-              'text': text_element.text,
-              'user_labels': {k: str(v.label).lower()  # TODO current UI is using true and false as strings. change to boolean in the new UI
-                              for k, v in text_element.category_to_label.items()},
-              'model_predictions': {}
-              }
-         for text_element in elements}
-
-    if category_name and len(elements) > 0 \
-            and len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name,
-                                                                              IterationStatus.READY)) > 0:
-        predicted_labels = [pred.label
-                            for pred in current_app.orchestrator_api.infer(workspace_id, category_name, elements)]
-        for text_element, prediction in zip(elements, predicted_labels):
-            # the frontend expects string labels and not boolean
-            element_uri_to_info[text_element.uri]['model_predictions'][category_name] = str(prediction).lower()
-
-    return [element_info for element_info in element_uri_to_info.values()]
-
-
-def get_element(workspace_id, category_name, element_id):
-    """
-    get element by id
-    :param workspace_id:
-    :param category_name:
-    :param element_id:
-    """
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    element = current_app.orchestrator_api.get_text_elements_by_uris(workspace_id, dataset_name, [element_id])
-    element_transformed = elements_back_to_front(workspace_id, element, category_name)[0]
-    return element_transformed
-
-
-def login_if_required(function):
-    @functools.wraps(function)
-    def wrapper(*args, **kwargs):
-        if current_app.config["CONFIGURATION"].login_required:
-            wrapped_func = auth.login_required(function)
-            return wrapped_func(*args, **kwargs)
-        else:
-            return function(*args, **kwargs)
-    return wrapper
-
-
-def authenticate_response(user):
-    return make_response(jsonify(user), 200)
-
-
-def verify_password(username, password):
-    if username in current_app.users:
-        user = current_app.users[username]
-        return user and user.password == password
-    else:
-        return False
-
-
-@auth.verify_token
-def verify_token(token):
-    if not token:
-        return False
-    return token in current_app.tokens
 
 
 @main_blueprint.route("/", defaults={'path': ''})
