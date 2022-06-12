@@ -28,8 +28,8 @@ Currently, the framework requires Python 3.8
 - Use the following commands to create a new anaconda environment and install the requirements:
 ```bash
 # Create and activate a virtual environment:
-conda create --yes -n sleuth_classification python=3.8
-conda activate sleuth_classification
+conda create --yes -n label-sleuth python=3.8
+conda activate label-sleuth
 # Install requirements
 pip install -r label_sleuth/requirements.txt
 ```
