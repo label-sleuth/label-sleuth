@@ -15,7 +15,7 @@ TBD
 Currently, the framework requires Python 3.8
 1. Clone the repository: 
 
-   `git clone git@github.ibm.com:sleuth/sleuth_classification_service.git`
+   `git clone git@github.com:label-sleuth/label-sleuth.git`
 2. cd to the cloned directory `cd sleuth_classification_service`
 3. Install the project dependencies using `conda` (recommended) or `pip`
 <details><summary><b>Installing with <tt>conda</tt></b></summary>
