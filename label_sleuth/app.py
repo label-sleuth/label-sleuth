@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO,
 import dacite
 import pandas as pd
 
-from flask import Flask, jsonify, request, send_file, make_response, send_from_directory
+from flask import Flask, jsonify, request, send_file, make_response, send_from_directory, current_app, Blueprint
 from flask_cors import CORS, cross_origin
 from flask_httpauth import HTTPTokenAuth
 
@@ -35,35 +35,38 @@ from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi
 print("user:")
 print(getpass.getuser())
 
+main_blueprint = Blueprint("main_blueprint",__name__)
 executor = ThreadPoolExecutor(20)
-app = Flask(__name__, static_url_path='', static_folder='./build')
 auth = HTTPTokenAuth(scheme='Bearer')
-cors = CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
 
-ROOT_DIR = os.environ.get('SLEUTH_ROOT', os.path.abspath(os.path.join(__file__, os.pardir)))
-CONFIGURATION = load_config(os.path.join(ROOT_DIR, "config.json"))
-users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in CONFIGURATION.users}
-tokens = [user.token for user in users.values()]
-orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(ROOT_DIR, "output", "workspaces")),
-                                   FileBasedDataAccess(os.path.join(ROOT_DIR, "output")),
-                                   ActiveLearningFactory(),
-                                   ModelFactory(os.path.join(ROOT_DIR, "output", "models"),
-                                                ModelsBackgroundJobsManager()),
-                                   CONFIGURATION)
+def create_app(config, root_dir):
+    app = Flask(__name__, static_url_path='', static_folder='../frontend/build')
+    cors = CORS(app)
+    app.config['CORS_HEADERS'] = 'Content-Type'
+    app.config["CONFIGURATION"] = config
+    app.config["root_dir"] = root_dir
+    app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.config["CONFIGURATION"].users}
+    app.tokens = [user.token for user in app.users.values()]
+    app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(root_dir, "output", "workspaces")),
+                                       FileBasedDataAccess(os.path.join(root_dir, "output")),
+                                       ActiveLearningFactory(),
+                                       ModelFactory(os.path.join(root_dir, "output", "models"),
+                                                    ModelsBackgroundJobsManager()),
+                                       app.config["CONFIGURATION"])
+    app.register_blueprint(main_blueprint)
 
 
 def start_server(port=8000):
-    # app.run(port=8000, debug=True, use_reloader=False)
+    # current_app.run(port=8000, debug=True, use_reloader=False)
     logging.info(f"Starting SLEUTH classification server on port {port}")
     disable_html_printouts = False
     if disable_html_printouts:
         logging.getLogger('werkzeug').disabled = True
         os.environ['WERKZEUG_RUN_MAIN'] = True
-    # app.run(host="0.0.0.0",port=8008,debug=False) # to enable running on a remote machine
+    # current_app.run(host="0.0.0.0",port=8008,debug=False) # to enable running on a remote machine
 
     from waitress import serve
-    serve(app, port=port, threads=20)  # to enable running on a remote machine
+    serve(current_app, port=port, threads=20)  # to enable running on a remote machine
 
 
 def elements_back_to_front(workspace_id: str, elements: List[TextElement], category_name: str) -> List[Mapping]:
@@ -90,8 +93,8 @@ def elements_back_to_front(workspace_id: str, elements: List[TextElement], categ
          for text_element in elements}
 
     if category_name and len(elements) > 0 \
-            and len(orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)) > 0:
-        predicted_labels = [pred.label for pred in orchestrator_api.infer(workspace_id, category_name, elements)]
+            and len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)) > 0:
+        predicted_labels = [pred.label for pred in current_app.orchestrator_api.infer(workspace_id, category_name, elements)]
         for text_element, prediction in zip(elements, predicted_labels):
             # the frontend expects string labels and not boolean
             element_uri_to_info[text_element.uri]['model_predictions'][category_name] = str(prediction).lower()
@@ -106,8 +109,8 @@ def get_element(workspace_id, category_name, element_id):
     :param category_name:
     :param element_id:
     """
-    dataset_name = orchestrator_api.get_dataset_name(workspace_id)
-    element = orchestrator_api.get_text_elements_by_uris(workspace_id, dataset_name, [element_id])
+    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    element = current_app.orchestrator_api.get_text_elements_by_uris(workspace_id, dataset_name, [element_id])
     element_transformed = elements_back_to_front(workspace_id, element, category_name)[0]
     return element_transformed
 
@@ -115,7 +118,7 @@ def get_element(workspace_id, category_name, element_id):
 def login_if_required(function):
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        if CONFIGURATION.login_required:
+        if current_app.config["CONFIGURATION"].login_required:
             wrapped_func = auth.login_required(function)
             return wrapped_func(*args, **kwargs)
         else:
@@ -128,8 +131,8 @@ def authenticate_response(user):
 
 
 def verify_password(username, password):
-    if username in users:
-        user = users[username]
+    if username in current_app.users:
+        user = current_app.users[username]
         return user and user.password == password
     else:
         return False
@@ -139,15 +142,15 @@ def verify_password(username, password):
 def verify_token(token):
     if not token:
         return False
-    return token in tokens
+    return token in current_app.tokens
 
 
-@app.route("/", defaults={'path': ''})
+@main_blueprint.route("/", defaults={'path': ''})
 def serve(path):
-    return send_from_directory(app.static_folder, 'index.html')
+    return send_from_directory(current_app.static_folder, 'index.html')
 
 
-@app.route('/users/authenticate', methods=['POST'])
+@main_blueprint.route('/users/authenticate', methods=['POST'])
 def login():
     post_data = request.get_json(force=True)
     username = post_data["username"]
@@ -159,7 +162,7 @@ def login():
             'error': "wrong user or password"
         }), 401)
     else:
-        user = users.get(username)
+        user = current_app.users.get(username)
         logging.info(f"LOGIN: {user.username}")
         return authenticate_response({
             'username': user.username,
@@ -173,20 +176,20 @@ workspace.
 """
 
 
-@app.route("/datasets", methods=['GET'])
+@main_blueprint.route("/datasets", methods=['GET'])
 @login_if_required
 def get_all_dataset_ids():
     """
     Get all existing datasets
     :return array of dataset ids as strings:
     """
-    all_datasets = orchestrator_api.get_all_dataset_names()
+    all_datasets = current_app.orchestrator_api.get_all_dataset_names()
     res = {'datasets':
                [{"dataset_id": d} for d in all_datasets]}
     return jsonify(res)
 
 
-@app.route('/datasets/<dataset_name>/add_documents', methods=['POST'])
+@main_blueprint.route('/datasets/<dataset_name>/add_documents', methods=['POST'])
 @cross_origin()
 @login_if_required
 def add_documents(dataset_name):
@@ -203,12 +206,12 @@ def add_documents(dataset_name):
     try:
         csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
         df = pd.read_csv(csv_data)
-        temp_dir = os.path.join(ROOT_DIR, "output", "temp", "csv_upload")
+        temp_dir = os.path.join(current_app.config["root_dir"], "output", "temp", "csv_upload")
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
         os.makedirs(temp_dir, exist_ok=True)
         temp_file_path = os.path.join(temp_dir, temp_file_name)
         df.to_csv(os.path.join(temp_dir, temp_file_name))
-        document_statistics, workspaces_to_update = orchestrator_api.add_documents_from_file(dataset_name,
+        document_statistics, workspaces_to_update = current_app.orchestrator_api.add_documents_from_file(dataset_name,
                                                                                              temp_file_path)
         return jsonify({"dataset_name": dataset_name,
                         "num_docs": document_statistics.documents_loaded,
@@ -230,7 +233,7 @@ Workspace endpoints. Each workspace is associated with a particular dataset at c
 """
 
 
-@app.route("/workspace", methods=['POST'])
+@main_blueprint.route("/workspace", methods=['POST'])
 @login_if_required
 def create_workspace():
     """
@@ -243,11 +246,11 @@ def create_workspace():
     workspace_id = post_data["workspace_id"]
     dataset_name = post_data["dataset_id"]
 
-    if orchestrator_api.workspace_exists(workspace_id):
+    if current_app.orchestrator_api.workspace_exists(workspace_id):
         raise Exception(f"workspace '{workspace_id}' already exists")
-    orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
+    current_app.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
-    all_document_ids = orchestrator_api.get_all_document_uris(workspace_id)
+    all_document_ids = current_app.orchestrator_api.get_all_document_uris(workspace_id)
     first_document_id = all_document_ids[0]
 
     res = {'workspace': {'workspace_id': workspace_id,
@@ -257,28 +260,28 @@ def create_workspace():
     return jsonify(res)
 
 
-@app.route("/workspaces", methods=['GET'])
+@main_blueprint.route("/workspaces", methods=['GET'])
 @login_if_required
 def get_all_workspace_ids():
     """
     Get all existing workspaces
     """
-    res = {'workspaces': orchestrator_api.list_workspaces()}
+    res = {'workspaces': current_app.orchestrator_api.list_workspaces()}
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>", methods=['DELETE'])
+@main_blueprint.route("/workspace/<workspace_id>", methods=['DELETE'])
 @login_if_required
 def delete_workspace(workspace_id):
     """
     This call permanently deletes all data associated with the workspaces, including all the categories, user labels
     and models.
     """
-    orchestrator_api.delete_workspace(workspace_id)
+    current_app.orchestrator_api.delete_workspace(workspace_id)
     return jsonify({'workspace_id': workspace_id})
 
 
-@app.route("/workspace/<workspace_id>", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>", methods=['GET'])
 @login_if_required
 def get_workspace_info(workspace_id):
     """
@@ -286,11 +289,11 @@ def get_workspace_info(workspace_id):
     :param workspace_id
     :return workspace_id, dataset_name, array of all document_ids, id of first document:
     """
-    document_ids = orchestrator_api.get_all_document_uris(workspace_id)
+    document_ids = current_app.orchestrator_api.get_all_document_uris(workspace_id)
     first_document_id = document_ids[0]
 
     res = {'workspace': {'workspace_id': workspace_id,
-                         'dataset_name': orchestrator_api.get_dataset_name(workspace_id),
+                         'dataset_name': current_app.orchestrator_api.get_dataset_name(workspace_id),
                          'first_document_id': first_document_id,
                          'document_ids': document_ids}}
     return jsonify(res)
@@ -302,7 +305,7 @@ the labels, classification models etc. are associated with a specific category.
 """
 
 
-@app.route("/workspace/<workspace_id>/category", methods=['POST'])
+@main_blueprint.route("/workspace/<workspace_id>/category", methods=['POST'])
 @login_if_required
 def create_category(workspace_id):
     """
@@ -312,19 +315,19 @@ def create_category(workspace_id):
     """
     post_data = request.get_json(force=True)
     post_data['id'] = post_data["category_name"]  # TODO old frontend expects the category name to be in id, remove after moving to new frontend
-    orchestrator_api.create_new_category(workspace_id, post_data["category_name"], post_data["category_description"])
+    current_app.orchestrator_api.create_new_category(workspace_id, post_data["category_name"], post_data["category_description"])
 
     res = {'category': post_data}
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/categories", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/categories", methods=['GET'])
 @login_if_required
 def get_all_categories(workspace_id):
     """
     Get information about all existing categories in the workspace
     """
-    categories = orchestrator_api.get_all_categories(workspace_id)
+    categories = current_app.orchestrator_api.get_all_categories(workspace_id)
     category_dicts = [{'id': name, 'category_name': name, 'category_description': category.description}
                       for name, category in sorted(categories.items())]
 
@@ -332,7 +335,7 @@ def get_all_categories(workspace_id):
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/category/<category_name>", methods=['PUT'])
+@main_blueprint.route("/workspace/<workspace_id>/category/<category_name>", methods=['PUT'])
 @login_if_required
 def rename_category(workspace_id, category_name):
     """
@@ -346,13 +349,13 @@ def rename_category(workspace_id, category_name):
     return "Not Implemented", 503
 
 
-@app.route("/workspace/<workspace_id>/category/<category_name>", methods=['DELETE'])
+@main_blueprint.route("/workspace/<workspace_id>/category/<category_name>", methods=['DELETE'])
 @login_if_required
 def delete_category(workspace_id, category_name):
     """
     This call permanently deletes all data associated with the category, including user labels and models.
     """
-    orchestrator_api.delete_category(workspace_id, category_name)
+    current_app.orchestrator_api.delete_category(workspace_id, category_name)
     return jsonify({'category': category_name})
 
 
@@ -363,7 +366,7 @@ but also category labels, model predictions etc. that are associated with a part
 """
 
 
-@app.route("/workspace/<workspace_id>/documents", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/documents", methods=['GET'])
 @login_if_required
 def get_all_document_uris(workspace_id):
     """
@@ -372,13 +375,13 @@ def get_all_document_uris(workspace_id):
     :return documents:
     """
 
-    doc_uris = orchestrator_api.get_all_document_uris(workspace_id)
+    doc_uris = current_app.orchestrator_api.get_all_document_uris(workspace_id)
     res = {"documents":
                [{"document_id": uri} for uri in doc_uris]}  # TODO change document_id to document_uri in the ui
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/document/<document_id>", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/document/<document_id>", methods=['GET'])
 @login_if_required
 def get_document_elements(workspace_id, document_id):
     """
@@ -387,8 +390,8 @@ def get_document_elements(workspace_id, document_id):
     :param document_id: the uri of the document
     :return elements:
     """
-    dataset_name = orchestrator_api.get_dataset_name(workspace_id)
-    document = orchestrator_api.get_documents(workspace_id, dataset_name, [document_id])[0]
+    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    document = current_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_id])[0]
     elements = document.text_elements
 
     category = None
@@ -400,7 +403,7 @@ def get_document_elements(workspace_id, document_id):
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/document/<document_id>/positive_predictions", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/document/<document_id>/positive_predictions", methods=['GET'])
 @login_if_required
 def get_document_positive_predictions(workspace_id, document_id):
     """
@@ -416,15 +419,15 @@ def get_document_positive_predictions(workspace_id, document_id):
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
     category_name = request.args.get('category_name')
-    if len(orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)) == 0:
+    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)) == 0:
         elements_transformed = []
     else:
-        dataset_name = orchestrator_api.get_dataset_name(workspace_id)
-        document = orchestrator_api.get_documents(workspace_id, dataset_name, [document_id])[0]
+        dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+        document = current_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_id])[0]
 
         elements = document.text_elements
 
-        predictions = [pred.label for pred in orchestrator_api.infer(workspace_id, category_name, elements)]
+        predictions = [pred.label for pred in current_app.orchestrator_api.infer(workspace_id, category_name, elements)]
         positive_predicted_elements = [element for element, prediction in zip(elements, predictions)
                                        if prediction == LABEL_POSITIVE]
 
@@ -434,14 +437,14 @@ def get_document_positive_predictions(workspace_id, document_id):
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/element/<eltid>", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/element/<eltid>", methods=['GET'])
 @login_if_required
 def get_element_by_id(workspace_id, eltid):
     category_name = request.args.get('category_name')
     return get_element(workspace_id, category_name, eltid)
 
 
-@app.route("/workspace/<workspace_id>/query", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/query", methods=['GET'])
 @login_if_required
 def query(workspace_id):
     """
@@ -459,7 +462,7 @@ def query(workspace_id):
     sample_start_idx = int(request.args.get('sample_start_idx', 0))
     category_name = request.args.get('category_name')
 
-    resp = orchestrator_api.query(workspace_id, orchestrator_api.get_dataset_name(workspace_id), category_name,
+    resp = current_app.orchestrator_api.query(workspace_id, current_app.orchestrator_api.get_dataset_name(workspace_id), category_name,
                                   query_string, unlabeled_only=False, sample_size=sample_size,
                                   sample_start_idx=sample_start_idx, remove_duplicates=True)
 
@@ -476,7 +479,7 @@ Labeling-related endpoints.
 """
 
 
-@app.route('/workspace/<workspace_id>/element/<element_id>', methods=['PUT'])
+@main_blueprint.route('/workspace/<workspace_id>/element/<element_id>', methods=['PUT'])
 @login_if_required
 def set_element_label(workspace_id, element_id):
     """
@@ -496,8 +499,8 @@ def set_element_label(workspace_id, element_id):
     update_counter = post_data.get('update_counter', True)
 
     if value == 'none':
-        orchestrator_api.unset_labels(workspace_id, category_name, [element_id],
-                                      apply_to_duplicate_texts=CONFIGURATION.apply_labels_to_duplicate_texts)
+        current_app.orchestrator_api.unset_labels(workspace_id, category_name, [element_id],
+                                      apply_to_duplicate_texts=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
 
     else:
         if value in ['true', "True", "TRUE", True]:
@@ -508,8 +511,8 @@ def set_element_label(workspace_id, element_id):
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
 
         uri_with_updated_label = {element_id: {category_name: Label(value)}}
-        orchestrator_api.set_labels(workspace_id, uri_with_updated_label,
-                                    apply_to_duplicate_texts=CONFIGURATION.apply_labels_to_duplicate_texts,
+        current_app.orchestrator_api.set_labels(workspace_id, uri_with_updated_label,
+                                    apply_to_duplicate_texts=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts,
                                     update_label_counter=update_counter)
 
     res = {'element': get_element(workspace_id, category_name, element_id), 'workspace_id': workspace_id,
@@ -517,12 +520,12 @@ def set_element_label(workspace_id, element_id):
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/positive_elements", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/positive_elements", methods=['GET'])
 @login_if_required
 def get_all_positive_labeled_elements_for_category(workspace_id):
     category = request.args.get('category_name')
     elements = \
-        orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id),
+        current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, current_app.orchestrator_api.get_dataset_name(workspace_id),
                                                        category)
     positive_elements = [element for element in elements if element.category_to_label[category].label == LABEL_POSITIVE]
 
@@ -532,19 +535,19 @@ def get_all_positive_labeled_elements_for_category(workspace_id):
     return jsonify(res)
 
 
-@app.route('/workspace/<workspace_id>/import_labels', methods=['POST'])
+@main_blueprint.route('/workspace/<workspace_id>/import_labels', methods=['POST'])
 @cross_origin()
 @login_if_required
 def import_labels(workspace_id):
     csv_data = StringIO(request.data.decode("utf-8"))  # TODO use request.data also in load_documents()
     df = pd.read_csv(csv_data, dtype={'labels': str})
-    return jsonify(orchestrator_api.import_category_labels(workspace_id, df))
+    return jsonify(current_app.orchestrator_api.import_category_labels(workspace_id, df))
 
 
-@app.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
+@main_blueprint.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
 @login_if_required
 def export_labels(workspace_id):
-    return orchestrator_api.export_workspace_labels(workspace_id).to_csv(index=False)
+    return current_app.orchestrator_api.export_workspace_labels(workspace_id).to_csv(index=False)
 
 
 """
@@ -552,7 +555,7 @@ Models and Iterations
 """
 
 
-@app.route("/workspace/<workspace_id>/status", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/status", methods=['GET'])
 @login_if_required
 def get_labelling_status(workspace_id):
     """
@@ -566,12 +569,12 @@ def get_labelling_status(workspace_id):
     """
 
     category_name = request.args.get('category_name')
-    dataset_name = orchestrator_api.get_dataset_name(workspace_id)
-    future = executor.submit(orchestrator_api.train_if_recommended, workspace_id, category_name)
+    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    future = executor.submit(current_app.orchestrator_api.train_if_recommended, workspace_id, category_name)
 
-    labeling_counts = orchestrator_api.get_label_counts(workspace_id, dataset_name, category_name,
-                                                        remove_duplicates=CONFIGURATION.apply_labels_to_duplicate_texts)
-    progress = orchestrator_api.get_progress(workspace_id, dataset_name, category_name)
+    labeling_counts = current_app.orchestrator_api.get_label_counts(workspace_id, dataset_name, category_name,
+                                                        remove_duplicates=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
+    progress = current_app.orchestrator_api.get_progress(workspace_id, dataset_name, category_name)
 
     return jsonify({
         "labeling_counts": labeling_counts,
@@ -580,7 +583,7 @@ def get_labelling_status(workspace_id):
     })
 
 
-@app.route("/workspace/<workspace_id>/models", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/models", methods=['GET'])
 @login_if_required
 @cross_origin()
 def get_all_models_for_category(workspace_id):
@@ -591,12 +594,12 @@ def get_all_models_for_category(workspace_id):
     """
     category_name = request.args.get('category_name')
 
-    iterations = orchestrator_api.get_all_iterations_for_category(workspace_id, category_name)
+    iterations = current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_name)
     res = {'models': extract_iteration_information_list(iterations)}
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/active_learning", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/active_learning", methods=['GET'])
 @login_if_required
 def get_elements_to_label(workspace_id):
     """
@@ -613,17 +616,17 @@ def get_elements_to_label(workspace_id):
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
 
-    if len(orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)) == 0:
+    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)) == 0:
         return jsonify({"elements": []})
 
-    elements = orchestrator_api.get_elements_to_label(workspace_id, category_name, size, start_idx)
+    elements = current_app.orchestrator_api.get_elements_to_label(workspace_id, category_name, size, start_idx)
     elements_transformed = elements_back_to_front(workspace_id, elements, category_name)
 
     res = {'elements': elements_transformed}
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/force_train", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/force_train", methods=['GET'])
 @login_if_required
 def force_train_for_category(workspace_id):
     """
@@ -634,15 +637,15 @@ def force_train_for_category(workspace_id):
     """
 
     category_name = request.args.get('category_name')
-    dataset_name = orchestrator_api.get_dataset_name(workspace_id)
-    if category_name not in orchestrator_api.get_all_categories(workspace_id):
+    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    if category_name not in current_app.orchestrator_api.get_all_categories(workspace_id):
         return jsonify({
             "error": "no such category '"+(category_name if category_name
                                            else "<category not provided in category_name param>")+"'"
         })
-    model_id = orchestrator_api.train_if_recommended(workspace_id, category_name, force=True)
+    model_id = current_app.orchestrator_api.train_if_recommended(workspace_id, category_name, force=True)
 
-    labeling_counts = orchestrator_api.get_label_counts(workspace_id, dataset_name, category_name)
+    labeling_counts = current_app.orchestrator_api.get_label_counts(workspace_id, dataset_name, category_name)
     logging.info(f"force training a new model in workspace '{workspace_id}' for category '{category_name}', "
                  f"model id: {model_id}")
 
@@ -652,21 +655,21 @@ def force_train_for_category(workspace_id):
     })
 
 
-@app.route('/workspace/<workspace_id>/export_predictions', methods=['GET'])
+@main_blueprint.route('/workspace/<workspace_id>/export_predictions', methods=['GET'])
 @login_if_required
 def export_predictions(workspace_id):
     category_name = request.args.get('category_name')
     uri_filter = request.args.get('uri_filter', None)
     iteration_index = request.args.get('iteration_index')
-    elements = orchestrator_api.get_all_text_elements(orchestrator_api.get_dataset_name(workspace_id))
+    elements = current_app.orchestrator_api.get_all_text_elements(current_app.orchestrator_api.get_dataset_name(workspace_id))
     if uri_filter is not None:
         elements = [x for x in elements if uri_filter in x.uri]
-    infer_results = orchestrator_api.infer(workspace_id, category_name, elements, iteration_index=iteration_index)
+    infer_results = current_app.orchestrator_api.infer(workspace_id, category_name, elements, iteration_index=iteration_index)
     return pd.DataFrame([{**te.__dict__, "score": pred.score, 'predicted_label': pred.label} for te, pred
                          in zip(elements, infer_results)]).to_csv(index=False)
 
 
-@app.route('/workspace/<workspace_id>/export_model', methods=['GET'])
+@main_blueprint.route('/workspace/<workspace_id>/export_model', methods=['GET'])
 @login_if_required
 def export_model(workspace_id):
     import zipfile
@@ -674,11 +677,11 @@ def export_model(workspace_id):
     iteration_index = request.args.get('iteration_index', None)  # TODO update in UI model_id -> iteration_index
     if iteration_index is None:
         iteration = \
-            orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)[-1]
+            current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)[-1]
     else:
-        iteration = orchestrator_api.get_all_iterations_for_category(workspace_id, category_name)[iteration_index]
+        iteration = current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_name)[iteration_index]
     model_id = iteration.model.model_id
-    model_dir = orchestrator_api.export_model(workspace_id, category_name, iteration_index)
+    model_dir = current_app.orchestrator_api.export_model(workspace_id, category_name, iteration_index)
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
         for dirpath, dirnames, filenames in os.walk(model_dir):
@@ -696,12 +699,12 @@ surface potential errors in the original labeling.
 """
 
 
-@app.route("/workspace/<workspace_id>/disagree_elements", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/disagree_elements", methods=['GET'])
 @login_if_required
 def get_label_and_model_disagreements(workspace_id):
     category = request.args.get('category_name')
     elements = \
-        orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id),
+        current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, current_app.orchestrator_api.get_dataset_name(workspace_id),
                                                        category)
     elements_transformed = elements_back_to_front(workspace_id, elements, category)
 
@@ -712,12 +715,12 @@ def get_label_and_model_disagreements(workspace_id):
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/suspicious_elements", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/suspicious_elements", methods=['GET'])
 @login_if_required
 def get_suspicious_elements(workspace_id):
     category = request.args.get('category_name')
     try:
-        suspicious_elements = orchestrator_api.get_suspicious_elements_report(workspace_id, category)
+        suspicious_elements = current_app.orchestrator_api.get_suspicious_elements_report(workspace_id, category)
         elements_transformed = elements_back_to_front(workspace_id, suspicious_elements, category)
         res = {'elements': elements_transformed}
         return jsonify(res)
@@ -727,12 +730,12 @@ def get_suspicious_elements(workspace_id):
         return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/contradiction_elements", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/contradiction_elements", methods=['GET'])
 @login_if_required
 def get_contradicting_elements(workspace_id):
     category = request.args.get('category_name')
     try:
-        contradiction_elements_dict = orchestrator_api.get_contradiction_report(workspace_id, category)
+        contradiction_elements_dict = current_app.orchestrator_api.get_contradiction_report(workspace_id, category)
         element_pairs_transformed = [elements_back_to_front(workspace_id, element_pair, category)
                                      for element_pair in contradiction_elements_dict['pairs']]
         diffs = [[list(element_a_unique_token_set), list(element_b_unique_token_set)]
@@ -750,14 +753,14 @@ Model evaluation
 """
 
 
-@app.route("/workspace/<workspace_id>/evaluation_elements", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/evaluation_elements", methods=['GET'])
 @login_if_required
 def get_elements_for_precision_evaluation(workspace_id):
-    size = CONFIGURATION.precision_evaluation_size
+    size = current_app.config["CONFIGURATION"].precision_evaluation_size
     category = request.args.get('category_name')
-    random_state = len(orchestrator_api.get_all_iterations_for_category(workspace_id, category))
+    random_state = len(current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category))
     positive_predicted_elements = \
-        orchestrator_api.sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False,
+        current_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False,
                                                        required_label=LABEL_POSITIVE, random_state=random_state)
     elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category)
     logging.info(f"sampled {len(elements_transformed)} elements for evaluation")
@@ -765,7 +768,7 @@ def get_elements_for_precision_evaluation(workspace_id):
     return jsonify(res)
 
 
-@app.route('/workspace/<workspace_id>/estimate_precision', methods=['POST'])
+@main_blueprint.route('/workspace/<workspace_id>/estimate_precision', methods=['POST'])
 @login_if_required
 @cross_origin()
 def run_precision_evaluation(workspace_id):
@@ -781,7 +784,7 @@ def run_precision_evaluation(workspace_id):
     ids = post_data["ids"]
     changed_elements_count = post_data["changed_elements_count"]
     model_id = post_data["model_id"]
-    score = orchestrator_api.estimate_precision(workspace_id, category_name, ids, changed_elements_count, model_id)
+    score = current_app.orchestrator_api.estimate_precision(workspace_id, category_name, ids, changed_elements_count, model_id)
     res = {'score': score}
     return jsonify(res)
 
@@ -791,12 +794,12 @@ Information on enriched tokens in a specific subset of elements, used for visual
 """
 
 
-@app.route("/workspace/<workspace_id>/labeled_info_gain", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/labeled_info_gain", methods=['GET'])
 @login_if_required
 def get_labeled_elements_enriched_tokens(workspace_id):
     category = request.args.get('category_name')
     elements = \
-        orchestrator_api.get_all_labeled_text_elements(workspace_id, orchestrator_api.get_dataset_name(workspace_id),
+        current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, current_app.orchestrator_api.get_dataset_name(workspace_id),
                                                        category)
     res = dict()
     if elements and len(elements) > 0:
@@ -805,7 +808,7 @@ def get_labeled_elements_enriched_tokens(workspace_id):
     return jsonify(res)
 
 
-@app.route("/workspace/<workspace_id>/predictions_info_gain", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/predictions_info_gain", methods=['GET'])
 @login_if_required
 @cross_origin()
 def get_predictions_enriched_tokens(workspace_id):
@@ -817,13 +820,13 @@ def get_predictions_enriched_tokens(workspace_id):
     res = dict()
     category = request.args.get('category_name')
 
-    if len(orchestrator_api.get_all_iterations_by_status(workspace_id, category, IterationStatus.READY)) == 0:
+    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category, IterationStatus.READY)) == 0:
         res['info_gain'] = []
         return jsonify(res)
 
-    true_elements = orchestrator_api.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
+    true_elements = current_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
                                                                    required_label=LABEL_POSITIVE)
-    false_elements = orchestrator_api.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
+    false_elements = current_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category, 1000, unlabeled_only=True,
                                                                     required_label=LABEL_NEGATIVE)
     elements = true_elements + false_elements
     boolean_labels = [LABEL_POSITIVE] * len(true_elements) + [LABEL_NEGATIVE] * len(false_elements)

@@ -6,8 +6,8 @@ import unittest
 import dacite
 
 import label_sleuth.config
+from label_sleuth import config
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
-from label_sleuth.app import ROOT_DIR
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
@@ -23,25 +23,18 @@ class TestAppIntegration(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.temp_dir = tempfile.TemporaryDirectory()
+
         app.app.test_request_context("/")
         app.app.config['TESTING'] = True
         app.app.config['LOGIN_DISABLED'] = True
-        print(os.getcwd())
-        app.CONFIGURATION = label_sleuth.config.load_config(os.path.join(ROOT_DIR, "config_for_tests.json"))
-        app.orchestrator_api.config = app.CONFIGURATION
-        app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.CONFIGURATION.users}
+        root_dir = os.path.abspath(os.path.join(__file__, os.pardir))
+        app.setup_app(config.load_config(os.path.join(root_dir, "config_for_tests.json")),cls.temp_dir.name)
+        # app.CONFIGURATION = label_sleuth.config.load_config(os.path.join(ROOT_DIR, "config_for_tests.json"))
+        # app.orchestrator_api.config = app.CONFIGURATION
 
-        app.tokens = [user.token for user in app.users.values()]
-        cls.temp_dir = tempfile.TemporaryDirectory()
-        app.ROOT_DIR = cls.temp_dir.name
+
         print(f"Integration tests, all output files will be written under {cls.temp_dir}")
-
-        app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(app.ROOT_DIR, "output", "workspaces")),
-                                               FileBasedDataAccess(os.path.join(app.ROOT_DIR, "output")),
-                                               ActiveLearningFactory(),
-                                               ModelFactory(os.path.join(app.ROOT_DIR, "output", "models"),
-                                                            ModelsBackgroundJobsManager()),
-                                               app.CONFIGURATION)
         cls.client = app.app.test_client()
 
     @classmethod
