@@ -8,7 +8,6 @@ from unittest.mock import patch
 import pandas as pd
 
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
-from label_sleuth.app import ROOT_DIR
 from label_sleuth.config import load_config
 from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, LABEL_NEGATIVE, LABEL_POSITIVE
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
@@ -43,7 +42,9 @@ class TestOrchestratorAPI(unittest.TestCase):
         cls.orchestrator_state = OrchestratorStateApi(os.path.join(cls.temp_dir.name, "output", "workspaces"))
         cls.orchestrator_api = OrchestratorApi(cls.orchestrator_state, cls.data_access, cls.active_learning_factory,
                                                cls.model_factory,
-                                               load_config(os.path.join(ROOT_DIR, "config_for_tests.json")))
+                                               load_config(os.path.abspath(os.path.join(__file__, os.pardir,
+                                                                                        os.pardir,
+                                                                                        "config_for_tests.json"))))
 
     @classmethod
     def tearDownClass(cls):
