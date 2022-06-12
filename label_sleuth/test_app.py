@@ -1,5 +1,6 @@
 import io
 import os
+import time
 import tempfile
 import unittest
 import dacite
@@ -11,7 +12,7 @@ from label_sleuth.configurations.users import User
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.models_factory import ModelFactory
-from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi
+from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, IterationStatus
 from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi
 import label_sleuth.app as app
 
@@ -124,24 +125,52 @@ class TestAppIntegration(unittest.TestCase):
                          res.get_json(), msg="diffs in get status response after setting a label")
 
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[1]["id"]}',
-                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, True), headers=HEADERS)
-
-        self.assertEqual(200, res.status_code, msg="Failed to set the second label for category")
+                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, False), headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to set the second label for a category")
         self.assertEqual({'category_name': 'my_category',
                           'element': {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 108,
                                       'id': 'my_test_dataset-document3-1', 'model_predictions': {},
                                       'text': 'document 3 has three text elements, this is the second',
+                                      'user_labels': {'my_category': 'false'}}, 'workspace_id': 'my_test_workspace'},
+                         res.get_json(), msg="diff in setting element's label response")
+        res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
+        self.assertEqual({'labeling_counts': {'true': 1, 'false': 1}, 'notifications': [], 'progress': {'all': 50}},
+                         res.get_json(), msg="diffs in get status response after setting a label")
+
+        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[2]["id"]}',
+                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, True), headers=HEADERS)
+
+        self.assertEqual(200, res.status_code, msg="Failed to set the third label for category")
+        self.assertEqual({'category_name': 'my_category',
+                          'element': {'begin': 109, 'docid': 'my_test_dataset-document3', 'end': 162,
+                                      'id': 'my_test_dataset-document3-2', 'model_predictions': {},
+                                      'text': 'document 3 has three text elements, this is the third',
                                       'user_labels': {'my_category': 'true'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json())
 
         res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
                               headers=HEADERS)
-        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the second label")
-        self.assertEqual({'labeling_counts': {'true': 2}, 'notifications': [], 'progress': {'all': 100}},
-                         res.get_json(), msg="diffs in get status response after setting the second label")
+        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the third label")
+        self.assertEqual({'true': 2,'false': 1},
+                         res.get_json()['labeling_counts'], msg="diffs in get status response after setting the second label")
 
-        res = self.client.get(f"/workspace/{workspace_name}/models?category_name={category_name}",
-                              headers=HEADERS)
+        waiting_count = 0
+        MAX_WAITING_FOR_TRAINING = 50 # wait maximum 5 seconds for the training (should be much faster)
+        while waiting_count < MAX_WAITING_FOR_TRAINING:
+            # since get_status is asynchronously starting a new training, we need to wait until it added to the
+            # iterations list and finishes successfully
+            res = self.client.get(f"/workspace/{workspace_name}/models?category_name={category_name}",
+                                  headers=HEADERS)
+            if res.status_code!= 200 or (len(res.get_json()["models"])==1
+                                         and res.get_json()['models'][0]['active_learning_status']==IterationStatus.READY.name):
+                break
+            time.sleep(0.1)
+            waiting_count += 1
+
         self.assertEqual(200, res.status_code, msg="Failed to get models list")
+
+
 
         print("Done")
