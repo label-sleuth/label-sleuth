@@ -50,7 +50,9 @@ pip install -r label_sleuth/requirements.txt
 </p>
 </details>
 
-4. Start Label Sleuth server `python -m label_sleuth.start_label_sleuth`
+4. Start Label Sleuth server `python -m label_sleuth.start_label_sleuth`. Default port is 8000, to change the port add `--port <port_number>`.
+
+   Latest version of the frontend is precompiled in this repo and can be accessed by browsing http://localhost:8000
 
 ## Adapting to additional scenarios
 ### Implementing a new machine learning model
