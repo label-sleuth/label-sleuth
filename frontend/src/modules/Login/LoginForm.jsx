@@ -10,7 +10,7 @@ import { getAuthenticated, clearState } from './LoginSlice';
 import 'react-toastify/dist/ReactToastify.css';
 import classes from "./login.module.css";
 import sleuth_logo from "../../assets/sleuth_logo.png"
-import { APP_NAME } from '../../config';
+import { APP_NAME, WORKSPACE_CONFIG_PATH } from '../../config';
 
 const LoginForm = () => {
     
@@ -20,7 +20,7 @@ const LoginForm = () => {
 
     useEffect(() => {
         if (token) {
-            navigate('/workspaces')
+            navigate(WORKSPACE_CONFIG_PATH)
         }
 
     }, [navigate, token])

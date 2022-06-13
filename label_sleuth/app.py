@@ -56,7 +56,6 @@ def create_app(config, output_dir) -> Flask:
 
 
 def start_server(app, port=8000):
-    logging.info(f"Starting SLEUTH classification server on port {port}")
     disable_html_printouts = False
     if disable_html_printouts:
         logging.getLogger('werkzeug').disabled = True
