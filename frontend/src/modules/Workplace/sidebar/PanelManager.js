@@ -1,9 +1,9 @@
 import React from "react";
 import { Box } from '@mui/material';
 import useSearchElement from "./customHooks/useSearchElement";
+import { SEARCH, RCMD } from '../../../const'
 
-
-export const PanelManager = ({ updateMainLabelState, children }) => {
+export const PanelManager = ({ activePanel, updateMainLabelState, children }) => {
 
     const { handleSearchPanelClick,
         handleSearchInputEnterKey,
@@ -21,7 +21,7 @@ export const PanelManager = ({ updateMainLabelState, children }) => {
             //         updateMainLabelState,
             //     });
             // }
-            if (child.type.name == "SearchPanel") {
+            if (activePanel == SEARCH) {
                 return React.cloneElement(child, {
                     handleSearchPanelClick,
                     handleSearchInputEnterKey,
@@ -33,7 +33,7 @@ export const PanelManager = ({ updateMainLabelState, children }) => {
                     updateMainLabelState,
                 });
             }
-            else if (child.type.name == "RecToLabelPanel") {
+            else if (activePanel == RCMD) {
                 return React.cloneElement(child, {
                     handleSearchPanelClick,
                     searchInput,

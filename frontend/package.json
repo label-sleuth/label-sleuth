@@ -41,6 +41,7 @@
     "start:remote": "env-cmd -f .env.remote react-scripts start",
     "build:testing": "env-cmd -f .env.testing react-scripts build",
     "build": "env-cmd -f .env.production react-scripts build",
+    "build:remote": "env-cmd -f .env.remote react-scripts build",
     "build:development": "env-cmd -f .env.development react-scripts build" 
   },
   "eslintConfig": {
