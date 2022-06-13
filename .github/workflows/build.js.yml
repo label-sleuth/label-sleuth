@@ -32,8 +32,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-          cache-dependency-path: ./frontend/package-lock.json
+#          cache: 'npm'
+#          cache-dependency-path: ./frontend/package-lock.json
 
       - name: Install our dependcies
         run: npm ci --force
@@ -44,7 +44,7 @@ jobs:
         working-directory: ./frontend
 
       - name: Build static web site
-        run: npm run build:production
+        run: npm run build
         working-directory: ./frontend
         env:
           CI: false
