@@ -9,7 +9,6 @@ import sleuth_logo from '../Asset/sleuth_logo.png';
 import info_icon from '../../../assets/workspace/help.svg';
 import logout_icon from '../../../assets/workspace/logout.svg';
 import workspace_icon from '../../../assets/workspace/change_catalog.svg';
-import LinearWithValueLabel from './ModelProgressBar'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchElements, downloadLabeling, getElementToLabel, checkStatus, fetchCategories, getPositiveElementForCategory, checkModelUpdate, fetchDocuments, setWorkspaceId } from '../DataSlice.jsx';
 import Stack from '@mui/material/Stack';
@@ -335,8 +334,6 @@ export default function Workspace({workspaceId}) {
                                     : <Typography><strong>None</strong></Typography>
                             }
                         </ModelName>
-                        <LinearWithValueLabel />
-                        <div className={classes.modelStatus}>{workspace['modelStatus']}</div>
                         <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
                     </Stack>
 
