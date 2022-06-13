@@ -4,14 +4,17 @@ import Login from './modules/Login/index';
 import WorkspaceConfig from './modules/Workspace-config/index';
 import Workplace from './modules/Workplace';
 import { PrivateRoute } from './features/PrivateRoute'
-import {WORKSPACE_CONFIG_PATH, WORKSPACE_PATH} from './config'
+import {AUTH_ENABLED, WORKSPACE_CONFIG_PATH, WORKSPACE_PATH, LOGIN_PATH} from './config'
+import React from 'react';
+import { Navigate } from 'react-router-dom'
+import { useAuth } from './customHooks/useAuth';
 
 function App() {
-
+  const isAuthenticated = useAuth()
   return (
     <div>
       <Routes>
-        <Route path="/" element={<Login />} />
+        {AUTH_ENABLED ? <Route path={LOGIN_PATH} exact element={<Login />}/> : null}
         <Route
           path={WORKSPACE_CONFIG_PATH}
           exact
@@ -34,7 +37,7 @@ function App() {
           path="/"
           exact
           element={
-              <Workplace />
+            isAuthenticated ? <Navigate to={WORKSPACE_CONFIG_PATH}/> : <Navigate to={LOGIN_PATH}/> 
           }
         />
       </Routes>
