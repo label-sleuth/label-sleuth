@@ -19,6 +19,7 @@ import useLogOut from '../../../customHooks/useLogOut';
 import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
 import { APP_NAME, WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
+import { toast } from 'react-toastify';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -103,6 +104,19 @@ export default function Workspace({workspaceId}) {
     const [tabStatus, setTabStatus] = React.useState(0)
     const refAnimationInstance = useRef(null);
     
+    // this state is used to not display the new model notififications the first time the model version is set
+    const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false)
+
+
+    const notifySuccess = (message) => toast.success(message);
+
+
+    React.useEffect( () => {
+        if (!modelVersionHasBeenSet) {
+            setModelVersionHasBeenSet(true)
+        }
+      }, [workspace.model_version])
+    
     React.useEffect(()=>{
         if(workspaceId){
             dispatch(setWorkspaceId(workspaceId))
@@ -176,6 +190,8 @@ export default function Workspace({workspaceId}) {
             }
 
         }, 5000);
+        
+        setModelVersionHasBeenSet(false)
 
         return () => clearInterval(interval);
 
@@ -184,10 +200,10 @@ export default function Workspace({workspaceId}) {
     React.useEffect(() => {
 
         console.log(`model updated, data retrieved, model version: ${workspace.model_version}`)
-        if (workspace.model_version > 0) {
+        if (workspace.model_version > -1 && modelVersionHasBeenSet) {
             fire();
+            notifySuccess('A new model is available!')
         }
-
         dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
 
     }, [workspace.model_version])
