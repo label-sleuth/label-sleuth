@@ -38,10 +38,10 @@ const Sidebar = ({ open, setOpen }) => {
                 open={open}
                 onClose={handleDrawerClose}
             >
-                <PanelManager activePanel={activePanel} updateMainLabelState={updateMainLabelState} >
+                <PanelManager  activePanel={activePanel} updateMainLabelState={updateMainLabelState} >
                     {open && activePanel == SEARCH &&
                         <SearchPanel
-                            handleDrawerClose={handleDrawerClose} 
+                            handleDrawerClose={handleDrawerClose}
                             newLabelState={newSearchLabelState}
                             currLabelState={currSearchLabelState}
                             updateLabelState={updateSearchLabelState}
