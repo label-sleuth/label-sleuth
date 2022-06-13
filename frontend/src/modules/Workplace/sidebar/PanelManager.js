@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import useSearchElement from "./customHooks/useSearchElement";
 
 
-export const PanelManager = ({ handleDrawerClose, updateMainLabelState, children }) => {
+export const PanelManager = ({ updateMainLabelState, children }) => {
 
     const { handleSearchPanelClick,
         handleSearchInputEnterKey,
@@ -23,7 +23,6 @@ export const PanelManager = ({ handleDrawerClose, updateMainLabelState, children
             // }
             if (child.type.name == "SearchPanel") {
                 return React.cloneElement(child, {
-                    handleDrawerClose,
                     handleSearchPanelClick,
                     handleSearchInputEnterKey,
                     handleSearch,
@@ -36,7 +35,6 @@ export const PanelManager = ({ handleDrawerClose, updateMainLabelState, children
             }
             else if (child.type.name == "RecToLabelPanel") {
                 return React.cloneElement(child, {
-                    handleDrawerClose,
                     handleSearchPanelClick,
                     searchInput,
                     updateMainLabelState,
