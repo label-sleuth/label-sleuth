@@ -3,6 +3,7 @@ import { useCallback, useRef } from "react";
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import CreateCategoryModal from './upperbar/Modal';
+import { ToastContainer } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchElements,
@@ -42,48 +43,6 @@ export default function Workspace() {
       }
     }
   }
-
-  const refAnimationInstance = useRef(null);
-
-  const makeShot = useCallback((particleRatio, opts) => {
-    refAnimationInstance.current &&
-      refAnimationInstance.current({
-        ...opts,
-        origin: { y: 0.7 },
-        particleCount: Math.floor(100 * particleRatio),
-        colors: ["#BE3092", "#166CFF", "#8ECCF3", "#88A8FB"]
-      });
-  }, []);
-
-  const fire = useCallback(() => {
-
-    makeShot(0.25, {
-      spread: 26,
-      startVelocity: 55
-    });
-
-    makeShot(0.2, {
-      spread: 60
-    });
-
-    makeShot(0.35, {
-      spread: 100,
-      decay: 0.91,
-      scalar: 0.8
-    });
-
-    makeShot(0.1, {
-      spread: 120,
-      startVelocity: 25,
-      decay: 0.92,
-      scalar: 1.2
-    });
-
-    makeShot(0.1, {
-      spread: 120,
-      startVelocity: 45
-    });
-  }, [makeShot]);
 
   const handleClick = (event, id) => {
     if (event.detail == 1) {
@@ -125,16 +84,6 @@ export default function Workspace() {
   React.useEffect(() => {
     setNumLabelGlobal({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
   }, [workspace.pos_label_num])
-
-  React.useEffect(() => {
-    console.log(`model updated, data retrieved, model version: ${workspace.model_version}`)
-    if (workspace.model_version > 0) {
-      fire();
-    }
-    dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
-
-  }, [workspace.model_version])
-
 
   return (
     <Box sx={{ display: 'flex' }}>
