@@ -330,7 +330,7 @@ export default function Workspace({workspaceId}) {
                         <ModelName>
                             <Typography>Current Model:</Typography>
                             {
-                                workspace.model_version > -1 ? <Typography><strong>v.{workspace.model_version}_Model</strong></Typography>
+                                workspace.model_version > -1 ? <Typography><strong>{workspace.model_version}<sup>st</sup> version</strong></Typography>
                                     : <Typography><strong>None</strong></Typography>
                             }
                         </ModelName>
