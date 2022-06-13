@@ -4,6 +4,7 @@ import Login from './modules/Login/index';
 import WorkspaceConfig from './modules/Workspace-config/index';
 import Workplace from './modules/Workplace';
 import { PrivateRoute } from './features/PrivateRoute'
+import {WORKSPACE_CONFIG_PATH, WORKSPACE_PATH} from './config'
 
 function App() {
 
@@ -12,7 +13,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route
-          path="/workspaces"
+          path={WORKSPACE_CONFIG_PATH}
           exact
           element={
             <PrivateRoute>
@@ -21,7 +22,7 @@ function App() {
           }
         />
         <Route
-          path="/workspace"
+          path={WORKSPACE_PATH}
           exact
           element={
             <PrivateRoute>

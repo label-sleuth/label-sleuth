@@ -19,7 +19,7 @@ import Tab from '@mui/material/Tab';
 import useLogOut from '../../../customHooks/useLogOut';
 import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
-import { APP_NAME } from '../../../config';
+import { APP_NAME, WORKSPACE_CONFIG_PATH } from '../../../config';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -263,7 +263,7 @@ export default function Workspace({workspaceId}) {
                             <label>Workspace</label>
                             <p><b>{workspaceId}</b></p>
                         </div>
-                        <img onClick={()=>{navigate('/workspaces')}} className={classes.workspace_nav} src={workspace_icon} alt="Change to Another Workspace" style={{marginBottom: '10px'}}/> 
+                        <img onClick={()=>{navigate(WORKSPACE_CONFIG_PATH)}} className={classes.workspace_nav} src={workspace_icon} alt="Change to Another Workspace" style={{marginBottom: '10px'}}/> 
                     </DrawerHeader>
                     
                     <Divider />
