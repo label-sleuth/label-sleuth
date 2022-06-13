@@ -33,7 +33,7 @@ const WorkspaceConfig = () => {
   return (
     <>
       <ButtonAppBar logout={logout} />
-      <ToastContainer position="top-center" />
+      <ToastContainer position="top-center" theme='dark'/>
       <div className={classes.container}>
         <div/>
         <div>
