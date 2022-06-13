@@ -39,7 +39,6 @@ const useSearchElement = () => {
     }
 
     const scrollIntoElementView = (element) => {
-        console.log("scrollIntoElementView---", element)
         element && element.scrollIntoView({
             behavior: "smooth",
             block: "start"
@@ -55,8 +54,6 @@ const useSearchElement = () => {
             else {
                 element = document.getElementById('L' + searchedIndex);
             }
- 
-            console.log("useEffect---", focusedIndex)
             scrollIntoElementView(element)
             dispatch(setIsSearchActive(false))
         }
@@ -64,7 +61,7 @@ const useSearchElement = () => {
 
 
     const handleSearchPanelClick = (e) => {
-
+        e.stopPropagation()
         let id = e.target.parentNode.parentNode.id;
         const lastIndex = id.lastIndexOf('-');
         const docid = id.slice(0, lastIndex);
