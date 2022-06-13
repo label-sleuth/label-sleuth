@@ -43,6 +43,7 @@
     "build": "env-cmd -f .env.production react-scripts build",
     "build:remote": "env-cmd -f .env.remote react-scripts build",
     "build:development": "env-cmd -f .env.development react-scripts build" 
+    "build:production.auth": "env-cmd -f .env.production.auth react-scripts build" 
   },
   "eslintConfig": {
     "extends": [

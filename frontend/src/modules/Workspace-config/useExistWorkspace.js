@@ -4,6 +4,7 @@ import { getWorkspaces, setActiveWorkspace } from './workspaceConfigSlice'
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { WORKSPACE_PATH } from '../../config';
 
 const useExistWorkspace = () => {
 
@@ -32,7 +33,7 @@ const useExistWorkspace = () => {
         }
         dispatch(setActiveWorkspace(value))
         window.localStorage.setItem('workspaceId', JSON.stringify(value));
-        navigate('/workspace')
+        navigate(WORKSPACE_PATH)
     };
 
     const options = workspaces.map((item) => ({ value: item, title: item }))

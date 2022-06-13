@@ -19,7 +19,7 @@ import Tab from '@mui/material/Tab';
 import useLogOut from '../../../customHooks/useLogOut';
 import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
-import { APP_NAME } from '../../../config';
+import { APP_NAME, WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -249,7 +249,7 @@ export default function Workspace({workspaceId}) {
                             {APP_NAME}
                             <img onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
                         </h2>
-                        <img onClick={logout} className={classes.logout} src={logout_icon}/> 
+                        { AUTH_ENABLED ? <img onClick={logout} className={classes.logout} src={logout_icon}/> : null }
                     </DrawerHeader>
 
                     <p className={classes.sleuth_desc}>A tool that allows humans to work effectively with partial-automation ML models, making data annotation more efficient and more effective in the NLP domain.</p>
@@ -258,12 +258,18 @@ export default function Workspace({workspaceId}) {
                     
                     <DrawerHeader style={{padding: '12px 16px', alignItems: 'flex-end'}}>
                         <div className={classes.account_info}>
-                            <label>User ID</label>
-                            <p><b>{localStorage.username}</b></p>
+                            {AUTH_ENABLED ? 
+                            <div> 
+                                <label>User ID</label>
+                                <p>
+                                    <b>{localStorage.username}</b>
+                                </p>
+                            </div>
+                            : null}
                             <label>Workspace</label>
                             <p><b>{workspaceId}</b></p>
                         </div>
-                        <img onClick={()=>{navigate('/workspaces')}} className={classes.workspace_nav} src={workspace_icon} alt="Change to Another Workspace" style={{marginBottom: '10px'}}/> 
+                        <img onClick={()=>{navigate(WORKSPACE_CONFIG_PATH)}} className={classes.workspace_nav} src={workspace_icon} alt="Change to Another Workspace" style={{marginBottom: '10px'}}/> 
                     </DrawerHeader>
                     
                     <Divider />

@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import sleuth_logo from "../../../assets/sleuth_logo.png";
-import  {APP_NAME} from "../../../config"
+import  {APP_NAME, AUTH_ENABLED} from "../../../config"
 
 export default function ButtonAppBar({logout}) {
   return (
@@ -31,7 +31,7 @@ export default function ButtonAppBar({logout}) {
           <img src={sleuth_logo} style={{ width: '20px', height: '20px'}}/>
           </IconButton>
           <Typography variant="p" component="div" style={{ flexGrow: 1, paddingTop: '2px' }}><b style={{fontWeight: 600}}>{APP_NAME}</b></Typography>
-          <Button color="inherit" onClick={logout}>Logout</Button>
+          {AUTH_ENABLED ? <Button color="inherit" onClick={logout}>Logout</Button> : null }
         </Toolbar>
       </AppBar>
     </Box>
