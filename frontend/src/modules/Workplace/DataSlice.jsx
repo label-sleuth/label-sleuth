@@ -42,7 +42,6 @@ const initialState = {
     activePanel: "",
 }
 
-const token = localStorage.getItem('token')
 const BASE_URL = process.env.REACT_APP_API_URL
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
@@ -70,7 +69,7 @@ export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -89,7 +88,7 @@ export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel',
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -114,7 +113,7 @@ export const getPositiveElementForCategory = createAsyncThunk('workspace/getPosi
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -135,7 +134,7 @@ export const createCategoryOnServer = createAsyncThunk('workspace/createCategory
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         body: JSON.stringify({
             'category_name': category,
@@ -163,7 +162,7 @@ export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -184,7 +183,7 @@ export const fetchNextDocElements = createAsyncThunk('workspace/fetchNextDoc', a
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -205,7 +204,7 @@ export const fetchPrevDocElements = createAsyncThunk('workspace/fetchPrevDoc', a
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -227,7 +226,7 @@ export const fetchElements = createAsyncThunk('workspace/fetchElements', async (
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -252,7 +251,7 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => {
@@ -273,7 +272,7 @@ export const downloadLabeling = createAsyncThunk('workspace/downloadLabeling', a
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'text/csv;charset=UTF-8',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(res => res.text())
@@ -292,7 +291,7 @@ export const labelInfoGain = createAsyncThunk('workspace/labeled_info_gain', asy
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -309,7 +308,7 @@ export const fetchCategories = createAsyncThunk('workspace/get_all_categories', 
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -328,7 +327,7 @@ export const checkModelUpdate = createAsyncThunk('workspace/check_model_update',
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -350,7 +349,7 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         body: JSON.stringify({
             'category_name': state.workspace.curCategory,
@@ -374,7 +373,7 @@ export const checkStatus = createAsyncThunk('workspace/get_labelling_status', as
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
