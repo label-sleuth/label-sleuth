@@ -12,6 +12,7 @@ import right_icon from '../../../assets/workspace/doc_right.svg'
 import CircularProgress from '@mui/material/CircularProgress';
 import useFetchPrevNextDoc from './customHooks/useFetchPrevNextDoc'
 import Tooltip from '@mui/material/Tooltip';
+import { PREV_DOC_TOOLTIP_MSG, NEXT_DOC_TOOLTIP_MSG } from '../../../const';
 
 const numOfElemPerPage = 500;
 const rightDrawerWidth = 360;
@@ -57,7 +58,7 @@ const MainContent = ({ handleKeyEvent, handleClick, open }) => {
     <>
       <Main className={classes.main_content} open={open}>
         <div className={classes.doc_header}>
-        <Tooltip title="Go to the previous document" placement="right">
+        <Tooltip title={PREV_DOC_TOOLTIP_MSG} placement="right">
             <button className={classes.doc_button} onClick={handleFetchPrevDoc}>
               <img src={left_icon} />
             </button>
@@ -76,7 +77,7 @@ const MainContent = ({ handleKeyEvent, handleClick, open }) => {
               <em>Text Entries: {workspace.elements.length}</em>
             </div>
           )}
-          <Tooltip title="Go to the next document" placement="left">
+          <Tooltip title={NEXT_DOC_TOOLTIP_MSG} placement="left">
             <button className={classes.doc_button} onClick={handleFetchNextDoc}>
               <img src={right_icon} />
             </button>
