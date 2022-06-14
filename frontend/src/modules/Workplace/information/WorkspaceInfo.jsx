@@ -15,11 +15,13 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import { Tooltip } from '@mui/material';
 import useLogOut from '../../../customHooks/useLogOut';
 import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
 import { APP_NAME, WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
 import { toast } from 'react-toastify';
+import { LOGOUT_TOOLTIP_MSG, GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG } from '../../../const';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -264,7 +266,11 @@ export default function Workspace({workspaceId}) {
                             {APP_NAME}
                             <img onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
                         </h2>
-                        { AUTH_ENABLED ? <img onClick={logout} className={classes.logout} src={logout_icon}/> : null }
+                        { AUTH_ENABLED ?   
+                            <Tooltip title={LOGOUT_TOOLTIP_MSG} placement='right'>
+                                <img onClick={logout} className={classes.logout} src={logout_icon}/>
+                            </Tooltip>
+                        : null }
                     </DrawerHeader>
 
                     <p className={classes.sleuth_desc}>A tool that allows humans to work effectively with partial-automation ML models, making data annotation more efficient and more effective in the NLP domain.</p>
@@ -284,7 +290,9 @@ export default function Workspace({workspaceId}) {
                             <label>Workspace</label>
                             <p><b>{workspaceId}</b></p>
                         </div>
-                        <img onClick={()=>{navigate(WORKSPACE_CONFIG_PATH)}} className={classes.workspace_nav} src={workspace_icon} alt="Change to Another Workspace" style={{marginBottom: '10px'}}/> 
+                        <Tooltip title={GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG} placement='right'>
+                            <img onClick={()=>{navigate(WORKSPACE_CONFIG_PATH)}} className={classes.workspace_nav} src={workspace_icon} alt="Change to Another Workspace" style={{marginBottom: '10px'}}/> 
+                        </Tooltip>
                     </DrawerHeader>
                     
                     <Divider />
