@@ -5,16 +5,6 @@ import CreateCategoryModal from './upperbar/Modal';
 import { ToastContainer } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  fetchElements,
-  getElementToLabel,
-  checkStatus,
-  fetchCategories,
-  checkModelUpdate,
-  fetchDocuments,
-  setFocusedState,
-  setIsDocLoaded,
-  setIsCategoryLoaded,
-  setNumLabelGlobal,
   setSearchInput,
   resetSearchResults,
 } from './DataSlice.jsx';
@@ -26,13 +16,13 @@ import { IconButton, Tooltip } from '@mui/material';
 import classes from './sidebar/index.module.css';
 import search_icon from './Asset/search.svg';
 import recommend_icon from './Asset/query-queue.svg'
-import { SEARCH_ALL_DOCS_TOOLTIP_MSG, NEXT_TO_LABEL_TOOLTIP_MSG, SEARCH, RCMD, RIGHT_DRAWER_WIDTH } from '../../const'
+import { SEARCH_ALL_DOCS_TOOLTIP_MSG, NEXT_TO_LABEL_TOOLTIP_MSG, SEARCH, RCMD } from '../../const'
 import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
 import Drawer from '@mui/material/Drawer';
 import { PanelManager } from "./PanelManager";
-import useUpdateLabelState from "./sidebar/customHooks/useUpdateLabelState";
 import SearchPanel from "./sidebar/SearchPanel";
 import RecToLabelPanel from "./sidebar/RecToLabelPanel";
+import useWorkspaceState from './useWorkspaceState';
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
@@ -45,10 +35,9 @@ export default function Workspace() {
   const { handleDrawerClose, activateSearchPanel, activateRecToLabelPanel } = useTogglePanel(setOpen)
   const activePanel = useSelector(state => state.workspace.activePanel)
 
+  const dispatch = useDispatch();
 
   const handleKeyEvent = (event, len_elements) => {
-
-    console.log("key pressed")
     if (event.key === "ArrowDown") {
       if (workspace.focusedIndex < len_elements) {
         dispatch(setFocusedState(workspace.focusedIndex + 1))
@@ -60,51 +49,11 @@ export default function Workspace() {
     }
   }
 
-
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(setIsCategoryLoaded(false));
-    dispatch(setIsDocLoaded(false));
-    dispatch(checkModelUpdate());
-    dispatch(fetchDocuments()).then(() =>
-      dispatch(fetchElements()).then(() =>
-        dispatch(fetchCategories()).then(() => {
-          if (workspace.curCategory) {
-            dispatch(checkStatus());
-            dispatch(getElementToLabel());
-          }
-          dispatch(setIsCategoryLoaded(true));
-          dispatch(setIsDocLoaded(true));
-        })
-      )
-    );
-
-    const interval = setInterval(() => {
-      console.log(`curCategory value: ${workspace.curCategory}`)
-      if (workspace.curCategory != null) {
-        dispatch(checkModelUpdate()).then(() => {
-        })
-      } else {
-
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [workspace.curCategory])
+  useWorkspaceState()
 
   useEffect(() => {
-    setNumLabelGlobal({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
-  }, [workspace.pos_label_num])
-
-  useEffect(() => {
-    if (!workspace.curDocName || (!isCategoryLoaded) || !isDocLoaded) {
-      setOpenBackdrop(!openBackdrop)
-    }
-    else {
-      { setOpenBackdrop(false) }
-    }
-
-  }, [workspace.curDocName, isCategoryLoaded, !isDocLoaded])
+    setOpenBackdrop(!workspace.curDocName || !isCategoryLoaded || !isDocLoaded)
+  }, [workspace.curDocName, isCategoryLoaded, isDocLoaded])
 
   const textInput = useRef(null);
 
@@ -119,10 +68,8 @@ export default function Workspace() {
   }
 
   useEffect(() => {
-    if (isCategoryLoaded) {
-      clearSearchInput()
-    }
-  }, [isCategoryLoaded])
+    clearSearchInput()
+  }, [workspace.curCategory])
 
 
   return (

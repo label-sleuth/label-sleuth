@@ -10,7 +10,7 @@ import info_icon from '../../../assets/workspace/help.svg';
 import logout_icon from '../../../assets/workspace/logout.svg';
 import workspace_icon from '../../../assets/workspace/change_catalog.svg';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchElements, downloadLabeling, getElementToLabel, checkStatus, fetchCategories, getPositiveElementForCategory, checkModelUpdate, fetchDocuments, setWorkspaceId } from '../DataSlice.jsx';
+import { downloadLabeling, checkModelUpdate, setWorkspaceId } from '../DataSlice.jsx';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
@@ -130,7 +130,6 @@ export default function Workspace({workspaceId}) {
                     notifySuccess('There are new suggestions for labeling!')
                 }
             }
-            dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
         }
       }, [workspace.model_version])
     
@@ -187,32 +186,16 @@ export default function Workspace({workspaceId}) {
     const dispatch = useDispatch();
 
     React.useEffect(() => {
-
-        dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories()).then(() => {
-            dispatch(checkStatus()).then(() => {
-                dispatch(getElementToLabel()).then(() => {
-
-                })
-            })
-        })))
-
         const interval = setInterval(() => {
-
-            console.log(`curCategory value: ${workspace.curCategory}`)
-
             if (workspace.curCategory != null) {
-                dispatch(checkModelUpdate()).then(() => {
-                })
-            } else {
+                dispatch(checkModelUpdate())
             }
-
         }, 5000);
-        
+
         setModelVersionHasBeenSet(false)
         setShouldNotifyNewModel(false)
 
         return () => clearInterval(interval);
-
     }, [workspace.curCategory])
 
     const handleChange = (event, newValue) => {
