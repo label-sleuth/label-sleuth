@@ -5,9 +5,9 @@ Label Sleuth is an open source project committed to bringing NLP model creation 
 ## How can I contribute?
 
 There are multiple ways to contribute to the project:
-- Report bugs
-- Request new features
-- Contribute code
+- [Report bugs](#reporting-bugs)
+- [Request new features](#requesting-new-features)
+- [Contribute code](#contributing-code)
 
 ## Reporting Bugs
 
