@@ -792,7 +792,10 @@ const DataSlice = createSlice({
                 }
             }
 
-            console.log(`latest model version: ${latest_model_version}`)
+            // if there is a model available, start counting the version from 1 (not 0)
+            if (latest_model_version >= 0) {
+                latest_model_version += 1
+            }
 
             return {
                 ...state,
