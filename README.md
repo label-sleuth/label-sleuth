@@ -55,7 +55,7 @@ pip install -r label_sleuth/requirements.txt
 </p>
 </details>
 
-4. Start the Label Sleuth server: `python -m label_sleuth.start_label_sleuth`. Default port is 8000, to change the port add `--port <port_number>`.
+4. Start the Label Sleuth server:`cd to label_sleuth` directory and run `python -m label_sleuth.start_label_sleuth`. Default port is 8000, to change the port add `--port <port_number>`.
 
    The system can then be accessed by browsing to http://localhost:8000 (or http://localhost:<port_number>)
 
