@@ -4,6 +4,7 @@ export const PREV_DOC_TOOLTIP_MSG = "Go to previous document"
 export const NEXT_DOC_TOOLTIP_MSG = "Go to next document"
 export const LOGOUT_TOOLTIP_MSG = "Logout"
 export const GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG = "Go to workspace configuration"
+export const NO_MODEL_AVAILABLE_MSG = "not available yet"
 export const SEARCH = 'search'
 export const RCMD = 'rcmd'
 export const RIGHT_DRAWER_WIDTH = 360
