@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import List, Mapping, Sequence
 
 from flask import current_app
@@ -88,3 +89,7 @@ def extract_enriched_ngrams_and_weights_list(elements, boolean_labels):
 
     ngrams_and_weights_list = [{'text': ngram, 'weight': weight} for ngram, weight in enriched_ngrams_and_weights]
     return ngrams_and_weights_list[:30]
+
+
+def get_natural_sort_key(text):
+    return [int(x) if x.isdigit() else x for x in re.split(r'(\d+)', text)]

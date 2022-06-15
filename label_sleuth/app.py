@@ -18,7 +18,7 @@ from flask import Flask, jsonify, request, send_file, make_response, send_from_d
 from flask_cors import CORS, cross_origin
 
 from label_sleuth.app_utils import elements_back_to_front, extract_iteration_information_list, \
-    extract_enriched_ngrams_and_weights_list, get_element
+    extract_enriched_ngrams_and_weights_list, get_element, get_natural_sort_key
 from label_sleuth.authentication import authenticate_response, login_if_required, verify_password
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.config import Configuration
@@ -412,7 +412,7 @@ def query(workspace_id):
                                               unlabeled_only=False, sample_size=sample_size,
                                               sample_start_idx=sample_start_idx, remove_duplicates=True)
 
-    sorted_elements = sorted(resp["results"], key=lambda te: te.doc_id)
+    sorted_elements = sorted(resp["results"], key=lambda te: get_natural_sort_key(te.uri))
     elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_name)
 
     res = {'elements': elements_transformed,
