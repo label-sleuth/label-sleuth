@@ -48,8 +48,7 @@ const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== 'open', })(({
   justifyContent: 'space-between',
 }));
 
-function CategoryFormControl(props) {
-  const { workspaceLength } = props
+function CategoryFormControl() {
   const workspace = useSelector(state => state.workspace)
   const dispatch = useDispatch()
   const [selValue, setSelVal] = React.useState()
@@ -83,10 +82,6 @@ function CategoryFormControl(props) {
 
 const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
 
-  const workspace = useSelector(state => state.workspace)
-  const dispatch = useDispatch()
-  const workspaceLength = useSelector(state => state.workspace.workspaceLength)
-
   const handleAddCategory = () => {
     setModalOpen(true)
   }
@@ -97,7 +92,6 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
         <div className={classes.upper}>
           <p>Category: </p>
           <CategoryFormControl
-            workspaceLength={workspaceLength}
             placholder="placeholder" />
 
           <Tooltip title="Create a new category">
