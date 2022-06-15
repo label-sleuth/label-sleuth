@@ -55,11 +55,8 @@ function CategoryFormControl(props) {
   const [selValue, setSelVal] = React.useState()
 
   React.useEffect(() => {
-    if (workspace.categories.length !== 0 && (workspaceLength == workspace.categories.length)) {
-      setSelVal(workspace.categories[workspace.categories.length - 1].id)
-    }
-
-  }, [workspace.categories.length, workspaceLength])
+    setSelVal(workspace.curCategory)
+  }, [workspace.curCategory])
 
   const options = workspace.categories
     .map((item) => ({ value: item.category_name, title: item.category_name }))
