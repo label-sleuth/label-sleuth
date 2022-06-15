@@ -21,7 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
 import { APP_NAME, WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
 import { toast } from 'react-toastify';
-import { LOGOUT_TOOLTIP_MSG, GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG } from '../../../const';
+import { LOGOUT_TOOLTIP_MSG, GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG, NO_MODEL_AVAILABLE_MSG } from '../../../const';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -355,7 +355,7 @@ export default function Workspace({workspaceId}) {
                             <Typography>Current Model:</Typography>
                             {
                                 workspace.model_version > -1 ? <Typography><strong>{workspace.model_version}<sup>st</sup> version</strong></Typography>
-                                    : <Typography><strong>None</strong></Typography>
+                                    : <Typography><strong>{NO_MODEL_AVAILABLE_MSG}</strong></Typography>
                             }
                         </ModelName>
                         <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
