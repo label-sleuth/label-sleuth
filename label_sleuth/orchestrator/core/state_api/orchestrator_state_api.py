@@ -34,6 +34,11 @@ class ModelInfo:
 
 @dataclass
 class Iteration:
+    """
+    This class stores information about an iteration. The flow of an iteration includes training a model,
+    inferring the full corpus using this model, choosing candidate elements for labeling using active learning, as
+    well as calculating various statistics. Each iteration is associated with a specific Category.
+    """
     model: ModelInfo
     status: IterationStatus
     iteration_statistics: Dict = field(default_factory=dict)

@@ -12,7 +12,6 @@ from label_sleuth.models.policy.model_policy import ModelPolicy
 from label_sleuth.training_set_selector.train_set_selector_api import TrainingSetSelectionStrategy
 
 
-
 @dataclass
 class Configuration:
     first_model_positive_threshold: int
@@ -33,7 +32,7 @@ converters = {
 }
 
 
-def load_config(config_path):
+def load_config(config_path) -> Configuration:
     # If this code is executed without an exception then we have a valid Configuration object
     with open(config_path) as f:
         raw_cfg = json.load(f)

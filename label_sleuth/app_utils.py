@@ -47,7 +47,7 @@ def elements_back_to_front(workspace_id: str, elements: List[TextElement], categ
 
 def get_element(workspace_id, category_name, element_id):
     """
-    get element by id
+    Get element by id
     :param workspace_id:
     :param category_name:
     :param element_id:
