@@ -32,7 +32,6 @@ const initialState = {
     neg_label_num_doc: 0,
     training_batch: 5,
     cur_completed_id_in_batch: 0,
-    workspaceLength:0,
     isDocLoaded: false,
     isCategoryLoaded: false,
     numLabel: { pos: 0, neg: 0 },
@@ -448,7 +447,6 @@ const DataSlice = createSlice({
         },
         updateCurCategory(state, action) {
             const c = action.payload
-            console.log(`category: ${c}`)
             return {
                 ...state,
                 curCategory: c
@@ -477,33 +475,6 @@ const DataSlice = createSlice({
             return {
                 ...state,
                 labelState: new_labeled_state
-            }
-        },
-        setWorkspaceLength(state, action) {
-            const workspace_length = action.payload
-
-            return {
-                ...state,
-                workspaceLength: workspace_length
-            }
-        },
-        createNewCategory(state, action) {
-            const new_category_name = action.payload
-
-            var cat_list = [...state.new_categories]
-
-            console.log(`createNewCategory called`)
-
-            if (!cat_list.includes(new_category_name)) {
-                console.log(`does not contain new category`)
-                cat_list.push(new_category_name)
-            } else {
-                console.log(`already contain new category`)
-            }
-
-            return {
-                ...state,
-                new_categories: cat_list
             }
         },
         increaseIdInBatch(state, action) {
@@ -956,11 +927,9 @@ const DataSlice = createSlice({
 export default DataSlice.reducer;
 export const { updateCurCategory,
     increaseIdInBatch,
-    createNewCategory,
     prevPrediction,
     setWorkspace,
     setFocusedState,
-    setWorkspaceLength,
     setWorkspaceId,
     setIsCategoryLoaded,
     setIsDocLoaded,
