@@ -4,7 +4,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { useDispatch, useSelector } from 'react-redux';
-import { createNewCategory, createCategoryOnServer, fetchCategories, setWorkspaceLength, updateCurCategory } from '../../DataSlice';
+import { createCategoryOnServer, fetchCategories, updateCurCategory } from '../../DataSlice';
 import TextField from '@mui/material/TextField';
 import classes from './index.module.css';
 
@@ -52,18 +52,13 @@ export default function CreateCategoryModal(props) {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <TextField id="outlined-basic" className={classes.new_modal_name} label="New Model Name" onChange={handleTextFieldChange} />
             <Button onClick={() => {
-              console.log(`button called`)
-              // dispatch(createNewCategory(text))
-              const newCategoryName = text.trim()
-              dispatch(createCategoryOnServer({ category: newCategoryName })).then(() => fetchCategories())
-              dispatch(createNewCategory(newCategoryName))
-              dispatch(fetchCategories())
-              dispatch(setWorkspaceLength(workspace.categories.length + 1))
-              dispatch(updateCurCategory(newCategoryName))
-              setOpen(false)
+              const newCategoryName = text.trim();
+              dispatch(createCategoryOnServer({ category: newCategoryName }))
+                .then(() => dispatch(fetchCategories()))
+                .then(() => dispatch(updateCurCategory(newCategoryName)))
+                .then(() => setOpen(false));
             }} className={classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
           </Box>
-
         </Box>
       </Modal>
     </div>
