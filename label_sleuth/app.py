@@ -146,10 +146,10 @@ def add_documents(dataset_name):
                         "workspaces_to_update": workspaces_to_update})
     except AlreadyExistsException as e:
         return jsonify({"dataset_name": dataset_name, "error": "documents already exist", "documents": e.documents,
-                        "error_code": 409})
+                        "error_code": 409}),409
     except Exception:
         logging.exception(f"failed to load or add documents to dataset '{dataset_name}'")
-        return jsonify({"dataset_name": dataset_name, "error": traceback.format_exc(), "error_code": 400})
+        return jsonify({"dataset_name": dataset_name, "error": traceback.format_exc(), "error_code": 400}),400
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
             os.remove(os.path.join(temp_dir, temp_file_name))
