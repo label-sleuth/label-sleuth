@@ -38,7 +38,7 @@ executor = ThreadPoolExecutor(20)
 
 
 def create_app(config, output_dir) -> Flask:
-    app = Flask(__name__, static_url_path='', static_folder='./build')
+    app = Flask(__name__, static_folder='./build')
     CORS(app)
     app.config['CORS_HEADERS'] = 'Content-Type'
     app.config["CONFIGURATION"] = config
@@ -66,7 +66,11 @@ def start_server(app, port=8000):
 
 
 @main_blueprint.route("/", defaults={'path': ''})
+@main_blueprint.route('/<path:path>') # catch all routes
 def serve(path):
+    if path != "" and os.path.exists(current_app.static_folder + '/' + path):
+        return send_from_directory(current_app.static_folder, path)
+
     return send_from_directory(current_app.static_folder, 'index.html')
 
 
