@@ -94,7 +94,7 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
           <CategoryFormControl
             placholder="placeholder" />
 
-          <Tooltip title="Create a new category">
+          <Tooltip title="Create a new category" disableFocusListener>
             <button onClick={handleAddCategory} alt="Create new category">
               <img src={add_icon} />
             </button>

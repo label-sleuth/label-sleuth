@@ -23,8 +23,6 @@ const style = {
 
 export default function CreateCategoryModal(props) {
 
-  const workspace = useSelector(state => state.workspace)
-
   const { open, setOpen } = props;
 
   const [text, setText] = React.useState("");
@@ -36,6 +34,20 @@ export default function CreateCategoryModal(props) {
     setText(e.target.value)
   }
 
+  const onKeyDown = (event) => {
+    event.preventDefault()
+    if (event.key === "Enter") {
+      onSubmit()
+    } 
+  }
+
+  const onSubmit = () => {
+    const newCategoryName = text.trim();
+    dispatch(createCategoryOnServer({ category: newCategoryName }))
+      .then(() => dispatch(fetchCategories()))
+      .then(() => dispatch(updateCurCategory(newCategoryName)))
+      .then(() => setOpen(false));
+  };
 
   return (
     <div>
@@ -50,14 +62,8 @@ export default function CreateCategoryModal(props) {
             Please enter new category:
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TextField id="outlined-basic" className={classes.new_modal_name} label="New Model Name" onChange={handleTextFieldChange} />
-            <Button onClick={() => {
-              const newCategoryName = text.trim();
-              dispatch(createCategoryOnServer({ category: newCategoryName }))
-                .then(() => dispatch(fetchCategories()))
-                .then(() => dispatch(updateCurCategory(newCategoryName)))
-                .then(() => setOpen(false));
-            }} className={classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
+            <TextField id="outlined-basic" className={classes.new_modal_name} label="New Model Name" onChange={handleTextFieldChange} onKeyUp={onKeyDown}/>
+            <Button onClick={onSubmit} className={classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
           </Box>
         </Box>
       </Modal>
