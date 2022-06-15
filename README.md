@@ -1,23 +1,28 @@
 # Label Sleuth Classification Framework
 
-TBD
+**Label Sleuth** is an open source tool for annotating and classifying texts.
+
+As users label textual examples within the system, machine learning models train in the background, make predictions on new examples, and provide suggestions for the user on the examples they should label next.
+This interactive system enables users to efficiently collect data for varied tasks and to easily build text classification models, all without requiring any machine learning expertise.
 
 
 **Table of contents**
 
 [Installation](#installation)
 
-[Adapting to additional scenarios](#adapting-to-additional-scenarios):
-* [Implementing a new machine learning model](#implementing-a-new-machine-learning-model)
-* [Implementing a new active learning strategy](#implementing-a-new-active-learning-strategy)
+[Project structure](#project-structure)
+
+[Customizing the system](#customizing-the-system)
+* [System configuration](#system-configuration)
+* [Implementing new components](#implementing-new-components)
 
 ## Installation
 Currently, the framework requires Python 3.8
 1. Clone the repository: 
 
    `git clone git@github.com:label-sleuth/label-sleuth.git`
-2. cd to the cloned directory `cd sleuth_classification_service`
-3. Install the project dependencies using `conda` (recommended) or `pip`
+2. cd to the cloned directory: `cd label-sleuth`
+3. Install the project dependencies using `conda` (recommended) or `pip`:
 <details><summary><b>Installing with <tt>conda</tt></b></summary>
 <p>
 
@@ -50,56 +55,57 @@ pip install -r label_sleuth/requirements.txt
 </p>
 </details>
 
-4. Start Label Sleuth server `python -m label_sleuth.start_label_sleuth`. Default port is 8000, to change the port add `--port <port_number>`.
+4. Start the Label Sleuth server: `python -m label_sleuth.start_label_sleuth`. Default port is 8000, to change the port add `--port <port_number>`.
 
-   Latest version of the frontend is precompiled in this repo and can be accessed by browsing http://localhost:8000
+   The system can then be accessed by browsing to http://localhost:8000 (or http://localhost:<port_number>)
 
-## Adapting to additional scenarios
-### Implementing a new machine learning model
-These are the steps for integrating a new classification model:
-1. Implement a new `TrainAndInferAPI`
+## Project Structure
+The repository consists of a backend library, written in Python, and a frontend that uses React. A compiled version of the frontend can be found under `label_sleuth/build`.
 
-    Machine learning models are integrated by adding a new implementation of the TrainAndInferAPI.
-    The main functions are *train* and *infer*:
-    
-    **Train** a new model and return a unique model identifier that will be used for inference.
-    ```python    
-    def train(self, train_data: Sequence[Mapping], dev_data: Sequence[Mapping], test_data: Sequence[Mapping], 
-    train_params: dict) -> str
+## Customizing the system
+### System configuration
+### Implementing new components
+<details><summary><b>Implementing a new machine learning model</b></summary>
+
+   These are the steps for integrating a new classification model:
+   1. Implement a new `ModelAPI`
+   
+   Machine learning models are integrated by adding a new implementation of the ModelAPI.
+   
+   The main functions are *_train()* and *_infer()*:
+   
+   ```python
+   def _train(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
    ```
-        
-    - train_data - a list of dictionaries with at least the "text" and "label" fields. Additional fields can be passed e.g.
-    *[{'text': 'text1', 'label': 1, 'additional_field': 'value1'}, {'text': 'text2', 'label': 0, 'additional_field': 'value2'}]*
-    - dev_data: can be None if not used by the implemented model
-    - test_data - can be None if not used by the implemented model
-    - train_params - dictionary for additional train parameters (can be None)
+   - model_id     
+   - train_data - a list of dictionaries with at least the "text" and "label" fields. Additional fields can be passed e.g.
+   *[{'text': 'text1', 'label': 1, 'additional_field': 'value1'}, {'text': 'text2', 'label': 0, 'additional_field': 'value2'}]*
+   - train_params - dictionary for additional train parameters (can be None)
 
-    **Infer** a given sequence of elements and return the results.
+   ```python
+   def infer(self, model_id, items_to_infer: Sequence[Mapping], infer_params: dict, use_cache=True) -> dict:
+   ```
+   Returns a dictionary with at least the "labels" key, where the value is a list of numeric labels for each element in items_to_infer.
+   Additional keys (with list values of the same length) can be passed,
+   e.g. *{"labels": [1, 0], "gradients": [[0.24, -0.39, -0.66, 0.25], [0.14, 0.29, -0.26, 0.16]]}*
+   - model_id
+   - items_to_infer: a list of dictionaries with at least the "text" field. Additional fields can be passed,
+   e.g. *[{'text': 'text1', 'additional_field': 'value1'}, {'text': 'text2', 'additional_field': 'value2'}]*
+   - infer_params: dictionary for additional inference parameters (can be None)
+   - use_cache: save the inference results to cache. Default is True
+   
+   2. Add the newly implemented ModelAPI to `ModelsCatalog`
+   
+   3. Add one or more policies that use the new model to `ModelPolicies`
+   
+</details>
 
-    ```python    
-    def infer(self, model_id, items_to_infer: Sequence[Mapping], infer_params: dict, use_cache=True) -> dict:
-    ```    
-    - model_id
-    - items_to_infer: a list of dictionaries with at least the "text" field. Additional fields can be passed,
-    e.g. *[{'text': 'text1', 'additional_field': 'value1'}, {'text': 'text2', 'additional_field': 'value2'}]*
-    - infer_params: dictionary for additional inference parameters (can be None)
-    - use_cache: save the inference results to cache. Default is True
-    
-    Returns a dictionary with at least the "labels" key, where the value is a list of numeric labels for each element in
-    items_to_infer.
-    Additional keys (with list values of the same length) can be passed,
-    e.g. *{"labels": [1, 0], "gradients": [[0.24, -0.39, -0.66, 0.25], [0.14, 0.29, -0.26, 0.16]]}*
-
-2. Specify a new ModelType in `ModelTypes`
-3. Return the newly implemented TrainAndInferAPI in `TrainAndInferFactory`
-4. The system assumes that active learning strategies that require special inference outputs (e.g. text embeddings)
-are not supported by your new model. If your model does support this, add it to the appropriate category 
-in `get_compatible_models` in `strategies.py`
-5. Set your ModelType in one of the ExperimentRunners, and run
-
-### Implementing a new active learning strategy
+<details>
+   <summary><b>Implementing a new active learning strategy</tt></b></summary>
+<p>
 These are the steps for integrating a new active learning approach:
-1. Implement a new `ActiveLearner`
+
+   1. Implement a new `ActiveLearner`
    
    Active learning modules inherit from the ActiveLearner API.
    The main function to implement is *get_recommended_items_for_labeling*:
@@ -113,12 +119,12 @@ These are the steps for integrating a new active learning approach:
    
    Optionally, the ActiveLearner can also implement the function `get_per_element_score`, where the active learning 
    module does not just return a batch of selected elements, but can also assign each text element with a score.
-
-2. Specify a new ActiveLearningStrategy in `ActiveLearningStrategies`
-3. Return your new ActiveLearner in `ActiveLearningFactory`
-4. If the active learner requires particular outputs from the machine learning model, update `get_compatible_models` 
-accordingly. For instance, if the strategy relies on model embeddings, add it to the set of embedding-based strategies.
-5. Set your ActiveLearningStrategy in one of the ExperimentRunners, and run
+   2. Specify a new ActiveLearningStrategy in `ActiveLearningStrategies`
+   3. Return your new ActiveLearner in `ActiveLearningFactory`
+   4. If the active learner requires particular outputs from the machine learning model, update `get_compatible_models` accordingly. For instance, if the strategy relies on model embeddings, add it to the set of embedding-based strategies.
+   5. Set your ActiveLearningStrategy in one of the ExperimentRunners, and run
+   </p>
+   </details>
 
 ### Classification models
 - **ModelTypes.NB_OVER_BOW**: a Naive Bayes implementation from [scikit-learn](https://scikit-learn.org) over Bag-of-words representations
