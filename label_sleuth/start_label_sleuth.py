@@ -20,9 +20,12 @@ if __name__ == '__main__':
     parser.add_argument('--config_path', type=str, help=f'Config file path. Default is {config_path}',
                         default=config_path)
 
+    parser.add_argument('--num_serving_threads', type=int, help=f'Number of threads to use in waitress',
+                        default=10)
+
     args = parser.parse_args()
     os.makedirs(args.output_path, exist_ok=True)
     curr_app = app.create_app(config=load_config(args.config_path),
                               output_dir=args.output_path)
     logging.info(f"starting label-sleuth using config file {args.config_path}. Output directory is {args.output_path}")
-    app.start_server(curr_app, args.port)
+    app.start_server(curr_app, args.port, args.num_serving_threads)

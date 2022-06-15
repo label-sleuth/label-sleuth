@@ -57,14 +57,14 @@ def create_app(config: Configuration, output_dir) -> Flask:
     return app
 
 
-def start_server(app, port=8000):
+def start_server(app, port, num_serving_threads):
     disable_html_printouts = False
     if disable_html_printouts:
         logging.getLogger('werkzeug').disabled = True
         os.environ['WERKZEUG_RUN_MAIN'] = True
 
     from waitress import serve
-    serve(app, port=port, threads=20)  # to enable running on a remote machine
+    serve(app, port=port, threads=num_serving_threads)  # to enable running on a remote machine
 
 
 @main_blueprint.route("/", defaults={'path': ''})
