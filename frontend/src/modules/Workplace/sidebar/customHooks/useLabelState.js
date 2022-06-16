@@ -29,15 +29,15 @@ const useLabelState = (newPanelLabelState, updateMainLabelState, updatePanelLabe
         let searchedIndex = getSearchedIndex(e)
         let id = getMainPanelId(e)
         let index = getMainPanelIndex(id)
-        let label = ""
+        let label = "none"
         let searchedElemIndex = `L${searchedIndex}-${id}`
         let mainElemIndex = `L${index}`
 
         if (newPanelLabelState[searchedElemIndex] == "pos") {
             setNumLabel({ ...numLabel, "pos": numLabel['pos'] - 1 })
             setNumLabelGlobal({ ...numLabelGlobal, "pos": numLabelGlobal['pos'] - 1 })
-            newPanelLabelState[searchedElemIndex] = ""
-            newMainState[mainElemIndex] = ""
+            newPanelLabelState[searchedElemIndex] = label
+            newMainState[mainElemIndex] = label
         }
         else {
             if (newPanelLabelState[searchedElemIndex] == "neg") {
@@ -61,15 +61,15 @@ const useLabelState = (newPanelLabelState, updateMainLabelState, updatePanelLabe
         let searchedIndex = getSearchedIndex(e)
         let id = getMainPanelId(e)
         let index = getMainPanelIndex(id)
-        let label = ""
+        let label = "none"
         let searchedElemIndex = `L${searchedIndex}-${id}`
         let mainElemIndex = `L${index}`
 
         if (newPanelLabelState['L' + searchedIndex + '-' + id] == "neg") {
             setNumLabel({ ...numLabel, "neg": numLabel['neg'] - 1 })
             setNumLabelGlobal({ ...numLabelGlobal, "neg": numLabelGlobal['neg'] - 1 })
-            newMainState[mainElemIndex] = ""
-            newPanelLabelState[searchedElemIndex] = ""
+            newMainState[mainElemIndex] = label
+            newPanelLabelState[searchedElemIndex] = label
         }
         else {
             if (newPanelLabelState[searchedElemIndex] == "pos") {

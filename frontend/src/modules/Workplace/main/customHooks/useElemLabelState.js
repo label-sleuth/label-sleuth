@@ -46,14 +46,14 @@ const useElemLabelState = ({ index, element_id }) => {
 
 
     const handlePosLabelState = () => {
-        let label = ""
+        let label = "none"
         let mainElemIndex = `L${index}`
 
         if (newStateMain[mainElemIndex] == "pos") {
             setNumLabel({ ...numLabel, "pos": numLabel['pos'] - 1 })
             setNumLabelGlobal({ ...numLabelGlobal, "pos": numLabelGlobal['pos'] - 1 })
-            newStateMain[mainElemIndex] = ""
-            newPanelLabelState[searchPanelIndex] = ""
+            newStateMain[mainElemIndex] = label
+            newPanelLabelState[searchPanelIndex] = label
         }
         else {
             if (newStateMain[mainElemIndex] == "neg") {
@@ -74,7 +74,7 @@ const useElemLabelState = ({ index, element_id }) => {
 
     const handleNegLabelState = () => {
 
-        let label = ""
+        let label = "none"
         let mainElemIndex = `L${index}`
 
         if (newStateMain[mainElemIndex] == "neg") {
