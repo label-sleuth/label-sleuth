@@ -40,7 +40,6 @@ const MainContent = ({ handleKeyEvent, handleClick, open }) => {
 
   const workspace = useSelector(state => state.workspace)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
-  const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
   const searchedIndex = useSelector(state => state.workspace.searchedIndex)
   const len_elements = workspace['elements'].length
   const { currentContentData, currentPage, setCurrentPage, firstPageIndex } = useMainPagination(searchedIndex, numOfElemPerPage)
