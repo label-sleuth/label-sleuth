@@ -27,7 +27,7 @@ def package_files(prefix, directory):
 
 build_files = package_files("label_sleuth", "build")
 
-requirements_file = 'label_sleuth/requirements.txt'
+requirements_file = 'requirements.txt'
 
 # read requirements from file
 with open(requirements_file) as fh:
@@ -39,7 +39,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="label-sleuth",
-    version="0.1.0",
+    version="0.1.9",
     author="IBM Research",
     author_email="eyals@il.ibm.com",
     url="https://github.com/label-sleuth/label-sleuth",
@@ -56,6 +56,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ],
-    package_data={"": ["../LICENSE", "config.json"] + build_files},
+    package_data={"": ["../LICENSE", "config.json", "../requirements.txt"] + build_files},
     include_package_data=True
 )
