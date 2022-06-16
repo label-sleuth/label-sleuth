@@ -4,7 +4,6 @@ import { IconButton } from "@mui/material";
 import { useSelector } from 'react-redux';
 import checking from '../Asset/checking.svg';
 import check from '../Asset/check.svg';
-import check_predict from '../Asset/check_predict.svg';
 import crossing from '../Asset/crossing.svg';
 import cross from '../Asset/cross.svg';
 import classes from './Element.module.css';
@@ -44,8 +43,6 @@ useEffect(()=>{
                         onClick={handlePosLabelState}>
                         {workspace.labelState['L' + index] == 'pos' ?
                             <img className={classes.resultbtn} src={check} alt="checked" /> :
-                            prediction[index] == true && workspace.labelState['L' + index] !== 'neg' ?
-                                <img className={classes.resultbtn} src={check_predict} alt="predicted checking" /> :
                                 <img className={classes.hovbtn} src={checking} alt="checking" />
                         }
                     </IconButton>
