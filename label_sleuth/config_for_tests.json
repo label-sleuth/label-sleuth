@@ -5,7 +5,6 @@
     "training_set_selection_strategy": "ALL_LABELED",
     "model_policy": "STATIC_SVM_ENSEMBLE",
     "active_learning_strategy": "HARD_MINING",
-    "local_finetune": false,
     "precision_evaluation_size": 5,
     "apply_labels_to_duplicate_texts": true,
     "login_required": false
