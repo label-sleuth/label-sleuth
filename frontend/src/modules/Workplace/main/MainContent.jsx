@@ -9,7 +9,6 @@ import useMainPagination from './customHooks/useMainPagination';
 import classes from './MainContent.module.css';
 import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
-import CircularProgress from '@mui/material/CircularProgress';
 import useFetchPrevNextDoc from './customHooks/useFetchPrevNextDoc'
 import Tooltip from '@mui/material/Tooltip';
 import { PREV_DOC_TOOLTIP_MSG, NEXT_DOC_TOOLTIP_MSG } from '../../../const';
@@ -63,20 +62,10 @@ const MainContent = ({ handleKeyEvent, handleClick, open }) => {
               <img src={left_icon} />
             </button>
           </Tooltip>
-          {!workspace.curDocName ||
-          (!isCategoryLoaded && workspace.curCategory != null) ||
-          !isDocLoaded ? (
-            <Box>
-              <CircularProgress
-                style={{ width: "25px", height: "25px", color: "#393939" }}
-              />
-            </Box>
-          ) : (
             <div className={classes.doc_stats}>
               <h6>{workspace.curDocName}</h6>
               <em>Text Entries: {workspace.elements.length}</em>
             </div>
-          )}
           <Tooltip title={NEXT_DOC_TOOLTIP_MSG} placement="left">
             <button className={classes.doc_button} onClick={handleFetchNextDoc}>
               <img src={right_icon} />
