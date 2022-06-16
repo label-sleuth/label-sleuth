@@ -9,7 +9,6 @@ import crossing from '../Asset/crossing.svg';
 import cross from '../Asset/cross.svg';
 import classes from './index.module.css';
 import PanelStyles from './PanelStyles';
-import check_predict from '../Asset/check_predict.svg';
 import { Box } from '@mui/material';
 import { useSelector } from "react-redux";
 
@@ -57,8 +56,6 @@ export default function Element(props) {
                             onClick={handlePosLabelState}>
                             {labelState[searchedElemIndex] == 'pos' ?
                                 <img src={check} alt="checked" /> :
-                                prediction == 'true' && labelState[searchedElemIndex] !== 'neg' ?
-                                    <img src={check_predict} alt="predicted checking" /> :
                                     <img className={classes.hovbtn} src={checking} alt="checking" />
                             }
                         </IconButton>
