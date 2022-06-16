@@ -22,14 +22,18 @@ import WorkspaceInfo from './information/WorkspaceInfo';
 import Sidebar from './sidebar/index';
 import UpperBar from './upperbar/UpperBar';
 import MainContent from './main/MainContent'
-
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
   const [open, setOpen] = React.useState(false);
   const workspace = useSelector(state => state.workspace)
   const [modalOpen, setModalOpen] = React.useState(false)
-
+  const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
+  const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
+  const [openBackdrop, setOpenBackdrop] = React.useState(false);
+  
   const handleKeyEvent = (event, len_elements) => {
 
     console.log("key pressed")
@@ -85,18 +89,37 @@ export default function Workspace() {
     setNumLabelGlobal({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
   }, [workspace.pos_label_num])
 
+  React.useEffect(()=>{
+    if(!workspace.curDocName || (!isCategoryLoaded ) || !isDocLoaded){
+      setOpenBackdrop(!openBackdrop)
+    }
+    else{
+     {setOpenBackdrop(false)}
+    }
+ 
+   },[workspace.curDocName, isCategoryLoaded, workspace.curCategory, !isDocLoaded])
+
+
   return (
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      <ToastContainer position="top-center" hideProgressBar={true} autoClose={2000} theme='dark' />
-      <WorkspaceInfo workspaceId={workspaceId} />
-      <Box component="main" sx={{ padding: 0 }}>
-        <UpperBar setModalOpen={setModalOpen} open={open} />
-        <Sidebar open={open} setOpen={setOpen} />
-        <MainContent handleKeyEvent={handleKeyEvent} handleClick={handleClick} open={open} />
+    <>
+      <Box sx={{ display: 'flex' }}>
+        <CssBaseline />
+        <ToastContainer position="top-center" hideProgressBar={true} autoClose={2000} theme='dark' />
+        <WorkspaceInfo workspaceId={workspaceId} />
+        <Box component="main" sx={{ padding: 0 }}>
+          <UpperBar setModalOpen={setModalOpen} open={open} />
+          <Sidebar open={open} setOpen={setOpen} />
+          <MainContent handleKeyEvent={handleKeyEvent} handleClick={handleClick} open={open} />
+        </Box>
+        <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
       </Box>
-      <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
-    </Box>
+      <Backdrop
+        sx={{ color: '#fff', zIndex: 10000 }}
+        open={openBackdrop}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+    </>
   );
 }
 
