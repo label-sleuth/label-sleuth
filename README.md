@@ -55,7 +55,9 @@ pip install -r label_sleuth/requirements.txt
 </p>
 </details>
 
-4. Start the Label Sleuth server:`cd to label_sleuth` directory and run `python -m label_sleuth.start_label_sleuth`. Default port is 8000, to change the port add `--port <port_number>`.
+4. Start the Label Sleuth server: run `python -m label_sleuth.start_label_sleuth`.
+   
+   By default all project files are written to `<home_directory>/label-sleuth`, to change the directory add `--output_path <your_output_path>`. Default port is 8000, to change the port add `--port <port_number>`.
 
    The system can then be accessed by browsing to http://localhost:8000 (or http://localhost:<port_number>)
 
@@ -63,7 +65,24 @@ pip install -r label_sleuth/requirements.txt
 The repository consists of a backend library, written in Python, and a frontend that uses React. A compiled version of the frontend can be found under `label_sleuth/build`.
 
 ## Customizing the system
+
 ### System configuration
+The configurable parameters of the system are specified in a json file. The default configuration file is [label_sleuth/config.json](label_sleuth/config.json).
+
+A custom configuration can be applied by passing the `--config_path` parameter to the "start_label_sleuth" command, e.g., `python -m label_sleuth.start_label_sleuth --config_path <path_to_my_configuration_json>`
+
+**Configurable parameters:**
+- _first_model_positive_threshold_: determines the number of elements that must be assigned a positive label for the category in order to trigger the training of a classification model.
+- _changed_element_threshold_: determines the number of changes in user labels for the category -- relative to the last trained model -- that are required to trigger the training of a new model. A change can be a assigning a label (positive or negative) to an element, or changing an existing label. Note that  _first_model_positive_threshold_ must also be met.
+- _training_set_selection_strategy_: specifies the strategy to be used from [TrainingSetSelectionStrategy](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/training_set_selector/train_set_selector_api.py#L9). A TrainingSetSelectionStrategy determines which examples will be sent in practice to the classification models at training time - these will not necessarily be identical to the set of elements labeled by the user. For currently supported implementations see [get_training_set_selector()](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/training_set_selector/training_set_selector_factory.py#L7).
+- _model_policy_: specifies the policy to be used from [ModelPolicies](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/models/core/model_policies.py#L5). A [ModelPolicy](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/models/policy/model_policy.py#L6) determines which type of classification model(s) will be used, and _when_ (e.g. always / only after a specific number of iterations / etc.).
+- _active_learning_strategy_: specifies the strategy to be used from [ActiveLearningStrategies](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/active_learning/core/active_learning_strategies.py#L4). An [ActiveLearner](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/active_learning/core/active_learning_api.py#L11) module implements the strategy for recommending the next elements to be labeled by the user, aiming to increase the efficiency of the annotation process. For currently supported implementations see [get_active_learner()](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/active_learning/core/active_learning_factory.py#L8).
+- _precision_evaluation_size_: determines the sample size to be used for estimating the precision of the current model.
+- _apply_labels_to_duplicate_texts_: specifies how to treat elements with identical texts. If `true`, assigning a label to an element will also assign the same label to other elements which share the exact same text; if `false`, the label will only be assigned to the specific element labeled by the user.
+- _login_required_: specifies whether or not using the system will require user authentication. If `true`, the configuration file must also include a `users` parameter, mapping the keys and values of the [User](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/configurations/users.py#L5) dataclass for each user.
+
+
+
 ### Implementing new components
 <details><summary><b>Implementing a new machine learning model</b></summary>
 
