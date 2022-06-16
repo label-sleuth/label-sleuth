@@ -97,7 +97,7 @@ export default function Workspace() {
      {setOpenBackdrop(false)}
     }
  
-   },[workspace.curDocName, isCategoryLoaded, workspace.curCategory, !isDocLoaded])
+   },[workspace.curDocName, isCategoryLoaded,  !isDocLoaded])
 
 
   return (
