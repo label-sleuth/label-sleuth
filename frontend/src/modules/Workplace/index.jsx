@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import CreateCategoryModal from './upperbar/Modal';
@@ -38,10 +38,12 @@ import { PanelManager } from "./PanelManager";
 import SearchPanel from "./sidebar/SearchPanel";
 import RecToLabelPanel from "./sidebar/RecToLabelPanel";
 import useWorkspaceState from './useWorkspaceState';
+import Tutorial from './tutorial';
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = React.useState(false);
+  const [tutorialOpen, setTutorialOpen] = React.useState(true);
   const workspace = useSelector(state => state.workspace)
   const [modalOpen, setModalOpen] = useState(false)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
@@ -78,7 +80,7 @@ export default function Workspace() {
       <Box sx={{ display: 'flex' }}>
         <CssBaseline />
         <ToastContainer position="top-center" hideProgressBar={true} autoClose={7000} theme='dark' />
-        <WorkspaceInfo workspaceId={workspaceId} />
+        <WorkspaceInfo workspaceId={workspaceId} setTutorialOpen={setTutorialOpen}/>
         <Box component="main" sx={{ padding: 0 }}>
           <UpperBar setModalOpen={setModalOpen} open={open} />
           <PanelManager
@@ -109,6 +111,7 @@ export default function Workspace() {
           </Drawer>
         </Box>
         <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
+        <Tutorial tutorialOpen={tutorialOpen} setTutorialOpen={setTutorialOpen}/>
       </Box>
       <Backdrop
         sx={{ color: '#fff', zIndex: 10000 }}
