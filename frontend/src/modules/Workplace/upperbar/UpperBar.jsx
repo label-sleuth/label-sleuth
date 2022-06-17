@@ -10,6 +10,7 @@ import { updateCurCategory } from '../DataSlice.jsx';
 import FormControl from '@mui/material/FormControl';
 import ControlledSelect from '../../../components/dropdown/Dropdown';
 import Tooltip from '@mui/material/Tooltip';
+import { CREATE_NEW_CATEGORY_TOOLTIP_MSG } from '../../../const';
 
 const rightDrawerWidth = 360;
 const leftDrawerWidthh = 280;
@@ -94,7 +95,7 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
           <CategoryFormControl
             placholder="placeholder" />
 
-          <Tooltip title="Create a new category" disableFocusListener>
+          <Tooltip title={CREATE_NEW_CATEGORY_TOOLTIP_MSG} disableFocusListener>
             <button onClick={handleAddCategory} alt="Create new category">
               <img src={add_icon} />
             </button>
