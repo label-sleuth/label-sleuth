@@ -6,7 +6,7 @@ import Box from '@mui/material/Box';
 import ButtonIBM from "../../components/buttons/ButtonIBM";
 import 'react-toastify/dist/ReactToastify.css';
 import classes from "./workspace-config.module.css";
-
+import { NEW_WORKSPACE_NAME_PLACEHOLER_MSG, NEW_WORKSPACE_NAME_MSG } from '../../const';
 const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options, handleNewWorkspace }) => {
 
     return (
@@ -18,7 +18,7 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                         onChange={handleChangeText}
                         required
                         id="standard-basic"
-                        label="Name Your New Workspace"
+                        label={NEW_WORKSPACE_NAME_MSG}
                         variant="standard"
                         inputProps={{
                             style: {
@@ -36,7 +36,7 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                                 marginTop: '-8px'
                             }
                          }}
-                        placeholder="e.g. New_Sleuth_Data"
+                        placeholder={NEW_WORKSPACE_NAME_PLACEHOLER_MSG}
                     />
                 </FormControl>
                 <FormControl required variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px'}}>
