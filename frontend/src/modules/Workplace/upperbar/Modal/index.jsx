@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createCategoryOnServer, fetchCategories, updateCurCategory } from '../../DataSlice';
 import TextField from '@mui/material/TextField';
 import classes from './index.module.css';
-
+import { CREATE_NEW_CATEGORY_MODAL_MSG, CREATE_NEW_CATEGORY_PLACEHOLDER_MSG } from '../../../../const';
 
 const style = {
   position: 'absolute',
@@ -59,10 +59,10 @@ export default function CreateCategoryModal(props) {
       >
         <Box sx={style}>
           <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ marginBottom: 2 }}>
-            Please enter new category:
+            {CREATE_NEW_CATEGORY_MODAL_MSG}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TextField id="outlined-basic" className={classes.new_modal_name} label="New Model Name" onChange={handleTextFieldChange} onKeyUp={onKeyDown}/>
+            <TextField id="outlined-basic" className={classes.new_modal_name} label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG} onChange={handleTextFieldChange} onKeyUp={onKeyDown}/>
             <Button onClick={onSubmit} className={classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
           </Box>
         </Box>
