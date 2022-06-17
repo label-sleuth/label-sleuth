@@ -113,7 +113,7 @@ function a11yProps(index) {
 }
  
 
-export default function Workspace({workspaceId}) {
+export default function Workspace({workspaceId, setTutorialOpen}) {
     const navigate = useNavigate()
     const theme = useTheme();
     const { logout } = useLogOut()
@@ -240,8 +240,8 @@ export default function Workspace({workspaceId}) {
     };
 
     const open_introSlides = function () {
-        console.log("this is where the tutorial starts");
-        // document.getElementById("presentation").style.display = "flex";
+        
+        setTutorialOpen(true)
     };
 
     return (
