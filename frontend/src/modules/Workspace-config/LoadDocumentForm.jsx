@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ComboBoxWithInputText from "../../components/combobox/ComboBoxWithInputText";
 import data_icon from "../../assets/workspace-config/document--add.svg"
 import { useSelector } from 'react-redux';
+import { UPLOAD_NEW_DATASET_MSG, UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG, UPLOAD_NEW_DATASET_FILE_HELPER_MSG } from '../../const';
 
 const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, datasetName }) => {
     const uploadingDataset = useSelector((state) => state.workspaces.uploadingDataset);
@@ -27,7 +28,7 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                         paddingRight: '25px',
                         fontSize: '13px',
                         marginBottom: '5px'
-                    }}>Upload New File</FormLabel>
+                    }}>{UPLOAD_NEW_DATASET_MSG}</FormLabel>
                     <FormControl 
                         encType="multipart/form-data" 
                         required
@@ -49,15 +50,15 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                             }}
                         />
                     </FormControl>
-                    <FormLabel sx={{margin: '5px 25px', fontStyle: 'italic', fontSize: 12 }} className={classes["text-upload"]}> Upload a CSV file with "text" column and optionally a "document_id" column</FormLabel>
+                    <FormLabel sx={{margin: '5px 25px', fontStyle: 'italic', fontSize: 12 }} className={classes["text-upload"]}>{UPLOAD_NEW_DATASET_FILE_HELPER_MSG}</FormLabel>
 
                     
                     <FormControl required variant="standard"  style={{margin: '35px 25px 10px 25px'}}>
                         <ComboBoxWithInputText 
                             options={datasets}
-                            label="As New Dataset / Add to Existing"
+                            label="As new dataset / Add to existing dataset"
                             handleInputChange={handleInputChange}
-                            placeholder="e.g. New_Upload_Name"
+                            placeholder={UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG}
                             value={datasetName} />
                     </FormControl>
                     <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>
