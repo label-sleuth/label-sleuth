@@ -108,14 +108,29 @@ export default function Workspace({workspaceId}) {
     
     // this state is used to not display the new model notififications the first time the model version is set
     const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false)
-
-
+    const [shouldNotifyNewModel, setShouldNotifyNewModel] = React.useState(false)
     const notifySuccess = (message) => toast.success(message);
 
 
     React.useEffect( () => {
-        if (!modelVersionHasBeenSet) {
-            setModelVersionHasBeenSet(true)
+        if (workspace.curCategory) {
+            if (!modelVersionHasBeenSet) {
+                setModelVersionHasBeenSet(true)
+                if (workspace.model_version === -1) {
+                    setShouldNotifyNewModel(true)
+                }
+            }
+            if (shouldNotifyNewModel) {
+                setShouldNotifyNewModel(false)
+            }
+            if (workspace.model_version && workspace.model_version > -1 && modelVersionHasBeenSet) {
+                fire();
+                if (shouldNotifyNewModel) {
+                    notifySuccess('A new model is available!')
+                    notifySuccess('There are new suggestions for labeling!')
+                }
+            }
+            dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
         }
       }, [workspace.model_version])
     
@@ -194,22 +209,11 @@ export default function Workspace({workspaceId}) {
         }, 5000);
         
         setModelVersionHasBeenSet(false)
+        setShouldNotifyNewModel(false)
 
         return () => clearInterval(interval);
 
     }, [workspace.curCategory])
-
-    React.useEffect(() => {
-
-        console.log(`model updated, data retrieved, model version: ${workspace.model_version}`)
-        if (workspace.model_version > -1 && modelVersionHasBeenSet) {
-            fire();
-            notifySuccess('A new model is available!')
-        }
-        dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
-
-    }, [workspace.model_version])
-
 
     const handleChange = (event, newValue) => {
         setTabValue(newValue);
@@ -354,7 +358,7 @@ export default function Workspace({workspaceId}) {
                         <ModelName>
                             <Typography>Current Model:</Typography>
                             {
-                                workspace.model_version > -1 ? <Typography><strong>{workspace.model_version}<sup>st</sup> version</strong></Typography>
+                               workspace.model_version && workspace.model_version > -1 ? <Typography><strong>{workspace.model_version}<sup>st</sup> version</strong></Typography>
                                     : <Typography><strong>{NO_MODEL_AVAILABLE_MSG}</strong></Typography>
                             }
                         </ModelName>

@@ -67,8 +67,8 @@ const Sidebar = ({ open, setOpen }) => {
                     </Tooltip>
                     <Tooltip title={NEXT_TO_LABEL_TOOLTIP_MSG} placement="left">
                         <IconButton 
-                            disabled={workspace.model_version === -1} 
-                            className={workspace.model_version === -1 ? classes.btndisabled: classes.top_nav_icons}
+                            disabled={!workspace.model_version || workspace.model_version === -1} 
+                            className={!workspace.model_version || workspace.model_version === -1 ? classes.btndisabled: classes.top_nav_icons}
                             onClick={activateRecToLabelPanel}>
                             <img src={recommend_icon} alt="recommendation" />
                         </IconButton>
