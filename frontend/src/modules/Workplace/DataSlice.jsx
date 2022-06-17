@@ -20,7 +20,7 @@ const initialState = {
     searchResult: [],
     searchLabelState: [],
     recommendToLabelState: [],
-    model_version: -1,
+    model_version: null,
     indexPrediction: 0,
     predictionForDocCat: [],
     modelUpdateProgress: 0,

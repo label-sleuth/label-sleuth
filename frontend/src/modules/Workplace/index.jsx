@@ -104,7 +104,7 @@ export default function Workspace() {
     <>
       <Box sx={{ display: 'flex' }}>
         <CssBaseline />
-        <ToastContainer position="top-center" hideProgressBar={true} autoClose={2000} theme='dark' />
+        <ToastContainer position="top-center" hideProgressBar={true} autoClose={7000} theme='dark' />
         <WorkspaceInfo workspaceId={workspaceId} />
         <Box component="main" sx={{ padding: 0 }}>
           <UpperBar setModalOpen={setModalOpen} open={open} />
