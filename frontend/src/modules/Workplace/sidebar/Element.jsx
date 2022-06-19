@@ -29,7 +29,7 @@ export default function Element(props) {
     const { text_colors, handleTextElemStyle } = PanelStyles(prediction)
     const searchedElemIndex = `L${searchedIndex}-${id}`
     const workspace = useSelector(state => state.workspace)
-    
+
     return (
         <Paper
             className={handleTextElemStyle()}
@@ -40,7 +40,7 @@ export default function Element(props) {
                 <p docid={docid} id={id} className={classes["elem_text"]} style={(text_colors[labelState[searchedElemIndex]])}>
                     <Highlighter
                         searchWords={[searchInput]}
-                        autoEscape={true}
+                        autoEscape={false}
                         textToHighlight={text}
                         style={{ cursor: "pointer" }}
                         onClick={handleSearchPanelClick}
