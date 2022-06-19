@@ -22,15 +22,15 @@ export default function Element(props) {
 
 
 useEffect(()=>{
-    if(!isSearchActive && workspace.curCategory){
+    if(!isSearchActive ){
         handleTextElemStyle()
     }
-  },[isSearchActive, workspace.curCategory])
+  },[isSearchActive])
 
 
     return (
         !workspace.curCategory?
-            <Box tabIndex="-1" className={classes["text_normal"]}>
+            <Box tabIndex="-1" className={handleTextElemStyle()} id={"L" + index}>
                 <p className={classes["nodata_text"]}>{text}</p>
             </Box>
             :
