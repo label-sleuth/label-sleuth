@@ -17,7 +17,7 @@ from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.policy.static_model_policy import StaticModelPolicy
 
 
-class ModelPolicies(object):
+class ModelPolicies:
     """
     Model policies determine which type of classification model is used. Policies can be static, i.e. always return the
     same model type, or dynamic, e.g. a different model type is returned depending on the current iteration.
