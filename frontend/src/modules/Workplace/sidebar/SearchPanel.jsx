@@ -60,7 +60,6 @@ const SearchPanel = forwardRef(({ handleDrawerClose,
                             <Typography sx={{ display: "flex", justifyContent: "center", fontSize: "0.9rem", color: "rgba(0,0,0,.54)" }}>
                                 No matching results were found.
                             </Typography>
-
                         </Box>
                         :
                         searchResult.map((res, i) => {
