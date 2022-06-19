@@ -18,6 +18,8 @@ const initialState = {
     focusedState: [],
     labelState: [],
     searchResult: null,
+    searchUniqueElemRes: null,
+    searchTotalElemRes: null,
     searchLabelState: [],
     recommendToLabelState: [],
     model_version: null,
@@ -466,7 +468,7 @@ const DataSlice = createSlice({
             }
 
             initialFocusedState['L' + id] = true
-
+            
             return {
                 ...state,
                 focusedState: initialFocusedState,
@@ -572,6 +574,8 @@ const DataSlice = createSlice({
             return {
                 ...state,
                 searchResult: data.elements,
+                searchUniqueElemRes: data.hit_count_unique,
+                searchTotalElemRes: data.hit_count,
                 searchLabelState: initialSearchLabelState
             }
         },
