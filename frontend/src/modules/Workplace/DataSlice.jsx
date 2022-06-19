@@ -14,7 +14,7 @@ const initialState = {
     ready: false,
     num_cur_batch: 0,
     elementsToLabel: [],
-    focusedIndex: 0,
+    focusedIndex: null,
     focusedState: [],
     labelState: [],
     searchResult: [],
@@ -499,8 +499,6 @@ const DataSlice = createSlice({
                 initialFocusedState['L' + i] = false
             }
 
-            initialFocusedState['L0'] = true
-
             var initialLabelState = {}
 
             var pos_label = 0
@@ -525,7 +523,7 @@ const DataSlice = createSlice({
                 ...state,
                 elements: data['elements'],
                 focusedState: initialFocusedState,
-                focusedIndex: 0,
+                focusedIndex: null,
                 labelState: initialLabelState,
                 ready: true,
                 pos_label_num_doc: pos_label,
@@ -630,8 +628,6 @@ const DataSlice = createSlice({
                 initialFocusedState['L' + i] = false
             }
 
-            initialFocusedState['L0'] = true
-
             var initialLabelState = {}
 
             var pos_label = 0
@@ -658,7 +654,7 @@ const DataSlice = createSlice({
                 curDocId: state.curDocId + 1,
                 curDocName: state['documents'][state.curDocId + 1]['document_id'],
                 focusedState: initialFocusedState,
-                focusedIndex: 0,
+                focusedIndex: null,
                 labelState: initialLabelState,
                 ready: true,
                 pos_label_num_doc: pos_label,
@@ -673,8 +669,6 @@ const DataSlice = createSlice({
             for (var i = 0; i < data['elements'].length; i++) {
                 initialFocusedState['L' + i] = false
             }
-
-            initialFocusedState['L0'] = true
 
             var initialLabelState = {}
 
@@ -702,7 +696,7 @@ const DataSlice = createSlice({
                 curDocId: state.curDocId - 1,
                 curDocName: state['documents'][state.curDocId - 1]['document_id'],
                 focusedState: initialFocusedState,
-                focusedIndex: 0,
+                focusedIndex: null,
                 labelState: initialLabelState,
                 ready: true,
                 pos_label_num_doc: pos_label,
@@ -849,7 +843,7 @@ const DataSlice = createSlice({
                 curDocId: DocId,
                 curDocName: state['documents'][DocId]['document_id'],
                 focusedState: initialFocusedState,
-                focusedIndex: 0,
+                focusedIndex: null,
                 labelState: initialLabelState,
                 ready: true,
             }
