@@ -9,15 +9,13 @@ export const PanelManager = ({ activePanel, updateMainLabelState, children }) =>
     const { handleSearchPanelClick,
         handleSearchInputEnterKey,
         handleSearch,
-        clearSearchInput,
         handleSearchInputChange,
-        textInput,
         searchInput } = useSearchElement()
 
     const childrenWithProps = React.Children.map(children, child => {
         if (child) {
             // TODO - when refactoring the main 
-            // if (child.type.name == "MainPanel") {
+            // if (activePanel == MAIN) {
             //     return React.cloneElement(child, {
             //         updateMainLabelState,
             //     });
@@ -28,9 +26,7 @@ export const PanelManager = ({ activePanel, updateMainLabelState, children }) =>
                     handleSearchPanelClick,
                     handleSearchInputEnterKey,
                     handleSearch,
-                    clearSearchInput,
                     handleSearchInputChange,
-                    textInput,
                     searchInput,
                     updateMainLabelState,
                 });

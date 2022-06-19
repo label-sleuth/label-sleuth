@@ -36,7 +36,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
 );
 
 
-const MainContent = ({ handleKeyEvent, handleClick, open }) => {
+const MainContent = ({ handleKeyEvent, open }) => {
 
   const workspace = useSelector(state => state.workspace)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
@@ -84,7 +84,6 @@ const MainContent = ({ handleKeyEvent, handleClick, open }) => {
                   keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
                   focusedState={workspace.focusedState}
                   index={index + firstPageIndex}
-                  clickEventHandler={handleClick}
                   element_id={element.id}
                   prediction={workspace.predictionForDocCat}
                   text={element['text']}

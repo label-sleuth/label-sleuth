@@ -1,5 +1,4 @@
-import * as React from 'react';
-import { useCallback, useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import CreateCategoryModal from './upperbar/Modal';
@@ -10,13 +9,14 @@ import {
   getElementToLabel,
   checkStatus,
   fetchCategories,
-  getPositiveElementForCategory,
   checkModelUpdate,
   fetchDocuments,
   setFocusedState,
   setIsDocLoaded,
   setIsCategoryLoaded,
   setNumLabelGlobal,
+  setSearchInput,
+  resetSearchResults,
 } from './DataSlice.jsx';
 import WorkspaceInfo from './information/WorkspaceInfo';
 import Sidebar from './sidebar/index';
@@ -27,12 +27,12 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const workspace = useSelector(state => state.workspace)
-  const [modalOpen, setModalOpen] = React.useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
   const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
-  const [openBackdrop, setOpenBackdrop] = React.useState(false);
+  const [openBackdrop, setOpenBackdrop] = useState(false);
   
   const handleKeyEvent = (event, len_elements) => {
 
@@ -48,15 +48,10 @@ export default function Workspace() {
     }
   }
 
-  const handleClick = (event, id) => {
-    if (event.detail == 1) {
-      dispatch(setFocusedState(id))
-    }
-  }
 
   const dispatch = useDispatch();
 
-  React.useEffect(() => {
+  useEffect(() => {
     dispatch(setIsCategoryLoaded(false));
     dispatch(setIsDocLoaded(false));
     dispatch(checkModelUpdate());
@@ -85,11 +80,11 @@ export default function Workspace() {
     return () => clearInterval(interval);
   }, [workspace.curCategory])
 
-  React.useEffect(() => {
+  useEffect(() => {
     setNumLabelGlobal({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
   }, [workspace.pos_label_num])
 
-  React.useEffect(()=>{
+  useEffect(()=>{
     if(!workspace.curDocName || (!isCategoryLoaded ) || !isDocLoaded){
       setOpenBackdrop(!openBackdrop)
     }
@@ -98,6 +93,24 @@ export default function Workspace() {
     }
  
    },[workspace.curDocName, isCategoryLoaded,  !isDocLoaded])
+
+   const textInput = useRef(null);
+   
+
+   const clearSearchInput = () => {
+    dispatch(setSearchInput(""))
+
+    dispatch(resetSearchResults())
+    if (textInput.current) {
+        textInput.current.value = ""
+    }
+}
+
+    useEffect(() => {
+       if (isCategoryLoaded) {
+        clearSearchInput()
+       }
+   }, [isCategoryLoaded])
 
 
   return (
@@ -108,8 +121,8 @@ export default function Workspace() {
         <WorkspaceInfo workspaceId={workspaceId} />
         <Box component="main" sx={{ padding: 0 }}>
           <UpperBar setModalOpen={setModalOpen} open={open} />
-          <Sidebar open={open} setOpen={setOpen} />
-          <MainContent handleKeyEvent={handleKeyEvent} handleClick={handleClick} open={open} />
+          <Sidebar ref={textInput} clearSearchInput={clearSearchInput} open={open} setOpen={setOpen} />
+          <MainContent handleKeyEvent={handleKeyEvent} open={open} />
         </Box>
         <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
       </Box>

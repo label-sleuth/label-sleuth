@@ -17,7 +17,7 @@ const initialState = {
     focusedIndex: null,
     focusedState: [],
     labelState: [],
-    searchResult: [],
+    searchResult: null,
     searchLabelState: [],
     recommendToLabelState: [],
     model_version: null,
@@ -39,6 +39,7 @@ const initialState = {
     searchedIndex:0,
     isSearchActive: false,
     activePanel: "",
+    searchInput: null
 }
 
 const BASE_URL = process.env.REACT_APP_API_URL
@@ -394,7 +395,7 @@ const DataSlice = createSlice({
             state.isDocLoaded = action.payload
         },
         resetSearchResults(state, _) {
-            state.searchResult = []
+            state.searchResult = null
         }, 
         setSearchLabelState(state, action) {
             return {
@@ -431,6 +432,9 @@ const DataSlice = createSlice({
         },
         setActivePanel(state, action) {
             state.activePanel = action.payload
+        },
+        setSearchInput(state, action) {
+            state.searchInput = action.payload
         },
         prevPrediction(state, action) {
             const pred_index = state.indexPrediction
@@ -937,4 +941,5 @@ export const { updateCurCategory,
     setSearchedIndex,
     setIsSearchActive,
     setActivePanel,
+    setSearchInput,
  } = DataSlice.actions;

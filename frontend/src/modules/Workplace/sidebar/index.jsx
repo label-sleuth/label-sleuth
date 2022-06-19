@@ -10,8 +10,9 @@ import useTogglePanel from './customHooks/useTogglePanel'
 import { SEARCH_ALL_DOCS_TOOLTIP_MSG, NEXT_TO_LABEL_TOOLTIP_MSG, SEARCH, RCMD, RIGHT_DRAWER_WIDTH } from '../../../const'
 import { PanelManager } from './PanelManager';
 import useUpdateLabelState from './customHooks/useUpdateLabelState'
+import { forwardRef } from 'react';
 
-const Sidebar = ({ open, setOpen }) => {
+const Sidebar = forwardRef(({ open, setOpen, clearSearchInput }, ref) => {
 
     const { handleDrawerClose, activateSearchPanel, activateRecToLabelPanel } = useTogglePanel(setOpen)
     const { updateSearchLabelState, updateRecLabelState, updateMainLabelState } = useUpdateLabelState()
@@ -38,9 +39,11 @@ const Sidebar = ({ open, setOpen }) => {
                 open={open}
                 onClose={handleDrawerClose}
             >
-                <PanelManager  activePanel={activePanel} updateMainLabelState={updateMainLabelState} >
+                <PanelManager activePanel={activePanel} updateMainLabelState={updateMainLabelState} >
                     {open && activePanel == SEARCH &&
                         <SearchPanel
+                            ref={ref}
+                            clearSearchInput={clearSearchInput}
                             handleDrawerClose={handleDrawerClose}
                             newLabelState={newSearchLabelState}
                             currLabelState={currSearchLabelState}
@@ -66,9 +69,9 @@ const Sidebar = ({ open, setOpen }) => {
                         </IconButton>
                     </Tooltip>
                     <Tooltip title={NEXT_TO_LABEL_TOOLTIP_MSG} placement="left">
-                        <IconButton 
-                            disabled={!workspace.model_version || workspace.model_version === -1} 
-                            className={!workspace.model_version || workspace.model_version === -1 ? classes.btndisabled: classes.top_nav_icons}
+                        <IconButton
+                            disabled={!workspace.model_version || workspace.model_version === -1}
+                            className={!workspace.model_version || workspace.model_version === -1 ? classes.btndisabled : classes.top_nav_icons}
                             onClick={activateRecToLabelPanel}>
                             <img src={recommend_icon} alt="recommendation" />
                         </IconButton>
@@ -77,7 +80,7 @@ const Sidebar = ({ open, setOpen }) => {
             </Drawer>
         </>
     );
-};
+});
 
 export default Sidebar;
 
