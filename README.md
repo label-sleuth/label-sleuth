@@ -135,7 +135,6 @@ These are the steps for integrating a new active learning approach:
    Given sequences of text elements and the model predictions for these elements, this function returns an active learning score for each element.
    The elements with the highest scores will be recommended for the user to label next.
    
-   2. Specify a new ActiveLearningStrategy in `ActiveLearningStrategies`
-   3. Return your new ActiveLearner in `ActiveLearningFactory`
+   2. Add the newly implemented ActiveLearner to the `ActiveLearningCatalog`
    </p>
    </details>
