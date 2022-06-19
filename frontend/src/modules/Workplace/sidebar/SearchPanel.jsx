@@ -26,6 +26,8 @@ const SearchPanel = forwardRef(({ handleDrawerClose,
 
     const workspace = useSelector(state => state.workspace)
     const searchResult = workspace.searchResult
+    const searchUniqueElemRes = workspace.searchUniqueElemRes
+    const searchTotalElemRes = workspace.searchTotalElemRes
     const { handlePosLabelState, handleNegLabelState } = useLabelState(newLabelState, updateMainLabelState, updateLabelState)
 
     return (
@@ -53,7 +55,13 @@ const SearchPanel = forwardRef(({ handleDrawerClose,
                     }
                 </Paper>
             </Box>
-            <Box className={classes["search-results"]} >
+            {searchResult && searchResult.length > 0 &&
+                <Box  sx={{ display: "flex", justifyContent: "center", mt:1, fontSize: "0.8rem", color: "rgba(0,0,0,.54)" }} >
+                    <Typography sx={{ display: "flex", justifyContent: "center", fontSize: "0.8rem", color: "rgba(0,0,0,.54)" }}>
+                        {`${searchTotalElemRes} elements found (${searchUniqueElemRes} including duplicates)`}
+                    </Typography>
+                </Box>}
+            <Box className={classes["search-results"]}  sx={{ mt:2 }} >
                 {searchResult &&
                     ((searchResult.length == 0) ?
                         <Box>
@@ -62,25 +70,27 @@ const SearchPanel = forwardRef(({ handleDrawerClose,
                             </Typography>
                         </Box>
                         :
-                        searchResult.map((res, i) => {
-                            return (
-                                <Element
-                                    key={i}
-                                    searchedIndex={i}
-                                    prediction={res.model_predictions[workspace.curCategory]}
-                                    text={res.text}
-                                    searchInput={searchInput}
-                                    id={res.id}
-                                    docid={res.docid}
-                                    labelValue={res.user_labels[workspace.curCategory]}
-                                    handleSearchPanelClick={handleSearchPanelClick}
-                                    handlePosLabelState={handlePosLabelState}
-                                    handleNegLabelState={handleNegLabelState}
-                                    labelState={currLabelState}
-                                />
-                            )
-                        }))
-                }
+                        <Box>
+                            {searchResult.map((res, i) => {
+                                return (
+                                    <Element
+                                        key={i}
+                                        searchedIndex={i}
+                                        prediction={res.model_predictions[workspace.curCategory]}
+                                        text={res.text}
+                                        searchInput={searchInput}
+                                        id={res.id}
+                                        docid={res.docid}
+                                        labelValue={res.user_labels[workspace.curCategory]}
+                                        handleSearchPanelClick={handleSearchPanelClick}
+                                        handlePosLabelState={handlePosLabelState}
+                                        handleNegLabelState={handleNegLabelState}
+                                        labelState={currLabelState}
+                                    />
+                                )
+                            })}
+                        </Box>
+                    )}
             </Box>
 
         </Box>
