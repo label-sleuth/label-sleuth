@@ -21,7 +21,8 @@ from typing import List
 
 import dacite
 
-from label_sleuth.active_learning.core.active_learning_strategies import ActiveLearningStrategies
+from label_sleuth.active_learning.core.active_learning_api import ActiveLearningStrategy
+from label_sleuth.active_learning.core.catalog import ActiveLearningCatalog
 from label_sleuth.models.core.model_policies import ModelPolicies
 from label_sleuth.models.policy.model_policy import ModelPolicy
 from label_sleuth.training_set_selector.train_set_selector_api import TrainingSetSelectionStrategy
@@ -33,7 +34,7 @@ class Configuration:
     changed_element_threshold: int
     model_policy: ModelPolicy
     training_set_selection_strategy: TrainingSetSelectionStrategy
-    active_learning_strategy: ActiveLearningStrategies
+    active_learning_strategy: ActiveLearningStrategy
     precision_evaluation_size: int
     apply_labels_to_duplicate_texts: bool
     login_required: bool
@@ -43,7 +44,7 @@ class Configuration:
 converters = {
     ModelPolicy: lambda x: getattr(ModelPolicies, x),
     TrainingSetSelectionStrategy: lambda x: getattr(TrainingSetSelectionStrategy, x),
-    ActiveLearningStrategies: lambda x: getattr(ActiveLearningStrategies, x)
+    ActiveLearningStrategy: lambda x: getattr(ActiveLearningCatalog, x),
 }
 
 

@@ -13,10 +13,13 @@
 #  limitations under the License.
 #
 
-from enum import Enum
+from label_sleuth.active_learning.core.active_learning_api import ActiveLearningStrategy
+from label_sleuth.active_learning.strategies.hard_example_mining import HardMiningLearner
+from label_sleuth.active_learning.strategies.random_sampling import RandomSampling
+from label_sleuth.active_learning.strategies.retrospective import RetrospectiveLearner
 
 
-class ActiveLearningStrategies(Enum):
-    RANDOM = 0
-    HARD_MINING = 1
-    RETROSPECTIVE = 2
+class ActiveLearningCatalog:
+    RANDOM = ActiveLearningStrategy(RandomSampling)
+    HARD_MINING = ActiveLearningStrategy(HardMiningLearner)
+    RETROSPECTIVE = ActiveLearningStrategy(RetrospectiveLearner)

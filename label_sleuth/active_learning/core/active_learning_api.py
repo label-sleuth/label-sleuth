@@ -15,7 +15,7 @@
 
 import abc
 
-from typing import Sequence
+from typing import Sequence, Type
 
 import numpy as np
 
@@ -53,7 +53,7 @@ class ActiveLearner:
                               candidate_text_element_predictions: Sequence[Prediction],
                               workspace_id: str, dataset_name: str, category_name: str) -> Sequence[float]:
         """
-        For a a given sequence of TextElements and their model predictions, return a score for each element
+        For a given sequence of TextElements and their model predictions, return a score for each element
         from the active learning module.
         :param candidate_text_elements:
         :param candidate_text_element_predictions:
@@ -61,3 +61,9 @@ class ActiveLearner:
         :param dataset_name:
         :param category_name:
         """
+
+
+class ActiveLearningStrategy:
+    def __init__(self, cls: Type[ActiveLearner]):
+        self.cls = cls
+        self.name = cls.__name__
