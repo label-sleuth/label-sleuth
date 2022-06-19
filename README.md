@@ -36,7 +36,7 @@ Currently, the framework requires Python 3.8
 conda create --yes -n label-sleuth python=3.8
 conda activate label-sleuth
 # Install requirements
-pip install -r label_sleuth/requirements.txt
+pip install -r requirements.txt
 ```
 </p>
 </details>
@@ -50,7 +50,7 @@ Assuming python 3.8 is already installed.
 
 - Install requirements:
 ```bash
-pip install -r label_sleuth/requirements.txt
+pip install -r requirements.txt
 ```
 </p>
 </details>
