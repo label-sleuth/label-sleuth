@@ -7,7 +7,7 @@ import ButtonIBM from "../../components/buttons/ButtonIBM";
 import 'react-toastify/dist/ReactToastify.css';
 import classes from "./workspace-config.module.css";
 import { NEW_WORKSPACE_NAME_PLACEHOLER_MSG, NEW_WORKSPACE_NAME_MSG } from '../../const';
-const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options, handleNewWorkspace }) => {
+const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options, handleNewWorkspace, textValue }) => {
 
     return (
         <Box className={classes.wrapper} style={{borderBottom: 'solid 1px #8d8d8d'}}>
@@ -16,11 +16,13 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                 <FormControl variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px', mb: '25px'}}>
                     <TextField
                         onChange={handleChangeText}
+                        value= {textValue} 
                         required
                         id="standard-basic"
                         label={NEW_WORKSPACE_NAME_MSG}
                         variant="standard"
                         inputProps={{
+                            maxLength: 25,
                             style: {
                                 background: '#fff',
                                 padding: '9px',
