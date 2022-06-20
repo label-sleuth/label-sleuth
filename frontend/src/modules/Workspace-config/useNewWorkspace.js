@@ -10,8 +10,11 @@ const useNewWorkspace = () => {
     const navigate = useNavigate()
 
     const [textValue, setTextValue] = useState('');
+
     const handleChangeText = (e) => {
-        setTextValue(e.target.value);
+        let val = e.target.value
+        const formatted = val.replace(/[^a-zA-Z0-9]/g,'_');  
+        setTextValue(formatted);
     };
 
     const handleNewWorkspace = () => {
@@ -39,6 +42,7 @@ const useNewWorkspace = () => {
         handleDatasetChange,
         handleNewWorkspace,
         selectedValue,
+        textValue,
     }
 };
 
