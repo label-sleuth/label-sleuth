@@ -38,10 +38,10 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                             variant="standard"
                             name="file-upload"
                             type="file"
-                            accept=".csv"
                             onChange={handleFileChange}
-                            InputProps={{
-                                disableUnderline: true,
+                            inputProps={{
+                                accept:".csv",
+                                disableunderline: true,
                                 style: {
                                     border: 'dotted 1px #b5b5b5',
                                     padding: '12px',
