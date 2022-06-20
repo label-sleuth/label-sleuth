@@ -41,7 +41,7 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                             onChange={handleFileChange}
                             inputProps={{
                                 accept:".csv",
-                                disableunderline: true,
+                                disableunderline: "true",
                                 style: {
                                     border: 'dotted 1px #b5b5b5',
                                     padding: '12px',
