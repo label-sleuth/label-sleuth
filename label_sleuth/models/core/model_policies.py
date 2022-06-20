@@ -23,5 +23,6 @@ class ModelPolicies:
     same model type, or dynamic, e.g. a different model type is returned depending on the current iteration.
     """
     STATIC_SVM_ENSEMBLE = StaticModelPolicy(ModelsCatalog.SVM_ENSEMBLE)
-    STATIC_SVM = StaticModelPolicy(ModelsCatalog.SVM_OVER_GLOVE)
+    STATIC_SVM_GLOVE = StaticModelPolicy(ModelsCatalog.SVM_OVER_GLOVE)
+    STATIC_SVM_BOW = StaticModelPolicy(ModelsCatalog.SVM_OVER_BOW)
     STATIC_HF_BERT = StaticModelPolicy(ModelsCatalog.HF_BERT)

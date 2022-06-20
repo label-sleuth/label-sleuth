@@ -51,13 +51,14 @@ class TestAppIntegration(unittest.TestCase):
         category_name = "my_category"
         category_description = "my_category_description"
         data = {}
-        data['file'] = (io.BytesIO(b'document_id,text\n'
-                                   b'document1,this is the first text element of document one\n'
-                                   b'document2,this is the second text element of document one\n'
-                                   b'document2,this is the only text element in document two\n'
-                                   b'document3,"document 3 has three text elements, this is the first"\n'
-                                   b'document3,"document 3 has three text elements, this is the second"\n'
-                                   b'document3,"document 3 has three text elements, this is the third"\n'),
+        data['file'] = (io.BytesIO(
+            b'document_id,text\n'
+            b'document1,this is the first text element of document one\n'
+            b'document1,this is the second text element of document one\n'
+            b'document2,this is the only text element in document two\n'
+            b'document3,"document 3 has three text elements, this is the first"\n'
+            b'document3,"document 3 has three text elements, this is the second that will be labeled as negative"\n'
+            b'document3,"document 3 has three text elements, this is the third"\n'),
                         'my_file.csv')
         res = self.client.post(f"/datasets/{dataset_name}/add_documents", data=data, headers=HEADERS,
                                content_type='multipart/form-data')
@@ -99,10 +100,11 @@ class TestAppIntegration(unittest.TestCase):
             {'begin': 0, 'docid': 'my_test_dataset-document3', 'end': 53, 'id': 'my_test_dataset-document3-0',
              'model_predictions': {}, 'text': 'document 3 has three text elements, this is the first',
              'user_labels': {}},
-            {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 108, 'id': 'my_test_dataset-document3-1',
-             'model_predictions': {}, 'text': 'document 3 has three text elements, this is the second',
+            {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 141, 'id': 'my_test_dataset-document3-1',
+             'model_predictions': {},
+             'text': 'document 3 has three text elements, this is the second that will be labeled as negative',
              'user_labels': {}},
-            {'begin': 109, 'docid': 'my_test_dataset-document3', 'end': 162, 'id': 'my_test_dataset-document3-2',
+            {'begin': 142, 'docid': 'my_test_dataset-document3', 'end': 195, 'id': 'my_test_dataset-document3-2',
              'model_predictions': {}, 'text': 'document 3 has three text elements, this is the third',
              'user_labels': {}}], document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
 
@@ -126,9 +128,9 @@ class TestAppIntegration(unittest.TestCase):
                               headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to set the second label for a category")
         self.assertEqual({'category_name': 'my_category',
-                          'element': {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 108,
+                          'element': {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 141,
                                       'id': 'my_test_dataset-document3-1', 'model_predictions': {},
-                                      'text': 'document 3 has three text elements, this is the second',
+                                      'text': 'document 3 has three text elements, this is the second that will be labeled as negative',
                                       'user_labels': {'my_category': 'false'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json(), msg="diff in setting element's label response")
         res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
@@ -142,7 +144,7 @@ class TestAppIntegration(unittest.TestCase):
 
         self.assertEqual(200, res.status_code, msg="Failed to set the third label for category")
         self.assertEqual({'category_name': 'my_category',
-                          'element': {'begin': 109, 'docid': 'my_test_dataset-document3', 'end': 162,
+                          'element': {'begin': 142, 'docid': 'my_test_dataset-document3', 'end': 195,
                                       'id': 'my_test_dataset-document3-2', 'model_predictions': {},
                                       'text': 'document 3 has three text elements, this is the third',
                                       'user_labels': {'my_category': 'true'}}, 'workspace_id': 'my_test_workspace'},
@@ -166,11 +168,11 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code, msg="Failed to get active learning recommendations")
         active_learning_response = res.get_json()
         self.assertEqual({'elements': [
-            {'begin': 48, 'docid': 'my_test_dataset-document2', 'end': 93, 'id': 'my_test_dataset-document2-1',
-             'model_predictions': {'my_category': 'true'}, 'text': 'this is the only text element in document two',
+            {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94, 'id': 'my_test_dataset-document1-1',
+             'model_predictions': {'my_category': 'true'}, 'text': 'this is the second text element of document one',
              'user_labels': {}},
-            {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 47, 'id': 'my_test_dataset-document2-0',
-             'model_predictions': {'my_category': 'false'}, 'text': 'this is the second text element of document one',
+            {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0',
+             'model_predictions': {'my_category': 'true'}, 'text': 'this is the only text element in document two',
              'user_labels': {}},
             {'begin': 0, 'docid': 'my_test_dataset-document1', 'end': 46, 'id': 'my_test_dataset-document1-0',
              'model_predictions': {'my_category': 'true'}, 'text': 'this is the first text element of document one',
@@ -182,11 +184,11 @@ class TestAppIntegration(unittest.TestCase):
                               data='{{"category_name":"{}","value":"{}"}}'.format(category_name, True), headers=HEADERS)
 
         self.assertEqual(200, res.status_code,
-                         msg="Failed to set the label for the first elemenet reommended by the active learning")
+                         msg="Failed to set the label for the first element recommended by the active learning")
         self.assertEqual({'category_name': 'my_category',
-                          'element': {'begin': 48, 'docid': 'my_test_dataset-document2', 'end': 93,
-                                      'id': 'my_test_dataset-document2-1', 'model_predictions': {'my_category': 'true'},
-                                      'text': 'this is the only text element in document two',
+                          'element': {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94,
+                                      'id': 'my_test_dataset-document1-1', 'model_predictions': {'my_category': 'true'},
+                                      'text': 'this is the second text element of document one',
                                       'user_labels': {'my_category': 'true'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json())
 
@@ -205,12 +207,12 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code,
                          msg="Failed to set the label for the first element recommended by the active learning")
         self.assertEqual({'category_name': 'my_category',
-                          'element': {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 47,
-                                      'id': 'my_test_dataset-document2-0',
-                                      'model_predictions': {'my_category': 'false'},
-                                      'text': 'this is the second text element of document one',
-                                      'user_labels': {'my_category': 'false'}}, 'workspace_id': 'my_test_workspace'},
-                         res.get_json())
+                           'element': {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45,
+                                       'id': 'my_test_dataset-document2-0',
+                                       'model_predictions': {'my_category': 'true'},
+                                       'text': 'this is the only text element in document two',
+                                       'user_labels': {'my_category': 'false'}}, 'workspace_id': 'my_test_workspace'},
+                          res.get_json())
 
         res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
                               headers=HEADERS)

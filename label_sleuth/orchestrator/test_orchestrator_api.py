@@ -51,12 +51,14 @@ class TestOrchestratorAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp_dir = tempfile.TemporaryDirectory()
-        cls.model_factory = ModelFactory(cls.temp_dir.name, ModelsBackgroundJobsManager())
+
+        cls.model_factory = ModelFactory(cls.temp_dir.name, ModelsBackgroundJobsManager(),None)
         cls.active_learning_factory = ActiveLearningFactory()
         cls.data_access = FileBasedDataAccess(os.path.join(cls.temp_dir.name, "output"))
         cls.orchestrator_state = OrchestratorStateApi(os.path.join(cls.temp_dir.name, "output", "workspaces"))
+
         cls.orchestrator_api = OrchestratorApi(cls.orchestrator_state, cls.data_access, cls.active_learning_factory,
-                                               cls.model_factory,
+                                               cls.model_factory, None, # no need to use sentence embedding
                                                load_config(os.path.abspath(os.path.join(__file__, os.pardir,
                                                                                         os.pardir,
                                                                                         "config_for_tests.json"))))

@@ -37,6 +37,7 @@ from label_sleuth.app_utils import elements_back_to_front, extract_iteration_inf
 from label_sleuth.authentication import authenticate_response, login_if_required, verify_password
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.config import Configuration
+from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label
 from label_sleuth.data_access.data_access_api import AlreadyExistsException
@@ -62,11 +63,14 @@ def create_app(config: Configuration, output_dir) -> Flask:
     app.config["output_dir"] = output_dir
     app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.config["CONFIGURATION"].users}
     app.tokens = [user.token for user in app.users.values()]
+    sentence_embedding_service = SentenceEmbeddingService(output_dir)
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),
                                            FileBasedDataAccess(output_dir),
                                            ActiveLearningFactory(),
                                            ModelFactory(os.path.join(output_dir, "models"),
-                                                        ModelsBackgroundJobsManager()),
+                                                        ModelsBackgroundJobsManager(),
+                                                        sentence_embedding_service),
+                                           sentence_embedding_service,
                                            app.config["CONFIGURATION"])
     app.register_blueprint(main_blueprint)
     return app

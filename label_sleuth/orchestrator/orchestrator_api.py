@@ -40,6 +40,7 @@ from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.core.model_type import ModelType
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.core.prediction import Prediction
+from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
     ModelInfo, OrchestratorStateApi
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
@@ -58,11 +59,12 @@ new_data_infer_thread_pool = ThreadPoolExecutor(1)
 class OrchestratorApi:
     def __init__(self, orchestrator_state: OrchestratorStateApi, data_access: DataAccessApi,
                  active_learning_factory: ActiveLearningFactory, model_factory: ModelFactory,
-                 config: Configuration):
+                 sentence_embedding_service: SentenceEmbeddingService, config: Configuration):
         self.orchestrator_state = orchestrator_state
         self.data_access = data_access
         self.active_learning_factory = active_learning_factory
         self.model_factory = model_factory
+        self.sentence_embedding_service = sentence_embedding_service
         self.config = config
 
     def get_all_dataset_names(self):
@@ -640,7 +642,8 @@ class OrchestratorApi:
     def get_contradiction_report(self, workspace_id, category_name) -> Mapping[str, List]:
         dataset_name = self.get_dataset_name(workspace_id)
         labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
-        return get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements)
+        return get_suspected_labeling_contradictions_by_distance_with_diffs(
+            category_name, labeled_elements, self.sentence_embedding_service.get_glove_representation)
 
     def get_suspicious_elements_report(self, workspace_id, category_name,
                                        model_type: ModelType = ModelsCatalog.SVM_ENSEMBLE) -> List[TextElement]:
