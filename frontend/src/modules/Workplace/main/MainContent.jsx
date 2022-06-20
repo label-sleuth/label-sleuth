@@ -41,9 +41,11 @@ const MainContent = ({ handleKeyEvent, open }) => {
   const workspace = useSelector(state => state.workspace)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
   const searchedIndex = useSelector(state => state.workspace.searchedIndex)
+  const curDocId = useSelector(state => state.workspace.curDocId)
+  const documents = useSelector(state => state.workspace.documents)
   const len_elements = workspace['elements'].length
   const { currentContentData, currentPage, setCurrentPage, firstPageIndex } = useMainPagination(searchedIndex, numOfElemPerPage)
-  const {handleFetchNextDoc, handleFetchPrevDoc} = useFetchPrevNextDoc()
+  const { handleFetchNextDoc, handleFetchPrevDoc } = useFetchPrevNextDoc()
 
   React.useEffect(() => {
     if (isCategoryLoaded) {
@@ -51,22 +53,39 @@ const MainContent = ({ handleKeyEvent, open }) => {
     }
   }, [setCurrentPage, isCategoryLoaded])
 
-
   return (
     <>
       <Main className={classes.main_content} open={open}>
         <div className={classes.doc_header}>
-        <Tooltip title={PREV_DOC_TOOLTIP_MSG} placement="right">
-            <button className={classes.doc_button} onClick={handleFetchPrevDoc}>
+          <Tooltip title={curDocId != 0 ? PREV_DOC_TOOLTIP_MSG : ""}
+            placement="right"
+            componentsProps={{
+              tooltip: {
+                sx: {
+                  bgcolor: curDocId != 0 ? 'common.black' : "transparent",
+                },
+              },
+            }}
+          >
+            <button className={curDocId == 0 ? classes["doc_button_disabled"] : classes["doc_button"]} onClick={handleFetchPrevDoc}>
               <img src={left_icon} />
             </button>
           </Tooltip>
-            <div className={classes.doc_stats}>
-              <h6>{workspace.curDocName}</h6>
-              <em>Text Entries: {workspace.elements.length}</em>
-            </div>
-          <Tooltip title={NEXT_DOC_TOOLTIP_MSG} placement="left">
-            <button className={classes.doc_button} onClick={handleFetchNextDoc}>
+          <div className={classes.doc_stats}>
+            <h6>{workspace.curDocName}</h6>
+            <em>Text Entries: {workspace.elements.length}</em>
+          </div>
+          <Tooltip title={documents.length - 1 != curDocId ? NEXT_DOC_TOOLTIP_MSG : ""}
+            placement="left"
+            componentsProps={{
+              tooltip: {
+                sx: {
+                  bgcolor: documents.length - 1 != curDocId ? 'common.black' : "transparent",
+                },
+              },
+            }}
+          >
+            <button className={documents.length - 1 == curDocId ? classes["doc_button_disabled"] : classes["doc_button"]} onClick={handleFetchNextDoc}>
               <img src={right_icon} />
             </button>
           </Tooltip>
