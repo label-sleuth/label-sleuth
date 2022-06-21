@@ -9,7 +9,7 @@ const useFetchPrevNextDoc = () => {
         const element = document.getElementById('L0')
         element && element.scrollIntoView({
             behavior: "smooth",
-            block: "start"
+            block: "center"
         })
     }
 
