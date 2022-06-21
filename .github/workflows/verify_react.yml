@@ -10,7 +10,7 @@ on:
       - frontend/**
 
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
     paths:
       - frontend/**
 
