@@ -19,11 +19,20 @@ import {
   resetSearchResults,
 } from './DataSlice.jsx';
 import WorkspaceInfo from './information/WorkspaceInfo';
-import Sidebar from './sidebar/index';
 import UpperBar from './upperbar/UpperBar';
-import MainContent from './main/MainContent'
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
+import { IconButton, Tooltip } from '@mui/material';
+import classes from './sidebar/index.module.css';
+import search_icon from './Asset/search.svg';
+import recommend_icon from './Asset/query-queue.svg'
+import { SEARCH_ALL_DOCS_TOOLTIP_MSG, NEXT_TO_LABEL_TOOLTIP_MSG, SEARCH, RCMD, RIGHT_DRAWER_WIDTH } from '../../const'
+import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
+import Drawer from '@mui/material/Drawer';
+import { PanelManager } from "./PanelManager";
+import useUpdateLabelState from "./sidebar/customHooks/useUpdateLabelState";
+import SearchPanel from "./sidebar/SearchPanel";
+import RecToLabelPanel from "./sidebar/RecToLabelPanel";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
@@ -33,7 +42,10 @@ export default function Workspace() {
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
   const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
   const [openBackdrop, setOpenBackdrop] = useState(false);
-  
+  const { handleDrawerClose, activateSearchPanel, activateRecToLabelPanel } = useTogglePanel(setOpen)
+  const activePanel = useSelector(state => state.workspace.activePanel)
+
+
   const handleKeyEvent = (event, len_elements) => {
 
     console.log("key pressed")
@@ -84,33 +96,33 @@ export default function Workspace() {
     setNumLabelGlobal({ pos: workspace.pos_label_num, neg: workspace.neg_label_num })
   }, [workspace.pos_label_num])
 
-  useEffect(()=>{
-    if(!workspace.curDocName || (!isCategoryLoaded ) || !isDocLoaded){
+  useEffect(() => {
+    if (!workspace.curDocName || (!isCategoryLoaded) || !isDocLoaded) {
       setOpenBackdrop(!openBackdrop)
     }
-    else{
-     {setOpenBackdrop(false)}
+    else {
+      { setOpenBackdrop(false) }
     }
- 
-   },[workspace.curDocName, isCategoryLoaded,  !isDocLoaded])
 
-   const textInput = useRef(null);
-   
+  }, [workspace.curDocName, isCategoryLoaded, !isDocLoaded])
 
-   const clearSearchInput = () => {
+  const textInput = useRef(null);
+
+
+  const clearSearchInput = () => {
     dispatch(setSearchInput(""))
 
     dispatch(resetSearchResults())
     if (textInput.current) {
-        textInput.current.value = ""
+      textInput.current.value = ""
     }
-}
+  }
 
-    useEffect(() => {
-       if (isCategoryLoaded) {
-        clearSearchInput()
-       }
-   }, [isCategoryLoaded])
+  useEffect(() => {
+    if (isCategoryLoaded) {
+      clearSearchInput()
+    }
+  }, [isCategoryLoaded])
 
 
   return (
@@ -121,8 +133,33 @@ export default function Workspace() {
         <WorkspaceInfo workspaceId={workspaceId} />
         <Box component="main" sx={{ padding: 0 }}>
           <UpperBar setModalOpen={setModalOpen} open={open} />
-          <Sidebar ref={textInput} clearSearchInput={clearSearchInput} open={open} setOpen={setOpen} />
-          <MainContent handleKeyEvent={handleKeyEvent} open={open} />
+          <PanelManager
+            handleDrawerClose={handleDrawerClose}
+            open={open}
+            activePanel={activePanel}>
+              {open && activePanel == SEARCH && 
+              <SearchPanel ref={textInput} clearSearchInput={clearSearchInput} handleDrawerClose={handleDrawerClose} />}
+              {activePanel == RCMD && 
+              <RecToLabelPanel handleDrawerClose={handleDrawerClose} />}
+          </PanelManager>
+          {/* Panel tabs  */}
+          <Drawer variant="permanent" anchor="right" PaperProps={{ sx: { minWidth: 50, } }}>
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: 'center', justifyContent: 'space-between', margin: '5px' }}>
+              <Tooltip title={SEARCH_ALL_DOCS_TOOLTIP_MSG} placement="left">
+                <IconButton className={classes.top_nav_icons} onClick={activateSearchPanel}>
+                  <img src={search_icon} alt="search" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={NEXT_TO_LABEL_TOOLTIP_MSG} placement="left">
+                <IconButton
+                  disabled={!workspace.model_version || workspace.model_version === -1}
+                  className={!workspace.model_version || workspace.model_version === -1 ? classes.btndisabled : classes.top_nav_icons}
+                  onClick={activateRecToLabelPanel}>
+                  <img src={recommend_icon} alt="recommendation" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Drawer>
         </Box>
         <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
       </Box>
