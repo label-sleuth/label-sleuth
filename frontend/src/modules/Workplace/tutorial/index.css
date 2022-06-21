@@ -23,3 +23,7 @@
 .stage-content {
     display: block;
 }
+
+.modal-background .MuiBackdrop-root {
+  background-color: transparent;
+}
