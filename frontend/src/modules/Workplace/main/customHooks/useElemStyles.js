@@ -15,7 +15,7 @@ const useElemStyles = ({ index, prediction }) => {
 
     const handleTextElemStyle = () => {
         if (workspace["focusedIndex"] == index) {
-            textElemStyle = classes["text_focus"]
+            textElemStyle = classes["text_auto_focus"]
         }
         else if (prediction && prediction[index]) {
             textElemStyle = classes["text_predict"]
