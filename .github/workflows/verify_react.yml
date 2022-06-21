@@ -5,12 +5,12 @@ name: Verify React code
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
     paths:
       - frontend/**
 
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
     paths:
       - frontend/**
 
