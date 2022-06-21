@@ -71,6 +71,17 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       ),
     },
     {
+      title: "Search",
+      content: (
+        <div>
+          <p>
+            You can search by keywords if you are looking for anything specific.
+            Give search a try!
+          </p>
+        </div>
+      ),
+    },
+    {
       title: "Model Update & Prediction",
       content: (
         <div>
@@ -101,17 +112,6 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             Here, you can see a list of recommend to label text entires on the
             right. Prioritize on labeling these will help improve the model
             classification result.
-          </p>
-        </div>
-      ),
-    },
-    {
-      title: "Search",
-      content: (
-        <div>
-          <p>
-            You can search by keywords if you are looking for anything specific.
-            Give search a try!
           </p>
         </div>
       ),
