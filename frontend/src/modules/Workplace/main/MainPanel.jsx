@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import Pagination from '../../../components/pagination/Pagination';
 import '../../../components/pagination/pagination.css';
 import useMainPagination from './customHooks/useMainPagination';
-import classes from './MainContent.module.css';
+import classes from './MainPanel.module.css';
 import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
 import useFetchPrevNextDoc from './customHooks/useFetchPrevNextDoc'
@@ -36,7 +36,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
 );
 
 
-const MainContent = ({ handleKeyEvent, open }) => {
+const MainPanel = ({ handleKeyEvent, open }) => {
 
   const workspace = useSelector(state => state.workspace)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
@@ -124,4 +124,4 @@ const MainContent = ({ handleKeyEvent, open }) => {
   );
 };
 
-export default MainContent;
+export default MainPanel;

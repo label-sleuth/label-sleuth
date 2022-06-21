@@ -11,8 +11,6 @@ import { forwardRef } from 'react';
 import { useSelector } from 'react-redux';
 
 const SearchPanel = forwardRef(({ handleDrawerClose,
-    newLabelState,
-    currLabelState,
     handleSearchPanelClick,
     handleSearchInputEnterKey,
     handleSearch,
@@ -25,10 +23,12 @@ const SearchPanel = forwardRef(({ handleDrawerClose,
 }, ref) => {
 
     const workspace = useSelector(state => state.workspace)
+    let newSearchLabelState = { ...workspace.searchLabelState }
+    const currSearchLabelState = workspace.searchLabelState
     const searchResult = workspace.searchResult
     const searchUniqueElemRes = workspace.searchUniqueElemRes
     const searchTotalElemRes = workspace.searchTotalElemRes
-    const { handlePosLabelState, handleNegLabelState } = useLabelState(newLabelState, updateMainLabelState, updateLabelState)
+    const { handlePosLabelState, handleNegLabelState } = useLabelState(newSearchLabelState, updateMainLabelState, updateLabelState)
 
     return (
         <Box>
@@ -85,7 +85,7 @@ const SearchPanel = forwardRef(({ handleDrawerClose,
                                         handleSearchPanelClick={handleSearchPanelClick}
                                         handlePosLabelState={handlePosLabelState}
                                         handleNegLabelState={handleNegLabelState}
-                                        labelState={currLabelState}
+                                        labelState={currSearchLabelState}
                                     />
                                 )
                             })}

@@ -10,8 +10,9 @@ import useLabelState from './customHooks/useLabelState';
 const RecToLabelPanel = ({ handleDrawerClose, updateMainLabelState, updateLabelState }) => {
 
     const workspace = useSelector(state => state.workspace)
-    let recommendToLabelState = { ...workspace.recommendToLabelState }
-    const { handlePosLabelState, handleNegLabelState } = useLabelState(recommendToLabelState, updateMainLabelState, updateLabelState)
+    let newRecLabelState = { ...workspace.recommendToLabelState }
+    const currRecLabelState = workspace.recommendToLabelState
+    const { handlePosLabelState, handleNegLabelState } = useLabelState(newRecLabelState, updateMainLabelState, updateLabelState)
     const { handleSearchPanelClick, searchInput } = useSearchElement()
 
     return (
@@ -41,7 +42,7 @@ const RecToLabelPanel = ({ handleDrawerClose, updateMainLabelState, updateLabelS
                             handleSearchPanelClick={handleSearchPanelClick}
                             handlePosLabelState={handlePosLabelState}
                             handleNegLabelState={handleNegLabelState}
-                            labelState={workspace.recommendToLabelState}
+                            labelState={currRecLabelState}
                         />
                     )
                 })}
