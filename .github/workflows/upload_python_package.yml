@@ -32,10 +32,10 @@ jobs:
       run: sed -i s/RELEASE_VERSION/${{ env.RELEASE_VERSION }}/ setup.py
 
     - name: Install packages required for publishing
-      run: pip install build wheel twine setuptools
+      run: pip install twine setuptools
 
     - name: Build the library
-      run: python -m build --wheel
+      run: python setup.py sdist
 
     - name: check the library
       run: twine check dist/*
