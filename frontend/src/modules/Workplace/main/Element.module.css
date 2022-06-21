@@ -46,9 +46,15 @@
 .text_normal:hover,
 .text_predict:hover,
 .text_focus {
-    background: #f4f4f4;
+    background: none;
     color: #000 !important;
+    animation: elem 5s;
 }
+
+@keyframes elem {
+    from {background-color: white;}
+    to {background-color: yellow;}
+  }
 
 .checking_buttons {
     justify-content: flex-end;

@@ -32,17 +32,16 @@ jobs:
       run: sed -i s/RELEASE_VERSION/${{ env.RELEASE_VERSION }}/ setup.py
 
     - name: Install packages required for publishing
-      run: pip install build wheel twine setuptools
+      run: pip install twine wheel setuptools
 
     - name: Build the library
-      run: python -m build --wheel
+      run: python setup.py sdist
 
     - name: check the library
       run: twine check dist/*
 
-# TODO upload to the package
-#    - name: Publish package
-#      uses: pypa/gh-action-pypi-publish@release/v1
-#      with:
-#        user: __token__
-#        password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}

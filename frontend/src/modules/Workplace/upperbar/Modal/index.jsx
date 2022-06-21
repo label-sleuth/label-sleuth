@@ -61,7 +61,7 @@ export default function CreateCategoryModal(props) {
           <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ marginBottom: 2 }}>
             {CREATE_NEW_CATEGORY_MODAL_MSG}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '300px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '300px'  }}>
             <TextField id="outlined-basic" className={classes.new_modal_name} label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG} onChange={handleTextFieldChange} onKeyUp={onKeyDown}/>
             <Button onClick={onSubmit} className={classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
           </Box>

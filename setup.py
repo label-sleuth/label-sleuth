@@ -39,7 +39,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="label-sleuth",
-    version="0.1.9",
+    version="RELEASE_VERSION".replace('v', ''),
     author="IBM Research",
     author_email="eyals@il.ibm.com",
     url="https://github.com/label-sleuth/label-sleuth",
@@ -56,6 +56,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ],
-    package_data={"": ["../LICENSE", "config.json", "../requirements.txt"] + build_files},
+    package_data={"": ["LICENSE", "config.json", "requirements.txt"] + build_files},
     include_package_data=True
 )
