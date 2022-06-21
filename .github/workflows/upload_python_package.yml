@@ -32,7 +32,7 @@ jobs:
       run: sed -i s/RELEASE_VERSION/${{ env.RELEASE_VERSION }}/ setup.py
 
     - name: Install packages required for publishing
-      run: pip install twine setuptools
+      run: pip install twine wheel setuptools
 
     - name: Build the library
       run: python setup.py sdist
