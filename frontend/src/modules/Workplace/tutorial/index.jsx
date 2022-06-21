@@ -142,7 +142,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   const currentStage = stages[stageIndex];
 
   return (
-    <Modal open={tutorialOpen} onClose={() => setTutorialOpen(false)}>
+    <Modal open={tutorialOpen} onClose={() => setTutorialOpen(false)} className="modal-background">
       <ModalContent>
         <div
           style={{ marginTop: "25px", marginLeft: "25px", display: "block" }}
