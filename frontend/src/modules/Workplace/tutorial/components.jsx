@@ -49,14 +49,13 @@ export const MainContent = styled("div")`
   color: #ffffff;
 `;
 
-export const NextButton = styled(Button)`
+export const PrimaryButton = styled(Button)`
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   padding: 10px 18px;
   gap: 10px;
-  width: 66px;
   height: 38px;
   background: #0f61fe;
   border-radius: 0;
@@ -70,14 +69,13 @@ export const NextButton = styled(Button)`
   text-transform: none;
 `;
 
-export const SkipButton = styled(Button)`
+export const SecondaryButton = styled(Button)`
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   padding: 10px 18px;
   gap: 10px;
-  width: 66px;
   height: 38px;
   background: inherit;
   border-radius: 0;

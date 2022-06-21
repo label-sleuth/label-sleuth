@@ -3,16 +3,23 @@ import {
   SmallTitle,
   LargeTitle,
   MainContent,
-  NextButton,
-  SkipButton,
+  PrimaryButton,
+  SecondaryButton,
   ModalContent,
 } from "./components";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./index.css";
 
 const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   const [stageIndex, setStageIndex] = useState(0);
 
+  useEffect(() => {
+    if (tutorialOpen) {
+      setStageIndex(0)
+    }
+  }, [tutorialOpen])
+
+  // default primary   button on click action
   const onNext = () => {
     if (stageIndex === stages.length - 1) {
       setStageIndex(0);
@@ -20,6 +27,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       setStageIndex(stageIndex + 1);
     }
   };
+
+  // default secondary button on click action
+  const onSkip = () => {
+    setTutorialOpen(false)
+  }
 
   const stages = [
     {
@@ -119,7 +131,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
     {
       smallTitle: "Tutorial completed",
       title: "That’s all! If you need to revisit the tutorial, go to the top left of the screen and click on",
-      content: null
+      content: null,
+      primaryButtonTitle: "Start labeling",
+      onPrimaryButtonClick: () => setTutorialOpen(false),
+      secondaryButtonTitle: "Restart from beginning",
+      onSecondaryButtonClick: () => setStageIndex(0)
     }
   ];
 
@@ -131,7 +147,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
         <div
           style={{ marginTop: "25px", marginLeft: "25px", display: "block" }}
         >
-          <SmallTitle>{currentStage.smallTitle ? currentStage.smallTitle : "Tutorial"}</SmallTitle>
+          <SmallTitle>{currentStage.smallTitle || "Tutorial"}</SmallTitle>
           <LargeTitle>{currentStage.title}</LargeTitle>
           <MainContent>{currentStage.content}</MainContent>
         </div>
@@ -142,8 +158,8 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
           spacing={0}
           style={{ width: "100%", flex: "none", order: 1, flexGrow: 0 }}
         >
-          <SkipButton>Skip</SkipButton>
-          <NextButton onClick={onNext}>Next</NextButton>
+          <SecondaryButton onClick={currentStage.onSecondaryButtonClick || onSkip}>{currentStage.secondaryButtonTitle || 'Skip'}</SecondaryButton>
+          <PrimaryButton onClick={currentStage.onPrimaryButtonClick || onNext}>{currentStage.primaryButtonTitle || 'Next'}</PrimaryButton>
         </Stack>
       </ModalContent>
     </Modal>
