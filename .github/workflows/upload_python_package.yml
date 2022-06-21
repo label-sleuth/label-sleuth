@@ -40,9 +40,8 @@ jobs:
     - name: check the library
       run: twine check dist/*
 
-# TODO upload to the package
-#    - name: Publish package
-#      uses: pypa/gh-action-pypi-publish@release/v1
-#      with:
-#        user: __token__
-#        password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}

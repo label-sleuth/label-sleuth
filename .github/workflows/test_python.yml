@@ -2,9 +2,9 @@ name: Test Python code
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
     paths:
       - label_sleuth/**
 
