@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
-import { resetSearchResults, searchKeywords } from '../../DataSlice.jsx';
+import { useEffect } from 'react';
+import { searchKeywords } from '../../DataSlice.jsx';
 import {
     setFocusedState,
     fetchCertainDocument,
     setIsDocLoaded,
     setSearchedIndex,
     setIsSearchActive,
+    setSearchInput,
 } from '../../DataSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -16,26 +17,21 @@ const useSearchElement = () => {
     const isSearchActive = useSelector(state => state.workspace.isSearchActive)
     const focusedIndex = useSelector(state => state.workspace.focusedIndex)
     const searchedIndex = useSelector(state => state.workspace.searchedIndex)
+    const searchInput = useSelector(state => state.workspace.searchInput)
+
     const dispatch = useDispatch()
-    const [searchInput, setSearchInput] = useState("");
-    const textInput = useRef(null);
 
     const handleSearch = () => {
         if (searchInput) {
             dispatch(searchKeywords({ keyword: searchInput }))
         }
-    }
-
-    const clearSearchInput = () => {
-        setSearchInput("")
-        dispatch(resetSearchResults())
-        if (textInput.current) {
-            textInput.current.value = ""
+        else {
+            dispatch(setSearchInput(""))
         }
     }
 
     const handleSearchInputChange = (event) => {
-        setSearchInput(event.target.value)
+        dispatch(setSearchInput(event.target.value))
     }
 
     const scrollIntoElementView = (element) => {
@@ -83,12 +79,6 @@ const useSearchElement = () => {
 
     }
 
-    useEffect(() => {
-        if (workspace.curCategory) {
-            handleSearch()
-        }
-    }, [workspace.curCategory])
-
     const handleSearchInputEnterKey = (ev) => {
         if (ev && ev.key) {
             if (ev.key === 'Enter') {
@@ -102,9 +92,7 @@ const useSearchElement = () => {
         handleSearchPanelClick,
         handleSearch,
         handleSearchInputChange,
-        clearSearchInput,
         searchInput,
-        textInput,
         handleSearchInputEnterKey
     }
 };

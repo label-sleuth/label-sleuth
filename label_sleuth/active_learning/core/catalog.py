@@ -13,20 +13,13 @@
 #  limitations under the License.
 #
 
-import torch
-
-INFER_CACHE_SIZE = 10000000
-ACTIVE_LEARNING_SUGGESTION_COUNT = 1000
-CPU_WORKERS = 10  # TODO use number of cores?
-GPU_AVAILABLE = torch.cuda.is_available()
-GPU_WORKERS = 1  # Currently only one GPU is supported
+from label_sleuth.active_learning.core.active_learning_api import ActiveLearningStrategy
+from label_sleuth.active_learning.strategies.hard_example_mining import HardMiningLearner
+from label_sleuth.active_learning.strategies.random_sampling import RandomSampling
+from label_sleuth.active_learning.strategies.retrospective import RetrospectiveLearner
 
 
-
-
-
-
-
-
-
-
+class ActiveLearningCatalog:
+    RANDOM = ActiveLearningStrategy(RandomSampling)
+    HARD_MINING = ActiveLearningStrategy(HardMiningLearner)
+    RETROSPECTIVE = ActiveLearningStrategy(RetrospectiveLearner)

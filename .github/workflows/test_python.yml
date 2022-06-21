@@ -27,7 +27,7 @@ jobs:
         cache: 'pip'
 
     - name: Install Requirements
-      run: pip install -r label_sleuth/requirements.txt
+      run: pip install -r requirements.txt
 
     - name: Install the package that is required for testing and coverage calculation
       run: pip install coverage

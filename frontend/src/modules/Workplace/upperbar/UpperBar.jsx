@@ -10,6 +10,7 @@ import { updateCurCategory } from '../DataSlice.jsx';
 import FormControl from '@mui/material/FormControl';
 import ControlledSelect from '../../../components/dropdown/Dropdown';
 import Tooltip from '@mui/material/Tooltip';
+import { CREATE_NEW_CATEGORY_TOOLTIP_MSG } from '../../../const';
 
 const rightDrawerWidth = 360;
 const leftDrawerWidthh = 280;
@@ -48,18 +49,14 @@ const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== 'open', })(({
   justifyContent: 'space-between',
 }));
 
-function CategoryFormControl(props) {
-  const { workspaceLength } = props
+function CategoryFormControl() {
   const workspace = useSelector(state => state.workspace)
   const dispatch = useDispatch()
   const [selValue, setSelVal] = React.useState()
 
   React.useEffect(() => {
-    if (workspace.categories.length !== 0 && (workspaceLength == workspace.categories.length)) {
-      setSelVal(workspace.categories[workspace.categories.length - 1].id)
-    }
-
-  }, [workspace.categories.length, workspaceLength])
+    setSelVal(workspace.curCategory)
+  }, [workspace.curCategory])
 
   const options = workspace.categories
     .map((item) => ({ value: item.category_name, title: item.category_name }))
@@ -86,10 +83,6 @@ function CategoryFormControl(props) {
 
 const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
 
-  const workspace = useSelector(state => state.workspace)
-  const dispatch = useDispatch()
-  const workspaceLength = useSelector(state => state.workspace.workspaceLength)
-
   const handleAddCategory = () => {
     setModalOpen(true)
   }
@@ -100,10 +93,9 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
         <div className={classes.upper}>
           <p>Category: </p>
           <CategoryFormControl
-            workspaceLength={workspaceLength}
             placholder="placeholder" />
 
-          <Tooltip title="Create a new category">
+          <Tooltip title={CREATE_NEW_CATEGORY_TOOLTIP_MSG} disableFocusListener>
             <button onClick={handleAddCategory} alt="Create new category">
               <img src={add_icon} />
             </button>

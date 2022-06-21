@@ -14,13 +14,15 @@ const initialState = {
     ready: false,
     num_cur_batch: 0,
     elementsToLabel: [],
-    focusedIndex: 0,
+    focusedIndex: null,
     focusedState: [],
     labelState: [],
-    searchResult: [],
+    searchResult: null,
+    searchUniqueElemRes: null,
+    searchTotalElemRes: null,
     searchLabelState: [],
     recommendToLabelState: [],
-    model_version: -1,
+    model_version: null,
     indexPrediction: 0,
     predictionForDocCat: [],
     modelUpdateProgress: 0,
@@ -32,7 +34,6 @@ const initialState = {
     neg_label_num_doc: 0,
     training_batch: 5,
     cur_completed_id_in_batch: 0,
-    workspaceLength:0,
     isDocLoaded: false,
     isCategoryLoaded: false,
     numLabel: { pos: 0, neg: 0 },
@@ -40,9 +41,9 @@ const initialState = {
     searchedIndex:0,
     isSearchActive: false,
     activePanel: "",
+    searchInput: null
 }
 
-const token = localStorage.getItem('token')
 const BASE_URL = process.env.REACT_APP_API_URL
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
@@ -70,7 +71,7 @@ export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -89,7 +90,7 @@ export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel',
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -114,7 +115,7 @@ export const getPositiveElementForCategory = createAsyncThunk('workspace/getPosi
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -135,7 +136,7 @@ export const createCategoryOnServer = createAsyncThunk('workspace/createCategory
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         body: JSON.stringify({
             'category_name': category,
@@ -163,7 +164,7 @@ export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -184,7 +185,7 @@ export const fetchNextDocElements = createAsyncThunk('workspace/fetchNextDoc', a
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -205,7 +206,7 @@ export const fetchPrevDocElements = createAsyncThunk('workspace/fetchPrevDoc', a
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -227,7 +228,7 @@ export const fetchElements = createAsyncThunk('workspace/fetchElements', async (
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -252,7 +253,7 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => {
@@ -273,7 +274,7 @@ export const downloadLabeling = createAsyncThunk('workspace/downloadLabeling', a
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'text/csv;charset=UTF-8',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(res => res.text())
@@ -292,7 +293,7 @@ export const labelInfoGain = createAsyncThunk('workspace/labeled_info_gain', asy
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -309,7 +310,7 @@ export const fetchCategories = createAsyncThunk('workspace/get_all_categories', 
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -328,7 +329,7 @@ export const checkModelUpdate = createAsyncThunk('workspace/check_model_update',
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -350,7 +351,7 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         body: JSON.stringify({
             'category_name': state.workspace.curCategory,
@@ -374,7 +375,7 @@ export const checkStatus = createAsyncThunk('workspace/get_labelling_status', as
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${state.authenticate.token}`
         },
         method: "GET"
     }).then(response => response.json())
@@ -396,7 +397,7 @@ const DataSlice = createSlice({
             state.isDocLoaded = action.payload
         },
         resetSearchResults(state, _) {
-            state.searchResult = []
+            state.searchResult = null
         }, 
         setSearchLabelState(state, action) {
             return {
@@ -434,6 +435,9 @@ const DataSlice = createSlice({
         setActivePanel(state, action) {
             state.activePanel = action.payload
         },
+        setSearchInput(state, action) {
+            state.searchInput = action.payload
+        },
         prevPrediction(state, action) {
             const pred_index = state.indexPrediction
             if (pred_index > 0) {
@@ -449,7 +453,6 @@ const DataSlice = createSlice({
         },
         updateCurCategory(state, action) {
             const c = action.payload
-            console.log(`category: ${c}`)
             return {
                 ...state,
                 curCategory: c
@@ -465,7 +468,7 @@ const DataSlice = createSlice({
             }
 
             initialFocusedState['L' + id] = true
-
+            
             return {
                 ...state,
                 focusedState: initialFocusedState,
@@ -478,33 +481,6 @@ const DataSlice = createSlice({
             return {
                 ...state,
                 labelState: new_labeled_state
-            }
-        },
-        setWorkspaceLength(state, action) {
-            const workspace_length = action.payload
-
-            return {
-                ...state,
-                workspaceLength: workspace_length
-            }
-        },
-        createNewCategory(state, action) {
-            const new_category_name = action.payload
-
-            var cat_list = [...state.new_categories]
-
-            console.log(`createNewCategory called`)
-
-            if (!cat_list.includes(new_category_name)) {
-                console.log(`does not contain new category`)
-                cat_list.push(new_category_name)
-            } else {
-                console.log(`already contain new category`)
-            }
-
-            return {
-                ...state,
-                new_categories: cat_list
             }
         },
         increaseIdInBatch(state, action) {
@@ -528,8 +504,6 @@ const DataSlice = createSlice({
             for (var i = 0; i < data['elements'].length; i++) {
                 initialFocusedState['L' + i] = false
             }
-
-            initialFocusedState['L0'] = true
 
             var initialLabelState = {}
 
@@ -555,7 +529,7 @@ const DataSlice = createSlice({
                 ...state,
                 elements: data['elements'],
                 focusedState: initialFocusedState,
-                focusedIndex: 0,
+                focusedIndex: null,
                 labelState: initialLabelState,
                 ready: true,
                 pos_label_num_doc: pos_label,
@@ -600,6 +574,8 @@ const DataSlice = createSlice({
             return {
                 ...state,
                 searchResult: data.elements,
+                searchUniqueElemRes: data.hit_count_unique,
+                searchTotalElemRes: data.hit_count,
                 searchLabelState: initialSearchLabelState
             }
         },
@@ -660,8 +636,6 @@ const DataSlice = createSlice({
                 initialFocusedState['L' + i] = false
             }
 
-            initialFocusedState['L0'] = true
-
             var initialLabelState = {}
 
             var pos_label = 0
@@ -688,7 +662,7 @@ const DataSlice = createSlice({
                 curDocId: state.curDocId + 1,
                 curDocName: state['documents'][state.curDocId + 1]['document_id'],
                 focusedState: initialFocusedState,
-                focusedIndex: 0,
+                focusedIndex: null,
                 labelState: initialLabelState,
                 ready: true,
                 pos_label_num_doc: pos_label,
@@ -703,8 +677,6 @@ const DataSlice = createSlice({
             for (var i = 0; i < data['elements'].length; i++) {
                 initialFocusedState['L' + i] = false
             }
-
-            initialFocusedState['L0'] = true
 
             var initialLabelState = {}
 
@@ -732,7 +704,7 @@ const DataSlice = createSlice({
                 curDocId: state.curDocId - 1,
                 curDocName: state['documents'][state.curDocId - 1]['document_id'],
                 focusedState: initialFocusedState,
-                focusedIndex: 0,
+                focusedIndex: null,
                 labelState: initialLabelState,
                 ready: true,
                 pos_label_num_doc: pos_label,
@@ -793,7 +765,10 @@ const DataSlice = createSlice({
                 }
             }
 
-            console.log(`latest model version: ${latest_model_version}`)
+            // if there is a model available, start counting the version from 1 (not 0)
+            if (latest_model_version >= 0) {
+                latest_model_version += 1
+            }
 
             return {
                 ...state,
@@ -876,7 +851,7 @@ const DataSlice = createSlice({
                 curDocId: DocId,
                 curDocName: state['documents'][DocId]['document_id'],
                 focusedState: initialFocusedState,
-                focusedIndex: 0,
+                focusedIndex: null,
                 labelState: initialLabelState,
                 ready: true,
             }
@@ -954,11 +929,9 @@ const DataSlice = createSlice({
 export default DataSlice.reducer;
 export const { updateCurCategory,
     increaseIdInBatch,
-    createNewCategory,
     prevPrediction,
     setWorkspace,
     setFocusedState,
-    setWorkspaceLength,
     setWorkspaceId,
     setIsCategoryLoaded,
     setIsDocLoaded,
@@ -972,4 +945,5 @@ export const { updateCurCategory,
     setSearchedIndex,
     setIsSearchActive,
     setActivePanel,
+    setSearchInput,
  } = DataSlice.actions;

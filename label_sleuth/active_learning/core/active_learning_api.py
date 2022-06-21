@@ -1,6 +1,21 @@
+#
+#  Copyright (c) 2022 IBM Corp.
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 import abc
 
-from typing import Sequence
+from typing import Sequence, Type
 
 import numpy as np
 
@@ -38,7 +53,7 @@ class ActiveLearner:
                               candidate_text_element_predictions: Sequence[Prediction],
                               workspace_id: str, dataset_name: str, category_name: str) -> Sequence[float]:
         """
-        For a a given sequence of TextElements and their model predictions, return a score for each element
+        For a given sequence of TextElements and their model predictions, return a score for each element
         from the active learning module.
         :param candidate_text_elements:
         :param candidate_text_element_predictions:
@@ -46,3 +61,9 @@ class ActiveLearner:
         :param dataset_name:
         :param category_name:
         """
+
+
+class ActiveLearningStrategy:
+    def __init__(self, cls: Type[ActiveLearner]):
+        self.cls = cls
+        self.name = cls.__name__

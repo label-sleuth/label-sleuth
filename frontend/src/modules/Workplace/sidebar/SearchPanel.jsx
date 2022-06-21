@@ -1,15 +1,16 @@
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { InputBase, Paper } from '@mui/material';
+import { InputBase, Paper, Typography } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import classes from './index.module.css';
 import useLabelState from './customHooks/useLabelState.js';
-import { useSelector } from 'react-redux';
 import Element from './Element';
+import { forwardRef } from 'react';
+import { useSelector } from 'react-redux';
 
-const SearchPanel = ({ handleDrawerClose,
+const SearchPanel = forwardRef(({ handleDrawerClose,
     newLabelState,
     currLabelState,
     handleSearchPanelClick,
@@ -17,15 +18,16 @@ const SearchPanel = ({ handleDrawerClose,
     handleSearch,
     clearSearchInput,
     handleSearchInputChange,
-    textInput,
     searchInput,
     updateMainLabelState,
     updateLabelState
 
-}) => {
+}, ref) => {
 
     const workspace = useSelector(state => state.workspace)
     const searchResult = workspace.searchResult
+    const searchUniqueElemRes = workspace.searchUniqueElemRes
+    const searchTotalElemRes = workspace.searchTotalElemRes
     const { handlePosLabelState, handleNegLabelState } = useLabelState(newLabelState, updateMainLabelState, updateLabelState)
 
     return (
@@ -38,45 +40,61 @@ const SearchPanel = ({ handleDrawerClose,
                     <InputBase sx={{ ml: 1, flex: 1 }} placeholder="Search" inputProps={{ 'aria-label': 'search' }}
                         onKeyPress={handleSearchInputEnterKey}
                         onChange={handleSearchInputChange}
-                        inputRef={textInput}
+                        inputRef={ref}
+                        defaultValue={searchInput}
                     />
                     {searchInput &&
                         <>
-                            <IconButton sx={{ p: '10px' }} aria-label="search" onClick={clearSearchInput} >
+                            <IconButton sx={{ p: '1px' }} aria-label="search" onClick={clearSearchInput} >
                                 <ClearIcon />
                             </IconButton>
-                            {<IconButton sx={{ p: '10px' }} aria-label="search" onClick={handleSearch} >
+                            {<IconButton sx={{ p: '1px' }} aria-label="search" onClick={handleSearch} >
                                 <SearchIcon />
                             </IconButton>}
                         </>
                     }
                 </Paper>
             </Box>
-            <Box className={classes["search-results"]} >
-                {
-                    searchResult && searchResult.map((res, i) => {
-                        return (
-                            <Element
-                                key={i}
-                                searchedIndex={i}
-                                prediction={res.model_predictions[workspace.curCategory]}
-                                text={res.text}
-                                searchInput={searchInput}
-                                id={res.id}
-                                docid={res.docid}
-                                labelValue={res.user_labels[workspace.curCategory]}
-                                handleSearchPanelClick={handleSearchPanelClick}
-                                handlePosLabelState={handlePosLabelState}
-                                handleNegLabelState={handleNegLabelState}
-                                labelState={currLabelState}
-                            />
-                        )
-                    })
-                }
+            {searchResult && searchResult.length > 0 &&
+                <Box  sx={{ display: "flex", justifyContent: "center", mt:1, fontSize: "0.8rem", color: "rgba(0,0,0,.54)" }} >
+                    <Typography sx={{ display: "flex", justifyContent: "center", fontSize: "0.8rem", color: "rgba(0,0,0,.54)" }}>
+                        {`${searchTotalElemRes} elements found (${searchUniqueElemRes} including duplicates)`}
+                    </Typography>
+                </Box>}
+            <Box className={classes["search-results"]}  sx={{ mt:2 }} >
+                {searchResult &&
+                    ((searchResult.length == 0) ?
+                        <Box>
+                            <Typography sx={{ display: "flex", justifyContent: "center", fontSize: "0.9rem", color: "rgba(0,0,0,.54)" }}>
+                                No matching results were found.
+                            </Typography>
+                        </Box>
+                        :
+                        <Box>
+                            {searchResult.map((res, i) => {
+                                return (
+                                    <Element
+                                        key={i}
+                                        searchedIndex={i}
+                                        prediction={res.model_predictions[workspace.curCategory]}
+                                        text={res.text}
+                                        searchInput={searchInput}
+                                        id={res.id}
+                                        docid={res.docid}
+                                        labelValue={res.user_labels[workspace.curCategory]}
+                                        handleSearchPanelClick={handleSearchPanelClick}
+                                        handlePosLabelState={handlePosLabelState}
+                                        handleNegLabelState={handleNegLabelState}
+                                        labelState={currLabelState}
+                                    />
+                                )
+                            })}
+                        </Box>
+                    )}
             </Box>
 
         </Box>
     );
-};
+});
 
 export default SearchPanel;

@@ -1,4 +1,4 @@
-import { getPositiveElementForCategory, fetchPrevDocElements, fetchNextDocElements, setNumLabel, setFocusedState } from '../../DataSlice.jsx';
+import { getPositiveElementForCategory, fetchPrevDocElements, fetchNextDocElements, setNumLabel } from '../../DataSlice.jsx';
 import { useDispatch, useSelector } from 'react-redux';
 
 const useFetchPrevNextDoc = () => {
@@ -22,7 +22,6 @@ const useFetchPrevNextDoc = () => {
     const handleFetchNextDoc = () => {
         if (workspace.curDocId < workspace.documents.length - 1) {
             dispatch(fetchNextDocElements()).then(() => {
-                dispatch(setFocusedState(0))
                 scrollIntoElementView()
                 getPosElemForCategory()
             })
@@ -32,7 +31,6 @@ const useFetchPrevNextDoc = () => {
     const handleFetchPrevDoc = () => {
         if (workspace.curDocId > 0) {
             dispatch(fetchPrevDocElements()).then(() => {
-                dispatch(setFocusedState(0))
                 scrollIntoElementView()
                 getPosElemForCategory()
             })

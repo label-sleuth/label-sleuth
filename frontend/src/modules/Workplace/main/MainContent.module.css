@@ -29,7 +29,7 @@
     overflow-y: scroll;
     padding: 15px 30px;
 }
-
+.doc_button_disabled,
 .doc_button {
     border: none;
     padding: 0;
@@ -47,6 +47,12 @@
 .doc_button:hover {
     opacity: 0.5;
     cursor: pointer;
+}
+
+.doc_button_disabled img {
+    width: 24px;
+    height: 24px;
+    opacity: 0.5;
 }
 
 .doc_stats {

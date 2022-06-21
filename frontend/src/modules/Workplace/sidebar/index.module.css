@@ -85,7 +85,7 @@ display: inline-block;
     right: 0;
     top: 100px;
     bottom: 0;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .top_nav_icons {
@@ -103,4 +103,13 @@ display: inline-block;
 
 .top_nav_icons:hover {
     background: #d6d6d6 !important;
+}
+
+.btndisabled {
+    width: 32px;
+    height: 32px;
+    padding: 5px !important;
+    background: none !important;
+    border-radius: 2px !important;
+    opacity: 0.5;
 }

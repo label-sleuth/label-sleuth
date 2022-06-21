@@ -1,3 +1,18 @@
+#
+#  Copyright (c) 2022 IBM Corp.
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 import gc
 import os
 
@@ -11,6 +26,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, Inpu
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.definitions import GPU_AVAILABLE
 from label_sleuth.models.core.model_api import ModelAPI
+from label_sleuth.models.core.models_factory import ModelDependencies
 from label_sleuth.models.core.prediction import Prediction
 
 
@@ -19,6 +35,7 @@ class HFTransformers(ModelAPI):
     Basic implementation for a pytorch-based transformer model that relies on the huggingface transformers library.
     """
     def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
+                 model_dependencies: ModelDependencies,
                  pretrained_model="bert-base-uncased", batch_size=32, learning_rate=5e-5, num_train_epochs=5):
         """
         :param output_dir:

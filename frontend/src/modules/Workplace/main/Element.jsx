@@ -4,7 +4,6 @@ import { IconButton } from "@mui/material";
 import { useSelector } from 'react-redux';
 import checking from '../Asset/checking.svg';
 import check from '../Asset/check.svg';
-import check_predict from '../Asset/check_predict.svg';
 import crossing from '../Asset/crossing.svg';
 import cross from '../Asset/cross.svg';
 import classes from './Element.module.css';
@@ -15,7 +14,7 @@ import { useEffect } from "react";
 
 export default function Element(props) {
 
-    const { index, text, prediction } = props
+    const { index, text } = props
     const workspace = useSelector(state => state.workspace) 
     const isSearchActive = useSelector(state => state.workspace.isSearchActive) 
     const { handlePosLabelState, handleNegLabelState } = useMainLabelState({ ...props })
@@ -23,15 +22,15 @@ export default function Element(props) {
 
 
 useEffect(()=>{
-    if(!isSearchActive && workspace.curCategory){
+    if(!isSearchActive ){
         handleTextElemStyle()
     }
-  },[isSearchActive, workspace.curCategory])
+  },[isSearchActive])
 
 
     return (
         !workspace.curCategory?
-            <Box tabIndex="-1" className={classes["text_normal"]}>
+            <Box tabIndex="-1" className={handleTextElemStyle()} id={"L" + index}>
                 <p className={classes["nodata_text"]}>{text}</p>
             </Box>
             :
@@ -44,8 +43,6 @@ useEffect(()=>{
                         onClick={handlePosLabelState}>
                         {workspace.labelState['L' + index] == 'pos' ?
                             <img className={classes.resultbtn} src={check} alt="checked" /> :
-                            prediction[index] == true && workspace.labelState['L' + index] !== 'neg' ?
-                                <img className={classes.resultbtn} src={check_predict} alt="predicted checking" /> :
                                 <img className={classes.hovbtn} src={checking} alt="checking" />
                         }
                     </IconButton>

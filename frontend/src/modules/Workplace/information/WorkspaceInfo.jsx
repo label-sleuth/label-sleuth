@@ -9,17 +9,19 @@ import sleuth_logo from '../Asset/sleuth_logo.png';
 import info_icon from '../../../assets/workspace/help.svg';
 import logout_icon from '../../../assets/workspace/logout.svg';
 import workspace_icon from '../../../assets/workspace/change_catalog.svg';
-import LinearWithValueLabel from './ModelProgressBar'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchElements, downloadLabeling, getElementToLabel, checkStatus, fetchCategories, getPositiveElementForCategory, checkModelUpdate, fetchDocuments, setWorkspaceId } from '../DataSlice.jsx';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import { Tooltip } from '@mui/material';
 import useLogOut from '../../../customHooks/useLogOut';
 import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
 import { APP_NAME, WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
+import { toast } from 'react-toastify';
+import { LOGOUT_TOOLTIP_MSG, GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG, NO_MODEL_AVAILABLE_MSG } from '../../../const';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -104,6 +106,34 @@ export default function Workspace({workspaceId}) {
     const [tabStatus, setTabStatus] = React.useState(0)
     const refAnimationInstance = useRef(null);
     
+    // this state is used to not display the new model notififications the first time the model version is set
+    const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false)
+    const [shouldNotifyNewModel, setShouldNotifyNewModel] = React.useState(false)
+    const notifySuccess = (message) => toast.success(message);
+
+
+    React.useEffect( () => {
+        if (workspace.curCategory) {
+            if (!modelVersionHasBeenSet) {
+                setModelVersionHasBeenSet(true)
+                if (workspace.model_version === -1) {
+                    setShouldNotifyNewModel(true)
+                }
+            }
+            if (shouldNotifyNewModel) {
+                setShouldNotifyNewModel(false)
+            }
+            if (workspace.model_version && workspace.model_version > -1 && modelVersionHasBeenSet) {
+                fire();
+                if (shouldNotifyNewModel) {
+                    notifySuccess('A new model is available!')
+                    notifySuccess('There are new suggestions for labeling!')
+                }
+            }
+            dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
+        }
+      }, [workspace.model_version])
+    
     React.useEffect(()=>{
         if(workspaceId){
             dispatch(setWorkspaceId(workspaceId))
@@ -177,22 +207,13 @@ export default function Workspace({workspaceId}) {
             }
 
         }, 5000);
+        
+        setModelVersionHasBeenSet(false)
+        setShouldNotifyNewModel(false)
 
         return () => clearInterval(interval);
 
     }, [workspace.curCategory])
-
-    React.useEffect(() => {
-
-        console.log(`model updated, data retrieved, model version: ${workspace.model_version}`)
-        if (workspace.model_version > 0) {
-            fire();
-        }
-
-        dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
-
-    }, [workspace.model_version])
-
 
     const handleChange = (event, newValue) => {
         setTabValue(newValue);
@@ -249,7 +270,11 @@ export default function Workspace({workspaceId}) {
                             {APP_NAME}
                             <img onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
                         </h2>
-                        { AUTH_ENABLED ? <img onClick={logout} className={classes.logout} src={logout_icon}/> : null }
+                        { AUTH_ENABLED ?   
+                            <Tooltip title={LOGOUT_TOOLTIP_MSG} placement='right'>
+                                <img onClick={logout} className={classes.logout} src={logout_icon}/>
+                            </Tooltip>
+                        : null }
                     </DrawerHeader>
 
                     <p className={classes.sleuth_desc}>A tool that allows humans to work effectively with partial-automation ML models, making data annotation more efficient and more effective in the NLP domain.</p>
@@ -269,7 +294,9 @@ export default function Workspace({workspaceId}) {
                             <label>Workspace</label>
                             <p><b>{workspaceId}</b></p>
                         </div>
-                        <img onClick={()=>{navigate(WORKSPACE_CONFIG_PATH)}} className={classes.workspace_nav} src={workspace_icon} alt="Change to Another Workspace" style={{marginBottom: '10px'}}/> 
+                        <Tooltip title={GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG} placement='right'>
+                            <img onClick={()=>{navigate(WORKSPACE_CONFIG_PATH)}} className={classes.workspace_nav} src={workspace_icon} alt="Change to Another Workspace" style={{marginBottom: '10px'}}/> 
+                        </Tooltip>
                     </DrawerHeader>
                     
                     <Divider />
@@ -331,12 +358,10 @@ export default function Workspace({workspaceId}) {
                         <ModelName>
                             <Typography>Current Model:</Typography>
                             {
-                                workspace.model_version > -1 ? <Typography><strong>v.{workspace.model_version}_Model</strong></Typography>
-                                    : <Typography><strong>None</strong></Typography>
+                               workspace.model_version && workspace.model_version > -1 ? <Typography><strong>{workspace.model_version}<sup>st</sup> version</strong></Typography>
+                                    : <Typography><strong>{NO_MODEL_AVAILABLE_MSG}</strong></Typography>
                             }
                         </ModelName>
-                        <LinearWithValueLabel />
-                        <div className={classes.modelStatus}>{workspace['modelStatus']}</div>
                         <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
                     </Stack>
 

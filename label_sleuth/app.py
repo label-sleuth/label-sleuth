@@ -1,8 +1,24 @@
+#
+#  Copyright (c) 2022 IBM Corp.
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 import getpass
 import logging
 import os
 import tempfile
 import traceback
+import zipfile
 
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
@@ -17,9 +33,11 @@ from flask import Flask, jsonify, request, send_file, make_response, send_from_d
 from flask_cors import CORS, cross_origin
 
 from label_sleuth.app_utils import elements_back_to_front, extract_iteration_information_list, \
-    extract_enriched_ngrams_and_weights_list, get_element
+    extract_enriched_ngrams_and_weights_list, get_element, get_natural_sort_key
 from label_sleuth.authentication import authenticate_response, login_if_required, verify_password
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
+from label_sleuth.config import Configuration
+from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label
 from label_sleuth.data_access.data_access_api import AlreadyExistsException
@@ -37,36 +55,43 @@ main_blueprint = Blueprint("main_blueprint", __name__)
 executor = ThreadPoolExecutor(20)
 
 
-def create_app(config, output_dir) -> Flask:
-    app = Flask(__name__, static_url_path='', static_folder='./build')
+def create_app(config: Configuration, output_dir) -> Flask:
+    app = Flask(__name__, static_folder='./build')
     CORS(app)
     app.config['CORS_HEADERS'] = 'Content-Type'
     app.config["CONFIGURATION"] = config
     app.config["output_dir"] = output_dir
     app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.config["CONFIGURATION"].users}
     app.tokens = [user.token for user in app.users.values()]
+    sentence_embedding_service = SentenceEmbeddingService(output_dir)
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),
                                            FileBasedDataAccess(output_dir),
                                            ActiveLearningFactory(),
                                            ModelFactory(os.path.join(output_dir, "models"),
-                                                        ModelsBackgroundJobsManager()),
+                                                        ModelsBackgroundJobsManager(),
+                                                        sentence_embedding_service),
+                                           sentence_embedding_service,
                                            app.config["CONFIGURATION"])
     app.register_blueprint(main_blueprint)
     return app
 
 
-def start_server(app, port=8000):
+def start_server(app, port, num_serving_threads):
     disable_html_printouts = False
     if disable_html_printouts:
         logging.getLogger('werkzeug').disabled = True
         os.environ['WERKZEUG_RUN_MAIN'] = True
 
     from waitress import serve
-    serve(app, port=port, threads=20)  # to enable running on a remote machine
+    serve(app, port=port, threads=num_serving_threads)  # to enable running on a remote machine
 
 
 @main_blueprint.route("/", defaults={'path': ''})
+@main_blueprint.route('/<path:path>') # catch all routes
 def serve(path):
+    if path != "" and os.path.exists(current_app.static_folder + '/' + path):
+        return send_from_directory(current_app.static_folder, path)
+
     return send_from_directory(current_app.static_folder, 'index.html')
 
 
@@ -100,8 +125,7 @@ workspace.
 @login_if_required
 def get_all_dataset_ids():
     """
-    Get all existing datasets
-    :return array of dataset ids as strings:
+    Get the names of all existing datasets
     """
     all_datasets = current_app.orchestrator_api.get_all_dataset_names()
     res = {'datasets':
@@ -119,8 +143,10 @@ def add_documents(dataset_name):
     includes updating labels and model predictions for all workspaces that use this dataset.
 
     The uploaded csv file must follow the required format, using the relevant column names from DisplayFields.
-    Specifically, the file must include a 'text' column, and may optionally include a 'doc_id' column as well as
+    Specifically, the file must include a 'text' column, and may optionally include a 'document_id' column as well as
     metadata columns starting with the 'metadata_' prefix.
+
+    :param dataset_name:
     """
     temp_dir = None
     try:
@@ -139,10 +165,10 @@ def add_documents(dataset_name):
                         "workspaces_to_update": workspaces_to_update})
     except AlreadyExistsException as e:
         return jsonify({"dataset_name": dataset_name, "error": "documents already exist", "documents": e.documents,
-                        "error_code": 409})
+                        "error_code": 409}),409
     except Exception:
         logging.exception(f"failed to load or add documents to dataset '{dataset_name}'")
-        return jsonify({"dataset_name": dataset_name, "error": traceback.format_exc(), "error_code": 400})
+        return jsonify({"dataset_name": dataset_name, "error": traceback.format_exc(), "error_code": 400}),400
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
             os.remove(os.path.join(temp_dir, temp_file_name))
@@ -157,10 +183,10 @@ Workspace endpoints. Each workspace is associated with a particular dataset at c
 @login_if_required
 def create_workspace():
     """
-    Create workspace
-    :param workspace_id
-    :param dataset_name
-    :return workspace_id, dataset_name:
+    Create a new workspace
+
+    :post_param workspace_id: str
+    :post_param dataset_id: str
     """
     post_data = request.get_json(force=True)
     workspace_id = post_data["workspace_id"]
@@ -184,7 +210,7 @@ def create_workspace():
 @login_if_required
 def get_all_workspace_ids():
     """
-    Get all existing workspaces
+    Get the ids of all existing workspaces
     """
     res = {'workspaces': current_app.orchestrator_api.list_workspaces()}
     return jsonify(res)
@@ -194,8 +220,10 @@ def get_all_workspace_ids():
 @login_if_required
 def delete_workspace(workspace_id):
     """
-    This call permanently deletes all data associated with the workspaces, including all the categories, user labels
-    and models.
+    This call permanently deletes all data associated with the given workspace, including all the categories, user
+    labels and models.
+
+    :param workspace_id:
     """
     current_app.orchestrator_api.delete_workspace(workspace_id)
     return jsonify({'workspace_id': workspace_id})
@@ -206,8 +234,9 @@ def delete_workspace(workspace_id):
 def get_workspace_info(workspace_id):
     """
     Get workspace information
-    :param workspace_id
-    :return workspace_id, dataset_name, array of all document_ids, id of first document:
+
+    :param workspace_id:
+    :returns a dictionary containing ids for the workspace and dataset as well as for all the documents in the dataset
     """
     document_ids = current_app.orchestrator_api.get_all_document_uris(workspace_id)
     first_document_id = document_ids[0]
@@ -229,9 +258,11 @@ the labels, classification models etc. are associated with a specific category.
 @login_if_required
 def create_category(workspace_id):
     """
-    add a new category
+    Create a new category in the given workspace
+
     :param workspace_id:
-    :return success:
+    :post_param category_name:
+    :post_param category_description:
     """
     post_data = request.get_json(force=True)
     post_data['id'] = post_data["category_name"]  # TODO old frontend expects the category name to be in id, remove after moving to new frontend
@@ -247,6 +278,8 @@ def create_category(workspace_id):
 def get_all_categories(workspace_id):
     """
     Get information about all existing categories in the workspace
+
+    :param workspace_id:
     """
     categories = current_app.orchestrator_api.get_all_categories(workspace_id)
     category_dicts = [{'id': name, 'category_name': name, 'category_description': category.description}
@@ -263,9 +296,7 @@ def rename_category(workspace_id, category_name):
     TODO implement
     :param workspace_id:
     :param category_name:
-    :param category_name:
     :param category_description:
-    :return success:
     """
     return "Not Implemented", 503
 
@@ -274,7 +305,10 @@ def rename_category(workspace_id, category_name):
 @login_if_required
 def delete_category(workspace_id, category_name):
     """
-    This call permanently deletes all data associated with the category, including user labels and models.
+    This call permanently deletes all data associated with the given category, including user labels and models.
+
+    :param workspace_id:
+    :param category_name:
     """
     current_app.orchestrator_api.delete_category(workspace_id, category_name)
     return jsonify({'category': category_name})
@@ -291,9 +325,9 @@ but also category labels, model predictions etc. that are associated with a part
 @login_if_required
 def get_all_document_uris(workspace_id):
     """
-    get all Documents
+    Get ids for all documents in the dataset associated with the workspace
+
     :param workspace_id:
-    :return documents:
     """
 
     doc_uris = current_app.orchestrator_api.get_all_document_uris(workspace_id)
@@ -302,17 +336,18 @@ def get_all_document_uris(workspace_id):
     return jsonify(res)
 
 
-@main_blueprint.route("/workspace/<workspace_id>/document/<document_id>", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/document/<document_uri>", methods=['GET'])
 @login_if_required
-def get_document_elements(workspace_id, document_id):
+def get_document_elements(workspace_id, document_uri):
     """
-    get all elements in a document
+    Get all elements in the given document
+
     :param workspace_id:
-    :param document_id: the uri of the document
-    :return elements:
+    :param document_uri:
+    :request_arg category_name:
     """
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    document = current_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_id])[0]
+    document = current_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_uri])[0]
     elements = document.text_elements
 
     category = None
@@ -324,17 +359,18 @@ def get_document_elements(workspace_id, document_id):
     return jsonify(res)
 
 
-@main_blueprint.route("/workspace/<workspace_id>/document/<document_id>/positive_predictions", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/document/<document_uri>/positive_predictions", methods=['GET'])
 @login_if_required
-def get_document_positive_predictions(workspace_id, document_id):
+def get_document_positive_predictions(workspace_id, document_uri):
     """
-    get all elements in a document
+    Get elements in the given document that received a positive prediction from the relevant classification model,
+    i.e. the latest trained model for the category specified in the request.
+
     :param workspace_id:
-    :param document_id:
-    :param category_name:
-    :param size:
-    :param start_idx:
-    :return elements filtered by whether in this document and the selected category, the prediction is positive:
+    :param document_uri:
+    :request_arg category_name:
+    :request_arg size: number of elements to return
+    :request_arg start_idx: get elements starting from this index (for pagination)
     """
 
     size = int(request.args.get('size', 100))
@@ -345,7 +381,7 @@ def get_document_positive_predictions(workspace_id, document_id):
         elements_transformed = []
     else:
         dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-        document = current_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_id])[0]
+        document = current_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_uri])[0]
 
         elements = document.text_elements
 
@@ -359,40 +395,46 @@ def get_document_positive_predictions(workspace_id, document_id):
     return jsonify(res)
 
 
-@main_blueprint.route("/workspace/<workspace_id>/element/<eltid>", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/element/<element_id>", methods=['GET'])
 @login_if_required
-def get_element_by_id(workspace_id, eltid):
+def get_element_by_id(workspace_id, element_id):
+    """
+    Get the element with the given id
+
+    :param workspace_id:
+    :param element_id:
+    :request_arg category_name:
+    """
     category_name = request.args.get('category_name')
-    return get_element(workspace_id, category_name, eltid)
+    return get_element(workspace_id, category_name, element_id)
 
 
 @main_blueprint.route("/workspace/<workspace_id>/query", methods=['GET'])
 @login_if_required
 def query(workspace_id):
     """
-    get elements that match query string
-    :param workspace_id:
-    :param qry_string:
-    :param category_name:
-    :param qry_size: how many elements to return
-    :param sample_start_idx: get the results from this sample_start_idx element (for paging)
-    :return elements:
-    """
+    Query a dataset using the regular expression given in the request, and return elements that meet this search query
 
+    :param workspace_id:
+    :request_arg category_name:
+    :request_arg qry_string: regular expression
+    :request_arg qry_size: number of elements to return
+    :request_arg sample_start_idx: get elements starting from this index (for pagination)
+    """
+    category_name = request.args.get('category_name')
     query_string = request.args.get('qry_string')
     sample_size = int(request.args.get('qry_size', 100))
     sample_start_idx = int(request.args.get('sample_start_idx', 0))
-    category_name = request.args.get('category_name')
 
-    resp = current_app.orchestrator_api.query(workspace_id, current_app.orchestrator_api.get_dataset_name(workspace_id),
-                                              category_name, query_string, unlabeled_only=False,
-                                              sample_size=sample_size, sample_start_idx=sample_start_idx,
-                                              remove_duplicates=True)
+    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    resp = current_app.orchestrator_api.query(workspace_id, dataset_name, category_name, query_string,
+                                              unlabeled_only=False, sample_size=sample_size,
+                                              sample_start_idx=sample_start_idx, remove_duplicates=True)
 
-    elements = resp["results"]
-    elements_transformed = elements_back_to_front(workspace_id, elements, category_name)
+    sorted_elements = sorted(resp["results"], key=lambda te: get_natural_sort_key(te.uri))
+    elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_name)
 
-    res = {'elements': sorted(elements_transformed, key=lambda e: e['docid']),
+    res = {'elements': elements_transformed,
            'hit_count': resp["hit_count"], 'hit_count_unique': resp["hit_count_unique"]}
     return jsonify(res)
 
@@ -406,14 +448,17 @@ Labeling-related endpoints.
 @login_if_required
 def set_element_label(workspace_id, element_id):
     """
-    Update element label information. This endpoint either adds or removes a label for a given element, depending on
-    the 'value' field in the post data.
+    Update element label information. This endpoint either adds or removes a label for a given element and category,
+    depending on the 'value' field in the post data.
+
     :param workspace_id:
     :param element_id:
-    :param category_name:
-    :param value:
-    :param update_counter:
-    :return success:
+    :post_param category_name:
+    :post_param value: if value == 'none', this element's label for the given category will be removed. Otherwise, the
+    element will be assigned a boolean label for the category corresponding to the given string (e.g., "true" -> True)
+    :post_param update_counter: determines whether the label changes are reflected in the label change counters
+    of the categories. Since an increase in label change counts can trigger the training of a new model, in some
+    specific situations this parameter is set to False and the updating of the counter is performed at a later time.
     """
     post_data = request.get_json(force=True)
 
@@ -448,10 +493,15 @@ def set_element_label(workspace_id, element_id):
 @main_blueprint.route("/workspace/<workspace_id>/positive_elements", methods=['GET'])
 @login_if_required
 def get_all_positive_labeled_elements_for_category(workspace_id):
+    """
+    Return all elements that were assigned a positive label for the given category by the user
+
+    :param workspace_id:
+    :request_arg category_name:
+    """
     category = request.args.get('category_name')
-    elements = current_app.orchestrator_api.\
-        get_all_labeled_text_elements(workspace_id, current_app.orchestrator_api.get_dataset_name(workspace_id),
-                                      category)
+    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category)
     positive_elements = [element for element in elements if element.category_to_label[category].label == LABEL_POSITIVE]
 
     elements_transformed = elements_back_to_front(workspace_id, positive_elements, category)
@@ -464,6 +514,18 @@ def get_all_positive_labeled_elements_for_category(workspace_id):
 @cross_origin()
 @login_if_required
 def import_labels(workspace_id):
+    """
+    Upload a csv file, and add its contents as user labels for the workspace. The file may contain labels for more than
+    one category.
+    The uploaded csv file must follow the required format, using the relevant column names from DisplayFields.
+    Specifically, the file must include 'text', 'category_name' and 'label' columns, and may optionally include a
+    'document_id' column.
+    If document ids are provided AND app.config["CONFIGURATION"].apply_labels_to_duplicate_texts is False, these labels
+    will be assigned only to elements in the specified documents; Otherwise, labels are assigned to all elements
+    matching the given texts.
+
+    :param workspace_id:
+    """
     csv_data = StringIO(request.data.decode("utf-8"))  # TODO use request.data also in load_documents()
     df = pd.read_csv(csv_data, dtype={'labels': str})
     return jsonify(current_app.orchestrator_api.import_category_labels(workspace_id, df))
@@ -472,6 +534,12 @@ def import_labels(workspace_id):
 @main_blueprint.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
 @login_if_required
 def export_labels(workspace_id):
+    """
+    Download all user labels from the workspace as a csv file. Each row in the csv is a label for a specific element
+    for a specific category. Column names for the various fields are listed under DisplayFields.
+
+    :param workspace_id:
+    """
     return current_app.orchestrator_api.export_workspace_labels(workspace_id).to_csv(index=False)
 
 
@@ -484,13 +552,15 @@ Models and Iterations
 @login_if_required
 def get_labelling_status(workspace_id):
     """
-    Once a certain amount of user labels for a given category has been reached, the get_labelling_status() call will
-    trigger an iteration flow in the background. This flow includes training a model, inferring the full corpus using
-    this model, choosing candidate elements for labeling using active learning, and calculating various statistics.
+    Returns information about the number of user labels for the category, as well as a number between 0-100 that
+    reflects when a new model will be trained.
+    Once a certain amount of user labels for a given category has been reached, the get_labelling_status() call --
+    via a call to orchestrator_api.train_if_recommended() -- will trigger an iteration flow in the background. This
+    flow includes training a model, inferring the full corpus using this model, choosing candidate elements for
+    labeling using active learning, and calculating various statistics.
 
     :param workspace_id:
-    :param category_name:
-    :return empty string or model id:
+    :request_arg category_name:
     """
 
     category_name = request.args.get('category_name')
@@ -514,9 +584,11 @@ def get_labelling_status(workspace_id):
 @cross_origin()
 def get_all_models_for_category(workspace_id):
     """
+    Return information about all the Iteration flows for this category and their current status.
+
     :param workspace_id:
-    :param category_name:
-    :return array of all models sorted from oldest to newest:
+    :request_arg category_name:
+    :return: array of all iterations sorted from oldest to newest
     """
     category_name = request.args.get('category_name')
 
@@ -529,13 +601,13 @@ def get_all_models_for_category(workspace_id):
 @login_if_required
 def get_elements_to_label(workspace_id):
     """
-    If at least one iteration has completed for the given category, return a list of *size* elements that were
+    If at least one Iteration has completed for the given category, return a list of *size* elements that were
     recommended for labeling by the active learning module.
+
     :param workspace_id:
-    :param category_name:
-    :param size: the number of elements to return
-    :param start_idx: get elements starting from this index (for pagination)
-    :return elements IN ORDER:
+    :request_arg category_name:
+    :request_arg size: the number of elements to return
+    :request_arg start_idx: get elements starting from this index (for pagination)
     """
 
     category_name = request.args.get('category_name')
@@ -557,17 +629,17 @@ def get_elements_to_label(workspace_id):
 @login_if_required
 def force_train_for_category(workspace_id):
     """
-    Used for manually triggering a new iteration.
+    This call is used for manually triggering a new Iteration flow.
+
     :param workspace_id:
-    :param category_name:
-    :return empty string or model id:
+    :request_arg category_name:
     """
 
     category_name = request.args.get('category_name')
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
     if category_name not in current_app.orchestrator_api.get_all_categories(workspace_id):
         return jsonify({
-            "error": "no such category '"+(category_name if category_name
+            "error": "no such category '"+(category_name if category_name != 'none'
                                            else "<category not provided in category_name param>")+"'"
         })
     model_id = current_app.orchestrator_api.train_if_recommended(workspace_id, category_name, force=True)
@@ -585,13 +657,17 @@ def force_train_for_category(workspace_id):
 @main_blueprint.route('/workspace/<workspace_id>/export_predictions', methods=['GET'])
 @login_if_required
 def export_predictions(workspace_id):
+    """
+    Download the predictions of the model from iteration *iteration_index* of *category_name*, as a csv file.
+
+    :param workspace_id:
+    :request_arg category_name:
+    :request_arg iteration_index:
+    """
     category_name = request.args.get('category_name')
-    uri_filter = request.args.get('uri_filter', None)
     iteration_index = request.args.get('iteration_index')
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
     elements = current_app.orchestrator_api.get_all_text_elements(dataset_name)
-    if uri_filter is not None:
-        elements = [x for x in elements if uri_filter in x.uri]
     infer_results = current_app.orchestrator_api.infer(workspace_id, category_name, elements,
                                                        iteration_index=iteration_index)
     return pd.DataFrame([{**te.__dict__, "score": pred.score, 'predicted_label': pred.label} for te, pred
@@ -601,7 +677,14 @@ def export_predictions(workspace_id):
 @main_blueprint.route('/workspace/<workspace_id>/export_model', methods=['GET'])
 @login_if_required
 def export_model(workspace_id):
-    import zipfile
+    """
+    Download the trained model files for the given category and (optionally) iteration index. In order for this
+    functionality to work, the ModelType currently in use must implement the ModelAPI.export_model() method.
+
+    :param workspace_id:
+    :request_arg category_name:
+    :request_arg iteration_index: optional. if not provided, the model from the latest iteration will be exported.
+    """
     category_name = request.args.get('category_name')
     iteration_index = request.args.get('iteration_index', None)  # TODO update in UI model_id -> iteration_index
     if iteration_index is None:
@@ -632,6 +715,13 @@ surface potential errors in the original labeling.
 @main_blueprint.route("/workspace/<workspace_id>/disagree_elements", methods=['GET'])
 @login_if_required
 def get_label_and_model_disagreements(workspace_id):
+    """
+    Returns all labeled elements where the predictions of the latest model for the category differ from the label
+    provided by the user.
+
+    :param workspace_id:
+    :request_arg category_name:
+    """
     category = request.args.get('category_name')
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
     elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category)
@@ -647,6 +737,17 @@ def get_label_and_model_disagreements(workspace_id):
 @main_blueprint.route("/workspace/<workspace_id>/suspicious_elements", methods=['GET'])
 @login_if_required
 def get_suspicious_elements(workspace_id):
+    """
+    This call returns elements where the user label might be incorrect, based on an analysis of all elements
+    labeled so far. Elements are ordered from most to least "suspicious" according to the analysis.
+
+    The current implementation relies on the get_disagreements_using_cross_validation() function. In this
+    implementation, several models are trained on different parts of the labeled data; labels are suspected as
+    incorrect if a model's prediction on a left-out element disagrees with the user label for that element.
+
+    :param workspace_id:
+    :request_arg category_name:
+    """
     category = request.args.get('category_name')
     try:
         suspicious_elements = current_app.orchestrator_api.get_suspicious_elements_report(workspace_id, category)
@@ -662,6 +763,19 @@ def get_suspicious_elements(workspace_id):
 @main_blueprint.route("/workspace/<workspace_id>/contradiction_elements", methods=['GET'])
 @login_if_required
 def get_contradicting_elements(workspace_id):
+    """
+    This call returns pairs of labeled elements that may be inconsistent with each other. Each pair consists of an
+    element given a positive label and an element given a negative label; since the two elements are similar to each
+    other, there is a possibility that one of the labels is incorrect. Pairs are sorted from most to least similar
+    to each other.
+    The current implementation of get_suspected_labeling_contradictions_by_distance() relies on distances between text
+    embeddings to identify the opposite-label elements that are similar to each other.
+    In addition, for each pair the call returns a list of unique tokens for each element, i.e. tokens that do not appear
+    in the other element in the pair. This can be used to visualize the similarities/differences between the two texts.
+
+    :param workspace_id:
+    :request_arg category_name:
+    """
     category = request.args.get('category_name')
     try:
         contradiction_elements_dict = current_app.orchestrator_api.get_contradiction_report(workspace_id, category)
@@ -685,6 +799,14 @@ Model evaluation
 @main_blueprint.route("/workspace/<workspace_id>/evaluation_elements", methods=['GET'])
 @login_if_required
 def get_elements_for_precision_evaluation(workspace_id):
+    """
+    Returns a sample of elements that were predicted as positive for the category by the latest model. This sample is
+    used for evaluating the precision of the model predictions: the user is asked to label this sample of elements,
+    and after they are labeled the run_precision_evaluation() call will use these labels to estimate model precision.
+
+    :param workspace_id:
+    :request_arg category_name:.
+    """
     size = current_app.config["CONFIGURATION"].precision_evaluation_size
     category = request.args.get('category_name')
     random_state = len(current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category))
@@ -702,11 +824,17 @@ def get_elements_for_precision_evaluation(workspace_id):
 @cross_origin()
 def run_precision_evaluation(workspace_id):
     """
-    update element
+    Return a score estimating the precision of *model_id*. This method is triggered manually, and after the
+    elements from get_elements_for_precision_evaluation() were labeled by the user.
+
     :param workspace_id:
-    :param category_name:
-    :param exams:
-    :return success:
+    :request_arg category_name:
+    :post_param model_id:
+    :post_param ids: element ids of the elements labeled for the purpose of precision evaluation
+    :post_param changed_elements_count: the number of labels that were added/changed in the labeling of elements
+    for evaluation. In order to avoid triggering a new iteration before evaluation is complete, labels set in the
+    context of precision evaluation are not immediately reflected in the label change counter of the category, and the
+    counts are updated only when calling run_precision_evaluation()
     """
     category_name = request.args.get('category_name')
     post_data = request.get_json(force=True)
@@ -727,10 +855,18 @@ Information on enriched tokens in a specific subset of elements, used for visual
 @main_blueprint.route("/workspace/<workspace_id>/labeled_info_gain", methods=['GET'])
 @login_if_required
 def get_labeled_elements_enriched_tokens(workspace_id):
+    """
+    Returns tokens and bigrams that are characteristic of positively labeled elements versus negatively labeled
+    elements for the category, along with weights indicating the relative significance of each token/bigram. These are
+    used to visualize the characteristic vocabulary of the category, e.g. using a word cloud. The current
+    implementation relies on calculating Mutual Information between the ngrams and the user labels.
+
+    :param workspace_id:
+    :request_arg category_name:
+    """
     category = request.args.get('category_name')
-    elements = current_app.orchestrator_api.\
-        get_all_labeled_text_elements(workspace_id, current_app.orchestrator_api.get_dataset_name(workspace_id),
-                                      category)
+    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category)
     res = dict()
     if elements and len(elements) > 0:
         boolean_labels = [element.category_to_label[category].label == LABEL_POSITIVE for element in elements]
@@ -743,9 +879,14 @@ def get_labeled_elements_enriched_tokens(workspace_id):
 @cross_origin()
 def get_predictions_enriched_tokens(workspace_id):
     """
+    Returns tokens and bigrams that are characteristic of positively predicted elements versus negatively predicted
+    elements by the latest model for the category, along with weights indicating the relative significance of each
+    token/bigram. These are used to visualize the characteristic vocabulary of the model predictions, e.g. using a
+    word cloud. The current implementation relies on calculating Mutual Information between the ngrams and the model
+    predictions.
+
     :param workspace_id:
-    :param category_name:
-    :return info-gain of a predictions sample
+    :request_arg category_name:
     """
     res = dict()
     category = request.args.get('category_name')

@@ -1,4 +1,20 @@
+#
+#  Copyright (c) 2022 IBM Corp.
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 import logging
+import re
 from typing import List, Mapping, Sequence
 
 from flask import current_app
@@ -47,7 +63,7 @@ def elements_back_to_front(workspace_id: str, elements: List[TextElement], categ
 
 def get_element(workspace_id, category_name, element_id):
     """
-    get element by id
+    Get element by id
     :param workspace_id:
     :param category_name:
     :param element_id:
@@ -88,3 +104,7 @@ def extract_enriched_ngrams_and_weights_list(elements, boolean_labels):
 
     ngrams_and_weights_list = [{'text': ngram, 'weight': weight} for ngram, weight in enriched_ngrams_and_weights]
     return ngrams_and_weights_list[:30]
+
+
+def get_natural_sort_key(text):
+    return [int(x) if x.isdigit() else x for x in re.split(r'(\d+)', text)]

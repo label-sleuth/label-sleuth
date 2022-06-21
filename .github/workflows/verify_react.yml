@@ -31,8 +31,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-#          cache: 'npm'
-#          cache-dependency-path: ./frontend/package-lock.json
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
 
       - name: Install our dependencies
         run: npm ci --force

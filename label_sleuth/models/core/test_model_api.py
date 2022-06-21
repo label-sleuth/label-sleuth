@@ -1,9 +1,25 @@
+#
+#  Copyright (c) 2022 IBM Corp.
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 import random
 import tempfile
 import unittest
 from unittest.mock import MagicMock
 
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
+from label_sleuth.models.core.models_factory import ModelDependencies
 from label_sleuth.models.random_model import RandomModel
 
 PREFIX = 'Fascinating sentence'
@@ -13,7 +29,7 @@ class TestModelAPI(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.model_api = RandomModel(self.temp_dir.name, ModelsBackgroundJobsManager())
+        self.model_api = RandomModel(self.temp_dir.name, ModelsBackgroundJobsManager(),ModelDependencies(None,None))
         self.model_id, future = self.model_api.train([], {})
         future.result()
         all_nums = list(range(1, 10))

@@ -1,3 +1,18 @@
+#
+#  Copyright (c) 2022 IBM Corp.
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 import setuptools
 import os
 
@@ -12,7 +27,7 @@ def package_files(prefix, directory):
 
 build_files = package_files("label_sleuth", "build")
 
-requirements_file = 'label_sleuth/requirements.txt'
+requirements_file = 'requirements.txt'
 
 # read requirements from file
 with open(requirements_file) as fh:
@@ -24,7 +39,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="label-sleuth",
-    version="RELEASE_VERSION".replace('v', ''),
+    version="0.1.9",
     author="IBM Research",
     author_email="eyals@il.ibm.com",
     url="https://github.com/label-sleuth/label-sleuth",
@@ -41,6 +56,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ],
-    package_data={"": ["../LICENSE", "config.json"] + build_files},
+    package_data={"": ["../LICENSE", "config.json", "../requirements.txt"] + build_files},
     include_package_data=True
 )

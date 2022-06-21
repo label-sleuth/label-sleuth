@@ -1,3 +1,18 @@
+#
+#  Copyright (c) 2022 IBM Corp.
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 import itertools
 import logging
 import random
@@ -12,7 +27,7 @@ from label_sleuth.analysis_utils.analyze_tokens import get_token_overlap
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, TextElement
 from label_sleuth.models.core.languages import Languages
 from label_sleuth.models.core.catalog import ModelsCatalog
-from label_sleuth.models.core.tools import get_glove_representation, remove_stop_words_and_punctuation
+from label_sleuth.models.core.tools import remove_stop_words_and_punctuation
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
 
 
@@ -74,7 +89,8 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
     return sorted_disagreement_elements
 
 
-def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements) -> Mapping[str, List]:
+def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements,
+                                                                 embedding_func) -> Mapping[str, List]:
     """
     Enrich the output of possibly inconsistent element pairs from *get_suspected_labeling_contradictions_by_distance*
     with sets of tokens that differentiate the pair of elements, to enable highlighting the similarities/differences
@@ -88,7 +104,7 @@ def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, 
     'diffs': a list of tuples with the tokens unique to the first and the second element of each pair, respectively,
     i.e. [(pair_1_element_a_unique_tokens_set, pair_1_element_b_unique_tokens_set), ...]
     """
-    pairs = get_suspected_labeling_contradictions_by_distance(category_name, labeled_elements)
+    pairs = get_suspected_labeling_contradictions_by_distance(category_name, labeled_elements, embedding_func)
     diffs = []
     for pair in pairs:
         set1 = set(pair[0].text.split())
@@ -99,7 +115,7 @@ def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, 
 
 
 def get_suspected_labeling_contradictions_by_distance(category_name, labeled_elements: List[TextElement],
-                                                      embedding_func=get_glove_representation,
+                                                      embedding_func,
                                                       language=Languages.ENGLISH) -> List[List[TextElement]]:
     """
     This method uses text embeddings in order to identify user labels that may be inconsistent with each other.
