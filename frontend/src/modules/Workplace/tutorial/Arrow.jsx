@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from 'react-dom'
-import { useSelector } from "react-redux";
 
 const configs = [
   {
@@ -12,15 +11,16 @@ const configs = [
     adjust: { x: 0, y: 15 },
   },
   {
-    direction: "right",
-    componentId: "sidebar-search-button",
-    adjust: { x: -140, y: -10}
-  },
-  {
     direction: "bottom",
     componentId: "main-element-view",
     xEnd: true,
     firstChild: true,
+  },
+  {
+    hide: true
+    // direction: "right",
+    // componentId: "sidebar-search-button",
+    // adjust: { x: -140, y: -10}
   },
   {
     direction: "left",
@@ -30,9 +30,10 @@ const configs = [
     adjust: { x: 30, y: 15 },
   },
   {
-    direction: "right",
-    componentId: "sidebar-recommended-button",
-    adjust: { x: -140, y: -10}
+    hide: true
+    // direction: "right",
+    // componentId: "sidebar-recommended-button",
+    // adjust: { x: -140, y: -10}
   },
   {
     direction: "left",
