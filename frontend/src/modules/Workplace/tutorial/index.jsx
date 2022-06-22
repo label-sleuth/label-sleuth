@@ -6,6 +6,7 @@ import {
   PrimaryButton,
   SecondaryButton,
   ModalContent,
+  getTutorialModal
 } from "./components";
 import { useState, useEffect } from "react";
 import "./index.css";
@@ -21,6 +22,12 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       setStageIndex(0)
     }
   }, [tutorialOpen])
+
+
+  useEffect(() => {
+    getTutorialModal(stageIndex)
+  }, [stageIndex])
+
 
   // default primary   button on click action
   const onNext = () => {
@@ -144,8 +151,10 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
 
   const currentStage = stages[stageIndex];
 
+  const TutorialModal = getTutorialModal(stageIndex)
+
   return (
-    <Modal open={tutorialOpen} onClose={() => setTutorialOpen(false)} className="modal-background">
+    <TutorialModal open={tutorialOpen} onClose={() => setTutorialOpen(false)} className='modal-background'>
       <ModalContent>
         <div
           style={{ marginTop: "25px", marginLeft: "25px", display: "block" }}
@@ -165,7 +174,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
           <PrimaryButton onClick={currentStage.onPrimaryButtonClick || onNext}>{currentStage.primaryButtonTitle || 'Next'}</PrimaryButton>
         </Stack>
       </ModalContent>
-    </Modal>
+    </TutorialModal>
   );
 };
 

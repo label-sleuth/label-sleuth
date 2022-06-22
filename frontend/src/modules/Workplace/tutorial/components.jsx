@@ -1,5 +1,26 @@
 import { styled } from "@mui/material/styles";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Modal } from "@mui/material";
+import img1 from './assets/stage_1.png'
+import img2 from './assets/stage_2.png'
+import img3 from './assets/stage_3.png'
+import img4 from './assets/stage_4.png'
+import img5 from './assets/stage_5.png'
+import img6 from './assets/stage_6.png'
+import img7 from './assets/stage_7.png'
+
+const images = [ img1, img2, img3, img4, img5, img6, img7]
+
+export const getTutorialModal = (stageIndex) => {
+  return styled(Modal)`
+    z-index: 10001;
+    & .MuiBackdrop-root {
+      background-image: url(${images[stageIndex]});
+      background-repeat:no-repeat;
+      background-size:100% 100%;
+    }
+`;
+}
+
 
 export const ModalContent = styled(Box)`
   position: absolute;
