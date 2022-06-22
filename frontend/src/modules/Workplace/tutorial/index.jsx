@@ -9,6 +9,9 @@ import {
 } from "./components";
 import { useState, useEffect } from "react";
 import "./index.css";
+import check from './assets/check.svg'
+import cross from './assets/cross.svg'
+import Arrow from "./Arrow";
 
 const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   const [stageIndex, setStageIndex] = useState(0);
@@ -76,8 +79,8 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             and edit your labels as many times as you’d like.
           </p>
           <div style={{ marginLeft: "35px" }}>
-            <p className="positive-label">Positive - it maches</p>
-            <p className="negative-label">Negative</p>
+            <span className="positive-label"><img src={check}/>Positive - it maches</span>
+            <span className="negative-label"><img src={cross}/>Negative</span>
           </div>
         </div>
       ),
@@ -111,7 +114,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             as guides to accelerate and fine-tune your model.
           </p>
           <div style={{ marginLeft: "35px", marginTop: "20px  " }}>
-            <p className="positive-label">Recommend to Label</p>
+            <span className="prediction"><div className="prediction-square"/>Recommend to Label</span>
           </div>
         </div>
       ),
