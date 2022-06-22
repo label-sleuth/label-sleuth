@@ -1,4 +1,4 @@
-import { Modal, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 import {
   SmallTitle,
   LargeTitle,
@@ -12,7 +12,6 @@ import { useState, useEffect } from "react";
 import "./index.css";
 import check from './assets/check.svg'
 import cross from './assets/cross.svg'
-import Arrow from "./Arrow";
 
 const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   const [stageIndex, setStageIndex] = useState(0);
@@ -25,17 +24,13 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
 
 
   useEffect(() => {
-    getTutorialModal(stageIndex)
+    TutorialModal = getTutorialModal(stageIndex)
   }, [stageIndex])
 
 
   // default primary   button on click action
   const onNext = () => {
-    if (stageIndex === stages.length - 1) {
-      setStageIndex(0);
-    } else {
-      setStageIndex(stageIndex + 1);
-    }
+    setStageIndex(stageIndex + 1);
   };
 
   // default secondary button on click action
@@ -151,12 +146,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
 
   const currentStage = stages[stageIndex];
 
-  const TutorialModal = getTutorialModal(stageIndex)
+  let TutorialModal = getTutorialModal(stageIndex)
 
   return (
     <TutorialModal open={tutorialOpen} onClose={() => setTutorialOpen(false)} className='modal-background'>
       <ModalContent>
-        <Arrow tutorialStageIndex={stageIndex}/>
         <div
           style={{ marginTop: "25px", marginLeft: "25px", display: "block" }}
         >
