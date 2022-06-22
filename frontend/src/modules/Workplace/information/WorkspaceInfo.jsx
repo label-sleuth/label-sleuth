@@ -21,7 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
 import { APP_NAME, WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
 import { toast } from 'react-toastify';
-import { LOGOUT_TOOLTIP_MSG, GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG, NO_MODEL_AVAILABLE_MSG } from '../../../const';
+import { LOGOUT_TOOLTIP_MSG, GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG, NO_MODEL_AVAILABLE_MSG, LABEL_SLEUTH_SHORT_DESC } from '../../../const';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -277,7 +277,7 @@ export default function Workspace({workspaceId}) {
                         : null }
                     </DrawerHeader>
 
-                    <p className={classes.sleuth_desc}>A tool that allows humans to work effectively with partial-automation ML models, making data annotation more efficient and more effective in the NLP domain.</p>
+                    <p className={classes.sleuth_desc}>{LABEL_SLEUTH_SHORT_DESC}</p>
                     
                     <Divider />
                     
