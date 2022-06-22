@@ -43,7 +43,7 @@ import Tutorial from './tutorial';
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
   const [open, setOpen] = React.useState(false);
-  const [tutorialOpen, setTutorialOpen] = React.useState(true);
+  const [tutorialOpen, setTutorialOpen] = React.useState(false);
   const workspace = useSelector(state => state.workspace)
   const [modalOpen, setModalOpen] = useState(false)
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
