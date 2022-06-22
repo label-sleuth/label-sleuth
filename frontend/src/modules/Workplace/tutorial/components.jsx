@@ -1,12 +1,12 @@
 import { styled } from "@mui/material/styles";
 import { Box, Button, Modal } from "@mui/material";
-import img1 from './assets/stage_1.png'
-import img2 from './assets/stage_2.png'
-import img3 from './assets/stage_3.png'
-import img4 from './assets/stage_4.png'
-import img5 from './assets/stage_5.png'
-import img6 from './assets/stage_6.png'
-import img7 from './assets/stage_7.png'
+import img1 from './assets/v1/stage_1.png'
+import img2 from './assets/v1/stage_2.png'
+import img3 from './assets/v1/stage_3.png'
+import img4 from './assets/v1/stage_4.png'
+import img5 from './assets/v1/stage_5.png'
+import img6 from './assets/v1/stage_6.png'
+import img7 from './assets/v1/stage_7.png'
 
 const images = [ img1, img2, img3, img4, img5, img6, img7]
 
