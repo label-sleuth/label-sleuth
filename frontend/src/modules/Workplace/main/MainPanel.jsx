@@ -108,7 +108,7 @@ const MainPanel = ({ handleKeyEvent, open }) => {
         <div className={classes.doc_content}>
           <Box>
           </Box>
-          <Box>
+          <Box id="main-element-view">
             {
               isCategoryLoaded && currentContentData.map((element, index) =>
                 <Element

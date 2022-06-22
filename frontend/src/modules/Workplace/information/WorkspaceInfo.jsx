@@ -273,7 +273,7 @@ export default function Workspace({workspaceId, setTutorialOpen}) {
                         <h2 className={classes.sleuth_title}>
                             <img src={sleuth_logo} className={classes.sleuthlogo} alt="Sleuth Logo" />
                             {APP_NAME}
-                            <img onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
+                            <img id="workspace-tutorial-image" onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
                         </h2>
                         { AUTH_ENABLED ?   
                             <Tooltip title={LOGOUT_TOOLTIP_MSG} placement='right'>
@@ -363,8 +363,8 @@ export default function Workspace({workspaceId, setTutorialOpen}) {
                         <ModelName>
                             <Typography>Current Model:</Typography>
                             {
-                               workspace.model_version && workspace.model_version > -1 ? <Typography><strong>{workspace.model_version}<sup>st</sup> version</strong></Typography>
-                                    : <Typography><strong>{NO_MODEL_AVAILABLE_MSG}</strong></Typography>
+                               workspace.model_version && workspace.model_version > -1 ? <Typography id="model-version"><strong>{workspace.model_version}<sup>st</sup> version</strong></Typography>
+                                    : <Typography id='model-version-unavailable'><strong>{NO_MODEL_AVAILABLE_MSG}</strong></Typography>
                             }
                         </ModelName>
                         <LinearWithValueLabel />

@@ -111,7 +111,7 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
             placholder="placeholder" />
 
           <Tooltip title={CREATE_NEW_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-            <button onClick={handleAddCategory} alt="Create new category">
+            <button onClick={handleAddCategory} alt="Create new category" id="upperbar-add-category">
               <img src={add_icon} />
             </button>
           </Tooltip>

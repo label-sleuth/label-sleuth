@@ -156,6 +156,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   return (
     <TutorialModal open={tutorialOpen} onClose={() => setTutorialOpen(false)} className='modal-background'>
       <ModalContent>
+        <Arrow tutorialStageIndex={stageIndex}/>
         <div
           style={{ marginTop: "25px", marginLeft: "25px", display: "block" }}
         >
