@@ -13,14 +13,15 @@ const images = [ img1, img2, img3, img4, img5, img6, img7]
 export const getTutorialModal = (stageIndex) => {
   return styled(Modal)`
     z-index: 10001;
+    background-color: rgba(0, 0, 0, 0.9);
     & .MuiBackdrop-root {
       background-image: url(${images[stageIndex]});
-      background-repeat:no-repeat;
-      background-size:100% 100%;
+      background-size: 100% 100%;
+      margin: 60px;
+      background-origin: padding-box;
     }
-`;
-}
-
+  `;
+};
 
 export const ModalContent = styled(Box)`
   position: absolute;
