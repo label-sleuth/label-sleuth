@@ -5,10 +5,7 @@ import classes from "./workspace-config.module.css"
 import ExistingWorkspace from "./ExistingWorkspaceForm"
 import NewWorkspace from "./NewWorkspaceForm"
 import LoadDocument from "./LoadDocumentForm"
-import workspaceConfigIcon from "../../assets/workspace-config/existing_workspace.png"
-import uploadDocIcon from "../../assets/workspace-config/upload.png"
 import ButtonAppBar from "../../components/bars/upperBar/ButtonAppBar"
-import new_workspace_icon from "../../assets/workspace-config/create_new_workspace.png"
 import { ToastContainer } from 'react-toastify';
 import { useDispatch } from 'react-redux'
 import useLoadDoc from './useLoadDoc';
@@ -33,11 +30,11 @@ const WorkspaceConfig = () => {
   return (
     <>
       <ButtonAppBar logout={logout} />
-      <ToastContainer position="top-center" theme='dark'/>
+      <ToastContainer position="top-center" theme='dark' limit={1} />
       <div className={classes.container}>
-        <div/>
+        <div />
         <div>
-          <h2 style={{display: 'flex', alignItems: 'center', marginTop: 0}}><img src={workspace_logo} style={{height: '28px', marginLeft: '3px', marginRight: '5px'}}/>Workspace</h2>
+          <h2 style={{ display: 'flex', alignItems: 'center', marginTop: 0 }}><img src={workspace_logo} style={{ height: '28px', marginLeft: '3px', marginRight: '5px' }} />Workspace</h2>
           <ExistingWorkspace {...existingWorkProps} />
           <p style={{
             marginTop: '10px',

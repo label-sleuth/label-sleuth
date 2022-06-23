@@ -17,3 +17,7 @@ export const LABEL_SLEUTH_SHORT_DESC = "Quickly create a text classifier"
 export const SEARCH = 'search'
 export const RCMD = 'rcmd'
 export const RIGHT_DRAWER_WIDTH = 360
+export const DOC_ALREADY_EXISTS = "Document already exists"
+export const FAILED_LOAD_DOCS_TO_DATASET = `An error occurred while uploading the dataset. Make sure your CSV file is well-formatted and contains the column "text" and optionally a column "document_id".`
+export const FILL_REQUIRED_FIELDS = "Please fill out all the required fields!"
+export const NEW_DATA_CREATED =  `The new dataset has been created` 

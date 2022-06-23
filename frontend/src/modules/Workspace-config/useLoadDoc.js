@@ -1,44 +1,72 @@
 
-import { useEffect, useState } from 'react';
-import { getDatasetsAPI } from './workspaceConfigSlice'
+import { useEffect, useRef, useState } from 'react';
+import { clearState, getDatasetsAPI, setIsToastActive } from './workspaceConfigSlice'
 import 'react-toastify/dist/ReactToastify.css';
 import { addDocuments } from './workspaceConfigSlice'
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux'
+import { FILL_REQUIRED_FIELDS, NEW_DATA_CREATED } from '../../const'
 
 const useLoadDoc = () => {
-    const notify = (message) => toast(message);
-    const notifyError = (message) => toast.error(message, {autoClose:15000});
+
     const { datasets } = useSelector((state) => state.workspaces)
+    const errorMessage = useSelector((state) => state.workspaces.errorMessage);
+    const isDocumentAdded = useSelector((state) => state.workspaces.isDocumentAdded);
+    const isToastActive = useSelector((state) => state.workspaces.isToastActive);
     const dispatch = useDispatch()
     const [datasetName, setDatasetName] = useState('');
+    const [file, setFile] = useState('');
+    const textFieldRef = useRef()
+    const comboInputTextRef = useRef()
+
+    function notify(message) {
+        dispatch(setIsToastActive(true))
+        toast(message, {
+            autoClose: 15000, 
+            onClose: () => {
+                dispatch(setIsToastActive(false))
+                if (isDocumentAdded || errorMessage) {
+                    dispatch(clearState())
+                }
+            }
+        });
+    }
+
+    useEffect(() => {
+        if (isDocumentAdded) {
+            notify(NEW_DATA_CREATED)
+        }
+        else if (errorMessage) {
+            notify(errorMessage)
+        }
+    }, [isDocumentAdded, errorMessage])
+
     const handleInputChange = (e) => {
         setDatasetName(e.target.value);
     };
 
     let options = datasets && datasets.map((item) => ({ value: item.dataset_id, title: item.dataset_id }))
-    const [file, setFile] = useState('');
+
     const handleFileChange = (e) => {
         setFile(e.target.files[0])
     }
 
     const handleLoadDoc = () => {
-        if (!datasetName || !file) {
-            return notify("Please fill out all the required fields!")
+        if (!errorMessage && (!datasetName || !file)) {
+            return notify(FILL_REQUIRED_FIELDS)
         }
         let formData = new FormData()
         formData.append('file', file);
         formData.append('dataset_name', datasetName)
-        dispatch(addDocuments(formData)).then((data) => {
-          if ("error" in data) {
-            notifyError(`An error occurred while uploading the dataset. Make sure your CSV file is well-formatted and contains the column "text" and optionally a column "document_id".`);
-          } 
-          else {
-            setDatasetName("");
-            dispatch(getDatasetsAPI());
-            notify("The new dataset has been created");
-          }
-        });
+        dispatch(addDocuments(formData))
+        dispatch(getDatasetsAPI())
+        let elem = document.getElementsByClassName("MuiAutocomplete-clearIndicator")
+        if (elem[0]) {
+            elem[0].click()
+        }
+        if (textFieldRef.current) {
+            textFieldRef.current.value = ''
+        }
     }
 
     return {
@@ -47,9 +75,10 @@ const useLoadDoc = () => {
         handleInputChange,
         options,
         datasets,
-        datasetName
+        textFieldRef,
+        isToastActive,
+        comboInputTextRef
     }
-
 };
 
 export default useLoadDoc;
