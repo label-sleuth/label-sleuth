@@ -43,7 +43,7 @@ const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== 'open', })(({
     }),
     paddingRight: `${rightDrawerWidth + 20}px`,
   }),
-  width: `calc(100vw - ${leftDrawerWidthh + 48}px)`,
+  // width: `calc(100vw - ${leftDrawerWidthh + 48}px)`,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
