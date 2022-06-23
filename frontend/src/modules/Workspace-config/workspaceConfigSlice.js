@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { GET_WORKSPACES_API, GET_DATASETS_API, CREATE_WORKSPACE_API, ADD_DOCUMENTS_API } from "../../config"
 import { client } from '../../api/client'
 import axios from 'axios'
+import { FAILED_LOAD_DOCS_TO_DATASET, DOC_ALREADY_EXISTS } from '../../const'
 
 const token = localStorage.getItem('token')
 
@@ -12,7 +13,9 @@ const initialState = {
   dataset: '',
   loading: false,
   isDocumentAdded: false,
-  uploadingDataset: false
+  uploadingDataset: false,
+  errorMessage: "",
+  isToastActive: false,
 }
 
 const BASE_URL = process.env.REACT_APP_API_URL
@@ -30,15 +33,30 @@ export const createWorkspace = createAsyncThunk('workspaces/createWorkspace', as
   return data
 })
 
-export const addDocuments = createAsyncThunk(`workspaces/getDatasets/dataset_name/addDocuments`, async (formData) => {
-  const dataset_name = formData.get('dataset_name')
-  let headers = {
-    'Content-Type': 'multipart/form-data',
-    'Authorization': `Bearer ${token}`
+export const addDocuments = createAsyncThunk(`workspaces/getDatasets/dataset_name/addDocuments`, async (formData, { rejectWithValue }) => {
+  try {
+    const dataset_name = formData.get('dataset_name')
+    let headers = {
+      'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${token}`
+    }
+    const { data } = await axios.post(`${getDatasets_url}/${dataset_name}/${ADD_DOCUMENTS_API}`, formData, { headers });
+    return data
+
+  } catch (err) {
+    let errorMessage = ""
+    const responseCode = err.response.data.error_code
+
+    if (responseCode == 409) {
+      errorMessage = DOC_ALREADY_EXISTS
+    }
+    else if (responseCode == 400) {
+      errorMessage = FAILED_LOAD_DOCS_TO_DATASET
+    }
+    return rejectWithValue(errorMessage)
   }
-  const { data } = await axios.post(`${getDatasets_url}/${dataset_name}/${ADD_DOCUMENTS_API}`, formData, { headers });
-  return data
-})
+}
+)
 
 export const getDatasets = createAsyncThunk('workspaces/getDatasets', async () => {
   const { data } = await client.get(getDatasets_url)
@@ -55,7 +73,15 @@ export const workspacesSlice = createSlice({
   initialState,
   reducers: {
     setActiveWorkspace: (state, action) => {
-      state.active_workspace = action.payload 
+      state.active_workspace = action.payload
+    },
+    clearState: (state) => {
+      state.errorMessage = ""
+      state.isDocumentAdded = false
+      state.uploadingDataset = false
+    },
+    setIsToastActive: (state, action) => {
+      state.isToastActive = action.payload
     },
   },
   extraReducers: {
@@ -89,8 +115,9 @@ export const workspacesSlice = createSlice({
       state.loading = false
       state.workspace = payload.workspace
     },
-    [addDocuments.rejected]: (state) => {
+    [addDocuments.rejected]: (state, action) => {
       state.uploadingDataset = false
+      state.errorMessage = action.payload
     },
     [addDocuments.pending]: (state) => {
       state.uploadingDataset = true
@@ -104,6 +131,8 @@ export const workspacesSlice = createSlice({
 })
 export const {
   setActiveWorkspace,
+  clearState,
+  setIsToastActive,
 } = workspacesSlice.actions
 
 export const workspacesReducer = workspacesSlice.reducer

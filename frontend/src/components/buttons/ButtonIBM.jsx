@@ -1,9 +1,9 @@
 import React from "react"
 import classes from "./Buttons.module.css"
 
-const ButtonIBM = ({ handleClick, disabled, size, text, ...rest }) => {
+const ButtonIBM = ({ handleClick, disabled, size, text, className, ...rest }) => {
     return (
-        <button className={classes["button-ibm"]}  onClick={handleClick} {...rest}>
+        <button className={className}  onClick={handleClick} {...rest}>
             {text}
         </button>
     )

@@ -4,19 +4,20 @@ import FormControl from '@mui/material/FormControl';
 import ControlledSelect from "../../components/dropdown/Dropdown"
 import Box from '@mui/material/Box';
 import ButtonIBM from "../../components/buttons/ButtonIBM";
+import buttonIBMClasses from "../../components/buttons/Buttons.module.css"
 import 'react-toastify/dist/ReactToastify.css';
 import classes from "./workspace-config.module.css";
 import { NEW_WORKSPACE_NAME_PLACEHOLER_MSG, NEW_WORKSPACE_NAME_MSG } from '../../const';
-const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options, handleNewWorkspace, textValue }) => {
+const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options, handleNewWorkspace, textValue, isToastActive }) => {
 
     return (
-        <Box className={classes.wrapper} style={{borderBottom: 'solid 1px #8d8d8d'}}>
-            <h2 style={{padding: '25px', margin: 0}}>Create New</h2>
+        <Box className={classes.wrapper} style={{ borderBottom: 'solid 1px #8d8d8d' }}>
+            <h2 style={{ padding: '25px', margin: 0 }}>Create New</h2>
             <FormControl variant="standard">
-                <FormControl variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px', mb: '25px'}}>
+                <FormControl variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px', mb: '25px' }}>
                     <TextField
                         onChange={handleChangeText}
-                        value= {textValue} 
+                        value={textValue}
                         required
                         id="standard-basic"
                         label={NEW_WORKSPACE_NAME_MSG}
@@ -31,17 +32,17 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                                 }
                             }
                         }}
-                        InputLabelProps={{ 
+                        InputLabelProps={{
                             shrink: true,
                             style: {
                                 fontSize: '18px',
                                 marginTop: '-8px'
                             }
-                         }}
+                        }}
                         placeholder={NEW_WORKSPACE_NAME_PLACEHOLER_MSG}
                     />
                 </FormControl>
-                <FormControl required variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px'}}>
+                <FormControl required variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px' }}>
                     <ControlledSelect
                         label="Select Dataset"
                         value={selectedValue}
@@ -50,8 +51,8 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                         placeholder="Choose from List"
                     />
                 </FormControl>
-                <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>
-                    <ButtonIBM onClick={handleNewWorkspace} text="Create & Go" />
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px' }}>
+                    <ButtonIBM onClick={handleNewWorkspace} className={isToastActive ? buttonIBMClasses["button-ibm-disabled"] : buttonIBMClasses["button-ibm"]} text="Create & Go" />
                 </div>
             </FormControl>
         </Box>
