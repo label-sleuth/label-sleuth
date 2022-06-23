@@ -22,6 +22,7 @@ const useLoadDoc = () => {
     function notify(message) {
         dispatch(setIsToastActive(true))
         toast(message, {
+            autoClose: 15000, 
             onClose: () => {
                 dispatch(setIsToastActive(false))
                 if (isDocumentAdded || errorMessage) {
@@ -52,7 +53,6 @@ const useLoadDoc = () => {
 
     const handleLoadDoc = () => {
         if (!errorMessage && (!datasetName || !file)) {
-            // dispatch(setIsToastActive(true))
             return notify(FILL_REQUIRED_FIELDS)
         }
         let formData = new FormData()
