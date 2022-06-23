@@ -37,18 +37,6 @@ export default function Workspace() {
 
   const dispatch = useDispatch();
 
-  const handleKeyEvent = (event, len_elements) => {
-    if (event.key === "ArrowDown") {
-      if (workspace.focusedIndex < len_elements) {
-        dispatch(setFocusedState(workspace.focusedIndex + 1))
-      }
-    } else if (event.key === "ArrowUp") {
-      if (workspace.focusedIndex > 0) {
-        dispatch(setFocusedState(workspace.focusedIndex - 1))
-      }
-    }
-  }
-
   useWorkspaceState()
 
   useEffect(() => {
