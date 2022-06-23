@@ -56,11 +56,9 @@ const useSearchElement = () => {
     }, [isSearchActive, isDocLoaded, workspace.curCategory, focusedIndex, scrollIntoElementView, setIsSearchActive])
 
 
-    const handleSearchPanelClick = (e) => {
-        e.stopPropagation()
-        let id = e.target.parentNode.parentNode.id;
+    const handleSearchPanelClick = (docid, id) => {
+        
         const lastIndex = id.lastIndexOf('-');
-        const docid = id.slice(0, lastIndex);
         const index = id.slice(lastIndex + 1);
         dispatch(setSearchedIndex(index))
         dispatch(setIsSearchActive(true))
