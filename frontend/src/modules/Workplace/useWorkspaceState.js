@@ -35,6 +35,14 @@ const useWorkspaceState = () => {
   }, []);
 
   React.useEffect(() => {
+    // elements has to be re-fetched when the category changes
+    dispatch(setIsCategoryLoaded(false));
+    dispatch(setIsDocLoaded(false));
+    dispatch(fetchElements()).then(() => {
+      dispatch(setIsCategoryLoaded(true));
+      dispatch(setIsDocLoaded(true));
+    })
+
     // reset the focused stata when the category changes
     dispatch(setFocusedState(null))
     // update the model version when the category changes (if any)
