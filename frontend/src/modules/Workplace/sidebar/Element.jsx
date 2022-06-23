@@ -31,19 +31,18 @@ export default function Element(props) {
     const workspace = useSelector(state => state.workspace)
 
     return (
-        <Paper
+        <Paper onClick={()=> handleSearchPanelClick(docid, id)}
             className={handleTextElemStyle()}
             sx={{ padding: '0 !important', mb: 2, ml: 1, mr: 0 }}
+            style={{ cursor: "pointer" }}
         >
-            <label className={classes["rec_doc_id"]}>{docid}</label>
+            <label style={{ cursor: "pointer" }} className={classes["rec_doc_id"]}>{docid}</label>
             <Box >
                 <p docid={docid} id={id} className={classes["elem_text"]} style={(text_colors[labelState[searchedElemIndex]])}>
                     <Highlighter
                         searchWords={[searchInput]}
                         autoEscape={false}
                         textToHighlight={text}
-                        style={{ cursor: "pointer" }}
-                        onClick={handleSearchPanelClick}
                     />
                 </p>
             </Box>
@@ -52,13 +51,13 @@ export default function Element(props) {
                 {workspace.curCategory &&
                     <>
                         <IconButton className={classes.resultbtn}
-                            onClick={() => handlePosLabelState(docid, id, searchedIndex)}>
+                            onClick={(e) => { e.stopPropagation(); handlePosLabelState(docid, id, searchedIndex)}}>
                             {labelState[searchedElemIndex] == 'pos' ?
                                 <img src={check} alt="checked" /> :
                                 <img className={classes.hovbtn} src={checking} alt="checking" />
                             }
                         </IconButton>
-                        <IconButton className={classes.resultbtn} positiveicon="false" onClick={() => handleNegLabelState(docid, id, searchedIndex)}>
+                        <IconButton className={classes.resultbtn} positiveicon="false" onClick={(e) => {e.stopPropagation(); handleNegLabelState(docid, id, searchedIndex)}}>
                             {labelState[searchedElemIndex] == 'neg' ?
                                 <img src={cross} alt="crossed" /> :
                                 <img className={classes.hovbtn} src={crossing} alt="crossinging" />
