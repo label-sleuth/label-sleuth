@@ -13,7 +13,7 @@ const ExistingWorkspaceForm = ({ handleChange, handleClick, value, options, isTo
         <Box className={classes.wrapper} style={{ borderBottom: 'solid 1px #8d8d8d' }}>
             <h2 style={{ padding: '25px', margin: 0 }}>Continue</h2>
             <FormControl variant="standard">
-                <FormControl required variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px' }}>
+                <FormControl variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px' }}>
                     <ControlledSelect
                         label="Continue with Existing Workspace"
                         value={value}

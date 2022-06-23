@@ -18,7 +18,6 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                     <TextField
                         onChange={handleChangeText}
                         value={textValue}
-                        required
                         id="standard-basic"
                         label={NEW_WORKSPACE_NAME_MSG}
                         variant="standard"
