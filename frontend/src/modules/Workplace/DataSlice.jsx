@@ -66,7 +66,6 @@ export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async
 
     const state = getState()
     var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/documents`
-    console.log(`url: ${url}`)
 
     const data = await fetch(url, {
         headers: {
@@ -129,8 +128,6 @@ export const createCategoryOnServer = createAsyncThunk('workspace/createCategory
 
     const { category } = request
 
-    console.log(`category on server: ${category}`)
-
     var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/category`
 
     const data = await fetch(url, {
@@ -153,7 +150,6 @@ export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async
     const state = getState()
 
     const { keyword } = request
-    console.log(`searchKeywords called, key: `, keyword)
     const queryParams = getQueryParamsString([
         `qry_string=${keyword}`, 
         getCategoryQueryString(state.workspace.curCategory),
@@ -244,8 +240,6 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
 
     const { docid, eid, switchStatus } = request
 
-    console.log(`call fetchCertainDocument, eid: ${eid}`)
-    
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
     var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(docid)}${queryParams}`
@@ -497,7 +491,6 @@ const DataSlice = createSlice({
     extraReducers: {
         [fetchElements.fulfilled]: (state, action) => {
             const data = action.payload
-            console.log(`fetchElements`, data)
 
             var initialFocusedState = {}
 
@@ -588,8 +581,6 @@ const DataSlice = createSlice({
 
             var predictionForDocCat = Array(state.elements.length - 1).fill(false)
 
-            console.log(`positive elements: `, data['positive_elements'])
-
             elements.map((e, i) => {
                 // const docid = e['docid']
                 // var eids = e['id'].split('-')
@@ -614,8 +605,6 @@ const DataSlice = createSlice({
 
             })
 
-            console.log(`prediction on doc: `, predictionForDocCat)
-
             return {
                 ...state,
                 predictionForDocCat: predictionForDocCat
@@ -627,8 +616,6 @@ const DataSlice = createSlice({
         },
         [fetchNextDocElements.fulfilled]: (state, action) => {
             const data = action.payload
-
-            console.log(data)
 
             var initialFocusedState = {}
 
@@ -714,8 +701,6 @@ const DataSlice = createSlice({
         [setElementLabel.fulfilled]: (state, action) => {
             const data = action.payload
 
-            console.log(`setElementLabel: `, data)
-
             return {
                 ...state,
                 num_cur_batch: state.num_cur_batch == 10 ? 0 : state.num_cur_batch + 1,
@@ -789,8 +774,6 @@ const DataSlice = createSlice({
                 initialFocusedState['L' + i] = false
             }
 
-            console.log(`data['eid]: ${eid}`)
-
             initialFocusedState['L' + eid] = true
             
             /* TODO - check if it is still needed */
@@ -843,8 +826,6 @@ const DataSlice = createSlice({
                 console.log(`No Doc found with docid: ${data['elements'][0]['docid']}`)
             }
 
-            console.log(`elements: `, data['elements'])
-
             return {
                 ...state,
                 elements: data['elements'],
@@ -859,13 +840,9 @@ const DataSlice = createSlice({
         [checkStatus.fulfilled]: (state, action) => {
             const response = action.payload
 
-            console.log(`checkStatus: `, response['labeling_counts'])
-
             const progress = response['progress']['all']
 
             const notifications = response['notifications']
-
-            console.log(`notifications: `, notifications)
 
             var status = null
 
@@ -910,9 +887,6 @@ const DataSlice = createSlice({
             } else {
                 neg_label = 0
             }
-
-
-            console.log(`pos_label: ${pos_label}, neg_label: ${neg_label}`)
 
             return {
                 ...state,
