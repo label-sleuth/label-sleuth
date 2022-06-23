@@ -14,7 +14,7 @@
 */
 
 export const SEARCH_ALL_DOCS_TOOLTIP_MSG = 'Search all documents'
-export const NEXT_TO_LABEL_TOOLTIP_MSG = 'Recommended to label' 
+export const NEXT_TO_LABEL_TOOLTIP_MSG = 'Label next' 
 export const PREV_DOC_TOOLTIP_MSG = "Go to previous document"
 export const NEXT_DOC_TOOLTIP_MSG = "Go to next document"
 export const LOGOUT_TOOLTIP_MSG = "Logout"
