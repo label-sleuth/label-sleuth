@@ -39,7 +39,7 @@ const RecToLabelPanel = ({ handleDrawerClose, updateMainLabelState, updateLabelS
                 }}>
                     <ChevronLeftIcon />
                 </IconButton>
-                <p style={{ width: '100%', textAlign: "center", marginRight: "40px" }}><strong>Recommend to label</strong></p>
+                <p style={{ width: '100%', textAlign: "center", marginRight: "40px" }}><strong>Label Next</strong></p>
             </Box>
 
             <Box className={classes["search-results"]} >
