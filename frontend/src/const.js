@@ -13,6 +13,7 @@ export const UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG = "Choose or set name"
 export const UPLOAD_NEW_DATASET_FILE_HELPER_MSG = `The csv file must have a header line (of "text" and optional "document_id")`
 export const NEW_WORKSPACE_NAME_MSG = "Name your new workspace"
 export const NEW_WORKSPACE_NAME_PLACEHOLER_MSG = "e.g., my_new_workspace"
+export const LABEL_SLEUTH_SHORT_DESC = "Quickly create a text classifier"
 export const SEARCH = 'search'
 export const RCMD = 'rcmd'
 export const RIGHT_DRAWER_WIDTH = 360

@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux'
 
 const useLoadDoc = () => {
     const notify = (message) => toast(message);
+    const notifyError = (message) => toast.error(message, {autoClose:15000});
     const { datasets } = useSelector((state) => state.workspaces)
     const dispatch = useDispatch()
     const [datasetName, setDatasetName] = useState('');
@@ -28,11 +29,16 @@ const useLoadDoc = () => {
         let formData = new FormData()
         formData.append('file', file);
         formData.append('dataset_name', datasetName)
-        dispatch(addDocuments(formData)).then(() => {
-            setDatasetName('')       
-            dispatch(getDatasetsAPI())
-            notify("The new dataset has been created")
-        })
+        dispatch(addDocuments(formData)).then((data) => {
+          if ("error" in data) {
+            notifyError(`An error occurred while uploading the dataset. Make sure your CSV file is well-formatted and contains the column "text" and optionally a column "document_id".`);
+          } 
+          else {
+            setDatasetName("");
+            dispatch(getDatasetsAPI());
+            notify("The new dataset has been created");
+          }
+        });
     }
 
     return {

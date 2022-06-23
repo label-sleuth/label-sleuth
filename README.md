@@ -22,7 +22,7 @@ This interactive system enables users to efficiently collect data for varied tas
 * [Implementing new components](#implementing-new-components)
 
 ## Installation
-Currently, the framework requires Python 3.8
+The system requires Python 3.8 (other versions are currently not supported and may cause issues).
 1. Clone the repository: 
 
    `git clone git@github.com:label-sleuth/label-sleuth.git`

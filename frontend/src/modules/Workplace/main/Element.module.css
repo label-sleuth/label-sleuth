@@ -28,6 +28,7 @@
 
 .text_predict,
 .text_normal,
+.text_auto_focus,
 .text_focus {
     color: #161616 !important;
     border: solid 2px transparent;
@@ -45,16 +46,23 @@
 
 .text_normal:hover,
 .text_predict:hover,
+.text_auto_focus:hover,
 .text_focus {
-    background: none;
+    background: #f4f4f4;
     color: #000 !important;
-    animation: elem 5s;
 }
 
-@keyframes elem {
-    from {background-color: white;}
-    to {background-color: yellow;}
-  }
+.text_auto_focus {
+    background: none;
+    color: #000 !important;
+    animation: glow 5s;
+}
+
+@keyframes glow { 
+    0% { background-color:white; }
+    50% { background-color:yellow; }
+    100% { background-color:white; } 
+} 
 
 .checking_buttons {
     justify-content: flex-end;
@@ -78,6 +86,7 @@
 
 .text_normal:hover .hovbtn,
 .text_predict:hover .hovbtn,
+.text_auto_focus:hover .hovbtn,
 .text_focus:hover .hovbtn{
     margin-left: 5px;
     display: inline-block;
