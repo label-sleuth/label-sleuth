@@ -124,8 +124,7 @@ export default function Workspace({workspaceId}) {
     // this state is used to not display the new model notififications the first time the model version is set
     const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false)
     const [shouldNotifyNewModel, setShouldNotifyNewModel] = React.useState(false)
-    const toastId = "workspace-info-toast-id";
-    function notifySuccess(message) {
+    function notifySuccess(message, toastId) {
         toast(message, {
           autoClose: false,
           type: toast.TYPE.SUCCESS,
@@ -147,8 +146,8 @@ export default function Workspace({workspaceId}) {
             if (workspace.model_version && workspace.model_version > -1 && modelVersionHasBeenSet) {
                 fire();
                 if (shouldNotifyNewModel) {
-                    notifySuccess('A new model is available!')
-                    notifySuccess('There are new suggestions for labeling!')
+                    notifySuccess('A new model is available!', 'toast-new-model')
+                    notifySuccess('There are new suggestions for labeling!', 'toast-new-suggestions-for-labelling')
                 }
             }
         }
