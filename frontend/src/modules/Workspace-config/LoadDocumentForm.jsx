@@ -27,7 +27,7 @@ import data_icon from "../../assets/workspace-config/document--add.svg"
 import { useSelector } from 'react-redux';
 import { UPLOAD_NEW_DATASET_MSG, UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG, UPLOAD_NEW_DATASET_FILE_HELPER_MSG } from '../../const';
 
-const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, textFieldRef, comboInputTextRef, isToastActive }) => {
+const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, textFieldRef, comboInputTextRef }) => {
     const uploadingDataset = useSelector((state) => state.workspaces.uploadingDataset);
 
     return (
@@ -78,7 +78,7 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                         />
                     </FormControl>
                     <div style={{ width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px' }}>
-                        {uploadingDataset ? <LoadingButtonIBM /> : <ButtonIBM onClick={handleLoadDoc} text="Upload" className={isToastActive ? buttonIBMClasses["button-ibm-disabled"] : buttonIBMClasses["button-ibm"]} />}
+                        {uploadingDataset ? <LoadingButtonIBM /> : <ButtonIBM onClick={handleLoadDoc} text="Upload" className={ buttonIBMClasses["button-ibm"]} />}
                     </div>
                 </FormControl>
             </div>

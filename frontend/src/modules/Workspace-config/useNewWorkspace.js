@@ -15,16 +15,16 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { createWorkspace, getDatasetsAPI, setActiveWorkspace, setIsToastActive } from './workspaceConfigSlice'
+import { createWorkspace, getDatasetsAPI, setActiveWorkspace } from './workspaceConfigSlice'
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
+import {FILL_REQUIRED_FIELDS} from '../../const'
 
-const useNewWorkspace = () => {
+const useNewWorkspace = (notify, toastId) => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const [textValue, setTextValue] = useState('');
-    const isToastActive = useSelector((state) => state.workspaces.isToastActive);
 
     const handleChangeText = (e) => {
         let val = e.target.value
@@ -34,7 +34,12 @@ const useNewWorkspace = () => {
 
     const handleNewWorkspace = () => {
         if (!selectedValue || !textValue) {
-            return notify("Please fill out all the required fields!")
+            return notify(FILL_REQUIRED_FIELDS, function (message) {
+                toast.update(toastId, {
+                    render: message,
+                    type: toast.TYPE.INFO,
+                })
+            })
         }
         dispatch(createWorkspace({ workspace_id: textValue, dataset_id: selectedValue }))
         dispatch(setActiveWorkspace(textValue))
@@ -50,23 +55,13 @@ const useNewWorkspace = () => {
     const handleDatasetChange = (value) => {
         setSelectedValue(value);
     };
-
-    function notify(message) {
-        dispatch(setIsToastActive(true))
-        toast(message, {
-            onClose: () => {
-                dispatch(setIsToastActive(false))
-            }
-        });
-    }
-
+ 
     return {
         handleChangeText,
         handleDatasetChange,
         handleNewWorkspace,
         selectedValue,
         textValue,
-        isToastActive,
     }
 };
 

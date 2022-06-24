@@ -15,46 +15,42 @@
 
 
 import { useEffect, useRef, useState } from 'react';
-import { clearState, getDatasetsAPI, setIsToastActive } from './workspaceConfigSlice'
+import { getDatasetsAPI } from './workspaceConfigSlice'
 import 'react-toastify/dist/ReactToastify.css';
 import { addDocuments } from './workspaceConfigSlice'
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux'
 import { FILL_REQUIRED_FIELDS, NEW_DATA_CREATED } from '../../const'
 
-const useLoadDoc = () => {
+const useLoadDoc = (notify, toastId) => {
 
     const { datasets } = useSelector((state) => state.workspaces)
     const errorMessage = useSelector((state) => state.workspaces.errorMessage);
     const isDocumentAdded = useSelector((state) => state.workspaces.isDocumentAdded);
-    const isToastActive = useSelector((state) => state.workspaces.isToastActive);
     const dispatch = useDispatch()
     const [datasetName, setDatasetName] = useState('');
     const [file, setFile] = useState('');
     const textFieldRef = useRef()
     const comboInputTextRef = useRef()
 
-    function notify(message) {
-        dispatch(setIsToastActive(true))
-        toast(message, {
-            autoClose: 15000, 
-            onClose: () => {
-                dispatch(setIsToastActive(false))
-                if (isDocumentAdded || errorMessage) {
-                    dispatch(clearState())
-                }
-            }
-        });
+    const updateToast = (message, type) => {
+        notify(message, function (message) {
+            toast.update(toastId, {
+                render: message,
+                type: type,
+            })
+        }
+        )
     }
 
     useEffect(() => {
         if (isDocumentAdded) {
-            notify(NEW_DATA_CREATED)
+            updateToast(NEW_DATA_CREATED, toast.TYPE.SUCCESS)
         }
         else if (errorMessage) {
-            notify(errorMessage)
+            updateToast(errorMessage, toast.TYPE.ERROR)
         }
-    }, [isDocumentAdded, errorMessage])
+    }, [isDocumentAdded, errorMessage, notify, dispatch])
 
     const handleInputChange = (e) => {
         setDatasetName(e.target.value);
@@ -68,7 +64,13 @@ const useLoadDoc = () => {
 
     const handleLoadDoc = () => {
         if (!errorMessage && (!datasetName || !file)) {
-            return notify(FILL_REQUIRED_FIELDS)
+            notify(FILL_REQUIRED_FIELDS, function (message) {
+                toast.update(toastId, {
+                    render: message,
+                    type: toast.TYPE.INFO,
+                })
+            }
+            )
         }
         let formData = new FormData()
         formData.append('file', file);
@@ -91,7 +93,6 @@ const useLoadDoc = () => {
         options,
         datasets,
         textFieldRef,
-        isToastActive,
         comboInputTextRef
     }
 };
