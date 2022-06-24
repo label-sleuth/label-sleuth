@@ -54,19 +54,19 @@ useEffect(()=>{
                 id={"L" + index}  >
                 <p className={classes.data_text} style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
                 <Stack className={classes.checking_buttons} direction="row" spacing={0}>
-                    <IconButton
-                        onClick={handlePosLabelState}>
+                    <div
+                        onClick={handlePosLabelState} style={{ cursor: "pointer" }}>
                         {workspace.labelState['L' + index] == 'pos' ?
                             <img className={classes.resultbtn} src={check} alt="checked" /> :
                                 <img className={classes.hovbtn} src={checking} alt="checking" />
                         }
-                    </IconButton>
-                    <IconButton onClick={handleNegLabelState}>
+                    </div>
+                    <div onClick={handleNegLabelState} style={{ cursor: "pointer" }}>
                         {workspace.labelState['L' + index] == 'neg' ?
                             <img className={classes.resultbtn} src={cross} alt="crossed" /> :
                             <img className={classes.hovbtn} src={crossing} alt="crossinging" />
                         }
-                    </IconButton>
+                    </div>
                 </Stack>
             </Box>
     )

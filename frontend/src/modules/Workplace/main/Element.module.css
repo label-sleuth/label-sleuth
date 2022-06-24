@@ -53,6 +53,8 @@
     align-items: flex-start;
     padding: 10px;
     margin-bottom: 10px;
+    min-height: 25px;
+    line-height: 10px;
 }
 
 .text_predict {
