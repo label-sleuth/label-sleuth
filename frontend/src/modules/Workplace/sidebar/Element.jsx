@@ -65,19 +65,19 @@ export default function Element(props) {
                 direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0, height: "25px", mr: 1, mb: 1 }}>
                 {workspace.curCategory &&
                     <>
-                        <IconButton className={classes.resultbtn}
+                        <div className={classes.resultbtn}
                             onClick={(e) => { e.stopPropagation(); handlePosLabelState(docid, id, searchedIndex)}}>
                             {labelState[searchedElemIndex] == 'pos' ?
                                 <img src={check} alt="checked" /> :
                                 <img className={classes.hovbtn} src={checking} alt="checking" />
                             }
-                        </IconButton>
-                        <IconButton className={classes.resultbtn} positiveicon="false" onClick={(e) => {e.stopPropagation(); handleNegLabelState(docid, id, searchedIndex)}}>
+                        </div>
+                        <div className={classes.resultbtn} positiveicon="false" onClick={(e) => {e.stopPropagation(); handleNegLabelState(docid, id, searchedIndex)}}>
                             {labelState[searchedElemIndex] == 'neg' ?
                                 <img src={cross} alt="crossed" /> :
                                 <img className={classes.hovbtn} src={crossing} alt="crossinging" />
                             }
-                        </IconButton>
+                        </div>
                     </>
                 }
             </Stack>
