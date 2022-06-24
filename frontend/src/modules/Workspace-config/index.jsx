@@ -14,7 +14,7 @@
 */
 
 import React, { useEffect } from 'react';
-import { getDatasetsAPI } from './workspaceConfigSlice'
+import { clearState, getDatasetsAPI } from './workspaceConfigSlice'
 import { cleanWorkplaceState } from '../Workplace/DataSlice'
 import classes from "./workspace-config.module.css"
 import ExistingWorkspace from "./ExistingWorkspaceForm"
@@ -28,19 +28,35 @@ import useNewWorkspace from './useNewWorkspace';
 import useLogOut from '../../customHooks/useLogOut';
 import useExistWorkspace from './useExistWorkspace';
 import workspace_logo from "../../assets/workspace-config/tag--edit.svg"
+import { toast } from 'react-toastify';
 
 const WorkspaceConfig = () => {
   const dispatch = useDispatch()
-  const loadDocProps = useLoadDoc()
-  const { options } = loadDocProps
-  const newWorkProps = useNewWorkspace()
-  const existingWorkProps = useExistWorkspace()
+
   const { logout } = useLogOut()
 
   useEffect(() => {
     dispatch(getDatasetsAPI())
     dispatch(cleanWorkplaceState())
   }, [dispatch])
+
+  const toastId = "workspace-config-toast-id";
+  function notify(message, func) {
+
+    toast(message, {
+      autoClose: 15000,
+      type: toast.TYPE.INFO,
+      toastId: toastId,
+    });
+    func(message)
+    dispatch(clearState())
+  }
+
+
+  const loadDocProps = useLoadDoc(notify, toastId)
+  const { options } = loadDocProps
+  const newWorkProps = useNewWorkspace(notify, toastId)
+  const existingWorkProps = useExistWorkspace(notify, toastId)
 
   return (
     <>

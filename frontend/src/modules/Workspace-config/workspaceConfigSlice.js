@@ -30,7 +30,6 @@ const initialState = {
   isDocumentAdded: false,
   uploadingDataset: false,
   errorMessage: "",
-  isToastActive: false,
 }
 
 const BASE_URL = process.env.REACT_APP_API_URL
@@ -95,9 +94,6 @@ export const workspacesSlice = createSlice({
       state.isDocumentAdded = false
       state.uploadingDataset = false
     },
-    setIsToastActive: (state, action) => {
-      state.isToastActive = action.payload
-    },
   },
   extraReducers: {
     [getWorkspaces.pending]: (state) => {
@@ -147,7 +143,6 @@ export const workspacesSlice = createSlice({
 export const {
   setActiveWorkspace,
   clearState,
-  setIsToastActive,
 } = workspacesSlice.actions
 
 export const workspacesReducer = workspacesSlice.reducer
