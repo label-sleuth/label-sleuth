@@ -124,8 +124,14 @@ export default function Workspace({workspaceId}) {
     // this state is used to not display the new model notififications the first time the model version is set
     const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false)
     const [shouldNotifyNewModel, setShouldNotifyNewModel] = React.useState(false)
-    const notifySuccess = (message) => toast.success(message, { autoClose: false });
-
+    const toastId = "workspace-info-toast-id";
+    function notifySuccess(message) {
+        toast(message, {
+          autoClose: false,
+          type: toast.TYPE.SUCCESS,
+          toastId: toastId,
+        });
+      }
 
     React.useEffect( () => {
         if (workspace.curCategory) {
