@@ -13,7 +13,6 @@
     limitations under the License.
 */
 
-import { refType } from '@mui/utils';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { getElementToLabel, setActivePanel } from '../../DataSlice';
