@@ -15,7 +15,6 @@
 
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { InputBase, Paper, Typography } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
@@ -25,7 +24,7 @@ import Element from './Element';
 import { forwardRef } from 'react';
 import { useSelector } from 'react-redux';
 
-const SearchPanel = forwardRef(({ handleDrawerClose,
+const SearchPanel = forwardRef(({
     handleSearchPanelClick,
     handleSearchInputEnterKey,
     handleSearch,
@@ -47,16 +46,14 @@ const SearchPanel = forwardRef(({ handleDrawerClose,
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom: "1px solid #e2e2e2", pb: 2 }} >
-                <IconButton onClick={handleDrawerClose}>
-                    <ChevronLeftIcon />
-                </IconButton>
-                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 280, height: 40, marginLeft: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom: "1px solid #e2e2e2", pb: 2, justifyContent: 'center' }} >
+                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 320, height: 40, marginLeft: 1 }}>
                     <InputBase sx={{ ml: 1, flex: 1 }} placeholder="Search" inputProps={{ 'aria-label': 'search' }}
                         onKeyPress={handleSearchInputEnterKey}
                         onChange={handleSearchInputChange}
                         inputRef={ref}
                         defaultValue={searchInput}
+                        autoFocus= {true}
                     />
                     {searchInput &&
                         <>

@@ -13,16 +13,15 @@
     limitations under the License.
 */
 
-import { Box, IconButton } from '@mui/material';
+import { Box } from '@mui/material';
 import React from 'react';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import classes from './index.module.css';
 import { useSelector } from 'react-redux';
 import Element from './Element';
 import useSearchElement from './customHooks/useSearchElement';
 import useLabelState from './customHooks/useLabelState';
 
-const RecToLabelPanel = ({ handleDrawerClose, updateMainLabelState, updateLabelState }) => {
+const RecToLabelPanel = ({ updateMainLabelState, updateLabelState }) => {
 
     const workspace = useSelector(state => state.workspace)
     let newRecLabelState = { ...workspace.recommendToLabelState }
@@ -32,14 +31,8 @@ const RecToLabelPanel = ({ handleDrawerClose, updateMainLabelState, updateLabelS
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom: "1px solid #e2e2e2", pb: 2 }} >
-                <IconButton onClick={handleDrawerClose} style={{
-                    background: 'none',
-                    borderRadius: 0
-                }}>
-                    <ChevronLeftIcon />
-                </IconButton>
-                <p style={{ width: '100%', textAlign: "center", marginRight: "40px" }}><strong>Label Next</strong></p>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom: "1px solid #e2e2e2", pb: 2, justifyContent: 'center' }} >
+                <p style={{ width: '100%', textAlign: "center"  }}><strong>Label Next</strong></p>
             </Box>
 
             <Box className={classes["search-results"]} >
