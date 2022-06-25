@@ -13,39 +13,47 @@
     limitations under the License.
 */
 
+import { refType } from '@mui/utils';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { getElementToLabel, setActivePanel } from '../../DataSlice';
 
-
-const useTogglePanel = (setOpen) => {
+const useTogglePanel = (setOpen, textInput) => {
 
     const dispatch = useDispatch()
+    const [toggleSearchPanel, setToggleSearchPanel] = useState(false)
+    const [toggleRCMDPanel, setToggleRCMDPanel] = useState(false)
 
-    const handleDrawerOpen = () => {
-        setOpen(true);
-    };
-
-    const handleDrawerClose = () => {
-        setOpen(false);
-        dispatch(setActivePanel(""))
-    };
+    useEffect(() => {
+        if (toggleSearchPanel || toggleRCMDPanel) {
+            setOpen(true);
+        }
+        else {
+            setOpen(false);
+        }
+    }, [toggleRCMDPanel, toggleSearchPanel, setOpen])
 
     const activateSearchPanel = () => {
+        if(textInput.current){
+            textInput.current.focus()
+        }
         dispatch(setActivePanel("search"))
-        handleDrawerOpen()
+        setToggleSearchPanel(!toggleSearchPanel)
+        setToggleRCMDPanel(false)
     }
 
     const activateRecToLabelPanel = () => {
-        dispatch(setActivePanel("rcmd"))
         dispatch(getElementToLabel())
-        handleDrawerOpen()
+        dispatch(setActivePanel("rcmd"))
+        setToggleSearchPanel(false)
+        setToggleRCMDPanel(!toggleRCMDPanel)
     }
 
     return {
-        handleDrawerClose,
         activateSearchPanel,
         activateRecToLabelPanel,
     }
 };
 
 export default useTogglePanel;
+
