@@ -31,7 +31,7 @@ const RecToLabelPanel = ({ updateMainLabelState, updateLabelState }) => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: 3, borderBottom: "1px solid #e2e2e2", pb: 2, justifyContent: 'center' }} >
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: "11px", borderBottom: "1px solid #e2e2e2", pb: "12px", justifyContent: 'center' }} >
                 <p style={{ width: '100%', textAlign: "center"  }}><strong>Label Next</strong></p>
             </Box>
 
