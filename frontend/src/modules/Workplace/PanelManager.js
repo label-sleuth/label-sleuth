@@ -21,11 +21,11 @@ import useUpdateLabelState from "./sidebar/customHooks/useUpdateLabelState";
 import { SEARCH, RCMD, RIGHT_DRAWER_WIDTH } from '../../const'
 import MainPanel from "./main/MainPanel";
 
-export const PanelManager = ({ activePanel, 
-    children, 
-    handleKeyEvent, 
-    open, 
-    handleDrawerClose }) => {
+export const PanelManager = ({ activePanel,
+    children,
+    handleKeyEvent,
+    open
+}) => {
 
     const { updateSearchLabelState, updateRecLabelState, updateMainLabelState } = useUpdateLabelState()
 
@@ -49,7 +49,6 @@ export const PanelManager = ({ activePanel,
                     updateLabelState: updateSearchLabelState,
                     handleKeyEvent,
                     open,
-                    handleDrawerClose,
                 });
             }
             else if (activePanel == RCMD) {
@@ -59,7 +58,6 @@ export const PanelManager = ({ activePanel,
                     updateMainLabelState,
                     updateLabelState: updateRecLabelState,
                     open,
-                    handleDrawerClose,
                 });
             }
         }
@@ -68,7 +66,7 @@ export const PanelManager = ({ activePanel,
 
     return (
         <Box>
-           <MainPanel handleKeyEvent={handleKeyEvent} open={open} />
+            <MainPanel handleKeyEvent={handleKeyEvent} open={open} />
             <Drawer sx={{
                 width: RIGHT_DRAWER_WIDTH, flexShrink: 0,
                 '& .MuiDrawer-paper': {
@@ -80,7 +78,6 @@ export const PanelManager = ({ activePanel,
                 variant="persistent"
                 anchor="right"
                 open={open}
-                onClose={handleDrawerClose}
             >
                 {activePanelWithProps}
             </Drawer>

@@ -47,9 +47,9 @@ export default function Workspace() {
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
   const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
   const [openBackdrop, setOpenBackdrop] = useState(false);
-  const { handleDrawerClose, activateSearchPanel, activateRecToLabelPanel } = useTogglePanel(setOpen)
   const activePanel = useSelector(state => state.workspace.activePanel)
-
+  const textInput = useRef(null);
+  const { activateSearchPanel, activateRecToLabelPanel } = useTogglePanel(setOpen, textInput)
   const dispatch = useDispatch();
 
   useWorkspaceState()
@@ -58,15 +58,13 @@ export default function Workspace() {
     setOpenBackdrop(!workspace.curDocName || !isCategoryLoaded || !isDocLoaded)
   }, [workspace.curDocName, isCategoryLoaded, isDocLoaded])
 
-  const textInput = useRef(null);
-
-
   const clearSearchInput = () => {
     dispatch(setSearchInput(""))
 
     dispatch(resetSearchResults())
     if (textInput.current) {
       textInput.current.value = ""
+      textInput.current.focus()
     }
   }
 
@@ -84,13 +82,12 @@ export default function Workspace() {
         <Box component="main" sx={{ padding: 0 }}>
           <UpperBar setModalOpen={setModalOpen} open={open} />
           <PanelManager
-            handleDrawerClose={handleDrawerClose}
             open={open}
             activePanel={activePanel}>
-              {open && activePanel == SEARCH && 
-              <SearchPanel ref={textInput} clearSearchInput={clearSearchInput} handleDrawerClose={handleDrawerClose} />}
-              {activePanel == RCMD && 
-              <RecToLabelPanel handleDrawerClose={handleDrawerClose} />}
+            {open && activePanel == SEARCH &&
+              <SearchPanel ref={textInput} clearSearchInput={clearSearchInput} />}
+            {activePanel == RCMD &&
+              <RecToLabelPanel />}
           </PanelManager>
           {/* Panel tabs  */}
           <Drawer variant="permanent" anchor="right" PaperProps={{ sx: { minWidth: 50, } }}>
