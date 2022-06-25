@@ -14,14 +14,27 @@
 */
 
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { workspacesReducer } from '../../../Workspace-config/workspaceConfigSlice';
 import { getElementToLabel, setActivePanel } from '../../DataSlice';
 
 const useTogglePanel = (setOpen, textInput) => {
 
     const dispatch = useDispatch()
+    const elementsToLabel = useSelector(state => state.workspace.elementsToLabel)
     const [toggleSearchPanel, setToggleSearchPanel] = useState(false)
     const [toggleRCMDPanel, setToggleRCMDPanel] = useState(false)
+
+
+  useEffect(() => {
+      if(elementsToLabel.length == 0){
+        activateSearchPanel()
+      }
+      else{
+        activateRecToLabelPanel() 
+      }
+   
+  }, [elementsToLabel.length])
 
     useEffect(() => {
         if (toggleSearchPanel || toggleRCMDPanel) {
@@ -51,6 +64,8 @@ const useTogglePanel = (setOpen, textInput) => {
     return {
         activateSearchPanel,
         activateRecToLabelPanel,
+        toggleRCMDPanel,
+        toggleSearchPanel,
     }
 };
 
