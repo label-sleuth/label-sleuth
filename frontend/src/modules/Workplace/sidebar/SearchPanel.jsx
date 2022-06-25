@@ -46,7 +46,7 @@ const SearchPanel = forwardRef(({
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: "20px", borderBottom: "1px solid #e2e2e2", pb: "19px", justifyContent: 'center' }} >
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: "19px", borderBottom: "1px solid #e2e2e2", pb: "20px", justifyContent: 'center' }} >
                 <Paper component="form" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 320, height: 40, marginLeft: 1 }}>
                     <InputBase sx={{ ml: 1, flex: 1 }} placeholder="Search" inputProps={{ 'aria-label': 'search' }}
                         onKeyPress={handleSearchInputEnterKey}

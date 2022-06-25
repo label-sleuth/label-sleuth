@@ -49,7 +49,7 @@ export default function Workspace() {
   const [openBackdrop, setOpenBackdrop] = useState(false);
   const activePanel = useSelector(state => state.workspace.activePanel)
   const textInput = useRef(null);
-  const { activateSearchPanel, activateRecToLabelPanel } = useTogglePanel(setOpen, textInput)
+  const { activateSearchPanel, activateRecToLabelPanel, toggleSearchPanel, toggleRCMDPanel } = useTogglePanel(setOpen, textInput)
   const dispatch = useDispatch();
 
   useWorkspaceState()
@@ -94,7 +94,7 @@ export default function Workspace() {
             <Box sx={{ display: "flex", flexDirection: "column", alignItems: 'center', justifyContent: 'space-between', margin: '5px' }}>
               <Tooltip title={SEARCH_ALL_DOCS_TOOLTIP_MSG} placement="left">
                 <IconButton className={classes.top_nav_icons} onClick={activateSearchPanel}>
-                  <img src={search_icon} alt="search" />
+                  <img src={search_icon} style={{ filter: !toggleSearchPanel ? 'invert(45%)' : "" }} alt="search" />
                 </IconButton>
               </Tooltip>
               <Tooltip title={NEXT_TO_LABEL_TOOLTIP_MSG} placement="left">
@@ -102,7 +102,7 @@ export default function Workspace() {
                   disabled={!workspace.model_version || workspace.model_version === -1}
                   className={!workspace.model_version || workspace.model_version === -1 ? classes.btndisabled : classes.top_nav_icons}
                   onClick={activateRecToLabelPanel}>
-                  <img src={recommend_icon} alt="recommendation" />
+                  <img src={recommend_icon} style={{ filter: !toggleRCMDPanel ? 'invert(45%)' : "" }} alt="recommendation" />
                 </IconButton>
               </Tooltip>
             </Box>
