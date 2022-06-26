@@ -18,12 +18,13 @@ import { useNavigate } from "react-router-dom";
 import { createWorkspace, getDatasetsAPI, setActiveWorkspace } from './workspaceConfigSlice'
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
-import { useDispatch } from 'react-redux'
-import {FILL_REQUIRED_FIELDS} from '../../const'
+import { useDispatch, useSelector } from 'react-redux'
+import { FILL_REQUIRED_FIELDS } from '../../const'
 
 const useNewWorkspace = (notify, toastId) => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
+    const isDocumentAdded = useSelector((state) => state.workspaces.isDocumentAdded);
     const [textValue, setTextValue] = useState('');
 
     const handleChangeText = (e) => {
@@ -48,14 +49,16 @@ const useNewWorkspace = (notify, toastId) => {
     }
 
     useEffect(() => {
-        dispatch(getDatasetsAPI())
-    }, [dispatch])
+        if (isDocumentAdded) {
+            dispatch(getDatasetsAPI())
+        }
+    }, [isDocumentAdded])
 
     const [selectedValue, setSelectedValue] = useState('');
     const handleDatasetChange = (value) => {
         setSelectedValue(value);
     };
- 
+
     return {
         handleChangeText,
         handleDatasetChange,
