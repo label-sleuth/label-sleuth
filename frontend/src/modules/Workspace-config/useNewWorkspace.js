@@ -99,4 +99,3 @@ const useNewWorkspace = (notify, toastId) => {
 };
 
 export default useNewWorkspace;
-
