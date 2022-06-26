@@ -70,7 +70,7 @@ const SearchPanel = forwardRef(({
             {searchResult && searchResult.length > 0 &&
                 <Box  sx={{ display: "flex", justifyContent: "center", mt:1, fontSize: "0.8rem", color: "rgba(0,0,0,.54)" }} >
                     <Typography sx={{ display: "flex", justifyContent: "center", fontSize: "0.8rem", color: "rgba(0,0,0,.54)" }}>
-                        {`${searchTotalElemRes} elements found (${searchUniqueElemRes} including duplicates)`}
+                        {`${searchUniqueElemRes} elements found (${searchTotalElemRes} including duplicates)`}
                     </Typography>
                 </Box>}
             <Box className={classes["search-results"]}  sx={{ mt:2 }} >
