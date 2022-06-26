@@ -15,7 +15,6 @@
 
 
 import { useEffect, useRef, useState } from 'react';
-import { getDatasetsAPI } from './workspaceConfigSlice'
 import 'react-toastify/dist/ReactToastify.css';
 import { addDocuments } from './workspaceConfigSlice'
 import { toast } from 'react-toastify';
@@ -63,8 +62,8 @@ const useLoadDoc = (notify, toastId) => {
     }
 
     const handleLoadDoc = () => {
-        if (!errorMessage && (!datasetName || !file)) {
-            notify(FILL_REQUIRED_FIELDS, function (message) {
+        if (!datasetName || !file) {
+            return notify(FILL_REQUIRED_FIELDS, function (message) {
                 toast.update(toastId, {
                     render: message,
                     type: toast.TYPE.INFO,
@@ -76,7 +75,6 @@ const useLoadDoc = (notify, toastId) => {
         formData.append('file', file);
         formData.append('dataset_name', datasetName)
         dispatch(addDocuments(formData))
-        dispatch(getDatasetsAPI())
         let elem = document.getElementsByClassName("MuiAutocomplete-clearIndicator")
         if (elem[0]) {
             elem[0].click()

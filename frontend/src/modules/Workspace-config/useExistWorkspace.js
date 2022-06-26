@@ -20,7 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { WORKSPACE_PATH } from '../../config';
-import {SELECT_WORKSPACE} from '../../const'
+import { SELECT_WORKSPACE } from '../../const'
 
 const useExistWorkspace = (notify, toastId) => {
 
@@ -28,10 +28,6 @@ const useExistWorkspace = (notify, toastId) => {
 
     let navigate = useNavigate();
     const dispatch = useDispatch()
-
-    useEffect(() => {
-        dispatch(getWorkspaces())
-    }, [dispatch])
 
     useEffect(() => {
         dispatch(getWorkspaces())

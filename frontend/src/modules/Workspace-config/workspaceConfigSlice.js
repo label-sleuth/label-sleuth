@@ -72,14 +72,9 @@ export const addDocuments = createAsyncThunk(`workspaces/getDatasets/dataset_nam
 }
 )
 
-export const getDatasets = createAsyncThunk('workspaces/getDatasets', async () => {
+export const getDatasetsAPI = createAsyncThunk('workspaces/getDatasetsAPI', async () => {
   const { data } = await client.get(getDatasets_url)
   return data
-})
-
-export const getDatasetsAPI = createAsyncThunk('workspaces/getDatasetsAPI', async (_, thunkAPI) => {
-  await client.get(getDatasets_url)
-  thunkAPI.dispatch(getDatasets());
 })
 
 export const workspacesSlice = createSlice({
@@ -106,14 +101,14 @@ export const workspacesSlice = createSlice({
     [getWorkspaces.rejected]: (state) => {
       state.loading = false
     },
-    [getDatasets.pending]: (state) => {
+    [getDatasetsAPI.pending]: (state) => {
       state.loading = true
     },
-    [getDatasets.fulfilled]: (state, { payload }) => {
+    [getDatasetsAPI.fulfilled]: (state, { payload }) => {
       state.loading = false
       state.datasets = payload.datasets
     },
-    [getDatasets.rejected]: (state) => {
+    [getDatasetsAPI.rejected]: (state) => {
       state.loading = false
     },
     [createWorkspace.rejected]: (state) => {
