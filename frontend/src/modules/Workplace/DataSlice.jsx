@@ -627,7 +627,10 @@ const DataSlice = createSlice({
         },
         [downloadLabeling.fulfilled]: (state, action) => {
             const data = action.payload
-            fileDownload(data, 'labeling-data.csv')
+            const current = new Date();
+            const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`;
+            const fileName = `labeleddata_from_Label_Sleuth<${date}>.csv`
+            fileDownload(data, fileName)
         },
         [fetchNextDocElements.fulfilled]: (state, action) => {
             const data = action.payload
