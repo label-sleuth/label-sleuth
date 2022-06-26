@@ -15,7 +15,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { createWorkspace, getDatasetsAPI, setActiveWorkspace } from './workspaceConfigSlice'
+import { createWorkspace, getDatasets, setActiveWorkspace } from './workspaceConfigSlice'
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux'
@@ -50,7 +50,7 @@ const useNewWorkspace = (notify, toastId) => {
 
     useEffect(() => {
         if (isDocumentAdded) {
-            dispatch(getDatasetsAPI())
+            dispatch(getDatasets())
         }
     }, [isDocumentAdded])
 

@@ -14,7 +14,7 @@
 */
 
 import React, { useEffect } from 'react';
-import { clearState, getDatasetsAPI } from './workspaceConfigSlice'
+import { clearState, getDatasets } from './workspaceConfigSlice'
 import { cleanWorkplaceState } from '../Workplace/DataSlice'
 import classes from "./workspace-config.module.css"
 import ExistingWorkspace from "./ExistingWorkspaceForm"
@@ -36,7 +36,7 @@ const WorkspaceConfig = () => {
   const { logout } = useLogOut()
 
   useEffect(() => {
-    dispatch(getDatasetsAPI())
+    dispatch(getDatasets())
     dispatch(cleanWorkplaceState())
   }, [dispatch])
 
