@@ -565,12 +565,14 @@ def get_labelling_status(workspace_id):
 
     category_name = request.args.get('category_name')
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    future = executor.submit(current_app.orchestrator_api.train_if_recommended, workspace_id, category_name)
+
 
     labeling_counts = current_app.orchestrator_api.\
         get_label_counts(workspace_id, dataset_name, category_name,
                          remove_duplicates=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
     progress = current_app.orchestrator_api.get_progress(workspace_id, dataset_name, category_name)
+
+    future = executor.submit(current_app.orchestrator_api.train_if_recommended, workspace_id, category_name)
 
     return jsonify({
         "labeling_counts": labeling_counts,
