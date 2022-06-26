@@ -18,6 +18,7 @@ dacite==1.6.0
 wcwidth==0.2.5
 waitress==2.0.0
 ruamel.yaml==0.15.87
+datasets==2.3.2
 torch==1.10.2
 tqdm==4.62.3
 transformers==4.16.2
