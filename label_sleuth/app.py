@@ -196,7 +196,9 @@ def create_workspace():
     dataset_name = post_data["dataset_id"]
 
     if current_app.orchestrator_api.workspace_exists(workspace_id):
-        raise Exception(f"workspace '{workspace_id}' already exists")
+        logging.info(f"Trying to create workspace '{workspace_id}' which already exists")
+        return jsonify({"workspace_id": workspace_id, "error": "workspace already exist",
+                        "error_code": 409}), 409
     current_app.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
     all_document_ids = current_app.orchestrator_api.get_all_document_uris(workspace_id)
