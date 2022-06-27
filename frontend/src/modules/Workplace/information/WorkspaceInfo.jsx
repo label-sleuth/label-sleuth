@@ -25,7 +25,7 @@ import info_icon from '../../../assets/workspace/help.svg';
 import logout_icon from '../../../assets/workspace/logout.svg';
 import workspace_icon from '../../../assets/workspace/change_catalog.svg';
 import { useDispatch, useSelector } from 'react-redux';
-import { downloadLabeling, checkModelUpdate, setWorkspaceId } from '../DataSlice.jsx';
+import { downloadLabeling, checkModelUpdate, setWorkspaceId, checkStatus } from '../DataSlice.jsx';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
@@ -37,6 +37,7 @@ import classes from './WorkspaceInfo.module.css';
 import { APP_NAME, WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
 import { toast } from 'react-toastify';
 import { LOGOUT_TOOLTIP_MSG, GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG, NO_MODEL_AVAILABLE_MSG, LABEL_SLEUTH_SHORT_DESC } from '../../../const';
+import LinearWithValueLabel from './ModelProgressBar'
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -365,6 +366,8 @@ export default function Workspace({workspaceId}) {
                                     : <Typography><strong>{NO_MODEL_AVAILABLE_MSG}</strong></Typography>
                             }
                         </ModelName>
+                        <LinearWithValueLabel />
+                                    <div className={classes.modelStatus}>{workspace['nextModelStatus']}</div>    
                         <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
                     </Stack>
 
