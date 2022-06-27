@@ -99,12 +99,12 @@ A custom configuration can be applied by passing the `--config_path` parameter t
    The main functions are *_train()* and *_infer()*:
    
    ```python
-   def _train(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
+   def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: dict):
    ```
    - model_id     
    - train_data - a list of dictionaries with at least the "text" and "label" fields. Additional fields can be passed e.g.
    *[{'text': 'text1', 'label': 1, 'additional_field': 'value1'}, {'text': 'text2', 'label': 0, 'additional_field': 'value2'}]*
-   - train_params - dictionary for additional train parameters (can be None)
+   - model_params - dictionary for additional model parameters (can be None)
 
    ```python
    def _infer(self, model_id, items_to_infer: Sequence[Mapping]) -> Sequence[Prediction]:
