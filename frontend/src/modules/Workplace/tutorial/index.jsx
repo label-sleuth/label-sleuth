@@ -6,27 +6,25 @@ import {
   PrimaryButton,
   SecondaryButton,
   ModalContent,
-  getTutorialModal
+  getTutorialModal,
 } from "./components";
 import { useState, useEffect } from "react";
 import "./index.css";
-import check from './assets/check.svg'
-import cross from './assets/cross.svg'
+import check from "./assets/check.svg";
+import cross from "./assets/cross.svg";
 
 const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   const [stageIndex, setStageIndex] = useState(0);
 
   useEffect(() => {
     if (tutorialOpen) {
-      setStageIndex(0)
+      setStageIndex(0);
     }
-  }, [tutorialOpen])
-
+  }, [tutorialOpen]);
 
   useEffect(() => {
-    TutorialModal = getTutorialModal(stageIndex)
-  }, [stageIndex])
-
+    TutorialModal = getTutorialModal(stageIndex);
+  }, [stageIndex]);
 
   // default primary   button on click action
   const onNext = () => {
@@ -35,8 +33,8 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
 
   // default secondary button on click action
   const onSkip = () => {
-    setTutorialOpen(false)
-  }
+    setTutorialOpen(false);
+  };
 
   const stages = [
     {
@@ -140,16 +138,20 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       primaryButtonTitle: "Start labeling",
       onPrimaryButtonClick: () => setTutorialOpen(false),
       secondaryButtonTitle: "Restart from beginning",
-      onSecondaryButtonClick: () => setStageIndex(0)
-    }
+      onSecondaryButtonClick: () => setStageIndex(0),
+    },
   ];
 
   const currentStage = stages[stageIndex];
 
-  let TutorialModal = getTutorialModal(stageIndex)
+  let TutorialModal = getTutorialModal(stageIndex);
 
   return (
-    <TutorialModal open={tutorialOpen} onClose={() => setTutorialOpen(false)} className='modal-background'>
+    <TutorialModal
+      open={tutorialOpen}
+      onClose={() => setTutorialOpen(false)}
+      className="modal-background"
+    >
       <ModalContent>
         <div
           style={{ marginTop: "25px", marginLeft: "25px", display: "block" }}
@@ -165,8 +167,14 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
           spacing={0}
           style={{ width: "100%", flex: "none", order: 1, flexGrow: 0 }}
         >
-          <SecondaryButton onClick={currentStage.onSecondaryButtonClick || onSkip}>{currentStage.secondaryButtonTitle || 'Skip'}</SecondaryButton>
-          <PrimaryButton onClick={currentStage.onPrimaryButtonClick || onNext}>{currentStage.primaryButtonTitle || 'Next'}</PrimaryButton>
+          <SecondaryButton
+            onClick={currentStage.onSecondaryButtonClick || onSkip}
+          >
+            {currentStage.secondaryButtonTitle || "Skip"}
+          </SecondaryButton>
+          <PrimaryButton onClick={currentStage.onPrimaryButtonClick || onNext}>
+            {currentStage.primaryButtonTitle || "Next"}
+          </PrimaryButton>
         </Stack>
       </ModalContent>
     </TutorialModal>
