@@ -401,7 +401,6 @@ def get_document_positive_predictions(workspace_id, document_uri):
     return jsonify(res)
 
 
-
 @main_blueprint.route("/workspace/<workspace_id>/positive_predictions", methods=['GET'])
 @login_if_required
 def get_positive_predictions(workspace_id):
@@ -418,21 +417,22 @@ def get_positive_predictions(workspace_id):
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
     category_name = request.args.get('category_name')
-    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name,
-                                                                     IterationStatus.READY)) == 0:
-        elements_transformed = []
+    all_ready_iterations = current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name,
+                                                                                     IterationStatus.READY)
+    if len(all_ready_iterations) == 0:
+        return jsonify({'hit_count': 0, "positive_fraction": None,'elements': []})
     else:
-        dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-        elements = current_app.orchestrator_api.get_all_text_elements(dataset_name)
+        positive_predicted_elements = current_app.orchestrator_api.sample_elements_by_prediction(
+            workspace_id, category_name, unlabeled_only=False, required_label=LABEL_POSITIVE)
+        iteration, iteration_idx = all_ready_iterations[-1]
 
-        predictions = [pred.label for pred in current_app.orchestrator_api.infer(workspace_id, category_name, elements)]
-        positive_predicted_elements = [element for element, prediction in zip(elements, predictions)
-                                       if prediction == LABEL_POSITIVE]
         sorted_elements = sorted(positive_predicted_elements, key=lambda te: get_natural_sort_key(te.uri))
         elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_name)
         elements_transformed = elements_transformed[start_idx: start_idx + size]
-    res = {'elements': elements_transformed}
-    return jsonify(res)
+
+        res = {'hit_count': len(positive_predicted_elements), "positive_fraction":
+            iteration.iteration_statistics["positive_fraction"],'elements': elements_transformed}
+        return jsonify(res)
 
 
 @main_blueprint.route("/workspace/<workspace_id>/element/<element_id>", methods=['GET'])
@@ -729,7 +729,7 @@ def export_model(workspace_id):
     category_name = request.args.get('category_name')
     iteration_index = request.args.get('iteration_index', None)  # TODO update in UI model_id -> iteration_index
     if iteration_index is None:
-        iteration = current_app.orchestrator_api. \
+        iteration, _ = current_app.orchestrator_api. \
             get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)[-1]
     else:
         iteration = current_app.orchestrator_api. \
