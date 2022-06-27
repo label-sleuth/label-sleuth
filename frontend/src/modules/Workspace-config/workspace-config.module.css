@@ -48,23 +48,6 @@
     border-right: solid 1px #161616;
 }
 
-.hexagon {
-    /* clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); */
-    height: 500px;
-    width: 400px;
-    max-height: 500px;
-    max-width: 400px;
-    background-color: white;
-    flex-basis: 50%;
-    border: 1px solid #393939;
-    border-radius: 5px;
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
-    align-items: center;
-    margin-top: 5px;
-}
- 
 .text-upload  {
     color: rgb(0 0 0 / 38%);
     font-family: "Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
@@ -87,11 +70,7 @@
     -webkit-justify-content: center;
     justify-content: center;
 }
-
-.title-workspace-config{
-    color:'#393939'
-}
-
+ 
 .wrapper {
     background: #f4f4f4;
     margin: 0 5px;
@@ -100,11 +79,4 @@
     border-top: solid 1px #eaeaea;
     border-left: solid 1px #eaeaea;
 }
-
-/* .wrapper button {
-    opacity: 0;
-}
-
-.wrapper:hover button{
-    opacity: 1;
-} */
+ 
