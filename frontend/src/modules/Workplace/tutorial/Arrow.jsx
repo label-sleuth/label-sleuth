@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from 'react-dom'
+import ReactDOM from "react-dom";
 
 const configs = [
   {
@@ -17,7 +17,7 @@ const configs = [
     firstChild: true,
   },
   {
-    hide: true
+    hide: true,
     // direction: "right",
     // componentId: "sidebar-search-button",
     // adjust: { x: -140, y: -10}
@@ -30,7 +30,7 @@ const configs = [
     adjust: { x: 30, y: 15 },
   },
   {
-    hide: true
+    hide: true,
     // direction: "right",
     // componentId: "sidebar-recommended-button",
     // adjust: { x: -140, y: -10}
@@ -43,9 +43,9 @@ const configs = [
   },
 ];
 
-const Arrow = ({tutorialStageIndex}) => {
+const Arrow = ({ tutorialStageIndex }) => {
   const [arrowPos, setArrowPos] = React.useState(null);
-  
+
   const rotation = {
     top: 0,
     right: "rotate(90deg)",
@@ -53,7 +53,15 @@ const Arrow = ({tutorialStageIndex}) => {
     bottom: "rotate(180deg)",
   };
 
-  const {direction, componentId, backupComponentId, xEnd, adjust, firstChild, hide} = configs[tutorialStageIndex]
+  const {
+    direction,
+    componentId,
+    backupComponentId,
+    xEnd,
+    adjust,
+    firstChild,
+    hide,
+  } = configs[tutorialStageIndex];
 
   React.useEffect(() => {
     let e = document.getElementById(componentId);
