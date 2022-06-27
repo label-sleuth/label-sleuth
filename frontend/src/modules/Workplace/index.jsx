@@ -43,22 +43,28 @@ import Tutorial from './tutorial';
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
   const [open, setOpen] = React.useState(false);
+
+  const [openBackdrop, setOpenBackdrop] = useState(false);
   const [tutorialOpen, setTutorialOpen] = React.useState(false);
-  const workspace = useSelector(state => state.workspace)
   const [modalOpen, setModalOpen] = useState(false)
+
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
   const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
-  const [openBackdrop, setOpenBackdrop] = useState(false);
+  const curDocName = useSelector(state => state.workspace.curDocName)
+  const curCategory = useSelector(state => state.workspace.curCategory)
   const activePanel = useSelector(state => state.workspace.activePanel)
+  const model_version = useSelector(state => state.workspace.model_version)
+
   const textInput = useRef(null);
+
   const { activateSearchPanel, activateRecToLabelPanel, toggleSearchPanel, toggleRCMDPanel } = useTogglePanel(setOpen, textInput)
   const dispatch = useDispatch();
 
   useWorkspaceState()
 
   useEffect(() => {
-    setOpenBackdrop(!workspace.curDocName || !isCategoryLoaded || !isDocLoaded)
-  }, [workspace.curDocName, isCategoryLoaded, isDocLoaded])
+    setOpenBackdrop(!curDocName || !isCategoryLoaded || !isDocLoaded)
+  }, [curDocName, isCategoryLoaded, isDocLoaded])
 
   const clearSearchInput = () => {
     dispatch(setSearchInput(""))
@@ -72,7 +78,7 @@ export default function Workspace() {
 
   useEffect(() => {
     clearSearchInput()
-  }, [workspace.curCategory])
+  }, [curCategory])
 
 
   return (
@@ -101,8 +107,8 @@ export default function Workspace() {
               </Tooltip>
               <Tooltip title={NEXT_TO_LABEL_TOOLTIP_MSG} placement="left">
                 <IconButton
-                  disabled={!workspace.model_version || workspace.model_version === -1}
-                  className={!workspace.model_version || workspace.model_version === -1 ? classes.btndisabled : classes.top_nav_icons}
+                  disabled={!model_version || model_version === -1}
+                  className={!model_version || model_version === -1 ? classes.btndisabled : classes.top_nav_icons}
                   onClick={activateRecToLabelPanel}
                   id='sidebar-recommended-button'
                 >
