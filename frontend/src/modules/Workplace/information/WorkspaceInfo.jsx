@@ -210,6 +210,7 @@ export default function Workspace({workspaceId}) {
         const interval = setInterval(() => {
             if (workspace.curCategory != null) {
                 dispatch(checkModelUpdate())
+                dispatch(checkStatus())
             }
         }, 5000);
 
@@ -367,7 +368,15 @@ export default function Workspace({workspaceId}) {
                             }
                         </ModelName>
                         <LinearWithValueLabel />
+                        {
+                            workspace['nextModelStatus'] ? (
+                                <div style={{display: "flex", flexDirection: "row", alignItems: "flex-end"}}>
                                     <div className={classes.modelStatus}>{workspace['nextModelStatus']}</div>    
+                                    <div className={classes["dot-pulse"]}></div>
+                                </div>
+                            )
+                            : null
+                        }
                         <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
                     </Stack>
 
