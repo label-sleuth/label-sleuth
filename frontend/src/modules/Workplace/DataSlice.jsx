@@ -13,10 +13,10 @@
     limitations under the License.
 */
 
-import { CoPresentOutlined, NotificationsTwoTone, SignalCellularNullSharp } from '@mui/icons-material'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
 import { WORKSPACE_API } from "../../config"
+import { NEXT_MODEL_TRAINING_MSG } from '../../const'
 
 const initialState = {
     workspaceId: "",
@@ -42,7 +42,6 @@ const initialState = {
     predictionForDocCat: [],
     modelUpdateProgress: 0,
     new_categories: [],
-    modelStatus: "Not ready",
     pos_label_num: 0,
     neg_label_num: 0,
     pos_label_num_doc: 0,
@@ -56,7 +55,8 @@ const initialState = {
     searchedIndex:0,
     isSearchActive: false,
     activePanel: "",
-    searchInput: null
+    searchInput: null,
+    nextModelStatus: null
 }
 
 const BASE_URL = process.env.REACT_APP_API_URL
@@ -757,6 +757,7 @@ const DataSlice = createSlice({
             let latest_model_version = -1
             let models = data['models']
             let found = false
+            let nextModelStatus = null
             while (models.length && !found) {
                 let last_model = models[models.length-1]
                 if (last_model['active_learning_status'] === 'READY') {
@@ -764,6 +765,7 @@ const DataSlice = createSlice({
                     found = true
                 }
                 else {
+                    nextModelStatus = NEXT_MODEL_TRAINING_MSG
                     models.pop()
                 }
             }
@@ -775,7 +777,8 @@ const DataSlice = createSlice({
 
             return {
                 ...state,
-                model_version: latest_model_version
+                model_version: latest_model_version,
+                nextModelStatus: nextModelStatus
             }
 
         },
@@ -857,19 +860,10 @@ const DataSlice = createSlice({
         },
         [checkStatus.fulfilled]: (state, action) => {
             const response = action.payload
-
             const progress = response['progress']['all']
-
-            const notifications = response['notifications']
-
-            var status = null
-
             var new_id_in_batch = state.cur_completed_id_in_batch
-
             var pos_label = state['pos_label_num']
-
             var neg_label = state['neg_label_num']
-
             // if (state.cur_completed_id_in_batch < state.training_batch - 1 ) {
             //     status = "New model is not ready"
             // } else if (state.cur_completed_id_in_batch == state.training_batch - 1) {
@@ -877,19 +871,6 @@ const DataSlice = createSlice({
             // } else {
             //     status = "New model is ready"
             // }
-
-            if (progress < 80) {
-                status = 'New model is not ready'
-            }
-
-            if (progress == 80) {
-                status = 'New model is almost ready'
-            }
-
-            if (progress == 100) {
-                status = 'New model is ready'
-            }
-
             if (state.cur_completed_id_in_batch == state.training_batch) {
                 new_id_in_batch = 0
             }
@@ -910,7 +891,6 @@ const DataSlice = createSlice({
                 ...state,
                 modelUpdateProgress: progress,
                 cur_completed_id_in_batch: new_id_in_batch,
-                modelStatus: status,
                 pos_label_num: pos_label,
                 neg_label_num: neg_label
             }
