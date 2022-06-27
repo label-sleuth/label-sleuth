@@ -181,6 +181,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                 logging.info(f"{len(indices_not_in_cache)} not in cache, loading model prediction store from disk "
                              f"in {self.__class__.__name__}")
                 model_predictions_store = self._load_model_prediction_store_to_cache(model_id)
+                logging.info(f"Done loading model prediction store from disk in {self.__class__.__name__}")
                 for idx in indices_not_in_cache:
                     infer_res[idx] = self.cache.get(in_memory_cache_keys[idx])
                 indices_not_in_cache = [i for i, v in enumerate(infer_res) if v is None]

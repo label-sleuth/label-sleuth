@@ -22,7 +22,7 @@ import time
 from collections import Counter, defaultdict
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime
-from typing import Mapping, List, Sequence, Union
+from typing import Mapping, List, Sequence, Union, Tuple
 
 import pandas as pd
 
@@ -287,7 +287,11 @@ class OrchestratorApi:
         return self.orchestrator_state.get_all_iterations(workspace_id, category_name)
 
     def get_all_iterations_by_status(self, workspace_id, category_name, iteration_status: IterationStatus) \
-            -> List[Iteration]:
+            -> List[Tuple[Iteration, int]]:
+        """
+        get all iterations by status
+        :return A list of tuples of Iteration and iteration index
+        """
         return self.orchestrator_state.get_all_iterations_by_status(workspace_id, category_name, iteration_status)
 
     def get_iteration_status(self, workspace_id, category_name, iteration_index) -> IterationStatus:
@@ -672,7 +676,8 @@ class OrchestratorApi:
         if unlabeled_only:
             elements = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category)
         else:
-            elements = self.get_all_text_elements(dataset_name)
+            elements = \
+                self.data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name)["results"]
         predictions = self.infer(workspace_id, category, elements)
         elements_with_matching_prediction = [text_element for text_element, prediction in zip(elements, predictions)
                                              if prediction.label == required_label]
