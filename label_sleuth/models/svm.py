@@ -44,7 +44,7 @@ class SVM(ModelAPI):
         if self.representation_type == RepresentationType.GLOVE:
             self.sentence_embedding_service = model_dependencies.sentence_embedding_service
 
-    def _train(self, model_id, train_data, train_params):
+    def _train(self, model_id, train_data, model_params):
         if self.kernel == "linear":
             model = sklearn.svm.LinearSVC()
         elif self.kernel == "rbf":

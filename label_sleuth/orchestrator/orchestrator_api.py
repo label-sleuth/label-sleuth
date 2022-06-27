@@ -338,8 +338,7 @@ class OrchestratorApi:
 
     # Iteration flow
     
-    def run_iteration(self, workspace_id: str, category_name: str, model_type: ModelType, train_data,
-                      train_params=None) -> str:
+    def run_iteration(self, workspace_id: str, category_name: str, model_type: ModelType, train_data) -> str:
         """
         This method initiates an Iteration, a flow that includes training a model, inferring the full corpus using
         this model, choosing candidate elements for labeling using active learning, as well as calculating various
@@ -355,7 +354,6 @@ class OrchestratorApi:
         :param category_name:
         :param model_type:
         :param train_data:
-        :param train_params:
         :return: model_id
         """
         def _get_counts_per_label(text_elements):
@@ -374,19 +372,18 @@ class OrchestratorApi:
     
         train_counts = _get_counts_per_label(train_data)
         train_data = convert_text_elements_to_train_data(train_data, category_name)
-        model_metadata = {TRAIN_COUNTS_STR_KEY: train_counts}
+        train_statistics = {TRAIN_COUNTS_STR_KEY: train_counts}
         model = self.model_factory.get_model(model_type)
     
         logging.info(f"workspace '{workspace_id}' training a model for category '{category_name}', "
-                     f"model_metadata: {model_metadata}")
-        model_id, _ = model.train(train_data=train_data, train_params=train_params,
+                     f"train_statistics: {train_statistics}")
+        model_id, _ = model.train(train_data=train_data, language=self.config.language,
                                   done_callback=functools.partial(self._train_done_callback, workspace_id,
                                                                   category_name, new_iteration_index))
         model_status = model.get_model_status(model_id)
-        if train_params:
-            model_metadata = {**model_metadata, **train_params}
         model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
-                               model_metadata=model_metadata, creation_date=datetime.now())
+                               language=self.config.language, train_statistics=train_statistics,
+                               creation_date=datetime.now())
         self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_name=category_name,
                                               model_info=model_info)
     
@@ -643,14 +640,15 @@ class OrchestratorApi:
         dataset_name = self.get_dataset_name(workspace_id)
         labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
         return get_suspected_labeling_contradictions_by_distance_with_diffs(
-            category_name, labeled_elements, self.sentence_embedding_service.get_glove_representation)
+            category_name, labeled_elements, self.sentence_embedding_service.get_glove_representation,
+            language=self.config.language)
 
     def get_suspicious_elements_report(self, workspace_id, category_name,
                                        model_type: ModelType = ModelsCatalog.SVM_ENSEMBLE) -> List[TextElement]:
         dataset_name = self.get_dataset_name(workspace_id)
         labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
         return get_disagreements_using_cross_validation(workspace_id, category_name, labeled_elements,
-                                                        self.model_factory, model_type)
+                                                        self.model_factory, self.config.language, model_type)
 
     def estimate_precision(self, workspace_id, category, ids, changed_elements_count, iteration_index):
         dataset_name = self.get_dataset_name(workspace_id)

@@ -31,12 +31,13 @@ import label_sleuth.definitions as definitions
 from label_sleuth.models.core.languages import Languages, Language
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.prediction import Prediction
-from label_sleuth.models.util.disk_cache import load_model_prediction_store_from_disk, save_model_prediction_store_to_disk
+from label_sleuth.models.util.disk_cache import load_model_prediction_store_from_disk, \
+    save_model_prediction_store_to_disk
 from label_sleuth.models.util.LRUCache import LRUCache
 
 
 PREDICTIONS_STORE_DIR_NAME = "predictions"
-METADATA_PARAMS_AND_DEFAULTS = {'Language': Languages.ENGLISH}
+LANGUAGE_STR_KEY = "Language"
 
 
 class ModelStatus(Enum):
@@ -66,7 +67,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def _train(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
+    def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
         """
         Method for training a classification model on *train_data*. This method is specific to each classification
         model, and is typically launched in the background via the train() method.
@@ -74,7 +75,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         :param train_data: a list of dictionaries with at least the "text" and "label" fields, additional fields can be
         passed e.g. [{'text': 'text1', 'label': True, 'additional_field': 'value1'}, {'text': 'text2', 'label': False,
         'additional_field': 'value2'}]
-        :param train_params: dictionary for additional train parameters (can be None)
+        :param model_params: dictionary for additional model parameters (can be None)
         """
 
     @abc.abstractmethod
@@ -102,23 +103,28 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         raise NotImplementedError(f"Model '{model_id}' cannot be exported as the 'export_model' method has not been "
                                   f"implemented for {self.__class__.__name__}")
 
-    def train(self, train_data: Sequence[Mapping], train_params: dict, done_callback=None) -> Tuple[str, Future]:
+    def train(self, train_data: Sequence[Mapping], language: Language,
+              model_params=None, done_callback=None) -> Tuple[str, Future]:
         """
         Create a unique model identifier, and launch a model training job in a background thread.
         :param train_data: a list of dictionaries with at least the "text" and "label" fields, additional fields can be
         passed e.g. [{'text': 'text1', 'label': True, 'additional_field': 'value1'}, {'text': 'text2', 'label': False,
         'additional_field': 'value2'}]
-        :param train_params: dictionary for additional train parameters (can be None)
+        :param language: the language used to initialize the model. The implemented _train() and _infer() methods can
+        then access this parameter via the get_language() call
+        :param model_params: dictionary for additional model parameters (can be None)
         :param done_callback: an optional function to be executed once the training job has completed
         :return: a unique identifier for the model, and a Future object for the training job that was submitted in the
         background
         """
+        if model_params is None:
+            model_params = {}
         model_id = f"{self.__class__.__name__}_{str(uuid.uuid1())}"
         self.mark_train_as_started(model_id)
-        self.save_metadata(model_id, train_params)
+        self.save_metadata(model_id, language, model_params)
 
         future = self.models_background_jobs_manager.add_training(model_id, self.train_and_update_status,
-                                                                  train_args=(model_id, train_data, train_params),
+                                                                  train_args=(model_id, train_data, model_params),
                                                                   use_gpu=self.gpu_support, done_callback=done_callback)
         return model_id, future
 
@@ -259,17 +265,14 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
     def get_in_progress_flag_path(self, model_id):
         return os.path.join(self.get_model_dir_by_id(model_id), f'train_in_progress_for_{model_id}')
 
-    def save_metadata(self, model_id, train_params):
+    def save_metadata(self, model_id, language: Language, model_params: Mapping):
         """
         Saves metadata on the model training parameters (e.g. model language) to disk.
         Specifically, this metadata dictionary should include values for the keys in METADATA_PARAMS_AND_DEFAULTS
         """
         metadata_path = os.path.join(self.get_model_dir_by_id(model_id), 'model_metadata.json')
-        if train_params is None:
-            model_metadata = METADATA_PARAMS_AND_DEFAULTS
-        else:
-            model_metadata = {key: train_params.get(key, default)
-                              for key, default in METADATA_PARAMS_AND_DEFAULTS.items()}
+        model_metadata = {LANGUAGE_STR_KEY: language.name, **model_params}
+
         with open(metadata_path, 'w') as f:
             f.write(jsonpickle.encode(model_metadata))
 
@@ -280,7 +283,8 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         return metadata
 
     def get_language(self, model_id) -> Language:
-        return self.get_metadata(model_id)['Language']
+        language_name = self.get_metadata(model_id)[LANGUAGE_STR_KEY]
+        return getattr(Languages, language_name.upper())
 
     def _load_model_prediction_store_to_cache(self, model_id):
         logging.debug("start loading cache from disk")

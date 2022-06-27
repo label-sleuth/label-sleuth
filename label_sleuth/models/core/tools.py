@@ -36,13 +36,12 @@ class RepresentationType(Enum):
 
 class SentenceEmbeddingService:
     def __init__(self, output_dir, preload_spacy_model_name=None):
-        self.spacy_models_path = os.path.join(output_dir,"spacy_models")
-        os.makedirs(self.spacy_models_path,exist_ok=True)
+        self.spacy_models_path = os.path.join(output_dir, "spacy_models")
+        os.makedirs(self.spacy_models_path, exist_ok=True)
         self.spacy_models = defaultdict(lambda: None)
         self.spacy_model_lock = threading.Lock()
         if preload_spacy_model_name is not None:
             self.load_or_download_spacy_model(preload_spacy_model_name)
-
 
     def get_glove_representation(self, sentences: List[str],
                                  language: Language = Languages.ENGLISH) -> List[np.ndarray]:
@@ -66,7 +65,6 @@ class SentenceEmbeddingService:
         logging.info(f"Done getting GloVe representations for {len(embeddings)} sentences")
         return embeddings
 
-
     def get_spacy_model(self, model_name):
         """
         The model is loaded once, on the first time this method is called. On
@@ -84,7 +82,7 @@ class SentenceEmbeddingService:
         Since there is no way to control the download destination for spacy models, the model is downloaded and then
         saved into the output dir.
         """
-        model_path = os.path.join(self.spacy_models_path,model_name)
+        model_path = os.path.join(self.spacy_models_path, model_name)
         if os.path.exists(model_path):
             return spacy.load(model_path)
         logging.info(f"Spacy model does not exist in {model_path}, downloading...")
@@ -110,7 +108,3 @@ def remove_punctuation(sentences: List[str]) -> List[str]:
     punctuation = string.punctuation + '•●'
     sentences = [t.translate(t.maketrans(punctuation, ' ' * len(punctuation))) for t in sentences]
     return sentences
-
-if __name__ == '__main__':
-    s = SentenceEmbeddingService("/Users/alonhal/PycharmProjects/label-sleuth/label_sleuth/output")
-    print(s.get_glove_representation("I love dogs"))

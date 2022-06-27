@@ -24,6 +24,7 @@ from typing import Dict, List, Sequence
 
 import jsonpickle
 
+from label_sleuth.models.core.languages import Language
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.model_type import ModelType
 
@@ -44,7 +45,8 @@ class ModelInfo:
     model_status: ModelStatus
     creation_date: datetime
     model_type: ModelType
-    model_metadata: dict
+    language: Language
+    train_statistics: dict
 
 
 @dataclass
