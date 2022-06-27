@@ -57,6 +57,7 @@ executor = ThreadPoolExecutor(20)
 
 
 def create_app(config: Configuration, output_dir) -> Flask:
+    os.makedirs(output_dir, exist_ok=True)
     app = Flask(__name__, static_folder='./build')
     CORS(app)
     app.config['CORS_HEADERS'] = 'Content-Type'
@@ -65,7 +66,7 @@ def create_app(config: Configuration, output_dir) -> Flask:
     app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.config["CONFIGURATION"].users}
     app.tokens = [user.token for user in app.users.values()]
     sentence_embedding_service = SentenceEmbeddingService(output_dir,
-                                                          preload_spacy_model_name=Languages.ENGLISH.spacy_model_name)
+                                                          preload_spacy_model_name=config.language.spacy_model_name)
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),
                                            FileBasedDataAccess(output_dir),
                                            ActiveLearningFactory(),

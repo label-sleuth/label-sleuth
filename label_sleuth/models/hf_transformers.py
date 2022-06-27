@@ -56,7 +56,7 @@ class HFTransformers(ModelAPI):
         self.max_seq_length = 128
         self.tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model_name)
 
-    def _train(self, model_id, train_data, train_params: dict):
+    def _train(self, model_id, train_data, model_params: dict):
         texts = [element["text"] for element in train_data]
         labels = [element["label"] for element in train_data]
         train_dataset = self.process_train_inputs(texts, labels)

@@ -18,6 +18,7 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock
 
+from label_sleuth.models.core.languages import Languages
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.models_factory import ModelDependencies
 from label_sleuth.models.random_model import RandomModel
@@ -29,8 +30,8 @@ class TestModelAPI(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.model_api = RandomModel(self.temp_dir.name, ModelsBackgroundJobsManager(),ModelDependencies(None,None))
-        self.model_id, future = self.model_api.train([], {})
+        self.model_api = RandomModel(self.temp_dir.name, ModelsBackgroundJobsManager(), ModelDependencies(None, None))
+        self.model_id, future = self.model_api.train([], Languages.ENGLISH, {})
         future.result()
         all_nums = list(range(1, 10))
         random.shuffle(all_nums)

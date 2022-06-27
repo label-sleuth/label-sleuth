@@ -25,7 +25,7 @@ from sklearn.neighbors import NearestNeighbors
 
 from label_sleuth.analysis_utils.analyze_tokens import get_token_overlap
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, TextElement
-from label_sleuth.models.core.languages import Languages
+from label_sleuth.models.core.languages import Language, Languages
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.core.tools import remove_stop_words_and_punctuation
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
@@ -35,8 +35,8 @@ MIN_TOKEN_OVERLAP_THRESHOLD = 0.4
 
 
 def get_disagreements_using_cross_validation(workspace_id, category_name, labeled_elements: List[TextElement],
-                                             model_factory, model_type=ModelsCatalog.SVM_ENSEMBLE, num_folds=4,
-                                             language=Languages.ENGLISH):
+                                             model_factory, language: Language, model_type=ModelsCatalog.SVM_ENSEMBLE,
+                                             num_folds=4):
     """
     This method uses cross-validation in order to identify elements where the user label might be incorrect.
     The *labeled elements* are divided into *num_folds* parts. In each fold, one part is left out and the other parts
@@ -48,10 +48,10 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
     :param category_name:
     :param labeled_elements:
     :param model_factory:
+    :param language:
     :param model_type: the type of model used for training and inference.
     :param num_folds: determines the number of partitions of the labeled elements, and thus the number of models
     that will be trained.
-    :param language:
     :return: a list of labeled text elements, sorted from most to least "suspicious" according to the confidence of the
     model predictions
     """
@@ -67,7 +67,7 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
         left_out_data = train_splits[i]
         fold_train_data = \
             np.concatenate([part for j, part in enumerate(train_splits) if j != i])
-        model_id, future = model.train(fold_train_data, train_params={'Language': language})
+        model_id, future = model.train(fold_train_data, language=language)
         logging.info(f'Suspicious labels report fold {i}: training cross-validation model {model_id}')
         future.result(timeout=60)
         logging.info(f'Suspicious labels report fold {i}: done waiting for cross-validation model {model_id}, '
@@ -89,8 +89,8 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
     return sorted_disagreement_elements
 
 
-def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements,
-                                                                 embedding_func) -> Mapping[str, List]:
+def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements, embedding_func,
+                                                                 language: Language) -> Mapping[str, List]:
     """
     Enrich the output of possibly inconsistent element pairs from *get_suspected_labeling_contradictions_by_distance*
     with sets of tokens that differentiate the pair of elements, to enable highlighting the similarities/differences
@@ -98,13 +98,16 @@ def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, 
 
     :param category_name:
     :param labeled_elements:
+    :param embedding_func: a function that receives a list of texts and a language, and returns a list of embedding
+    vectors for those texts.
+    :param language:
     :return: a dictionary containing:
     {'pairs': the list of text element pairs from get_suspected_labeling_contradictions_by_distance,
     i.e. [[pair_1_element_a, pair_1_element_b], [pair_2_element_a, pair_2_element_b], ...],
     'diffs': a list of tuples with the tokens unique to the first and the second element of each pair, respectively,
     i.e. [(pair_1_element_a_unique_tokens_set, pair_1_element_b_unique_tokens_set), ...]
     """
-    pairs = get_suspected_labeling_contradictions_by_distance(category_name, labeled_elements, embedding_func)
+    pairs = get_suspected_labeling_contradictions_by_distance(category_name, labeled_elements, embedding_func, language)
     diffs = []
     for pair in pairs:
         set1 = set(pair[0].text.split())
@@ -115,8 +118,8 @@ def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, 
 
 
 def get_suspected_labeling_contradictions_by_distance(category_name, labeled_elements: List[TextElement],
-                                                      embedding_func,
-                                                      language=Languages.ENGLISH) -> List[List[TextElement]]:
+                                                      embedding_func, language: Language) \
+        -> List[List[TextElement]]:
     """
     This method uses text embeddings in order to identify user labels that may be inconsistent with each other.
     For each of the *labeled_elements*, we identify a nearest neighbor that was given the opposite label.
@@ -171,7 +174,7 @@ def _get_nearest_neighbors_with_opposite_label(all_elements: List[TextElement], 
     return distances_and_pairs
 
 
-def _filter_nearest_neighbor_pairs(pairs_list: List[Tuple[TextElement]], language):
+def _filter_nearest_neighbor_pairs(pairs_list: List[Tuple[TextElement]], language: Language):
     """
     :param pairs_list: a list of tuples of TextElements, where the element in tuple index 1 is the nearest neighbor of
     the element in tuple index 0

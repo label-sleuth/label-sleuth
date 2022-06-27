@@ -31,7 +31,10 @@ class TestAppIntegration(unittest.TestCase):
     def setUpClass(cls):
         cls.temp_dir = tempfile.TemporaryDirectory()
         path_to_test_config = os.path.abspath(os.path.join(__file__, os.pardir, "config_for_tests.json"))
-        app_for_test = app.create_app(config=config.load_config(path_to_test_config),
+        loaded_config = config.load_config(path_to_test_config)
+        # avoid downloading spacy model for test
+        loaded_config.language.spacy_model_name = None
+        app_for_test = app.create_app(config=loaded_config,
                                       output_dir=os.path.join(cls.temp_dir.name, 'output'))
         app_for_test.test_request_context("/")
         app_for_test.config['TESTING'] = True

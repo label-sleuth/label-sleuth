@@ -36,7 +36,7 @@ class RandomModel(ModelAPI):
         self.model_id_to_random_seed = {}
         self.random_seed = -1
 
-    def _train(self, model_id, train_data, train_params):
+    def _train(self, model_id, train_data, model_params):
         seed = self.random_seed + 1
         self.model_id_to_random_seed[model_id] = seed
         self.random_seed = seed

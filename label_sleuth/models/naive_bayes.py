@@ -47,7 +47,7 @@ class NaiveBayes(ModelAPI):
         if self.representation_type == RepresentationType.GLOVE:
             self.sentence_embedding_service = model_dependencies.sentence_embedding_service
 
-    def _train(self, model_id, train_data, train_params):
+    def _train(self, model_id, train_data, model_params):
         model = MultinomialNB() if self.representation_type == RepresentationType.BOW else GaussianNB()
         language = self.get_language(model_id)
         texts = [x['text'] for x in train_data]
