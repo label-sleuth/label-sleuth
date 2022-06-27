@@ -37,3 +37,4 @@ export const FAILED_LOAD_DOCS_TO_DATASET = `An error occurred while uploading th
 export const FILL_REQUIRED_FIELDS = "Please fill out all the required fields!"
 export const NEW_DATA_CREATED =  `The new dataset has been created` 
 export const SELECT_WORKSPACE =  `Please select workspace!`
+export const NEXT_MODEL_TRAINING_MSG = "Training a new model"
