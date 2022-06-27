@@ -57,5 +57,4 @@ def load_config(config_path) -> Configuration:
         data_class=Configuration, data=raw_cfg,
         config=dacite.Config(type_hooks=converters),
     )
-    logging.info(f"loaded configuration: {config}")
     return config

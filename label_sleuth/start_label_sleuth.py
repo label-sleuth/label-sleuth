@@ -43,7 +43,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     os.makedirs(args.output_path, exist_ok=True)
+    logging.info(f"Starting label-sleuth using config file {args.config_path}. Output directory is {args.output_path}")
+    logging.info("(Starting the service for the first time may take a little longer)")
     curr_app = app.create_app(config=load_config(args.config_path),
                               output_dir=args.output_path)
-    logging.info(f"starting label-sleuth using config file {args.config_path}. Output directory is {args.output_path}")
+
     app.start_server(curr_app, args.host, args.port, args.num_serving_threads)

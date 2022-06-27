@@ -23,6 +23,8 @@ import zipfile
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
 
+from label_sleuth.models.core.languages import Languages
+
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
@@ -47,7 +49,6 @@ from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus, OrchestratorStateApi
 from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi
 
-
 print("user:")
 print(getpass.getuser())
 
@@ -63,7 +64,8 @@ def create_app(config: Configuration, output_dir) -> Flask:
     app.config["output_dir"] = output_dir
     app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.config["CONFIGURATION"].users}
     app.tokens = [user.token for user in app.users.values()]
-    sentence_embedding_service = SentenceEmbeddingService(output_dir)
+    sentence_embedding_service = SentenceEmbeddingService(output_dir,
+                                                          preload_spacy_model_name=Languages.ENGLISH.spacy_model_name)
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),
                                            FileBasedDataAccess(output_dir),
                                            ActiveLearningFactory(),
@@ -87,7 +89,7 @@ def start_server(app, host, port, num_serving_threads):
 
 
 @main_blueprint.route("/", defaults={'path': ''})
-@main_blueprint.route('/<path:path>') # catch all routes
+@main_blueprint.route('/<path:path>')  # catch all routes
 def serve(path):
     if path != "" and os.path.exists(current_app.static_folder + '/' + path):
         return send_from_directory(current_app.static_folder, path)
@@ -165,10 +167,10 @@ def add_documents(dataset_name):
                         "workspaces_to_update": workspaces_to_update})
     except AlreadyExistsException as e:
         return jsonify({"dataset_name": dataset_name, "error": "documents already exist", "documents": e.documents,
-                        "error_code": 409}),409
+                        "error_code": 409}), 409
     except Exception:
         logging.exception(f"failed to load or add documents to dataset '{dataset_name}'")
-        return jsonify({"dataset_name": dataset_name, "error": traceback.format_exc(), "error_code": 400}),400
+        return jsonify({"dataset_name": dataset_name, "error": traceback.format_exc(), "error_code": 400}), 400
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
             os.remove(os.path.join(temp_dir, temp_file_name))
@@ -265,7 +267,8 @@ def create_category(workspace_id):
     :post_param category_description:
     """
     post_data = request.get_json(force=True)
-    post_data['id'] = post_data["category_name"]  # TODO old frontend expects the category name to be in id, remove after moving to new frontend
+    post_data['id'] = post_data[
+        "category_name"]  # TODO old frontend expects the category name to be in id, remove after moving to new frontend
     current_app.orchestrator_api.create_new_category(workspace_id, post_data["category_name"],
                                                      post_data["category_description"])
 
@@ -467,7 +470,7 @@ def set_element_label(workspace_id, element_id):
     update_counter = post_data.get('update_counter', True)
 
     if value == 'none':
-        current_app.orchestrator_api.\
+        current_app.orchestrator_api. \
             unset_labels(workspace_id, category_name, [element_id],
                          apply_to_duplicate_texts=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
 
@@ -480,7 +483,7 @@ def set_element_label(workspace_id, element_id):
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
 
         uri_with_updated_label = {element_id: {category_name: Label(value)}}
-        current_app.orchestrator_api.\
+        current_app.orchestrator_api. \
             set_labels(workspace_id, uri_with_updated_label,
                        apply_to_duplicate_texts=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts,
                        update_label_counter=update_counter)
@@ -566,8 +569,7 @@ def get_labelling_status(workspace_id):
     category_name = request.args.get('category_name')
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
 
-
-    labeling_counts = current_app.orchestrator_api.\
+    labeling_counts = current_app.orchestrator_api. \
         get_label_counts(workspace_id, dataset_name, category_name,
                          remove_duplicates=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
     progress = current_app.orchestrator_api.get_progress(workspace_id, dataset_name, category_name)
@@ -641,8 +643,8 @@ def force_train_for_category(workspace_id):
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
     if category_name not in current_app.orchestrator_api.get_all_categories(workspace_id):
         return jsonify({
-            "error": "no such category '"+(category_name if category_name != 'none'
-                                           else "<category not provided in category_name param>")+"'"
+            "error": "no such category '" + (category_name if category_name != 'none'
+                                             else "<category not provided in category_name param>") + "'"
         })
     model_id = current_app.orchestrator_api.train_if_recommended(workspace_id, category_name, force=True)
 
@@ -690,10 +692,10 @@ def export_model(workspace_id):
     category_name = request.args.get('category_name')
     iteration_index = request.args.get('iteration_index', None)  # TODO update in UI model_id -> iteration_index
     if iteration_index is None:
-        iteration = current_app.orchestrator_api.\
+        iteration = current_app.orchestrator_api. \
             get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)[-1]
     else:
-        iteration = current_app.orchestrator_api.\
+        iteration = current_app.orchestrator_api. \
             get_all_iterations_for_category(workspace_id, category_name)[iteration_index]
     model_id = iteration.model.model_id
     model_dir = current_app.orchestrator_api.export_model(workspace_id, category_name, iteration_index)
@@ -812,7 +814,7 @@ def get_elements_for_precision_evaluation(workspace_id):
     size = current_app.config["CONFIGURATION"].precision_evaluation_size
     category = request.args.get('category_name')
     random_state = len(current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category))
-    positive_predicted_elements = current_app.orchestrator_api.\
+    positive_predicted_elements = current_app.orchestrator_api. \
         sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False,
                                       required_label=LABEL_POSITIVE, random_state=random_state)
     elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category)

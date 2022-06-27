@@ -35,11 +35,13 @@ class RepresentationType(Enum):
 
 
 class SentenceEmbeddingService:
-    def __init__(self, output_dir):
+    def __init__(self, output_dir, preload_spacy_model_name=None):
         self.spacy_models_path = os.path.join(output_dir,"spacy_models")
         os.makedirs(self.spacy_models_path,exist_ok=True)
         self.spacy_models = defaultdict(lambda: None)
         self.spacy_model_lock = threading.Lock()
+        if preload_spacy_model_name is not None:
+            self.load_or_download_spacy_model(preload_spacy_model_name)
 
 
     def get_glove_representation(self, sentences: List[str],
@@ -53,13 +55,8 @@ class SentenceEmbeddingService:
         """
         model_name = language.spacy_model_name
 
-        # The model used for calculating the representations is loaded once, on the first time this method is called. On
-        # subsequent calls, the loaded model is read from the spacy_models dictionary
-        with self.spacy_model_lock:
-            if self.spacy_models[model_name] is None:
-                #logging.info(f"Loading spacy model {model_name} from disk")
-                self.spacy_models[model_name] = self.get_or_download_spacy_model(model_name)
-        spacy_model = self.spacy_models[model_name]
+        # The model used for calculating the representations
+        spacy_model = self.get_spacy_model(model_name)
 
         sentences = remove_stop_words_and_punctuation(sentences, language=language)
         # remove out-of-vocabulary tokens
@@ -70,9 +67,20 @@ class SentenceEmbeddingService:
         return embeddings
 
 
-    def get_or_download_spacy_model(self, model_name):
+    def get_spacy_model(self, model_name):
         """
-        get spacy model by name.
+        The model is loaded once, on the first time this method is called. On
+        subsequent calls, the loaded model is read from the spacy_models dictionary
+        """
+        with self.spacy_model_lock:
+            if self.spacy_models[model_name] is None:
+                #logging.info(f"Loading spacy model {model_name} from disk")
+                self.spacy_models[model_name] = self.load_or_download_spacy_model(model_name)
+        return self.spacy_models[model_name]
+
+    def load_or_download_spacy_model(self, model_name):
+        """
+        load or download spacy model by name.
         Since there is no way to control the download destination for spacy models, the model is downloaded and then
         saved into the output dir.
         """
