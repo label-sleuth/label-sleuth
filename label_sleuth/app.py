@@ -401,6 +401,40 @@ def get_document_positive_predictions(workspace_id, document_uri):
     return jsonify(res)
 
 
+
+@main_blueprint.route("/workspace/<workspace_id>/positive_predictions", methods=['GET'])
+@login_if_required
+def get_positive_predictions(workspace_id):
+    """
+    Get elements in the given workspace that received a positive prediction from the relevant classification model,
+    i.e. the latest trained model for the category specified in the request.
+
+    :param workspace_id:
+    :request_arg category_name:
+    :request_arg size: number of elements to return
+    :request_arg start_idx: get elements starting from this index (for pagination)
+    """
+
+    size = int(request.args.get('size', 100))
+    start_idx = int(request.args.get('start_idx', 0))
+    category_name = request.args.get('category_name')
+    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name,
+                                                                     IterationStatus.READY)) == 0:
+        elements_transformed = []
+    else:
+        dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+        elements = current_app.orchestrator_api.get_all_text_elements(dataset_name)
+
+        predictions = [pred.label for pred in current_app.orchestrator_api.infer(workspace_id, category_name, elements)]
+        positive_predicted_elements = [element for element, prediction in zip(elements, predictions)
+                                       if prediction == LABEL_POSITIVE]
+        sorted_elements = sorted(positive_predicted_elements, key=lambda te: get_natural_sort_key(te.uri))
+        elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_name)
+        elements_transformed = elements_transformed[start_idx: start_idx + size]
+    res = {'elements': elements_transformed}
+    return jsonify(res)
+
+
 @main_blueprint.route("/workspace/<workspace_id>/element/<element_id>", methods=['GET'])
 @login_if_required
 def get_element_by_id(workspace_id, element_id):
