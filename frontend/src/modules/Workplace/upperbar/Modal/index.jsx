@@ -77,7 +77,14 @@ export default function CreateCategoryModal(props) {
             {CREATE_NEW_CATEGORY_MODAL_MSG}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '300px'  }}>
-            <TextField id="outlined-basic" className={classes.new_modal_name} label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG} onChange={handleTextFieldChange} onKeyUp={onKeyDown}/>
+            <TextField 
+              id="outlined-basic" 
+              className={classes.new_modal_name} 
+              label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG} 
+              onChange={handleTextFieldChange} 
+              onKeyUp={onKeyDown}
+              autoFocus
+            />
             <Button onClick={onSubmit} className={classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
           </Box>
         </Box>
