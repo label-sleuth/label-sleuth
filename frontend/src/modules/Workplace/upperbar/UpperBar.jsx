@@ -26,6 +26,7 @@ import FormControl from '@mui/material/FormControl';
 import ControlledSelect from '../../../components/dropdown/Dropdown';
 import Tooltip from '@mui/material/Tooltip';
 import { CREATE_NEW_CATEGORY_TOOLTIP_MSG } from '../../../const';
+import { CategoryCard } from './CategoryCard'
 
 const rightDrawerWidth = 360;
 const leftDrawerWidthh = 280;
@@ -97,6 +98,8 @@ function CategoryFormControl() {
 }
 
 const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
+  
+  const [cardOpen, setCardOpen] = React.useState(true)
 
   const handleAddCategory = () => {
     setModalOpen(true)
@@ -111,10 +114,16 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
             placholder="placeholder" />
 
           <Tooltip title={CREATE_NEW_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-            <button onClick={handleAddCategory} alt="Create new category" id="upperbar-add-category">
+            <button
+              onClick={handleAddCategory}
+              alt="Create new category"
+              id="upperbar-add-category"
+              className={classes["add-category-button"]}
+            >
               <img src={add_icon} />
             </button>
           </Tooltip>
+          {cardOpen ? <CategoryCard setCardOpen={setCardOpen} /> : null}
           {/* TODO 
               <IconButton onClick={() => setModalOpen(false)} >
                 <EditIcon  color="success" />
