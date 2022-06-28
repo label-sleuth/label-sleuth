@@ -14,6 +14,7 @@
 #
 
 import os
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from argparse import ArgumentParser
 import logging
@@ -22,6 +23,22 @@ from label_sleuth import app
 from label_sleuth.config import load_config
 
 PROJECT_ROOT = os.path.abspath(os.path.join(__file__, os.pardir))
+
+
+def add_file_logger(output_path):
+    """
+    add a rotating file logger. Files will be written to <output_path>/logs/
+    """
+    log_dir = os.path.join(output_path, "logs")
+    os.makedirs(log_dir, exist_ok=True)
+    handler = RotatingFileHandler(
+        os.path.join(log_dir, "label-sleuth.log"), maxBytes=(1048576 * 5), backupCount=7
+    )
+
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    logging.getLogger().addHandler(handler)
+
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -43,6 +60,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     os.makedirs(args.output_path, exist_ok=True)
+
+    add_file_logger(args.output_path) # log to file in addition to the console
     logging.info(f"Starting label-sleuth using config file {args.config_path}. Output directory is {args.output_path}")
     logging.info("(Starting the service for the first time may take a little longer)")
     curr_app = app.create_app(config=load_config(args.config_path),
