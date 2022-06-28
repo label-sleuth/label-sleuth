@@ -15,7 +15,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { createWorkspace, getDatasets, setActiveWorkspace } from './workspaceConfigSlice'
+import { clearState, createWorkspace, getDatasets, setActiveWorkspace } from './workspaceConfigSlice'
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux'
@@ -25,7 +25,20 @@ const useNewWorkspace = (notify, toastId) => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const isDocumentAdded = useSelector((state) => state.workspaces.isDocumentAdded);
+    const isWorkspaceAdded = useSelector((state) => state.workspaces.isWorkspaceAdded);
+    const errorMessage = useSelector((state) => state.workspaces.errorMessage);
     const [textValue, setTextValue] = useState('');
+    const [selectedValue, setSelectedValue] = useState('');
+
+    const updateToast = (message, type) => {
+        notify(message, function (message) {
+            toast.update(toastId, {
+                render: message,
+                type: type,
+            })
+        }
+        )
+    }
 
     const handleChangeText = (e) => {
         let val = e.target.value
@@ -33,7 +46,28 @@ const useNewWorkspace = (notify, toastId) => {
         setTextValue(formatted);
     };
 
+    useEffect(() => {
+        if (errorMessage) {
+            setTextValue("")
+            setSelectedValue("")
+            return updateToast(errorMessage, toast.TYPE.ERROR)
+        }
+    }, [errorMessage])
+
+    useEffect(() => {
+        if (isWorkspaceAdded) {
+            dispatch(setActiveWorkspace(textValue))
+            window.localStorage.setItem('workspaceId', JSON.stringify(textValue));
+            navigate('/workspace')
+        }
+        return function cleanup() {
+            dispatch(clearState())
+        }
+    }, [isWorkspaceAdded, dispatch, textValue, navigate])
+
+
     const handleNewWorkspace = () => {
+
         if (!selectedValue || !textValue) {
             return notify(FILL_REQUIRED_FIELDS, function (message) {
                 toast.update(toastId, {
@@ -43,9 +77,6 @@ const useNewWorkspace = (notify, toastId) => {
             })
         }
         dispatch(createWorkspace({ workspace_id: textValue, dataset_id: selectedValue }))
-        dispatch(setActiveWorkspace(textValue))
-        window.localStorage.setItem('workspaceId', JSON.stringify(textValue));
-        navigate('/workspace')
     }
 
     useEffect(() => {
@@ -54,7 +85,6 @@ const useNewWorkspace = (notify, toastId) => {
         }
     }, [isDocumentAdded])
 
-    const [selectedValue, setSelectedValue] = useState('');
     const handleDatasetChange = (value) => {
         setSelectedValue(value);
     };
@@ -69,3 +99,4 @@ const useNewWorkspace = (notify, toastId) => {
 };
 
 export default useNewWorkspace;
+
