@@ -38,7 +38,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
 
   const stages = [
     {
-      title: "What is Label Sleuth?",
+      title: "Welcome to the Label Sleuth Tutorial",
       content: (
         <div>
           Data is the new oil of the digital era - when it is processed,
@@ -151,7 +151,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       open={tutorialOpen}
       onClose={() => setTutorialOpen(false)}
       className="modal-background"
-    >
+      >
       <ModalContent>
         <div
           style={{ marginTop: "25px", marginLeft: "25px", display: "block" }}
@@ -170,7 +170,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
           <SecondaryButton
             onClick={currentStage.onSecondaryButtonClick || onSkip}
           >
-            {currentStage.secondaryButtonTitle || "Skip"}
+            {currentStage.secondaryButtonTitle || "Close tutorial"}
           </SecondaryButton>
           <PrimaryButton onClick={currentStage.onPrimaryButtonClick || onNext}>
             {currentStage.primaryButtonTitle || "Next"}
