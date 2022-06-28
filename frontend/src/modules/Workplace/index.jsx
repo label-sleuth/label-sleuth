@@ -83,7 +83,7 @@ export default function Workspace() {
 
   return (
     <>
-      <Box sx={{ display: 'flex' }}>
+      <Box sx={{ display: 'flex' }} style={tutorialOpen ? {filter: "blur(2px)"} : null}>
         <CssBaseline />
         <ToastContainer position="top-center" hideProgressBar={true} autoClose={7000} theme='dark' />
         <WorkspaceInfo workspaceId={workspaceId} setTutorialOpen={setTutorialOpen}/>
