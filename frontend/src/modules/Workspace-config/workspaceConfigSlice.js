@@ -17,11 +17,12 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { GET_WORKSPACES_API, GET_DATASETS_API, CREATE_WORKSPACE_API, ADD_DOCUMENTS_API } from "../../config"
 import { client } from '../../api/client'
 import axios from 'axios'
-import { FAILED_LOAD_DOCS_TO_DATASET, DOC_ALREADY_EXISTS } from '../../const'
+import { FAILED_LOAD_DOCS_TO_DATASET, DOC_ALREADY_EXISTS, WORKSPACE_ALREADY_EXISTS, SERVER_ERROR_500 } from '../../const'
 
 const token = localStorage.getItem('token')
 
 const initialState = {
+  isWorkspaceAdded: false,
   workspaces: [],
   active_workspace: '',
   datasets: [],
@@ -41,11 +42,30 @@ export const getWorkspaces = createAsyncThunk('workspaces/getWorkspaces', async 
   const { data } = await client.get(getWorkspaces_url)
   return data
 })
+ 
+export const createWorkspace = createAsyncThunk(`workspaces/createWorkspace`, async (params, { rejectWithValue }) => {
 
-export const createWorkspace = createAsyncThunk('workspaces/createWorkspace', async (params) => {
-  const { data } = await client.post(createWorkset_url, params)
-  return data
-})
+  try {
+    let headers = {
+      'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${token}`
+    }
+    const { data } = await axios.post(createWorkset_url, params, { headers });
+    return data
+  } catch (err) {
+    let errorMessage = ""
+    const responseCode = err.response.data.error_code
+
+    if (responseCode == 409) {
+      errorMessage = WORKSPACE_ALREADY_EXISTS
+    }
+    else if (responseCode == 500) {
+      errorMessage = SERVER_ERROR_500
+    }
+    return rejectWithValue(errorMessage)
+  }
+}
+)
 
 export const addDocuments = createAsyncThunk(`workspaces/getDatasets/dataset_name/addDocuments`, async (formData, { rejectWithValue }) => {
   try {
@@ -66,6 +86,9 @@ export const addDocuments = createAsyncThunk(`workspaces/getDatasets/dataset_nam
     }
     else if (responseCode == 400) {
       errorMessage = FAILED_LOAD_DOCS_TO_DATASET
+    }
+    else if (responseCode == 500) {
+      errorMessage = SERVER_ERROR_500
     }
     return rejectWithValue(errorMessage)
   }
@@ -88,6 +111,7 @@ export const workspacesSlice = createSlice({
       state.errorMessage = ""
       state.isDocumentAdded = false
       state.uploadingDataset = false
+      state.isWorkspaceAdded = false
     },
   },
   extraReducers: {
@@ -111,15 +135,16 @@ export const workspacesSlice = createSlice({
     [getDatasets.rejected]: (state) => {
       state.loading = false
     },
-    [createWorkspace.rejected]: (state) => {
+    [createWorkspace.rejected]: (state, action) => {
       state.loading = false
+      state.errorMessage = action.payload
     },
     [createWorkspace.pending]: (state) => {
       state.loading = true
     },
     [createWorkspace.fulfilled]: (state, { payload }) => {
       state.loading = false
-      state.workspace = payload.workspace
+      state.isWorkspaceAdded = true
     },
     [addDocuments.rejected]: (state, action) => {
       state.uploadingDataset = false
