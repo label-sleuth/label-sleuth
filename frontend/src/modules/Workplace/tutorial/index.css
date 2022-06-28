@@ -50,10 +50,6 @@
     display: block;
 }
 
-.modal-background .MuiBackdrop-root {
-  background-color: transparent;
-}
-
 .prediction-square {
   height: 50px;
   width: 50px;

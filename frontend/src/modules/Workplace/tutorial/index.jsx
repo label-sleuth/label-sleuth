@@ -1,18 +1,20 @@
-import { Stack } from "@mui/material";
+import { Modal, Stack } from "@mui/material";
 import {
   SmallTitle,
   LargeTitle,
   MainContent,
   PrimaryButton,
   SecondaryButton,
-  ModalContent,
-  getTutorialModal,
+  InnerModalContent,
+  getOuterModalContent,
+  InnerModal,
+  OuterModal,
 } from "./components";
 import { useState, useEffect } from "react";
 import "./index.css";
 import check from "./assets/check.svg";
 import cross from "./assets/cross.svg";
-
+import { Fade } from "@mui/material";
 const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   const [stageIndex, setStageIndex] = useState(0);
 
@@ -23,7 +25,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   }, [tutorialOpen]);
 
   useEffect(() => {
-    TutorialModal = getTutorialModal(stageIndex);
+    OuterModalContent = getOuterModalContent(stageIndex);
   }, [stageIndex]);
 
   // default primary   button on click action
@@ -79,8 +81,14 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             and edit your labels as many times as you’d like.
           </p>
           <div style={{ marginLeft: "35px" }}>
-            <span className="positive-label"><img src={check}/>Positive - it maches</span>
-            <span className="negative-label"><img src={cross}/>Negative</span>
+            <span className="positive-label">
+              <img src={check} />
+              Positive - it maches
+            </span>
+            <span className="negative-label">
+              <img src={cross} />
+              Negative
+            </span>
           </div>
         </div>
       ),
@@ -114,7 +122,10 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             as guides to accelerate and fine-tune your model.
           </p>
           <div style={{ marginLeft: "35px", marginTop: "20px  " }}>
-            <span className="prediction"><div className="prediction-square"/>Recommend to Label</span>
+            <span className="prediction">
+              <div className="prediction-square" />
+              Recommend to Label
+            </span>
           </div>
         </div>
       ),
@@ -133,7 +144,8 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
     },
     {
       smallTitle: "Tutorial completed",
-      title: "That’s all! If you need to revisit the tutorial, go to the top left of the screen and click on",
+      title:
+        "That’s all! If you need to revisit the tutorial, go to the top left of the screen and click on",
       content: null,
       primaryButtonTitle: "Start labeling",
       onPrimaryButtonClick: () => setTutorialOpen(false),
@@ -144,40 +156,55 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
 
   const currentStage = stages[stageIndex];
 
-  let TutorialModal = getTutorialModal(stageIndex);
+  let OuterModalContent = getOuterModalContent(stageIndex);
 
   return (
-    <TutorialModal
+    <OuterModal
       open={tutorialOpen}
       onClose={() => setTutorialOpen(false)}
-      className="modal-background"
-      >
-      <ModalContent>
-        <div
-          style={{ marginTop: "25px", marginLeft: "25px", display: "block" }}
-        >
-          <SmallTitle>{currentStage.smallTitle || "Tutorial"}</SmallTitle>
-          <LargeTitle>{currentStage.title}</LargeTitle>
-          <MainContent>{currentStage.content}</MainContent>
-        </div>
-        <Stack
-          direction="row"
-          justifyContent="flex-end"
-          alignItems="flex-end"
-          spacing={0}
-          style={{ width: "100%", flex: "none", order: 1, flexGrow: 0 }}
-        >
-          <SecondaryButton
-            onClick={currentStage.onSecondaryButtonClick || onSkip}
+    >
+      <Fade in={tutorialOpen} timeout={{ enter:1000, exit:0 }}>
+        <OuterModalContent>
+          <InnerModal
+            open={tutorialOpen}
+            onClose={() => setTutorialOpen(false)}
+            hideBackdrop
           >
-            {currentStage.secondaryButtonTitle || "Close tutorial"}
-          </SecondaryButton>
-          <PrimaryButton onClick={currentStage.onPrimaryButtonClick || onNext}>
-            {currentStage.primaryButtonTitle || "Next"}
-          </PrimaryButton>
-        </Stack>
-      </ModalContent>
-    </TutorialModal>
+            <InnerModalContent>
+              <div
+                style={{
+                  marginTop: "25px",
+                  marginLeft: "25px",
+                  display: "block",
+                }}
+              >
+                <SmallTitle>{currentStage.smallTitle || "Tutorial"}</SmallTitle>
+                <LargeTitle>{currentStage.title}</LargeTitle>
+                <MainContent>{currentStage.content}</MainContent>
+              </div>
+              <Stack
+                direction="row"
+                justifyContent="flex-end"
+                alignItems="flex-end"
+                spacing={0}
+                style={{ width: "100%", flex: "none", order: 1, flexGrow: 0 }}
+              >
+                <SecondaryButton
+                  onClick={currentStage.onSecondaryButtonClick || onSkip}
+                >
+                  {currentStage.secondaryButtonTitle || "Close tutorial"}
+                </SecondaryButton>
+                <PrimaryButton
+                  onClick={currentStage.onPrimaryButtonClick || onNext}
+                >
+                  {currentStage.primaryButtonTitle || "Next"}
+                </PrimaryButton>
+              </Stack>
+            </InnerModalContent>
+          </InnerModal>
+        </OuterModalContent>
+        </Fade>
+    </OuterModal>
   );
 };
 

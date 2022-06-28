@@ -1,20 +1,16 @@
 import { styled } from "@mui/material/styles";
 import { Box, Button, Modal } from "@mui/material";
 
-export const getTutorialModal = (stageIndex) => {
-  return styled(Modal)`
+export const OuterModal = styled(Modal)`
     z-index: 10001;
-    background-color: rgba(0, 0, 0, 0.9);
-    & .MuiBackdrop-root {
-      background-image: url(${require(`./assets/v2/stage_${stageIndex + 1}`)});
-      background-size: 100% 100%;
-      margin: 60px;
-      background-origin: padding-box;
-    }
-  `;
-};
+    background-color: rgba(0, 0, 0, 0.1);
+  }`;
 
-export const ModalContent = styled(Box)`
+export const InnerModal = styled(Modal)`
+  z-index: 10002;
+`;
+
+export const InnerModalContent = styled(Box)`
   position: absolute;
   top: 50%;
   left: 50%;
@@ -28,6 +24,19 @@ export const ModalContent = styled(Box)`
   flex-direction: column;
   justify-content: space-between;
 `;
+
+export const getOuterModalContent = (stageIndex) =>
+  styled(Box)`
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
+    background-image: url(${require(`./assets/v2/stage_${stageIndex + 1}`)});
+    background-size: 100% 100%;
+    border-radius: 10px;
+  `;
 
 export const SmallTitle = styled("div")`
   width: 404px;
