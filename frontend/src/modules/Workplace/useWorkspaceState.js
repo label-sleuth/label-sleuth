@@ -48,7 +48,7 @@ const useWorkspaceState = () => {
     });
     // fetch categories only once, they will be fetched again if a new category is added
     dispatch(fetchCategories());
-  }, []);
+  }, [dispatch]);
 
   React.useEffect(() => {
     // elements has to be re-fetched when the category changes
@@ -65,7 +65,7 @@ const useWorkspaceState = () => {
     if (workspace.curCategory) {
       dispatch(checkModelUpdate());
     }
-  }, [workspace.curCategory]);
+  }, [workspace.curCategory, dispatch]);
 
   React.useEffect(() => {
     // category changes or model_version changes means
@@ -77,7 +77,7 @@ const useWorkspaceState = () => {
       dispatch(getPositivePredictions())
       dispatch(checkStatus());
     }
-  }, [workspace.curCategory, workspace.model_version]);
+  }, [workspace.curCategory, workspace.model_version, dispatch]);
 
   React.useEffect(() => {
     // document changes and category is set and there is a model available
@@ -85,7 +85,7 @@ const useWorkspaceState = () => {
     if (workspace.curCategory && workspace.model_version >= 0) {
       dispatch(getPositiveElementForCategory());
     }
-  }, [workspace.curDocName]);
+  }, [workspace.curCategory, workspace.model_version, dispatch]);
 };
 
 export default useWorkspaceState;

@@ -25,6 +25,7 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
 
     const workspace = useSelector(state => state.workspace)
     const posPredTotalElemRes = useSelector(state => state.workspace.posPredTotalElemRes)
+    const posPredFraction = useSelector(state => state.workspace.posPredFraction)
     const posPredResult = useSelector(state => state.workspace.posPredResult)
     let newPosPredLabelState = { ...workspace.posPredLabelState}
     const currPosPredLabelState = workspace.posPredLabelState
@@ -39,7 +40,7 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
             {posPredResult && posPredResult.length > 0 &&
                 <Box  sx={{ display: "flex", justifyContent: "center", mt:1, fontSize: "0.8rem", color: "rgba(0,0,0,.54)" }} >
                     <Typography sx={{ display: "flex", justifyContent: "center", fontSize: "0.8rem", color: "rgba(0,0,0,.54)" }}>
-                        {`${posPredTotalElemRes} elements found`}
+                        {`${posPredTotalElemRes}  positive in workspace, ${Number((posPredFraction).toFixed(1))*100}% of all text elements`} 
                     </Typography>
                 </Box>}
             <Box className={classes["search-results"]} sx={{mt:1}}>
