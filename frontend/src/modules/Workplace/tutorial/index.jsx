@@ -125,10 +125,12 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             recommend to label text entries in your dataset. You can use these
             as guides to accelerate and fine-tune your model.
           </p>
-          <div style={{ marginLeft: "35px", marginTop: "20px" }}>
+          <div style={{ marginTop: "20px" }}>
             <span className="prediction">
-              <div className="prediction-square" />
-              Recommend to Label
+              Positive prediction example:
+              <div className="predicted-element">
+                <p> I am a text entry that was predicted as positive! </p>
+              </div>
             </span>
           </div>
         </div>
