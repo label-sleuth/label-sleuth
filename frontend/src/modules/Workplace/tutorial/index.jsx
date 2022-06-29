@@ -1,4 +1,4 @@
-import { Modal, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 import {
   SmallTitle,
   LargeTitle,
@@ -23,10 +23,6 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       setStageIndex(0);
     }
   }, [tutorialOpen]);
-
-  useEffect(() => {
-    OuterModalContent = getOuterModalContent(stageIndex);
-  }, [stageIndex]);
 
   // default primary   button on click action
   const onNext = () => {
@@ -165,6 +161,10 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
     >
       <Fade in={tutorialOpen} timeout={{ enter:1000, exit:0 }}>
         <OuterModalContent>
+          <img
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            src={media[stageIndex]}
+          />
           <InnerModal
             open={tutorialOpen}
             onClose={() => setTutorialOpen(false)}
