@@ -16,7 +16,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
 import { WORKSPACE_API } from "../../config"
-import { NEXT_MODEL_TRAINING_MSG } from '../../const'
  
 const initialState = {
     workspaceId: "",
@@ -60,7 +59,7 @@ const initialState = {
     isSearchActive: false,
     activePanel: "",
     searchInput: null,
-    nextModelStatus: null
+    nextModelShouldBeTraining: false
 }
 
 const BASE_URL = process.env.REACT_APP_API_URL
@@ -494,7 +493,8 @@ const DataSlice = createSlice({
             const c = action.payload
             return {
                 ...state,
-                curCategory: c
+                curCategory: c,
+                nextModelShouldBeTraining: false
             }
         },
         setFocusedState(state, action) {
@@ -813,29 +813,48 @@ const DataSlice = createSlice({
             const data = action.payload
             let latest_model_version = -1
             let models = data['models']
-            let found = false
-            let nextModelStatus = null
-            while (models.length && !found) {
+            let modelReadyFound = false
+            let nextModelShouldBeTraining
+            while (models.length && !modelReadyFound) {
                 let last_model = models[models.length-1]
                 if (last_model['active_learning_status'] === 'READY') {
                     latest_model_version = last_model['iteration']
-                    found = true
+                    modelReadyFound = true
                 }
                 else {
-                    nextModelStatus = NEXT_MODEL_TRAINING_MSG
                     models.pop()
                 }
             }
-
+            
             // if there is a model available, start counting the version from 1 (not 0)
             if (latest_model_version >= 0) {
                 latest_model_version += 1
             }
 
+            // logic to manage the next model status, it is first set to true in checkStatus when progress is 100
+
+            // if there are non-ready models, it means that a model is training
+            if (!modelReadyFound && models.length) {
+                nextModelShouldBeTraining = true
+            }
+            // if there are no models yet, next model status depends on 
+            // progress bar having been full or not
+            else if (!models.length) {
+                nextModelShouldBeTraining = state.nextModelShouldBeTraining
+            } 
+            // if there is at least one ready model found, next model status depends on 
+            // the last ready model is already known. If it is not the same means training has
+            // finished
+            else if (modelReadyFound) {
+                nextModelShouldBeTraining = latest_model_version === state.model_version ? state.nextModelShouldBeTraining : false
+            }            
+
+            // console.log(`models.length: ${models.length}\nfound: ${found}\nnextModelShouldBeTraining: ${state.nextModelShouldBeTraining}\nmodel_version: ${state.model_version}\nlatest_model_version: ${latest_model_version}\n\nnextModelShouldBeTraining: ${nextModelShouldBeTraining}`)
+
             return {
                 ...state,
                 model_version: latest_model_version,
-                nextModelStatus: nextModelStatus
+                nextModelShouldBeTraining: nextModelShouldBeTraining
             }
 
         },
@@ -949,7 +968,8 @@ const DataSlice = createSlice({
                 modelUpdateProgress: progress,
                 cur_completed_id_in_batch: new_id_in_batch,
                 pos_label_num: pos_label,
-                neg_label_num: neg_label
+                neg_label_num: neg_label,
+                nextModelShouldBeTraining: progress === 100 ? true : state.nextModelShouldBeTraining
             }
         }
     }
