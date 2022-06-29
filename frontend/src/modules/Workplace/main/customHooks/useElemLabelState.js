@@ -13,8 +13,9 @@
     limitations under the License.
 */
 
-import { setElementLabel, checkStatus, setLabelState, increaseIdInBatch, setSearchLabelState, setNumLabel, setNumLabelGlobal, setRecommendToLabelState } from '../../DataSlice';
+import { setElementLabel, checkStatus, setLabelState, increaseIdInBatch, setSearchLabelState, setNumLabel, setNumLabelGlobal, setRecommendToLabelState, setPosPredLabelState } from '../../DataSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import { POS_PREDICTIONS, RCMD, SEARCH } from '../../../../const';
 
 const useElemLabelState = ({ index, element_id }) => {
 
@@ -27,7 +28,7 @@ const useElemLabelState = ({ index, element_id }) => {
     let newPanelLabelState ={}
     let searchPanelIndex = 0
  
-       if(activePanel == "search"){
+       if(activePanel == SEARCH){
         newPanelLabelState = { ...workspace.searchLabelState }
         searchPanelIndex = Object.keys(newPanelLabelState).filter((id) => {
             if (id.includes(element_id)) {
@@ -35,7 +36,7 @@ const useElemLabelState = ({ index, element_id }) => {
             }
         })
        }
-       else if(activePanel == "rcmd"){
+       else if(activePanel == RCMD){
         newPanelLabelState = { ...workspace.recommendToLabelState }
         searchPanelIndex = Object.keys(newPanelLabelState).filter((id) => {
             if (id.includes(element_id)) {
@@ -44,16 +45,27 @@ const useElemLabelState = ({ index, element_id }) => {
         })
        }
  
+       else if(activePanel == POS_PREDICTIONS){
+        newPanelLabelState = { ...workspace.posPredLabelState }
+        searchPanelIndex = Object.keys(newPanelLabelState).filter((id) => {
+            if (id.includes(element_id)) {
+                return id
+            }
+        })
+       }
        const updateLabelsState = (element_id, label, newPanelLabelState, newMainState) => {
         dispatch(increaseIdInBatch())
         dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: label })).then(() => {
             dispatch(checkStatus())
         })
-        if(activePanel == "search"){
+        if(activePanel == SEARCH){
             dispatch(setSearchLabelState(newPanelLabelState))
         }
-        else if(activePanel == "rcmd"){
+        else if(activePanel == RCMD){
             dispatch(setRecommendToLabelState(newPanelLabelState))
+        }
+        else if(activePanel == POS_PREDICTIONS){
+            dispatch(setPosPredLabelState(newPanelLabelState))
         }
         
         dispatch(setLabelState(newMainState))
@@ -61,8 +73,10 @@ const useElemLabelState = ({ index, element_id }) => {
 
 
     const handlePosLabelState = () => {
+        
         let label = "none"
         let mainElemIndex = `L${index}`
+        console.log("newStateMain[mainElemIndex]------", newStateMain[mainElemIndex])
 
         if (newStateMain[mainElemIndex] == "pos") {
             setNumLabel({ ...numLabel, "pos": numLabel['pos'] - 1 })

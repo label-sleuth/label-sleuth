@@ -18,7 +18,7 @@ import { Box } from '@mui/material';
 import useSearchElement from "./sidebar/customHooks/useSearchElement";
 import Drawer from '@mui/material/Drawer';
 import useUpdateLabelState from "./sidebar/customHooks/useUpdateLabelState";
-import { SEARCH, RCMD, RIGHT_DRAWER_WIDTH } from '../../const'
+import { SEARCH, RCMD, RIGHT_DRAWER_WIDTH, POS_PREDICTIONS } from '../../const'
 import MainPanel from "./main/MainPanel";
 
 export const PanelManager = ({ activePanel,
@@ -27,7 +27,7 @@ export const PanelManager = ({ activePanel,
     open
 }) => {
 
-    const { updateSearchLabelState, updateRecLabelState, updateMainLabelState } = useUpdateLabelState()
+    const { updateSearchLabelState, updateRecLabelState, updateMainLabelState, updatePosPredLabelState } = useUpdateLabelState()
 
     const { handleSearchPanelClick,
         handleSearchInputEnterKey,
@@ -57,6 +57,15 @@ export const PanelManager = ({ activePanel,
                     searchInput,
                     updateMainLabelState,
                     updateLabelState: updateRecLabelState,
+                    open,
+                });
+            }
+            else if (activePanel == POS_PREDICTIONS) {
+                return React.cloneElement(child, {
+                    handleSearchPanelClick,
+                    searchInput,
+                    updateMainLabelState,
+                    updateLabelState: updatePosPredLabelState,
                     open,
                 });
             }
