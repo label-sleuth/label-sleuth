@@ -49,7 +49,9 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
         <div>
           <a href="http://label-sleuth.org/" target="_blank">Label Sleuth</a> 
         significantly reduces the time and effort for creating usable text classification models. 
-        This no-code system guides you throughout the labeling process and directs you towards an efficient process.
+        This no-code system guides you throughout the labeling process. An AI model is automatically maintained in the background 
+        and provides you feedback to direct you towards an efficient process. This model keeps improving as you annotate more examples.
+        The goal is that with just a few hours with Label Sleuth you will have all you need for a text classification model.
         </div>
       ),
     },
@@ -58,11 +60,10 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div className="stage-content">
           <p>
-            Text classification is one of the fundamental natural language
-            processing (NLP) challenges. With category classification, you can
-            identify text entries with tags to be used for things like:
-            Sentiment analysis. Spam detection. Start by creating your own
-            category, or choose an existing one.
+            Start by creating your own category, or choose an existing one. Make sure the category is well-defined and that given a short text, 
+            it is clear to you whether this text belongs to the category or not. 
+            You can have many categories in a workspace and switch between them whenever you’d like. 
+            In Label Sleuth we work on one category at a time. This plays a pivotal role in making the process faster.    
           </p>
         </div>
       ),
@@ -74,7 +75,6 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
           <p>
             You can start labeling the data now! Labeling is a process that
             helps the AI model to understanding the criteria to your category.
-            Assign a label to each of your data entry based on your category.
             The label system is binary - positive and negative. You can go back
             and edit your labels as many times as you’d like.
           </p>
