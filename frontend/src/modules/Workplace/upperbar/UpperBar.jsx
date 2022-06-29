@@ -66,15 +66,16 @@ const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== 'open', })(({
 }));
 
 function CategoryFormControl() {
-  const workspace = useSelector(state => state.workspace)
+  const curCategory = useSelector(state => state.workspace.curCategory)
+  const categories = useSelector(state => state.workspace.categories)
   const dispatch = useDispatch()
   const [selValue, setSelVal] = React.useState()
 
   React.useEffect(() => {
-    setSelVal(workspace.curCategory)
-  }, [workspace.curCategory])
+    setSelVal(curCategory)
+  }, [curCategory])
 
-  const options = workspace.categories
+  const options = categories
     .map((item) => ({ value: item.category_name, title: item.category_name }))
     .sort((a, b) => a.value.localeCompare(b.value));
   // TODO: insert sorted when categories are added
