@@ -29,7 +29,7 @@ import { useEffect } from "react";
 
 export default function Element(props) {
 
-    const { index, text } = props
+    const { index, text, element_id } = props
     const workspace = useSelector(state => state.workspace) 
     const isSearchActive = useSelector(state => state.workspace.isSearchActive) 
     const { handlePosLabelState, handleNegLabelState } = useMainLabelState({ ...props })

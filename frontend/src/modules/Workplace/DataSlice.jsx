@@ -157,7 +157,7 @@ export const getPositivePredictions = createAsyncThunk('workspace/getPositivePre
         },
         method: "GET"
     }).then(response => response.json())
-    console.log("getPositivePredictions data----", data)
+
     return data
 })
 
