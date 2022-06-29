@@ -25,18 +25,14 @@ export const InnerModalContent = styled(Box)`
   justify-content: space-between;
 `;
 
-export const getOuterModalContent = (stageIndex) =>
-  styled(Box)`
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    height: 90%;
-    background-image: url(${require(`./assets/v2/stage_${stageIndex + 1}`)});
-    background-size: 100% 100%;
-    border-radius: 10px;
-  `;
+export const OuterModalContent = styled(Box)`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 95%;
+  height: 95%;
+`;
 
 export const SmallTitle = styled("div")`
   width: 404px;
@@ -61,8 +57,6 @@ export const LargeTitle = styled("div")`
 `;
 
 export const MainContent = styled("div")`
-  width: 774px;
-  height: 160px;
   font-family: "IBM Plex Sans";
   font-style: normal;
   font-weight: 300;
