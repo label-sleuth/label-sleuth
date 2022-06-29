@@ -24,6 +24,7 @@ import {
   fetchElements,
   getPositiveElementForCategory,
   setFocusedState,
+  getPositivePredictions,
 } from "./DataSlice.jsx";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -73,6 +74,7 @@ const useWorkspaceState = () => {
     if (workspace.curCategory && workspace.model_version >= 0) {
       dispatch(getElementToLabel());
       dispatch(getPositiveElementForCategory());
+      dispatch(getPositivePredictions())
       dispatch(checkStatus());
     }
   }, [workspace.curCategory, workspace.model_version]);

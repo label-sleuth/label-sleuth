@@ -14,58 +14,57 @@
 */
 
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { workspacesReducer } from '../../../Workspace-config/workspaceConfigSlice';
-import { getElementToLabel, setActivePanel } from '../../DataSlice';
+import { useDispatch } from 'react-redux';
+import { POS_PREDICTIONS, RCMD, SEARCH } from '../../../../const';
+import {   setActivePanel } from '../../DataSlice';
 
 const useTogglePanel = (setOpen, textInput) => {
 
     const dispatch = useDispatch()
-    const elementsToLabel = useSelector(state => state.workspace.elementsToLabel)
     const [toggleSearchPanel, setToggleSearchPanel] = useState(false)
     const [toggleRCMDPanel, setToggleRCMDPanel] = useState(false)
-
-
-  useEffect(() => {
-      if(elementsToLabel.length == 0){
-        activateSearchPanel()
-      }
-      else{
-        activateRecToLabelPanel() 
-      }
-   
-  }, [elementsToLabel.length])
+    const [togglePosPredPanel, setTogglePosPredPanel] = useState(false)
 
     useEffect(() => {
-        if (toggleSearchPanel || toggleRCMDPanel) {
+        if (toggleSearchPanel || toggleRCMDPanel || togglePosPredPanel) {
             setOpen(true);
         }
         else {
             setOpen(false);
         }
-    }, [toggleRCMDPanel, toggleSearchPanel, setOpen])
+    }, [toggleRCMDPanel, toggleSearchPanel, togglePosPredPanel, setOpen])
 
     const activateSearchPanel = () => {
         if(textInput.current){
             textInput.current.focus()
         }
-        dispatch(setActivePanel("search"))
+        dispatch(setActivePanel(SEARCH))
         setToggleSearchPanel(!toggleSearchPanel)
+        setTogglePosPredPanel(false)
         setToggleRCMDPanel(false)
     }
 
     const activateRecToLabelPanel = () => {
-        dispatch(getElementToLabel())
-        dispatch(setActivePanel("rcmd"))
+        dispatch(setActivePanel(RCMD))
         setToggleSearchPanel(false)
+        setTogglePosPredPanel(false)
         setToggleRCMDPanel(!toggleRCMDPanel)
+    }
+
+    const activatePosPredLabelPanel = () => {
+        dispatch(setActivePanel(POS_PREDICTIONS))
+        setToggleSearchPanel(false)
+        setToggleRCMDPanel(false)
+        setTogglePosPredPanel(!togglePosPredPanel)
     }
 
     return {
         activateSearchPanel,
         activateRecToLabelPanel,
+        activatePosPredLabelPanel,
         toggleRCMDPanel,
         toggleSearchPanel,
+        togglePosPredPanel,
     }
 };
 

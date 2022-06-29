@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>32x32</title>
+    <g id="32x32" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Organization-/-File-/-certificate--check-/-32" fill="#000000">
+            <path d="M6,16 L12,16 L12,18 L6,18 L6,16 Z M6,12 L16,12 L16,14 L6,14 L6,12 Z M6,8 L16,8 L16,10 L6,10 L6,8 Z M14,26 L4,26 L4,6 L28,6 L28,16 L30,16 L30,6 C30,4.8954305 29.1045695,4 28,4 L4,4 C2.8954305,4 2,4.8954305 2,6 L2,26 C2,27.1045695 2.8954305,28 4,28 L14,28 L14,26 Z M22,25.59 L19.41,23 L18,24.41 L22,28.41 L30,20.41 L28.59,19 L22,25.59 L22,25.59 Z" id="Fill"></path>
+        </g>
+    </g>
+</svg>
