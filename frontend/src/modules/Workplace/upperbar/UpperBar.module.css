@@ -71,19 +71,27 @@
 
 .category-card {
     background-color: #ff9800 !important;
-    height: 50px;
     margin-left: 20px;
+    padding: 5px 0;
+    max-height: 80px;
 }
 
 .category-card :global .MuiCardHeader-root {
-    padding: 4px;
-    height: 15px;
+    padding: 2px;
+    height: 10px;
 }
 
 .category-card :global .MuiCardContent-root {
-    padding: 0px 15px ;
+    padding: 0px 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 
 .category-card :global .MuiCardContent-root:last-child {
     padding-bottom: 2px  ;
+}
+
+.category-card :global .MuiCardContent-root .MuiIconButton-root {
+    padding: 0 0 0 10px;
 }

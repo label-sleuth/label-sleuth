@@ -4,18 +4,14 @@ import classes from "./UpperBar.module.css";
 
 export const CategoryCard = ({ setCardOpen }) => (
   
-    <Card className={classes["category-card"]} onClick={() => setCardOpen(false)}>
-      <CardHeader
-         action={
-          <IconButton aria-label="close" style={{fontSize: "1rem"}} onClick={() => setCardOpen(false)}>
-            <CloseIcon fontSize="inherit" />
-          </IconButton>
-        }
-      />
+    <Card className={classes["category-card"]}>
       <CardContent>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="caption" color="text.secondary">
             Please select a category or create a new one
         </Typography>
+        <IconButton aria-label="close" style={{fontSize: "1rem"}} onClick={() => setCardOpen(false)}>
+            <CloseIcon fontSize="inherit" />
+          </IconButton>
       </CardContent>
     </Card>
 )
