@@ -25,7 +25,7 @@ import info_icon from '../../../assets/workspace/help.svg';
 import logout_icon from '../../../assets/workspace/logout.svg';
 import workspace_icon from '../../../assets/workspace/change_catalog.svg';
 import { useDispatch, useSelector } from 'react-redux';
-import { downloadLabeling, checkModelUpdate, setWorkspaceId, checkStatus } from '../DataSlice.jsx';
+import { downloadLabeling, checkModelUpdate, setWorkspaceId } from '../DataSlice.jsx';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
@@ -36,7 +36,13 @@ import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
 import { APP_NAME, WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
 import { toast } from 'react-toastify';
-import { LOGOUT_TOOLTIP_MSG, GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG, NO_MODEL_AVAILABLE_MSG, LABEL_SLEUTH_SHORT_DESC } from '../../../const';
+import {
+  LOGOUT_TOOLTIP_MSG,
+  GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG,
+  NO_MODEL_AVAILABLE_MSG,
+  LABEL_SLEUTH_SHORT_DESC,
+  NEXT_MODEL_TRAINING_MSG,
+} from "../../../const";
 import LinearWithValueLabel from './ModelProgressBar'
 
 const drawerWidth = 280; // left navigation panel width
@@ -210,7 +216,6 @@ export default function Workspace({workspaceId, setTutorialOpen}) {
         const interval = setInterval(() => {
             if (workspace.curCategory != null) {
                 dispatch(checkModelUpdate())
-                dispatch(checkStatus())
             }
         }, 5000);
 
@@ -369,9 +374,9 @@ export default function Workspace({workspaceId, setTutorialOpen}) {
                         </ModelName>
                         <LinearWithValueLabel />
                         {
-                            workspace['nextModelStatus'] ? (
+                            workspace['nextModelShouldBeTraining'] ? (
                                 <div style={{display: "flex", flexDirection: "row", alignItems: "flex-end"}}>
-                                    <div className={classes.modelStatus}>{workspace['nextModelStatus']}</div>    
+                                    <div className={classes.modelStatus}>{NEXT_MODEL_TRAINING_MSG}</div>    
                                     <div className={classes["dot-pulse"]}></div>
                                 </div>
                             )
