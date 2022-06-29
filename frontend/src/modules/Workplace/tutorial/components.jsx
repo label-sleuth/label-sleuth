@@ -35,18 +35,16 @@ export const OuterModalContent = styled(Box)`
 `;
 
 export const SmallTitle = styled("div")`
-  width: 404px;
-  height: 20px;
   font-family: "IBM Plex Sans";
   font-style: normal;
   font-weight: 300;
   font-size: 14px;
   line-height: 20px;
   color: rgba(255, 255, 255, 0.5);
+  margin-top: -20px;
 `;
 
 export const LargeTitle = styled("div")`
-  height: 36px;
   font-family: "IBM Plex Sans";
   font-style: normal;
   font-weight: 600;
@@ -63,7 +61,9 @@ export const MainContent = styled("div")`
   font-size: 16px;
   line-height: 20px;
   color: #ffffff;
-`;
+  text-align: justify;
+  margin-right: 25px;
+  `;
 
 export const PrimaryButton = styled(Button)`
   display: flex;

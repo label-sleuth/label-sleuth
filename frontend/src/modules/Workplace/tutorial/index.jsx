@@ -6,7 +6,7 @@ import {
   PrimaryButton,
   SecondaryButton,
   InnerModalContent,
-  getOuterModalContent,
+  OuterModalContent,
   InnerModal,
   OuterModal,
 } from "./components";
@@ -14,7 +14,17 @@ import { useState, useEffect } from "react";
 import "./index.css";
 import check from "./assets/check.svg";
 import cross from "./assets/cross.svg";
+import info_icon from "../../../assets/workspace/help.svg";
 import { Fade } from "@mui/material";
+import { IconButton } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+
+function importAll(r) {
+  return r.keys().map(r);
+}
+
+const media = importAll(require.context("./assets/v2/", false));
+
 const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   const [stageIndex, setStageIndex] = useState(0);
 
@@ -24,19 +34,17 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
     }
   }, [tutorialOpen]);
 
-  // default primary   button on click action
-  const onNext = () => {
+  const onPrimaryButtonClickDefault = () => {
     setStageIndex(stageIndex + 1);
   };
 
-  // default secondary button on click action
-  const onSkip = () => {
-    setTutorialOpen(false);
+  const onSecondaryButtonClickDefault = () => {
+    setStageIndex(stageIndex - 1);
   };
 
   const stages = [
     {
-      title: "Welcome to the Label Sleuth Tutorial",
+      largeTitle: "Welcome to the Label Sleuth Tutorial",
       content: (
         <div>
           Data is the new oil of the digital era - when it is processed,
@@ -52,7 +60,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       ),
     },
     {
-      title: "Category",
+      largeTitle: "Category",
       content: (
         <div className="stage-content">
           <p>
@@ -66,7 +74,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       ),
     },
     {
-      title: "Data",
+      largeTitle: "Data",
       content: (
         <div>
           <p>
@@ -90,7 +98,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       ),
     },
     {
-      title: "Search",
+      largeTitle: "Search",
       content: (
         <div>
           <p>
@@ -101,7 +109,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       ),
     },
     {
-      title: "Model Update & Prediction",
+      largeTitle: "Model Update & Prediction",
       content: (
         <div>
           <p>
@@ -117,7 +125,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             recommend to label text entries in your dataset. You can use these
             as guides to accelerate and fine-tune your model.
           </p>
-          <div style={{ marginLeft: "35px", marginTop: "20px  " }}>
+          <div style={{ marginLeft: "35px", marginTop: "20px" }}>
             <span className="prediction">
               <div className="prediction-square" />
               Recommend to Label
@@ -127,7 +135,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       ),
     },
     {
-      title: "Recommended to label",
+      largeTitle: "Recommended to label",
       content: (
         <div>
           <p>
@@ -140,9 +148,14 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
     },
     {
       smallTitle: "Tutorial completed",
-      title:
-        "That’s all! If you need to revisit the tutorial, go to the top left of the screen and click on",
-      content: null,
+      largeTitle: "That’s all!",
+      content: (
+        <p>
+          If you need to revisit the tutorial, go to the top left of the screen
+          and click on
+          <img src={info_icon} className="tutorial-icon" alt="Open Tutorial" />
+        </p>
+      ),
       primaryButtonTitle: "Start labeling",
       onPrimaryButtonClick: () => setTutorialOpen(false),
       secondaryButtonTitle: "Restart from beginning",
@@ -152,14 +165,9 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
 
   const currentStage = stages[stageIndex];
 
-  let OuterModalContent = getOuterModalContent(stageIndex);
-
   return (
-    <OuterModal
-      open={tutorialOpen}
-      onClose={() => setTutorialOpen(false)}
-    >
-      <Fade in={tutorialOpen} timeout={{ enter:1000, exit:0 }}>
+    <OuterModal open={tutorialOpen} onClose={() => setTutorialOpen(false)}>
+      <Fade in={tutorialOpen} timeout={{ enter: 1000, exit: 0 }}>
         <OuterModalContent>
           <img
             style={{ width: "100%", height: "100%", objectFit: "contain" }}
@@ -173,13 +181,28 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             <InnerModalContent>
               <div
                 style={{
-                  marginTop: "25px",
+                  marginTop: "5px",
                   marginLeft: "25px",
                   display: "block",
                 }}
               >
+                <div style={{
+                      display: "flex",
+                      flexDirection: "row-reverse",
+                      order: 1, 
+                      flex: "0 0 auto",
+                }}>
+                  <IconButton
+                    aria-label="close"
+                    style={{color: "white"}}
+                    onClick={() => setTutorialOpen(false)}
+                    sizeMedium
+                  >
+                    <CloseIcon fontSize="inherit" />
+                  </IconButton>
+                </div>
                 <SmallTitle>{currentStage.smallTitle || "Tutorial"}</SmallTitle>
-                <LargeTitle>{currentStage.title}</LargeTitle>
+                <LargeTitle>{currentStage.largeTitle}</LargeTitle>
                 <MainContent>{currentStage.content}</MainContent>
               </div>
               <Stack
@@ -189,13 +212,21 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
                 spacing={0}
                 style={{ width: "100%", flex: "none", order: 1, flexGrow: 0 }}
               >
-                <SecondaryButton
-                  onClick={currentStage.onSecondaryButtonClick || onSkip}
-                >
-                  {currentStage.secondaryButtonTitle || "Close tutorial"}
-                </SecondaryButton>
+                {stageIndex !== 0 ? (
+                  <SecondaryButton
+                    onClick={
+                      currentStage.onSecondaryButtonClick ||
+                      onSecondaryButtonClickDefault
+                    }
+                  >
+                    {currentStage.secondaryButtonTitle || "Previous"}
+                  </SecondaryButton>
+                ) : null}
                 <PrimaryButton
-                  onClick={currentStage.onPrimaryButtonClick || onNext}
+                  onClick={
+                    currentStage.onPrimaryButtonClick ||
+                    onPrimaryButtonClickDefault
+                  }
                 >
                   {currentStage.primaryButtonTitle || "Next"}
                 </PrimaryButton>
@@ -203,7 +234,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             </InnerModalContent>
           </InnerModal>
         </OuterModalContent>
-        </Fade>
+      </Fade>
     </OuterModal>
   );
 };
