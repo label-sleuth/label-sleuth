@@ -23,6 +23,7 @@ import dacite
 
 from label_sleuth.active_learning.core.active_learning_api import ActiveLearningStrategy
 from label_sleuth.active_learning.core.catalog import ActiveLearningCatalog
+from label_sleuth.models.core.languages import Language, Languages
 from label_sleuth.models.core.model_policies import ModelPolicies
 from label_sleuth.models.policy.model_policy import ModelPolicy
 from label_sleuth.training_set_selector.train_set_selector_api import TrainingSetSelectionStrategy
@@ -37,6 +38,7 @@ class Configuration:
     active_learning_strategy: ActiveLearningStrategy
     precision_evaluation_size: int
     apply_labels_to_duplicate_texts: bool
+    language: Language
     login_required: bool
     users: List[dict] = field(default_factory=list)
 
@@ -45,6 +47,7 @@ converters = {
     ModelPolicy: lambda x: getattr(ModelPolicies, x),
     TrainingSetSelectionStrategy: lambda x: getattr(TrainingSetSelectionStrategy, x),
     ActiveLearningStrategy: lambda x: getattr(ActiveLearningCatalog, x),
+    Language: lambda x: getattr(Languages, x)
 }
 
 
@@ -57,5 +60,4 @@ def load_config(config_path) -> Configuration:
         data_class=Configuration, data=raw_cfg,
         config=dacite.Config(type_hooks=converters),
     )
-    logging.info(f"loaded configuration: {config}")
     return config

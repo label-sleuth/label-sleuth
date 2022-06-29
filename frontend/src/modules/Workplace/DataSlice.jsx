@@ -1,7 +1,22 @@
-import { CoPresentOutlined, NotificationsTwoTone, SignalCellularNullSharp } from '@mui/icons-material'
+/*
+    Copyright (c) 2022 IBM Corp.
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
 import { WORKSPACE_API } from "../../config"
+import { NEXT_MODEL_TRAINING_MSG } from '../../const'
 
 const initialState = {
     workspaceId: "",
@@ -27,7 +42,6 @@ const initialState = {
     predictionForDocCat: [],
     modelUpdateProgress: 0,
     new_categories: [],
-    modelStatus: "Not ready",
     pos_label_num: 0,
     neg_label_num: 0,
     pos_label_num_doc: 0,
@@ -41,7 +55,8 @@ const initialState = {
     searchedIndex:0,
     isSearchActive: false,
     activePanel: "",
-    searchInput: null
+    searchInput: null,
+    nextModelStatus: null
 }
 
 const BASE_URL = process.env.REACT_APP_API_URL
@@ -66,7 +81,6 @@ export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async
 
     const state = getState()
     var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/documents`
-    console.log(`url: ${url}`)
 
     const data = await fetch(url, {
         headers: {
@@ -129,8 +143,6 @@ export const createCategoryOnServer = createAsyncThunk('workspace/createCategory
 
     const { category } = request
 
-    console.log(`category on server: ${category}`)
-
     var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/category`
 
     const data = await fetch(url, {
@@ -153,7 +165,6 @@ export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async
     const state = getState()
 
     const { keyword } = request
-    console.log(`searchKeywords called, key: `, keyword)
     const queryParams = getQueryParamsString([
         `qry_string=${keyword}`, 
         getCategoryQueryString(state.workspace.curCategory),
@@ -244,8 +255,6 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
 
     const { docid, eid, switchStatus } = request
 
-    console.log(`call fetchCertainDocument, eid: ${eid}`)
-    
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
     var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(docid)}${queryParams}`
@@ -497,7 +506,6 @@ const DataSlice = createSlice({
     extraReducers: {
         [fetchElements.fulfilled]: (state, action) => {
             const data = action.payload
-            console.log(`fetchElements`, data)
 
             var initialFocusedState = {}
 
@@ -588,8 +596,6 @@ const DataSlice = createSlice({
 
             var predictionForDocCat = Array(state.elements.length - 1).fill(false)
 
-            console.log(`positive elements: `, data['positive_elements'])
-
             elements.map((e, i) => {
                 // const docid = e['docid']
                 // var eids = e['id'].split('-')
@@ -614,8 +620,6 @@ const DataSlice = createSlice({
 
             })
 
-            console.log(`prediction on doc: `, predictionForDocCat)
-
             return {
                 ...state,
                 predictionForDocCat: predictionForDocCat
@@ -623,12 +627,13 @@ const DataSlice = createSlice({
         },
         [downloadLabeling.fulfilled]: (state, action) => {
             const data = action.payload
-            fileDownload(data, 'labeling-data.csv')
+            const current = new Date();
+            const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`;
+            const fileName = `labeleddata_from_Label_Sleuth<${date}>.csv`
+            fileDownload(data, fileName)
         },
         [fetchNextDocElements.fulfilled]: (state, action) => {
             const data = action.payload
-
-            console.log(data)
 
             var initialFocusedState = {}
 
@@ -714,8 +719,6 @@ const DataSlice = createSlice({
         [setElementLabel.fulfilled]: (state, action) => {
             const data = action.payload
 
-            console.log(`setElementLabel: `, data)
-
             return {
                 ...state,
                 num_cur_batch: state.num_cur_batch == 10 ? 0 : state.num_cur_batch + 1,
@@ -754,6 +757,7 @@ const DataSlice = createSlice({
             let latest_model_version = -1
             let models = data['models']
             let found = false
+            let nextModelStatus = null
             while (models.length && !found) {
                 let last_model = models[models.length-1]
                 if (last_model['active_learning_status'] === 'READY') {
@@ -761,6 +765,7 @@ const DataSlice = createSlice({
                     found = true
                 }
                 else {
+                    nextModelStatus = NEXT_MODEL_TRAINING_MSG
                     models.pop()
                 }
             }
@@ -772,7 +777,8 @@ const DataSlice = createSlice({
 
             return {
                 ...state,
-                model_version: latest_model_version
+                model_version: latest_model_version,
+                nextModelStatus: nextModelStatus
             }
 
         },
@@ -788,8 +794,6 @@ const DataSlice = createSlice({
             for (var i = 0; i < data['elements'].length; i++) {
                 initialFocusedState['L' + i] = false
             }
-
-            console.log(`data['eid]: ${eid}`)
 
             initialFocusedState['L' + eid] = true
             
@@ -843,8 +847,6 @@ const DataSlice = createSlice({
                 console.log(`No Doc found with docid: ${data['elements'][0]['docid']}`)
             }
 
-            console.log(`elements: `, data['elements'])
-
             return {
                 ...state,
                 elements: data['elements'],
@@ -858,23 +860,10 @@ const DataSlice = createSlice({
         },
         [checkStatus.fulfilled]: (state, action) => {
             const response = action.payload
-
-            console.log(`checkStatus: `, response['labeling_counts'])
-
             const progress = response['progress']['all']
-
-            const notifications = response['notifications']
-
-            console.log(`notifications: `, notifications)
-
-            var status = null
-
             var new_id_in_batch = state.cur_completed_id_in_batch
-
             var pos_label = state['pos_label_num']
-
             var neg_label = state['neg_label_num']
-
             // if (state.cur_completed_id_in_batch < state.training_batch - 1 ) {
             //     status = "New model is not ready"
             // } else if (state.cur_completed_id_in_batch == state.training_batch - 1) {
@@ -882,19 +871,6 @@ const DataSlice = createSlice({
             // } else {
             //     status = "New model is ready"
             // }
-
-            if (progress < 80) {
-                status = 'New model is not ready'
-            }
-
-            if (progress == 80) {
-                status = 'New model is almost ready'
-            }
-
-            if (progress == 100) {
-                status = 'New model is ready'
-            }
-
             if (state.cur_completed_id_in_batch == state.training_batch) {
                 new_id_in_batch = 0
             }
@@ -911,14 +887,10 @@ const DataSlice = createSlice({
                 neg_label = 0
             }
 
-
-            console.log(`pos_label: ${pos_label}, neg_label: ${neg_label}`)
-
             return {
                 ...state,
                 modelUpdateProgress: progress,
                 cur_completed_id_in_batch: new_id_in_batch,
-                modelStatus: status,
                 pos_label_num: pos_label,
                 neg_label_num: neg_label
             }

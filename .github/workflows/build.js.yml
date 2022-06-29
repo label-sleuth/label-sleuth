@@ -2,7 +2,7 @@ name: Push results of react build
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [  develop ]
     paths-ignore:
       - label_sleuth/**
 

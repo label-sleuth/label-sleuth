@@ -1,18 +1,34 @@
+/*
+    Copyright (c) 2022 IBM Corp.
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
 import React from 'react';
 import FormControl from '@mui/material/FormControl';
 import ControlledSelect from "../../components/dropdown/Dropdown"
 import Box from '@mui/material/Box';
 import ButtonIBM from "../../components/buttons/ButtonIBM";
+import buttonIBMClasses from "../../components/buttons/Buttons.module.css"
 import 'react-toastify/dist/ReactToastify.css';
 import classes from "./workspace-config.module.css";
 
-const ExistingWorkspaceForm = ({ handleChange, handleClick, workspaces, value, options }) => {
+const ExistingWorkspaceForm = ({ handleChange, handleClick, value, options }) => {
 
     return (
-        <Box className={classes.wrapper} style={{borderBottom: 'solid 1px #8d8d8d'}}>
-            <h2 style={{padding: '25px', margin: 0}}>Continue</h2>
+        <Box className={classes.wrapper} style={{ borderBottom: 'solid 1px #8d8d8d' }}>
+            <h2 style={{ padding: '25px', margin: 0 }}>Continue</h2>
             <FormControl variant="standard">
-                <FormControl required variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px'}}>
+                <FormControl variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px' }}>
                     <ControlledSelect
                         label="Continue with Existing Workspace"
                         value={value}
@@ -21,8 +37,8 @@ const ExistingWorkspaceForm = ({ handleChange, handleClick, workspaces, value, o
                         placeholder="Choose from List"
                     />
                 </FormControl>
-                <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>
-                    <ButtonIBM onClick={handleClick} text="Go" />
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px' }}>
+                    <ButtonIBM onClick={handleClick} className={  buttonIBMClasses["button-ibm"]} text="Go" />
                 </div>
             </FormControl>
         </Box>

@@ -13,15 +13,15 @@
 #  limitations under the License.
 #
 
-import gc
 import os
 
 from typing import List
 
-import torch
-import tqdm
-
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, InputFeatures, Trainer, TrainingArguments
+from datasets import Dataset
+from tqdm.auto import tqdm
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, InputFeatures, Trainer, TrainingArguments, \
+    TextClassificationPipeline
+from transformers.pipelines.pt_utils import KeyDataset
 
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.definitions import GPU_AVAILABLE
@@ -56,7 +56,7 @@ class HFTransformers(ModelAPI):
         self.max_seq_length = 128
         self.tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model_name)
 
-    def _train(self, model_id, train_data, train_params: dict):
+    def _train(self, model_id, train_data, model_params: dict):
         texts = [element["text"] for element in train_data]
         labels = [element["label"] for element in train_data]
         train_dataset = self.process_train_inputs(texts, labels)
@@ -71,22 +71,19 @@ class HFTransformers(ModelAPI):
         trainer.save_model(self.get_model_dir_by_id(model_id))
 
     def _infer(self, model_id, items_to_infer):
-        device = "cuda:0" if GPU_AVAILABLE else "cpu"
+        device = 0 if GPU_AVAILABLE else -1
         model_path = self.get_model_dir_by_id(model_id)
-        model = AutoModelForSequenceClassification.from_pretrained(model_path).to(device)
-        preds = []
-        for x in tqdm.tqdm(range(0, len(items_to_infer), self.batch_size)):
-            batch_texts = [x['text'] for x in items_to_infer[x:x + self.batch_size]]
-            batch_input = self.tokenizer.batch_encode_plus(batch_texts, max_length=self.max_seq_length, padding=True,
-                                                           truncation=True, return_tensors='pt').to(device)
-            batch_res = model(**batch_input).logits.softmax(-1).detach().cpu()
-            preds.extend(batch_res)
-            del batch_res, batch_input
-            gc.collect()
-            torch.cuda.empty_cache()
 
-        # The True label is in the second position as sorted([True, False]) is [False, True]
-        scores = [pred.squeeze().numpy()[1] for pred in preds]
+        model = AutoModelForSequenceClassification.from_pretrained(model_path)
+        pipeline = TextClassificationPipeline(model=model, tokenizer=self.tokenizer, device=device)
+
+        ds = Dataset.from_dict({'text': [item['text'] for item in items_to_infer]})
+        preds = []
+        for output in tqdm(pipeline(KeyDataset(ds, 'text'), batch_size=self.batch_size),
+                           total=len(items_to_infer), desc="classification inference"):
+            preds.append(output)
+
+        scores = [pred['score'] for pred in preds]
         return [Prediction(label=score > 0.5, score=score) for score in scores]
 
     def get_models_dir(self):

@@ -59,15 +59,17 @@ class Ensemble(ModelAPI):
         self.model_types = model_types
         self.models = [model_dependencies.model_factory.get_model(model_type) for model_type in model_types]
 
-    def train(self, train_data, train_params, done_callback=None) -> Tuple[str, Future]:
+    def train(self, train_data, language, model_params=None, done_callback=None) -> Tuple[str, Future]:
         """
         Submits training of the different model types in the background, and returns a model_id and future object
         for the ensemble model.
         """
-        model_ids_and_futures = [model.train(train_data, train_params) for model in self.models]
+        if model_params is None:
+            model_params = {}
+        model_ids_and_futures = [model.train(train_data, language, model_params) for model in self.models]
         ensemble_model_id = ",".join(model_id for model_id, future in model_ids_and_futures)
         self.mark_train_as_started(ensemble_model_id)
-        self.save_metadata(ensemble_model_id, train_params)
+        self.save_metadata(ensemble_model_id, language, model_params)
 
         future = self.models_background_jobs_manager.add_training(
             ensemble_model_id, self.wait_and_update_status,
@@ -96,7 +98,7 @@ class Ensemble(ModelAPI):
 
         return model_id
 
-    def _train(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
+    def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: dict):
         pass
 
     def _infer(self, model_id, items_to_infer) -> Sequence[EnsemblePrediction]:

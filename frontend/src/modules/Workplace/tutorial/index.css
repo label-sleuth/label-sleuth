@@ -1,0 +1,61 @@
+.prediction {
+  margin-bottom: 5px;
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  color: #A3D8E5;
+}
+
+.positive-label {
+  margin-bottom: 5px;
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  color: #3092ab;
+}
+
+.negative-label {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    color: #BD3951;
+}
+
+.positive-label img {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+}
+
+.negative-label img {
+  width: 15px;
+  height: 15px;
+  margin-right: 12px;
+  margin-left: 3px;
+}
+
+.stage-content {
+    display: block;
+}
+
+.prediction-square {
+  height: 50px;
+  width: 50px;
+  background-color: transparent;
+  border: 2px dotted #A3D8E5;
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+}

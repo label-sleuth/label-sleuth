@@ -1,3 +1,18 @@
+/*
+    Copyright (c) 2022 IBM Corp.
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
 import * as React from 'react';
 import { useCallback, useRef } from "react";
 import ReactCanvasConfetti from "react-canvas-confetti";
@@ -10,7 +25,7 @@ import info_icon from '../../../assets/workspace/help.svg';
 import logout_icon from '../../../assets/workspace/logout.svg';
 import workspace_icon from '../../../assets/workspace/change_catalog.svg';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchElements, downloadLabeling, getElementToLabel, checkStatus, fetchCategories, getPositiveElementForCategory, checkModelUpdate, fetchDocuments, setWorkspaceId } from '../DataSlice.jsx';
+import { downloadLabeling, checkModelUpdate, setWorkspaceId, checkStatus } from '../DataSlice.jsx';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
@@ -22,6 +37,7 @@ import classes from './WorkspaceInfo.module.css';
 import { APP_NAME, WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
 import { toast } from 'react-toastify';
 import { LOGOUT_TOOLTIP_MSG, GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG, NO_MODEL_AVAILABLE_MSG, LABEL_SLEUTH_SHORT_DESC } from '../../../const';
+import LinearWithValueLabel from './ModelProgressBar'
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -97,7 +113,7 @@ function a11yProps(index) {
 }
  
 
-export default function Workspace({workspaceId}) {
+export default function Workspace({workspaceId, setTutorialOpen}) {
     const navigate = useNavigate()
     const theme = useTheme();
     const { logout } = useLogOut()
@@ -109,8 +125,13 @@ export default function Workspace({workspaceId}) {
     // this state is used to not display the new model notififications the first time the model version is set
     const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false)
     const [shouldNotifyNewModel, setShouldNotifyNewModel] = React.useState(false)
-    const notifySuccess = (message) => toast.success(message);
-
+    function notifySuccess(message, toastId) {
+        toast(message, {
+          autoClose: false,
+          type: toast.TYPE.SUCCESS,
+          toastId: toastId,
+        });
+      }
 
     React.useEffect( () => {
         if (workspace.curCategory) {
@@ -126,11 +147,10 @@ export default function Workspace({workspaceId}) {
             if (workspace.model_version && workspace.model_version > -1 && modelVersionHasBeenSet) {
                 fire();
                 if (shouldNotifyNewModel) {
-                    notifySuccess('A new model is available!')
-                    notifySuccess('There are new suggestions for labeling!')
+                    notifySuccess('A new model is available!', 'toast-new-model')
+                    notifySuccess('There are new suggestions for labeling!', 'toast-new-suggestions-for-labelling')
                 }
             }
-            dispatch(getPositiveElementForCategory()).then(() => dispatch(getElementToLabel()))
         }
       }, [workspace.model_version])
     
@@ -187,32 +207,17 @@ export default function Workspace({workspaceId}) {
     const dispatch = useDispatch();
 
     React.useEffect(() => {
-
-        dispatch(fetchDocuments()).then(() => dispatch(fetchElements()).then(() => dispatch(fetchCategories()).then(() => {
-            dispatch(checkStatus()).then(() => {
-                dispatch(getElementToLabel()).then(() => {
-
-                })
-            })
-        })))
-
         const interval = setInterval(() => {
-
-            console.log(`curCategory value: ${workspace.curCategory}`)
-
             if (workspace.curCategory != null) {
-                dispatch(checkModelUpdate()).then(() => {
-                })
-            } else {
+                dispatch(checkModelUpdate())
+                dispatch(checkStatus())
             }
-
         }, 5000);
-        
+
         setModelVersionHasBeenSet(false)
         setShouldNotifyNewModel(false)
 
         return () => clearInterval(interval);
-
     }, [workspace.curCategory])
 
     const handleChange = (event, newValue) => {
@@ -235,8 +240,8 @@ export default function Workspace({workspaceId}) {
     };
 
     const open_introSlides = function () {
-        console.log("this is where the tutorial starts");
-        // document.getElementById("presentation").style.display = "flex";
+        
+        setTutorialOpen(true)
     };
 
     return (
@@ -268,7 +273,7 @@ export default function Workspace({workspaceId}) {
                         <h2 className={classes.sleuth_title}>
                             <img src={sleuth_logo} className={classes.sleuthlogo} alt="Sleuth Logo" />
                             {APP_NAME}
-                            <img onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
+                            <img id="workspace-tutorial-image" onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
                         </h2>
                         { AUTH_ENABLED ?   
                             <Tooltip title={LOGOUT_TOOLTIP_MSG} placement='right'>
@@ -358,10 +363,20 @@ export default function Workspace({workspaceId}) {
                         <ModelName>
                             <Typography>Current Model:</Typography>
                             {
-                               workspace.model_version && workspace.model_version > -1 ? <Typography><strong>{workspace.model_version}<sup>st</sup> version</strong></Typography>
-                                    : <Typography><strong>{NO_MODEL_AVAILABLE_MSG}</strong></Typography>
+                               workspace.model_version && workspace.model_version > -1 ? <Typography id="model-version"><strong>{workspace.model_version}<sup>st</sup> version</strong></Typography>
+                                    : <Typography id='model-version-unavailable'><strong>{NO_MODEL_AVAILABLE_MSG}</strong></Typography>
                             }
                         </ModelName>
+                        <LinearWithValueLabel />
+                        {
+                            workspace['nextModelStatus'] ? (
+                                <div style={{display: "flex", flexDirection: "row", alignItems: "flex-end"}}>
+                                    <div className={classes.modelStatus}>{workspace['nextModelStatus']}</div>    
+                                    <div className={classes["dot-pulse"]}></div>
+                                </div>
+                            )
+                            : null
+                        }
                         <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
                     </Stack>
 

@@ -1,3 +1,18 @@
+/*
+    Copyright (c) 2022 IBM Corp.
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
 .sleuth_title {
     display: flex;
     align-items: center;
@@ -104,6 +119,8 @@
     padding: 0 16px;
     font-style: italic;
     color: #0080ff;
+    margin-right: 8px;
+    margin-top: 20px;
 }
 
 .hint {
@@ -143,3 +160,84 @@
 .hint:hover > span {
     display: inline-block;
 } */
+
+  /**
+ * ==============================================
+ * Dot Pulse
+ * ==============================================
+ */
+.dot-pulse {
+    position: relative;
+    left: -9999px;
+    width: 3px;
+    height: 3px;
+    border-radius: 3px;
+    background-color: #0080ff;
+    color: #0080ff;
+    box-shadow: 9999px 0 0 -3px #0080ff;
+    animation: dotPulse 1.75s infinite;
+    animation-delay: .25s;
+    margin-bottom: 7px;
+  }
+  
+  .dot-pulse::before, .dot-pulse::after {
+    content: '';
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    width: 3px;
+    height: 3px;
+    border-radius: 3px;
+    background-color: #0080ff;
+    color: #0080ff;
+  }
+  
+  .dot-pulse::before {
+    animation: dotPulseBefore 1.75s infinite ;
+    animation-delay: 0s;
+  }
+  
+  .dot-pulse::after {
+    animation: dotPulseAfter 1.75s infinite ;
+    animation-delay: .5s;
+  }
+  
+  @keyframes dotPulseBefore {
+    0% {
+      box-shadow: 9985px 0 0 -3px #0080ff;
+    }
+    30% {
+      box-shadow: 9985px 0 0 1.5px #0080ff;
+    }
+    70%,
+    100% {
+      box-shadow: 9985px 0 0 -3px #0080ff;
+    }
+  }
+  
+  @keyframes dotPulse {
+    0% {
+      box-shadow: 9999px 0 0 -3px #0080ff;
+    }
+    30% {
+      box-shadow: 9999px 0 0 1.5px #0080ff;
+    }
+    70%,
+    100% {
+      box-shadow: 9999px 0 0 -3px #0080ff;
+    }
+  }
+  
+  @keyframes dotPulseAfter {
+    0% {
+      box-shadow: 10011px 0 0 -3px #0080ff;
+    }
+    30% {
+      box-shadow: 10011px 0 0 1.5px #0080ff;
+    }
+    70%,
+    100% {
+      box-shadow: 10011px 0 0 -3px #0080ff;
+    }
+  }
+  

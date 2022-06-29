@@ -22,7 +22,7 @@ import time
 from collections import Counter, defaultdict
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime
-from typing import Mapping, List, Sequence, Union
+from typing import Mapping, List, Sequence, Union, Tuple
 
 import pandas as pd
 
@@ -193,16 +193,19 @@ class OrchestratorApi:
         return self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category, sample_size=sys.maxsize,
                                                           remove_duplicates=False)['results']
 
-    def get_all_unlabeled_text_elements(self, workspace_id, dataset_name, category) -> List[TextElement]:
+    def get_all_unlabeled_text_elements(self, workspace_id, dataset_name, category, remove_duplicates=False) \
+            -> List[TextElement]:
         """
         Get all the text elements that were not assigned user labels for the given category.
         :param workspace_id:
         :param dataset_name:
         :param category:
+        :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :return: a list of TextElement objects
         """
         return self.data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category,
-                                                            sample_size=sys.maxsize, remove_duplicates=False)['results']
+                                                            sample_size=sys.maxsize,
+                                                            remove_duplicates=remove_duplicates)['results']
 
     def query(self, workspace_id: str, dataset_name: str, category_name: str, query_regex: str,
               sample_size: int = sys.maxsize, sample_start_idx: int = 0, unlabeled_only: bool = False,
@@ -287,7 +290,11 @@ class OrchestratorApi:
         return self.orchestrator_state.get_all_iterations(workspace_id, category_name)
 
     def get_all_iterations_by_status(self, workspace_id, category_name, iteration_status: IterationStatus) \
-            -> List[Iteration]:
+            -> List[Tuple[Iteration, int]]:
+        """
+        get all iterations by status
+        :return A list of tuples of Iteration and iteration index
+        """
         return self.orchestrator_state.get_all_iterations_by_status(workspace_id, category_name, iteration_status)
 
     def get_iteration_status(self, workspace_id, category_name, iteration_index) -> IterationStatus:
@@ -338,8 +345,7 @@ class OrchestratorApi:
 
     # Iteration flow
     
-    def run_iteration(self, workspace_id: str, category_name: str, model_type: ModelType, train_data,
-                      train_params=None) -> str:
+    def run_iteration(self, workspace_id: str, category_name: str, model_type: ModelType, train_data) -> str:
         """
         This method initiates an Iteration, a flow that includes training a model, inferring the full corpus using
         this model, choosing candidate elements for labeling using active learning, as well as calculating various
@@ -355,7 +361,6 @@ class OrchestratorApi:
         :param category_name:
         :param model_type:
         :param train_data:
-        :param train_params:
         :return: model_id
         """
         def _get_counts_per_label(text_elements):
@@ -374,19 +379,18 @@ class OrchestratorApi:
     
         train_counts = _get_counts_per_label(train_data)
         train_data = convert_text_elements_to_train_data(train_data, category_name)
-        model_metadata = {TRAIN_COUNTS_STR_KEY: train_counts}
+        train_statistics = {TRAIN_COUNTS_STR_KEY: train_counts}
         model = self.model_factory.get_model(model_type)
     
         logging.info(f"workspace '{workspace_id}' training a model for category '{category_name}', "
-                     f"model_metadata: {model_metadata}")
-        model_id, _ = model.train(train_data=train_data, train_params=train_params,
+                     f"train_statistics: {train_statistics}")
+        model_id, _ = model.train(train_data=train_data, language=self.config.language,
                                   done_callback=functools.partial(self._train_done_callback, workspace_id,
                                                                   category_name, new_iteration_index))
         model_status = model.get_model_status(model_id)
-        if train_params:
-            model_metadata = {**model_metadata, **train_params}
         model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
-                               model_metadata=model_metadata, creation_date=datetime.now())
+                               language=self.config.language, train_statistics=train_statistics,
+                               creation_date=datetime.now())
         self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_name=category_name,
                                               model_info=model_info)
     
@@ -521,7 +525,11 @@ class OrchestratorApi:
         :param iteration_index: iteration to use
         """
         active_learner = self.active_learning_factory.get_active_learner(self.config.active_learning_strategy)
-        unlabeled = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category_name)
+        # Where labels are applied to duplicate texts (the default behavior), we do not want duplicates to appear in
+        # the Label Next list
+        remove_duplicates = self.config.apply_labels_to_duplicate_texts
+        unlabeled = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category_name,
+                                                         remove_duplicates=remove_duplicates)
         predictions = self.infer(workspace_id, category_name, unlabeled, iteration_index)
         new_recommendations = active_learner.get_recommended_items_for_labeling(
             workspace_id=workspace_id, dataset_name=dataset_name, category_name=category_name,
@@ -643,14 +651,15 @@ class OrchestratorApi:
         dataset_name = self.get_dataset_name(workspace_id)
         labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
         return get_suspected_labeling_contradictions_by_distance_with_diffs(
-            category_name, labeled_elements, self.sentence_embedding_service.get_glove_representation)
+            category_name, labeled_elements, self.sentence_embedding_service.get_glove_representation,
+            language=self.config.language)
 
     def get_suspicious_elements_report(self, workspace_id, category_name,
                                        model_type: ModelType = ModelsCatalog.SVM_ENSEMBLE) -> List[TextElement]:
         dataset_name = self.get_dataset_name(workspace_id)
         labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_name)
         return get_disagreements_using_cross_validation(workspace_id, category_name, labeled_elements,
-                                                        self.model_factory, model_type)
+                                                        self.model_factory, self.config.language, model_type)
 
     def estimate_precision(self, workspace_id, category, ids, changed_elements_count, iteration_index):
         dataset_name = self.get_dataset_name(workspace_id)
@@ -669,12 +678,15 @@ class OrchestratorApi:
         return estimated_precision
 
     def sample_elements_by_prediction(self, workspace_id, category, sample_size: int = sys.maxsize,
-                                      unlabeled_only=False, required_label=LABEL_POSITIVE, random_state: int = 0):
+                                      unlabeled_only=False, required_label=LABEL_POSITIVE,
+                                      remove_duplicates=True, random_state: int = 0):
         dataset_name = self.get_dataset_name(workspace_id)
         if unlabeled_only:
-            elements = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category)
+            elements = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category,
+                                                            remove_duplicates=remove_duplicates)
         else:
-            elements = self.get_all_text_elements(dataset_name)
+            elements = self.data_access.get_text_elements(
+                workspace_id=workspace_id, dataset_name=dataset_name, remove_duplicates=remove_duplicates)["results"]
         predictions = self.infer(workspace_id, category, elements)
         elements_with_matching_prediction = [text_element for text_element, prediction in zip(elements, predictions)
                                              if prediction.label == required_label]

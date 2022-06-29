@@ -24,6 +24,7 @@ from label_sleuth.data_access.core.data_structs import TextElement
 from label_sleuth.data_access.data_access_api import get_document_uri
 from label_sleuth.models.core.languages import Languages
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Iteration, IterationStatus
+from label_sleuth.orchestrator.orchestrator_api import TRAIN_COUNTS_STR_KEY
 
 
 def elements_back_to_front(workspace_id: str, elements: List[TextElement], category_name: str) -> List[Mapping]:
@@ -81,9 +82,9 @@ def extract_iteration_information_list(iterations: Sequence[Iteration]):
           'creation_epoch': iteration.model.creation_date.timestamp(),
           'model_type': iteration.model.model_type.name,
           # The frontend expects a dict of string to int, and train counts contains a mix of boolean and string keys.
-          'model_metadata': {**iteration.model.model_metadata, **iteration.iteration_statistics,
-                             "train_counts": {str(k).lower(): v
-                                              for k, v in iteration.model.model_metadata["train_counts"].items()}},
+          'model_metadata': {**iteration.model.train_statistics, **iteration.iteration_statistics,  # TODO change model_metadata key in coordination with frontend
+                             TRAIN_COUNTS_STR_KEY: {str(k).lower(): v for k, v
+                                                    in iteration.model.train_statistics[TRAIN_COUNTS_STR_KEY].items()}},
           'active_learning_status': iteration.status.name}
          for iteration_index, iteration in enumerate(iterations)]
 

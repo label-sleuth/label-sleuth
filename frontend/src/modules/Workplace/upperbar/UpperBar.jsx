@@ -1,3 +1,18 @@
+/*
+    Copyright (c) 2022 IBM Corp.
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -11,6 +26,7 @@ import FormControl from '@mui/material/FormControl';
 import ControlledSelect from '../../../components/dropdown/Dropdown';
 import Tooltip from '@mui/material/Tooltip';
 import { CREATE_NEW_CATEGORY_TOOLTIP_MSG } from '../../../const';
+import { CategoryCard } from './CategoryCard'
 
 const rightDrawerWidth = 360;
 const leftDrawerWidthh = 280;
@@ -43,7 +59,7 @@ const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== 'open', })(({
     }),
     paddingRight: `${rightDrawerWidth + 20}px`,
   }),
-  width: `calc(100vw - ${leftDrawerWidthh + 48}px)`,
+  // width: `calc(100vw - ${leftDrawerWidthh + 48}px)`,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -82,6 +98,8 @@ function CategoryFormControl() {
 }
 
 const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
+  
+  const [cardOpen, setCardOpen] = React.useState(true)
 
   const handleAddCategory = () => {
     setModalOpen(true)
@@ -96,10 +114,16 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
             placholder="placeholder" />
 
           <Tooltip title={CREATE_NEW_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-            <button onClick={handleAddCategory} alt="Create new category">
+            <button
+              onClick={handleAddCategory}
+              alt="Create new category"
+              id="upperbar-add-category"
+              className={classes["add-category-button"]}
+            >
               <img src={add_icon} />
             </button>
           </Tooltip>
+          {cardOpen ? <CategoryCard setCardOpen={setCardOpen} /> : null}
           {/* TODO 
               <IconButton onClick={() => setModalOpen(false)} >
                 <EditIcon  color="success" />

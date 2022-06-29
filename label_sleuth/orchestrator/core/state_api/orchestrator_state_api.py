@@ -20,10 +20,11 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Sequence
+from typing import Dict, List, Sequence, Tuple
 
 import jsonpickle
 
+from label_sleuth.models.core.languages import Language
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.model_type import ModelType
 
@@ -44,7 +45,8 @@ class ModelInfo:
     model_status: ModelStatus
     creation_date: datetime
     model_type: ModelType
-    model_metadata: dict
+    language: Language
+    train_statistics: dict
 
 
 @dataclass
@@ -218,10 +220,11 @@ class OrchestratorStateApi:
             workspace = self._load_workspace(workspace_id)
             return workspace.categories[category_name].iterations
 
-    def get_all_iterations_by_status(self, workspace_id, category_name, status: IterationStatus) -> List[Iteration]:
+    def get_all_iterations_by_status(self, workspace_id, category_name, status: IterationStatus) -> \
+            List[Tuple[Iteration, int]]:
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            return [iteration for iteration in workspace.categories[category_name].iterations
+            return [(iteration, idx) for idx, iteration in enumerate(workspace.categories[category_name].iterations)
                     if iteration.status == status]
 
     def add_iteration_statistics(self, workspace_id, category_name, iteration_index, statistics_dict: dict):

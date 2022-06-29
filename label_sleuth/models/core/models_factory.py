@@ -31,7 +31,7 @@ class ModelFactory(object):
         self.loaded_models = {}
         self.output_dir = output_dir
         self.models_background_jobs_manager = models_background_jobs_manager
-        self.model_dependencies = ModelDependencies(sentence_embedding_service,self)
+        self.model_dependencies = ModelDependencies(sentence_embedding_service, self)
 
     def get_model(self, model_type: ModelType) -> ModelAPI:
         kwargs = {'output_dir': self.output_dir,
@@ -47,6 +47,7 @@ class ModelFactory(object):
                 logging.exception(f"Could not get model type {model_type.cls} from the model factory")
 
         return self.loaded_models[model_type]
+
 
 @dataclass
 class ModelDependencies:

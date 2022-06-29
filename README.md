@@ -62,7 +62,11 @@ pip install -r requirements.txt
 
 4. Start the Label Sleuth server: run `python -m label_sleuth.start_label_sleuth`.
    
-   By default all project files are written to `<home_directory>/label-sleuth`, to change the directory add `--output_path <your_output_path>`. Default port is 8000, to change the port add `--port <port_number>`.
+   By default all project files are written to `<home_directory>/label-sleuth`, to change the directory add `--output_path <your_output_path>`. 
+   
+   By default, the host will be `localhost` to expose the server only on the host machine. If you wish to expose the server to external communication, add `--host <IP>` for example, `--host 0.0.0.0` to listen to all IPs.
+   
+   Default port is 8000, to change the port add `--port <port_number>`.
 
    The system can then be accessed by browsing to http://localhost:8000 (or http://localhost:<port_number>)
 
@@ -84,6 +88,7 @@ A custom configuration can be applied by passing the `--config_path` parameter t
 - _active_learning_strategy_: specifies the strategy to be used from [ActiveLearningStrategies](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/active_learning/core/active_learning_strategies.py#L4). An [ActiveLearner](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/active_learning/core/active_learning_api.py#L11) module implements the strategy for recommending the next elements to be labeled by the user, aiming to increase the efficiency of the annotation process. For currently supported implementations see [get_active_learner()](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/active_learning/core/active_learning_factory.py#L8).
 - _precision_evaluation_size_: determines the sample size to be used for estimating the precision of the current model.
 - _apply_labels_to_duplicate_texts_: specifies how to treat elements with identical texts. If `true`, assigning a label to an element will also assign the same label to other elements which share the exact same text; if `false`, the label will only be assigned to the specific element labeled by the user.
+- _language_: specifies the chosen system-wide language. This determines some language-specific resources that will be used by models and helper functions (e.g., stop words). The list of supported languages can be found in [Languages](https://github.com/label-sleuth/label-sleuth/blob/b7d60ac5e62448514d10f9de093c5c987bca2e96/label_sleuth/models/core/languages.py#L58). We welcome the contribution of new languages.
 - _login_required_: specifies whether or not using the system will require user authentication. If `true`, the configuration file must also include a `users` parameter, mapping the keys and values of the [User](https://github.com/label-sleuth/label-sleuth/blob/316bacb7cca7d7b78a11b96d397aac9bfd7e33bf/label_sleuth/configurations/users.py#L5) dataclass for each user.
 
 
@@ -99,12 +104,12 @@ A custom configuration can be applied by passing the `--config_path` parameter t
    The main functions are *_train()* and *_infer()*:
    
    ```python
-   def _train(self, model_id: str, train_data: Sequence[Mapping], train_params: dict):
+   def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: dict):
    ```
    - model_id     
    - train_data - a list of dictionaries with at least the "text" and "label" fields. Additional fields can be passed e.g.
    *[{'text': 'text1', 'label': 1, 'additional_field': 'value1'}, {'text': 'text2', 'label': 0, 'additional_field': 'value2'}]*
-   - train_params - dictionary for additional train parameters (can be None)
+   - model_params - dictionary for additional model parameters (can be None)
 
    ```python
    def _infer(self, model_id, items_to_infer: Sequence[Mapping]) -> Sequence[Prediction]:

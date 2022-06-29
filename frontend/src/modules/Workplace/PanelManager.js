@@ -1,3 +1,18 @@
+/*
+    Copyright (c) 2022 IBM Corp.
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
 import React from "react";
 import { Box } from '@mui/material';
 import useSearchElement from "./sidebar/customHooks/useSearchElement";
@@ -6,11 +21,11 @@ import useUpdateLabelState from "./sidebar/customHooks/useUpdateLabelState";
 import { SEARCH, RCMD, RIGHT_DRAWER_WIDTH } from '../../const'
 import MainPanel from "./main/MainPanel";
 
-export const PanelManager = ({ activePanel, 
-    children, 
-    handleKeyEvent, 
-    open, 
-    handleDrawerClose }) => {
+export const PanelManager = ({ activePanel,
+    children,
+    handleKeyEvent,
+    open
+}) => {
 
     const { updateSearchLabelState, updateRecLabelState, updateMainLabelState } = useUpdateLabelState()
 
@@ -34,7 +49,6 @@ export const PanelManager = ({ activePanel,
                     updateLabelState: updateSearchLabelState,
                     handleKeyEvent,
                     open,
-                    handleDrawerClose,
                 });
             }
             else if (activePanel == RCMD) {
@@ -44,7 +58,6 @@ export const PanelManager = ({ activePanel,
                     updateMainLabelState,
                     updateLabelState: updateRecLabelState,
                     open,
-                    handleDrawerClose,
                 });
             }
         }
@@ -53,7 +66,7 @@ export const PanelManager = ({ activePanel,
 
     return (
         <Box>
-           <MainPanel handleKeyEvent={handleKeyEvent} open={open} />
+            <MainPanel handleKeyEvent={handleKeyEvent} open={open} />
             <Drawer sx={{
                 width: RIGHT_DRAWER_WIDTH, flexShrink: 0,
                 '& .MuiDrawer-paper': {
@@ -65,7 +78,6 @@ export const PanelManager = ({ activePanel,
                 variant="persistent"
                 anchor="right"
                 open={open}
-                onClose={handleDrawerClose}
             >
                 {activePanelWithProps}
             </Drawer>
