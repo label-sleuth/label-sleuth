@@ -40,7 +40,7 @@ def infer_failed_with_error(mid, dummy_data):
     raise Exception("Inference failed")
 
 
-class TestActiveLearningStrategies(unittest.TestCase):
+class TestModelsBackgroundJobsManager(unittest.TestCase):
     def test_simple_training_job(self):
         callback_mock = MagicMock(name='callback')
         manager = ModelsBackgroundJobsManager()
