@@ -21,7 +21,11 @@ This interactive system enables users to efficiently collect data for varied tas
 * [System configuration](#system-configuration)
 * [Implementing new components](#implementing-new-components)
 
-## Installation
+
+## Installation for end-users (non-developers)
+Follow the instructions on our website <LINK_TO_INSTRUCTION_PAGE>
+
+## Setting up a development environment
 The system requires Python 3.8 (other versions are currently not supported and may cause issues).
 1. Clone the repository: 
 
