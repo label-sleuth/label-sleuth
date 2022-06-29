@@ -422,8 +422,12 @@ def get_positive_predictions(workspace_id):
     if len(all_ready_iterations) == 0:
         return jsonify({'hit_count': 0, "positive_fraction": None,'elements': []})
     else:
+        # Where labels are applied to duplicate texts (the default behavior), we do not want duplicates to appear in
+        # the positive predictions list
+        remove_duplicates = current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts
         positive_predicted_elements = current_app.orchestrator_api.sample_elements_by_prediction(
-            workspace_id, category_name, unlabeled_only=False, required_label=LABEL_POSITIVE)
+            workspace_id, category_name, unlabeled_only=False, required_label=LABEL_POSITIVE,
+            remove_duplicates=remove_duplicates)
         iteration, iteration_idx = all_ready_iterations[-1]
 
         sorted_elements = sorted(positive_predicted_elements, key=lambda te: get_natural_sort_key(te.uri))
@@ -853,7 +857,7 @@ def get_elements_for_precision_evaluation(workspace_id):
     random_state = len(current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category))
     positive_predicted_elements = current_app.orchestrator_api. \
         sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False,
-                                      required_label=LABEL_POSITIVE, random_state=random_state)
+                                      required_label=LABEL_POSITIVE, remove_duplicates=False, random_state=random_state)
     elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category)
     logging.info(f"sampled {len(elements_transformed)} elements for evaluation")
     res = {'elements': elements_transformed}
