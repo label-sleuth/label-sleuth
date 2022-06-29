@@ -31,7 +31,8 @@ import { IconButton, Tooltip } from '@mui/material';
 import classes from './sidebar/index.module.css';
 import search_icon from './Asset/search.svg';
 import recommend_icon from './Asset/query-queue.svg'
-import { SEARCH_ALL_DOCS_TOOLTIP_MSG, NEXT_TO_LABEL_TOOLTIP_MSG, SEARCH, RCMD } from '../../const'
+import pos_pred_icon from './Asset/pos_predictions.svg'
+import { SEARCH_ALL_DOCS_TOOLTIP_MSG, NEXT_TO_LABEL_TOOLTIP_MSG, SEARCH, RCMD, POS_PREDICTIONS } from '../../const'
 import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
 import Drawer from '@mui/material/Drawer';
 import { PanelManager } from "./PanelManager";
@@ -39,6 +40,7 @@ import SearchPanel from "./sidebar/SearchPanel";
 import RecToLabelPanel from "./sidebar/RecToLabelPanel";
 import useWorkspaceState from './useWorkspaceState';
 import Tutorial from './tutorial';
+import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
@@ -57,7 +59,7 @@ export default function Workspace() {
 
   const textInput = useRef(null);
 
-  const { activateSearchPanel, activateRecToLabelPanel, toggleSearchPanel, toggleRCMDPanel } = useTogglePanel(setOpen, textInput)
+  const { activateSearchPanel, activateRecToLabelPanel, activatePosPredLabelPanel, toggleSearchPanel, toggleRCMDPanel, togglePosPredPanel } = useTogglePanel(setOpen, textInput)
   const dispatch = useDispatch();
 
   useWorkspaceState()
@@ -96,6 +98,8 @@ export default function Workspace() {
               <SearchPanel ref={textInput} clearSearchInput={clearSearchInput} />}
             {activePanel == RCMD &&
               <RecToLabelPanel />}
+            {activePanel == POS_PREDICTIONS &&
+              <PosPredictionsPanel />}  
           </PanelManager>
           {/* Panel tabs  */}
           <Drawer variant="permanent" anchor="right" PaperProps={{ sx: { minWidth: 50, } }}>
@@ -113,6 +117,15 @@ export default function Workspace() {
                   id='sidebar-recommended-button'
                 >
                   <img src={recommend_icon} style={{ filter: !toggleRCMDPanel ? 'invert(45%)' : "" }} alt="recommendation" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="" placement="left">
+                <IconButton
+                  className={classes.top_nav_icons}
+                  onClick={activatePosPredLabelPanel}
+                  id='sidebar-pos-pred-button'
+                >
+                  <img src={pos_pred_icon} style={{ filter: !togglePosPredPanel ? 'invert(45%)' : "" }} alt="positive predictions" />
                 </IconButton>
               </Tooltip>
             </Box>
