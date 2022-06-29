@@ -14,7 +14,7 @@
 */
 
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { POS_PREDICTIONS, RCMD, SEARCH } from '../../../../const';
 import {   setActivePanel } from '../../DataSlice';
 
@@ -24,6 +24,26 @@ const useTogglePanel = (setOpen, textInput) => {
     const [toggleSearchPanel, setToggleSearchPanel] = useState(false)
     const [toggleRCMDPanel, setToggleRCMDPanel] = useState(false)
     const [togglePosPredPanel, setTogglePosPredPanel] = useState(false)
+    const elementsToLabel = useSelector(state => state.workspace.elementsToLabel)
+
+    useEffect(() => {
+        if(elementsToLabel.length == 0){
+          activateSearchPanel()
+        }
+        else{
+          activateRecToLabelPanel() 
+        }
+     
+    }, [elementsToLabel.length])
+  
+      useEffect(() => {
+          if (toggleSearchPanel || toggleRCMDPanel) {
+              setOpen(true);
+          }
+          else {
+              setOpen(false);
+          }
+      }, [toggleRCMDPanel, toggleSearchPanel, setOpen])
 
     useEffect(() => {
         if (toggleSearchPanel || toggleRCMDPanel || togglePosPredPanel) {
