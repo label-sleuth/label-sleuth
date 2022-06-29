@@ -7,7 +7,16 @@
   line-height: 20px;
   display: flex;
   align-items: center;
-  color: #A3D8E5;
+}
+
+.predicted-element {
+  border: dotted 2px #a3d8e5;
+  margin-left: 15px;
+}
+
+.predicted-element p {
+  padding: 8px;
+  margin: 0;
 }
 
 .positive-label {
@@ -48,16 +57,6 @@
 
 .stage-content {
     display: block;
-}
-
-.prediction-square {
-  height: 50px;
-  width: 50px;
-  background-color: transparent;
-  border: 2px dotted #A3D8E5;
-  width: 20px;
-  height: 20px;
-  margin-right: 12px;
 }
 
 .tutorial-icon {
