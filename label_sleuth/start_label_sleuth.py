@@ -19,7 +19,6 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from argparse import ArgumentParser
 import logging
-
 import requests
 
 from label_sleuth import app
@@ -45,15 +44,14 @@ def add_file_logger(output_path):
 
 def load_sample_corpus(app):
     CORPUS_NAME = "Wikipedia_Animals"
-    if CORPUS_NAME in app.orchestrator_api.get_all_dataset_names():
-        logging.info(f"{CORPUS_NAME} already loaded. Skipping.")
-    else:
+    if CORPUS_NAME not in app.orchestrator_api.get_all_dataset_names():
         temp_dir = os.path.join(app.config["output_dir"], "temp", "csv_upload")
         temp_file_path = os.path.join(temp_dir, f"{next(tempfile._get_candidate_names())}.csv")
-        response = requests.get("https://github.com/label-sleuth/data-examples/raw/main/2000_wiki_animals_pages.csv")
+        response = requests.get(
+            "https://github.com/label-sleuth/data-examples/raw/main/2000_wiki_animal_pages/2000_wiki_animal_pages.csv")
         with open(temp_file_path, 'wb') as f:
             f.write(response.content)
-        app.orchestrator_api.add_documents_from_file(CORPUS_NAME,temp_file_path)
+        app.orchestrator_api.add_documents_from_file(CORPUS_NAME, temp_file_path)
 
 
 if __name__ == '__main__':
@@ -80,7 +78,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     os.makedirs(args.output_path, exist_ok=True)
 
-    add_file_logger(args.output_path) # log to file in addition to the console
+    add_file_logger(args.output_path)  # log to file in addition to the console
     logging.info(f"Starting label-sleuth using config file {args.config_path}. Output directory is {args.output_path}")
     logging.info("(Starting the service for the first time may take a little longer)")
     curr_app = app.create_app(config=load_config(args.config_path),
