@@ -60,10 +60,12 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div className="stage-content">
           <p>
-            Start by creating your own category, or choose an existing one. Make sure the category is well-defined and that given a short text, 
+            Start by creating your own category, or choose an existing one. 
+            A category corresponds to the aspect that you want to identify in your data. 
+            Make sure the category is well-defined and that given a text from your data, 
             it is clear to you whether this text belongs to the category or not. 
             You can have many categories in a workspace and switch between them whenever you’d like. 
-            In Label Sleuth we work on one category at a time. This plays a pivotal role in making the process faster.    
+            In Label Sleuth we work on one category at a time. This plays a pivotal role in making the process efficient.    
           </p>
         </div>
       ),
@@ -75,13 +77,15 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
           <p>
             You can start labeling the data now! Labeling is a process that
             helps the AI model to understanding the criteria to your category.
-            The label system is binary - positive and negative. You can go back
-            and edit your labels as many times as you’d like.
+            The label system is binary - positive or negative - the text either matches the category definition or not.
+            You can go back and edit your labels as many times as you’d like.
+            In a common case, where positive examples are rare in your data (roughly less than 20% are positives), spend more 
+            time on finding and annotating positive examples, as they are more valuable for the AI model in such a case. 
           </p>
           <div style={{ marginLeft: "35px" }}>
             <span className="positive-label">
               <img src={check} />
-              Positive - it maches
+              Positive - text maches the chosen category
             </span>
             <span className="negative-label">
               <img src={cross} />
@@ -96,8 +100,10 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <p>
-            You can search by keywords if you are looking for anything specific.
-            Give search a try!
+            To find good examples to annotate you can skim your documents. 
+            A faster way to find good examples is to search for terms that they contain.
+            Double-clicking on a text element card on the list in the right panel will bring up the document of this element in the center view
+            and will focus on the text element within the document. You can label text elements directly on the search results or in the document view.
           </p>
         </div>
       ),
@@ -107,17 +113,16 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <p>
-            The AI model will be updated every 5 labels. You can track your
-            model version and progress on the left.
-          </p>
-          <p>
+            Initially, there is not AI model yet. 
+            Keep annotating until Label Sleuth prepares a first version of the model for you. 
+            The progress bar on the left shows how many annotations are missing until Label Sleuth starts training a model. 
             Whenever the model finishes updating, a confetti will appear! It
             tells you that there is now a new model.
           </p>
           <p>
-            Additionally, the model will also make predictions and mark
-            recommend to label text entries in your dataset. You can use these
-            as guides to accelerate and fine-tune your model.
+            The model makes predictions on your entire data. Examples it predict to be positive (i.e., belonging to the category of interest) 
+            are shown with a dotted frame. It is useful to label some of those to provide feedback to the model 
+            on where it is correct and where it is wrong.
           </p>
           <div style={{ marginTop: "20px" }}>
             <span className="prediction">
@@ -135,9 +140,8 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <p>
-            Here, you can see a list of recommend to label text entires on the
-            right. Prioritize on labeling these will help improve the model
-            classification result.
+            An important guidance the AI model provides you is a list of text elements it recommend to label next.  
+            Prioritize on labeling these will help improve the model the most.
           </p>
         </div>
       ),
