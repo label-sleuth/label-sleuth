@@ -28,31 +28,30 @@ const useElemLabelState = ({ index, element_id }) => {
     let newPanelLabelState ={}
     let searchPanelIndex = 0
  
-       if(activePanel == SEARCH){
-        newPanelLabelState = { ...workspace.searchLabelState }
-        searchPanelIndex = Object.keys(newPanelLabelState).filter((id) => {
-            if (id.includes(element_id)) {
+    const getSearchPanelIndex = (newPanelLabelState) =>{
+        return Object.keys(newPanelLabelState).filter((id) => {
+            let index = id.indexOf('-');
+            let arr = [id.slice(0, index), id.slice(index + 1)];
+            if (arr[1] ==element_id) {
                 return id
             }
         })
+    }
+
+       if(activePanel == SEARCH){
+        newPanelLabelState = { ...workspace.searchLabelState }
+        searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
        }
        else if(activePanel == RCMD){
         newPanelLabelState = { ...workspace.recommendToLabelState }
-        searchPanelIndex = Object.keys(newPanelLabelState).filter((id) => {
-            if (id.includes(element_id)) {
-                return id
-            }
-        })
+        searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
        }
  
        else if(activePanel == POS_PREDICTIONS){
         newPanelLabelState = { ...workspace.posPredLabelState }
-        searchPanelIndex = Object.keys(newPanelLabelState).filter((id) => {
-            if (id.includes(element_id)) {
-                return id
-            }
-        })
+        searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
        }
+
        const updateLabelsState = (element_id, label, newPanelLabelState, newMainState) => {
         dispatch(increaseIdInBatch())
         dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: label })).then(() => {
@@ -76,7 +75,6 @@ const useElemLabelState = ({ index, element_id }) => {
         
         let label = "none"
         let mainElemIndex = `L${index}`
-        console.log("newStateMain[mainElemIndex]------", newStateMain[mainElemIndex])
 
         if (newStateMain[mainElemIndex] == "pos") {
             setNumLabel({ ...numLabel, "pos": numLabel['pos'] - 1 })
@@ -102,7 +100,6 @@ const useElemLabelState = ({ index, element_id }) => {
 
 
     const handleNegLabelState = () => {
-
         let label = "none"
         let mainElemIndex = `L${index}`
 
