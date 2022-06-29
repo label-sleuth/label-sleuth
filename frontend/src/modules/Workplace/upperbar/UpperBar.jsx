@@ -100,11 +100,19 @@ function CategoryFormControl() {
 
 const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
   
+  const curCategory = useSelector(state => state.workspace.curCategory)
+  
   const [cardOpen, setCardOpen] = React.useState(true)
 
   const handleAddCategory = () => {
     setModalOpen(true)
   }
+
+  React.useEffect(() => {
+    if (curCategory && cardOpen) {
+      setCardOpen(false)
+    } 
+  }, [curCategory])
 
   return (
     <ElevationScroll>
