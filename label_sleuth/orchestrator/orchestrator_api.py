@@ -193,16 +193,19 @@ class OrchestratorApi:
         return self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category, sample_size=sys.maxsize,
                                                           remove_duplicates=False)['results']
 
-    def get_all_unlabeled_text_elements(self, workspace_id, dataset_name, category) -> List[TextElement]:
+    def get_all_unlabeled_text_elements(self, workspace_id, dataset_name, category, remove_duplicates=False) \
+            -> List[TextElement]:
         """
         Get all the text elements that were not assigned user labels for the given category.
         :param workspace_id:
         :param dataset_name:
         :param category:
+        :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :return: a list of TextElement objects
         """
         return self.data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category,
-                                                            sample_size=sys.maxsize, remove_duplicates=False)['results']
+                                                            sample_size=sys.maxsize,
+                                                            remove_duplicates=remove_duplicates)['results']
 
     def query(self, workspace_id: str, dataset_name: str, category_name: str, query_regex: str,
               sample_size: int = sys.maxsize, sample_start_idx: int = 0, unlabeled_only: bool = False,
@@ -522,7 +525,11 @@ class OrchestratorApi:
         :param iteration_index: iteration to use
         """
         active_learner = self.active_learning_factory.get_active_learner(self.config.active_learning_strategy)
-        unlabeled = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category_name)
+        # Where labels are applied to duplicate texts (the default behavior), we do not want duplicates to appear in
+        # the Label Next list
+        remove_duplicates = self.config.apply_labels_to_duplicate_texts
+        unlabeled = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category_name,
+                                                         remove_duplicates=remove_duplicates)
         predictions = self.infer(workspace_id, category_name, unlabeled, iteration_index)
         new_recommendations = active_learner.get_recommended_items_for_labeling(
             workspace_id=workspace_id, dataset_name=dataset_name, category_name=category_name,
@@ -671,13 +678,15 @@ class OrchestratorApi:
         return estimated_precision
 
     def sample_elements_by_prediction(self, workspace_id, category, sample_size: int = sys.maxsize,
-                                      unlabeled_only=False, required_label=LABEL_POSITIVE, random_state: int = 0):
+                                      unlabeled_only=False, required_label=LABEL_POSITIVE,
+                                      remove_duplicates=True, random_state: int = 0):
         dataset_name = self.get_dataset_name(workspace_id)
         if unlabeled_only:
-            elements = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category)
+            elements = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category,
+                                                            remove_duplicates=remove_duplicates)
         else:
-            elements = \
-                self.data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name)["results"]
+            elements = self.data_access.get_text_elements(
+                workspace_id=workspace_id, dataset_name=dataset_name, remove_duplicates=remove_duplicates)["results"]
         predictions = self.infer(workspace_id, category, elements)
         elements_with_matching_prediction = [text_element for text_element, prediction in zip(elements, predictions)
                                              if prediction.label == required_label]
