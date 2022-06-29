@@ -14,10 +14,13 @@
 #
 
 import os
+import tempfile
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from argparse import ArgumentParser
 import logging
+
+import requests
 
 from label_sleuth import app
 from label_sleuth.config import load_config
@@ -40,6 +43,19 @@ def add_file_logger(output_path):
     logging.getLogger().addHandler(handler)
 
 
+def load_sample_corpus(app):
+    CORPUS_NAME = "Wikipedia_Animals"
+    if CORPUS_NAME in app.orchestrator_api.get_all_dataset_names():
+        logging.info(f"{CORPUS_NAME} already loaded. Skipping.")
+    else:
+        temp_dir = os.path.join(app.config["output_dir"], "temp", "csv_upload")
+        temp_file_path = os.path.join(temp_dir, f"{next(tempfile._get_candidate_names())}.csv")
+        response = requests.get("https://github.com/label-sleuth/data-examples/raw/main/2000_wiki_animals_pages.csv")
+        with open(temp_file_path, 'wb') as f:
+            f.write(response.content)
+        app.orchestrator_api.add_documents_from_file(CORPUS_NAME,temp_file_path)
+
+
 if __name__ == '__main__':
     parser = ArgumentParser()
 
@@ -58,6 +74,9 @@ if __name__ == '__main__':
     parser.add_argument('--num_serving_threads', type=int, help=f'Number of threads to use in waitress',
                         default=10)
 
+    parser.add_argument('--load_sample_corpus', type=bool, help=f'True to load a sample wikipedia animals corpus',
+                        default=False)
+
     args = parser.parse_args()
     os.makedirs(args.output_path, exist_ok=True)
 
@@ -66,5 +85,7 @@ if __name__ == '__main__':
     logging.info("(Starting the service for the first time may take a little longer)")
     curr_app = app.create_app(config=load_config(args.config_path),
                               output_dir=args.output_path)
+    if args.load_sample_corpus:
+        load_sample_corpus(curr_app)
 
     app.start_server(curr_app, args.host, args.port, args.num_serving_threads)
