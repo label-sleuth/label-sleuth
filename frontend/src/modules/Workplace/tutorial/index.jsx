@@ -47,15 +47,9 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       largeTitle: "Welcome to the Label Sleuth Tutorial",
       content: (
         <div>
-          Data is the new oil of the digital era - when it is processed,
-          analyzed and utilized efficiently and instantly, it will have a much
-          greater value. Sleuth (System for Learning to Understand Text with
-          Human-in-the-loop) aims to simplify and accelerate the generation of
-          language models by bringing the human into the loop. Our solution will
-          leverage, combine and further enhance the SOTA of various NLP models,
-          and human-in-the-loop approaches, with the goal of creating a unified
-          system for developing NLP algorithms with SMEs (Subject Matter
-          Experts). Sleuth is an open source project from IBM Research.
+          <a href="http://label-sleuth.org/" target="_blank">Label Sleuth</a> 
+        significantly reduces the time and effort for creating usable text classification models. 
+        This no-code system guides you throughout the labeling process and directs you towards an efficient process.
         </div>
       ),
     },
