@@ -14,7 +14,7 @@
 */
 
 import { useDispatch } from 'react-redux';
-import { checkStatus, fetchElements, increaseIdInBatch, setElementLabel, setRecommendToLabelState, setSearchLabelState } from '../../DataSlice';
+import { checkStatus, fetchElements, increaseIdInBatch, setElementLabel, setRecommendToLabelState, setSearchLabelState, setPosPredLabelState } from '../../DataSlice';
 
 const useUpdateLabelState = () => {
 
@@ -35,10 +35,16 @@ const useUpdateLabelState = () => {
         dispatch(setRecommendToLabelState(newPanelLabelState))
     }
 
+    const updatePosPredLabelState = (newPanelLabelState) => {
+        dispatch(setPosPredLabelState(newPanelLabelState))
+    }
+    
+
     return {
         updateRecLabelState,
         updateMainLabelState,
-        updateSearchLabelState
+        updateSearchLabelState,
+        updatePosPredLabelState,
     }
 };
 

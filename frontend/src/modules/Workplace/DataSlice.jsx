@@ -17,7 +17,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
 import { WORKSPACE_API } from "../../config"
 import { NEXT_MODEL_TRAINING_MSG } from '../../const'
-
+ 
 const initialState = {
     workspaceId: "",
     curDocId: 0,
@@ -36,6 +36,10 @@ const initialState = {
     searchUniqueElemRes: null,
     searchTotalElemRes: null,
     searchLabelState: [],
+    posPredResult: [],
+    posPredFraction: 0,
+    posPredTotalElemRes: null,
+    posPredLabelState: [],
     recommendToLabelState: [],
     model_version: null,
     indexPrediction: 0,
@@ -134,6 +138,26 @@ export const getPositiveElementForCategory = createAsyncThunk('workspace/getPosi
         method: "GET"
     }).then(response => response.json())
 
+    return data
+})
+
+export const getPositivePredictions = createAsyncThunk('workspace/getPositivePredictions', async (request, { getState }) => {
+
+    const state = getState()
+    const queryParams = getQueryParamsString([
+        `size=100`, 
+        getCategoryQueryString(state.workspace.curCategory),
+        `start_idx=0`])
+    const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/positive_predictions${queryParams}`
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.authenticate.token}`
+        },
+        method: "GET"
+    }).then(response => response.json())
+    console.log("getPositivePredictions data----", data)
     return data
 })
 
@@ -420,6 +444,12 @@ const DataSlice = createSlice({
                 recommendToLabelState: action.payload
             }
         },
+        setPosPredLabelState(state, action) {
+            return {
+                ...state,
+                posPredLabelState: action.payload
+            }
+        },
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
         },
@@ -587,6 +617,33 @@ const DataSlice = createSlice({
                 searchLabelState: initialSearchLabelState
             }
         },
+        [getPositivePredictions.fulfilled]: (state, action) => {
+            const data = action.payload
+            let initialPosPredLabelState = {}
+
+            for (let i = 0; i < data['elements'].length; i++) {
+                if (state.curCategory in data['elements'][i]['user_labels']) {
+                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
+                        initialPosPredLabelState['L' + i+'-'+data['elements'][i].id] = 'pos'
+                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
+                        initialPosPredLabelState['L' + i+'-'+data['elements'][i].id] = 'neg'
+                    }
+                    else{
+                        initialPosPredLabelState['L' + i+'-'+data['elements'][i].id] = ""
+                    }
+                } else {
+                    initialPosPredLabelState['L' + i+'-'+data['elements'][i].id] = ""
+                }
+            }
+            return {
+                ...state,
+                posPredResult: data.elements,
+                posPredFraction: data.positive_fraction,
+                posPredTotalElemRes: data.hit_count,
+                posPredLabelState: initialPosPredLabelState
+            }
+        },
+        
         [getPositiveElementForCategory.fulfilled]: (state, action) => {
             const data = action.payload
 
@@ -910,6 +967,7 @@ export const { updateCurCategory,
     resetSearchResults,
     setSearchLabelState,
     setRecommendToLabelState,
+    setPosPredLabelState,
     setLabelState,
     cleanWorkplaceState,
     setNumLabelGlobal,

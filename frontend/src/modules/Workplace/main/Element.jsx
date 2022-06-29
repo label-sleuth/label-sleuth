@@ -42,7 +42,6 @@ useEffect(()=>{
     }
   },[isSearchActive])
 
-
     return (
         !workspace.curCategory?
             <Box tabIndex="-1" className={handleTextElemStyle()} id={"L" + index}>
@@ -57,14 +56,14 @@ useEffect(()=>{
                     <div
                         onClick={handlePosLabelState} style={{ cursor: "pointer" }}>
                         {workspace.labelState['L' + index] == 'pos' ?
-                            <img className={classes.resultbtn} src={check} alt="checked" /> :
-                                <img className={classes.hovbtn} src={checking} alt="checking" />
+                            <img className={classes.resultbtn} loading="eager" src={check} alt="checked" /> :
+                                <img className={classes.hovbtn} loading="eager" src={checking} alt="checking" />
                         }
                     </div>
                     <div onClick={handleNegLabelState} style={{ cursor: "pointer" }}>
                         {workspace.labelState['L' + index] == 'neg' ?
-                            <img className={classes.resultbtn} src={cross} alt="crossed" /> :
-                            <img className={classes.hovbtn} src={crossing} alt="crossinging" />
+                            <img className={classes.resultbtn}  loading="eager" src={cross} alt="crossed" /> :
+                            <img className={classes.hovbtn}  loading="eager" src={crossing} alt="crossinging" />
                         }
                     </div>
                 </Stack>

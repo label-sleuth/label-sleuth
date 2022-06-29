@@ -31,6 +31,7 @@ export const NEW_WORKSPACE_NAME_PLACEHOLER_MSG = "e.g., my_new_workspace"
 export const LABEL_SLEUTH_SHORT_DESC = "Quickly create a text classifier"
 export const SEARCH = 'search'
 export const RCMD = 'rcmd'
+export const POS_PREDICTIONS = 'Positive predictions'
 export const RIGHT_DRAWER_WIDTH = 360
 export const DOC_ALREADY_EXISTS = "Document already exists"
 export const WORKSPACE_ALREADY_EXISTS = "Workspace already exists" 

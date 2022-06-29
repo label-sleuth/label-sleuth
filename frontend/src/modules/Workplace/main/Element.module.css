@@ -44,6 +44,7 @@
 .text_predict,
 .text_normal,
 .text_auto_focus,
+.text_auto_focus_pred,
 .text_focus {
     color: #161616 !important;
     border: solid 2px transparent;
@@ -64,11 +65,13 @@
 .text_normal:hover,
 .text_predict:hover,
 .text_auto_focus:hover,
+.text_auto_focus_pred:hover,
 .text_focus {
     background: #f4f4f4;
     color: #000 !important;
 }
 
+.text_auto_focus_pred,
 .text_auto_focus {
     background: none;
     color: #000 !important;
@@ -80,6 +83,11 @@
     50% { background-color:#FFFAA0; }
     100% { background-color:white; } 
 } 
+
+
+.text_auto_focus_pred{
+    border: dotted 2px #a3d8e5;
+}
 
 .checking_buttons {
     justify-content: flex-end;
@@ -104,6 +112,7 @@
 .text_normal:hover .hovbtn,
 .text_predict:hover .hovbtn,
 .text_auto_focus:hover .hovbtn,
+.text_auto_focus_pred:hover .hovbtn, 
 .text_focus:hover .hovbtn{
     margin-left: 5px;
     display: inline-block;
