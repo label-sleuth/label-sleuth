@@ -17,8 +17,8 @@ export const InnerModalContent = styled(Box)`
   transform: translate(-50%, -50%);
   padding: 0px;
   gap: 5px;
-  width: 824px;
-  height: 324px;
+  width: 45%;
+  min-height: 324px;
   background: #161616;
   display: flex;
   flex-direction: column;

@@ -210,7 +210,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
                 justifyContent="flex-end"
                 alignItems="flex-end"
                 spacing={0}
-                style={{ width: "100%", flex: "none", order: 1, flexGrow: 0 }}
+                style={{ width: "100%", flex: "none", order: 1, flexGrow: 0, marginTop: "15px" }}
               >
                 {stageIndex !== 0 ? (
                   <SecondaryButton
