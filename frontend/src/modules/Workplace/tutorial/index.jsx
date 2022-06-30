@@ -197,7 +197,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
                     aria-label="close"
                     style={{color: "white"}}
                     onClick={() => setTutorialOpen(false)}
-                    sizeMedium
+                    size="medium"
                   >
                     <CloseIcon fontSize="inherit" />
                   </IconButton>

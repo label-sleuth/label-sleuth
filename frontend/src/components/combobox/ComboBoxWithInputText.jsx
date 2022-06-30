@@ -52,7 +52,7 @@ const ComboBoxWithInputText = forwardRef(({ options, handleInputChange, label, p
               }
             }}
             placeholder={placeholder}
-            error={error}
+            error={error  ? true : false}
             helperText={helperText}
           />}
       />
