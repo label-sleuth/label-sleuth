@@ -44,7 +44,7 @@ const WorkspaceConfig = () => {
   function notify(message, func) {
 
     toast(message, {
-      autoClose: 15000,
+      autoClose: false,
       type: toast.TYPE.INFO,
       toastId: toastId,
     });

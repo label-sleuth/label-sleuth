@@ -16,21 +16,30 @@
 
 import { useEffect, useRef, useState } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
-import { addDocuments } from './workspaceConfigSlice'
+import { addDocuments, clearState } from './workspaceConfigSlice'
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux'
-import { FILL_REQUIRED_FIELDS, NEW_DATA_CREATED } from '../../const'
+import { FILL_REQUIRED_FIELDS, NEW_DATA_CREATED, newDataCreatedMessage } from '../../const'
 
 const useLoadDoc = (notify, toastId) => {
 
+    const workspaces = useSelector((state) => state.workspaces)
+    const uploadingDataset = useSelector((state) => state.workspaces.uploadingDataset);
     const { datasets } = useSelector((state) => state.workspaces)
     const errorMessage = useSelector((state) => state.workspaces.errorMessage);
     const isDocumentAdded = useSelector((state) => state.workspaces.isDocumentAdded);
+    const {dataset_name, num_docs, num_sentences} = {...workspaces.document}
     const dispatch = useDispatch()
     const [datasetName, setDatasetName] = useState('');
     const [file, setFile] = useState('');
     const textFieldRef = useRef()
     const comboInputTextRef = useRef()
+    const [openBackdrop, setOpenBackdrop] = useState(false);
+
+    useEffect(() => {
+        setOpenBackdrop(uploadingDataset)
+      }, [uploadingDataset, setOpenBackdrop])
+
 
     const updateToast = (message, type) => {
         notify(message, function (message) {
@@ -42,14 +51,36 @@ const useLoadDoc = (notify, toastId) => {
         )
     }
 
+    const clearFields = () =>{
+        let elem = document.getElementsByClassName("MuiAutocomplete-clearIndicator")
+        if (elem[0]) {
+            elem[0].click()
+        }
+        if (textFieldRef.current) {
+            textFieldRef.current.value = ''
+        }
+        setDatasetName('')
+        if (comboInputTextRef.current) {
+            comboInputTextRef.current.value = ''
+        }
+        setFile('')
+    }
+
     useEffect(() => {
-        if (isDocumentAdded) {
-            updateToast(NEW_DATA_CREATED, toast.TYPE.SUCCESS)
+        if(openBackdrop){
+            toast.dismiss()
+        }
+        else if (isDocumentAdded) {
+            updateToast(newDataCreatedMessage(dataset_name, num_docs, num_sentences), toast.TYPE.SUCCESS)
+            clearFields()
+ 
         }
         else if (errorMessage) {
             updateToast(errorMessage, toast.TYPE.ERROR)
+            clearFields()
         }
-    }, [isDocumentAdded, errorMessage, notify, dispatch])
+
+    }, [clearFields, openBackdrop, isDocumentAdded, errorMessage, notify, dispatch])
 
     const handleInputChange = (e) => {
         setDatasetName(e.target.value);
@@ -62,7 +93,10 @@ const useLoadDoc = (notify, toastId) => {
     }
 
     const handleLoadDoc = () => {
-        if (!datasetName || !file) {
+        if(openBackdrop){
+            toast.dismiss()
+        }
+        else if (!datasetName || !file) {
             return notify(FILL_REQUIRED_FIELDS, function (message) {
                 toast.update(toastId, {
                     render: message,
@@ -75,13 +109,8 @@ const useLoadDoc = (notify, toastId) => {
         formData.append('file', file);
         formData.append('dataset_name', datasetName)
         dispatch(addDocuments(formData))
-        let elem = document.getElementsByClassName("MuiAutocomplete-clearIndicator")
-        if (elem[0]) {
-            elem[0].click()
-        }
-        if (textFieldRef.current) {
-            textFieldRef.current.value = ''
-        }
+        // clearFields()
+
     }
 
     return {
@@ -91,7 +120,8 @@ const useLoadDoc = (notify, toastId) => {
         options,
         datasets,
         textFieldRef,
-        comboInputTextRef
+        comboInputTextRef,
+        openBackdrop,
     }
 };
 
