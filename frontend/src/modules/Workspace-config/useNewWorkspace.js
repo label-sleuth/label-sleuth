@@ -19,7 +19,7 @@ import { clearState, createWorkspace, getDatasets, setActiveWorkspace } from './
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux'
-import { FILL_REQUIRED_FIELDS } from '../../const'
+import { FILL_REQUIRED_FIELDS, WRONG_INPUT_NAME_LENGTH, WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES } from '../../const'
 
 const useNewWorkspace = (notify, toastId) => {
     const dispatch = useDispatch()
@@ -28,6 +28,7 @@ const useNewWorkspace = (notify, toastId) => {
     const isWorkspaceAdded = useSelector((state) => state.workspaces.isWorkspaceAdded);
     const errorMessage = useSelector((state) => state.workspaces.errorMessage);
     const [textValue, setTextValue] = useState('');
+    const [newWorkspaceNameError, setNewWorkspaceNameError] = useState("")
     const [selectedValue, setSelectedValue] = useState('');
 
     const updateToast = (message, type) => {
@@ -42,8 +43,15 @@ const useNewWorkspace = (notify, toastId) => {
 
     const handleChangeText = (e) => {
         let val = e.target.value
-        const formatted = val.replace(/[^a-zA-Z0-9]/g, '_');
-        setTextValue(formatted);
+        let error = ""
+        if (val.length > 30) {
+            error = WRONG_INPUT_NAME_LENGTH
+        }
+        else if (!val.match(/^[a-zA-Z0-9_]*$/)) {
+            error = WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES
+        }
+        setNewWorkspaceNameError(error)
+        setTextValue(val);
     };
 
     useEffect(() => {
@@ -95,6 +103,7 @@ const useNewWorkspace = (notify, toastId) => {
         handleNewWorkspace,
         selectedValue,
         textValue,
+        newWorkspaceNameError
     }
 };
 

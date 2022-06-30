@@ -23,8 +23,8 @@ import buttonIBMClasses from "../../components/buttons/Buttons.module.css"
 import 'react-toastify/dist/ReactToastify.css';
 import classes from "./workspace-config.module.css";
 import { NEW_WORKSPACE_NAME_PLACEHOLER_MSG, NEW_WORKSPACE_NAME_MSG } from '../../const';
-const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options, handleNewWorkspace, textValue  }) => {
-
+const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options, handleNewWorkspace, textValue, newWorkspaceNameError }) => {
+    
     return (
         <Box className={classes.wrapper} style={{ borderBottom: 'solid 1px #8d8d8d' }}>
             <h2 style={{ padding: '25px', margin: 0 }}>Create New</h2>
@@ -37,7 +37,6 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                         label={NEW_WORKSPACE_NAME_MSG}
                         variant="standard"
                         inputProps={{
-                            maxLength: 25,
                             style: {
                                 background: '#fff',
                                 padding: '9px',
@@ -54,6 +53,8 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                             }
                         }}
                         placeholder={NEW_WORKSPACE_NAME_PLACEHOLER_MSG}
+                        error={newWorkspaceNameError} 
+                        helperText={newWorkspaceNameError}
                     />
                 </FormControl>
                 <FormControl required variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px' }}>
@@ -66,7 +67,7 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                     />
                 </FormControl>
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px' }}>
-                    <ButtonIBM onClick={handleNewWorkspace} className={ buttonIBMClasses["button-ibm"]} text="Create & Go" />
+                    <ButtonIBM onClick={handleNewWorkspace} className={newWorkspaceNameError ? buttonIBMClasses["button-ibm-disabled"] : buttonIBMClasses["button-ibm"]} text="Create & Go" />
                 </div>
             </FormControl>
         </Box>
