@@ -32,7 +32,7 @@ import classes from './sidebar/index.module.css';
 import search_icon from './Asset/search.svg';
 import recommend_icon from './Asset/query-queue.svg'
 import pos_pred_icon from './Asset/pos_predictions.svg'
-import { SEARCH_ALL_DOCS_TOOLTIP_MSG, NEXT_TO_LABEL_TOOLTIP_MSG, POSITIVE_PRED_TOOLTIP_MSG, SEARCH, RCMD, POS_PREDICTIONS } from '../../const'
+import { SEARCH_ALL_DOCS_TOOLTIP_MSG, NEXT_TO_LABEL_TOOLTIP_MSG,  getPosPredTooltipMessage,  SEARCH, RCMD, POS_PREDICTIONS } from '../../const'
 import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
 import Drawer from '@mui/material/Drawer';
 import { PanelManager } from "./PanelManager";
@@ -59,7 +59,7 @@ export default function Workspace() {
 
   const textInput = useRef(null);
 
-  const { activateSearchPanel, activateRecToLabelPanel, activatePosPredLabelPanel, toggleSearchPanel, toggleRCMDPanel, togglePosPredPanel } = useTogglePanel(setOpen, textInput)
+  const { activateSearchPanel, activateRecToLabelPanel, activatePosPredLabelPanel,toggleSearchPanel, toggleRCMDPanel, togglePosPredPanel } = useTogglePanel(setOpen, textInput)
   const dispatch = useDispatch();
 
   useWorkspaceState()
@@ -119,7 +119,7 @@ export default function Workspace() {
                   <img src={recommend_icon} style={{ filter: !toggleRCMDPanel ? 'invert(45%)' : "" }} alt="recommendation" />
                 </IconButton>
               </Tooltip>
-              <Tooltip   title={POSITIVE_PRED_TOOLTIP_MSG} placement="left">
+              <Tooltip   title={getPosPredTooltipMessage(curCategory)} placement="left">
                 <IconButton
                   disabled={!model_version || model_version === -1}
                   className={!model_version || model_version === -1 ? classes.btndisabled : classes.pos_pred_icon}
