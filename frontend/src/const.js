@@ -33,6 +33,7 @@ export const LABEL_SLEUTH_SHORT_DESC = "Quickly create a text classifier"
 export const SEARCH = 'search'
 export const RCMD = 'rcmd'
 export const POS_PREDICTIONS = 'Positive predictions'
+export const getPosPredTooltipMessage = (categoryName) => `These are the examples the model predicts to be related to the category ${categoryName} `
 export const RIGHT_DRAWER_WIDTH = 360
 export const DOC_ALREADY_EXISTS = "Document already exists"
 export const WORKSPACE_ALREADY_EXISTS = "Workspace already exists" 
