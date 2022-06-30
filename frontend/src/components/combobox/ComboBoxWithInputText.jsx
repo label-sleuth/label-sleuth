@@ -18,7 +18,7 @@ import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import { forwardRef } from 'react';
 
-const ComboBoxWithInputText = forwardRef(({ options, handleInputChange, label, placeholder }, ref) => {
+const ComboBoxWithInputText = forwardRef(({ options, handleInputChange, label, placeholder, error, helperText }, ref) => {
   return (
     <Stack spacing={3} sx={{ width: '100%' }} >
       <Autocomplete
@@ -53,6 +53,8 @@ const ComboBoxWithInputText = forwardRef(({ options, handleInputChange, label, p
               }
             }}
             placeholder={placeholder}
+            error={error}
+            helperText={helperText}
           />}
       />
     </Stack>
