@@ -103,7 +103,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
           <p>
             You can try to find good examples to annotate by skimming through your documents. 
             However, a faster way to find positive examples is to search for terms that they contain.
-            While looking at the search results, double-clicking on a text element will bring up the element in
+            While looking at the search results, clicking on a text element will bring up the element in
             the document view, allowing you to inspect its surrounding text. You can annotate text elements
             either in the search results or in the document view.
           </p>
