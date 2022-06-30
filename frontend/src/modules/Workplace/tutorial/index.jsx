@@ -48,10 +48,10 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <a href="http://label-sleuth.org/" target="_blank">Label Sleuth</a> 
-        significantly reduces the time and effort for creating usable text classification models. 
-        This no-code system guides you throughout the labeling process. An AI model is automatically maintained in the background 
-        and provides you feedback to direct you towards an efficient process. This model keeps improving as you annotate more examples.
-        The goal is that with just a few hours with Label Sleuth you will have all you need for a text classification model.
+        is a no-code system for quickly creating custom text classifiers; no technical expertise required! Label Sleuth guides you
+        through the data annotation process, while automatically creating an AI model in the background. This process is iterative,
+        with the system automatically improving the model as you annotate more examples. The goal is to get a high-performance text
+        classification model for your use case with just a few hours of interaction with Label Sleuth.
         </div>
       ),
     },
@@ -60,10 +60,10 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div className="stage-content">
           <p>
-            Start by creating your own category, or choose an existing one. Make sure the category is well-defined and that given a short text, 
-            it is clear to you whether this text belongs to the category or not. 
-            You can have many categories in a workspace and switch between them whenever you’d like. 
-            In Label Sleuth we work on one category at a time. This plays a pivotal role in making the process faster.    
+            Start by creating a new category describing the aspect of the dataset that you want to identify. Make sure that the category
+            is well-defined and it is clear to you whether a given text belongs to the category or not. In Label Sleuth you will be working
+            one category at a time; a design decision that has been made to make the data annotation and model building process more efficient.
+            However, you may create several categories within a workspace and switch between them as needed.
           </p>
         </div>
       ),
