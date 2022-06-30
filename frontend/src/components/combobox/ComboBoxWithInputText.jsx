@@ -22,7 +22,7 @@ const ComboBoxWithInputText = forwardRef(({ options, handleInputChange, label, p
   return (
     <Stack spacing={3} sx={{ width: '100%' }} >
       <Autocomplete
-        onChange={handleInputChange}
+        onInputChange={handleInputChange}
         id="free-solo-demo"
         freeSolo
         options={options && options.map((option) => option.dataset_id)}
