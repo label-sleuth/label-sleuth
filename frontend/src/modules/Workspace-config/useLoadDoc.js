@@ -19,7 +19,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { addDocuments } from './workspaceConfigSlice'
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux'
-import { FILL_REQUIRED_FIELDS, newDataCreatedMessage, WRONG_INPUT_NAME_LENGTH, WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES } from '../../const'
+import {
+  FILL_REQUIRED_FIELDS,
+  newDataCreatedMessage,
+  WRONG_INPUT_NAME_LENGTH,
+  WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES,
+  REGEX_LETTER_NUMBERS_UNDERSCORE,
+} from "../../const";
 
 const useLoadDoc = (notify, toastId) => {
 
@@ -89,7 +95,7 @@ const useLoadDoc = (notify, toastId) => {
         if (val.length > 30) {
             error = WRONG_INPUT_NAME_LENGTH
         }
-        else if (!val.match(/^[a-zA-Z0-9_]*$/)) {
+        else if (!val.match(REGEX_LETTER_NUMBERS_UNDERSCORE)) {
             error = WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES
         }
         setDatasetNameError(error)

@@ -19,7 +19,7 @@ import { clearState, createWorkspace, getDatasets, setActiveWorkspace } from './
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux'
-import { FILL_REQUIRED_FIELDS, WRONG_INPUT_NAME_LENGTH, WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES } from '../../const'
+import { FILL_REQUIRED_FIELDS, WRONG_INPUT_NAME_LENGTH, WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES, REGEX_LETTER_NUMBERS_UNDERSCORE } from '../../const'
 
 const useNewWorkspace = (notify, toastId) => {
     const dispatch = useDispatch()
@@ -47,7 +47,7 @@ const useNewWorkspace = (notify, toastId) => {
         if (val.length > 30) {
             error = WRONG_INPUT_NAME_LENGTH
         }
-        else if (!val.match(/^[a-zA-Z0-9_]*$/)) {
+        else if (!val.match(REGEX_LETTER_NUMBERS_UNDERSCORE)) {
             error = WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES
         }
         setNewWorkspaceNameError(error)
