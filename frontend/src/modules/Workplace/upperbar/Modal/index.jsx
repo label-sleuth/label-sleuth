@@ -114,10 +114,10 @@ export default function CreateCategoryModal(props) {
                 label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG} 
                 onChange={handleTextFieldChange} 
                 onKeyUp={onKeyDown} 
-                error={categoryNameError} 
+                error={categoryNameError ? true : false} 
                 autoFocus
               />
-            <Button onClick={onSubmit} className={categoryNameError ? classes['btn-disabled'] : classes.btn} sx={{ marginLeft: 3 }} disabled={categoryNameError}>Create</Button>
+            <Button onClick={onSubmit} className={categoryNameError ? classes['btn-disabled'] : classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
             <p className={classes['error']}>{categoryNameError}</p>
           </Box>
         </Box>

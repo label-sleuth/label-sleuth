@@ -53,7 +53,7 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                             }
                         }}
                         placeholder={NEW_WORKSPACE_NAME_PLACEHOLER_MSG}
-                        error={newWorkspaceNameError} 
+                        error={newWorkspaceNameError ? true : false} 
                         helperText={newWorkspaceNameError}
                     />
                 </FormControl>
