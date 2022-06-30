@@ -27,7 +27,7 @@ import { UPLOAD_NEW_DATASET_MSG, UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG, UPLOAD_
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 
-const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, textFieldRef, comboInputTextRef, openBackdrop }) => {
+const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, textFieldRef, comboInputTextRef, openBackdrop, datasetNameError }) => {
 
     return (
         <Box className={classes.wrapper} style={{ borderRight: 'none' }}>
@@ -74,10 +74,12 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                             label="As new dataset / Add to existing dataset"
                             handleInputChange={handleInputChange}
                             placeholder={UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG}
+                            error={datasetNameError} 
+                            helperText={datasetNameError}
                         />
                     </FormControl>
                     <div style={{ width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px' }}>
-                       <ButtonIBM onClick={handleLoadDoc} text="Upload" className={ buttonIBMClasses["button-ibm"]} />
+                       <ButtonIBM onClick={handleLoadDoc} text="Upload" className={ buttonIBMClasses[`button-ibm${datasetNameError ? '-disabled' : ''}`]} />
                     </div>
                 </FormControl>
             </div>

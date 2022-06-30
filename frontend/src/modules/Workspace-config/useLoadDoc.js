@@ -16,10 +16,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
-import { addDocuments, clearState } from './workspaceConfigSlice'
+import { addDocuments } from './workspaceConfigSlice'
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux'
-import { FILL_REQUIRED_FIELDS, NEW_DATA_CREATED, newDataCreatedMessage } from '../../const'
+import { FILL_REQUIRED_FIELDS, newDataCreatedMessage, WRONG_INPUT_NAME_LENGTH, WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES } from '../../const'
 
 const useLoadDoc = (notify, toastId) => {
 
@@ -35,6 +35,7 @@ const useLoadDoc = (notify, toastId) => {
     const textFieldRef = useRef()
     const comboInputTextRef = useRef()
     const [openBackdrop, setOpenBackdrop] = useState(false);
+    const [datasetNameError, setDatasetNameError] = useState("")
 
     useEffect(() => {
         setOpenBackdrop(uploadingDataset)
@@ -83,7 +84,16 @@ const useLoadDoc = (notify, toastId) => {
     }, [clearFields, openBackdrop, isDocumentAdded, errorMessage, notify, dispatch])
 
     const handleInputChange = (e) => {
-        setDatasetName(e.target.value);
+        const val = e.target.value
+        let error = ""
+        if (val.length > 30) {
+            error = WRONG_INPUT_NAME_LENGTH
+        }
+        else if (!val.match(/^[a-zA-Z0-9_]*$/)) {
+            error = WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES
+        }
+        setDatasetNameError(error)
+        setDatasetName(val);
     };
 
     let options = datasets && datasets.map((item) => ({ value: item.dataset_id, title: item.dataset_id }))
@@ -122,6 +132,7 @@ const useLoadDoc = (notify, toastId) => {
         textFieldRef,
         comboInputTextRef,
         openBackdrop,
+        datasetNameError
     }
 };
 
