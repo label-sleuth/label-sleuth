@@ -56,8 +56,11 @@ export const createWorkspace = createAsyncThunk(`workspaces/createWorkspace`, as
   } catch (err) {
     let errorMessage = ""
     const responseCode = err.response.data.error_code
-
-    if (responseCode == 409) {
+    
+    if (responseCode == 400) {
+      errorMessage = FAILED_LOAD_DOCS_TO_DATASET
+    }
+    else if (responseCode == 409) {
       errorMessage = WORKSPACE_ALREADY_EXISTS
     }
     else if (responseCode == 500) {
