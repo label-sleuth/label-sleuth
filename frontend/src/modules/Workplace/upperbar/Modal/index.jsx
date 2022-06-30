@@ -22,7 +22,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createCategoryOnServer, fetchCategories, updateCurCategory } from '../../DataSlice';
 import TextField from '@mui/material/TextField';
 import classes from './index.module.css';
-import { CREATE_NEW_CATEGORY_MODAL_MSG, CREATE_NEW_CATEGORY_PLACEHOLDER_MSG, WRONG_INPUT_NAME_LENGTH, WRONG_INPUT_NAME_BAD_CHARACTER } from '../../../../const';
+import {
+  CREATE_NEW_CATEGORY_MODAL_MSG,
+  CREATE_NEW_CATEGORY_PLACEHOLDER_MSG,
+  WRONG_INPUT_NAME_LENGTH,
+  WRONG_INPUT_NAME_BAD_CHARACTER,
+  REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES
+} from "../../../../const";
 
 const style = {
   position: 'absolute',
@@ -50,7 +56,7 @@ export default function CreateCategoryModal(props) {
       if (text.length > 30) {
         setCategoryNameError(WRONG_INPUT_NAME_LENGTH)
       }
-      else if (!text.match(/^[a-zA-Z0-9 _]*$/)) {
+      else if (!text.match(REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES)) {
         setCategoryNameError(WRONG_INPUT_NAME_BAD_CHARACTER)
       }
       else setCategoryNameError('')
