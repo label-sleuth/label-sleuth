@@ -71,9 +71,10 @@
 
 .category-card {
     background-color: #ff9800 !important;
-    margin-left: 20px;
+    /* margin-left: 20px; */
     padding: 5px 0;
     max-height: 80px;
+    max-width: 200px;
 }
 
 .category-card :global .MuiCardHeader-root {
@@ -95,3 +96,12 @@
 .category-card :global .MuiCardContent-root .MuiIconButton-root {
     padding: 0 0 0 10px;
 }
+
+.arrow-left {
+    width: 0; 
+    height: 0; 
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent; 
+    border-right:10px solid #ff9800; 
+    padding-left: 2px;
+  }

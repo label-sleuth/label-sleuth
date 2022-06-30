@@ -57,7 +57,7 @@ const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== 'open', })(({
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
     }),
-    paddingRight: `${rightDrawerWidth + 20}px`,
+    paddingRight: `${rightDrawerWidth + 80}px`,
   }),
   // width: `calc(100vw - ${leftDrawerWidthh + 48}px)`,
   display: 'flex',
@@ -85,7 +85,7 @@ function CategoryFormControl() {
     setSelVal(value)
   }
 
-  return (
+  return ( 
     <FormControl variant="standard" sx={{ minWidth: '200px', marginBottom: '16px' }}>
       <ControlledSelect
         id="label-select"
