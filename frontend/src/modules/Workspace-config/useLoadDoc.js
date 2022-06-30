@@ -89,13 +89,13 @@ const useLoadDoc = (notify, toastId) => {
 
     }, [clearFields, openBackdrop, isDocumentAdded, errorMessage, notify, dispatch])
 
-    const handleInputChange = (e) => {
-        const val = e.target.value
+    const handleInputChange = (e, newVal) => {
+        const val = newVal || e.target.value
         let error = ""
-        if (val.length > 30) {
+        if (val && val.length > 30) {
             error = WRONG_INPUT_NAME_LENGTH
         }
-        else if (!val.match(REGEX_LETTER_NUMBERS_UNDERSCORE)) {
+        else if (val && !val.match(REGEX_LETTER_NUMBERS_UNDERSCORE)) {
             error = WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES
         }
         setDatasetNameError(error)
