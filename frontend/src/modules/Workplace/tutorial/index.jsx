@@ -47,7 +47,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       largeTitle: "Welcome to the Label Sleuth Tutorial",
       content: (
         <div>
-          <a href="http://label-sleuth.org/" target="_blank">Label Sleuth</a> 
+        Label Sleuth 
         is a no-code system for quickly creating custom text classifiers; no technical expertise required!
         Label Sleuth guides you through the data annotation process, while automatically creating an AI model
         in the background. This process is iterative, with the system automatically improving the model
