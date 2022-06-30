@@ -26,6 +26,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import classes from "./login.module.css";
 import sleuth_logo from "../../assets/sleuth_logo.png"
 import { APP_NAME, WORKSPACE_CONFIG_PATH } from '../../config';
+import buttonIBMClasses from "../../components/buttons/Buttons.module.css"
 
 const LoginForm = () => {
     
@@ -119,7 +120,7 @@ const LoginForm = () => {
                         <label className={classes.login_error}><b style={{fontWeight: 600}}>Login Error:</b> An Unexpected Error Occurred</label>
                     }
                     <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>
-                        <ButtonIBM onClick={handleLogin} text="Log In" />
+                        <ButtonIBM onClick={handleLogin} text="Log In" className={buttonIBMClasses["button-ibm"]}/>
                     </div>
                 </FormControl>
             </Box>
