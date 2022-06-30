@@ -19,16 +19,15 @@ import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
 import ButtonIBM from "../../components/buttons/ButtonIBM"
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css"
-import LoadingButtonIBM from '../../components/buttons/LoadingButtonIBM';
 import TextField from '@mui/material/TextField';
 import 'react-toastify/dist/ReactToastify.css';
 import ComboBoxWithInputText from "../../components/combobox/ComboBoxWithInputText";
 import data_icon from "../../assets/workspace-config/document--add.svg"
-import { useSelector } from 'react-redux';
 import { UPLOAD_NEW_DATASET_MSG, UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG, UPLOAD_NEW_DATASET_FILE_HELPER_MSG } from '../../const';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
-const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, textFieldRef, comboInputTextRef }) => {
-    const uploadingDataset = useSelector((state) => state.workspaces.uploadingDataset);
+const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, textFieldRef, comboInputTextRef, openBackdrop }) => {
 
     return (
         <Box className={classes.wrapper} style={{ borderRight: 'none' }}>
@@ -78,11 +77,18 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                         />
                     </FormControl>
                     <div style={{ width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px' }}>
-                        {uploadingDataset ? <LoadingButtonIBM /> : <ButtonIBM onClick={handleLoadDoc} text="Upload" className={ buttonIBMClasses["button-ibm"]} />}
+                       <ButtonIBM onClick={handleLoadDoc} text="Upload" className={ buttonIBMClasses["button-ibm"]} />
                     </div>
                 </FormControl>
             </div>
+            <Backdrop
+        sx={{ color: '#fff', zIndex: 10000 }}
+        open={openBackdrop}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
         </Box>
+
     );
 };
 
