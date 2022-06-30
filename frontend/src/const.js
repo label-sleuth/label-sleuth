@@ -44,3 +44,6 @@ export const NEW_DATA_CREATED =  `The new dataset has been created`
 export const SELECT_WORKSPACE =  `Please select workspace!`
 export const NEXT_MODEL_TRAINING_MSG = "Training a new model"
 export const newDataCreatedMessage =  (name, numDocs, numsentences ) => `The new dataset ${name} has been created with ${numDocs} documents and ${numsentences} text entries.` 
+export const WRONG_INPUT_NAME_LENGTH = "Name may be max 30 characters long"
+export const WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES = `Name may only contain characters, digits, underscores, and spaces`
+export const WRONG_INPUT_NAME_BAD_CHARACTER = `Name may only contain characters, digits and underscores`

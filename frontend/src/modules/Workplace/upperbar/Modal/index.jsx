@@ -22,7 +22,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createCategoryOnServer, fetchCategories, updateCurCategory } from '../../DataSlice';
 import TextField from '@mui/material/TextField';
 import classes from './index.module.css';
-import { CREATE_NEW_CATEGORY_MODAL_MSG, CREATE_NEW_CATEGORY_PLACEHOLDER_MSG } from '../../../../const';
+import { CREATE_NEW_CATEGORY_MODAL_MSG, CREATE_NEW_CATEGORY_PLACEHOLDER_MSG, WRONG_INPUT_NAME_LENGTH, WRONG_INPUT_NAME_BAD_CHARACTER } from '../../../../const';
 
 const style = {
   position: 'absolute',
@@ -41,12 +41,23 @@ export default function CreateCategoryModal(props) {
   const { open, setOpen } = props;
 
   const [text, setText] = React.useState("");
-
+  const [categoryNameError, setCategoryNameError] = React.useState("")
   const dispatch = useDispatch()
 
-
   const handleTextFieldChange = (e) => {
-    setText(e.target.value)
+    let text = e.target.value
+    if (text) {
+      if (text.length > 30) {
+        setCategoryNameError(WRONG_INPUT_NAME_LENGTH)
+      }
+      else if (!text.match(/^[a-zA-Z0-9 _]*$/)) {
+        setCategoryNameError(WRONG_INPUT_NAME_BAD_CHARACTER)
+      }
+      else setCategoryNameError('')
+    } else {
+      setCategoryNameError('')
+    }
+    setText(text)
   }
 
   const onKeyDown = (event) => {
@@ -64,28 +75,44 @@ export default function CreateCategoryModal(props) {
       .then(() => setOpen(false));
   };
 
+  const onModalClose = () => {
+    setOpen(false)
+    setCategoryNameError("")
+  }
+
   return (
     <div>
       <Modal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={onModalClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
+          
           <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ marginBottom: 2 }}>
             {CREATE_NEW_CATEGORY_MODAL_MSG}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '300px'  }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gap: 1,
+              gridTemplateColumns: '60% 40%',
+              alignItems: "center",
+              width: "300px"
+            }}
+          >
             <TextField 
-              id="outlined-basic" 
-              className={classes.new_modal_name} 
-              label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG} 
-              onChange={handleTextFieldChange} 
-              onKeyUp={onKeyDown}
-              autoFocus
-            />
-            <Button onClick={onSubmit} className={classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
+                id="outlined-basic" 
+                className={classes.new_modal_name} 
+                label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG} 
+                onChange={handleTextFieldChange} 
+                onKeyUp={onKeyDown} 
+                error={categoryNameError} 
+                autoFocus
+              />
+            <Button onClick={onSubmit} className={categoryNameError ? classes['btn-disabled'] : classes.btn} sx={{ marginLeft: 3 }} disabled={categoryNameError}>Create</Button>
+            <p className={classes['error']}>{categoryNameError}</p>
           </Box>
         </Box>
       </Modal>
