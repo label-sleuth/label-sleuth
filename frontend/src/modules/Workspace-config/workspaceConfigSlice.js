@@ -22,6 +22,7 @@ import { FAILED_LOAD_DOCS_TO_DATASET, DOC_ALREADY_EXISTS, WORKSPACE_ALREADY_EXIS
 const token = localStorage.getItem('token')
 
 const initialState = {
+  document: {},
   isWorkspaceAdded: false,
   workspaces: [],
   active_workspace: '',
@@ -153,7 +154,8 @@ export const workspacesSlice = createSlice({
     [addDocuments.pending]: (state) => {
       state.uploadingDataset = true
     },
-    [addDocuments.fulfilled]: (state) => {
+    [addDocuments.fulfilled]: (state, action) => {
+      state.document = action.payload
       state.uploadingDataset = false
       state.isDocumentAdded = true
     },
