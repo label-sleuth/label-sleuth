@@ -117,7 +117,7 @@ export default function CreateCategoryModal(props) {
                 error={categoryNameError ? true : false} 
                 autoFocus
               />
-            <Button onClick={onSubmit} className={categoryNameError ? classes['btn-disabled'] : classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
+            <Button onClick={onSubmit} className={categoryNameError || !text ? classes['btn-disabled'] : classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
             <p className={classes['error']}>{categoryNameError}</p>
           </Box>
         </Box>
