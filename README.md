@@ -13,7 +13,9 @@ This interactive system enables users to efficiently collect data for varied tas
 
 **Table of contents**
 
-[Installation](#installation)
+[Installation for end users](#installation-for-end-users-non-developers)
+
+[Setting up a development environment](#setting-up-a-development-environment)
 
 [Project structure](#project-structure)
 
@@ -22,7 +24,7 @@ This interactive system enables users to efficiently collect data for varied tas
 * [Implementing new components](#implementing-new-components)
 
 
-## Installation for end-users (non-developers)
+## Installation for end users (non-developers)
 Follow the instructions on our website <LINK_TO_INSTRUCTION_PAGE>
 
 ## Setting up a development environment
@@ -98,6 +100,10 @@ A custom configuration can be applied by passing the `--config_path` parameter t
 
 
 ### Implementing new components
+Label Sleuth is a modular system. We welcome the contribution of additional implementations for the various modules, aiming to support a wider range of user needs and to harness efficient and innovative machine learning algorithms.
+
+Below are instructions for implementing new models and active learning strategies:
+
 <details><summary><b>Implementing a new machine learning model</b></summary>
 
    These are the steps for integrating a new classification model:
