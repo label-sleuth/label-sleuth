@@ -48,10 +48,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <a href="http://label-sleuth.org/" target="_blank">Label Sleuth</a> 
-        significantly reduces the time and effort for creating usable text classification models. 
-        This no-code system guides you throughout the labeling process. An AI model is automatically maintained in the background 
-        and provides you feedback to direct you towards an efficient process. This model keeps improving as you annotate more examples.
-        The goal is that with just a few hours with Label Sleuth you will have all you need for a text classification model.
+        is a no-code system for quickly creating custom text classifiers; no technical expertise required!
+        Label Sleuth guides you through the data annotation process, while automatically creating an AI model
+        in the background. This process is iterative, with the system automatically improving the model
+        as you annotate more examples. The goal is to get a high-performance text classification model
+        for your use case after just a few hours of interacting with Label Sleuth.  
         </div>
       ),
     },
@@ -60,12 +61,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div className="stage-content">
           <p>
-            Start by creating your own category, or choose an existing one. 
-            A category corresponds to the aspect that you want to identify in your data. 
-            Make sure the category is well-defined and that given a text from your data, 
-            it is clear to you whether this text belongs to the category or not. 
-            You can have many categories in a workspace and switch between them whenever you’d like. 
-            In Label Sleuth we work on one category at a time. This plays a pivotal role in making the process efficient.    
+          Start by creating a category describing the aspect of the dataset that you want to identify.
+          Make sure that the category is well-defined (i.e., it is clear to you whether a given text belongs
+          to the category or not). In Label Sleuth you will be working one category at a time; a design decision
+          that has been made to make the data annotation and model building process more efficient.
+          However, you may create several categories within a workspace and switch between them as needed.  
           </p>
         </div>
       ),
@@ -75,21 +75,22 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <p>
-            You can start labeling the data now! Labeling is a process that
-            helps the AI model to understanding the criteria to your category.
-            The label system is binary - positive or negative - the text either matches the category definition or not.
-            You can go back and edit your labels as many times as you’d like.
-            In a common case, where positive examples are rare in your data (roughly less than 20% are positives), spend more 
-            time on finding and annotating positive examples, as they are more valuable for the AI model in such a case. 
+            Once you have created a category, you can start annotating the data. Annotation is a process that
+            helps the AI model understand how to identify your category.
+            The annotation system is binary - positive or negative - meaning that the text either matches the category definition or not.
+            Annotate elements as positive or negative examples by clicking on the corresponding icons shown below.
+            Note that annotations are not final; if you made a mistake, you can go back and edit your annotations as many times as you like.
+            In the common case, where positive examples in your data are rare (i.e., less than 20% of the text elements are positives), spend more 
+            time on finding and annotating positive examples, as they are more valuable for the AI model to identify your category. 
           </p>
           <div style={{ marginLeft: "35px" }}>
             <span className="positive-label">
               <img src={check} />
-              Positive - text maches the chosen category
+              Positive example - text matches category
             </span>
             <span className="negative-label">
               <img src={cross} />
-              Negative
+              Negative example - text does not match category
             </span>
           </div>
         </div>
@@ -100,10 +101,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <p>
-            To find good examples to annotate you can skim your documents. 
-            A faster way to find good examples is to search for terms that they contain.
-            Double-clicking on a text element card on the list in the right panel will bring up the document of this element in the center view
-            and will focus on the text element within the document. You can label text elements directly on the search results or in the document view.
+            You can try to find good examples to annotate by skimming through your documents. 
+            However, a faster way to find positive examples is to search for terms that they contain.
+            While looking at the search results, double-clicking on a text element will bring up the element in
+            the document view, allowing you to inspect its surrounding text. You can annotate text elements
+            either in the search results or in the document view.
           </p>
         </div>
       ),
@@ -113,15 +115,14 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <p>
-            Initially, there is not AI model yet. 
+            Initially, there is no AI model yet. 
             Keep annotating until Label Sleuth prepares a first version of the model for you. 
             The progress bar on the left shows how many annotations are missing until Label Sleuth starts training a model. 
-            Whenever the model finishes updating, a confetti will appear! It
-            tells you that there is now a new model.
+            Whenever a new version of the model is available, a confetti animation will notify you of the new model.
           </p>
           <p>
-            The model makes predictions on your entire data. Examples it predict to be positive (i.e., belonging to the category of interest) 
-            are shown with a dotted frame. It is useful to label some of those to provide feedback to the model 
+            The model makes predictions on your entire dataset. Examples it predicts to be positive (i.e., belonging to the category of interest) 
+            are shown with a dotted blue outline. Try to annotate some of these positive predictions to provide feedback to the model 
             on where it is correct and where it is wrong.
           </p>
           <div style={{ marginTop: "20px" }}>
@@ -136,12 +137,12 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       ),
     },
     {
-      largeTitle: "Recommended to label",
+      largeTitle: "Label Next",
       content: (
         <div>
           <p>
-            An important guidance the AI model provides you is a list of text elements it recommend to label next.  
-            Prioritize on labeling these will help improve the model the most.
+            Once a first version of the model is available, Label Sleuth will start guiding you by suggesting which elements to annotate next.  
+            Prioritize on annotating the suggested elements, to help improve the AI model the most.
           </p>
         </div>
       ),
@@ -151,7 +152,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       largeTitle: "That’s all!",
       content: (
         <p>
-          If you need to revisit the tutorial, go to the top left of the screen
+          You are now ready to start annotating to create your own model! If you need to revisit the tutorial, go to the top left of the screen
           and click on
           <img src={info_icon} className="tutorial-icon" alt="Open Tutorial" />
         </p>
