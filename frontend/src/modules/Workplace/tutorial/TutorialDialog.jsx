@@ -1,12 +1,13 @@
 import * as React from 'react';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import './index.css'
+import { Stack } from "@mui/material";
+import {
+  LargeTitle,
+  MainContent,
+  PrimaryButton,
+  SecondaryButton,
+} from "./components";
 import info_icon from "../../../assets/workspace/help.svg";
+import { Box, Modal } from "@mui/material";
 
 export default function TutorialDialog({open, setOpen, setTutorialOpen}) {
 
@@ -20,27 +21,41 @@ export default function TutorialDialog({open, setOpen, setTutorialOpen}) {
   }
 
   return (
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
+    <Modal
+    open={open}
+    onClose={handleClose}
+    disableAutoFocus
+    >
+    <Box className='tutorial-dialog-content' >
+      <div
+        style={{
+          margin: "25px",
+          display: "block",
+        }}
       >
-        <DialogTitle id="alert-dialog-title">
-          {"Do you  want to go through a quick tutorial?"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            You can always do it by clicking on
-            <img src={info_icon} className="tutorial-icon" alt="Open Tutorial" />
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>No</Button>
-          <Button onClick={handleAgree} autoFocus>
-            Yes
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <LargeTitle>Do you  want to go through a quick tutorial?</LargeTitle>
+        <MainContent>
+            <p>
+                You can always start it by clicking on
+                <img src={info_icon} className="tutorial-icon" alt="Open Tutorial" />
+            </p>
+        </MainContent>
+      </div>
+      <Stack
+        direction="row"
+        justifyContent="flex-end"
+        alignItems="flex-end"
+        spacing={0}
+        style={{ width: "100%", flex: "none", order: 1, flexGrow: 0, marginTop: "15px" }}
+      >
+        <SecondaryButton onClick={handleClose} >
+            No
+        </SecondaryButton>
+        <PrimaryButton
+          onClick={handleAgree}>Yes
+        </PrimaryButton>
+      </Stack>
+    </Box>
+  </Modal>
   );
 }
