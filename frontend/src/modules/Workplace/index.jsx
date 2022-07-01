@@ -46,9 +46,7 @@ export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
   const [open, setOpen] = React.useState(false);
 
-  const [openBackdrop, setOpenBackdrop] = useState(false);
-  const [tutorialOpen, setTutorialOpen] = React.useState(false);
-  const [modalOpen, setModalOpen] = useState(false)
+
 
   const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
   const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
@@ -56,7 +54,11 @@ export default function Workspace() {
   const curCategory = useSelector(state => state.workspace.curCategory)
   const activePanel = useSelector(state => state.workspace.activePanel)
   const model_version = useSelector(state => state.workspace.model_version)
+  const workspaceVisited = useSelector(state => state.workspace.workspaceVisited)
 
+  const [openBackdrop, setOpenBackdrop] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = React.useState(!!!workspaceVisited);
+  const [modalOpen, setModalOpen] = useState(false)
   const textInput = useRef(null);
 
   const { activateSearchPanel, activateRecToLabelPanel, activatePosPredLabelPanel,toggleSearchPanel, toggleRCMDPanel, togglePosPredPanel } = useTogglePanel(setOpen, textInput)

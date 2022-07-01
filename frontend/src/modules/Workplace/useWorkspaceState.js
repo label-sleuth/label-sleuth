@@ -25,6 +25,7 @@ import {
   getPositiveElementForCategory,
   setFocusedState,
   getPositivePredictions,
+  setWorkspaceVisited
 } from "./DataSlice.jsx";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,6 +49,11 @@ const useWorkspaceState = () => {
     });
     // fetch categories only once, they will be fetched again if a new category is added
     dispatch(fetchCategories());
+
+    if (!workspace.workspaceVisited) {
+      dispatch(setWorkspaceVisited())
+    }
+
   }, [dispatch]);
 
   React.useEffect(() => {
