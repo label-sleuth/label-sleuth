@@ -41,6 +41,7 @@ import RecToLabelPanel from "./sidebar/RecToLabelPanel";
 import useWorkspaceState from './useWorkspaceState';
 import Tutorial from './tutorial';
 import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
+import TutorialDialog from "./tutorial/TutorialDialog";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
@@ -57,7 +58,8 @@ export default function Workspace() {
   const workspaceVisited = useSelector(state => state.workspace.workspaceVisited)
 
   const [openBackdrop, setOpenBackdrop] = useState(false);
-  const [tutorialOpen, setTutorialOpen] = React.useState(!!!workspaceVisited);
+  const [tutorialOpen, setTutorialOpen] = React.useState(false);
+  const [tutorialDialogOpen, setTutorialDialogOpen] = React.useState(!!!workspaceVisited);
   const [modalOpen, setModalOpen] = useState(false)
   const textInput = useRef(null);
 
@@ -136,7 +138,8 @@ export default function Workspace() {
         </Box>
         <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
         <Tutorial tutorialOpen={tutorialOpen} setTutorialOpen={setTutorialOpen}/>
-      </Box>
+        <TutorialDialog open={tutorialDialogOpen} setOpen={setTutorialDialogOpen} setTutorialOpen={setTutorialOpen}/>
+       </Box>
       <Backdrop
         sx={{ color: '#fff', zIndex: 10000 }}
         open={openBackdrop}
