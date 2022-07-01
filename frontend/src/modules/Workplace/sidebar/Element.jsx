@@ -25,6 +25,7 @@ import classes from './index.module.css';
 import PanelStyles from './PanelStyles';
 import { Box } from '@mui/material';
 import { useSelector } from "react-redux";
+import { SEARCH } from "../../../const";
 
 export default function Element(props) {
 
@@ -55,7 +56,7 @@ export default function Element(props) {
             <Box >
                 <p docid={docid} id={id} className={classes["elem_text"]} style={(text_colors[labelState[searchedElemIndex]])}>
                     <Highlighter
-                        searchWords={[searchInput]}
+                        searchWords={workspace.activePanel === SEARCH ? [searchInput] : []}
                         autoEscape={false}
                         textToHighlight={text}
                     />
