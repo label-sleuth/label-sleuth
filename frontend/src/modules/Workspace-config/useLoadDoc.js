@@ -22,6 +22,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   FILL_REQUIRED_FIELDS,
   newDataCreatedMessage,
+  UPLOAD_DOC_WAIT_MESSAGE,
   WRONG_INPUT_NAME_LENGTH,
   WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES,
   REGEX_LETTER_NUMBERS_UNDERSCORE,
@@ -44,7 +45,12 @@ const useLoadDoc = (notify, toastId) => {
     const [datasetNameError, setDatasetNameError] = useState("")
 
     useEffect(() => {
-        setOpenBackdrop(uploadingDataset)
+        if(uploadingDataset){
+            setOpenBackdrop(true)
+        }
+        else{
+            setOpenBackdrop(false)
+        }
       }, [uploadingDataset, setOpenBackdrop])
 
 
@@ -74,23 +80,24 @@ const useLoadDoc = (notify, toastId) => {
     }
 
     useEffect(() => {
-        if(openBackdrop){
-            toast.dismiss()
+        if(uploadingDataset){
+            updateToast(UPLOAD_DOC_WAIT_MESSAGE, toast.TYPE.INFO)
         }
-        else if (isDocumentAdded) {
+         else if (isDocumentAdded) {
             updateToast(newDataCreatedMessage(dataset_name, num_docs, num_sentences), toast.TYPE.SUCCESS)
             clearFields()
- 
         }
         else if (errorMessage) {
             updateToast(errorMessage, toast.TYPE.ERROR)
             clearFields()
         }
 
-    }, [clearFields, openBackdrop, isDocumentAdded, errorMessage, notify, dispatch])
+    }, [  openBackdrop, isDocumentAdded, uploadingDataset, errorMessage, clearFields, updateToast, dispatch])
 
     const handleInputChange = (e, newVal) => {
+       
         const val = newVal || e.target.value
+     
         let error = ""
         if (val && val.length > 30) {
             error = WRONG_INPUT_NAME_LENGTH
@@ -109,10 +116,7 @@ const useLoadDoc = (notify, toastId) => {
     }
 
     const handleLoadDoc = () => {
-        if(openBackdrop){
-            toast.dismiss()
-        }
-        else if (!datasetName || !file) {
+       if (!datasetName || !file) {
             return notify(FILL_REQUIRED_FIELDS, function (message) {
                 toast.update(toastId, {
                     render: message,
@@ -125,8 +129,6 @@ const useLoadDoc = (notify, toastId) => {
         formData.append('file', file);
         formData.append('dataset_name', datasetName)
         dispatch(addDocuments(formData))
-        // clearFields()
-
     }
 
     return {

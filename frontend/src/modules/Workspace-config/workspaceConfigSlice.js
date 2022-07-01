@@ -114,7 +114,6 @@ export const workspacesSlice = createSlice({
     clearState: (state) => {
       state.errorMessage = ""
       state.isDocumentAdded = false
-      state.uploadingDataset = false
       state.isWorkspaceAdded = false
     },
   },

@@ -27,6 +27,7 @@ export const CREATE_NEW_CATEGORY_PLACEHOLDER_MSG = "New category name"
 export const UPLOAD_NEW_DATASET_MSG = "Upload new data"
 export const UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG = "Choose or set name"
 export const UPLOAD_NEW_DATASET_FILE_HELPER_MSG = `The csv file must have a header line (of "text" and optional "document_id")`
+export const UPLOAD_DOC_WAIT_MESSAGE = `Please wait while we upload your document...` 
 export const NEW_WORKSPACE_NAME_MSG = "Name your new workspace"
 export const NEW_WORKSPACE_NAME_PLACEHOLER_MSG = "e.g., my_new_workspace"
 export const LABEL_SLEUTH_SHORT_DESC = "Quickly create a text classifier"
