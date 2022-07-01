@@ -59,7 +59,9 @@ const initialState = {
     isSearchActive: false,
     activePanel: "",
     searchInput: null,
-    nextModelShouldBeTraining: false
+    nextModelShouldBeTraining: false,
+    // tells if the user visited the workspace at least once to open the tutorial the first time
+    workspaceVisited: false
 }
 
 const BASE_URL = process.env.REACT_APP_API_URL
@@ -530,7 +532,16 @@ const DataSlice = createSlice({
             }
         },
         cleanWorkplaceState(state, action) {
-            return initialState
+            return {
+                ...initialState,
+                workspaceVisited: state.workspaceVisited
+            }
+        },
+        setWorkspaceVisited(state, action) {
+            return {
+                ...state,
+                workspaceVisited: true
+            }
         }
     },
     extraReducers: {
@@ -996,4 +1007,5 @@ export const { updateCurCategory,
     setIsSearchActive,
     setActivePanel,
     setSearchInput,
+    setWorkspaceVisited
  } = DataSlice.actions;
