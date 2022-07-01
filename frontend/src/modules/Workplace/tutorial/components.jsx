@@ -59,7 +59,7 @@ export const MainContent = styled("div")`
   font-style: normal;
   font-weight: 300;
   font-size: 16px;
-  line-height: 20px;
+  line-height: 25px;
   color: #ffffff;
   text-align: justify;
   margin-right: 25px;
