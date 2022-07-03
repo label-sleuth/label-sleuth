@@ -270,10 +270,16 @@ def create_category(workspace_id):
     :post_param category_description:
     """
     post_data = request.get_json(force=True)
+    category_name = post_data["category_name"]
+    category_description = post_data["category_description"]
+    if category_name in current_app.orchestrator_api.get_all_categories(workspace_id):
+        return jsonify({"workspace_id": workspace_id, "error": "category already exist", "category_name": category_name,
+                 "error_code": 409}), 409
+
     post_data['id'] = post_data[
         "category_name"]  # TODO old frontend expects the category name to be in id, remove after moving to new frontend
-    current_app.orchestrator_api.create_new_category(workspace_id, post_data["category_name"],
-                                                     post_data["category_description"])
+    current_app.orchestrator_api.create_new_category(workspace_id, category_name,
+                                                     category_description)
 
     res = {'category': post_data}
     return jsonify(res)
