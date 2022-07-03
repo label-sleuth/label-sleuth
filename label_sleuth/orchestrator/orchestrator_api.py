@@ -694,7 +694,7 @@ class OrchestratorApi:
         return elements_with_matching_prediction[:sample_size]
 
     def get_progress(self, workspace_id: str, dataset_name: str, category: str):
-        category_label_counts = self.get_label_counts(workspace_id, dataset_name, category)
+        category_label_counts = self.get_label_counts(workspace_id, dataset_name, category, remove_duplicates=True)
         if category_label_counts[LABEL_POSITIVE]:
             changed_since_last_model_count = \
                 self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category)
