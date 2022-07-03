@@ -1,6 +1,5 @@
 # Sleuth annotation system
 
-
 ## System access
 you can directly check the latest progress via this [website](http://35.223.89.10:8000/)
 
