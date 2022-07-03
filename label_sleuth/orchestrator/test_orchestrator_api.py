@@ -169,11 +169,15 @@ class TestOrchestratorAPI(unittest.TestCase):
 
         # do not trigger training
         negative_count = 1
-        positive_count = min(max(0, change_threshold - negative_count - 1), max(0, first_model_pos_threshold - 1))
+        positive_count = max(max(0, change_threshold - negative_count - 1),
+                             max(0, first_model_pos_threshold - 1))
 
         label_counts = {LABEL_POSITIVE: positive_count, LABEL_NEGATIVE: negative_count}
         mock_get_label_counts.return_value = label_counts
         mock_get_label_change_count.return_value = sum(label_counts.values())
+
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_name)
+        self.assertEqual(progress['all'], 100*positive_count/first_model_pos_threshold)
 
         self.orchestrator_api.train_if_recommended(workspace_id, category_name)
         mock_run_iteration.assert_not_called()
@@ -183,6 +187,9 @@ class TestOrchestratorAPI(unittest.TestCase):
         label_counts = {LABEL_POSITIVE: positive_count, LABEL_NEGATIVE: negative_count}
         mock_get_label_counts.return_value = label_counts
         mock_get_label_change_count.return_value = sum(label_counts.values())
+
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_name)
+        self.assertEqual(progress['all'], 100)
 
         train_set_selector_cls = \
             get_training_set_selector(self.data_access,
