@@ -79,7 +79,6 @@ def create_app(config: Configuration, output_dir) -> Flask:
     return app
 
 
-
 def start_server(app, host, port, num_serving_threads):
     disable_html_printouts = False
     if disable_html_printouts:
