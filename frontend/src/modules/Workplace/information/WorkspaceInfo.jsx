@@ -249,6 +249,28 @@ export default function Workspace({workspaceId, setTutorialOpen}) {
         setTutorialOpen(true)
     };
 
+    /**
+    * Returns the suffix of a number in its ordinal form
+    **/
+    const getOrdinalSuffix = (x) => {
+        // suffix pattern repeats every 100 numbers
+        x %= 100
+        let prefix = "th"
+        if (x <= 3 || x >= 21) {
+            switch (x % 10) {
+                case 1: 
+                    prefix = "st"
+                    break;
+                case 2: 
+                    prefix = "nd"
+                    break;
+                case 3: 
+                    prefix = "rd"
+            }
+        }
+        return prefix
+    }
+
     return (
         <>
             {/* <Presentation /> */}
@@ -368,7 +390,7 @@ export default function Workspace({workspaceId, setTutorialOpen}) {
                         <ModelName>
                             <Typography>Current Model:</Typography>
                             {
-                               workspace.model_version && workspace.model_version > -1 ? <Typography id="model-version"><strong>{workspace.model_version}<sup>st</sup> version</strong></Typography>
+                               workspace.model_version && workspace.model_version > -1 ? <Typography id="model-version"><strong>{workspace.model_version}<sup>{getOrdinalSuffix(workspace.model_version)}</sup> version</strong></Typography>
                                     : <Typography id='model-version-unavailable'><strong>{NO_MODEL_AVAILABLE_MSG}</strong></Typography>
                             }
                         </ModelName>
