@@ -266,7 +266,7 @@ export default function Workspace({workspaceId, setTutorialOpen}) {
                     break;
                 case 3: 
                     prefix = "rd"
-            }
+            } 
         }
         return prefix
     }
