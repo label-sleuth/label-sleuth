@@ -7,6 +7,7 @@ you can directly check the latest progress via this [website](http://35.223.89.1
 ## Local installation
 Below are instructions to run this website in your local environment
 
+
 ### Step 1: 
 Clone the repo to your local directory:\
     `git clone https://github.com/roryzhengzhang/Sleuth.git`
