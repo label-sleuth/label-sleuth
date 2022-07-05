@@ -17,4 +17,29 @@
 // allows you to do things like:
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
+import { rest } from "msw";
+import { setupServer } from "msw/node";
+import {modelUpdateExample} from "./utils/test-utils"
+
+jest.setTimeout(10000);
+
+const BASE_MOCK_URL = "http://localhost:3000";
+
+const handlers = [
+  rest.get(
+    `${BASE_MOCK_URL}/workspace/:workspace_id/models`,
+    (req, res, ctx) => {
+      const models = modelUpdateExample
+      return res(ctx.json(models));
+    }
+  ),
+];
+
+const server = setupServer(...handlers);
+
+beforeAll(() => server.listen());
+
+afterEach(() => server.resetHandlers());
+
+afterAll(() => server.close());
