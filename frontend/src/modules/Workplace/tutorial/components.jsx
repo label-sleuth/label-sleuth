@@ -57,9 +57,9 @@ export const LargeTitle = styled("div")`
 export const MainContent = styled("div")`
   font-family: "IBM Plex Sans";
   font-style: normal;
-  font-weight: 300;
-  font-size: 16px;
-  line-height: 25px;
+  font-weight: 350;
+  font-size: 18px;
+  line-height: 30px;
   color: #ffffff;
   text-align: justify;
   margin-right: 25px;
