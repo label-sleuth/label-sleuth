@@ -119,7 +119,7 @@ function a11yProps(index) {
 }
  
 
-export default function Workspace({workspaceId, setTutorialOpen}) {
+export default function WorkspaceInfo({workspaceId, setTutorialOpen}) {
     const navigate = useNavigate()
     const theme = useTheme();
     const { logout } = useLogOut()
