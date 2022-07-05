@@ -71,7 +71,7 @@ class CsvFileProcessor(DataProcessorAPI):
                          for col_name, col_values in zip(metadata_column_names, get_columns(df, metadata_column_names))}
         for idx, (text, doc_id) in enumerate(zip(*get_columns(df, [self.text_col, self.doc_id_col]))):
             if doc_id is None:
-                doc_name_for_uri = time.strftime('%d_%b_%Y_%H:%M:%S', time.gmtime())
+                doc_name_for_uri = time.strftime('%d_%b_%Y_%H-%M-%S', time.gmtime())
             else:
                 doc_name_for_uri = str(doc_id).replace(URI_SEP, '_')
             doc_uri = self.dataset_name + URI_SEP + doc_name_for_uri
