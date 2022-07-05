@@ -21,13 +21,13 @@ import theme from './theme.jsx';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import configureStore from "./store/configureStore";
+import setupStore from "./store/configureStore";
 import { Provider } from 'react-redux'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 ReactDOM.render(
-  <Provider store={configureStore}>
+  <Provider store={setupStore()}>
     <ThemeProvider theme={theme}>
       <BrowserRouter>
         <App ToastContainer={ToastContainer} toast={toast} />

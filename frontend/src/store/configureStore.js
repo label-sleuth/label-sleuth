@@ -18,10 +18,13 @@ import { workspacesReducer } from '../modules/Workspace-config/workspaceConfigSl
 import { authenticateReducer } from '../modules/Login/LoginSlice'
 import workspaceReducer from '../modules/Workplace/DataSlice'
 
-export default configureStore({
+const setupStore = preloadedState => configureStore({
   reducer: {
     authenticate: authenticateReducer,
     workspaces: workspacesReducer,
     workspace: workspaceReducer
-  }
+  },
+  preloadedState
 })
+
+export default setupStore
