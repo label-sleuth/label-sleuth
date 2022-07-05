@@ -42,12 +42,11 @@ export const SERVER_ERROR_500 = "An error occurred and your request could not be
 export const FAILED_LOAD_DOCS_TO_DATASET = `An error occurred while uploading the dataset. Make sure your CSV file is well-formatted and contains the column "text" and optionally a column "document_id".`
 export const FILL_REQUIRED_FIELDS = "Please fill out all the required fields!"
 export const NEW_DATA_CREATED =  `The new dataset has been created` 
-export const SELECT_WORKSPACE =  `Please select workspace!`
+export const SELECT_WORKSPACE =  `Please select a workspace!`
 export const NEXT_MODEL_TRAINING_MSG = "Training a new model"
 export const newDataCreatedMessage =  (name, numDocs, numsentences ) => `The new dataset ${name} has been created with ${numDocs} documents and ${numsentences} text entries.` 
 export const WRONG_INPUT_NAME_LENGTH = "Name may be max 30 characters long"
 export const WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES = `Name may only contain characters, digits and underscores`
 export const WRONG_INPUT_NAME_BAD_CHARACTER = `Name may only contain characters, digits, underscores and spaces`
-
 export const REGEX_LETTER_NUMBERS_UNDERSCORE = /^[a-zA-Z0-9_]*$/
 export const REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES = /^[a-zA-Z0-9_ ]*$/
