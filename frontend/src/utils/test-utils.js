@@ -19,3 +19,12 @@ export const renderWithProviderAndRouter = (
   return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
 
+export const modelUpdateExample = {
+  models: [
+    {
+      active_learning_status: "READY",
+      iteration: 4,
+      model_status: "READY",
+    },
+  ],
+};

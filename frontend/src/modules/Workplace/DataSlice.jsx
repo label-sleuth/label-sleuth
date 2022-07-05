@@ -17,7 +17,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
 import { WORKSPACE_API } from "../../config"
  
-const initialState = {
+export const initialState = {
     workspaceId: "",
     curDocId: 0,
     curDocName: "",
