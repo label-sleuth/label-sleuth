@@ -68,7 +68,9 @@ pip install -r requirements.txt
 
 4. Start the Label Sleuth server: run `python -m label_sleuth.start_label_sleuth`.
    
-   By default all project files are written to `<home_directory>/label-sleuth`, to change the directory add `--output_path <your_output_path>`. 
+   By default all project files are written to `<home_directory>/label-sleuth`, to change the directory add `--output_path <your_output_path>`.
+   
+   You can add `--load_sample_corpus wiki_animals_2000_pages` to load a sample corpus into the system at startup. This fetches a collection of Wikipedia documents from the [data-examples repository](https://github.com/label-sleuth/data-examples).
    
    By default, the host will be `localhost` to expose the server only on the host machine. If you wish to expose the server to external communication, add `--host <IP>` for example, `--host 0.0.0.0` to listen to all IPs.
    
