@@ -27,7 +27,7 @@ test("test that workspace information is displayed correctly", async () => {
 
 test("test that model version is updated if model changes", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} />,
+    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} checkModelInterval={1000} />,
     {
       preloadedState: {
         workspace: {
@@ -46,10 +46,9 @@ test("test that model version is updated if model changes", async () => {
   expect(screen.getByText(/4/i)).toBeInTheDocument();
   expect(screen.getByText("th", { exact: true })).toBeInTheDocument();
 
-//  Find the workaround to make the mocking library work without setting the base path
-//   expect(
-//     await screen.findByText(/5/i, {}, { timeout: "7000", interval: "1000" })
-//   ).toBeInTheDocument();
+  expect(
+    await screen.findByText(/5/i, {}, { timeout: "2000" })
+  ).toBeInTheDocument();
  });
 
 test("test that model related information is not displayed if there is no category selected", async () => {
