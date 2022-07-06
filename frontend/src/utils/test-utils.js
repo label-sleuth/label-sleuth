@@ -28,3 +28,20 @@ export const modelUpdateExample = {
     },
   ],
 };
+
+export const workspacesExample = {
+  workspaces: [
+    "full",
+    "medium",
+    "small",
+  ],
+}
+
+export const datasetsExample = {
+  datasets: [
+    { dataset_id: "full" },
+    { dataset_id: "medium" },
+    { dataset_id: "small" },
+    { dataset_id: "very_small" },
+  ],
+}
