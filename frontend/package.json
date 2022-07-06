@@ -28,7 +28,7 @@
     "react-minimal-pie-chart": "^8.2.0",
     "react-redux": "^7.2.6",
     "react-router-dom": "^6.2.2",
-    "react-scripts": "5.0.0",
+    "react-scripts": "^5.0.1",
     "react-toastify": "^8.2.0",
     "react-tooltip": "^4.2.21",
     "redux": "^4.1.2",
