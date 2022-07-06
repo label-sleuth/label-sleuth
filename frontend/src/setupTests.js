@@ -20,7 +20,11 @@
 import "@testing-library/jest-dom";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
-import {modelUpdateExample} from "./utils/test-utils"
+import {
+  modelUpdateExample,
+  workspacesExample,
+  datasetsExample,
+} from "./utils/test-utils";
 
 jest.setTimeout(10000);
 
@@ -28,6 +32,12 @@ const handlers = [
   rest.get("/workspace/:workspace_id/models", (req, res, ctx) => {
     const models = modelUpdateExample;
     return res(ctx.json(models));
+  }),
+  rest.get(`/workspaces`, (req, res, ctx) => {
+    return res(ctx.json(workspacesExample));
+  }),
+  rest.get(`/datasets`, (req, res, ctx) => {
+    return res(ctx.json(datasetsExample));
   }),
 ];
 
