@@ -13,6 +13,7 @@
     limitations under the License.
 */
 
+// The base URL is set to an empty string if the environment variable hasn't been set
 export const BASE_URL = process.env.REACT_APP_API_URL === null || process.env.REACT_APP_API_URL === undefined ? '' : process.env.REACT_APP_API_URL
 export const GET_WORKSPACES_API = 'workspaces'
 export const GET_DATASETS_API = 'datasets'
