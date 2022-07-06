@@ -577,8 +577,9 @@ def import_labels(workspace_id):
 
     :param workspace_id:
     """
-    csv_data = StringIO(request.data.decode("utf-8"))  # TODO use request.data also in load_documents()
-    df = pd.read_csv(csv_data, dtype={'labels': str})
+    csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
+    df = pd.read_csv(csv_data)
+
     return jsonify(current_app.orchestrator_api.import_category_labels(workspace_id, df))
 
 
