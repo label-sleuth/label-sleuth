@@ -119,7 +119,7 @@ const MainPanel = ({ handleKeyEvent, open }) => {
                   focusedState={workspace.focusedState}
                   index={index + firstPageIndex}
                   element_id={element.id}
-                  prediction={workspace.predictionForDocCat}
+                  prediction={element.model_predictions[workspace.curCategory]}
                   text={element['text']}
                 />
               )
