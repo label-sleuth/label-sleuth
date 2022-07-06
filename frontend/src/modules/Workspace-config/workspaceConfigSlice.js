@@ -14,7 +14,7 @@
 */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { GET_WORKSPACES_API, GET_DATASETS_API, CREATE_WORKSPACE_API, ADD_DOCUMENTS_API } from "../../config"
+import { BASE_URL, GET_WORKSPACES_API, GET_DATASETS_API, CREATE_WORKSPACE_API, ADD_DOCUMENTS_API } from "../../config"
 import { client } from '../../api/client'
 import axios from 'axios'
 import { FAILED_LOAD_DOCS_TO_DATASET, DOC_ALREADY_EXISTS, WORKSPACE_ALREADY_EXISTS, SERVER_ERROR_500 } from '../../const'
@@ -34,7 +34,6 @@ const initialState = {
   errorMessage: "",
 }
 
-const BASE_URL = process.env.REACT_APP_API_URL
 const getWorkspaces_url = `${BASE_URL}/${GET_WORKSPACES_API}`
 const getDatasets_url = `${BASE_URL}/${GET_DATASETS_API}`
 const createWorkset_url = `${BASE_URL}/${CREATE_WORKSPACE_API}`
