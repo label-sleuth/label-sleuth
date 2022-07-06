@@ -13,7 +13,9 @@
 #  limitations under the License.
 #
 
+import os
 import unittest
+import shutil
 import tempfile
 from datetime import datetime
 
@@ -21,7 +23,7 @@ from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, Doc
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, ModelInfo, \
-    IterationStatus
+    IterationStatus, Iteration, Category, Workspace
 
 
 def generate_simple_doc(dataset_name, num_sentences, doc_id=0):
@@ -141,3 +143,27 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.orchestrator_state_api.update_model_status(workspace_id, "category_2", 1, ModelStatus.READY)
         self.assertEqual(ModelStatus.READY, self.orchestrator_state_api.get_all_iterations(
             workspace_id, "category_2")[1].model.model_status)
+
+    def test_load_existing_workspace(self):
+        """
+        Make sure that code changes do not break existing workspaces
+        """
+        sample_workspace = os.path.abspath(os.path.join(__file__, os.pardir, 'test_workspace.json'))
+        shutil.copyfile(sample_workspace, os.path.join(self.temp_dir.name, os.path.basename(sample_workspace)))
+
+        try:
+            ws = self.orchestrator_state_api.get_workspace('test_workspace')
+        except Exception:
+            raise Exception("Failed to load the example workspace. This probably means that your code changes break "
+                            "existing workspace files.")
+
+        self.assertEqual(ws.__dict__.keys(), Workspace.__annotations__.keys(),
+                         "Workspace fields have changed, this may break existing user files")
+        for cat_name, cat in ws.categories.items():
+            self.assertEqual(cat.__dict__.keys(), Category.__annotations__.keys(),
+                             "Category fields have changed, this may break existing user files")
+            for iteration in cat.iterations:
+                self.assertEqual(iteration.__dict__.keys(), Iteration.__annotations__.keys(),
+                                 "Iteration fields have changed, this may break existing user files")
+                self.assertEqual(iteration.model.__dict__.keys(), ModelInfo.__annotations__.keys(),
+                                 "ModelInfo fields have changed, this may break existing user files")
