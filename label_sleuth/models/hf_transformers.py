@@ -26,7 +26,6 @@ from transformers.pipelines.pt_utils import KeyDataset
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.definitions import GPU_AVAILABLE
 from label_sleuth.models.core.model_api import ModelAPI
-from label_sleuth.models.core.models_factory import ModelDependencies
 from label_sleuth.models.core.prediction import Prediction
 
 
@@ -35,7 +34,6 @@ class HFTransformers(ModelAPI):
     Basic implementation for a pytorch-based transformer model that relies on the huggingface transformers library.
     """
     def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
-                 model_dependencies: ModelDependencies,
                  pretrained_model="bert-base-uncased", batch_size=32, learning_rate=5e-5, num_train_epochs=5):
         """
         :param output_dir:

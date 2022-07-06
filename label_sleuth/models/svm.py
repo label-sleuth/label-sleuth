@@ -25,9 +25,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.languages import Languages
 from label_sleuth.models.core.model_api import ModelAPI
-from label_sleuth.models.core.models_factory import ModelDependencies
 from label_sleuth.models.core.prediction import Prediction
-from label_sleuth.models.core.tools import RepresentationType
+from label_sleuth.models.core.tools import RepresentationType, SentenceEmbeddingService
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
@@ -35,14 +34,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(f
 class SVM(ModelAPI):
     def __init__(self, output_dir, representation_type: RepresentationType,
                  models_background_jobs_manager: ModelsBackgroundJobsManager,
-                 model_dependencies: ModelDependencies, kernel="linear"):
+                 sentence_embedding_service: SentenceEmbeddingService, kernel="linear"):
         super().__init__(models_background_jobs_manager)
         self.model_dir = os.path.join(output_dir, "svm")
         os.makedirs(self.model_dir, exist_ok=True)
         self.kernel = kernel
         self.representation_type = representation_type
         if self.representation_type == RepresentationType.GLOVE:
-            self.sentence_embedding_service = model_dependencies.sentence_embedding_service
+            self.sentence_embedding_service = sentence_embedding_service
 
     def _train(self, model_id, train_data, model_params):
         if self.kernel == "linear":
@@ -113,12 +112,14 @@ class SVM(ModelAPI):
 
 
 class SVM_BOW(SVM):
-    def __init__(self, output_dir, models_background_jobs_manager, model_dependencies):
+    def __init__(self, output_dir, models_background_jobs_manager, sentence_embedding_service):
         super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
-                         representation_type=RepresentationType.BOW, model_dependencies=model_dependencies)
+                         representation_type=RepresentationType.BOW,
+                         sentence_embedding_service=sentence_embedding_service)
 
 
 class SVM_GloVe(SVM):
-    def __init__(self, output_dir, models_background_jobs_manager, model_dependencies):
+    def __init__(self, output_dir, models_background_jobs_manager, sentence_embedding_service):
         super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
-                         representation_type=RepresentationType.GLOVE, model_dependencies=model_dependencies)
+                         representation_type=RepresentationType.GLOVE,
+                         sentence_embedding_service=sentence_embedding_service)
