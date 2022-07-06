@@ -104,4 +104,5 @@
     border-bottom: 10px solid transparent; 
     border-right:10px solid #ff9800; 
     padding-left: 2px;
+    z-index:99;
   }
