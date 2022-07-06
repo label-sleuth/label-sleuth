@@ -19,6 +19,8 @@ This interactive system enables users to efficiently collect data for varied tas
 
 [Project structure](#project-structure)
 
+[Using the system](#using-the-system)
+
 [Customizing the system](#customizing-the-system)
 * [System configuration](#system-configuration)
 * [Implementing new components](#implementing-new-components)
@@ -80,6 +82,12 @@ pip install -r requirements.txt
 
 ## Project Structure
 The repository consists of a backend library, written in Python, and a frontend that uses React. A compiled version of the frontend can be found under `label_sleuth/build`.
+
+## Using the system
+
+See <LINK_TO_WEBSITE> for a simple tutorial that illustrates how to use the system with a sample dataset of Wikipedia pages. Before starting the tutorial, make sure you pre-load the sample dataset by running:
+
+`python -m label_sleuth.start_label_sleuth --load_sample_corpus wiki_animals_2000_pages`.
 
 ## Customizing the system
 
