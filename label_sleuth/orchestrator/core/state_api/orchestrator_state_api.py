@@ -45,7 +45,6 @@ class ModelInfo:
     model_status: ModelStatus
     creation_date: datetime
     model_type: ModelType
-    language: Language
     train_statistics: dict
 
 
