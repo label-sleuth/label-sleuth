@@ -44,6 +44,7 @@ import {
   NEXT_MODEL_TRAINING_MSG,
 } from "../../../const";
 import LinearWithValueLabel from './ModelProgressBar'
+import { Link } from "@mui/material";
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -407,6 +408,14 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                     </Stack>
 
                     : null}
+                    <Link
+                        className={classes["link-to-website"]}
+                        href="https://ibm.biz/label-sleuth"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >
+                        Visit the website
+                    </Link>
                 </Drawer>
             </Box>
         </>
