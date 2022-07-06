@@ -38,8 +38,8 @@ jobs:
         run: npm ci --force
         working-directory: ./frontend
 
-      - name: Run js tests
-        run: npm run tests --if-present
+      - name: Run react tests
+        run: npm test
         working-directory: ./frontend
 
       - name: Build static web site
