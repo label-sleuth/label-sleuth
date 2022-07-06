@@ -42,16 +42,20 @@ def add_file_logger(output_path):
     logging.getLogger().addHandler(handler)
 
 
-def load_sample_corpus(app):
-    CORPUS_NAME = "Wikipedia_Animals"
-    if CORPUS_NAME not in app.orchestrator_api.get_all_dataset_names():
+def load_sample_corpus(app, corpus_name):
+    if corpus_name not in app.orchestrator_api.get_all_dataset_names():
         temp_dir = os.path.join(app.config["output_dir"], "temp", "csv_upload")
         temp_file_path = os.path.join(temp_dir, f"{next(tempfile._get_candidate_names())}.csv")
+        logging.info(f'Downloading sample corpus "{corpus_name}" from https://github.com/label-sleuth/data-examples/')
         response = requests.get(
-            "https://github.com/label-sleuth/data-examples/raw/main/2000_wiki_animal_pages/2000_wiki_animal_pages.csv")
+            f"https://github.com/label-sleuth/data-examples/raw/main/{corpus_name}/{corpus_name}.csv")
+        if response.status_code != 200:
+            raise Exception(f'Corpus "{corpus_name}" could not be retrieved. Please make sure it exists in '
+                            f'https://github.com/label-sleuth/data-examples/')
+
         with open(temp_file_path, 'wb') as f:
             f.write(response.content)
-        app.orchestrator_api.add_documents_from_file(CORPUS_NAME, temp_file_path)
+        app.orchestrator_api.add_documents_from_file(corpus_name, temp_file_path)
 
 
 if __name__ == '__main__':
@@ -72,8 +76,9 @@ if __name__ == '__main__':
     parser.add_argument('--num_serving_threads', type=int, help=f'Number of threads to use in waitress',
                         default=10)
 
-    parser.add_argument('--load_sample_corpus', type=bool, help=f'True to load a sample wikipedia animals corpus',
-                        default=False)
+    parser.add_argument('--load_sample_corpus', type=str,
+                        help=f'Name of a sample corpus from https://github.com/label-sleuth/data-examples/, to be '
+                             f'loaded at startup', default=None)
 
     args = parser.parse_args()
     os.makedirs(args.output_path, exist_ok=True)
@@ -84,6 +89,6 @@ if __name__ == '__main__':
     curr_app = app.create_app(config=load_config(args.config_path),
                               output_dir=args.output_path)
     if args.load_sample_corpus:
-        load_sample_corpus(curr_app)
+        load_sample_corpus(curr_app, args.load_sample_corpus)
 
     app.start_server(curr_app, args.host, args.port, args.num_serving_threads)
