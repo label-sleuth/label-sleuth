@@ -20,7 +20,7 @@ import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import Typography from '@mui/material/Typography';
-import sleuth_logo from '../Asset/sleuth_logo.png';
+import sleuth_logo from '../../../assets/sleuth_logo.png';
 import info_icon from '../../../assets/workspace/help.svg';
 import logout_icon from '../../../assets/workspace/logout.svg';
 import workspace_icon from '../../../assets/workspace/change_catalog.svg';
@@ -34,7 +34,7 @@ import { Tooltip } from '@mui/material';
 import useLogOut from '../../../customHooks/useLogOut';
 import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
-import { APP_NAME, WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
+import { WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
 import { toast } from 'react-toastify';
 import {
   LOGOUT_TOOLTIP_MSG,
@@ -299,7 +299,6 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                     <DrawerHeader>
                         <h2 className={classes.sleuth_title}>
                             <img src={sleuth_logo} className={classes.sleuthlogo} alt="Sleuth Logo" />
-                            {APP_NAME}
                             <img id="workspace-tutorial-image" onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
                         </h2>
                         { AUTH_ENABLED ?   
