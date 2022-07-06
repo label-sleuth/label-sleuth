@@ -119,7 +119,7 @@ function a11yProps(index) {
 }
  
 
-export default function WorkspaceInfo({workspaceId, setTutorialOpen}) {
+export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelInterval=5000}) {
     const navigate = useNavigate()
     const theme = useTheme();
     const { logout } = useLogOut()
@@ -217,13 +217,13 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen}) {
             if (workspace.curCategory != null) {
                 dispatch(checkModelUpdate())
             }
-        }, 5000);
+        }, checkModelInterval);
 
         setModelVersionHasBeenSet(false)
         setShouldNotifyNewModel(false)
 
         return () => clearInterval(interval);
-    }, [workspace.curCategory])
+    }, [workspace.curCategory, checkModelInterval])
 
     const handleChange = (event, newValue) => {
         setTabValue(newValue);
