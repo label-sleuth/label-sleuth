@@ -24,16 +24,11 @@ import {modelUpdateExample} from "./utils/test-utils"
 
 jest.setTimeout(10000);
 
-const BASE_MOCK_URL = "http://localhost:3000";
-
 const handlers = [
-  rest.get(
-    `${BASE_MOCK_URL}/workspace/:workspace_id/models`,
-    (req, res, ctx) => {
-      const models = modelUpdateExample
-      return res(ctx.json(models));
-    }
-  ),
+  rest.get("/workspace/:workspace_id/models", (req, res, ctx) => {
+    const models = modelUpdateExample;
+    return res(ctx.json(models));
+  }),
 ];
 
 const server = setupServer(...handlers);
