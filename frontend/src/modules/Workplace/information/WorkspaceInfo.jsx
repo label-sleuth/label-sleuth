@@ -404,10 +404,10 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                             )
                             : null
                         }
-                        <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
                     </Stack>
 
                     : null}
+                    <Button sx={{ marginTop: 3 }} onClick={() => dispatch(downloadLabeling())}> Download Data </Button>
                     <Link
                         className={classes["link-to-website"]}
                         href="https://ibm.biz/label-sleuth"
