@@ -15,7 +15,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
-import { WORKSPACE_API } from "../../config"
+import { BASE_URL, WORKSPACE_API } from "../../config"
  
 export const initialState = {
     workspaceId: "",
@@ -64,7 +64,6 @@ export const initialState = {
     workspaceVisited: false
 }
 
-const BASE_URL = process.env.REACT_APP_API_URL
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
 const getCategoryQueryString = (curCategory) => {
