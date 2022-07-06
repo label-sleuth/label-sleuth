@@ -45,6 +45,7 @@ def add_file_logger(output_path):
 def load_sample_corpus(app, corpus_name):
     if corpus_name not in app.orchestrator_api.get_all_dataset_names():
         temp_dir = os.path.join(app.config["output_dir"], "temp", "csv_upload")
+        os.makedirs(temp_dir,exist_ok=True)
         temp_file_path = os.path.join(temp_dir, f"{next(tempfile._get_candidate_names())}.csv")
         logging.info(f'Downloading sample corpus "{corpus_name}" from https://github.com/label-sleuth/data-examples/')
         response = requests.get(
