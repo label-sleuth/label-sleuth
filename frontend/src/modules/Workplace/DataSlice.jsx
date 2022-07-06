@@ -64,7 +64,7 @@ export const initialState = {
     workspaceVisited: false
 }
 
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000"
+const BASE_URL = process.env.REACT_APP_API_URL
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
 const getCategoryQueryString = (curCategory) => {
