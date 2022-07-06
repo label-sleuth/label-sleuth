@@ -13,7 +13,9 @@
 #  limitations under the License.
 #
 
+import inspect
 import logging
+
 from dataclasses import dataclass
 
 from label_sleuth.models.core.model_api import ModelAPI
@@ -22,25 +24,24 @@ from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgr
 from label_sleuth.models.core.tools import SentenceEmbeddingService
 
 
-class ModelFactory(object):
+class ModelFactory:
     """
     Given a model type, this factory returns the relevant implementation of ModelAPI
     """
     def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
                  sentence_embedding_service: SentenceEmbeddingService):
         self.loaded_models = {}
-        self.output_dir = output_dir
-        self.models_background_jobs_manager = models_background_jobs_manager
-        self.model_dependencies = ModelDependencies(sentence_embedding_service, self)
+        self.model_dependencies = ModelDependencies(
+            output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+            sentence_embedding_service=sentence_embedding_service, model_factory=self)
 
     def get_model(self, model_type: ModelType) -> ModelAPI:
-        kwargs = {'output_dir': self.output_dir,
-                  'models_background_jobs_manager': self.models_background_jobs_manager,
-                  'model_dependencies': self.model_dependencies
-                  }
-
         if model_type not in self.loaded_models:
             try:
+                # check which of the model dependencies are used by this model implementation
+                model_input_args = inspect.signature(model_type.cls).parameters.keys()
+                kwargs = {k: v for k, v in self.model_dependencies.__dict__.items() if k in model_input_args}
+                # instantiate the model
                 model = model_type.cls(**kwargs)
                 self.loaded_models[model_type] = model
             except Exception:
@@ -51,5 +52,11 @@ class ModelFactory(object):
 
 @dataclass
 class ModelDependencies:
+    """
+    These are the parameters that can be passed to the model's init method by the ModelFactory. Model implementations
+    can use some or all of these parameters (as needed) as keyword arguments for initialization.
+    """
+    output_dir: str
+    models_background_jobs_manager: ModelsBackgroundJobsManager
     sentence_embedding_service: SentenceEmbeddingService
     model_factory: ModelFactory

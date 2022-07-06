@@ -40,7 +40,7 @@ class TestEnsembleModel(unittest.TestCase):
         model_factory = ModelFactory(self.temp_dir.name, self.models_background_job_manager, None)
         self.ensemble = Ensemble(self.temp_dir.name, model_types=[ModelsCatalog.RAND, ModelsCatalog.NB_OVER_BOW],
                                  models_background_jobs_manager=self.models_background_job_manager,
-                                 model_dependencies=ModelDependencies(None, model_factory))
+                                 model_factory=model_factory)
         all_nums = list(range(1, 15))
         random.shuffle(all_nums)
         self.sentences = [{'text': f'{PREFIX} {num}', 'label': random.choice([LABEL_POSITIVE, LABEL_NEGATIVE])}

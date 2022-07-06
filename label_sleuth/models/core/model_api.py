@@ -54,6 +54,11 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
     while the _train() and _infer() methods are specific to each model implementation.
     """
     def __init__(self, models_background_jobs_manager: ModelsBackgroundJobsManager, gpu_support=False):
+        """
+        Model implementations can require some or all of the parameters in models_factory.ModelDependencies
+        in their __init__ method, as these will be passed to the model by the ModelFactory.
+        Only parameters from ModelDependencies can be required by the __init__ of a new ModelAPI implementation.
+        """
         self.models_background_jobs_manager = models_background_jobs_manager
         self.gpu_support = gpu_support
         self.model_locks = defaultdict(lambda: threading.Lock())
