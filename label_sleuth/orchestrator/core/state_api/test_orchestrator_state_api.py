@@ -18,7 +18,6 @@ import tempfile
 from datetime import datetime
 
 from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, Document
-from label_sleuth.models.core.languages import Languages
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, ModelInfo, \
@@ -61,7 +60,7 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
         self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
                                                   ModelInfo("123", ModelStatus.READY, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_GLOVE, Languages.ENGLISH, {}))
+                                                            ModelsCatalog.SVM_OVER_GLOVE, {}))
         self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_3", "category 3 description")
 
         categories = self.orchestrator_state_api.get_workspace(workspace_id).categories.keys()
@@ -98,7 +97,7 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
         self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
                                                   ModelInfo("123", ModelStatus.READY, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_GLOVE, Languages.ENGLISH, {}))
+                                                            ModelsCatalog.SVM_OVER_GLOVE, {}))
         self.assertEqual(1, len(self.orchestrator_state_api.get_all_iterations(workspace_id, "category_2")))
 
     def test_get_and_update_iteration_status(self):
@@ -109,10 +108,10 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
         self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
                                                   ModelInfo("123", ModelStatus.READY, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_GLOVE, Languages.ENGLISH, {}))
+                                                            ModelsCatalog.SVM_OVER_GLOVE, {}))
         self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
                                                   ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_GLOVE, Languages.ENGLISH, {}))
+                                                            ModelsCatalog.SVM_OVER_GLOVE, {}))
 
         self.assertEqual(IterationStatus.TRAINING,
                          self.orchestrator_state_api.get_iteration_status(workspace_id, "category_2", 0))
@@ -133,10 +132,10 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
         self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
                                                   ModelInfo("123", ModelStatus.READY, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_GLOVE, Languages.ENGLISH, {}))
+                                                            ModelsCatalog.SVM_OVER_GLOVE, {}))
         self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
                                                   ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_GLOVE, Languages.ENGLISH, {}))
+                                                            ModelsCatalog.SVM_OVER_GLOVE, {}))
         self.assertEqual(ModelStatus.TRAINING, self.orchestrator_state_api.get_all_iterations(
             workspace_id, "category_2")[1].model.model_status)
         self.orchestrator_state_api.update_model_status(workspace_id, "category_2", 1, ModelStatus.READY)

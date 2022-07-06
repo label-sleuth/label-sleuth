@@ -389,8 +389,7 @@ class OrchestratorApi:
                                                                   category_name, new_iteration_index))
         model_status = model.get_model_status(model_id)
         model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
-                               language=self.config.language, train_statistics=train_statistics,
-                               creation_date=datetime.now())
+                               train_statistics=train_statistics, creation_date=datetime.now())
         self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_name=category_name,
                                               model_info=model_info)
     
