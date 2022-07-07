@@ -23,8 +23,6 @@ import zipfile
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
 
-from label_sleuth.models.core.languages import Languages
-
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
@@ -77,7 +75,6 @@ def create_app(config: Configuration, output_dir) -> Flask:
                                            app.config["CONFIGURATION"])
     app.register_blueprint(main_blueprint)
     return app
-
 
 
 def start_server(app, host, port, num_serving_threads):
@@ -427,7 +424,7 @@ def get_positive_predictions(workspace_id):
     all_ready_iterations = current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name,
                                                                                      IterationStatus.READY)
     if len(all_ready_iterations) == 0:
-        return jsonify({'hit_count': 0, "positive_fraction": None,'elements': []})
+        return jsonify({'hit_count': 0, "positive_fraction": None, 'elements': []})
     else:
         # Where labels are applied to duplicate texts (the default behavior), we do not want duplicates to appear in
         # the positive predictions list
@@ -442,7 +439,7 @@ def get_positive_predictions(workspace_id):
         elements_transformed = elements_transformed[start_idx: start_idx + size]
 
         res = {'hit_count': len(positive_predicted_elements), "positive_fraction":
-            iteration.iteration_statistics["positive_fraction"],'elements': elements_transformed}
+            iteration.iteration_statistics["positive_fraction"], 'elements': elements_transformed}
         return jsonify(res)
 
 

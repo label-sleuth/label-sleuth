@@ -46,11 +46,11 @@ class SentenceEmbeddingService:
     def get_glove_representation(self, sentences: List[str],
                                  language: Language = Languages.ENGLISH) -> List[np.ndarray]:
         """
-        Given a list of texts, return a list of GloVe-based representation vectors. Each text is represented by the mean of
-        the vector representations of its consisting tokens.
+        Given a list of texts, return a list of GloVe-based representation vectors. Each text is represented by the
+        mean of the vector representations of its consisting tokens.
         :param sentences:
         :param language:
-        :return: a list of numpy vectors. The vector length depends on the representation model specified under *language*
+        :return: a list of numpy vectors. Vector length depends on the representation model specified under *language*
         """
         model_name = language.spacy_model_name
 
@@ -59,8 +59,10 @@ class SentenceEmbeddingService:
 
         sentences = remove_stop_words_and_punctuation(sentences, language=language)
         # remove out-of-vocabulary tokens
-        sentences = [' '.join(token for token in sent.split() if spacy_model.vocab.has_vector(token)) for sent in sentences]
-        # the vector obtained by *make_doc(X).vector* is an average of the representations for the individual tokens in X
+        sentences = [' '.join(token for token in sent.split() if spacy_model.vocab.has_vector(token))
+                     for sent in sentences]
+        # the vector obtained by *make_doc(X).vector* is an average of the representations for the
+        # individual tokens in X
         embeddings = [spacy_model.make_doc(sent).vector for sent in sentences]
         logging.info(f"Done getting GloVe representations for {len(embeddings)} sentences")
         return embeddings
@@ -72,7 +74,6 @@ class SentenceEmbeddingService:
         """
         with self.spacy_model_lock:
             if self.spacy_models[model_name] is None:
-                #logging.info(f"Loading spacy model {model_name} from disk")
                 self.spacy_models[model_name] = self.load_or_download_spacy_model(model_name)
         return self.spacy_models[model_name]
 

@@ -24,7 +24,6 @@ from typing import Dict, List, Sequence, Tuple
 
 import jsonpickle
 
-from label_sleuth.models.core.languages import Language
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.model_type import ModelType
 

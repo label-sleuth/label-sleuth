@@ -63,7 +63,7 @@ class Document:
     metadata: Mapping
 
 
-class DisplayFields(object):
+class DisplayFields:
     workspace_id = 'workspace_id'
     category_name = 'category_name'
     doc_id = 'document_id'
