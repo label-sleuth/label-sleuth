@@ -18,7 +18,7 @@ import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
-import sleuth_logo from '../../../assets/sleuth_logo.png';
+import sleuth_logo from '../../../assets/sleuth_logo_white.svg';
 import  {AUTH_ENABLED} from "../../../config"
 
 export default function ButtonAppBar({logout}) {
@@ -34,7 +34,7 @@ export default function ButtonAppBar({logout}) {
             paddingRight: '12px',
             height: '48px'
           }}>
-          <img src={sleuth_logo} style={{}}/>
+          <img src={sleuth_logo} style={{width: "160px"}}/>
           {AUTH_ENABLED ? <Button color="inherit" onClick={logout}>Logout</Button> : null }
         </Toolbar>
       </AppBar>
