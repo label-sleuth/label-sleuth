@@ -630,9 +630,10 @@ class OrchestratorApi:
         else:
             iteration = iterations[iteration_index]
             if iteration.status in [IterationStatus.TRAINING, IterationStatus.MODEL_DELETED, IterationStatus.ERROR]:
-                raise Exception(f"iteration {iteration_index} in workspace '{workspace_id}' "
-                                f"category '{category_name}' is not ready for inference. "
-                                f"(current status is {iteration.status}, model status is {iteration.model.model_status})")
+                raise Exception(
+                    f"iteration {iteration_index} in workspace '{workspace_id}' category '{category_name}' "
+                    f"is not ready for inference. "
+                    f"(current status is {iteration.status}, model status is {iteration.model.model_status})")
     
         model_info = iteration.model
         if model_info.model_status != ModelStatus.READY:

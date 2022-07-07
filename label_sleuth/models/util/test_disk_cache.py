@@ -2,7 +2,8 @@ import unittest
 import tempfile
 import os
 from label_sleuth.models.core.prediction import Prediction
-from label_sleuth.models.util.disk_cache import save_model_prediction_store_to_disk, load_model_prediction_store_from_disk
+from label_sleuth.models.util.disk_cache import save_model_prediction_store_to_disk, \
+    load_model_prediction_store_from_disk
 
 
 class TestDiskCache(unittest.TestCase):

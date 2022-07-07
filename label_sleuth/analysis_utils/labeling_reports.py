@@ -25,7 +25,7 @@ from sklearn.neighbors import NearestNeighbors
 
 from label_sleuth.analysis_utils.analyze_tokens import get_token_overlap
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, TextElement
-from label_sleuth.models.core.languages import Language, Languages
+from label_sleuth.models.core.languages import Language
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.core.tools import remove_stop_words_and_punctuation
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
@@ -155,7 +155,8 @@ def get_suspected_labeling_contradictions_by_distance(category_name, labeled_ele
 
 
 def _get_nearest_neighbors_with_opposite_label(all_elements: List[TextElement], embedding_vectors: List,
-                                               category_name, source_label) -> List[Tuple[float, Tuple[TextElement]]]:
+                                               category_name, source_label) \
+        -> List[Tuple[float, Tuple[TextElement, TextElement]]]:
     source_label_idxs = [i for i, (element, rep) in enumerate(zip(all_elements, embedding_vectors))
                          if element.category_to_label[category_name].label == source_label and rep[0] != 0]
     opposite_label_idxs = [i for i, (element, rep) in enumerate(zip(all_elements, embedding_vectors))

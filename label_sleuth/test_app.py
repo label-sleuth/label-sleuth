@@ -133,7 +133,8 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual({'category_name': 'my_category',
                           'element': {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 141,
                                       'id': 'my_test_dataset-document3-1', 'model_predictions': {},
-                                      'text': 'document 3 has three text elements, this is the second that will be labeled as negative',
+                                      'text': 'document 3 has three text elements, '
+                                              'this is the second that will be labeled as negative',
                                       'user_labels': {'my_category': 'false'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json(), msg="diff in setting element's label response")
         res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
@@ -210,12 +211,12 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code,
                          msg="Failed to set the label for the first element recommended by the active learning")
         self.assertEqual({'category_name': 'my_category',
-                           'element': {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45,
-                                       'id': 'my_test_dataset-document2-0',
-                                       'model_predictions': {'my_category': 'true'},
-                                       'text': 'this is the only text element in document two',
-                                       'user_labels': {'my_category': 'false'}}, 'workspace_id': 'my_test_workspace'},
-                          res.get_json())
+                          'element': {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45,
+                                      'id': 'my_test_dataset-document2-0',
+                                      'model_predictions': {'my_category': 'true'},
+                                      'text': 'this is the only text element in document two',
+                                      'user_labels': {'my_category': 'false'}}, 'workspace_id': 'my_test_workspace'},
+                         res.get_json())
 
         res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
                               headers=HEADERS)

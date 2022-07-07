@@ -22,7 +22,7 @@ from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.core.languages import Languages
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
-from label_sleuth.models.core.models_factory import ModelDependencies, ModelFactory
+from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.ensemble import Ensemble
 
 PREFIX = 'Fascinating sentence'
