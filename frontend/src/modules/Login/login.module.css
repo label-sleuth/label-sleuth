@@ -37,9 +37,16 @@
     align-items: center;
     padding: 12px;
     background: #161616;
-    color: #fff;
-    border-right: solid 1px #393939;
 }
+
+.sleuthlogo {
+    width: 170px;
+    /* 
+      to change the color of the svg use a filter filter to change the color. 
+      The filter can be calcuted using the following codepen https://codepen.io/sosuke/pen/Pjoqqp
+    */
+  }
+  
 
 .login_error {
     border-left: solid 3px #DA1D27;

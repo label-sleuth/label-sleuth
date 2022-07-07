@@ -20,7 +20,7 @@ import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import Typography from '@mui/material/Typography';
-import sleuth_logo from '../../../assets/sleuth_logo.png';
+import sleuth_logo from '../../../assets/sleuth_logo_white.svg';
 import info_icon from '../../../assets/workspace/help.svg';
 import logout_icon from '../../../assets/workspace/logout.svg';
 import workspace_icon from '../../../assets/workspace/change_catalog.svg';

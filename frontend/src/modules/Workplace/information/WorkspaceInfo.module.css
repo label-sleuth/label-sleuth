@@ -20,8 +20,12 @@
 }
 
 .sleuthlogo {
+  margin: 8px 8px 8px 0px;
   width: 180px;
-  margin: 8px 8px 15px;
+  /* 
+    to change the color of the svg use a filter to change the color. 
+    The filter can be calcuted using the following codepen https://codepen.io/sosuke/pen/Pjoqqp
+  */
 }
 
 .moreinfo,
