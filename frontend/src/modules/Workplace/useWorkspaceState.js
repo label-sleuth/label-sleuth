@@ -65,8 +65,8 @@ const useWorkspaceState = () => {
       dispatch(setIsDocLoaded(true));
     })
 
-    // reset the focused stata when the category changes
-    dispatch(setFocusedState(null))
+    // reset the focused state when the category changes
+    dispatch(setFocusedState(null));
     // update the model version when the category changes (if any)
     if (workspace.curCategory !== null) {
       dispatch(checkModelUpdate());
