@@ -60,6 +60,14 @@ display: inline-block;
     background: #e2e2e2;
 }
 
+.pred_rec_doc_id{
+    display: flex;
+    left: 0;
+    top: 0;
+    padding: 3px 6px;
+    background: rgb(163, 216, 229);
+}
+
 .elem_text{
     padding: 1px 10px 1px 10px;
 }

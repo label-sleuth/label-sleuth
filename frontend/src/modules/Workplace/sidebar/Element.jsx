@@ -52,7 +52,7 @@ export default function Element(props) {
             sx={{ padding: '0 !important', mb: 2, ml: 1, mr: 0 }}
             style={{ cursor: "pointer" }}
         >
-            <label style={{ cursor: "pointer" }} className={classes["rec_doc_id"]}>{docid}</label>
+            <label style={{ cursor: "pointer" }} className={prediction == "true"? classes["pred_rec_doc_id"] : classes["rec_doc_id"]}>{docid}</label>
             <Box >
                 <p docid={docid} id={id} className={classes["elem_text"]} style={(text_colors[labelState[searchedElemIndex]])}>
                     <Highlighter
