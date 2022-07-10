@@ -1,3 +1,4 @@
+[![version](https://img.shields.io/pypi/v/label-sleuth)](https://pypi.org/project/label-sleuth/)  ![license](https://img.shields.io/github/license/label-sleuth/label-sleuth)  ![python](https://img.shields.io/badge/python-3.8%20|%203.9-blue)  ![python test](https://img.shields.io/github/workflow/status/label-sleuth/label-sleuth/Test%20Python%20code?label=python%20tests)  ![react test](https://img.shields.io/github/workflow/status/label-sleuth/label-sleuth/Test%20React%20code?label=react%20tests) 
 # Label Sleuth
 
 [Label Sleuth](https://www.label-sleuth.org/) is an open source no-code system for text annotation and building text classifers. With Label Sleuth, domain experts (e.g., physicians, lawyers, psychologists) can quickly create custom NLP models by themselves, with no dependency on NLP experts.
@@ -46,7 +47,7 @@ The system requires Python 3.8 or 3.9 (other versions are currently not supporte
 - Use the following commands to create a new anaconda environment and install the requirements:
 ```bash
 # Create and activate a virtual environment:
-conda create --yes -n label-sleuth python=3.8
+conda create --yes -n label-sleuth python=3.9
 conda activate label-sleuth
 # Install requirements
 pip install -r requirements.txt
@@ -55,7 +56,7 @@ pip install -r requirements.txt
 </details>
 <details><summary><b>Installing with <tt>pip</tt></b></summary>
 <p>
-Assuming python 3.8 is already installed.
+Assuming python 3.8/3.9 is already installed.
 
 - Install pip https://pip.pypa.io/en/stable/installation/
 
