@@ -1,6 +1,6 @@
 # Label Sleuth
 
-Label Sleuth is an open source no-code system for text annotation and building text classifers. With Label Sleuth, domain experts (e.g., physicians, lawyers, psychologists) can quickly create custom NLP models by themselves, with no dependency on NLP experts.
+[Label Sleuth](https://www.label-sleuth.org/) is an open source no-code system for text annotation and building text classifers. With Label Sleuth, domain experts (e.g., physicians, lawyers, psychologists) can quickly create custom NLP models by themselves, with no dependency on NLP experts.
 
 Creating real-world NLP models typically requires a combination of two expertise - deep knowledge of the target domain, provided by domain experts, and machine learning knowledge, provided by NLP experts. Thus, domain experts are dependent on NLP experts. Label Sleuth comes to eliminate this dependency. With an intuitive UX, it escorts domain experts in the process of labeling the data and building NLP models which are tailored to their specific needs. As domain experts label examples within the system, machine learning models are being automatically trained in the background, make predictions on new examples, and provide suggestions for the users on the examples they should label next.
 
@@ -27,10 +27,10 @@ This interactive system enables users to efficiently collect data for varied tas
 
 
 ## Installation for end users (non-developers)
-Follow the instructions on our website <LINK_TO_INSTRUCTION_PAGE>
+Follow [the instructions on our website](https://www.label-sleuth.org/docs/installation.html).
 
 ## Setting up a development environment
-The system requires Python 3.8 (other versions are currently not supported and may cause issues).
+The system requires Python 3.8 or 3.9 (other versions are currently not supported and may cause issues).
 1. Clone the repository: 
 
    `git clone git@github.com:label-sleuth/label-sleuth.git`
@@ -85,7 +85,7 @@ The repository consists of a backend library, written in Python, and a frontend 
 
 ## Using the system
 
-See <LINK_TO_WEBSITE> for a simple tutorial that illustrates how to use the system with a sample dataset of Wikipedia pages. Before starting the tutorial, make sure you pre-load the sample dataset by running:
+See our website for a [simple tutorial](https://www.label-sleuth.org/docs/tutorial.html) that illustrates how to use the system with a sample dataset of Wikipedia pages. Before starting the tutorial, make sure you pre-load the sample dataset by running:
 
 `python -m label_sleuth.start_label_sleuth --load_sample_corpus wiki_animals_2000_pages`.
 
