@@ -58,18 +58,18 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         dataset_name = 'non_existing_dump'
 
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
-        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
-        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
-        self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
+        category1_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
+        category2_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
                                                   ModelInfo("123", ModelStatus.READY, datetime.now(),
                                                             ModelsCatalog.SVM_OVER_GLOVE, {}))
-        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_3", "category 3 description")
+        category3_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_3", "category 3 description")
 
-        categories = self.orchestrator_state_api.get_workspace(workspace_id).categories.keys()
-        self.assertEqual({"category_1", "category_2", "category_3"}, categories)
-        categories = self.orchestrator_state_api.get_workspace(workspace_id).categories.keys()
-        self.orchestrator_state_api.delete_category_from_workspace(workspace_id, "category_2")
-        self.assertEqual({"category_1", "category_3"}, categories)
+        category_ids = self.orchestrator_state_api.get_all_categories(workspace_id).keys()
+        self.assertEqual({category1_id, category2_id, category3_id}, category_ids)
+        self.orchestrator_state_api.delete_category_from_workspace(workspace_id, category2_id)
+        category_ids = self.orchestrator_state_api.get_all_categories(workspace_id).keys()
+        self.assertEqual({category1_id, category3_id}, category_ids)
 
     def test_get_all_workspaces(self):
         dataset_name = 'non_existing_dump'
@@ -95,54 +95,54 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         dataset_name = 'non_existing_dump'
         workspace_id = "workspace_1"
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
-        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
-        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
-        self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
+        category1_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
+        category2_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
                                                   ModelInfo("123", ModelStatus.READY, datetime.now(),
                                                             ModelsCatalog.SVM_OVER_GLOVE, {}))
-        self.assertEqual(1, len(self.orchestrator_state_api.get_all_iterations(workspace_id, "category_2")))
+        self.assertEqual(1, len(self.orchestrator_state_api.get_all_iterations(workspace_id, category2_id)))
 
     def test_get_and_update_iteration_status(self):
         dataset_name = 'non_existing_dump'
         workspace_id = "workspace_1"
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
-        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
-        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
-        self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
+        category1_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
+        category2_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
                                                   ModelInfo("123", ModelStatus.READY, datetime.now(),
                                                             ModelsCatalog.SVM_OVER_GLOVE, {}))
-        self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
                                                   ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
                                                             ModelsCatalog.SVM_OVER_GLOVE, {}))
 
         self.assertEqual(IterationStatus.TRAINING,
-                         self.orchestrator_state_api.get_iteration_status(workspace_id, "category_2", 0))
+                         self.orchestrator_state_api.get_iteration_status(workspace_id, category2_id, 0))
         self.assertEqual(IterationStatus.TRAINING,
-                         self.orchestrator_state_api.get_iteration_status(workspace_id, "category_2", 1))
-        self.orchestrator_state_api.update_iteration_status(workspace_id, "category_2", 0, IterationStatus.READY)
+                         self.orchestrator_state_api.get_iteration_status(workspace_id, category2_id, 1))
+        self.orchestrator_state_api.update_iteration_status(workspace_id, category2_id, 0, IterationStatus.READY)
         self.assertEqual(IterationStatus.READY,
-                         self.orchestrator_state_api.get_iteration_status(workspace_id, "category_2", 0))
-        self.orchestrator_state_api.update_iteration_status(workspace_id, "category_2", 1, IterationStatus.READY)
+                         self.orchestrator_state_api.get_iteration_status(workspace_id, category2_id, 0))
+        self.orchestrator_state_api.update_iteration_status(workspace_id, category2_id, 1, IterationStatus.READY)
         self.assertEqual(IterationStatus.READY,
-                         self.orchestrator_state_api.get_iteration_status(workspace_id, "category_2", 1))
+                         self.orchestrator_state_api.get_iteration_status(workspace_id, category2_id, 1))
 
     def test_get_and_update_model_status(self):
         dataset_name = 'non_existing_dump'
         workspace_id = "workspace_1"
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
         self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
-        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
-        self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
+        category2_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
                                                   ModelInfo("123", ModelStatus.READY, datetime.now(),
                                                             ModelsCatalog.SVM_OVER_GLOVE, {}))
-        self.orchestrator_state_api.add_iteration(workspace_id, "category_2",
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
                                                   ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
                                                             ModelsCatalog.SVM_OVER_GLOVE, {}))
         self.assertEqual(ModelStatus.TRAINING, self.orchestrator_state_api.get_all_iterations(
-            workspace_id, "category_2")[1].model.model_status)
-        self.orchestrator_state_api.update_model_status(workspace_id, "category_2", 1, ModelStatus.READY)
+            workspace_id, category2_id)[1].model.model_status)
+        self.orchestrator_state_api.update_model_status(workspace_id, category2_id, 1, ModelStatus.READY)
         self.assertEqual(ModelStatus.READY, self.orchestrator_state_api.get_all_iterations(
-            workspace_id, "category_2")[1].model.model_status)
+            workspace_id, category2_id)[1].model.model_status)
 
     def test_load_existing_workspace(self):
         """

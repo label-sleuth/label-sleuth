@@ -51,19 +51,19 @@ def build_text_elements_from_dataframe_and_labels(df, labels_dict):
     return text_elements
 
 
-def filter_by_labeled_status(df: pd.DataFrame, labels: pd.Series, category_name: str, labeled_status: LabeledStatus):
+def filter_by_labeled_status(df: pd.DataFrame, labels: pd.Series, category_id: int, labeled_status: LabeledStatus):
     """
     :param df:
     :param labels:
-    :param category_name:
+    :param category_id:
     :param labeled_status: unlabeled, labeled or all
     :return:
     """
     if labeled_status == LabeledStatus.UNLABELED:
-        return df[labels.apply(lambda x: category_name not in x)]
+        return df[labels.apply(lambda x: category_id not in x)]
 
     elif labeled_status == LabeledStatus.LABELED:
-        return df[labels.apply(lambda x: category_name in x)]
+        return df[labels.apply(lambda x: category_id in x)]
 
     return df
 
@@ -74,8 +74,8 @@ def filter_by_query(df: pd.DataFrame, query):
     return df
 
 
-def filter_by_query_and_label_status(df: pd.DataFrame, labels_series: pd.Series, category_name: str,
+def filter_by_query_and_label_status(df: pd.DataFrame, labels_series: pd.Series, category_id: int,
                                      labeled_status: LabeledStatus, query: str):
-    df = filter_by_labeled_status(df, labels_series, category_name, labeled_status)
+    df = filter_by_labeled_status(df, labels_series, category_id, labeled_status)
     df = filter_by_query(df, query)
     return df

@@ -274,10 +274,11 @@ def create_category(workspace_id):
         return jsonify({"workspace_id": workspace_id, "error": "category already exist", "category_name": category_name,
                  "error_code": 409}), 409
 
-    post_data['id'] = post_data[
-        "category_name"]  # TODO old frontend expects the category name to be in id, remove after moving to new frontend
-    current_app.orchestrator_api.create_new_category(workspace_id, category_name,
+
+    category_id = current_app.orchestrator_api.create_new_category(workspace_id, category_name,
                                                      category_description)
+
+    post_data['category_id'] = str(category_id)
 
     res = {'category': post_data}
     return jsonify(res)
@@ -292,36 +293,41 @@ def get_all_categories(workspace_id):
     :param workspace_id:
     """
     categories = current_app.orchestrator_api.get_all_categories(workspace_id)
-    category_dicts = [{'id': name, 'category_name': name, 'category_description': category.description}
-                      for name, category in sorted(categories.items())]
+    category_dicts = [{'category_id': id, 'category_name': category.name, 'category_description': category.description}
+                      for id, category in categories.items()]
 
     res = {'categories': category_dicts}
     return jsonify(res)
 
 
-@main_blueprint.route("/workspace/<workspace_id>/category/<category_name>", methods=['PUT'])
+@main_blueprint.route("/workspace/<workspace_id>/category/<category_id>", methods=['PUT'])
 @login_if_required
-def rename_category(workspace_id, category_name):
+def update_category(workspace_id, category_id):
     """
     TODO implement
     :param workspace_id:
     :param category_name:
     :param category_description:
     """
-    return "Not Implemented", 503
+    post_data = request.get_json(force=True)
+    new_category_name = post_data["category_name"]
+    new_category_description = post_data["category_description"]
+    current_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description)
+    return jsonify({"workspace_id":workspace_id,"category_id":str(category_id),"category_name":new_category_name,
+                    "category_description":new_category_description})
 
 
-@main_blueprint.route("/workspace/<workspace_id>/category/<category_name>", methods=['DELETE'])
+@main_blueprint.route("/workspace/<workspace_id>/category/<category_id>", methods=['DELETE'])
 @login_if_required
-def delete_category(workspace_id, category_name):
+def delete_category(workspace_id, category_id):
     """
     This call permanently deletes all data associated with the given category, including user labels and models.
 
     :param workspace_id:
     :param category_name:
     """
-    current_app.orchestrator_api.delete_category(workspace_id, category_name)
-    return jsonify({'category': category_name})
+    current_app.orchestrator_api.delete_category(workspace_id, category_id)
+    return jsonify({"workspace_id":workspace_id, 'category_id': str(category_id)})
 
 
 """
@@ -359,11 +365,10 @@ def get_document_elements(workspace_id, document_uri):
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
     document = current_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_uri])[0]
     elements = document.text_elements
-
-    category = None
-    if request.args.get('category_name'):
-        category = request.args.get('category_name')
-    elements_transformed = elements_back_to_front(workspace_id, elements, category)
+    category_id = request.args.get('category_id')
+    if category_id is not None:
+        category_id = int(category_id)
+    elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
 
     res = {'elements': elements_transformed}
     return jsonify(res)
@@ -385,8 +390,12 @@ def get_document_positive_predictions(workspace_id, document_uri):
 
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
-    category_name = request.args.get('category_name')
-    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name,
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+    category_id = int(category_id)
+
+    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
                                                                      IterationStatus.READY)) == 0:
         elements_transformed = []
     else:
@@ -395,11 +404,11 @@ def get_document_positive_predictions(workspace_id, document_uri):
 
         elements = document.text_elements
 
-        predictions = [pred.label for pred in current_app.orchestrator_api.infer(workspace_id, category_name, elements)]
+        predictions = [pred.label for pred in current_app.orchestrator_api.infer(workspace_id, category_id, elements)]
         positive_predicted_elements = [element for element, prediction in zip(elements, predictions)
                                        if prediction == LABEL_POSITIVE]
 
-        elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_name)
+        elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_id)
         elements_transformed = elements_transformed[start_idx: start_idx + size]
     res = {'elements': elements_transformed}
     return jsonify(res)
@@ -420,8 +429,11 @@ def get_positive_predictions(workspace_id):
 
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
-    category_name = request.args.get('category_name')
-    all_ready_iterations = current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name,
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+    category_id = int(category_id)
+    all_ready_iterations = current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
                                                                                      IterationStatus.READY)
     if len(all_ready_iterations) == 0:
         return jsonify({'hit_count': 0, "positive_fraction": None, 'elements': []})
@@ -430,12 +442,12 @@ def get_positive_predictions(workspace_id):
         # the positive predictions list
         remove_duplicates = current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts
         positive_predicted_elements = current_app.orchestrator_api.sample_elements_by_prediction(
-            workspace_id, category_name, unlabeled_only=False, required_label=LABEL_POSITIVE,
+            workspace_id, category_id, unlabeled_only=False, required_label=LABEL_POSITIVE,
             remove_duplicates=remove_duplicates)
         iteration, iteration_idx = all_ready_iterations[-1]
 
         sorted_elements = sorted(positive_predicted_elements, key=lambda te: get_natural_sort_key(te.uri))
-        elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_name)
+        elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id)
         elements_transformed = elements_transformed[start_idx: start_idx + size]
 
         res = {'hit_count': len(positive_predicted_elements), "positive_fraction":
@@ -453,8 +465,10 @@ def get_element_by_id(workspace_id, element_id):
     :param element_id:
     :request_arg category_name:
     """
-    category_name = request.args.get('category_name')
-    return get_element(workspace_id, category_name, element_id)
+    category_id = request.args.get('category_id')
+    if category_id is not None:
+        category_id = int(category_id)
+    return get_element(workspace_id, category_id, element_id)
 
 
 @main_blueprint.route("/workspace/<workspace_id>/query", methods=['GET'])
@@ -469,18 +483,20 @@ def query(workspace_id):
     :request_arg qry_size: number of elements to return
     :request_arg sample_start_idx: get elements starting from this index (for pagination)
     """
-    category_name = request.args.get('category_name')
+    category_id = request.args.get('category_id')
+    if category_id is not None:
+        category_id = int(category_id)
     query_string = request.args.get('qry_string')
     sample_size = int(request.args.get('qry_size', 100))
     sample_start_idx = int(request.args.get('sample_start_idx', 0))
 
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    resp = current_app.orchestrator_api.query(workspace_id, dataset_name, category_name, query_string,
+    resp = current_app.orchestrator_api.query(workspace_id, dataset_name, category_id=None, query_regex=query_string,
                                               unlabeled_only=False, sample_size=sample_size,
                                               sample_start_idx=sample_start_idx, remove_duplicates=True)
 
     sorted_elements = sorted(resp["results"], key=lambda te: get_natural_sort_key(te.uri))
-    elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_name)
+    elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id)
 
     res = {'elements': elements_transformed,
            'hit_count': resp["hit_count"], 'hit_count_unique': resp["hit_count_unique"]}
@@ -501,7 +517,7 @@ def set_element_label(workspace_id, element_id):
 
     :param workspace_id:
     :param element_id:
-    :post_param category_name:
+    :post_param category_id:
     :post_param value: if value == 'none', this element's label for the given category will be removed. Otherwise, the
     element will be assigned a boolean label for the category corresponding to the given string (e.g., "true" -> True)
     :post_param update_counter: determines whether the label changes are reflected in the label change counters
@@ -510,13 +526,16 @@ def set_element_label(workspace_id, element_id):
     """
     post_data = request.get_json(force=True)
 
-    category_name = post_data["category_name"]
+    if "category_id" not in post_data:
+            return jsonify({"type": "missing_category_id", "title": "category_id was not provided in post data"}), 422
+
+    category_id = int(post_data["category_id"])
     value = post_data["value"]
     update_counter = post_data.get('update_counter', True)
 
     if value == 'none':
         current_app.orchestrator_api. \
-            unset_labels(workspace_id, category_name, [element_id],
+            unset_labels(workspace_id, category_id, [element_id],
                          apply_to_duplicate_texts=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
 
     else:
@@ -527,14 +546,14 @@ def set_element_label(workspace_id, element_id):
         else:
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
 
-        uri_with_updated_label = {element_id: {category_name: Label(value)}}
+        uri_with_updated_label = {element_id: {category_id: Label(value)}}
         current_app.orchestrator_api. \
             set_labels(workspace_id, uri_with_updated_label,
                        apply_to_duplicate_texts=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts,
                        update_label_counter=update_counter)
 
-    res = {'element': get_element(workspace_id, category_name, element_id), 'workspace_id': workspace_id,
-           'category_name': category_name}
+    res = {'element': get_element(workspace_id, category_id, element_id), 'workspace_id': workspace_id,
+           'category_id': str(category_id)}
     return jsonify(res)
 
 
@@ -547,12 +566,16 @@ def get_all_positive_labeled_elements_for_category(workspace_id):
     :param workspace_id:
     :request_arg category_name:
     """
-    category = request.args.get('category_name')
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+    category_id = int(category_id)
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category)
-    positive_elements = [element for element in elements if element.category_to_label[category].label == LABEL_POSITIVE]
+    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
+    positive_elements = [element for element in elements
+                         if element.category_to_label[category_id].label == LABEL_POSITIVE]
 
-    elements_transformed = elements_back_to_front(workspace_id, positive_elements, category)
+    elements_transformed = elements_back_to_front(workspace_id, positive_elements, category_id)
 
     res = {'positive_elements': elements_transformed}
     return jsonify(res)
@@ -612,20 +635,23 @@ def get_labelling_status(workspace_id):
     :request_arg category_name:
     """
 
-    category_name = request.args.get('category_name')
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+    category_id = int(category_id)
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
 
     labeling_counts = current_app.orchestrator_api. \
-        get_label_counts(workspace_id, dataset_name, category_name,
+        get_label_counts(workspace_id, dataset_name, category_id,
                          remove_duplicates=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
-    progress = current_app.orchestrator_api.get_progress(workspace_id, dataset_name, category_name)
+    progress = current_app.orchestrator_api.get_progress(workspace_id, dataset_name, category_id)
 
-    future = executor.submit(current_app.orchestrator_api.train_if_recommended, workspace_id, category_name)
+    # TODO move executor to the orchestrator
+    executor.submit(current_app.orchestrator_api.train_if_recommended, workspace_id, category_id)
 
     return jsonify({
         "labeling_counts": labeling_counts,
-        "progress": progress,
-        "notifications": []  # TODO remove from UI
+        "progress": progress
     })
 
 
@@ -637,12 +663,15 @@ def get_all_models_for_category(workspace_id):
     Return information about all the Iteration flows for this category and their current status.
 
     :param workspace_id:
-    :request_arg category_name:
+    :request_arg category_id:
     :return: array of all iterations sorted from oldest to newest
     """
-    category_name = request.args.get('category_name')
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+    category_id = int(category_id)
 
-    iterations = current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_name)
+    iterations = current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id)
     res = {'models': extract_iteration_information_list(iterations)}
     return jsonify(res)
 
@@ -655,21 +684,25 @@ def get_elements_to_label(workspace_id):
     recommended for labeling by the active learning module.
 
     :param workspace_id:
-    :request_arg category_name:
+    :request_arg category_id:
     :request_arg size: the number of elements to return
     :request_arg start_idx: get elements starting from this index (for pagination)
     """
 
-    category_name = request.args.get('category_name')
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+    category_id = int(category_id)
+
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
 
-    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_name,
+    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
                                                                      IterationStatus.READY)) == 0:
         return jsonify({"elements": []})
 
-    elements = current_app.orchestrator_api.get_elements_to_label(workspace_id, category_name, size, start_idx)
-    elements_transformed = elements_back_to_front(workspace_id, elements, category_name)
+    elements = current_app.orchestrator_api.get_elements_to_label(workspace_id, category_id, size, start_idx)
+    elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
 
     res = {'elements': elements_transformed}
     return jsonify(res)
@@ -685,17 +718,21 @@ def force_train_for_category(workspace_id):
     :request_arg category_name:
     """
 
-    category_name = request.args.get('category_name')
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    if category_name not in current_app.orchestrator_api.get_all_categories(workspace_id):
-        return jsonify({
-            "error": "no such category '" + (category_name if category_name != 'none'
-                                             else "<category not provided in category_name param>") + "'"
-        })
-    model_id = current_app.orchestrator_api.train_if_recommended(workspace_id, category_name, force=True)
 
-    labeling_counts = current_app.orchestrator_api.get_label_counts(workspace_id, dataset_name, category_name)
-    logging.info(f"force training a new model in workspace '{workspace_id}' for category '{category_name}', "
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+
+    category_id = int(category_id)
+    if category_id not in current_app.orchestrator_api.get_all_categories(workspace_id):
+        return jsonify({"type": "category_id_does_not_exist",
+                        "title": f"category_id {category_id} does not exist in workspace {workspace_id}"}), 404
+
+    model_id = current_app.orchestrator_api.train_if_recommended(workspace_id, category_id, force=True)
+
+    labeling_counts = current_app.orchestrator_api.get_label_counts(workspace_id, dataset_name, category_id)
+    logging.info(f"force training a new model in workspace '{workspace_id}' for category '{category_id}', "
                  f"model id: {model_id}")
 
     return jsonify({
@@ -735,16 +772,21 @@ def export_model(workspace_id):
     :request_arg category_name:
     :request_arg iteration_index: optional. if not provided, the model from the latest iteration will be exported.
     """
-    category_name = request.args.get('category_name')
+
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+
+    category_id = int(category_id)
     iteration_index = request.args.get('iteration_index', None)  # TODO update in UI model_id -> iteration_index
     if iteration_index is None:
         iteration, _ = current_app.orchestrator_api. \
-            get_all_iterations_by_status(workspace_id, category_name, IterationStatus.READY)[-1]
+            get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
     else:
         iteration = current_app.orchestrator_api. \
-            get_all_iterations_for_category(workspace_id, category_name)[iteration_index]
+            get_all_iterations_for_category(workspace_id, category_id)[iteration_index]
     model_id = iteration.model.model_id
-    model_dir = current_app.orchestrator_api.export_model(workspace_id, category_name, iteration_index)
+    model_dir = current_app.orchestrator_api.export_model(workspace_id, category_id, iteration_index)
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
         for dirpath, dirnames, filenames in os.walk(model_dir):
@@ -772,15 +814,20 @@ def get_label_and_model_disagreements(workspace_id):
     :param workspace_id:
     :request_arg category_name:
     """
-    category = request.args.get('category_name')
+
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+
+    category_id = int(category_id)
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category)
-    elements_transformed = elements_back_to_front(workspace_id, elements, category)
+    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
+    elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
 
     res = {'disagree_elements':
                [element for element in elements_transformed
-                if category in element['model_predictions'] and category in element['user_labels']
-                and element['model_predictions'][category] != element['user_labels'][category]]}
+                if category_id in element['model_predictions'] and category_id in element['user_labels']
+                and element['model_predictions'][category_id] != element['user_labels'][category_id]]}
     return jsonify(res)
 
 
@@ -798,10 +845,15 @@ def get_suspicious_elements(workspace_id):
     :param workspace_id:
     :request_arg category_name:
     """
-    category = request.args.get('category_name')
+
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+
+    category_id = int(category_id)
     try:
-        suspicious_elements = current_app.orchestrator_api.get_suspicious_elements_report(workspace_id, category)
-        elements_transformed = elements_back_to_front(workspace_id, suspicious_elements, category)
+        suspicious_elements = current_app.orchestrator_api.get_suspicious_elements_report(workspace_id, category_id)
+        elements_transformed = elements_back_to_front(workspace_id, suspicious_elements, category_id)
         res = {'elements': elements_transformed}
         return jsonify(res)
     except Exception:
@@ -826,19 +878,24 @@ def get_contradicting_elements(workspace_id):
     :param workspace_id:
     :request_arg category_name:
     """
-    category = request.args.get('category_name')
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+
+    category_id = int(category_id)
     try:
-        contradiction_elements_dict = current_app.orchestrator_api.get_contradiction_report(workspace_id, category)
-        element_pairs_transformed = [elements_back_to_front(workspace_id, element_pair, category)
+        contradiction_elements_dict = current_app.orchestrator_api.get_contradiction_report(workspace_id, category_id)
+        element_pairs_transformed = [elements_back_to_front(workspace_id, element_pair, category_id)
                                      for element_pair in contradiction_elements_dict['pairs']]
         diffs = [[list(element_a_unique_token_set), list(element_b_unique_token_set)]
                  for element_a_unique_token_set, element_b_unique_token_set in contradiction_elements_dict['diffs']]
         res = {'pairs': element_pairs_transformed, 'diffs': diffs}
         return jsonify(res)
     except Exception:
-        logging.exception("Failed to generate contradiction report")
-        res = {'pairs': []}
-        return jsonify(res)
+        logging.exception(f"Failed to generate contradiction report for workspace "
+                          f"{workspace_id} category_id {category_id}")
+        return jsonify({"type": "contradiction_report_generation_error", "title":
+            f"Failed to generate contradiction report for workspace {workspace_id} category_id {category_id}"}), 500
 
 
 """
@@ -855,15 +912,19 @@ def get_elements_for_precision_evaluation(workspace_id):
     and after they are labeled the run_precision_evaluation() call will use these labels to estimate model precision.
 
     :param workspace_id:
-    :request_arg category_name:.
+    :request_arg category_id:.
     """
     size = current_app.config["CONFIGURATION"].precision_evaluation_size
-    category = request.args.get('category_name')
-    random_state = len(current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category))
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+
+    category_id = int(category_id)
+    random_state = len(current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id))
     positive_predicted_elements = current_app.orchestrator_api. \
-        sample_elements_by_prediction(workspace_id, category, size, unlabeled_only=False,
+        sample_elements_by_prediction(workspace_id, category_id, size, unlabeled_only=False,
                                       required_label=LABEL_POSITIVE, remove_duplicates=False, random_state=random_state)
-    elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category)
+    elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_id)
     logging.info(f"sampled {len(elements_transformed)} elements for evaluation")
     res = {'elements': elements_transformed}
     return jsonify(res)
@@ -886,12 +947,16 @@ def run_precision_evaluation(workspace_id):
     context of precision evaluation are not immediately reflected in the label change counter of the category, and the
     counts are updated only when calling run_precision_evaluation()
     """
-    category_name = request.args.get('category_name')
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+
+    category_id = int(category_id)
     post_data = request.get_json(force=True)
     ids = post_data["ids"]
     changed_elements_count = post_data["changed_elements_count"]
     model_id = post_data["model_id"]
-    score = current_app.orchestrator_api.estimate_precision(workspace_id, category_name, ids, changed_elements_count,
+    score = current_app.orchestrator_api.estimate_precision(workspace_id, category_id, ids, changed_elements_count,
                                                             model_id)
     res = {'score': score}
     return jsonify(res)
@@ -912,14 +977,18 @@ def get_labeled_elements_enriched_tokens(workspace_id):
     implementation relies on calculating Mutual Information between the ngrams and the user labels.
 
     :param workspace_id:
-    :request_arg category_name:
+    :request_arg category_id:
     """
-    category = request.args.get('category_name')
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+
+    category_id = int(category_id)
     dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category)
+    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
     res = dict()
     if elements and len(elements) > 0:
-        boolean_labels = [element.category_to_label[category].label == LABEL_POSITIVE for element in elements]
+        boolean_labels = [element.category_to_label[category_id].label == LABEL_POSITIVE for element in elements]
         res['info_gain'] = extract_enriched_ngrams_and_weights_list(elements, boolean_labels)
     return jsonify(res)
 
@@ -936,20 +1005,24 @@ def get_predictions_enriched_tokens(workspace_id):
     predictions.
 
     :param workspace_id:
-    :request_arg category_name:
+    :request_arg category_id:
     """
     res = dict()
-    category = request.args.get('category_name')
+    category_id = request.args.get('category_id')
+    if category_id is None:
+        return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
 
-    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category,
+    category_id = int(category_id)
+
+    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
                                                                      IterationStatus.READY)) == 0:
         res['info_gain'] = []
         return jsonify(res)
 
-    true_elements = current_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category, 1000,
+    true_elements = current_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category_id, 1000,
                                                                                unlabeled_only=True,
                                                                                required_label=LABEL_POSITIVE)
-    false_elements = current_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category, 1000,
+    false_elements = current_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category_id, 1000,
                                                                                 unlabeled_only=True,
                                                                                 required_label=LABEL_NEGATIVE)
     elements = true_elements + false_elements

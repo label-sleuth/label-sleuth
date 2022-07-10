@@ -39,7 +39,7 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
         self.data_access = data_access
 
     @abc.abstractmethod
-    def get_train_set(self, workspace_id: str, train_dataset_name: str, category_name: str) -> Sequence[TextElement]:
+    def get_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int) -> Sequence[TextElement]:
         """
         For a given workspace, dataset and category, prepare and return a train set for training the model.
         Returns a list of TextElement objects (containing labels for the category, and possibly metadata about
@@ -47,5 +47,5 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
 
         :param workspace_id:
         :param train_dataset_name:
-        :param category_name:
+        :param category_id:
         """

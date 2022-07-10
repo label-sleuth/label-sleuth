@@ -27,5 +27,5 @@ class RetrospectiveLearner(ActiveLearner):
     """
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
                               candidate_text_element_predictions: Sequence[Prediction], workspace_id: str,
-                              dataset_name: str, category_name: str) -> Sequence[float]:
+                              dataset_name: str, category_id: int) -> Sequence[float]:
         return [pred.score for pred in candidate_text_element_predictions]

@@ -27,7 +27,7 @@ class ActiveLearner:
     """
     Base class for implementing an active learning module.
     """
-    def get_recommended_items_for_labeling(self, workspace_id: str, dataset_name: str, category_name: str,
+    def get_recommended_items_for_labeling(self, workspace_id: str, dataset_name: str, category_id: int,
                                            candidate_text_elements: Sequence[TextElement],
                                            candidate_text_element_predictions: Sequence[Prediction],
                                            sample_size: int = 1) -> Sequence[TextElement]:
@@ -36,13 +36,13 @@ class ActiveLearner:
         for a given dataset and category, based on the model predictions for a sequence of candidate text elements.
         :param workspace_id:
         :param dataset_name:
-        :param category_name:
+        :param category_id:
         :param candidate_text_elements:
         :param candidate_text_element_predictions:
         :param sample_size: number of suggested elements to return
         """
         scores = self.get_per_element_score(candidate_text_elements, candidate_text_element_predictions,
-                                            workspace_id, dataset_name, category_name)
+                                            workspace_id, dataset_name, category_id)
         sorted_indices = np.argsort(scores)[::-1]
         top_indices = sorted_indices[:sample_size]
         recommended_items = np.array(candidate_text_elements)[np.array(top_indices)].tolist()
@@ -51,7 +51,7 @@ class ActiveLearner:
     @abc.abstractmethod
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
                               candidate_text_element_predictions: Sequence[Prediction],
-                              workspace_id: str, dataset_name: str, category_name: str) -> Sequence[float]:
+                              workspace_id: str, dataset_name: str, category_id: int) -> Sequence[float]:
         """
         For a given sequence of TextElements and their model predictions, return a score for each element
         from the active learning module.
@@ -59,7 +59,7 @@ class ActiveLearner:
         :param candidate_text_element_predictions:
         :param workspace_id:
         :param dataset_name:
-        :param category_name:
+        :param category_id:
         """
 
 
