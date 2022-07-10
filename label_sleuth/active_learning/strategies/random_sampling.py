@@ -29,7 +29,7 @@ class RandomSampling(ActiveLearner):
     """
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
                               candidate_text_element_predictions: Sequence[Prediction], workspace_id: str,
-                              dataset_name: str, category_name: str) -> Sequence[float]:
+                              dataset_name: str, category_id: int) -> Sequence[float]:
         # The scores/selected elements are reproducible given the same *candidate_text_elements* -
         # i.e., if the same set of elements in the dataset was labeled, the list *candidate_text_elements*
         # of unlabeled elements would be identical and the same scores/elements will be returned

@@ -71,12 +71,12 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def unset_labels(self, workspace_id: str, category_name, uris: Sequence[str], apply_to_duplicate_texts=False):
+    def unset_labels(self, workspace_id: str, category_id, uris: Sequence[str], apply_to_duplicate_texts=False):
         """
         Remove workspace labels for a certain category from a specified list of uris.
 
         :param workspace_id: the workspace_id of the labeling effort.
-        :param category_name: the name of the category labels are assigned to.
+        :param category_id: the id of the category labels are assigned to.
         :param uris: list of URIs to unset the label for.
         :param apply_to_duplicate_texts: if True, also unset the same labels for additional URIs that have the same text
         as that of the URIs provided.
@@ -146,16 +146,16 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
+    def get_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
                                     sample_size: int = sys.maxsize, sample_start_idx: int = 0, query_regex: str = None,
                                     remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
-        Sample *sample_size* TextElements from dataset_name, unlabeled for category_name in workspace_id, optionally
+        Sample *sample_size* TextElements from dataset_name, unlabeled for category_id in workspace_id, optionally
         limiting to those matching a query.
 
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which TextElements are sampled
-        :param category_name: we demand that the elements are not labeled for this category
+        :param category_id: we demand that the elements are not labeled for this category
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
         :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
@@ -168,16 +168,16 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
+    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
                                   sample_size: int = sys.maxsize, query_regex: str = None,
                                   remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
-        Sample *sample_size* TextElements from dataset_name, labeled for category_name in workspace_id,
+        Sample *sample_size* TextElements from dataset_name, labeled for category_id in workspace_id,
         optionally limiting to those matching a query.
 
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which TextElements are sampled
-        :param category_name: we demand that the elements are labeled for this category
+        :param category_id: we demand that the elements are labeled for this category
         :param sample_size: how many TextElements should be sampled
         :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
         no such filtering is performed.
@@ -189,13 +189,13 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_label_counts(self, workspace_id: str, dataset_name: str, category_name: str, remove_duplicates=False) \
+    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False) \
             -> Mapping[str, int]:
         """
-        Return for each label value, assigned to category_name, the total count of its appearances in dataset_name.
+        Return for each label value, assigned to category_id, the total count of its appearances in dataset_name.
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which labels count should be generated
-        :param category_name: the name of the category whose label information is the target
+        :param category_id: the id of the category whose label information is the target
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :return: a map whose keys are label values, and the values are the number of TextElements this label was
         assigned to.
@@ -210,12 +210,12 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def delete_labels_for_category(self, workspace_id, dataset_name, category_name):
+    def delete_labels_for_category(self, workspace_id:str, dataset_name:str, category_id:int):
         """
         Delete the labels info associated with the given category.
         :param workspace_id:
         :param dataset_name:
-        :param category_name:
+        :param category_id:
         """
 
     @abc.abstractmethod
