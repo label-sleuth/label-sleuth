@@ -11,16 +11,23 @@
 
 .predicted-element {
   border: dotted 2px #a3d8e5;
-  margin-left: 15px;
 }
 
 .predicted-element p {
+  color: black;
   padding: 8px;
   margin: 0;
 }
 
+.element-example {
+  background-color: white; 
+  border-radius: 5px; 
+  padding: 15px; 
+  min-width: 65%;
+}
+
+.negative-label,
 .positive-label {
-  margin-bottom: 5px;
   font-family: "IBM Plex Sans";
   font-style: normal;
   font-weight: 300;
@@ -28,19 +35,18 @@
   line-height: 20px;
   display: flex;
   align-items: center;
+}
+
+.positive-label {
+  margin-bottom: 15px;
   color: #3092ab;
 }
 
 .negative-label {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 300;
-    font-size: 16px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
-    color: #BD3951;
+  color: #BD3951;
 }
+
+
 
 .positive-label img {
   width: 20px;

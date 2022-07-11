@@ -86,16 +86,14 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             In the common case, where positive examples in your data are rare (i.e., less than 20% of the text elements are positives), spend more 
             time on finding and annotating positive examples, as they are more valuable for the AI model to identify your category. 
           </p>
-          <div style={{ marginLeft: "35px" }}>
-            <span className="positive-label">
+            <span className="positive-label element-example">
               <img src={check} />
               Positive example - text matches category
             </span>
-            <span className="negative-label">
+            <span className="negative-label element-example">
               <img src={cross} />
               Negative example - text does not match category
             </span>
-          </div>
         </div>
       ),
     },
@@ -131,8 +129,10 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
           <div style={{ marginTop: "20px" }}>
             <span className="prediction">
               Positive prediction example:
+              <div className="element-example" style={{ marginLeft: "15px"}}>
               <div className="predicted-element">
                 <p> I am a text entry that was predicted as positive! </p>
+              </div>
               </div>
             </span>
           </div>
