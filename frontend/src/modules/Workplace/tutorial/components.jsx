@@ -10,20 +10,32 @@ export const InnerModal = styled(Modal)`
   z-index: 10002;
 `;
 
-export const InnerModalContent = styled(Box)`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 0px;
-  gap: 5px;
-  width: 35%;
-  min-height: 324px;
-  background: #161616;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-`;
+export const InnerModalContent = styled(Box)(({ theme }) => ({
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  padding: "0px",
+  gap: "5px",
+  minHeight: "324px",
+  background: "#161616",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "space-between",
+  [theme.breakpoints.up('sm')]: {
+    width: "60%",
+  },
+  [theme.breakpoints.up('md')]: {
+    width: "55%",
+  },
+  [theme.breakpoints.up('lg')]: {
+    width: "45%",
+  },
+  [theme.breakpoints.up('xl')]: {
+    width: "35%",
+  },
+}));
+  
 
 export const OuterModalContent = styled(Box)`
   position: absolute;
