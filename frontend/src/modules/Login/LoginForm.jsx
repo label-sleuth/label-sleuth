@@ -123,9 +123,6 @@ const LoginForm = () => {
                     </div>
                 </FormControl>
             </Box>
-            <label className={classes.reach_out}>
-                Having trouble? Contact <a href="https://research.ibm.com/" target='_blank' style={{ fontWeight: '600', textDecoration: 'underline', color: '#2162FE'}}>IBM Sleuth Team</a>.
-            </label>
         </Box>
     );
 };
