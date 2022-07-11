@@ -18,13 +18,13 @@ import info_icon from "../../../assets/workspace/help.svg";
 import { Fade } from "@mui/material";
 import { IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import media1 from './assets/v2/stage_1'
-import media2 from './assets/v2/stage_2'
-import media3 from './assets/v2/stage_3'
-import media4 from './assets/v2/stage_4'
-import media5 from './assets/v2/stage_5'
-import media6 from './assets/v2/stage_6'
-import media7 from './assets/v2/stage_7'
+import media1 from './assets/v3/stage_1.webp'
+import media2 from './assets/v3/stage_2.webp'
+import media3 from './assets/v3/stage_3.webp'
+import media4 from './assets/v3/stage_4.webp'
+import media5 from './assets/v3/stage_5.webp'
+import media6 from './assets/v3/stage_6.webp'
+import media7 from './assets/v3/stage_7.webp'
 
 const media = [media1, media2, media3, media4, media5, media6, media7]
 
