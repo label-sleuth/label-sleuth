@@ -17,7 +17,7 @@ export const InnerModalContent = styled(Box)`
   transform: translate(-50%, -50%);
   padding: 0px;
   gap: 5px;
-  width: 45%;
+  width: 35%;
   min-height: 324px;
   background: #161616;
   display: flex;
@@ -59,7 +59,7 @@ export const MainContent = styled("div")`
   font-style: normal;
   font-weight: 350;
   font-size: 18px;
-  line-height: 30px;
+  line-height: 25px;
   color: #ffffff;
   text-align: justify;
   margin-right: 25px;
