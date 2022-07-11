@@ -65,6 +65,18 @@ export const LargeTitle = styled("div")`
   margin-bottom: 15px;
 `;
 
+export const StageCounter = styled("div")`
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 300;
+  font-size: 28px;
+  line-height: 36px;
+  color: #ffffff;
+  margin-bottom: 15px;
+  margin-left: 10px;
+  margin-right: 25px;
+  white-space: nowrap;`;
+
 export const MainContent = styled("div")`
   font-family: "IBM Plex Sans";
   font-style: normal;
