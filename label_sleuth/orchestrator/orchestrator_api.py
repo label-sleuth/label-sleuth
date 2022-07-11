@@ -191,28 +191,28 @@ class OrchestratorApi:
         """
         return self.data_access.get_text_elements_by_uris(workspace_id, dataset_name, uris)
 
-    def get_all_labeled_text_elements(self, workspace_id, dataset_name, category) -> List[TextElement]:
+    def get_all_labeled_text_elements(self, workspace_id, dataset_name, category_id: int) -> List[TextElement]:
         """
         Get all the text elements that were assigned user labels for the given category.
         :param workspace_id:
         :param dataset_name:
-        :param category:
+        :param category_id:
         :return: a list of TextElement objects
         """
-        return self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category, sample_size=sys.maxsize,
-                                                          remove_duplicates=False)['results']
+        return self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
+                                                          sample_size=sys.maxsize, remove_duplicates=False)['results']
 
-    def get_all_unlabeled_text_elements(self, workspace_id, dataset_name, category, remove_duplicates=False) \
+    def get_all_unlabeled_text_elements(self, workspace_id, dataset_name, category_id: int, remove_duplicates=False) \
             -> List[TextElement]:
         """
         Get all the text elements that were not assigned user labels for the given category.
         :param workspace_id:
         :param dataset_name:
-        :param category:
+        :param category_id:
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :return: a list of TextElement objects
         """
-        return self.data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category,
+        return self.data_access.get_unlabeled_text_elements(workspace_id, dataset_name, category_id,
                                                             sample_size=sys.maxsize,
                                                             remove_duplicates=remove_duplicates)['results']
 
@@ -802,7 +802,7 @@ class OrchestratorApi:
             if self.get_dataset_name(workspace_id) == dataset_name:
                 workspaces_to_update.append(workspace_id)
     
-                for category_id, category in self.get_all_categories(workspace_id):
+                for category_id, category in self.get_all_categories(workspace_id).items():
                     if self.config.apply_labels_to_duplicate_texts:
                         # since new data may contain texts identical to existing labeled texts, we set all the existing
                         # labels again to apply the labels to the new data
@@ -813,39 +813,41 @@ class OrchestratorApi:
     
                     if len(category.iterations) > 0:
                         iteration_index = len(category.iterations)-1
-                        new_data_infer_thread_pool.submit(self._infer_missing_elements, workspace_id, category,
+                        new_data_infer_thread_pool.submit(self._infer_missing_elements, workspace_id, category_id,
                                                           dataset_name, iteration_index)
                         total_infer_jobs += 1
         logging.info(f"done adding documents to {dataset_name} upload statistics: {document_statistics}."
                      f"{total_infer_jobs} infer jobs were submitted in the background")
         return document_statistics, workspaces_to_update
     
-    def _infer_missing_elements(self, workspace_id, category, dataset_name, iteration_index):
-        iteration_status = self.get_iteration_status(workspace_id, category, iteration_index)
+    def _infer_missing_elements(self, workspace_id, category_id, dataset_name, iteration_index):
+        iteration_status = self.get_iteration_status(workspace_id, category_id, iteration_index)
         if iteration_status == IterationStatus.ERROR:
             logging.error(
-                f"Cannot run inference for category '{category}' in workspace '{workspace_id}' after new documents were"
-                f" loaded to dataset '{dataset_name}' using model {iteration_index}, as the iteration status is ERROR")
+                f"Cannot run inference for category id {category_id} in workspace '{workspace_id}' after new documents "
+                f"were loaded to dataset '{dataset_name}' using model {iteration_index}, as the iteration status "
+                f"is ERROR")
             return
         # if *model_id* is currently training, wait for training to complete
         start_time = time.time()
         while iteration_status != IterationStatus.READY:
             wait_time = time.time() - start_time
             if wait_time > 15 * 60:
-                logging.error(f"Timeout reached when waiting to run inference with the last model for category "
-                              f"'{category}' in workspace '{workspace_id}' after new documents were loaded to "
+                logging.error(f"Timeout reached when waiting to run inference with the last model for category id "
+                              f"{category_id} in workspace '{workspace_id}' after new documents were loaded to "
                               f"dataset '{dataset_name}' using model {iteration_index}")
                 return
             logging.info(f"waiting for iteration {iteration_index} to complete in order to infer newly added documents"
-                         f" for category '{category}' in workspace '{workspace_id}'")
+                         f" for category id {category_id} in workspace '{workspace_id}'")
             time.sleep(30)
-            iteration_status = self.get_iteration_status(workspace_id, category, iteration_index)
+            iteration_status = self.get_iteration_status(workspace_id, category_id, iteration_index)
     
-        logging.info(f"Running inference with the latest model for category '{category}' in workspace '{workspace_id}' "
-                     f"after new documents were loaded to dataset '{dataset_name}' using model {iteration_index}")
+        logging.info(f"Running inference with the latest model for category id {category_id} in workspace "
+                     f"'{workspace_id}' after new documents were loaded to dataset '{dataset_name}' "
+                     f"using model {iteration_index}")
         # Currently, there is no indication to the user that inference is running on the new documents, and there is no
         # indication for when this inferences ends. Can be added and reflected in the UI in the future
-        self.infer(workspace_id, category, self.get_all_text_elements(dataset_name), iteration_index)
-        logging.info(f"completed inference with the latest model for category '{category}' in workspace "
+        self.infer(workspace_id, category_id, self.get_all_text_elements(dataset_name), iteration_index)
+        logging.info(f"completed inference with the latest model for category id {category_id} in workspace "
                      f"'{workspace_id}' after new documents were loaded to dataset '{dataset_name}',"
                      f"using model {iteration_index}")
