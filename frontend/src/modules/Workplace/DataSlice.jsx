@@ -187,10 +187,8 @@ export const createCategoryOnServer = createAsyncThunk('workspace/createCategory
 
 export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async (request, { getState }) => {
     const state = getState()
-
-    const { keyword } = request
     const queryParams = getQueryParamsString([
-        `qry_string=${keyword}`, 
+        `qry_string=${state.workspace.searchInput}`, 
         getCategoryQueryString(state.workspace.curCategory),
         `sample_start_idx=0`])
 
