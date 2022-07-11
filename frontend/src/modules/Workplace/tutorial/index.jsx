@@ -9,6 +9,7 @@ import {
   OuterModalContent,
   InnerModal,
   OuterModal,
+  StageCounter,
 } from "./components";
 import { useState, useEffect } from "react";
 import "./index.css";
@@ -226,7 +227,13 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
                   </IconButton>
                 </div>
                 <SmallTitle>{currentStage.smallTitle || "Tutorial"}</SmallTitle>
-                <LargeTitle><span>{currentStage.largeTitle}</span><span style={{ fontWeight: "150px" }}>{` (${stageIndex + 1} of ${stages.length})`}</span></LargeTitle>
+                <div style={{
+                  display: "flex",
+                  flexDirection: "row"
+                  }}>
+                  <LargeTitle>{currentStage.largeTitle}</LargeTitle>
+                  <StageCounter>{`(${stageIndex + 1} of ${stages.length})`}</StageCounter>
+                </div>
                 <MainContent>{currentStage.content}</MainContent>
               </div>
               <Stack
