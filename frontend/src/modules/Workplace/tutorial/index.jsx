@@ -39,11 +39,15 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   }, [tutorialOpen]);
 
   const onPrimaryButtonClickDefault = () => {
-    setStageIndex(stageIndex + 1);
+    if (stageIndex < 6) {
+      setStageIndex(prevIndex => prevIndex + 1);
+    }
   };
 
   const onSecondaryButtonClickDefault = () => {
-    setStageIndex(stageIndex - 1);
+    if (stageIndex > 0) {
+      setStageIndex(prevIndex => prevIndex - 1);
+    }
   };
 
   const stages = [
@@ -186,6 +190,22 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
   ];
 
   const currentStage = stages[stageIndex];
+
+  const handleKeyPress =(event) => {
+    if (event.key === "ArrowRight") {
+      onPrimaryButtonClickDefault()
+    }
+    else if (event.key === "ArrowLeft") {
+      onSecondaryButtonClickDefault()
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [handleKeyPress]);
 
   return (
     <OuterModal open={tutorialOpen} onClose={() => setTutorialOpen(false)}>
