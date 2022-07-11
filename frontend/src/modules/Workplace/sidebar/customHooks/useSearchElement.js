@@ -38,7 +38,7 @@ const useSearchElement = () => {
 
     const handleSearch = () => {
         if (searchInput) {
-            dispatch(searchKeywords({ keyword: searchInput }))
+            dispatch(searchKeywords())
         }
         else {
             dispatch(setSearchInput(""))
