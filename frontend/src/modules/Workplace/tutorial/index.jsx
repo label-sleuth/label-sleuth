@@ -96,11 +96,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             valuable for the AI model to identify your category.
           </p>
           <span className="positive-label element-example">
-            <img src={check} />
+            <img src={check} alt="positive element example" />
             Positive example - text matches category
           </span>
           <span className="negative-label element-example">
-            <img src={cross} />
+            <img src={cross} alt="negative element example" />
             Negative example - text does not match category
           </span>
         </div>
@@ -193,6 +193,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
           <img
             style={{ width: "100%", height: "100%", objectFit: "contain" }}
             src={media[stageIndex]}
+            alt={`media for stage ${currentStage.largeTitle}`}
           />
           <InnerModal
             open={tutorialOpen}
