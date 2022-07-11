@@ -279,7 +279,7 @@ class FileBasedDataAccess(DataAccessApi):
                                                    remove_duplicates=remove_duplicates, random_state=random_state)
         return results_dict
 
-    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: str,
+    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
                                   sample_size: int = sys.maxsize, query_regex: str = None,
                                   remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
@@ -496,7 +496,7 @@ class FileBasedDataAccess(DataAccessApi):
         file_path = self._get_workspace_labels_dump_filename(workspace_id, dataset_name)
         os.makedirs(Path(file_path).parent, exist_ok=True)
         labels = self.labels_in_memory[workspace_id][dataset_name]
-        simplified_labels = {k: {str(category): label.to_dict() for category, label in v.items()}
+        simplified_labels = {k: {str(category_id): label.to_dict() for category_id, label in v.items()}
                              for k, v in labels.items()}
         labels_in_memory_encoded = json.dumps(simplified_labels)
         with open(file_path, 'w') as f:

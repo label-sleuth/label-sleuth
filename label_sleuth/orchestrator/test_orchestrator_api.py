@@ -129,8 +129,8 @@ class TestOrchestratorAPI(unittest.TestCase):
         labeled_elements_for_export = add_random_labels_to_document(doc, 5, categories)
         labeled_elements_for_export = [e for e in labeled_elements_for_export if e.category_to_label != {}]
 
-        def mock_get_labeled_text_elements(wid, ds, category, *args, **kwargs):
-            return {'results': [e for e in labeled_elements_for_export if category in e.category_to_label]}
+        def mock_get_labeled_text_elements(wid, ds, category_id, *args, **kwargs):
+            return {'results': [e for e in labeled_elements_for_export if category_id in e.category_to_label]}
 
         # use export_workspace_labels() to turn labeled_elements_for_export into a dataframe for export
         with patch.object(FileBasedDataAccess, 'get_labeled_text_elements', side_effect=mock_get_labeled_text_elements):
