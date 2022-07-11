@@ -86,10 +86,10 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             Annotation is a process that helps the AI model understand how to
             identify your category. The annotation system is binary - positive
             or negative - meaning that the text either matches the category
-            definition or not. Annotate elements as positive or negative
+            definition or not.</p><p>Annotate elements as positive or negative
             examples by clicking on the corresponding icons shown below. Note
             that annotations are not final; if you made a mistake, you can go
-            back and edit your annotations as many times as you like. In the
+            back and edit your annotations as many times as you like.</p><p> In the
             common case, where positive examples in your data are rare (i.e.,
             less than 20% of the text elements are positives), spend more time
             on finding and annotating positive examples, as they are more
@@ -226,7 +226,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
                   </IconButton>
                 </div>
                 <SmallTitle>{currentStage.smallTitle || "Tutorial"}</SmallTitle>
-                <LargeTitle>{currentStage.largeTitle}</LargeTitle>
+                <LargeTitle><span>{currentStage.largeTitle}</span><span style={{ fontWeight: "150px" }}>{` (${stageIndex + 1} of ${stages.length})`}</span></LargeTitle>
                 <MainContent>{currentStage.content}</MainContent>
               </div>
               <Stack
