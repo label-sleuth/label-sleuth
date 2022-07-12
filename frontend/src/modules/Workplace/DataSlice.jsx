@@ -16,7 +16,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
 import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../config"
- 
+import { handleError } from '../../utils/utils'
+
 export const initialState = {
     workspaceId: "",
     curDocId: 0,
@@ -62,7 +63,8 @@ export const initialState = {
     nextModelShouldBeTraining: false,
     // tells if the user visited the workspace at least once to open the tutorial the first time
     workspaceVisited: false,
-    uploadedLabels: null
+    uploadedLabels: null,
+    errorMessage: null
 }
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
@@ -557,6 +559,12 @@ const DataSlice = createSlice({
                 ...state,
                 workspaceVisited: true
             }
+        },
+        clearError(state, action) {
+            return {
+                ...state,
+                errorMessage: null
+            }
         }
     },
     extraReducers: {
@@ -1011,7 +1019,13 @@ const DataSlice = createSlice({
                 categories: [...state.categories, action.payload],
                 nextModelShouldBeTraining: false
             }
-        }
+        },
+        [uploadLabels.rejected]: (state, action) => {
+            return {
+                ...state,
+                errorMessage: handleError(action.error)
+            }
+        },
     }
 })
 
@@ -1045,5 +1059,6 @@ export const { updateCurCategory,
     setIsSearchActive,
     setActivePanel,
     setSearchInput,
-    setWorkspaceVisited
+    setWorkspaceVisited,
+    clearError
  } = DataSlice.actions;
