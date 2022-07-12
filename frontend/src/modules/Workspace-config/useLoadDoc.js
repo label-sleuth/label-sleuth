@@ -41,7 +41,18 @@ const useLoadDoc = (notify, toastId) => {
     const [file, setFile] = useState('');
     const textFieldRef = useRef()
     const comboInputTextRef = useRef()
+    const [openBackdrop, setOpenBackdrop] = useState(false);
     const [datasetNameError, setDatasetNameError] = useState("")
+
+    useEffect(() => {
+        if(uploadingDataset){
+            setOpenBackdrop(true)
+        }
+        else{
+            setOpenBackdrop(false)
+        }
+      }, [uploadingDataset, setOpenBackdrop])
+
 
     const updateToast = (message, type) => {
         notify(message, function (message) {
@@ -81,7 +92,7 @@ const useLoadDoc = (notify, toastId) => {
             clearFields()
         }
 
-    }, [isDocumentAdded, uploadingDataset, errorMessage, clearFields, updateToast, dispatch])
+    }, [  openBackdrop, isDocumentAdded, uploadingDataset, errorMessage, clearFields, updateToast, dispatch])
 
     const handleInputChange = (e, newVal) => {
        
@@ -128,6 +139,7 @@ const useLoadDoc = (notify, toastId) => {
         datasets,
         textFieldRef,
         comboInputTextRef,
+        openBackdrop,
         datasetNameError
     }
 };

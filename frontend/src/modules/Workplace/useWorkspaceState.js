@@ -19,6 +19,7 @@ import {
   fetchCategories,
   fetchDocuments,
   setIsDocLoaded,
+  setIsCategoryLoaded,
   checkModelUpdate,
   fetchElements,
   getPositiveElementForCategory,
@@ -38,9 +39,11 @@ const useWorkspaceState = () => {
 
   React.useEffect(() => {
     // fetch documents only once, they won't change
+    dispatch(setIsCategoryLoaded(false));
     dispatch(setIsDocLoaded(false));
     dispatch(fetchDocuments()).then(() => {
       dispatch(fetchElements()).then(() => {
+        dispatch(setIsCategoryLoaded(true));
         dispatch(setIsDocLoaded(true));
       });
     });
@@ -55,8 +58,10 @@ const useWorkspaceState = () => {
 
   React.useEffect(() => {
     // elements has to be re-fetched when the category changes
+    dispatch(setIsCategoryLoaded(false));
     dispatch(setIsDocLoaded(false));
     dispatch(fetchElements()).then(() => {
+      dispatch(setIsCategoryLoaded(true));
       dispatch(setIsDocLoaded(true));
     })
 
