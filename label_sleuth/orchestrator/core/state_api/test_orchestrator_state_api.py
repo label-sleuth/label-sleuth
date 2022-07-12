@@ -144,6 +144,25 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.assertEqual(ModelStatus.READY, self.orchestrator_state_api.get_all_iterations(
             workspace_id, category2_id)[1].model.model_status)
 
+    def test_write_and_read_workspace(self):
+        dataset_name = 'non_existing_dump'
+        workspace_id = "workspace_1"
+        self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
+        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
+        category2_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
+                                                  ModelInfo("123", ModelStatus.READY, datetime.now(),
+                                                            ModelsCatalog.SVM_OVER_GLOVE, {}))
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
+                                                  ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
+                                                            ModelsCatalog.SVM_OVER_GLOVE, {}))
+        workspace = self.orchestrator_state_api.get_workspace(workspace_id)
+        # clear workspace cache
+        self.orchestrator_state_api.workspaces = {}
+        workspace_from_disk = self.orchestrator_state_api.get_workspace(workspace_id)
+        self.assertEqual(workspace, workspace_from_disk,
+                         msg='Workspace loaded from disk does not match original workspace')
+
     def test_load_existing_workspace(self):
         """
         Make sure that code changes do not break existing workspaces
