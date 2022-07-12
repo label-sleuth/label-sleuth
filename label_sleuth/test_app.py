@@ -82,11 +82,10 @@ class TestAppIntegration(unittest.TestCase):
                                data='{{"category_name":"{}","category_description":"{}"}}'.format(category_name,
                                                                                                   category_description),
                                headers=HEADERS)
-        category_id = int(res.get_json()["category"]["category_id"])
+        category_id = int(res.get_json()["category_id"])
         self.assertEqual(200, res.status_code, msg="Failed to add a new category to workspace")
-        self.assertEqual({'category': {'category_description': 'my_category_description',
-                                       'category_name': category_name, 'category_id': str(category_id)}},
-                         res.get_json(),
+        self.assertEqual({'category_description': 'my_category_description',
+                          'category_name': category_name, 'category_id': str(category_id)}, res.get_json(),
                          msg="diff in create category response")
 
         res = self.client.get(f"/workspace/{workspace_name}/documents", headers=HEADERS)
