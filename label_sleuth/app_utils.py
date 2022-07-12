@@ -17,7 +17,7 @@ import logging
 import re
 from typing import List, Mapping, Sequence
 
-from flask import current_app
+from flask import current_app, request, jsonify
 
 from label_sleuth.analysis_utils.analyze_tokens import ngrams_by_info_gain
 from label_sleuth.data_access.core.data_structs import TextElement
@@ -27,15 +27,30 @@ from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Iter
 from label_sleuth.orchestrator.orchestrator_api import TRAIN_COUNTS_STR_KEY
 
 
-# def validate_category_id(function):
-#     @functools.wraps(function)
-#     def wrapper(*args, **kwargs):
-#         if current_app.config["CONFIGURATION"].login_required:
-#             wrapped_func = auth.login_required(function)
-#             return wrapped_func(*args, **kwargs)
-#         else:
-#             return function(*args, **kwargs)
-#     return wrapper
+def validate_workspace_id(function):
+    @functools.wraps(function)
+    def wrapper(workspace_id, *args, **kwargs):
+        if not current_app.orchestrator_api.workspace_exists(workspace_id):
+            return jsonify({"type": "workspace_id_does_not_exist",
+                            "title": f"workspace_id {workspace_id} does not exist"}), 404
+        return function(workspace_id, *args, **kwargs)
+    return wrapper
+
+
+def validate_category_id(function):
+    @functools.wraps(function)
+    def wrapper(workspace_id, *args, **kwargs):
+        category_id = request.args.get('category_id')
+        if category_id is None:
+            return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+
+        category_id = int(category_id)
+        if category_id not in current_app.orchestrator_api.get_all_categories(workspace_id):
+            return jsonify({"type": "category_id_does_not_exist",
+                            "title": f"category_id {category_id} does not exist in workspace {workspace_id}"}), 404
+        return function(workspace_id, *args, **kwargs)
+    return wrapper
+
 
 def elements_back_to_front(workspace_id: str, elements: List[TextElement], category_id: int) -> List[Mapping]:
     """
