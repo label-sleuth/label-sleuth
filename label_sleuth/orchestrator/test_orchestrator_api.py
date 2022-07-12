@@ -88,9 +88,18 @@ class TestOrchestratorAPI(unittest.TestCase):
         df_for_import = pd.DataFrame(dicts_for_import)
 
         # create only one of the categories
-        self.orchestrator_api.create_new_category(workspace_id, next(iter(categories_with_labels)), 'description')
+        selected_cat1 = next(iter(categories_with_labels))
+        category_id1 = self.orchestrator_api.create_new_category(workspace_id, selected_cat1, 'description')
+        category_id_to_name = {category_id1: selected_cat1}
 
+        def create_cat_id(ws, cat_name, desc):
+            cat_id = len(category_id_to_name)+1
+            category_id_to_name[cat_id] = cat_name
+            return cat_id
+
+        # call import_labels()
         with patch.object(OrchestratorApi, 'create_new_category') as mock_create_new_category:
+            mock_create_new_category.side_effect = create_cat_id
             info_dict = self.orchestrator_api.import_category_labels(workspace_id, df_for_import)
 
         self.assertEqual(len(info_dict['categories']), len(categories_with_labels))
@@ -114,8 +123,8 @@ class TestOrchestratorAPI(unittest.TestCase):
         label_tuples_sent = set()
         for d in label_dicts_sent:
             for uri, cat_to_label in d.items():
-                for cat, label_obj in cat_to_label.items():
-                    label_tuples_sent.add((uri, cat, label_obj.label))
+                for cat_id, label_obj in cat_to_label.items():
+                    label_tuples_sent.add((uri, category_id_to_name[cat_id], label_obj.label))
         self.assertEqual(label_tuples_imported, label_tuples_sent)
 
     def test_export_and_import_workspace_labels(self):
@@ -124,9 +133,11 @@ class TestOrchestratorAPI(unittest.TestCase):
         categories = ['cat_' + str(i) for i in range(3)]
 
         self.orchestrator_api.create_workspace(workspace_id='mock_workspace_1', dataset_name=dataset_name)
+        category_ids = []
         for cat in categories:
-            self.orchestrator_api.create_new_category('mock_workspace_1', cat, 'some_description')
-        labeled_elements_for_export = add_random_labels_to_document(doc, 5, categories)
+            category_id = self.orchestrator_api.create_new_category('mock_workspace_1', cat, 'some_description')
+            category_ids.append(category_id)
+        labeled_elements_for_export = add_random_labels_to_document(doc, 5, category_ids)
         labeled_elements_for_export = [e for e in labeled_elements_for_export if e.category_to_label != {}]
 
         def mock_get_labeled_text_elements(wid, ds, category_id, *args, **kwargs):
@@ -145,8 +156,8 @@ class TestOrchestratorAPI(unittest.TestCase):
 
         unique = set()
         labeled_elements_imported = \
-            [element for cat in categories for element
-             in self.orchestrator_api.get_all_labeled_text_elements('mock_workspace_2', dataset_name, cat)
+            [element for cat_id in category_ids for element
+             in self.orchestrator_api.get_all_labeled_text_elements('mock_workspace_2', dataset_name, cat_id)
              if element.uri not in unique and not unique.add(element.uri)]
 
         self.assertEqual(sorted(labeled_elements_for_export, key=lambda te: te.uri),
