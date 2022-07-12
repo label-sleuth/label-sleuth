@@ -103,7 +103,7 @@ class OrchestratorStateApi:
             return self._load_workspace(workspace_id)
 
     def get_all_categories(self, workspace_id) -> Mapping[int,Category]:
-        return {category_id:category for category_id, category in
+        return {category_id: category for category_id, category in
                 self.get_workspace(workspace_id).categories.items() if category is not None}
 
     def workspace_exists(self, workspace_id: str) -> bool:
@@ -154,7 +154,7 @@ class OrchestratorStateApi:
                 raise Exception(f"Category '{category_name}' already exists in workspace '{workspace_id}'")
             category_id = len(workspace.categories)
             workspace.categories[category_id] = Category(name=category_name, description=category_description,
-                                                           id=category_id)
+                                                         id=category_id)
             self._save_workspace(workspace)
             return category_id
 

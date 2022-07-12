@@ -129,8 +129,7 @@ class OrchestratorApi:
         logging.info(f"Creating a new category '{category_name}' in workspace '{workspace_id}'")
         return self.orchestrator_state.add_category_to_workspace(workspace_id, category_name, category_description)
 
-
-    def edit_category(self, workspace_id:str, category_id:int, new_category_name, new_category_description:str):
+    def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str):
         logging.info(f"Updating category id {id} name to {new_category_name}, and category description to "
                      f"{new_category_description}")
         return self.orchestrator_state.edit_category(workspace_id, category_id, new_category_name,
@@ -728,18 +727,26 @@ class OrchestratorApi:
         dataset_name = self.get_dataset_name(workspace_id)
         imported_categories_to_uris_and_labels = process_labels_dataframe(workspace_id, dataset_name, self.data_access,
                                                                           labels_df_to_import)
-    
-        existing_categories = self.get_all_categories(workspace_id)
+        # name to id mapping for *existing* categories
+        category_name_to_id = {category.name: category_id
+                               for category_id, category in self.get_all_categories(workspace_id).items()}
         categories_counter = defaultdict(int)
         categories_created = []
         lines_skipped = []
-        for category_name, uri_to_label in imported_categories_to_uris_and_labels.items():
-            if category_name not in existing_categories:
+        # if dataframe contained new categories, create them and update name to id mapping
+        for category_name in imported_categories_to_uris_and_labels.keys():
+            if category_name not in category_name_to_id.keys():
                 logging.info(f"** category '{category_name}' is missing, creating it ** ")
                 category_id = self.create_new_category(
                     workspace_id, category_name, f'{category_name} (created during upload)')
+                category_name_to_id[category_name] = category_id
                 categories_created.append(category_name)
-    
+
+        for category_name, uri_to_label in imported_categories_to_uris_and_labels.items():
+            # switch from category_name to the corresponding category_id
+            category_id = category_name_to_id[category_name]
+            uri_to_label = {uri: {category_id: label} for uri, cat_to_label in uri_to_label.items()
+                            for category_name, label in cat_to_label.items()}
             logging.info(f'{category_name}: adding labels for {len(uri_to_label)} uris')
             self.set_labels(workspace_id, uri_to_label,
                             apply_to_duplicate_texts=self.config.apply_labels_to_duplicate_texts,
