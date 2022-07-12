@@ -52,7 +52,6 @@ export const initialState = {
     training_batch: 5,
     cur_completed_id_in_batch: 0,
     isDocLoaded: false,
-    isCategoryLoaded: false,
     numLabel: { pos: 0, neg: 0 },
     numLabelGlobal: {},
     searchedIndex:0,
@@ -422,9 +421,6 @@ const DataSlice = createSlice({
     reducers: {
         setWorkspaceId(state, action) {
             state.workspaceId = action.payload
-        },
-        setIsCategoryLoaded(state, action) {
-            state.isCategoryLoaded = action.payload
         },
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
@@ -992,7 +988,6 @@ export const { updateCurCategory,
     setWorkspace,
     setFocusedState,
     setWorkspaceId,
-    setIsCategoryLoaded,
     setIsDocLoaded,
     resetSearchResults,
     setSearchLabelState,
