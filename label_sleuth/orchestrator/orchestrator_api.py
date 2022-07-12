@@ -322,7 +322,10 @@ class OrchestratorApi:
     def _delete_category_models(self, workspace_id, category_name):
         workspace = self.orchestrator_state.get_workspace(workspace_id)
         for idx in range(len(workspace.categories[category_name].iterations)):
-            self.delete_iteration_model(workspace_id, category_name, idx)
+            try:
+                self.delete_iteration_model(workspace_id, category_name, idx)
+            except Exception as e:
+                logging.exception(f"error deleting model for iteration '{idx}' in category '{category_name}' from workspace '{workspace_id}'")
 
     def get_elements_to_label(self, workspace_id: str, category_name: str, count: int, start_index: int = 0) \
             -> List[TextElement]:
