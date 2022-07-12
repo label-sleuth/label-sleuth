@@ -29,12 +29,11 @@ import useLogOut from '../../customHooks/useLogOut';
 import useExistWorkspace from './useExistWorkspace';
 import workspace_logo from "../../assets/workspace-config/tag--edit.svg"
 import { toast } from 'react-toastify';
-import useBackdrop from '../../customHooks/useBackdrop';
 
 const WorkspaceConfig = () => {
   const dispatch = useDispatch()
+
   const { logout } = useLogOut()
-  const {openBackdrop} = useBackdrop()
 
   useEffect(() => {
     dispatch(getDatasets())
@@ -77,7 +76,7 @@ const WorkspaceConfig = () => {
           <NewWorkspace  {...newWorkProps} options={options} />
         </div>
         <div className={classes.newdata}>
-          <LoadDocument {...loadDocProps} openBackdrop={openBackdrop} />
+          <LoadDocument {...loadDocProps} />
         </div>
       </div>
     </>
