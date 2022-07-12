@@ -76,8 +76,8 @@ function CategoryFormControl() {
   }, [curCategory])
 
   const options = categories
-    .map((item) => ({ value: item.category_name, title: item.category_name }))
-    .sort((a, b) => a.value.localeCompare(b.value));
+    .map((item) => ({ value: item.category_id, label: item.category_name }))
+    .sort((a, b) => a.label.localeCompare(b.label));
   // TODO: insert sorted when categories are added
 
   const handleCategorySelect = (value) => {

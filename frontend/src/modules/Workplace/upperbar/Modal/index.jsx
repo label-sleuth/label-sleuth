@@ -19,7 +19,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { useDispatch, useSelector } from 'react-redux';
-import { createCategoryOnServer, fetchCategories, updateCurCategory } from '../../DataSlice';
+import { createCategoryOnServer, fetchCategories } from '../../DataSlice';
 import TextField from '@mui/material/TextField';
 import classes from './index.module.css';
 import {
@@ -77,7 +77,6 @@ export default function CreateCategoryModal(props) {
     const newCategoryName = text.trim();
     dispatch(createCategoryOnServer({ category: newCategoryName }))
       .then(() => dispatch(fetchCategories()))
-      .then(() => dispatch(updateCurCategory(newCategoryName)))
       .then(() => setOpen(false));
   };
 
