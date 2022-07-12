@@ -282,8 +282,7 @@ def create_category(workspace_id):
 
     post_data['category_id'] = str(category_id)
 
-    res = {'category': post_data}
-    return jsonify(res)
+    return jsonify(post_data)
 
 
 @main_blueprint.route("/workspace/<workspace_id>/categories", methods=['GET'])
