@@ -54,7 +54,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
 const MainPanel = ({ handleKeyEvent, open }) => {
 
   const workspace = useSelector(state => state.workspace)
-  const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
+  const curCategory = useSelector(state => state.workspace.curCategory)
   const searchedIndex = useSelector(state => state.workspace.searchedIndex)
   const curDocId = useSelector(state => state.workspace.curDocId)
   const documents = useSelector(state => state.workspace.documents)
@@ -63,10 +63,10 @@ const MainPanel = ({ handleKeyEvent, open }) => {
   const { handleFetchNextDoc, handleFetchPrevDoc } = useFetchPrevNextDoc()
 
   React.useEffect(() => {
-    if (isCategoryLoaded) {
+    if (curCategory) {
       setCurrentPage(1)
     }
-  }, [setCurrentPage, isCategoryLoaded])
+  }, [setCurrentPage, curCategory])
 
   return (
     <>
@@ -110,7 +110,7 @@ const MainPanel = ({ handleKeyEvent, open }) => {
           </Box>
           <Box id="main-element-view">
             {
-              isCategoryLoaded && currentContentData.map((element, index) =>
+              curCategory && currentContentData.map((element, index) =>
                 <Element
                   searchedIndex={searchedIndex}
                   numOfElemPerPage={numOfElemPerPage}

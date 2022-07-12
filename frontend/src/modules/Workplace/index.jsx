@@ -42,35 +42,33 @@ import useWorkspaceState from './useWorkspaceState';
 import Tutorial from './tutorial';
 import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
 import TutorialDialog from "./tutorial/TutorialDialog";
+import useBackdrop from "../../customHooks/useBackdrop";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
-  const [open, setOpen] = React.useState(false);
-
-
-
-  const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
-  const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
-  const curDocName = useSelector(state => state.workspace.curDocName)
+  const [open, setOpen] = useState(false);
   const curCategory = useSelector(state => state.workspace.curCategory)
   const activePanel = useSelector(state => state.workspace.activePanel)
   const model_version = useSelector(state => state.workspace.model_version)
   const workspaceVisited = useSelector(state => state.workspace.workspaceVisited)
-
-  const [openBackdrop, setOpenBackdrop] = useState(false);
-  const [tutorialOpen, setTutorialOpen] = React.useState(false);
-  const [tutorialDialogOpen, setTutorialDialogOpen] = React.useState(!!!workspaceVisited);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [tutorialDialogOpen, setTutorialDialogOpen] = useState(!!!workspaceVisited);
   const [modalOpen, setModalOpen] = useState(false)
   const textInput = useRef(null);
+  const {openBackdrop}  = useBackdrop()
 
-  const { activateSearchPanel, activateRecToLabelPanel, activatePosPredLabelPanel,toggleSearchPanel, toggleRCMDPanel, togglePosPredPanel } = useTogglePanel(setOpen, textInput)
+  const { 
+    activateSearchPanel, 
+    activateRecToLabelPanel, 
+    activatePosPredLabelPanel,
+    toggleSearchPanel, 
+    toggleRCMDPanel, 
+    togglePosPredPanel 
+  } = 
+  useTogglePanel(setOpen, textInput)
+
   const dispatch = useDispatch();
-
   useWorkspaceState()
-
-  useEffect(() => {
-    setOpenBackdrop(!curDocName || !isCategoryLoaded || !isDocLoaded)
-  }, [curDocName, isCategoryLoaded, isDocLoaded])
 
   const clearSearchInput = () => {
     dispatch(setSearchInput(""))
@@ -86,7 +84,6 @@ export default function Workspace() {
     clearSearchInput()
   }, [curCategory])
 
-
   return (
     <>
       <Box sx={{ display: 'flex' }} style={tutorialOpen ? {filter: "blur(2px)"} : null}>
@@ -98,12 +95,9 @@ export default function Workspace() {
           <PanelManager
             open={open}
             activePanel={activePanel}>
-            {open && activePanel == SEARCH &&
-              <SearchPanel ref={textInput} clearSearchInput={clearSearchInput} />}
-            {activePanel == RCMD &&
-              <RecToLabelPanel />}
-            {activePanel == POS_PREDICTIONS &&
-              <PosPredictionsPanel />}  
+            {open && activePanel == SEARCH && <SearchPanel ref={textInput} clearSearchInput={clearSearchInput} />}
+            {activePanel == RCMD && <RecToLabelPanel />}
+            {activePanel == POS_PREDICTIONS && <PosPredictionsPanel />}  
           </PanelManager>
           {/* Panel tabs  */}
           <Drawer variant="permanent" anchor="right" PaperProps={{ sx: { minWidth: 50, } }}>
