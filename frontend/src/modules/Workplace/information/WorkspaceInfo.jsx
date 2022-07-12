@@ -132,7 +132,8 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
     const [tabValue, setTabValue] = React.useState(0);
     const [tabStatus, setTabStatus] = React.useState(0)
     const refAnimationInstance = useRef(null);
-    
+    const uploadLabelsRef = useRef();
+
     // this state is used to not display the new model notififications the first time the model version is set
     const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false)
     const [shouldNotifyNewModel, setShouldNotifyNewModel] = React.useState(false)
@@ -284,6 +285,9 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
       const formData = new FormData();
       formData.append("file", file);
       dispatch(uploadLabels(formData));
+      if (uploadLabelsRef.current) {
+        uploadLabelsRef.current.value = ''
+    }
     };  
 
     const getCategoriesString = (categories) => {
@@ -463,10 +467,11 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                         >
                             Upload
                             <TextField
-                            onChange={handleFileSelection}
-                            sx={{ display: { xs: "none" } }}
-                            type="file"
-                            inputProps={{ accept: ".csv" }}
+                                inputRef={uploadLabelsRef}
+                                onChange={handleFileSelection}
+                                sx={{ display: { xs: "none" } }}
+                                type="file"
+                                inputProps={{ accept: ".csv" }}
                             />
                         </Button>
                     </Stack>
