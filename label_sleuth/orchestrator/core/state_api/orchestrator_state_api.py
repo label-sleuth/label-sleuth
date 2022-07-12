@@ -133,6 +133,9 @@ class OrchestratorStateApi:
         with open(os.path.join(self.workspace_dir, self._filename_from_workspace_id(workspace_id))) as json_file:
             workspace = json_file.read()
         workspace = jsonpickle.decode(workspace)
+        # int dictionary keys are converted to string when writing to json, see https://bugs.python.org/issue34972
+        workspace.categories = {int(category_id_str): category
+                                for category_id_str, category in workspace.categories.items()}
         self.workspaces[workspace_id] = workspace
         return workspace
 
