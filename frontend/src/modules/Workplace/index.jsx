@@ -44,6 +44,7 @@ import Tutorial from './tutorial';
 import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
 import TutorialDialog from "./tutorial/TutorialDialog";
 import useBackdrop from "../../customHooks/useBackdrop";
+import { useErrorHandler } from "./useErrorHandler";
 
 
 export default function Workspace() {
@@ -71,7 +72,9 @@ export default function Workspace() {
   useTogglePanel(setOpen, textInput)
 
   const dispatch = useDispatch();
-  useWorkspaceState()
+
+  useWorkspaceState();
+  useErrorHandler();
 
   const clearSearchInput = () => {
     dispatch(setSearchInput(""))
