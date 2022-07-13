@@ -77,7 +77,7 @@ const useWorkspaceState = () => {
     // category changes or model_version changes means
     // that recommend to label and positive predicted text entries has to be updated
     // also the status is updated
-    if (workspace.curCategory && workspace.model_version >= 0) {
+    if (workspace.curCategory !== null && workspace.model_version >= 0) {
       dispatch(getElementToLabel());
       dispatch(getPositiveElementForCategory());
       dispatch(getPositivePredictions())

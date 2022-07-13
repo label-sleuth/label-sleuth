@@ -332,7 +332,7 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                     </DrawerHeader>
                     
                     <Divider />
-                    {workspace.curCategory ? 
+                    {workspace.curCategory !== null ? 
                     
                     <Stack style={{paddingTop: '12px'}}>
                         <Box sx={{ width: '100%', padding: theme.spacing(0, 2) }}>

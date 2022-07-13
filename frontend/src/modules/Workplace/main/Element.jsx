@@ -43,7 +43,7 @@ useEffect(()=>{
   },[isSearchActive])
 
     return (
-        !workspace.curCategory?
+        workspace.curCategory  === null ?
             <Box tabIndex="-1" className={handleTextElemStyle()} id={"L" + index}>
                 <p className={classes["nodata_text"]}>{text}</p>
             </Box>
