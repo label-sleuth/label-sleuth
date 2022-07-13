@@ -14,8 +14,20 @@
 */
 
 import { useDispatch } from 'react-redux';
-import { checkStatus, fetchElements, increaseIdInBatch, setElementLabel, setRecommendToLabelState, setSearchLabelState, setPosPredLabelState } from '../../DataSlice';
+import {
+    checkStatus,
+    fetchElements,
+    increaseIdInBatch,
+    setElementLabel,
+    setRecommendToLabelState,
+    setSearchLabelState,
+    setPosPredLabelState
+} from '../../DataSlice';
 
+
+/**
+ * This custom hook is responsible for updating the label state for the currently active sidebar panel and the main panel
+ */ 
 const useUpdateLabelState = () => {
 
     const dispatch = useDispatch()
@@ -23,6 +35,7 @@ const useUpdateLabelState = () => {
     const updateSearchLabelState = (newPanelLabelState) => {
         dispatch(setSearchLabelState(newPanelLabelState))
     }
+
     const updateMainLabelState = (id, docid, label) => {
         dispatch(increaseIdInBatch())
         dispatch(setElementLabel({ element_id: id, docid: docid, label: label })).then(() => {
@@ -38,7 +51,6 @@ const useUpdateLabelState = () => {
     const updatePosPredLabelState = (newPanelLabelState) => {
         dispatch(setPosPredLabelState(newPanelLabelState))
     }
-    
 
     return {
         updateRecLabelState,
