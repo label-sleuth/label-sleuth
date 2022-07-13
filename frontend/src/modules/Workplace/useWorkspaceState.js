@@ -68,7 +68,7 @@ const useWorkspaceState = () => {
     // reset the focused stata when the category changes
     dispatch(setFocusedState(null))
     // update the model version when the category changes (if any)
-    if (workspace.curCategory) {
+    if (workspace.curCategory !== null) {
       dispatch(checkModelUpdate());
     }
   }, [workspace.curCategory, dispatch]);

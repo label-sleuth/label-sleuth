@@ -140,8 +140,8 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
         });
       }
 
-    React.useEffect( () => {
-        if (workspace.curCategory) {
+    React.useEffect(() => {
+        if (workspace.curCategory !== null) {
             if (!modelVersionHasBeenSet) {
                 setModelVersionHasBeenSet(true)
                 if (workspace.model_version === -1) {

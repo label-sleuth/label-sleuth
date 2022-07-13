@@ -67,7 +67,7 @@ export const initialState = {
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
 const getCategoryQueryString = (curCategory) => {
-    return curCategory ? `category_id=${curCategory}` : null
+    return curCategory !== null ? `category_id=${curCategory}` : null
 }
 
 const getQueryParamsString = (queryParams) => {

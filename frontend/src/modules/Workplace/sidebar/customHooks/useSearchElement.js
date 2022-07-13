@@ -59,7 +59,7 @@ const useSearchElement = () => {
     useEffect(() => {
         if (isSearchActive && isDocLoaded) {
             let element
-            if (workspace.curCategory) {
+            if (workspace.curCategory !== null) {
                 element = document.getElementById('L' + focusedIndex);
             }
             else {
