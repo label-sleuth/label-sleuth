@@ -189,6 +189,13 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
     },
   ];
 
+
+  useEffect(() => {
+    Array(stages.length).fill().forEach((_,i) => {
+      new Image().src = `./assets/v3/stage_${i+1}`
+    })
+  }, [stages.length])
+
   const currentStage = stages[stageIndex];
 
   const handleKeyPress =(event) => {
