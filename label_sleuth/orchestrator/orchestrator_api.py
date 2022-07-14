@@ -122,7 +122,7 @@ class OrchestratorApi:
         Declare a new category in the given workspace
         :param workspace_id:
         :param category_name:
-        :param category_description:
+        :param category_description:st
 
         :return: The new category's id
         """
