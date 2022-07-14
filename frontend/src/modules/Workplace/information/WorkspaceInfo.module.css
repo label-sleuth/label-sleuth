@@ -64,7 +64,7 @@
     top: 0;
     height: 100vh;
     width: 279px;
-    z-index: 9999;
+    z-index: 1000;
     background: #161616;
 }
 
@@ -251,4 +251,8 @@
     font-size: 18px;
     margin: auto 0 25px !important;
     align-self: center;
+  }
+
+  .import-export-buttons {
+    text-transform: none;
   }
