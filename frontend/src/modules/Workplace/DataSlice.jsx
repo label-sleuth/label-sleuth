@@ -15,7 +15,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
-import { BASE_URL, WORKSPACE_API } from "../../config"
+import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../config"
  
 export const initialState = {
     workspaceId: "",
@@ -61,7 +61,8 @@ export const initialState = {
     searchInput: null,
     nextModelShouldBeTraining: false,
     // tells if the user visited the workspace at least once to open the tutorial the first time
-    workspaceVisited: false
+    workspaceVisited: false,
+    uploadedLabels: null
 }
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
@@ -296,11 +297,11 @@ export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocu
     return { data, eid, switchStatus }
 })
 
-export const downloadLabeling = createAsyncThunk('workspace/downloadLabeling', async (request, { getState }) => {
+export const downloadLabels = createAsyncThunk('workspace/downloadLabels', async (request, { getState }) => {
 
     const state = getState()
 
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/export_labels`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/${DOWNLOAD_LABELS_API}`
 
     const data = await fetch(url, {
         headers: {
@@ -312,6 +313,23 @@ export const downloadLabeling = createAsyncThunk('workspace/downloadLabeling', a
 
     return data
 })
+
+
+export const uploadLabels = createAsyncThunk(`workspace/uploadLabels`, async (formData, {getState}) => {
+    const state = getState()
+    let headers = {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${state.authenticate.token}`,
+    };
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/${UPLOAD_LABELS_API}`;
+    const data = await fetch(url, {
+      method: "POST",
+      header: headers,
+      body: formData,
+    }).then(res => res.json());
+    return data;
+  }
+);
 
 export const labelInfoGain = createAsyncThunk('workspace/labeled_info_gain', async (request, { getState }) => {
 
@@ -690,12 +708,18 @@ const DataSlice = createSlice({
                 predictionForDocCat: predictionForDocCat
             }
         },
-        [downloadLabeling.fulfilled]: (state, action) => {
+        [downloadLabels.fulfilled]: (state, action) => {
             const data = action.payload
             const current = new Date();
             const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`;
             const fileName = `labeleddata_from_Label_Sleuth<${date}>.csv`
             fileDownload(data, fileName)
+        },
+        [uploadLabels.fulfilled]: (state, action) => {
+            return {
+                ...state,
+                uploadedLabels: action.payload
+            }
         },
         [fetchNextDocElements.fulfilled]: (state, action) => {
             const data = action.payload

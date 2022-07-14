@@ -25,7 +25,8 @@ import {
   getPositiveElementForCategory,
   setFocusedState,
   getPositivePredictions,
-  setWorkspaceVisited
+  setWorkspaceVisited,
+  searchKeywords
 } from "./DataSlice.jsx";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -77,21 +78,44 @@ const useWorkspaceState = () => {
     // category changes or model_version changes means
     // that recommend to label and positive predicted text entries has to be updated
     // also the status is updated
-    if (workspace.curCategory !== null && workspace.model_version >= 0) {
-      dispatch(getElementToLabel());
-      dispatch(getPositiveElementForCategory());
-      dispatch(getPositivePredictions())
+    if (workspace.curCategory !== null) {
       dispatch(checkStatus());
+      if (workspace.model_version >= 0) {
+        dispatch(getElementToLabel());
+        dispatch(getPositiveElementForCategory());
+        dispatch(getPositivePredictions());
+      }
     }
   }, [workspace.curCategory, workspace.model_version, dispatch]);
 
   React.useEffect(() => {
-    // document changes and category is set and there is a model available
-    // the positive predicted text entries has to be updated
-    if (workspace.curCategory !== null && workspace.model_version >= 0) {
-      dispatch(getPositiveElementForCategory());
+    // this useEffect manages the actions to be carried out when new labels have been imported
+    // if new categories where added the category list is fetched again
+    // if the user is currently in a category where labels have been added then the document is
+    // fetched again, as well as the search bar results (in case element labels has to be updated there)
+    if (workspace.uploadedLabels) {
+      const { categories, categoriesCreated } = workspace.uploadedLabels;
+      if (categories?.some(cat => cat.category_id == workspace.curCategory)) {
+        dispatch(setIsCategoryLoaded(false));
+        dispatch(setIsDocLoaded(false));
+        dispatch(fetchElements()).then(() => {
+          if (workspace.searchInput) {
+            dispatch(searchKeywords()).then(() => {
+              dispatch(setIsCategoryLoaded(true));
+              dispatch(setIsDocLoaded(true));
+            });
+          } else {
+            dispatch(setIsCategoryLoaded(true));
+            dispatch(setIsDocLoaded(true));
+          }
+          dispatch(checkStatus());
+        });
+      }
+      if (categoriesCreated) {
+        dispatch(fetchCategories());
+      }
     }
-  }, [workspace.curCategory, workspace.model_version, dispatch]);
+  }, [workspace.uploadedLabels]);
 };
 
 export default useWorkspaceState;

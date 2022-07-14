@@ -21,6 +21,8 @@ export const WORKSPACE_API = 'workspace'
 export const CREATE_WORKSPACE_API = 'workspace'
 export const ADD_DOCUMENTS_API = 'add_documents'
 export const AUTHENTICATE_API = 'users/authenticate' 
+export const DOWNLOAD_LABELS_API = 'export_labels'
+export const UPLOAD_LABELS_API = 'import_labels'
 export const APP_NAME = 'Label Sleuth'
 
 export const LOGIN_PATH = '/login'
