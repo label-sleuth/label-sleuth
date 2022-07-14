@@ -109,7 +109,7 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
   }
 
   React.useEffect(() => {
-    if (curCategory && cardOpen) {
+    if (curCategory !== null && cardOpen) {
       setCardOpen(false)
     } 
   }, [curCategory])

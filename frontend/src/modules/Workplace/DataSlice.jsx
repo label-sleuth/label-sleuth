@@ -993,6 +993,15 @@ const DataSlice = createSlice({
     }
 })
 
+// selector for getting the current category name (curCategory is a category id)
+export const curCategoryNameSelector = (state) => {
+  return state.workspace.categories.find(
+    (cat) => cat.category_id == state.workspace.curCategory
+  )?.category_name;
+};
+
+  
+
 export default DataSlice.reducer;
 export const { updateCurCategory,
     increaseIdInBatch,

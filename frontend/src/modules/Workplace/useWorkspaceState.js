@@ -88,7 +88,7 @@ const useWorkspaceState = () => {
   React.useEffect(() => {
     // document changes and category is set and there is a model available
     // the positive predicted text entries has to be updated
-    if (workspace.curCategory && workspace.model_version >= 0) {
+    if (workspace.curCategory !== null && workspace.model_version >= 0) {
       dispatch(getPositiveElementForCategory());
     }
   }, [workspace.curCategory, workspace.model_version, dispatch]);
