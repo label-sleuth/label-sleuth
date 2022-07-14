@@ -67,7 +67,7 @@ export const initialState = {
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
 const getCategoryQueryString = (curCategory) => {
-    return curCategory ? `category_name=${curCategory}` : null
+    return curCategory !== null ? `category_id=${curCategory}` : null
 }
 
 const getQueryParamsString = (queryParams) => {
@@ -387,7 +387,7 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
             'Authorization': `Bearer ${state.authenticate.token}`
         },
         body: JSON.stringify({
-            'category_name': state.workspace.curCategory,
+            'category_id': state.workspace.curCategory,
             'value': label,
             'update_counter': true
         }),
@@ -980,6 +980,14 @@ const DataSlice = createSlice({
                 pos_label_num: pos_label,
                 neg_label_num: neg_label,
                 nextModelShouldBeTraining: progress === 100 ? true : state.nextModelShouldBeTraining
+            }
+        },
+        [createCategoryOnServer.fulfilled]: (state, action) => {
+            return {
+                ...state,
+                curCategory: action.payload.category_id.toString(),
+                categories: [...state.categories, action.payload],
+                nextModelShouldBeTraining: false
             }
         }
     }

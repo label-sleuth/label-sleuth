@@ -64,7 +64,7 @@ export default function Element(props) {
             </Box>
             <Stack id={id} searchedindex={searchedIndex} className={classes["recommend_buttons"]}
                 direction="row" spacing={0} sx={{ justifyContent: "flex-end", marginBottom: 0, height: "25px", mr: 1, mb: 1 }}>
-                {workspace.curCategory &&
+                {workspace.curCategory !== null &&
                     <>
                         <div className={classes.resultbtn}
                             onClick={(e) => { e.stopPropagation(); handlePosLabelState(docid, id, searchedIndex)}}>

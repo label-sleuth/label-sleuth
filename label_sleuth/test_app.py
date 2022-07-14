@@ -82,9 +82,10 @@ class TestAppIntegration(unittest.TestCase):
                                data='{{"category_name":"{}","category_description":"{}"}}'.format(category_name,
                                                                                                   category_description),
                                headers=HEADERS)
+        category_id = int(res.get_json()["category_id"])
         self.assertEqual(200, res.status_code, msg="Failed to add a new category to workspace")
-        self.assertEqual({'category': {'category_description': 'my_category_description',
-                                       'category_name': 'my_category', 'id': 'my_category'}}, res.get_json(),
+        self.assertEqual({'category_description': 'my_category_description',
+                          'category_name': category_name, 'category_id': str(category_id)}, res.get_json(),
                          msg="diff in create category response")
 
         res = self.client.get(f"/workspace/{workspace_name}/documents", headers=HEADERS)
@@ -112,113 +113,114 @@ class TestAppIntegration(unittest.TestCase):
              'user_labels': {}}], document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
 
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}',
-                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, True), headers=HEADERS)
+                              data='{{"category_id":"{}","value":"{}"}}'.format(category_id, True), headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to set the first label for a category")
-        self.assertEqual({'category_name': 'my_category',
+        self.assertEqual({'category_id': str(category_id),
                           'element': {'begin': 0, 'docid': 'my_test_dataset-document3', 'end': 53,
                                       'id': 'my_test_dataset-document3-0', 'model_predictions': {},
                                       'text': 'document 3 has three text elements, this is the first',
-                                      'user_labels': {'my_category': 'true'}}, 'workspace_id': 'my_test_workspace'},
+                                      'user_labels': {str(category_id): 'true'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json(), msg="diff in setting element's label response")
-        res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
+        res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
-        self.assertEqual({'labeling_counts': {'true': 1}, 'notifications': [], 'progress': {'all': 50}},
+        self.assertEqual({'labeling_counts': {'true': 1}, 'progress': {'all': 50}},
                          res.get_json(), msg="diffs in get status response after setting a label")
 
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[1]["id"]}',
-                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, False),
+                              data='{{"category_id":"{}","value":"{}"}}'.format(category_id, False),
                               headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to set the second label for a category")
-        self.assertEqual({'category_name': 'my_category',
+        self.assertEqual({'category_id': str(category_id),
                           'element': {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 141,
                                       'id': 'my_test_dataset-document3-1', 'model_predictions': {},
                                       'text': 'document 3 has three text elements, '
                                               'this is the second that will be labeled as negative',
-                                      'user_labels': {'my_category': 'false'}}, 'workspace_id': 'my_test_workspace'},
+                                      'user_labels': {str(category_id): 'false'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json(), msg="diff in setting element's label response")
-        res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
+        res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
-        self.assertEqual({'labeling_counts': {'true': 1, 'false': 1}, 'notifications': [], 'progress': {'all': 50}},
+        self.assertEqual({'labeling_counts': {'true': 1, 'false': 1}, 'progress': {'all': 50}},
                          res.get_json(), msg="diffs in get status response after setting a label")
 
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[2]["id"]}',
-                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, True), headers=HEADERS)
+                              data='{{"category_id":"{}","value":"{}"}}'.format(category_id, True), headers=HEADERS)
 
         self.assertEqual(200, res.status_code, msg="Failed to set the third label for category")
-        self.assertEqual({'category_name': 'my_category',
+        self.assertEqual({'category_id': str(category_id),
                           'element': {'begin': 142, 'docid': 'my_test_dataset-document3', 'end': 195,
                                       'id': 'my_test_dataset-document3-2', 'model_predictions': {},
                                       'text': 'document 3 has three text elements, this is the third',
-                                      'user_labels': {'my_category': 'true'}}, 'workspace_id': 'my_test_workspace'},
+                                      'user_labels': {str(category_id): 'true'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json())
 
-        res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
+        res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the third label")
         self.assertEqual({'true': 2, 'false': 1},
                          res.get_json()['labeling_counts'],
                          msg="diffs in get status response after setting the second label")
 
-        res = self.wait_for_new_iteration(category_name, res, workspace_name, 1)
+        res = self.wait_for_new_iteration(category_id, res, workspace_name, 1)
 
         self.assertEqual(200, res.status_code, msg="Failed to get models list")
         self.assertEqual(1, len(res.get_json()["models"]), msg="first model was not added to the models list")
 
         # get active learning recommendations
-        res = self.client.get(f"/workspace/{workspace_name}/active_learning?category_name={category_name}",
+        res = self.client.get(f"/workspace/{workspace_name}/active_learning?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get active learning recommendations")
         active_learning_response = res.get_json()
         self.assertEqual({'elements': [
             {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94, 'id': 'my_test_dataset-document1-1',
-             'model_predictions': {'my_category': 'true'}, 'text': 'this is the second text element of document one',
+             'model_predictions': {str(category_id): 'true'}, 'text': 'this is the second text element of document one',
              'user_labels': {}},
             {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0',
-             'model_predictions': {'my_category': 'true'}, 'text': 'this is the only text element in document two',
+             'model_predictions': {str(category_id): 'true'}, 'text': 'this is the only text element in document two',
              'user_labels': {}},
             {'begin': 0, 'docid': 'my_test_dataset-document1', 'end': 46, 'id': 'my_test_dataset-document1-0',
-             'model_predictions': {'my_category': 'true'}, 'text': 'this is the first text element of document one',
+             'model_predictions': {str(category_id): 'true'}, 'text': 'this is the first text element of document one',
              'user_labels': {}}]},
             active_learning_response)
 
         # set the first label according to the active learning recommendations
         res = self.client.put(f'/workspace/{workspace_name}/element/{active_learning_response["elements"][0]["id"]}',
-                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, True), headers=HEADERS)
+                              data='{{"category_id":"{}","value":"{}"}}'.format(category_id, True), headers=HEADERS)
 
         self.assertEqual(200, res.status_code,
                          msg="Failed to set the label for the first element recommended by the active learning")
-        self.assertEqual({'category_name': 'my_category',
+        self.assertEqual({'category_id': str(category_id),
                           'element': {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94,
-                                      'id': 'my_test_dataset-document1-1', 'model_predictions': {'my_category': 'true'},
+                                      'id': 'my_test_dataset-document1-1',
+                                      'model_predictions': {str(category_id): 'true'},
                                       'text': 'this is the second text element of document one',
-                                      'user_labels': {'my_category': 'true'}}, 'workspace_id': 'my_test_workspace'},
+                                      'user_labels': {str(category_id): 'true'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json())
 
-        res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
+        res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to get status after successfully setting the first label for the second model")
-        self.assertEqual({'labeling_counts': {'true': 3, 'false': 1}, 'notifications': [], 'progress': {'all': 50}},
+        self.assertEqual({'labeling_counts': {'true': 3, 'false': 1}, 'progress': {'all': 50}},
                          res.get_json(), msg="diffs in get status response after setting a label")
 
         # set the second label according to the active learning recommendations
         res = self.client.put(f'/workspace/{workspace_name}/element/{active_learning_response["elements"][1]["id"]}',
-                              data='{{"category_name":"{}","value":"{}"}}'.format(category_name, False),
+                              data='{{"category_id":"{}","value":"{}"}}'.format(category_id, False),
                               headers=HEADERS)
 
         self.assertEqual(200, res.status_code,
                          msg="Failed to set the label for the first element recommended by the active learning")
-        self.assertEqual({'category_name': 'my_category',
+        self.assertEqual({'category_id': str(category_id),
                           'element': {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45,
                                       'id': 'my_test_dataset-document2-0',
-                                      'model_predictions': {'my_category': 'true'},
+                                      'model_predictions': {str(category_id): 'true'},
                                       'text': 'this is the only text element in document two',
-                                      'user_labels': {'my_category': 'false'}}, 'workspace_id': 'my_test_workspace'},
+                                      'user_labels': {str(category_id): 'false'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json())
 
-        res = self.client.get(f"/workspace/{workspace_name}/status?category_name={category_name}",
+        res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to get status after successfully setting the first label for the second model")
@@ -226,19 +228,19 @@ class TestAppIntegration(unittest.TestCase):
                          res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
 
         # wait for the second models
-        res = self.wait_for_new_iteration(category_name, res, workspace_name, 2)
+        res = self.wait_for_new_iteration(category_id, res, workspace_name, 2)
         self.assertEqual(200, res.status_code, msg="Failed to get models list")
         self.assertEqual(2, len(res.get_json()["models"]), msg="second model was not added to the models list")
 
         print("Done")
 
-    def wait_for_new_iteration(self, category_name, res, workspace_name, num_models):
+    def wait_for_new_iteration(self, category_id, res, workspace_name, num_models):
         waiting_count = 0
         MAX_WAITING_FOR_TRAINING = 50  # wait maximum 5 seconds for the training (should be much faster)
         while waiting_count < MAX_WAITING_FOR_TRAINING:
             # since get_status is asynchronously starting a new training, we need to wait until it added to the
             # iterations list and finishes successfully
-            res = self.client.get(f"/workspace/{workspace_name}/models?category_name={category_name}",
+            res = self.client.get(f"/workspace/{workspace_name}/models?category_id={category_id}",
                                   headers=HEADERS)
             response = res.get_json()
             if res.status_code != 200 or (len(response["models"]) == num_models

@@ -30,22 +30,22 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
     Implements the basic model training behavior: use all elements labeled by the user - and only those elements -
     for training the model.
     """
-    def get_train_set(self, workspace_id, train_dataset_name, category_name) -> Sequence[TextElement]:
+    def get_train_set(self, workspace_id, train_dataset_name, category_id) -> Sequence[TextElement]:
 
-        train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_name,
+        train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_id,
                                                                         remove_duplicates=True)
         self.verify_all_labels_are_in_train(train_counts)
         logging.info(f"using {len(train_data)} for train using dataset {train_dataset_name}")
         return train_data
 
-    def get_data_and_counts_for_labeled(self, workspace_id, dataset_name, category_name, remove_duplicates=False):
+    def get_data_and_counts_for_labeled(self, workspace_id, dataset_name, category_id, remove_duplicates=False):
         if dataset_name is None:
             return None, None
         labeled_elements = \
             self.data_access.get_labeled_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                       category_name=category_name, sample_size=sys.maxsize,
+                                                       category_id=category_id, sample_size=sys.maxsize,
                                                        remove_duplicates=remove_duplicates)["results"]
-        labels = [element.category_to_label[category_name].label for element in labeled_elements]
+        labels = [element.category_to_label[category_id].label for element in labeled_elements]
         counts = Counter(labels)
 
         return labeled_elements, counts
@@ -79,9 +79,9 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
         self.neg_label = LABEL_NEGATIVE
         self.pos_label = LABEL_POSITIVE
 
-    def get_train_set(self, workspace_id, train_dataset_name, category_name) -> Sequence[TextElement]:
+    def get_train_set(self, workspace_id, train_dataset_name, category_id) -> Sequence[TextElement]:
 
-        train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_name,
+        train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_id,
                                                                         remove_duplicates=True)
         current_neg_count = train_counts.get(self.neg_label, 0)
         required_neg_count = self.negative_ratio * train_counts[self.pos_label]
@@ -92,13 +92,13 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
             logging.info(f"Trying to add {required_number_of_unlabeled_as_neg} to meet ratio of "
                          f"{self.negative_ratio} negatives per positive")
             # Weak negatives are added according to a fixed order for the specific dataset
-            elements_by_order = self.get_weak_negative_candidates(workspace_id, train_dataset_name, category_name)
+            elements_by_order = self.get_weak_negative_candidates(workspace_id, train_dataset_name, category_id)
             weak_negatives_added = 0
             for element in elements_by_order:
                 if weak_negatives_added == required_number_of_unlabeled_as_neg:
                     break
-                if category_name not in element.category_to_label:  # unlabeled
-                    element.category_to_label = {category_name: Label(self.neg_label, label_type=LabelType.Weak)}
+                if category_id not in element.category_to_label:  # unlabeled
+                    element.category_to_label = {category_id: Label(self.neg_label, label_type=LabelType.Weak)}
                     train_data.append(element)
                     weak_negatives_added += 1
             train_counts[self.neg_label] += weak_negatives_added
@@ -107,10 +107,10 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
             logging.info(f"Too many strong negative elements, sampling to get to a ratio of "
                          f"less than {self.max_negative_ratio} negatives per positive")
             positives = [element for element in train_data
-                         if element.category_to_label[category_name].label == self.pos_label]
+                         if element.category_to_label[category_id].label == self.pos_label]
             shuffled_elements = get_elements_by_selection_order(workspace_id, train_dataset_name, self.data_access)
-            negatives_to_keep = [element for element in shuffled_elements if category_name in element.category_to_label
-                                 and element.category_to_label[category_name].label == self.neg_label][:max_neg_count]
+            negatives_to_keep = [element for element in shuffled_elements if category_id in element.category_to_label
+                                 and element.category_to_label[category_id].label == self.neg_label][:max_neg_count]
             train_data = positives + negatives_to_keep
             train_counts[self.neg_label] = len(negatives_to_keep)
 
@@ -119,7 +119,7 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
         logging.info(f"using {len(train_data)} for train using dataset {train_dataset_name}")
         return train_data
 
-    def get_weak_negative_candidates(self, workspace_id, dataset_name, category_name) -> List[TextElement]:
+    def get_weak_negative_candidates(self, workspace_id, dataset_name, category_id) -> List[TextElement]:
         return get_elements_by_selection_order(workspace_id, dataset_name, self.data_access)
 
 

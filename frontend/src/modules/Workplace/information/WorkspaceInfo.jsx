@@ -140,8 +140,8 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
         });
       }
 
-    React.useEffect( () => {
-        if (workspace.curCategory) {
+    React.useEffect(() => {
+        if (workspace.curCategory !== null) {
             if (!modelVersionHasBeenSet) {
                 setModelVersionHasBeenSet(true)
                 if (workspace.model_version === -1) {
@@ -332,7 +332,7 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                     </DrawerHeader>
                     
                     <Divider />
-                    {workspace.curCategory ? 
+                    {workspace.curCategory !== null ? 
                     
                     <Stack style={{paddingTop: '12px'}}>
                         <Box sx={{ width: '100%', padding: theme.spacing(0, 2) }}>

@@ -128,12 +128,12 @@ class FileBasedDataAccess(DataAccessApi):
             # Save updated labels dict to disk
             self._save_labels_data(dataset_name, workspace_id)
 
-    def unset_labels(self, workspace_id: str, category_name, uris: Sequence[str], apply_to_duplicate_texts=False):
+    def unset_labels(self, workspace_id: str, category_id:int, uris: Sequence[str], apply_to_duplicate_texts=False):
         """
         Remove workspace labels for a certain category from a specified list of uris.
 
         :param workspace_id: the workspace_id of the labeling effort.
-        :param category_name: the name of the category labels are assigned to.
+        :param category_id: the id of the category labels are assigned to.
         :param uris: list of URIs to unset the label for.
         :param apply_to_duplicate_texts: if True, also unset the same labels for additional URIs that have the same text
         as that of the URIs provided.
@@ -149,11 +149,11 @@ class FileBasedDataAccess(DataAccessApi):
                 if apply_to_duplicate_texts:  # unset the given label for all elements with the same text
                     same_text_uris = self._get_uris_with_the_same_text(dataset_name, uri)
                     for same_text_uri in same_text_uris:
-                        ds_labels[same_text_uri].pop(category_name)
+                        ds_labels[same_text_uri].pop(category_id)
                         if len(ds_labels[same_text_uri]) == 0:
                             ds_labels.pop(same_text_uri)
                 else:
-                    ds_labels[uri].pop(category_name)
+                    ds_labels[uri].pop(category_id)
                     if len(ds_labels[uri]) == 0:
                         ds_labels.pop(uri)
             # Save updated labels dict to disk
@@ -249,16 +249,16 @@ class FileBasedDataAccess(DataAccessApi):
 
         return results_dict
 
-    def get_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
+    def get_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
                                     sample_size: int = sys.maxsize, sample_start_idx: int = 0, query_regex: str = None,
                                     remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
-        Sample *sample_size* TextElements from dataset_name, unlabeled for category_name in workspace_id, optionally
+        Sample *sample_size* TextElements from dataset_name, unlabeled for category_id in workspace_id, optionally
         limiting to those matching a query.
 
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which TextElements are sampled
-        :param category_name: we demand that the elements are not labeled for this category
+        :param category_id: we demand that the elements are not labeled for this category
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
         :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
@@ -270,7 +270,7 @@ class FileBasedDataAccess(DataAccessApi):
         {'results': [TextElement], 'hit_count': int}
         """
         filter_func = lambda df, labels: \
-            utils.filter_by_query_and_label_status(df, labels, category_name, LabeledStatus.UNLABELED, query_regex)
+            utils.filter_by_query_and_label_status(df, labels, category_id, LabeledStatus.UNLABELED, query_regex)
 
         with self._get_lock_object_for_workspace(workspace_id):
             results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
@@ -279,16 +279,16 @@ class FileBasedDataAccess(DataAccessApi):
                                                    remove_duplicates=remove_duplicates, random_state=random_state)
         return results_dict
 
-    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_name: str,
+    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
                                   sample_size: int = sys.maxsize, query_regex: str = None,
                                   remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
-        Sample *sample_size* TextElements from dataset_name, labeled for category_name in workspace_id,
+        Sample *sample_size* TextElements from dataset_name, labeled for category_id in workspace_id,
         optionally limiting to those matching a query.
 
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which TextElements are sampled
-        :param category_name: we demand that the elements are labeled for this category
+        :param category_id: we demand that the elements are labeled for this category
         :param sample_size: how many TextElements should be sampled
         :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
         no such filtering is performed.
@@ -299,7 +299,7 @@ class FileBasedDataAccess(DataAccessApi):
         {'results': [TextElement], 'hit_count': int}
         """
         filter_func = lambda df, labels: \
-            utils.filter_by_query_and_label_status(df, labels, category_name, LabeledStatus.LABELED, query_regex)
+            utils.filter_by_query_and_label_status(df, labels, category_id, LabeledStatus.LABELED, query_regex)
 
         with self._get_lock_object_for_workspace(workspace_id):
             results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
@@ -307,13 +307,13 @@ class FileBasedDataAccess(DataAccessApi):
                                                    remove_duplicates=remove_duplicates, random_state=random_state)
         return results_dict
 
-    def get_label_counts(self, workspace_id: str, dataset_name: str, category_name: str, remove_duplicates=False) \
+    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False) \
             -> Mapping[str, int]:
         """
-        Return for each label value, assigned to category_name, the total count of its appearances in dataset_name.
+        Return for each label value, assigned to category_id, the total count of its appearances in dataset_name.
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which labels count should be generated
-        :param category_name: the name of the category whose label information is the target
+        :param category_id: the id of the category whose label information is the target
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :return: a map whose keys are label values, and the values are the number of TextElements this label was
         assigned to.
@@ -327,8 +327,8 @@ class FileBasedDataAccess(DataAccessApi):
                             if t.text not in unique_texts and not unique_texts.add(t.text)}
             labels_by_uri = {key: value for key, value in labels_by_uri.items() if key in uris_to_keep}
         category_label_list = \
-            [labels_by_uri[uri][category_name].label for uri in labels_by_uri
-             if category_name in labels_by_uri[uri]]
+            [labels_by_uri[uri][category_id].label for uri in labels_by_uri
+             if category_id in labels_by_uri[uri]]
         category_label_counts = Counter(category_label_list)
         return category_label_counts
 
@@ -345,17 +345,17 @@ class FileBasedDataAccess(DataAccessApi):
         if os.path.exists(workspace_dumps_dir) and len(os.listdir(workspace_dumps_dir)) == 0:
             os.rmdir(workspace_dumps_dir)
 
-    def delete_labels_for_category(self, workspace_id, dataset_name, category_name):
+    def delete_labels_for_category(self, workspace_id, dataset_name, category_id):
         """
         Delete the labels info associated with the given category.
         :param workspace_id:
         :param dataset_name:
-        :param category_name:
+        :param category_id:
         """
-        labeled_elements = self.get_labeled_text_elements(workspace_id, dataset_name, category_name,
+        labeled_elements = self.get_labeled_text_elements(workspace_id, dataset_name, category_id,
                                                           sample_size=sys.maxsize)['results']
         if len(labeled_elements) > 0:
-            self.unset_labels(workspace_id, category_name, [e.uri for e in labeled_elements])
+            self.unset_labels(workspace_id, category_id, [e.uri for e in labeled_elements])
 
     def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Iterable[str]) -> List[TextElement]:
         """
@@ -427,8 +427,8 @@ class FileBasedDataAccess(DataAccessApi):
                     labels_encoded = f.read()
                 simplified_dict = json.loads(labels_encoded)
                 for uri, category_to_label in simplified_dict.items():
-                    for category, label_dict in category_to_label.items():
-                        self.labels_in_memory[workspace_id][dataset_name][uri][category] = Label(**label_dict)
+                    for category_id, label_dict in category_to_label.items():
+                        self.labels_in_memory[workspace_id][dataset_name][uri][int(category_id)] = Label(**label_dict)
             else:
                 # Save empty dict to disk
                 os.makedirs(Path(file_path).parent, exist_ok=True)
@@ -496,7 +496,7 @@ class FileBasedDataAccess(DataAccessApi):
         file_path = self._get_workspace_labels_dump_filename(workspace_id, dataset_name)
         os.makedirs(Path(file_path).parent, exist_ok=True)
         labels = self.labels_in_memory[workspace_id][dataset_name]
-        simplified_labels = {k: {str(category): label.to_dict() for category, label in v.items()}
+        simplified_labels = {k: {str(category_id): label.to_dict() for category_id, label in v.items()}
                              for k, v in labels.items()}
         labels_in_memory_encoded = json.dumps(simplified_labels)
         with open(file_path, 'w') as f:

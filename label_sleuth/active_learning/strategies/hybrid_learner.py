@@ -32,13 +32,13 @@ class HybridLearner(ActiveLearner):
 
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
                               candidate_text_element_predictions: Sequence[Prediction], workspace_id: str,
-                              dataset_name: str, category_name: str) -> Sequence[float]:
+                              dataset_name: str, category_id: int) -> Sequence[float]:
         scores1 = self.active_learner1.get_per_element_score(candidate_text_elements,
                                                              candidate_text_element_predictions,
-                                                             workspace_id, dataset_name, category_name)
+                                                             workspace_id, dataset_name, category_id)
         scores2 = self.active_learner2.get_per_element_score(candidate_text_elements,
                                                              candidate_text_element_predictions,
-                                                             workspace_id, dataset_name, category_name)
+                                                             workspace_id, dataset_name, category_id)
         scores = [(s1 + s2) / 2 for s1, s2 in zip(scores1, scores2)]
 
         return scores

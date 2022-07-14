@@ -47,7 +47,7 @@ test("test that model version is updated if model changes", async () => {
       preloadedState: {
         workspace: {
           ...initialWorkspaceState,
-          curCategory: "cat1",
+          curCategory: 0,
           model_version: 4,
           workspaceId: "workspace_id",
         },
@@ -93,7 +93,7 @@ test("test model version ordinal: st", async () => {
       preloadedState: {
         workspace: {
           ...initialWorkspaceState,
-          curCategory: "cat1",
+          curCategory: 0,
           model_version: 1,
           workspaceId: "workspace_id",
         },
@@ -110,7 +110,7 @@ test("test model version ordinal: nd", async () => {
       preloadedState: {
         workspace: {
           ...initialWorkspaceState,
-          curCategory: "cat1",
+          curCategory: 0,
           model_version: 102,
         },
       },
@@ -126,7 +126,7 @@ test("test model version ordinal: rd", async () => {
       preloadedState: {
         workspace: {
           ...initialWorkspaceState,
-          curCategory: "cat1",
+          curCategory: 0,
           model_version: 1123,
         },
       },
@@ -142,7 +142,7 @@ test("test model version ordinal: th", async () => {
       preloadedState: {
         workspace: {
           ...initialWorkspaceState,
-          curCategory: "cat1",
+          curCategory: 0,
           model_version: 12,
         },
       },

@@ -25,7 +25,7 @@ from sklearn.neighbors import NearestNeighbors
 
 from label_sleuth.analysis_utils.analyze_tokens import get_token_overlap
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, TextElement
-from label_sleuth.models.core.languages import Language
+from label_sleuth.models.core.languages import Language, Languages
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.core.tools import remove_stop_words_and_punctuation
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
@@ -34,7 +34,7 @@ from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
 MIN_TOKEN_OVERLAP_THRESHOLD = 0.4
 
 
-def get_disagreements_using_cross_validation(workspace_id, category_name, labeled_elements: List[TextElement],
+def get_disagreements_using_cross_validation(workspace_id, category_id:int, labeled_elements: List[TextElement],
                                              model_factory, language: Language, model_type=ModelsCatalog.SVM_ENSEMBLE,
                                              num_folds=4):
     """
@@ -45,7 +45,7 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
     the user label is considered suspect.
 
     :param workspace_id:
-    :param category_name:
+    :param category_id:
     :param labeled_elements:
     :param model_factory:
     :param language:
@@ -60,7 +60,7 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
 
     all_scores = []
     random.Random(0).shuffle(labeled_elements)
-    all_train_data = convert_text_elements_to_train_data(labeled_elements, category_name)
+    all_train_data = convert_text_elements_to_train_data(labeled_elements, category_id)
     train_splits = np.array_split(np.array(all_train_data), num_folds)
     for i in range(num_folds):
         # train split i is used for inference and left out of the train data
@@ -84,19 +84,19 @@ def get_disagreements_using_cross_validation(workspace_id, category_name, labele
     sorted_scores_and_elements = sorted(disagreement_scores_and_elements, key=lambda x: abs(x[0] - 0.5),
                                         reverse=True)
     sorted_disagreement_elements = [text_element for score, text_element in sorted_scores_and_elements]
-    logging.info(f"creating suspicious labels report for category '{category_name}' in workspace '{workspace_id}' "
+    logging.info(f"creating suspicious labels report for category_id '{category_id}' in workspace '{workspace_id}' "
                  f"took {'{:.2f}'.format(time.time() - start_time)}")
     return sorted_disagreement_elements
 
 
-def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, labeled_elements, embedding_func,
+def get_suspected_labeling_contradictions_by_distance_with_diffs(category_id:int, labeled_elements, embedding_func,
                                                                  language: Language) -> Mapping[str, List]:
     """
     Enrich the output of possibly inconsistent element pairs from *get_suspected_labeling_contradictions_by_distance*
     with sets of tokens that differentiate the pair of elements, to enable highlighting the similarities/differences
     between the texts in each pair.
 
-    :param category_name:
+    :param category_id:
     :param labeled_elements:
     :param embedding_func: a function that receives a list of texts and a language, and returns a list of embedding
     vectors for those texts.
@@ -107,7 +107,7 @@ def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, 
     'diffs': a list of tuples with the tokens unique to the first and the second element of each pair, respectively,
     i.e. [(pair_1_element_a_unique_tokens_set, pair_1_element_b_unique_tokens_set), ...]
     """
-    pairs = get_suspected_labeling_contradictions_by_distance(category_name, labeled_elements, embedding_func, language)
+    pairs = get_suspected_labeling_contradictions_by_distance(category_id, labeled_elements, embedding_func, language)
     diffs = []
     for pair in pairs:
         set1 = set(pair[0].text.split())
@@ -117,7 +117,7 @@ def get_suspected_labeling_contradictions_by_distance_with_diffs(category_name, 
     return {'pairs': pairs, 'diffs': diffs}
 
 
-def get_suspected_labeling_contradictions_by_distance(category_name, labeled_elements: List[TextElement],
+def get_suspected_labeling_contradictions_by_distance(category_id, labeled_elements: List[TextElement],
                                                       embedding_func, language: Language) \
         -> List[List[TextElement]]:
     """
@@ -126,7 +126,7 @@ def get_suspected_labeling_contradictions_by_distance(category_name, labeled_ele
     Where the similarity between the pair of opposite-label elements is high, we suspect that one of the pair elements
     may have been given the wrong label.
 
-    :param category_name:
+    :param category_id:
     :param labeled_elements:
     :param embedding_func: a function that receives a list of texts and a language, and returns a list of embedding
     vectors for those texts.
@@ -138,7 +138,7 @@ def get_suspected_labeling_contradictions_by_distance(category_name, labeled_ele
     # for each positively labeled element we find the nearest neighbor with a negative label, and vice versa
     for source_label in [LABEL_POSITIVE, LABEL_NEGATIVE]:
         distances_and_pairs = _get_nearest_neighbors_with_opposite_label(labeled_elements, embedding_vectors,
-                                                                         category_name, source_label=source_label)
+                                                                         category_id, source_label=source_label)
         sorted_element_pairs = [element_pair for distance, element_pair
                                 in sorted(distances_and_pairs, key=lambda x: x[0])]  # sort by distance
         sorted_pair_lists.append(sorted_element_pairs)
@@ -149,18 +149,17 @@ def get_suspected_labeling_contradictions_by_distance(category_name, labeled_ele
     # filter duplicates and low-overlap pairs
     unified_pairs_list = _filter_nearest_neighbor_pairs(unified_pairs_list, language=language)
     # align pairs by label
-    unified_pairs_list = [sorted(pair, key=lambda te: te.category_to_label[category_name].label, reverse=True)
+    unified_pairs_list = [sorted(pair, key=lambda te: te.category_to_label[category_id].label, reverse=True)
                           for pair in unified_pairs_list]
     return unified_pairs_list
 
 
 def _get_nearest_neighbors_with_opposite_label(all_elements: List[TextElement], embedding_vectors: List,
-                                               category_name, source_label) \
-        -> List[Tuple[float, Tuple[TextElement, TextElement]]]:
+                                               category_id, source_label) -> List[Tuple[float, Tuple[TextElement]]]:
     source_label_idxs = [i for i, (element, rep) in enumerate(zip(all_elements, embedding_vectors))
-                         if element.category_to_label[category_name].label == source_label and rep[0] != 0]
+                         if element.category_to_label[category_id].label == source_label and rep[0] != 0]
     opposite_label_idxs = [i for i, (element, rep) in enumerate(zip(all_elements, embedding_vectors))
-                           if element.category_to_label[category_name].label != source_label and rep[0] != 0]
+                           if element.category_to_label[category_id].label != source_label and rep[0] != 0]
     source_label_embeddings = np.array(embedding_vectors)[source_label_idxs]
     opposite_label_embeddings = np.array(embedding_vectors)[opposite_label_idxs]
 
