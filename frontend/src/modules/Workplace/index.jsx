@@ -22,6 +22,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   setSearchInput,
   resetSearchResults,
+  curCategoryNameSelector
 } from './DataSlice.jsx';
 import WorkspaceInfo from './information/WorkspaceInfo';
 import UpperBar from './upperbar/UpperBar';
@@ -44,10 +45,12 @@ import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
 import TutorialDialog from "./tutorial/TutorialDialog";
 import useBackdrop from "../../customHooks/useBackdrop";
 
+
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem('workspaceId'))
   const [open, setOpen] = useState(false);
   const curCategory = useSelector(state => state.workspace.curCategory)
+  const curCategoryName = useSelector(curCategoryNameSelector);
   const activePanel = useSelector(state => state.workspace.activePanel)
   const model_version = useSelector(state => state.workspace.model_version)
   const workspaceVisited = useSelector(state => state.workspace.workspaceVisited)
@@ -117,7 +120,7 @@ export default function Workspace() {
                   <img src={recommend_icon} style={{ filter: !toggleRCMDPanel ? 'invert(45%)' : "" }} alt="recommendation" />
                 </IconButton>
               </Tooltip>
-              <Tooltip   title={getPosPredTooltipMessage(curCategory)} placement="left">
+              <Tooltip   title={getPosPredTooltipMessage(curCategoryName)} placement="left">
                 <IconButton
                   disabled={!model_version || model_version === -1}
                   className={!model_version || model_version === -1 ? classes.btndisabled : classes.pos_pred_icon}
