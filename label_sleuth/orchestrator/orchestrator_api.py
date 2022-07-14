@@ -755,9 +755,9 @@ class OrchestratorApi:
             label_counts_dict = self.get_label_counts(workspace_id, dataset_name, category_id, False)
             logging.info(f"Updated total label count in workspace '{workspace_id}' for category id {category_id} "
                          f"is {sum(label_counts_dict.values())} ({label_counts_dict})")
-            categories_counter[category_name] = len(uri_to_label)
+            categories_counter[category_id] = len(uri_to_label)
         # TODO return both positive and negative counts
-        categories_counter_list = [{'category': key, 'counter': value} for key, value in categories_counter.items()]
+        categories_counter_list = [{'category_id': key, 'counter': value} for key, value in categories_counter.items()]
         total = sum(categories_counter.values())
     
         res = {'categories': categories_counter_list,
