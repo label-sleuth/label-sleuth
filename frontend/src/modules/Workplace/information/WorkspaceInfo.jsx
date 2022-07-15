@@ -136,7 +136,6 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
 
     // this state is used to not display the new model notififications the first time the model version is set
     const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false)
-    const [shouldNotifyNewModel, setShouldNotifyNewModel] = React.useState(false)
 
     function notifySuccess(message, toastId, autoClose=false) {
         toast(message, {
@@ -147,21 +146,13 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
       }
 
     React.useEffect(() => {
-        console.log(`Model version has changed. It is ${workspace.model_version}`)
         if (workspace.curCategory !== null) {
             if (!modelVersionHasBeenSet) {
-                console.log("Setting modelVersionHasBeenSet to true")
                 setModelVersionHasBeenSet(true)
-                if (workspace.model_version === -1) {
-                    setShouldNotifyNewModel(true)
-                }
-            }
-            if (shouldNotifyNewModel) {
-                setShouldNotifyNewModel(false)
             }
             if (workspace.model_version && workspace.model_version > -1 && modelVersionHasBeenSet) {
                 fire();
-                if (shouldNotifyNewModel) {
+                if (workspace.model_version === 1) {
                     notifySuccess('A new model is available!', 'toast-new-model')
                     notifySuccess('There are new suggestions for labeling!', 'toast-new-suggestions-for-labelling')
                 }
@@ -229,7 +220,6 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
         }, checkModelInterval);
 
         setModelVersionHasBeenSet(false)
-        setShouldNotifyNewModel(false)
 
         return () => clearInterval(interval);
     }, [workspace.curCategory, checkModelInterval])
