@@ -22,11 +22,15 @@ import {
   setIsCategoryLoaded,
   checkModelUpdate,
   fetchElements,
-  getPositiveElementForCategory,
+  getPosPredElementForCategory,
   setFocusedState,
   getPositivePredictions,
   setWorkspaceVisited,
-  searchKeywords
+  searchKeywords,
+  getDisagreeElements,
+  getSuspiciousElements,
+  getContradictiveElements,
+  getPositiveElements
 } from "./DataSlice.jsx";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -83,8 +87,12 @@ const useWorkspaceState = () => {
       if (workspace.model_version >= 0) {
         dispatch(fetchElements())
         dispatch(getElementToLabel());
-        dispatch(getPositiveElementForCategory());
-        dispatch(getPositivePredictions());
+        dispatch(getPosPredElementForCategory());
+        dispatch(getPositivePredictions())
+        dispatch(getPositiveElements())
+        dispatch(getDisagreeElements())
+        dispatch(getSuspiciousElements())
+        dispatch(getContradictiveElements())
       }
     }
   }, [workspace.curCategory, workspace.model_version, dispatch]);

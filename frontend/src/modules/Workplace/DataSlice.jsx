@@ -17,7 +17,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
 import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../config"
 import { handleError } from '../../utils/utils'
-import { SEARCH } from '../../const'
+import { sidebarOptionEnum } from '../../const'
 
 export const initialState = {
     workspaceId: "",
@@ -38,9 +38,18 @@ export const initialState = {
     searchTotalElemRes: null,
     searchLabelState: [],
     posPredResult: [],
+    posElemResult: [],
+    disagreeElemResult: [],
+    suspiciousElemResult:[],
+    contradictiveElemDiffsResult: [],
+    contradictiveElemPairsResult: [],
     posPredFraction: 0,
     posPredTotalElemRes: null,
     posPredLabelState: [],
+    posElemLabelState: [],
+    disagreeElemLabelState: [],
+    suspiciousElemLabelState: [],
+    contradictiveElemPairsLabelState: [],
     recommendToLabelState: [],
     model_version: null,
     indexPrediction: 0,
@@ -125,7 +134,7 @@ export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel',
 
 
 
-export const getPositiveElementForCategory = createAsyncThunk('workspace/getPositiveElementForCategory', async (request, { getState }) => {
+export const getPosPredElementForCategory = createAsyncThunk('workspace/getPosPredElementForCategory', async (request, { getState }) => {
 
     const state = getState()
 
@@ -147,6 +156,82 @@ export const getPositiveElementForCategory = createAsyncThunk('workspace/getPosi
 
     return data
 })
+
+export const getPositiveElements = createAsyncThunk('workspace/getPositiveElements', async (request, { getState }) => {
+
+    const state = getState()
+    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
+
+    const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/positive_elements${queryParams}`
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.authenticate.token}`
+        },
+        method: "GET"
+    }).then(response => response.json())
+    console.log("positive elements:", data)
+    return data
+})
+
+export const getDisagreeElements = createAsyncThunk('workspace/getDisagreeElements', async (request, { getState }) => {
+
+    const state = getState()
+
+    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
+
+    const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/disagree_elements${queryParams}`
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.authenticate.token}`
+        },
+        method: "GET"
+    }).then(response => response.json())
+    console.log("disagree elements:", data)
+    return data
+})
+
+export const getSuspiciousElements = createAsyncThunk('workspace/getSuspiciousElements', async (request, { getState }) => {
+
+    const state = getState()
+    
+    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
+
+    const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/suspicious_elements${queryParams}`
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.authenticate.token}`
+        },
+        method: "GET"
+    }).then(response => response.json())
+    console.log("suspicious elements:", data)
+    return data
+})
+
+export const getContradictiveElements = createAsyncThunk('workspace/getContradictiveElements', async (request, { getState }) => {
+
+    const state = getState()
+    
+    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
+
+    const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/contradiction_elements${queryParams}`
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.authenticate.token}`
+        },
+        method: "GET"
+    }).then(response => response.json())
+    console.log("contradictive elements:", data)
+    return data
+})
+
 
 export const getPositivePredictions = createAsyncThunk('workspace/getPositivePredictions', async (request, { getState }) => {
 
@@ -478,6 +563,29 @@ export const checkStatus = createAsyncThunk('workspace/get_labelling_status', as
     return data
 })
 
+const _initNewLabelState = (state, elements)  => {
+
+    let initialLabelState = {}
+    if(elements){
+        for (let i = 0; i < elements.length; i++) {
+            if (state.curCategory in elements[i]['user_labels']) {
+                if (elements[i]['user_labels'][state.curCategory] == 'true') {
+                    initialLabelState['L' + i+'-'+elements[i].id] = 'pos'
+                } else if (elements[i]['user_labels'][state.curCategory] == 'false') {
+                    initialLabelState['L' + i+'-'+elements[i].id] = 'neg'
+                }
+                else{
+                    initialLabelState['L' + i+'-'+elements[i].id] = ""
+                }
+            } else {
+                initialLabelState['L' + i+'-'+elements[i].id] = ""
+            }
+        }        
+    }
+
+    return initialLabelState
+}
+
 const DataSlice = createSlice({
     name: "workspace",
     initialState,
@@ -495,37 +603,28 @@ const DataSlice = createSlice({
             state.searchResult = null
         }, 
         setSearchLabelState(state, action) {
-            return {
-                ...state,
-                searchLabelState: action.payload
-            }
+            state.searchLabelState = action.payload
         }, 
         setRecommendToLabelState(state, action) {
-            return {
-                ...state,
-                recommendToLabelState: action.payload
-            }
+            state.recommendToLabelState = action.payload
         },
         setPosPredLabelState(state, action) {
-            return {
-                ...state,
-                posPredLabelState: action.payload
-            }
-        },
+            state.posPredLabelState = action.payload
+         },
+         setPosElemLabelState(state, action) {
+                 state.posElemLabelState = action.payload
+         },
+         setDisagreeElemLabelState(state, action) {
+             state.disagreeElemLabelState = action.payload
+         },
+         setSuspiciousElemLabelState(state, action) {
+             state.suspiciousElemLabelState = action.payload
+         },
+         setContradictiveElemLabelState(state, action) {
+            state.contradictiveElemPairsLabelState = action.payload
+        },    
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
-        },
-        setNumLabel(state, action) {
-            return {
-                ...state,
-                numLabel: action.payload
-            }
-        },
-        setNumLabelGlobal(state, action) {
-            return {
-                ...state,
-                numLabelGlobal: action.payload
-            }
         },
         setSearchedIndex(state, action) {
             state.searchedIndex = action.payload
@@ -538,6 +637,18 @@ const DataSlice = createSlice({
         },
         setSearchInput(state, action) {
             state.searchInput = action.payload
+        },
+        setNumLabel(state, action) {
+            return {
+                ...state,
+                numLabel: action.payload
+            }
+        },
+        setNumLabelGlobal(state, action) {
+            return {
+                ...state,
+                numLabelGlobal: action.payload
+            }
         },
         prevPrediction(state, action) {
             const pred_index = state.indexPrediction
@@ -671,22 +782,8 @@ const DataSlice = createSlice({
         },
         [searchKeywords.fulfilled]: (state, action) => {
             const data = action.payload
-            let initialSearchLabelState = {}
+            let initialSearchLabelState = _initNewLabelState(state, data.elements)  
 
-            for (let i = 0; i < data['elements'].length; i++) {
-                if (state.curCategory in data['elements'][i]['user_labels']) {
-                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
-                        initialSearchLabelState['L' + i+'-'+data['elements'][i].id] = 'pos'
-                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
-                        initialSearchLabelState['L' + i+'-'+data['elements'][i].id] = 'neg'
-                    }
-                    else{
-                        initialSearchLabelState['L' + i+'-'+data['elements'][i].id] = ""
-                    }
-                } else {
-                    initialSearchLabelState['L' + i+'-'+data['elements'][i].id] = ""
-                }
-            }
             return {
                 ...state,
                 searchResult: data.elements,
@@ -697,32 +794,82 @@ const DataSlice = createSlice({
         },
         [getPositivePredictions.fulfilled]: (state, action) => {
             const data = action.payload
-            let initialPosPredLabelState = {}
 
-            for (let i = 0; i < data['elements'].length; i++) {
-                if (state.curCategory in data['elements'][i]['user_labels']) {
-                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
-                        initialPosPredLabelState['L' + i+'-'+data['elements'][i].id] = 'pos'
-                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
-                        initialPosPredLabelState['L' + i+'-'+data['elements'][i].id] = 'neg'
-                    }
-                    else{
-                        initialPosPredLabelState['L' + i+'-'+data['elements'][i].id] = ""
-                    }
-                } else {
-                    initialPosPredLabelState['L' + i+'-'+data['elements'][i].id] = ""
-                }
-            }
             return {
                 ...state,
                 posPredResult: data.elements,
                 posPredFraction: data.positive_fraction,
                 posPredTotalElemRes: data.hit_count,
-                posPredLabelState: initialPosPredLabelState
+                posPredLabelState: _initNewLabelState(state, data.elements)
+            }
+        },
+        [getPositiveElements.fulfilled]: (state, action) => {
+            const data = action.payload
+
+            return {
+                ...state,
+                posElemResult: data.positive_elements,
+                posElemLabelState: _initNewLabelState(state, data.positive_elements) 
+            }
+        },
+        [getDisagreeElements.fulfilled]: (state, action) => {
+            const data = action.payload  
+
+            return {
+                ...state,
+                disagreeElemResult: data.disagree_elements,
+                disagreeElemLabelState: _initNewLabelState(state, data.disagree_elements)
+            }
+        },
+        [getSuspiciousElements.fulfilled]: (state, action) => {
+            const data = action.payload  
+
+            return {
+                ...state,
+                suspiciousElemResult: data.elements,
+                suspiciousElemLabelState: _initNewLabelState(state, data.elements)
+            }
+        },
+        [getContradictiveElements.fulfilled]: (state, action) => {
+            const data = action.payload  
+            let initialContrLabelState = {}
+            // let contradictiveElemPairsResult = []
+            
+ 
+            if(data.pairs){
+                let count = 0
+
+                let initialContrLabelState = {}
+
+                Object.keys(data.pairs).map((key, j) => {
+                    data.pairs[key].map((res, i) => {
+                        if (state.curCategory in res['user_labels']) {
+                            if (res['user_labels'][state.curCategory] == 'true') {
+                                initialContrLabelState['L' + count+'-'+res.id] = 'pos'
+                            } else if (res['user_labels'][state.curCategory] == 'false') {
+                                initialContrLabelState['L' + count+'-'+res.id] = 'neg'
+                            }
+                            else{
+                                initialContrLabelState['L' + count+'-'+res.id] = ""
+                            }
+                        } else {
+                            initialContrLabelState['L' + count+'-'+res.id] = ""
+                        }     
+                        count++
+                    })
+                })
+            }
+
+     
+            return {
+                ...state,
+                contradictiveElemDiffsResult: data.diffs,
+                contradictiveElemPairsResult: data.pairs.reduce((acc, val) => acc.concat(val), []),
+                contradictiveElemPairsLabelState: _initNewLabelState(state, data.pairs.reduce((acc, val) => acc.concat(val), []))
             }
         },
         
-        [getPositiveElementForCategory.fulfilled]: (state, action) => {
+        [getPosPredElementForCategory.fulfilled]: (state, action) => {
             const data = action.payload
 
             var elements = data['elements']
@@ -1096,7 +1243,7 @@ const DataSlice = createSlice({
                 elements: state.elements,
                 deletingCategory: false,
                 categories: state.categories.filter(c => c.category_id != state.curCategory),
-                activePanel: SEARCH,
+                activePanel: sidebarOptionEnum.SEARCH,
                 workspaceId: state.workspaceId
             }
         },
@@ -1147,6 +1294,10 @@ export const {
     setSearchLabelState,
     setRecommendToLabelState,
     setPosPredLabelState,
+    setPosElemLabelState,
+    setDisagreeElemLabelState,
+    setSuspiciousElemLabelState,
+    setContradictiveElemLabelState,
     setLabelState,
     cleanWorkplaceState,
     setNumLabelGlobal,

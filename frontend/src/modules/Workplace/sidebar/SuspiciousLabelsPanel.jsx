@@ -20,27 +20,20 @@ import { useSelector } from "react-redux";
 import Element from "./Element";
 import useSearchElement from "./customHooks/useSearchElement";
 import useLabelState from "./customHooks/useLabelState";
-import { curCategoryNameSelector } from "../DataSlice";
 
-const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
+const SuspiciousLabelsPanel = ({ updateMainLabelState, updateLabelState }) => {
   const workspace = useSelector((state) => state.workspace);
-  const curCategoryName = useSelector(curCategoryNameSelector)
-  const posPredTotalElemRes = useSelector(
-    (state) => state.workspace.posPredTotalElemRes
+  const suspiciousElemResult = useSelector(
+    (state) => state.workspace.suspiciousElemResult
   );
-  const posPredFraction = useSelector(
-    (state) => state.workspace.posPredFraction
-  );
-  const posPredResult = useSelector((state) => state.workspace.posPredResult);
-  let newPosPredLabelState = { ...workspace.posPredLabelState };
-  const currPosPredLabelState = workspace.posPredLabelState;
+  let newSuspiciousElemLabelState = { ...workspace.suspiciousElemLabelState };
+  const currSuspiciousElemLabelState = workspace.suspiciousElemLabelState;
   const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    newPosPredLabelState,
+    newSuspiciousElemLabelState,
     updateMainLabelState,
     updateLabelState
   );
   const { handleSearchPanelClick, searchInput } = useSearchElement();
-
   return (
     <Box>
       <Box
@@ -55,26 +48,45 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
         }}
       >
         <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Positive predictions</strong>
+          <strong>Suspicious labels</strong>
         </p>
       </Box>
-      <Typography
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          fontSize: "0.8rem",
-          color: "rgba(0,0,0,.54)",
-          mt: 2,
-          mb: 2,
-          mr: 1,
-          ml: 1,
-        }}
-      >
-        {`The following examples are predicted by the system to be related to the category '${curCategoryName}'`}
-      </Typography>
+      {!suspiciousElemResult || suspiciousElemResult.length == 0 ? (
+        <Typography
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            fontSize: "0.8rem",
+            color: "rgba(0,0,0,.54)",
+            mt: 2,
+            mb: 2,
+            mr: 1,
+            ml: 1,
+          }}
+        >
+          {`No suspicious labels were found.`}
+        </Typography>
+      ) : (
+        <Typography
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            fontSize: "0.8rem",
+            color: "rgba(0,0,0,.54)",
+            mt: 2,
+            mb: 2,
+            mr: 1,
+            ml: 1,
+          }}
+        >
+          {
+            "Review the labels of these examples which the system suspects might be wrong"
+          }
+        </Typography>
+      )}
       <Box className={classes["search-results"]} sx={{ mt: 4 }}>
-        {posPredResult &&
-          posPredResult.map((res, i) => {
+        {suspiciousElemResult &&
+          suspiciousElemResult.map((res, i) => {
             return (
               <Element
                 key={i}
@@ -88,7 +100,7 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
                 handleSearchPanelClick={handleSearchPanelClick}
                 handlePosLabelState={handlePosLabelState}
                 handleNegLabelState={handleNegLabelState}
-                labelState={currPosPredLabelState}
+                labelState={currSuspiciousElemLabelState}
               />
             );
           })}
@@ -97,4 +109,4 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
   );
 };
 
-export default PosPredictionsPanel;
+export default SuspiciousLabelsPanel;

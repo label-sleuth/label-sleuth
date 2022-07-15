@@ -13,9 +13,23 @@
     limitations under the License.
 */
 
-import { setElementLabel, checkStatus, setLabelState, increaseIdInBatch, setSearchLabelState, setNumLabel, setNumLabelGlobal, setRecommendToLabelState, setPosPredLabelState } from '../../DataSlice';
+import { setElementLabel, 
+    checkStatus, 
+    setLabelState, 
+    increaseIdInBatch, 
+    setSearchLabelState, 
+    setNumLabel, 
+    setNumLabelGlobal, 
+    setRecommendToLabelState, 
+    setPosPredLabelState, 
+    setPosElemLabelState, 
+    setSuspiciousElemLabelState, 
+    setDisagreeElemLabelState, 
+    setContradictiveElemLabelState } from '../../DataSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { POS_PREDICTIONS, RCMD, SEARCH } from '../../../../const';
+import {
+    sidebarOptionEnum
+} from "../../../../const";
 
 const useElemLabelState = ({ index, element_id }) => {
 
@@ -38,17 +52,37 @@ const useElemLabelState = ({ index, element_id }) => {
         })
     }
 
-       if(activePanel == SEARCH){
+       if(activePanel == sidebarOptionEnum.SEARCH){
         newPanelLabelState = { ...workspace.searchLabelState }
         searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
        }
-       else if(activePanel == RCMD){
+       else if(activePanel == sidebarOptionEnum.LABEL_NEXT){
         newPanelLabelState = { ...workspace.recommendToLabelState }
         searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
        }
  
-       else if(activePanel == POS_PREDICTIONS){
+       else if(activePanel == sidebarOptionEnum.POSITIVE_PREDICTIONS){
         newPanelLabelState = { ...workspace.posPredLabelState }
+        searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
+       }
+
+       else if(activePanel == sidebarOptionEnum.POSITIVE_LABELS){
+        newPanelLabelState = { ...workspace.posElemLabelState }
+        searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
+       }
+
+       else if(activePanel == sidebarOptionEnum.SUSPICIOUS_LABELS){
+        newPanelLabelState = { ...workspace.suspiciousElemLabelState }
+        searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
+       }
+
+       else if(activePanel == sidebarOptionEnum.DISAGREEMENTS){
+        newPanelLabelState = { ...workspace.disagreeElemLabelState }
+        searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
+       }
+
+       else if(activePanel == sidebarOptionEnum.CONTRADICTING_LABELS){
+        newPanelLabelState = { ...workspace.contradictiveElemPairsLabelState}
         searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
        }
 
@@ -57,16 +91,27 @@ const useElemLabelState = ({ index, element_id }) => {
         dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: label })).then(() => {
             dispatch(checkStatus())
         })
-        if(activePanel == SEARCH){
+        if(activePanel === sidebarOptionEnum.SEARCH){
             dispatch(setSearchLabelState(newPanelLabelState))
         }
-        else if(activePanel == RCMD){
+        else if(activePanel === sidebarOptionEnum.LABEL_NEXT){
             dispatch(setRecommendToLabelState(newPanelLabelState))
         }
-        else if(activePanel == POS_PREDICTIONS){
+        else if(activePanel === sidebarOptionEnum.POSITIVE_PREDICTIONS){
             dispatch(setPosPredLabelState(newPanelLabelState))
         }
-        
+        else if(activePanel === sidebarOptionEnum.POSITIVE_LABELS){
+            dispatch(setPosElemLabelState(newPanelLabelState))
+        }
+        else if(activePanel === sidebarOptionEnum.SUSPICIOUS_LABELS){
+            dispatch(setSuspiciousElemLabelState(newPanelLabelState))
+        }
+        else if(activePanel === sidebarOptionEnum.DISAGREEMENTS){
+            dispatch(setDisagreeElemLabelState(newPanelLabelState))
+        }
+        else if(activePanel === sidebarOptionEnum.CONTRADICTING_LABELS){
+            dispatch(setContradictiveElemLabelState(newPanelLabelState))
+        }
         dispatch(setLabelState(newMainState))
     }
 

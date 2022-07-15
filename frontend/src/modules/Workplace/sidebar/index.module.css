@@ -68,6 +68,15 @@ display: inline-block;
     background: rgb(163, 216, 229);
 }
 
+.separator{
+    margin-bottom: 20px;
+    border-bottom: 40px solid white;
+}
+
+.separator:nth-child(2n+1){
+    border-bottom: none;  
+}
+
 .elem_text{
     padding: 1px 10px 1px 10px;
 }
@@ -119,6 +128,14 @@ display: inline-block;
     border-radius: 2px !important;
 }
 
+.blue-filter {
+    filter: invert(12%) sepia(100%) saturate(5444%) hue-rotate(253deg) brightness(68%) contrast(133%); /* #1900bd */
+}
+
+.gray-filter {
+    filter: invert(55%)
+}
+
 .top_nav_icons img {
     width: 100%;
     height: 100%;
@@ -153,3 +170,4 @@ display: inline-block;
     border-radius: 2px !important;
     opacity: 0.1;
 }
+ 
