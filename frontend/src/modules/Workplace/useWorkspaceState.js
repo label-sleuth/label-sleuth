@@ -81,6 +81,7 @@ const useWorkspaceState = () => {
     if (workspace.curCategory !== null) {
       dispatch(checkStatus());
       if (workspace.model_version >= 0) {
+        dispatch(fetchElements())
         dispatch(getElementToLabel());
         dispatch(getPositiveElementForCategory());
         dispatch(getPositivePredictions());

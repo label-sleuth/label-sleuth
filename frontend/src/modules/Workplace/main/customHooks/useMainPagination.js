@@ -53,7 +53,7 @@ const useMainPagination = (searchedIndex, numOfElemPerPage) => {
         setFirstPageIndex(firstPageIndex)
         setLastPageIndex(lastPageIndex)
         return workspace.elements.slice(firstPageIndex, lastPageIndex);
-    }, [currentPage, numOfElemPerPage, workspace.curDocId, len_elements]);
+    }, [workspace.elements, currentPage, numOfElemPerPage, workspace.curDocId, len_elements]);
 
     return {
         currentContentData,
