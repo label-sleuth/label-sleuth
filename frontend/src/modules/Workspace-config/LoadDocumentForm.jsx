@@ -84,7 +84,7 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                 </FormControl>
             </div>
             <Backdrop
-        sx={{ color: '#fff', zIndex: 10000 }}
+        sx={{ color: '#fff' }}
         open={openBackdrop}
       >
         <CircularProgress color="inherit" />

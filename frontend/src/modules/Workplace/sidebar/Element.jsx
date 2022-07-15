@@ -25,7 +25,7 @@ import classes from './index.module.css';
 import PanelStyles from './PanelStyles';
 import { Box } from '@mui/material';
 import { useSelector } from "react-redux";
-import { SEARCH } from "../../../const";
+import { sidebarOptionEnum } from "../../../const";
 
 export default function Element(props) {
 
@@ -45,7 +45,7 @@ export default function Element(props) {
     const { text_colors, handleTextElemStyle } = PanelStyles(prediction)
     const searchedElemIndex = `L${searchedIndex}-${id}`
     const workspace = useSelector(state => state.workspace)
-
+ 
     return (
         <Paper onClick={()=> handleSearchPanelClick(docid, id)}
             className={handleTextElemStyle()}
@@ -56,7 +56,7 @@ export default function Element(props) {
             <Box >
                 <p docid={docid} id={id} className={classes["elem_text"]} style={(text_colors[labelState[searchedElemIndex]])}>
                     <Highlighter
-                        searchWords={workspace.activePanel === SEARCH ? [searchInput] : []}
+                        searchWords={workspace.activePanel === sidebarOptionEnum.SEARCH ? [searchInput] : []}
                         autoEscape={false}
                         textToHighlight={text}
                     />

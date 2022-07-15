@@ -13,29 +13,24 @@
     limitations under the License.
 */
 
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Stack } from "@mui/material";
 import React from "react";
 import classes from "./index.module.css";
 import { useSelector } from "react-redux";
 import Element from "./Element";
 import useSearchElement from "./customHooks/useSearchElement";
 import useLabelState from "./customHooks/useLabelState";
-import { curCategoryNameSelector } from "../DataSlice";
+import { LABEL_NEXT_HELPER_MSG } from "../../../const";
 
-const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
+const LabelNextPanel = ({ updateMainLabelState, updateLabelState }) => {
   const workspace = useSelector((state) => state.workspace);
-  const curCategoryName = useSelector(curCategoryNameSelector)
-  const posPredTotalElemRes = useSelector(
-    (state) => state.workspace.posPredTotalElemRes
+  const elementsToLabel = useSelector(
+    (state) => state.workspace.elementsToLabel
   );
-  const posPredFraction = useSelector(
-    (state) => state.workspace.posPredFraction
-  );
-  const posPredResult = useSelector((state) => state.workspace.posPredResult);
-  let newPosPredLabelState = { ...workspace.posPredLabelState };
-  const currPosPredLabelState = workspace.posPredLabelState;
+  let newRecLabelState = { ...workspace.recommendToLabelState };
+  const currRecLabelState = workspace.recommendToLabelState;
   const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    newPosPredLabelState,
+    newRecLabelState,
     updateMainLabelState,
     updateLabelState
   );
@@ -55,7 +50,7 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
         }}
       >
         <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Positive predictions</strong>
+          <strong>Label Next</strong>
         </p>
       </Box>
       <Typography
@@ -70,11 +65,11 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
           ml: 1,
         }}
       >
-        {`The following examples are predicted by the system to be related to the category '${curCategoryName}'`}
+        {LABEL_NEXT_HELPER_MSG}
       </Typography>
-      <Box className={classes["search-results"]} sx={{ mt: 4 }}>
-        {posPredResult &&
-          posPredResult.map((res, i) => {
+      <Stack className={classes["search-results"]} sx={{ mt: 4 }}>
+        {elementsToLabel &&
+          elementsToLabel.map((res, i) => {
             return (
               <Element
                 key={i}
@@ -88,13 +83,13 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
                 handleSearchPanelClick={handleSearchPanelClick}
                 handlePosLabelState={handlePosLabelState}
                 handleNegLabelState={handleNegLabelState}
-                labelState={currPosPredLabelState}
+                labelState={currRecLabelState}
               />
             );
           })}
-      </Box>
+      </Stack>
     </Box>
   );
 };
 
-export default PosPredictionsPanel;
+export default LabelNextPanel;

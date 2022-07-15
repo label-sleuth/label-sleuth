@@ -18,7 +18,10 @@ import { Box } from '@mui/material';
 import useSearchElement from "./sidebar/customHooks/useSearchElement";
 import Drawer from '@mui/material/Drawer';
 import useUpdateLabelState from "./sidebar/customHooks/useUpdateLabelState";
-import { SEARCH, RCMD, RIGHT_DRAWER_WIDTH, POS_PREDICTIONS } from '../../const'
+import {
+  RIGHT_DRAWER_WIDTH,
+  sidebarOptionEnum
+} from "../../const";
 import MainPanel from "./main/MainPanel";
 import { useSelector } from "react-redux";
 
@@ -29,7 +32,15 @@ export const PanelManager = ({
 }) => {
     const activePanel = useSelector(state => state.workspace.activePanel)
 
-    const { updateSearchLabelState, updateRecLabelState, updateMainLabelState, updatePosPredLabelState } = useUpdateLabelState()
+    const { updateSearchLabelState,
+        updateRecLabelState,
+        updateMainLabelState,
+        updatePosPredLabelState,
+        updatePosElemLabelState,
+        updateDisagreelemLabelState,
+        updateSuspiciouslemLabelState,
+        updateContradictivelemLabelState,
+    } = useUpdateLabelState()
 
     const { handleSearchPanelClick,
         handleSearchInputEnterKey,
@@ -40,7 +51,7 @@ export const PanelManager = ({
     const activePanelWithProps = React.Children.map(children, child => {
 
         if (child) {
-            if (activePanel == SEARCH) {
+            if (activePanel === sidebarOptionEnum.SEARCH) {
                 return React.cloneElement(child, {
                     handleSearchPanelClick,
                     handleSearchInputEnterKey,
@@ -53,7 +64,7 @@ export const PanelManager = ({
                     open,
                 });
             }
-            else if (activePanel == RCMD) {
+            else if (activePanel === sidebarOptionEnum.LABEL_NEXT) {
                 return React.cloneElement(child, {
                     handleSearchPanelClick,
                     searchInput,
@@ -62,12 +73,48 @@ export const PanelManager = ({
                     open,
                 });
             }
-            else if (activePanel == POS_PREDICTIONS) {
+            else if (activePanel === sidebarOptionEnum.POSITIVE_PREDICTIONS) {
                 return React.cloneElement(child, {
                     handleSearchPanelClick,
                     searchInput,
                     updateMainLabelState,
                     updateLabelState: updatePosPredLabelState,
+                    open,
+                });
+            }
+            else if (activePanel === sidebarOptionEnum.POSITIVE_LABELS) {
+                return React.cloneElement(child, {
+                    handleSearchPanelClick,
+                    searchInput,
+                    updateMainLabelState,
+                    updateLabelState: updatePosElemLabelState,
+                    open,
+                });
+            }
+            else if (activePanel === sidebarOptionEnum.DISAGREEMENTS) {
+                return React.cloneElement(child, {
+                    handleSearchPanelClick,
+                    searchInput,
+                    updateMainLabelState,
+                    updateLabelState: updateDisagreelemLabelState,
+                    open,
+                });
+            }
+            else if (activePanel === sidebarOptionEnum.SUSPICIOUS_LABELS) {
+                return React.cloneElement(child, {
+                    handleSearchPanelClick,
+                    searchInput,
+                    updateMainLabelState,
+                    updateLabelState: updateSuspiciouslemLabelState,
+                    open,
+                });
+            }
+            else if (activePanel === sidebarOptionEnum.CONTRADICTING_LABELS) {
+                return React.cloneElement(child, {
+                    handleSearchPanelClick,
+                    searchInput,
+                    updateMainLabelState,
+                    updateLabelState: updateContradictivelemLabelState,
                     open,
                 });
             }

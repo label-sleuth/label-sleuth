@@ -20,22 +20,16 @@ import { useSelector } from "react-redux";
 import Element from "./Element";
 import useSearchElement from "./customHooks/useSearchElement";
 import useLabelState from "./customHooks/useLabelState";
-import { curCategoryNameSelector } from "../DataSlice";
 
-const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
+const DisagreementsPanel = ({ updateMainLabelState, updateLabelState }) => {
   const workspace = useSelector((state) => state.workspace);
-  const curCategoryName = useSelector(curCategoryNameSelector)
-  const posPredTotalElemRes = useSelector(
-    (state) => state.workspace.posPredTotalElemRes
+  const disagreeElemResult = useSelector(
+    (state) => state.workspace.disagreeElemResult
   );
-  const posPredFraction = useSelector(
-    (state) => state.workspace.posPredFraction
-  );
-  const posPredResult = useSelector((state) => state.workspace.posPredResult);
-  let newPosPredLabelState = { ...workspace.posPredLabelState };
-  const currPosPredLabelState = workspace.posPredLabelState;
+  let newDisagreeElemLabelState = { ...workspace.disagreeElemLabelState };
+  const currDisagreeElemLabelState = workspace.disagreeElemLabelState;
   const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    newPosPredLabelState,
+    newDisagreeElemLabelState,
     updateMainLabelState,
     updateLabelState
   );
@@ -55,26 +49,43 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
         }}
       >
         <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Positive predictions</strong>
+          <strong>Disagreements labels</strong>
         </p>
       </Box>
-      <Typography
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          fontSize: "0.8rem",
-          color: "rgba(0,0,0,.54)",
-          mt: 2,
-          mb: 2,
-          mr: 1,
-          ml: 1,
-        }}
-      >
-        {`The following examples are predicted by the system to be related to the category '${curCategoryName}'`}
-      </Typography>
+      {!disagreeElemResult || disagreeElemResult.length == 0 ? (
+        <Typography
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            fontSize: "0.8rem",
+            color: "rgba(0,0,0,.54)",
+            mt: 2,
+            mb: 2,
+            mr: 1,
+            ml: 1,
+          }}
+        >
+          {`No model predictions disagree with your labels.`}
+        </Typography>
+      ) : (
+        <Typography
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            fontSize: "0.8rem",
+            color: "rgba(0,0,0,.54)",
+            mt: 2,
+            mb: 2,
+            mr: 1,
+            ml: 1,
+          }}
+        >
+          {`Review these examples in which the labels provided by you do not match the prediction made by the system`}
+        </Typography>
+      )}
       <Box className={classes["search-results"]} sx={{ mt: 4 }}>
-        {posPredResult &&
-          posPredResult.map((res, i) => {
+        {disagreeElemResult &&
+          disagreeElemResult.map((res, i) => {
             return (
               <Element
                 key={i}
@@ -88,7 +99,7 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
                 handleSearchPanelClick={handleSearchPanelClick}
                 handlePosLabelState={handlePosLabelState}
                 handleNegLabelState={handleNegLabelState}
-                labelState={currPosPredLabelState}
+                labelState={currDisagreeElemLabelState}
               />
             );
           })}
@@ -97,4 +108,4 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
   );
 };
 
-export default PosPredictionsPanel;
+export default DisagreementsPanel;

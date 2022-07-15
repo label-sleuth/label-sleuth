@@ -21,7 +21,11 @@ import {
     setElementLabel,
     setRecommendToLabelState,
     setSearchLabelState,
-    setPosPredLabelState
+    setPosPredLabelState,
+    setPosElemLabelState,
+    setDisagreeElemLabelState,
+    setSuspiciousElemLabelState,
+    setContradictiveElemLabelState
 } from '../../DataSlice';
 
 
@@ -52,11 +56,31 @@ const useUpdateLabelState = () => {
         dispatch(setPosPredLabelState(newPanelLabelState))
     }
 
+    const updatePosElemLabelState = (newPanelLabelState) => {
+        dispatch(setPosElemLabelState(newPanelLabelState))
+    }   
+
+    const updateDisagreelemLabelState = (newPanelLabelState) => {
+        dispatch(setDisagreeElemLabelState(newPanelLabelState))
+    }   
+
+    const updateSuspiciouslemLabelState = (newPanelLabelState) => {
+        dispatch(setSuspiciousElemLabelState(newPanelLabelState))
+    }   
+
+    const updateContradictivelemLabelState = (newPanelLabelState) => {
+        dispatch(setContradictiveElemLabelState(newPanelLabelState))
+    }   
+
     return {
         updateRecLabelState,
         updateMainLabelState,
         updateSearchLabelState,
         updatePosPredLabelState,
+        updatePosElemLabelState,
+        updateDisagreelemLabelState,
+        updateSuspiciouslemLabelState,
+        updateContradictivelemLabelState
     }
 };
 
