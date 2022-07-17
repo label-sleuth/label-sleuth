@@ -274,9 +274,11 @@ def create_category(workspace_id):
     post_data = request.get_json(force=True)
     category_name = post_data["category_name"]
     category_description = post_data["category_description"]
-    if category_name in current_app.orchestrator_api.get_all_categories(workspace_id):
-        return jsonify({"workspace_id": workspace_id, "error": "category already exist", "category_name": category_name,
-                        "error_code": 409}), 409
+    existing_category_names = [category.name for category
+                               in current_app.orchestrator_api.get_all_categories(workspace_id).values()]
+    if category_name in existing_category_names:
+        return jsonify({"workspace_id": workspace_id, "error": "category with this name already exists",
+                        "category_name": category_name, "error_code": 409}), 409
 
     category_id = current_app.orchestrator_api.create_new_category(workspace_id, category_name, category_description)
 
@@ -307,17 +309,23 @@ def get_all_categories(workspace_id):
 @validate_workspace_id
 def update_category(workspace_id, category_id):
     """
-    TODO implement
     :param workspace_id:
-    :param category_name:
-    :param category_description:
+    :param category_id:
+    :post_param category_name:
+    :post_param category_description:
     """
     post_data = request.get_json(force=True)
     new_category_name = post_data["category_name"]
     new_category_description = post_data["category_description"]
+    existing_category_names = [category.name for category
+                               in current_app.orchestrator_api.get_all_categories(workspace_id).values()]
+    if new_category_name in existing_category_names:
+        return jsonify({"workspace_id": workspace_id, "error": "category with this name already exists",
+                        "category_name": new_category_name, "error_code": 409}), 409
+
     current_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description)
-    return jsonify({"workspace_id":workspace_id,"category_id":str(category_id),"category_name":new_category_name,
-                    "category_description":new_category_description})
+    return jsonify({"workspace_id": workspace_id, "category_id": str(category_id), "category_name": new_category_name,
+                    "category_description": new_category_description})
 
 
 @main_blueprint.route("/workspace/<workspace_id>/category/<category_id>", methods=['DELETE'])
@@ -328,10 +336,10 @@ def delete_category(workspace_id, category_id):
     This call permanently deletes all data associated with the given category, including user labels and models.
 
     :param workspace_id:
-    :param category_name:
+    :param category_id:
     """
     current_app.orchestrator_api.delete_category(workspace_id, category_id)
-    return jsonify({"workspace_id":workspace_id, 'category_id': str(category_id)})
+    return jsonify({"workspace_id": workspace_id, 'category_id': str(category_id)})
 
 
 """
