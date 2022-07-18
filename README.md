@@ -77,7 +77,7 @@ pip install -r requirements.txt
    
    By default, the host will be `localhost` to expose the server only on the host machine. If you wish to expose the server to external communication, add `--host <IP>` for example, `--host 0.0.0.0` to listen to all IPs.
    
-   Default port is 8000, to change the port add `--port <port_number>`.
+   Default port is 8000, to change the port add `--port <port_number>` to the command.
 
    The system can then be accessed by browsing to http://localhost:8000 (or http://localhost:<port_number>)
 
