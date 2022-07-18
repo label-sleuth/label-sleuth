@@ -15,6 +15,7 @@
 
 import os
 import threading
+import logging
 from collections import defaultdict
 
 from dataclasses import dataclass, field
@@ -76,6 +77,11 @@ class Workspace:
     categories: Dict[int, Category] = field(default_factory=dict)
 
 
+class WorkspaceSchemeChangedException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
 class OrchestratorStateApi:
 
     def __init__(self, workspaces_dir):
@@ -100,7 +106,14 @@ class OrchestratorStateApi:
 
     def get_workspace(self, workspace_id) -> Workspace:
         with self.workspaces_lock[workspace_id]:
-            return self._load_workspace(workspace_id)
+            try:
+                return self._load_workspace(workspace_id)
+            except Exception as e:
+                raise WorkspaceSchemeChangedException(
+                    f"Failed to load workspace {workspace_id}. This is probably due to an unhandled "
+                    f"workspace scheme upgrade. Please open an issue on "
+                    f"https://github.com/label-sleuth/label-sleuth/issues/new/choose for additional support") from e
+
 
     def get_all_categories(self, workspace_id) -> Mapping[int,Category]:
         return {category_id: category for category_id, category in
@@ -122,7 +135,11 @@ class OrchestratorStateApi:
             if file.startswith('.') or not file.endswith('.json'):
                 continue
             workspace_id, _ = os.path.splitext(file)
-            workspace = self.get_workspace(workspace_id)
+            try:
+                workspace = self.get_workspace(workspace_id)
+            except WorkspaceSchemeChangedException:
+                logging.warning(f"Failed to load workspace {workspace_id}. skipping...", exc_info=True)
+                continue
             all_workspaces.append(workspace)
         return all_workspaces
 
