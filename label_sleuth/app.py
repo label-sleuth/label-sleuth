@@ -338,6 +338,16 @@ def delete_category(workspace_id, category_id):
     :param workspace_id:
     :param category_id:
     """
+    try:
+        category_id = int(category_id)
+    except:
+        return jsonify({"type": "category_id_error",
+                        "title": f"category_id should be an integer (got {category_id}) "}), 400
+
+    if category_id not in current_app.orchestrator_api.get_all_categories(workspace_id):
+        return jsonify({"type": "category_id_does_not_exist",
+                        "title": f"category_id {category_id} does not exist in workspace {workspace_id}"}), 404
+
     current_app.orchestrator_api.delete_category(workspace_id, category_id)
     return jsonify({"workspace_id": workspace_id, 'category_id': str(category_id)})
 
