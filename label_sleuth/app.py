@@ -320,6 +320,10 @@ def update_category(workspace_id, category_id):
         return jsonify({"type": "category_id_error",
                         "title": f"category_id should be an integer (got {category_id}) "}), 400
 
+    if category_id not in current_app.orchestrator_api.get_all_categories(workspace_id):
+        return jsonify({"type": "category_id_does_not_exist",
+                        "title": f"category_id {category_id} does not exist in workspace {workspace_id}"}), 404
+
     post_data = request.get_json(force=True)
     new_category_name = post_data["category_name"]
     new_category_description = post_data["category_description"]
