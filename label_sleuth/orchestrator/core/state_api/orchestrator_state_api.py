@@ -169,7 +169,9 @@ class OrchestratorStateApi:
     def add_category_to_workspace(self, workspace_id: str, category_name: str, category_description: str):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            if category_name in [category.name for category in workspace.categories.values()]:
+            existing_category_names = [category.name for category in workspace.categories.values()
+                                       if category is not None]
+            if category_name in existing_category_names:
                 raise Exception(f"Category '{category_name}' already exists in workspace '{workspace_id}'")
             category_id = len(workspace.categories)
             workspace.categories[category_id] = Category(name=category_name, description=category_description,
