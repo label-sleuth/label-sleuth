@@ -31,7 +31,7 @@ from typing import Sequence, Iterable, Mapping, List, Union
 import label_sleuth.data_access.file_based.utils as utils
 from label_sleuth.data_access.core.data_structs import Document, Label, TextElement
 from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, \
-    LabeledStatus
+    LabeledStatus, get_document_uri
 
 
 class FileBasedDataAccess(DataAccessApi):
@@ -222,8 +222,8 @@ class FileBasedDataAccess(DataAccessApi):
         return utils.build_text_elements_from_dataframe_and_labels(self._get_ds_in_memory(dataset_name), labels_dict={})
 
     def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize,
-                          sample_start_idx: int = 0, query_regex: str = None, remove_duplicates=False,
-                          random_state: int = 0) -> Mapping:
+                          sample_start_idx: int = 0, query_regex: str = None, document_uri = None,
+                          remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query,
         and add their labels information for workspace_id, if available.
@@ -234,6 +234,7 @@ class FileBasedDataAccess(DataAccessApi):
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
         :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
         no such filtering is performed.
+        :param document_uri: get elements from a particular document
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
@@ -242,10 +243,11 @@ class FileBasedDataAccess(DataAccessApi):
         """
         with self._get_lock_object_for_workspace(workspace_id):
             results_dict = \
-                self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                        filter_func=lambda df, labels: utils.filter_by_query(df, query_regex),
-                                        sample_size=sample_size, sample_start_idx=sample_start_idx,
-                                        remove_duplicates=remove_duplicates, random_state=random_state)
+                self._get_text_elements(
+                    workspace_id=workspace_id, dataset_name=dataset_name,
+                    filter_func=lambda df, _: utils.filter_by_query_and_document_uri(df, query_regex, document_uri),
+                    sample_size=sample_size, sample_start_idx=sample_start_idx,
+                    remove_duplicates=remove_duplicates, random_state=random_state)
 
         return results_dict
 

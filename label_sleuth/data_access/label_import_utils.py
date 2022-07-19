@@ -37,10 +37,9 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
     remove_duplicates = False if doc_uri is not None else True
     regex = '|'.join(f'^{re.escape(t)}$' for t in texts)
     elements = data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                             sample_size=sys.maxsize, query_regex=regex,
+                                             sample_size=sys.maxsize, query_regex=regex, document_uri=doc_uri,
                                              remove_duplicates=remove_duplicates)['results']
-    if doc_uri is not None:
-        elements = [e for e in elements if get_document_uri(e.uri) == doc_uri]
+
     return elements
 
 
@@ -65,16 +64,17 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
         # and assigning a label for one text at a time.
         if DisplayFields.doc_id not in category_df.columns:
             doc_id_to_label_to_texts = {None:
-                                            {label: df_for_label[DisplayFields.text]
+                                            {label: df_for_label[DisplayFields.text].values.tolist()
                                              for label, df_for_label in category_df.groupby(DisplayFields.label)}}
         else:
             doc_id_to_label_to_texts = {doc_id:
-                                            {label: df_for_label[DisplayFields.text]
+                                            {label: df_for_label[DisplayFields.text].values.tolist()
                                              for label, df_for_label in df_for_doc.groupby(DisplayFields.label)}
                                         for doc_id, df_for_doc in category_df.groupby(DisplayFields.doc_id)}
+
         uri_to_label = {}
         for doc_id, label_to_texts in doc_id_to_label_to_texts.items():
-            doc_uri = f'{dataset_name}-{doc_id}' if doc_id is not None else None  # TODO if we change uri and doc id etc, we should change this field here
+            doc_uri = f'{dataset_name}-{doc_id}' if doc_id is not None else None
             for label, texts in label_to_texts.items():
                 elements_to_label = get_element_group_by_texts(texts, workspace_id, dataset_name, data_access,
                                                                doc_uri=doc_uri)
