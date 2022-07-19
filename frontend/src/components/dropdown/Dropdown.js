@@ -32,8 +32,6 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
       },
     },
   };
-  const [localValue, setLocalValue] = useState(value ?? '');   
-  useEffect(() => setLocalValue(value ?? ''), [value]);       
   const handleFocus = () => {
     if (onFocus) {
       onFocus();
@@ -41,7 +39,6 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
   };
   const handleChange = (e) => {
     const value = e.target.value;
-    setLocalValue(value);
     if (onChange) {
       onChange(value);
     }
@@ -65,7 +62,7 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
       <Select
         labelId="demo-simple-select-helper-label"
         id="demo-simple-select-helper"
-        value={localValue}
+        value={value ?? ''}
         label={label}
         displayEmpty
         renderValue={value !== "" ? undefined : () => placeholder}
