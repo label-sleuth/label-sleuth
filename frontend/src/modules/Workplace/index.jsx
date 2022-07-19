@@ -109,29 +109,35 @@ export default function Workspace() {
           <Drawer variant="permanent" anchor="right" PaperProps={{ sx: { minWidth: 50, } }}>
             <Box sx={{ display: "flex", flexDirection: "column", alignItems: 'center', justifyContent: 'space-between', margin: '5px' }}>
               <Tooltip title={SEARCH_ALL_DOCS_TOOLTIP_MSG} placement="left">
-                <IconButton className={classes.top_nav_icons} onClick={activateSearchPanel} id='sidebar-search-button'>
-                  <img src={search_icon} style={{ filter: !toggleSearchPanel ? 'invert(45%)' : "" }} alt="search" />
-                </IconButton>
+                <span>
+                  <IconButton className={classes.top_nav_icons} onClick={activateSearchPanel} id='sidebar-search-button'>
+                    <img src={search_icon} style={{ filter: !toggleSearchPanel ? 'invert(45%)' : "" }} alt="search" />
+                  </IconButton>
+                </span>
               </Tooltip>
               <Tooltip title={NEXT_TO_LABEL_TOOLTIP_MSG} placement="left">
-                <IconButton
-                  disabled={!model_version || model_version === -1}
-                  className={!model_version || model_version === -1 ? classes.btndisabled : classes.top_nav_icons}
-                  onClick={activateRecToLabelPanel}
-                  id='sidebar-recommended-button'
-                >
-                  <img src={recommend_icon} style={{ filter: !toggleRCMDPanel ? 'invert(45%)' : "" }} alt="recommendation" />
-                </IconButton>
+                <span>
+                  <IconButton
+                    disabled={shouldDisableButtons}
+                    className={shouldDisableButtons ? classes.btndisabled : classes.top_nav_icons}
+                    onClick={activateRecToLabelPanel}
+                    id='sidebar-recommended-button'
+                  >
+                    <img src={recommend_icon} style={{ filter: !toggleRCMDPanel ? 'invert(45%)' : "" }} alt="recommendation" />
+                  </IconButton>
+                </span>
               </Tooltip>
               <Tooltip   title={getPosPredTooltipMessage(curCategoryName)} placement="left">
-                <IconButton
-                  disabled={!model_version || model_version === -1}
-                  className={!model_version || model_version === -1 ? classes.btndisabled : classes.pos_pred_icon}
-                  onClick={activatePosPredLabelPanel}
-                  id='sidebar-pos-pred-button'
-                >
-                  <img src={pos_pred_icon} width= "22px" height= "22px"  style={{ filter: !togglePosPredPanel ? 'invert(45%)' : "" }} alt="positive predictions" />
-                </IconButton>
+                <span>
+                  <IconButton
+                    disabled={shouldDisableButtons}
+                    className={shouldDisableButtons ? classes.btndisabled : classes.pos_pred_icon}
+                    onClick={activatePosPredLabelPanel}
+                    id='sidebar-pos-pred-button'
+                  >
+                    <img src={pos_pred_icon} width= "22px" height= "22px"  style={{ filter: !togglePosPredPanel ? 'invert(45%)' : "" }} alt="positive predictions" />
+                  </IconButton>
+                </span>
               </Tooltip>
             </Box>
           </Drawer>
