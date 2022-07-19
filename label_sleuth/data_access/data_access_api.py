@@ -63,15 +63,15 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
         :param workspace_id: the workspace_id of the labeling effort.
         :param uris_to_labels: list of tuples of TextElement URI and a dict that represents a label.
-        The dict keys are category names and values are Labels. For example: [(uri_1, {0: Label_cat_1}),
-                                                                              (uri_2, {0: Label_cat_1,
-                                                                                       1: Label_cat_2})]
+        The dict keys are category ids and values are Labels. For example: [(uri_1, {0: Label_cat_1}),
+                                                                            (uri_2, {0: Label_cat_1,
+                                                                                     1: Label_cat_2})]
         :param apply_to_duplicate_texts: if True, also set the same labels for additional URIs that are duplicates
         of the URIs provided.
         """
 
     @abc.abstractmethod
-    def unset_labels(self, workspace_id: str, category_id, uris: Sequence[str], apply_to_duplicate_texts=False):
+    def unset_labels(self, workspace_id: str, category_id: int, uris: Sequence[str], apply_to_duplicate_texts=False):
         """
         Remove workspace labels for a certain category from a specified list of uris.
 
@@ -80,7 +80,6 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param uris: list of URIs to unset the label for.
         :param apply_to_duplicate_texts: if True, also unset the same labels for additional URIs that have the same text
         as that of the URIs provided.
-        Unset labels to TextElements in dataset for a given workspace_id and category.
         """
 
     @abc.abstractmethod
@@ -211,7 +210,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def delete_labels_for_category(self, workspace_id:str, dataset_name:str, category_id:int):
+    def delete_labels_for_category(self, workspace_id: str, dataset_name: str, category_id: int):
         """
         Delete the labels info associated with the given category.
         :param workspace_id:

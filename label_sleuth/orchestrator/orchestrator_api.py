@@ -266,7 +266,7 @@ class OrchestratorApi:
                 self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, cat, num_changes)
         self.data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts)
 
-    def unset_labels(self, workspace_id: str, category_id:int, uris: Sequence[str], apply_to_duplicate_texts=True):
+    def unset_labels(self, workspace_id: str, category_id: int, uris: Sequence[str], apply_to_duplicate_texts=True):
         """
         Unset labels of a set of element URIs for a given category.
         :param workspace_id:

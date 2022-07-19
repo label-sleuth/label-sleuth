@@ -67,6 +67,9 @@ class FileBasedDataAccess(DataAccessApi):
         In this implementation, the same data is stored in two formats:
             A. a json file per Document, containing data for the TextElement objects within that Document
             B. a single csv file, containing data for the TextElement objects from all Documents for this dataset
+
+        :param dataset_name: the name of the dataset to which the documents should be added.
+        :param documents: an Iterable over Document type.
         """
         doc_dump_dir = self._get_documents_dump_dir(dataset_name)
         sentences = []
@@ -95,16 +98,16 @@ class FileBasedDataAccess(DataAccessApi):
                      f'({num_of_text_elements} text elements) under {doc_dump_dir}')
         return DocumentStatistics(len(documents), num_of_text_elements)
 
-    def set_labels(self, workspace_id: str, uris_to_labels: Mapping[str, Mapping[str, Label]],
+    def set_labels(self, workspace_id: str, uris_to_labels: Mapping[str, Mapping[int, Label]],
                    apply_to_duplicate_texts=False):
         """
         Set labels to TextElements in dataset for a given workspace_id.
 
         :param workspace_id: the workspace_id of the labeling effort.
         :param uris_to_labels: list of tuples of TextElement URI and a dict that represents a label.
-        The dict keys are category names and values are Labels. For example: [(uri_1, {category_1: Label_cat_1}),
-                                                                              (uri_2, {category_1: Label_cat_1,
-                                                                                       category_2: Label_cat_2})]
+        The dict keys are category ids and values are Labels. For example: [(uri_1, {0: Label_cat_1}),
+                                                                            (uri_2, {0: Label_cat_1,
+                                                                                     1: Label_cat_2})]
         :param apply_to_duplicate_texts: if True, also set the same labels for additional URIs that are duplicates
         of the URIs provided.
         """
@@ -128,7 +131,7 @@ class FileBasedDataAccess(DataAccessApi):
             # Save updated labels dict to disk
             self._save_labels_data(dataset_name, workspace_id)
 
-    def unset_labels(self, workspace_id: str, category_id:int, uris: Sequence[str], apply_to_duplicate_texts=False):
+    def unset_labels(self, workspace_id: str, category_id: int, uris: Sequence[str], apply_to_duplicate_texts=False):
         """
         Remove workspace labels for a certain category from a specified list of uris.
 
@@ -222,7 +225,7 @@ class FileBasedDataAccess(DataAccessApi):
         return utils.build_text_elements_from_dataframe_and_labels(self._get_ds_in_memory(dataset_name), labels_dict={})
 
     def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize,
-                          sample_start_idx: int = 0, query_regex: str = None, document_uri = None,
+                          sample_start_idx: int = 0, query_regex: str = None, document_uri=None,
                           remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query,
@@ -310,7 +313,7 @@ class FileBasedDataAccess(DataAccessApi):
         return results_dict
 
     def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False) \
-            -> Mapping[str, int]:
+            -> Mapping[bool, int]:
         """
         Return for each label value, assigned to category_id, the total count of its appearances in dataset_name.
         :param workspace_id: the workspace_id of the labeling effort.
