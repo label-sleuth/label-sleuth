@@ -29,6 +29,7 @@ import {
   WRONG_INPUT_NAME_BAD_CHARACTER,
   REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES
 } from "../../../../const";
+import { notify } from "../../../../utils/notification";
 
 const style = {
   position: 'absolute',
@@ -42,9 +43,7 @@ const style = {
   p: 4,
 };
 
-export default function CreateCategoryModal(props) {
-
-  const { open, setOpen } = props;
+export default function CreateCategoryModal({ open, setOpen }) {
 
   const [text, setText] = React.useState("");
   const [categoryNameError, setCategoryNameError] = React.useState("")
@@ -76,8 +75,13 @@ export default function CreateCategoryModal(props) {
   const onSubmit = () => {
     const newCategoryName = text.trim();
     dispatch(createCategoryOnServer({ category: newCategoryName }))
+      .then(() => setOpen(false))
       .then(() => dispatch(fetchCategories()))
-      .then(() => setOpen(false));
+      .then(() =>
+      notify(`The category '${newCategoryName}' has been created`, {
+        type: "success",
+        autoClose: 5000,
+      }));
   };
 
   const onModalClose = () => {
@@ -92,6 +96,7 @@ export default function CreateCategoryModal(props) {
         onClose={onModalClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
+        disableRestoreFocus
       >
         <Box sx={style}>
           

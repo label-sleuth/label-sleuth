@@ -16,7 +16,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
-import CreateCategoryModal from './upperbar/Modal';
 import { ToastContainer } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -57,7 +56,7 @@ export default function Workspace() {
   const workspaceVisited = useSelector(state => state.workspace.workspaceVisited)
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(!!!workspaceVisited);
-  const [modalOpen, setModalOpen] = useState(false)
+
   const textInput = useRef(null);
   const {openBackdrop}  = useBackdrop()
 
@@ -90,6 +89,8 @@ export default function Workspace() {
     clearSearchInput()
   }, [curCategory])
 
+  const shouldDisableButtons = curCategory === null || !model_version || model_version === -1
+
   return (
     <>
       <Box sx={{ display: 'flex' }} style={tutorialOpen ? {filter: "blur(2px)"} : null}>
@@ -97,7 +98,7 @@ export default function Workspace() {
         <ToastContainer position="top-center" hideProgressBar={true} autoClose={7000} theme='dark' />
         <WorkspaceInfo workspaceId={workspaceId} setTutorialOpen={setTutorialOpen}/>
         <Box component="main" sx={{ padding: 0 }}>
-          <UpperBar setModalOpen={setModalOpen} open={open} />
+          <UpperBar />
           <PanelManager
             open={open}
             activePanel={activePanel}>
@@ -142,7 +143,6 @@ export default function Workspace() {
             </Box>
           </Drawer>
         </Box>
-        <CreateCategoryModal open={modalOpen} setOpen={setModalOpen} />
         <Tutorial tutorialOpen={tutorialOpen} setTutorialOpen={setTutorialOpen}/>
         <TutorialDialog open={tutorialDialogOpen} setOpen={setTutorialDialogOpen} setTutorialOpen={setTutorialOpen}/>
        </Box>

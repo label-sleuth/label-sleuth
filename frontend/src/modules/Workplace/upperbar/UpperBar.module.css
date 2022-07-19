@@ -36,13 +36,14 @@
     margin-right: 10px;
 }
 
-.add-category-button {
+.category-action-button {
     padding: 0;
     height: 43px;
     width: 43px;
     border: none;
     border-radius: 0 !important;
-    background: #393939;
+    background: #747070 !important;
+    color: white !important
 }
 
 .nextbtn {

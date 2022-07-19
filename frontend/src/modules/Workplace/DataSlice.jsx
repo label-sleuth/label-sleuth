@@ -17,6 +17,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
 import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../config"
 import { handleError } from '../../utils/utils'
+import { SEARCH } from '../../const'
 
 export const initialState = {
     workspaceId: "",
@@ -64,7 +65,8 @@ export const initialState = {
     // tells if the user visited the workspace at least once to open the tutorial the first time
     workspaceVisited: false,
     uploadedLabels: null,
-    errorMessage: null
+    errorMessage: null,
+    deletingCategory: false
 }
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
@@ -183,6 +185,46 @@ export const createCategoryOnServer = createAsyncThunk('workspace/createCategory
             'update_counter': true
         }),
         method: "POST"
+    }).then(response => response.json())
+
+    return data
+})
+
+export const deleteCategory = createAsyncThunk('workspace/deleteCategory', async (request, { getState }) => {
+
+    const state = getState()
+
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/category/${state.workspace.curCategory}`
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.authenticate.token}`
+        },
+        method: "DELETE"
+    }).then(response => response.json())
+
+    return data
+})
+
+export const editCategory = createAsyncThunk('workspace/editCategory', async ({newCategoryName, newCategoryDescription}, { getState }) => {
+
+    const state = getState()
+
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/category/${state.workspace.curCategory}`
+
+    const body = JSON.stringify({
+        category_name: newCategoryName,
+        category_description: newCategoryDescription
+    })
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.authenticate.token}`
+        },
+        body: body,
+        method: "PUT"
     }).then(response => response.json())
 
     return data
@@ -1020,6 +1062,39 @@ const DataSlice = createSlice({
                 nextModelShouldBeTraining: false
             }
         },
+        [deleteCategory.pending]: (state, action) => {
+            return {
+                ...state,
+                deletingCategory: true
+            }
+        },
+        [deleteCategory.fulfilled]: (state, action) => {
+            return {
+                ...initialState,
+                curDocName: state.curDocName,
+                documents: state.documents,
+                elements: state.elements,
+                deletingCategory: false,
+                categories: state.categories.filter(c => c.category_id != state.curCategory),
+                activePanel: SEARCH,
+                workspaceId: state.workspaceId
+            }
+        },
+        // [editCategory.fulfilled]: (state, action) => {
+        //     const { newCategoryName, newCategoryDescription } = action.payload;
+        //     return {
+        //       ...state,
+        //       categories: state.categories.map((c) =>
+        //         c.category_id == state.curCategory
+        //           ? {
+        //               ...c,
+        //               category_name: newCategoryName,
+        //               category_description: newCategoryDescription,
+        //             }
+        //           : c
+        //       ),
+        //     };
+        // },
         [uploadLabels.rejected]: (state, action) => {
             return {
                 ...state,
@@ -1039,7 +1114,8 @@ export const curCategoryNameSelector = (state) => {
   
 
 export default DataSlice.reducer;
-export const { updateCurCategory,
+export const { 
+    updateCurCategory,
     increaseIdInBatch,
     prevPrediction,
     setWorkspace,

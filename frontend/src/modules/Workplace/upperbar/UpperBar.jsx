@@ -16,8 +16,10 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import add_icon from '../../../assets/workspace/add_icon.svg';
-import next_icon from '../../../assets/workspace/right_icon.svg';
+
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
+import ModeEditOutlineOutlinedIcon from '@mui/icons-material/ModeEditOutlineOutlined';
 import classes from './UpperBar.module.css';
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useDispatch, useSelector } from 'react-redux';
@@ -25,8 +27,13 @@ import { updateCurCategory } from '../DataSlice.jsx';
 import FormControl from '@mui/material/FormControl';
 import ControlledSelect from '../../../components/dropdown/Dropdown';
 import Tooltip from '@mui/material/Tooltip';
-import { CREATE_NEW_CATEGORY_TOOLTIP_MSG } from '../../../const';
+import { CREATE_NEW_CATEGORY_TOOLTIP_MSG, DELETE_CATEGORY_TOOLTIP_MSG, EDIT_CATEGORY_TOOLTIP_MSG } from '../../../const';
 import { CategoryCard } from './CategoryCard'
+import { IconButton } from '@mui/material';
+import { useState } from 'react';
+import CreateCategoryModal from './Modal/CreateCategoryModal'
+import DeleteCategoryModal from './Modal/DeleteCategoryModal';
+import EditCategoryModal from './Modal/EditCategoryModal';
 
 const rightDrawerWidth = 360;
 const leftDrawerWidthh = 280;
@@ -91,14 +98,24 @@ function CategoryFormControl() {
   );
 }
 
-const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
+const UpperBar = ({ setNumLabel }) => {
   
   const curCategory = useSelector(state => state.workspace.curCategory)
-  
+  const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false)
+  const [deleteCategoryModalOpen, setDeleteCategoryModalOpen] = useState(false)
+  const [editCategoryModalOpen, setEditCategoryModalOpen] = useState(false)
   const [cardOpen, setCardOpen] = React.useState(true)
 
   const handleAddCategory = () => {
-    setModalOpen(true)
+    setCreateCategoryModalOpen(true)
+  }
+
+  const handleDeleteCategory = () => {
+    setDeleteCategoryModalOpen(true)
+  }
+
+  const handleEditCategory = () => {
+    setEditCategoryModalOpen(true)
   }
 
   React.useEffect(() => {
@@ -109,22 +126,49 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
 
   return (
     <ElevationScroll>
-      <AppBar className={classes.elevation_scroll} open={open}>
+      <AppBar className={classes.elevation_scroll} open={createCategoryModalOpen}>
         <div className={classes.upper}>
           <p>Category: </p>
           <CategoryFormControl
             placholder="placeholder" />
 
           <Tooltip title={CREATE_NEW_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-            <button
+            <IconButton
               onClick={handleAddCategory}
               alt="Create new category"
               id="upperbar-add-category"
-              className={classes["add-category-button"]}
+              className={classes["category-action-button"]}
             >
-              <img src={add_icon} />
-            </button>
+              <AddOutlinedIcon/>
+            </IconButton>
           </Tooltip>
+          {
+            curCategory !== null ? 
+            (
+            <>
+              <Tooltip title={DELETE_CATEGORY_TOOLTIP_MSG} disableFocusListener>
+                <IconButton 
+                  className={classes["category-action-button"]}
+                  alt="Delete category"
+                  onClick={handleDeleteCategory}
+              >
+                  <DeleteOutlineOutlinedIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={EDIT_CATEGORY_TOOLTIP_MSG} disableFocusListener>
+                <IconButton 
+                  className={classes["category-action-button"]}
+                  alt="Edit category"
+                  onClick={handleEditCategory}
+                >
+                  <ModeEditOutlineOutlinedIcon />
+                </IconButton>
+              </Tooltip>
+            </>
+            )
+            : null
+          }
+          
           {cardOpen ? <CategoryCard setCardOpen={setCardOpen} /> : null}
           {/* TODO 
               <IconButton onClick={() => setModalOpen(false)} >
@@ -135,6 +179,9 @@ const UpperBar = ({ setNumLabel, setModalOpen, open }) => {
               </IconButton>
             */}
         </div>
+        <CreateCategoryModal open={createCategoryModalOpen} setOpen={setCreateCategoryModalOpen} />
+        <DeleteCategoryModal open={deleteCategoryModalOpen} setOpen={setDeleteCategoryModalOpen} />
+        <EditCategoryModal open={editCategoryModalOpen} setOpen={setEditCategoryModalOpen} />
       </AppBar>
     </ElevationScroll>
   );
