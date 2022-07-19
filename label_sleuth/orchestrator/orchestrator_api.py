@@ -818,8 +818,9 @@ class OrchestratorApi:
                         # labels again to apply the labels to the new data
                         labeled_elements = self.data_access.get_labeled_text_elements(workspace_id, dataset_name,
                                                                                       category_id)['results']
-                        uri_to_label = {te.uri: te.category_to_label for te in labeled_elements}
-                        self.data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts=True)
+                        if len(labeled_elements) > 0:
+                            uri_to_label = {te.uri: te.category_to_label for te in labeled_elements}
+                            self.data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts=True)
     
                     if len(category.iterations) > 0:
                         iteration_index = len(category.iterations)-1
