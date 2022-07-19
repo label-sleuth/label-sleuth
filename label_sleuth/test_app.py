@@ -243,7 +243,7 @@ class TestAppIntegration(unittest.TestCase):
 
         # delete category and create a new one
         res = self.client.delete(f"/workspace/{workspace_name}/category/{category_id}", headers=HEADERS)
-        self.assertEqual(200, res.status_code, msg="Failed to update category")
+        self.assertEqual(200, res.status_code, msg="Failed to delete category")
 
         res = self.client.get(f"/workspace/{workspace_name}/categories", headers=HEADERS)
         self.assertEqual(len(res.get_json()['categories']), 0, msg='unexpected number of categories')
