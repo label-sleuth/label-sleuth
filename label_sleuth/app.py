@@ -314,6 +314,12 @@ def update_category(workspace_id, category_id):
     :post_param category_name:
     :post_param category_description:
     """
+    try:
+        category_id = int(category_id)
+    except:
+        return jsonify({"type": "category_id_error",
+                        "title": f"category_id should be an integer (got {category_id}) "}), 400
+
     post_data = request.get_json(force=True)
     new_category_name = post_data["category_name"]
     new_category_description = post_data["category_description"]

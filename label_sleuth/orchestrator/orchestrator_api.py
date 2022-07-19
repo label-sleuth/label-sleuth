@@ -130,7 +130,7 @@ class OrchestratorApi:
         return self.orchestrator_state.add_category_to_workspace(workspace_id, category_name, category_description)
 
     def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str):
-        logging.info(f"Updating category id {id} name to {new_category_name}, and category description to "
+        logging.info(f"Updating category id {category_id} name to {new_category_name}, and category description to "
                      f"{new_category_description}")
         return self.orchestrator_state.edit_category(workspace_id, category_id, new_category_name,
                                                      new_category_description)
