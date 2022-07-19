@@ -69,27 +69,20 @@ function CategoryFormControl() {
   const curCategory = useSelector(state => state.workspace.curCategory)
   const categories = useSelector(state => state.workspace.categories)
   const dispatch = useDispatch()
-  const [selValue, setSelVal] = React.useState()
-
-  React.useEffect(() => {
-    setSelVal(curCategory)
-  }, [curCategory])
 
   const options = categories
     .map((item) => ({ value: item.category_id, label: item.category_name }))
     .sort((a, b) => a.label.localeCompare(b.label));
-  // TODO: insert sorted when categories are added
 
   const handleCategorySelect = (value) => {
     dispatch(updateCurCategory(value))
-    setSelVal(value)
   }
 
   return ( 
     <FormControl variant="standard" sx={{ minWidth: '200px', marginBottom: '16px' }}>
       <ControlledSelect
         id="label-select"
-        value={selValue}
+        value={curCategory}
         onChange={handleCategorySelect}
         options={options}
         placholder="placeholder"
