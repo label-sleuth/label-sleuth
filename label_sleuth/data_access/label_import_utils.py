@@ -22,7 +22,6 @@ from typing import Dict, Iterable, Sequence
 import pandas as pd
 
 from label_sleuth.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement
-from label_sleuth.data_access.data_access_api import get_document_uri
 
 
 def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name, data_access, doc_uri=None) \

@@ -67,7 +67,7 @@ class SentenceEmbeddingService:
         logging.info(f"Done getting GloVe representations for {len(embeddings)} sentences")
         return embeddings
 
-    def get_spacy_model(self, model_name):
+    def get_spacy_model(self, model_name) -> spacy.Language:
         """
         The model is loaded once, on the first time this method is called. On
         subsequent calls, the loaded model is read from the spacy_models dictionary
@@ -77,7 +77,7 @@ class SentenceEmbeddingService:
                 self.spacy_models[model_name] = self.load_or_download_spacy_model(model_name)
         return self.spacy_models[model_name]
 
-    def load_or_download_spacy_model(self, model_name):
+    def load_or_download_spacy_model(self, model_name) -> spacy.Language:
         """
         load or download spacy model by name.
         Since there is no way to control the download destination for spacy models, the model is downloaded and then
