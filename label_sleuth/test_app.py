@@ -232,6 +232,35 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code, msg="Failed to get models list")
         self.assertEqual(2, len(res.get_json()["models"]), msg="second model was not added to the models list")
 
+        # update existing category
+        new_category_name = f'{category_name}_new'
+        new_category_description = f'{category_description} new'
+        res = self.client.put(f"/workspace/{workspace_name}/category/{category_id}",
+                              data='{{"category_name":"{}","category_description":"{}"}}'.format(
+                                  new_category_name, new_category_description),
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to update category")
+
+        # delete category and create a new one
+        res = self.client.delete(f"/workspace/{workspace_name}/category/{category_id}", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to update category")
+
+        res = self.client.get(f"/workspace/{workspace_name}/categories", headers=HEADERS)
+        self.assertEqual(len(res.get_json()['categories']), 0, msg='unexpected number of categories')
+
+        res = self.client.post(f"/workspace/{workspace_name}/category",
+                               data='{{"category_name":"{}","category_description":"{}"}}'.format(category_name,
+                                                                                                  category_description),
+                               headers=HEADERS)
+        category_id = int(res.get_json()["category_id"])
+        self.assertEqual(200, res.status_code, msg="Failed to add a new category to workspace")
+        self.assertEqual(res.get_json(),
+                         {'category_description': category_description, 'category_name': category_name,
+                          'category_id': str(category_id)}, msg="diff in create category response")
+
+        res = self.client.get(f"/workspace/{workspace_name}/categories", headers=HEADERS)
+        self.assertEqual(len(res.get_json()['categories']), 1, msg='unexpected number of categories')
+
         print("Done")
 
     def wait_for_new_iteration(self, category_id, res, workspace_name, num_models):
