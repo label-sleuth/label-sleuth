@@ -20,12 +20,14 @@ import Drawer from '@mui/material/Drawer';
 import useUpdateLabelState from "./sidebar/customHooks/useUpdateLabelState";
 import { SEARCH, RCMD, RIGHT_DRAWER_WIDTH, POS_PREDICTIONS } from '../../const'
 import MainPanel from "./main/MainPanel";
+import { useSelector } from "react-redux";
 
-export const PanelManager = ({ activePanel,
+export const PanelManager = ({ 
     children,
     handleKeyEvent,
     open
 }) => {
+    const activePanel = useSelector(state => state.workspace.activePanel)
 
     const { updateSearchLabelState, updateRecLabelState, updateMainLabelState, updatePosPredLabelState } = useUpdateLabelState()
 
