@@ -747,11 +747,14 @@ class OrchestratorApi:
             category_id = category_name_to_id[category_name]
             uri_to_label = {uri: {category_id: label} for uri, cat_to_label in uri_to_label.items()
                             for category_name, label in cat_to_label.items()}
-            logging.info(f'{category_name}: adding labels for {len(uri_to_label)} uris')
-            self.set_labels(workspace_id, uri_to_label,
-                            apply_to_duplicate_texts=self.config.apply_labels_to_duplicate_texts,
-                            update_label_counter=True)
-    
+            if len(uri_to_label) == 0:
+                logging.info(f"found 0 elements for category {category_name}")
+            else:
+                logging.info(f'{category_name}: adding labels for {len(uri_to_label)} uris')
+                self.set_labels(workspace_id, uri_to_label,
+                                apply_to_duplicate_texts=self.config.apply_labels_to_duplicate_texts,
+                                update_label_counter=True)
+
             label_counts_dict = self.get_label_counts(workspace_id, dataset_name, category_id, False)
             logging.info(f"Updated total label count in workspace '{workspace_id}' for category id {category_id} "
                          f"is {sum(label_counts_dict.values())} ({label_counts_dict})")
