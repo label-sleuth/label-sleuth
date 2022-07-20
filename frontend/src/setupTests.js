@@ -20,6 +20,7 @@ import {
   modelUpdateExample,
   workspacesExample,
   datasetsExample,
+  categoriesExample,
 } from "./utils/test-utils";
 
 jest.setTimeout(10000);
@@ -34,6 +35,29 @@ const handlers = [
   }),
   rest.get(`/datasets`, (req, res, ctx) => {
     return res(ctx.json(datasetsExample));
+  }),
+  rest.get(`/workspace/:workspace_id/categories`, (req, res, ctx) => {
+    return res(
+      ctx.json([
+        ...categoriesExample,
+        {
+          category_description: "",
+          category_id: 26,
+          category_name: "test_category",
+        },
+      ])
+    );
+  }),
+  rest.post("/workspace/:workspace_id/category", (req, res, ctx) => {
+    const category = req.body;
+    return res(
+      ctx.json({
+        category_description: "",
+        category_id: "26",
+        category_name: category.category_name,
+        update_counter: true,
+      })
+    );
   }),
 ];
 

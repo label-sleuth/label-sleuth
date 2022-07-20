@@ -13,11 +13,12 @@
     limitations under the License.
 */
 
-import React from 'react'
-import { render } from '@testing-library/react'
-import { Provider } from 'react-redux'
-import { BrowserRouter } from 'react-router-dom'
-import setupStore from '../store/configureStore'
+import React from "react";
+import { render } from "@testing-library/react";
+import { Provider } from "react-redux";
+import { BrowserRouter } from "react-router-dom";
+import setupStore from "../store/configureStore";
+import { ToastContainer } from 'react-toastify';
 
 export const renderWithProviderAndRouter = (
   ui,
@@ -28,11 +29,18 @@ export const renderWithProviderAndRouter = (
   } = {}
 ) => {
   function Wrapper({ children }) {
-    return <Provider store={store}> <BrowserRouter>{children}</BrowserRouter></Provider>
+    return (
+      <Provider store={store}>
+        <BrowserRouter>
+          <ToastContainer position="top-center" hideProgressBar={true} autoClose={7000} theme='dark' />
+          {children}
+        </BrowserRouter>
+      </Provider>
+    );
   }
 
-  return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
+  return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) };
+};
 
 export const modelUpdateExample = {
   models: [
@@ -45,12 +53,8 @@ export const modelUpdateExample = {
 };
 
 export const workspacesExample = {
-  workspaces: [
-    "full",
-    "medium",
-    "small",
-  ],
-}
+  workspaces: ["full", "medium", "small"],
+};
 
 export const datasetsExample = {
   datasets: [
@@ -59,4 +63,12 @@ export const datasetsExample = {
     { dataset_id: "small" },
     { dataset_id: "very_small" },
   ],
-}
+};
+
+export const categoriesExample = {
+  categories: [
+    { category_description: "", category_id: 22, category_name: "cat1" },
+    { category_description: "", category_id: 23, category_name: "cat2" },
+    { category_description: "", category_id: 24, category_name: "cat3" },
+  ],
+};
