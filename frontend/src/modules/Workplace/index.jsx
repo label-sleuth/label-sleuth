@@ -99,9 +99,7 @@ export default function Workspace() {
         <WorkspaceInfo workspaceId={workspaceId} setTutorialOpen={setTutorialOpen}/>
         <Box component="main" sx={{ padding: 0 }}>
           <UpperBar />
-          <PanelManager
-            open={open}
-            activePanel={activePanel}>
+          <PanelManager open={open}>
             {open && activePanel == SEARCH && <SearchPanel ref={textInput} clearSearchInput={clearSearchInput} />}
             {activePanel == RCMD && <RecToLabelPanel />}
             {activePanel == POS_PREDICTIONS && <PosPredictionsPanel />}  

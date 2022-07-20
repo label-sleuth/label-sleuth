@@ -76,7 +76,6 @@ export default function CreateCategoryModal({ open, setOpen }) {
     const newCategoryName = text.trim();
     dispatch(createCategoryOnServer({ category: newCategoryName }))
       .then(() => setOpen(false))
-      .then(() => dispatch(fetchCategories()))
       .then(() =>
       notify(`The category '${newCategoryName}' has been created`, {
         type: "success",
@@ -112,17 +111,28 @@ export default function CreateCategoryModal({ open, setOpen }) {
               width: "300px"
             }}
           >
-            <TextField 
-                id="outlined-basic" 
-                className={classes.new_modal_name} 
-                label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG} 
-                onChange={handleTextFieldChange} 
-                onKeyUp={onKeyDown} 
-                error={categoryNameError ? true : false} 
-                autoFocus
-              />
-            <Button onClick={onSubmit} className={categoryNameError || !text ? classes['btn-disabled'] : classes.btn} sx={{ marginLeft: 3 }}>Create</Button>
-            <p className={classes['error']}>{categoryNameError}</p>
+            <TextField
+              id="outlined-basic"
+              className={classes.new_modal_name}
+              label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG}
+              onChange={handleTextFieldChange}
+              onKeyUp={onKeyDown}
+              error={categoryNameError ? true : false}
+              autoFocus
+            />
+            <Button
+              onClick={onSubmit}
+              className={
+                categoryNameError || !text
+                  ? classes["btn-disabled"]
+                  : classes.btn
+              }
+              sx={{ marginLeft: 3 }}
+              disabled={categoryNameError !== "" || text === ""}
+            >
+              Create
+            </Button>
+            <p className={classes["error"]}>{categoryNameError}</p>
           </Box>
         </Box>
       </Modal>

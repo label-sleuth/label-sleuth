@@ -21,7 +21,7 @@ import InputLabel from '@mui/material/InputLabel';
 import classes from "./Dropdown.module.css";
 
 
-const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, placeholder }) => {
+const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, placeholder, aria="demo-simple-select" }) => {
   const ITEM_HEIGHT = 30;
   const ITEM_PADDING_TOP = 8;
   const MenuProps = {
@@ -52,7 +52,7 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
   return (
     <>
       <InputLabel 
-        id="demo-simple-select-helper-label"
+        id={`${aria}-label`}
         shrink={true}
         style={{
             fontSize: '18px',
@@ -60,8 +60,8 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
         }}
       >{label}</InputLabel>
       <Select
-        labelId="demo-simple-select-helper-label"
-        id="demo-simple-select-helper"
+        labelId={`${aria}-label`}
+        id={`${aria}-helper`}
         value={value ?? ''}
         label={label}
         displayEmpty

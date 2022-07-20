@@ -1055,6 +1055,7 @@ const DataSlice = createSlice({
             }
         },
         [createCategoryOnServer.fulfilled]: (state, action) => {
+            // TODO: action.payload has an update_counter field that is not used, remove it
             return {
                 ...state,
                 curCategory: action.payload.category_id.toString(),

@@ -93,6 +93,7 @@ function CategoryFormControl() {
         onChange={handleCategorySelect}
         options={options}
         placholder="placeholder"
+        aria="category-select"
       />
     </FormControl>
   );
@@ -168,16 +169,7 @@ const UpperBar = ({ setNumLabel }) => {
             )
             : null
           }
-          
           {cardOpen ? <CategoryCard setCardOpen={setCardOpen} /> : null}
-          {/* TODO 
-              <IconButton onClick={() => setModalOpen(false)} >
-                <EditIcon  color="success" />
-              </IconButton>
-              <IconButton onClick={() => setModalOpen(false)} >
-                <DeleteIcon  color="error" />
-              </IconButton>
-            */}
         </div>
         <CreateCategoryModal open={createCategoryModalOpen} setOpen={setCreateCategoryModalOpen} />
         <DeleteCategoryModal open={deleteCategoryModalOpen} setOpen={setDeleteCategoryModalOpen} />
