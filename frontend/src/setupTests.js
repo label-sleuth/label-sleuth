@@ -59,6 +59,14 @@ const handlers = [
       })
     );
   }),
+  rest.delete("/workspace/:workspace_id/category/:category_id", (req, res, ctx) => {
+    return res(
+      ctx.json({
+        category_id: "26",
+        workspace_id: "workspace_id",
+      })
+    );
+  }),
 ];
 
 const server = setupServer(...handlers);
