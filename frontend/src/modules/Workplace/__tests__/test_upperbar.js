@@ -15,12 +15,10 @@
 
 import React from "react";
 import { screen, fireEvent } from "@testing-library/react";
-import { renderWithProviderAndRouter } from "../../../utils/test-utils";
+import { renderWithProviderAndRouter, createCategory } from "../../../utils/test-utils";
 import { initialState as initialWorkspaceState } from "../DataSlice";
 import UpperBar from '../upperbar/UpperBar'
 import { categoriesExample } from '../../../utils/test-utils'
-
-
 
 test("test that category action butttons are present", async () => {
     renderWithProviderAndRouter(
@@ -104,17 +102,7 @@ test("test create new category flow", async () => {
     }
   );
 
-  fireEvent.click(screen.queryByRole('button', { name: /create/i}))
-  expect(screen.getByText(/Create a new category/i)).toBeInTheDocument();
-
-  const button = screen.getByRole('button', {name: "Create"})
-  const input = screen.getByRole('textbox', {name: "New category name"})
-  
-  fireEvent.change(input, {target: {value: "test_category"}})
-  expect(input.value).toBe('test_category')
-  expect(button).not.toBeDisabled()
-
-  fireEvent.click(button)
+  await createCategory()
 
   expect(await screen.findByRole("alert")).toBeInTheDocument()
   expect(await screen.findByText(/The category 'test_category' has been created/)).toBeInTheDocument()
@@ -124,4 +112,35 @@ test("test create new category flow", async () => {
 
   // check that the created category is selected in the dropdown
   expect(screen.getByLabelText("test_category")).toBeInTheDocument()
+});
+
+test("test delete category flow", async () => {
+  const r = renderWithProviderAndRouter(
+    <UpperBar />,
+    {
+      preloadedState: {
+        workspace: {
+          ...initialWorkspaceState,
+          curCategory: null,
+          categories: categoriesExample.categories,
+          workspaceId: "workspace_id"
+        },
+      },
+    }
+  );
+  
+  await createCategory()
+
+  fireEvent.click(screen.queryByRole('button', { name: /delete/i}))
+  expect(screen.getByText(/Are you sure you want to delete the category?/i)).toBeInTheDocument();
+  const button = screen.getByRole('button', {name: "Yes"})
+  fireEvent.click(button)
+  
+  expect(await screen.findByText(/The category test_category has been deleted/)).toBeInTheDocument()
+  expect(screen.queryByText(/Are you sure you want to delete the category 'ad'?/i)).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /delete/i}));
+  expect(screen.queryByRole('button', { name: /edit/i})).not.toBeInTheDocument();
+
+  await createCategory()
+  // TODO: check that the category is not present in the dropdown and that no category is selected
 });

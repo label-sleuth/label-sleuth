@@ -14,7 +14,7 @@
 */
 
 import React from "react";
-import { render } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import setupStore from "../store/configureStore";
@@ -41,6 +41,23 @@ export const renderWithProviderAndRouter = (
 
   return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) };
 };
+
+
+export const createCategory = async () => {
+  const createCategoryButton = await screen.findByRole('button', { name: /create/i})
+  fireEvent.click(createCategoryButton)
+  expect(await screen.findByText(/Create a new category/i)).toBeInTheDocument();
+  const button = screen.getByRole('button', {name: "Create"})
+  const input = screen.getByRole('textbox', {name: "New category name"})
+  fireEvent.change(input, {target: {value: "test_category"}})
+  expect(input.value).toBe('test_category')
+  expect(button).not.toBeDisabled()
+
+  fireEvent.click(screen.getByRole('button', {name: "Create"}))
+  expect(await screen.findByText(/The category 'test_category' has been created/)).toBeInTheDocument()
+
+}
+
 
 export const modelUpdateExample = {
   models: [
