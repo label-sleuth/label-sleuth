@@ -53,7 +53,7 @@ export const createCategory = async () => {
   expect(input.value).toBe('test_category')
   expect(button).not.toBeDisabled()
 
-  fireEvent.click(screen.getByRole('button', {name: "Create"}))
+  fireEvent.click(button)
   expect(await screen.findByText(/The category 'test_category' has been created/)).toBeInTheDocument()
 
 }

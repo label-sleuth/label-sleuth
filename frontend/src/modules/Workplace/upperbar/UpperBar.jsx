@@ -76,7 +76,7 @@ function CategoryFormControl() {
   const curCategory = useSelector(state => state.workspace.curCategory)
   const categories = useSelector(state => state.workspace.categories)
   const dispatch = useDispatch()
-
+  
   const options = categories
     .map((item) => ({ value: item.category_id, label: item.category_name }))
     .sort((a, b) => a.label.localeCompare(b.label));
