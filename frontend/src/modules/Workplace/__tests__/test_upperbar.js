@@ -85,6 +85,10 @@ test("test create new category validation", async () => {
   fireEvent.change(input, {target: {value: "!"}})
   expect(screen.getByText(/Name may only contain English characters, digits, underscores and spaces/i)).toBeInTheDocument()
   expect(button).toBeDisabled()
+
+  fireEvent.change(input, {target: {value: "This text is longer than 30 characters which is the maximum len allowed"}})
+  expect(screen.getByText(/Name may be max 30 characters long/i)).toBeInTheDocument()
+  expect(button).toBeDisabled()
 });
 
 test("test create new category flow", async () => {
@@ -143,4 +147,36 @@ test("test delete category flow", async () => {
 
   await createCategory()
   // TODO: check that the category is not present in the dropdown and that no category is selected
+});
+
+test("test edit category flow", async () => {
+  const r = renderWithProviderAndRouter(
+    <UpperBar />,
+    {
+      preloadedState: {
+        workspace: {
+          ...initialWorkspaceState,
+          curCategory: null,
+          categories: categoriesExample.categories,
+          workspaceId: "workspace_id"
+        },
+      },
+    }
+  );
+  
+  await createCategory()
+
+  fireEvent.click(await screen.findByRole('button', { name: /edit/i}))
+  expect(screen.getByRole("heading", /Edit category/i)).toBeInTheDocument();
+
+  const button = screen.getByRole('button', {name: "Edit"})
+  const input = screen.getByRole('textbox', {name: "New category name"})
+  fireEvent.change(input, {target: {value: " edited_test_category "}})
+  expect(input.value).toBe(' edited_test_category ')
+  expect(button).not.toBeDisabled()
+
+  fireEvent.click(button)
+  expect(await screen.findByText(/The category name has been successfully edited/i)).toBeInTheDocument()
+
+  expect(await screen.findByRole('button', {name: "edited_test_category"})).toBeInTheDocument()
 });

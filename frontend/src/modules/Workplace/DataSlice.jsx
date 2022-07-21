@@ -1081,21 +1081,21 @@ const DataSlice = createSlice({
                 workspaceId: state.workspaceId
             }
         },
-        // [editCategory.fulfilled]: (state, action) => {
-        //     const { newCategoryName, newCategoryDescription } = action.payload;
-        //     return {
-        //       ...state,
-        //       categories: state.categories.map((c) =>
-        //         c.category_id == state.curCategory
-        //           ? {
-        //               ...c,
-        //               category_name: newCategoryName,
-        //               category_description: newCategoryDescription,
-        //             }
-        //           : c
-        //       ),
-        //     };
-        // },
+        [editCategory.fulfilled]: (state, action) => {
+            const { category_name, category_description } = action.payload;
+            return {
+              ...state,
+              categories: state.categories.map((c) =>
+                c.category_id == state.curCategory
+                  ? {
+                      ...c,
+                      category_name,
+                      category_description,
+                    }
+                  : c
+              ),
+            };
+        },
         [uploadLabels.rejected]: (state, action) => {
             return {
                 ...state,

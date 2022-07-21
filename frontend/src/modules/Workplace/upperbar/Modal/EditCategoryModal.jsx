@@ -69,14 +69,11 @@ export default function EditCategoryModal({ open, setOpen }) {
       })
     )
       .then(() => {
-        dispatch(fetchCategories());
-      })
-      .then(() => {
         setOpen(false);
         notify("The category name has been successfully edited", {
           type: "success",
           autoClose: 5000,
-        });
+        }); 
       });
   };
 

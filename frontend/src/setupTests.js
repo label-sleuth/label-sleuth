@@ -28,16 +28,17 @@ jest.setTimeout(10000);
 const handlers = [
   rest.get("/workspace/:workspace_id/models", (req, res, ctx) => {
     const models = modelUpdateExample;
-    return res(ctx.json(models));
+    return res(ctx.delay(), ctx.json(models));
   }),
   rest.get(`/workspaces`, (req, res, ctx) => {
-    return res(ctx.json(workspacesExample));
+    return res(ctx.delay(),ctx.json(workspacesExample));
   }),
   rest.get(`/datasets`, (req, res, ctx) => {
-    return res(ctx.json(datasetsExample));
+    return res(ctx.delay(),ctx.json(datasetsExample));
   }),
   rest.get(`/workspace/:workspace_id/categories`, (req, res, ctx) => {
     return res(
+      ctx.delay(),
       ctx.json([
         ...categoriesExample,
         {
@@ -51,6 +52,7 @@ const handlers = [
   rest.post("/workspace/:workspace_id/category", (req, res, ctx) => {
     const category = req.body;
     return res(
+      ctx.delay(),
       ctx.json({
         category_description: "",
         category_id: "26",
@@ -61,8 +63,21 @@ const handlers = [
   }),
   rest.delete("/workspace/:workspace_id/category/:category_id", (req, res, ctx) => {
     return res(
+      ctx.delay(),
       ctx.json({
         category_id: "26",
+        workspace_id: "workspace_id",
+      })
+    );
+  }),
+  rest.put("/workspace/:workspace_id/category/:category_id", (req, res, ctx) => {
+    const {category_name, category_description} = req.body
+    return res(
+      ctx.delay(),
+      ctx.json({
+        category_id: "26",
+        category_description,
+        category_name,
         workspace_id: "workspace_id",
       })
     );
