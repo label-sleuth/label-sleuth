@@ -49,6 +49,7 @@ import { Link } from "@mui/material";
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { IconButton } from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -434,7 +435,6 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                     : null}
                     <Divider />
                     <Stack
-                        direction="row"
                         sx={{
                             display: "flex",
                             flexDirection: "column",
@@ -443,27 +443,43 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                         }}
                         >
                         <Typography>Labeled data:</Typography>
-                        <Button
-                            onClick={() => dispatch(downloadLabels())}
-                            startIcon={<FileDownloadOutlinedIcon />}
-                            sx={{ textTransform: "none" }}
+                        <Stack
+                            direction="row"
+                            sx={{
+                                alignItems: "center",
+                            }}
                         >
-                            Download
-                        </Button>
-                        <Button
-                            startIcon={<FileUploadOutlinedIcon />}
-                            component="label"
-                            sx={{ textTransform: "none" }}
+                            <Button
+                                onClick={() => dispatch(downloadLabels())}
+                                startIcon={<FileDownloadOutlinedIcon />}
+                                sx={{ textTransform: "none" }}
+                            >
+                                Download
+                            </Button>
+                            {workspace.downloadingLabels && <CircularProgress size={20} sx={{marginLeft: "15px"}}/>}
+                        </Stack>
+                        <Stack
+                            direction="row"
+                            sx={{
+                                alignItems: "center",
+                            }}
                         >
-                            Upload
-                            <TextField
-                                inputRef={uploadLabelsRef}
-                                onChange={handleFileSelection}
-                                sx={{ display: { xs: "none" } }}
-                                type="file"
-                                inputProps={{ accept: ".csv" }}
-                            />
-                        </Button>
+                            <Button
+                                startIcon={<FileUploadOutlinedIcon />}
+                                component="label"
+                                sx={{ textTransform: "none" }}
+                            >
+                                Upload
+                                <TextField
+                                    inputRef={uploadLabelsRef}
+                                    onChange={handleFileSelection}
+                                    sx={{ display: { xs: "none" } }}
+                                    type="file"
+                                    inputProps={{ accept: ".csv" }}
+                                />
+                            </Button>
+                            {workspace.uploadingLabels && <CircularProgress size={20} sx={{marginLeft: "15px"}}/>}
+                        </Stack>
                     </Stack>
                     <Link
                         className={classes["link-to-website"]}
