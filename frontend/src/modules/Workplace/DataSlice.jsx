@@ -66,7 +66,9 @@ export const initialState = {
     workspaceVisited: false,
     uploadedLabels: null,
     errorMessage: null,
-    deletingCategory: false
+    deletingCategory: false,
+    uploadingLabels: false,
+    downloadingLabels: false
 }
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
@@ -758,17 +760,34 @@ const DataSlice = createSlice({
                 predictionForDocCat: predictionForDocCat
             }
         },
+        [downloadLabels.pending]: (state, action) => {
+            return {
+                ...state,
+                downloadingLabels: true
+            }
+        },
         [downloadLabels.fulfilled]: (state, action) => {
             const data = action.payload
             const current = new Date();
             const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`;
             const fileName = `labeleddata_from_Label_Sleuth<${date}>.csv`
             fileDownload(data, fileName)
+            return {
+                ...state,
+                downloadingLabels: false
+            }
+        },
+        [uploadLabels.pending]: (state, action) => {
+            return {
+                ...state,
+                uploadingLabels: true
+            }
         },
         [uploadLabels.fulfilled]: (state, action) => {
             return {
                 ...state,
-                uploadedLabels: action.payload
+                uploadedLabels: action.payload,
+                uploadingLabels: false
             }
         },
         [fetchNextDocElements.fulfilled]: (state, action) => {
