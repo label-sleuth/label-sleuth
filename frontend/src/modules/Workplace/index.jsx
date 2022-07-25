@@ -22,7 +22,7 @@ import {
   setSearchInput,
   resetSearchResults,
   curCategoryNameSelector
-} from './DataSlice.jsx';
+} from './redux/DataSlice';
 import WorkspaceInfo from './information/WorkspaceInfo';
 import UpperBar from './upperbar/UpperBar';
 import Backdrop from '@mui/material/Backdrop';

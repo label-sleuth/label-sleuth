@@ -14,7 +14,6 @@
 */
 
 import { useEffect } from 'react';
-import { searchKeywords } from '../../DataSlice.jsx';
 import {
     setFocusedState,
     fetchCertainDocument,
@@ -22,7 +21,8 @@ import {
     setSearchedIndex,
     setIsSearchActive,
     setSearchInput,
-} from '../../DataSlice';
+    searchKeywords
+} from '../../redux/DataSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
 const useSearchElement = () => {

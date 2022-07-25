@@ -22,7 +22,7 @@ import {
     setRecommendToLabelState,
     setSearchLabelState,
     setPosPredLabelState
-} from '../../DataSlice';
+} from '../../redux/DataSlice';
 
 
 /**
@@ -37,6 +37,7 @@ const useUpdateLabelState = () => {
     }
 
     const updateMainLabelState = (id, docid, label) => {
+        alert('here')
         dispatch(increaseIdInBatch())
         dispatch(setElementLabel({ element_id: id, docid: docid, label: label })).then(() => {
             dispatch(checkStatus())

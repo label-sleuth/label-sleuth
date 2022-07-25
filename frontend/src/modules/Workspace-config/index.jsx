@@ -15,7 +15,7 @@
 
 import React, { useEffect } from 'react';
 import { clearState, getDatasets } from './workspaceConfigSlice'
-import { cleanWorkplaceState } from '../Workplace/DataSlice'
+import { cleanWorkplaceState } from '../Workplace/redux/DataSlice'
 import classes from "./workspace-config.module.css"
 import ExistingWorkspace from "./ExistingWorkspaceForm"
 import NewWorkspace from "./NewWorkspaceForm"

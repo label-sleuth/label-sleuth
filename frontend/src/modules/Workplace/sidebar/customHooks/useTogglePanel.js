@@ -16,7 +16,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { POS_PREDICTIONS, RCMD, SEARCH } from '../../../../const';
-import {   setActivePanel } from '../../DataSlice';
+import {   setActivePanel } from '../../redux/DataSlice';
 
 const useTogglePanel = (setOpen, textInput) => {
 

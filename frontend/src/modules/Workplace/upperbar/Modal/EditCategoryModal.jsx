@@ -20,14 +20,14 @@ import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
 import TextField from "@mui/material/TextField";
 import { useDispatch } from "react-redux";
-import { editCategory } from "../../DataSlice";
+import { editCategory } from "../../redux/DataSlice";
 import {
   CREATE_NEW_CATEGORY_PLACEHOLDER_MSG,
   WRONG_INPUT_NAME_LENGTH,
   REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES,
   WRONG_INPUT_NAME_BAD_CHARACTER,
 } from "../../../../const";
-import { fetchCategories } from "../../DataSlice";
+import { fetchCategories } from "../../redux/DataSlice";
 import classes from "./index.module.css";
 import { notify } from "../../../../utils/notification";
 

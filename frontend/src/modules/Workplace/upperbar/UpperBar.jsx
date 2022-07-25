@@ -23,7 +23,7 @@ import ModeEditOutlineOutlinedIcon from '@mui/icons-material/ModeEditOutlineOutl
 import classes from './UpperBar.module.css';
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateCurCategory } from '../DataSlice.jsx';
+import { updateCurCategory } from '../redux/DataSlice';
 import FormControl from '@mui/material/FormControl';
 import ControlledSelect from '../../../components/dropdown/Dropdown';
 import Tooltip from '@mui/material/Tooltip';

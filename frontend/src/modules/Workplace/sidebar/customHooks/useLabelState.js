@@ -16,7 +16,7 @@
 import {
     setNumLabel,
     setNumLabelGlobal,
-} from '../../DataSlice';
+} from '../../redux/DataSlice';
 import { useSelector } from 'react-redux';
 
 

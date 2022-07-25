@@ -27,7 +27,7 @@ import {
   getPositivePredictions,
   setWorkspaceVisited,
   searchKeywords
-} from "./DataSlice.jsx";
+} from "./redux/DataSlice";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 

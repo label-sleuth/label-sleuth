@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { setElementLabel, checkStatus, setLabelState, increaseIdInBatch, setSearchLabelState, setNumLabel, setNumLabelGlobal, setRecommendToLabelState, setPosPredLabelState } from '../../DataSlice';
+import { setElementLabel, checkStatus, setLabelState, increaseIdInBatch, setSearchLabelState, setNumLabel, setNumLabelGlobal, setRecommendToLabelState, setPosPredLabelState } from '../../redux/DataSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { POS_PREDICTIONS, RCMD, SEARCH } from '../../../../const';
 
