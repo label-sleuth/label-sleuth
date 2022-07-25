@@ -15,10 +15,8 @@
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  sidebarOptionEnum
-} from "../../../../const";
-import {   setActivePanel } from '../../DataSlice';
+import { sidebarOptionEnum} from '../../../../const';
+import { setActivePanel } from '../../redux/DataSlice';
 
 const useTogglePanel = (setOpen, textInput) => {
 

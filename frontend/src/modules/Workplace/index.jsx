@@ -22,7 +22,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   setSearchInput,
   resetSearchResults,
-} from "./DataSlice.jsx";
+} from './redux/DataSlice';
 import WorkspaceInfo from "./information/WorkspaceInfo";
 import UpperBar from "./upperbar/UpperBar";
 import Backdrop from "@mui/material/Backdrop";
@@ -46,6 +46,7 @@ import {
   EVALUATION_TOOLTIP_MSG,
   sidebarOptionEnum
 } from "../../const";
+
 import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
 import Drawer from "@mui/material/Drawer";
 import { PanelManager } from "./PanelManager";

@@ -25,7 +25,7 @@ import info_icon from '../../../assets/workspace/help.svg';
 import logout_icon from '../../../assets/workspace/logout.svg';
 import workspace_icon from '../../../assets/workspace/change_catalog.svg';
 import { useDispatch, useSelector } from 'react-redux';
-import { downloadLabels, uploadLabels, checkModelUpdate, setWorkspaceId } from '../DataSlice.jsx';
+import { downloadLabels, uploadLabels, checkModelUpdate, setWorkspaceId } from '../redux/DataSlice';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
@@ -242,16 +242,14 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
 
     // placeholder for finding documents stats
     let doc_stats = {
-        pos: Object.values(workspace.labelState).filter(function (d) { return d == 'pos' }).length,
-        neg: Object.values(workspace.labelState).filter(function (d) { return d == 'neg' }).length,
-        total: workspace.elements.length
+        pos: workspace.pos_label_num_doc,
+        neg: workspace.neg_label_num_doc,
     };
 
     // placeholder for finding workspace  stats
     let workspace_stats = {
         pos: workspace.pos_label_num,
         neg: workspace.neg_label_num,
-        total: workspace.documents.length * 10
     };
 
     const open_introSlides = function () {

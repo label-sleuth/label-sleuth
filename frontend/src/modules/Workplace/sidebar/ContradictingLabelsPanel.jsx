@@ -26,7 +26,7 @@ import { useSelector, useDispatch } from "react-redux";
 import Element from "./Element";
 import useSearchElement from "./customHooks/useSearchElement";
 import useLabelState from "./customHooks/useLabelState";
-import { getContradictingLabels } from "../DataSlice";
+import { getContradictingLabels } from "../redux/DataSlice";
 import contradictive_elem_icon from "../Asset/contradicting.svg";
 
 const ContradictingLabelsPanel = ({

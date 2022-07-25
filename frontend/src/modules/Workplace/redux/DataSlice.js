@@ -15,9 +15,14 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import fileDownload from 'js-file-download'
-import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../config"
-import { handleError } from '../../utils/utils'
-import { sidebarOptionEnum } from '../../const'
+import { sidebarOptionEnum } from '../../../const'
+import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../../config"
+import { reducers as searchReducers, extraReducers as searchExtraReducers } from './searchSlice'
+import { extraReducers as documentExtraReducers } from './documentSlice'
+import { handleError, getCategoryQueryString, getQueryParamsString } from '../../../utils/utils'
+
+export { searchKeywords } from './searchSlice'
+export { fetchDocuments, fetchElements, fetchNextDocElements, fetchPrevDocElements, fetchCertainDocument } from './documentSlice'
 
 export const initialState = {
     workspaceId: "",
@@ -94,38 +99,7 @@ export const initialState = {
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
 
-const getCategoryQueryString = (curCategory) => {
-    return curCategory !== null ? `category_id=${curCategory}` : null
-}
-
-const getQueryParamsString = (queryParams) => {
-    let queryParamsString = ''
-    queryParams.forEach(param => {
-        queryParamsString = param ? `${queryParamsString}${param}&` : queryParamsString
-    })
-    // add leading '?' removes last '&'
-    queryParamsString = '?' + queryParamsString.substring(0, queryParamsString.length-1)
-    // return an empty string if there are no query params
-    return queryParamsString === '?' ? '' : queryParamsString
-}
-
-export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async (request, { getState }) => {
-
-    const state = getState()
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/documents`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const getLabelNext = createAsyncThunk('workspace/getElementToLabel', async (request, { getState }) => {
+export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel', async (request, { getState }) => {
 
     const state = getState()
     
@@ -144,10 +118,7 @@ export const getLabelNext = createAsyncThunk('workspace/getElementToLabel', asyn
     return data
 })
 
-
-
-export const getPosPredElementForCategory = createAsyncThunk('workspace/getPosPredElementForCategory', async (request, { getState }) => {
-
+export const getPositiveElementForCategory = createAsyncThunk('workspace/getPositiveElementForCategory', async (request, { getState }) => {
     const state = getState()
 
     const curDocument = state.workspace.documents[state.workspace.curDocId]['document_id']
@@ -322,117 +293,6 @@ export const editCategory = createAsyncThunk('workspace/editCategory', async ({n
     }).then(response => response.json())
 
     return data
-})
-
-export const searchKeywords = createAsyncThunk('workspace/searchKeywords', async (request, { getState }) => {
-    const state = getState()
-    const queryParams = getQueryParamsString([
-        `qry_string=${state.workspace.searchInput}`, 
-        getCategoryQueryString(state.workspace.curCategory),
-        `sample_start_idx=0`])
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/query${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const fetchNextDocElements = createAsyncThunk('workspace/fetchNextDoc', async (request, { getState }) => {
-
-    const state = getState()
-
-    const curDocument = state.workspace.documents[state.workspace.curDocId + 1]['document_id']
-
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-    
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(curDocument)}${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const fetchPrevDocElements = createAsyncThunk('workspace/fetchPrevDoc', async (request, { getState }) => {
-
-    const state = getState()
-
-    const curDocument = state.workspace.documents[state.workspace.curDocId - 1]['document_id']
-    
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(curDocument)}${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const fetchElements = createAsyncThunk('workspace/fetchElements', async (request, { getState }) => {
-
-    const state = getState()
-
-    const curDocument = state.workspace.documents[state.workspace.curDocId]['document_id']
-
-    var url = null;
-    
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-    url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(curDocument)}${queryParams}`
-    
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const fetchCertainDocument = createAsyncThunk('workspace/fetchCertainDocument', async (request, { getState }) => {
-    // if(!state.workspace.curCategory){
-    //     throw Error("No category was selected!") 
-    // }
-    const state = getState()
-
-    const { docid, eid, switchStatus } = request
-
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(docid)}${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => {
-        var data = response.json()
-        data['eid'] = eid
-        return data
-    })
-
-    return { data, eid, switchStatus }
 })
 
 export const downloadLabels = createAsyncThunk('workspace/downloadLabels', async (request, { getState }) => {
@@ -666,6 +526,7 @@ const DataSlice = createSlice({
     name: "workspace",
     initialState,
     reducers: {
+        ...searchReducers,
         setWorkspaceId(state, action) {
             state.workspaceId = action.payload
         },
@@ -675,9 +536,6 @@ const DataSlice = createSlice({
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
         },
-        resetSearchResults(state, _) {
-            state.searchResult = null
-        }, 
         setSearchLabelState(state, action) {
             state.searchLabelState = action.payload
         }, 
@@ -816,73 +674,14 @@ const DataSlice = createSlice({
         },
     },
     extraReducers: {
-        [fetchElements.fulfilled]: (state, action) => {
-            const data = action.payload
-
-            var initialFocusedState = {}
-
-            for (var i = 0; i < data['elements'].length; i++) {
-                initialFocusedState['L' + i] = false
-            }
-
-            var initialLabelState = {}
-
-            var pos_label = 0
-
-            var neg_label = 0
-
-            for (var i = 0; i < data['elements'].length; i++) {
-                if (state.curCategory in data['elements'][i]['user_labels']) {
-                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
-                        initialLabelState['L' + i] = 'pos'
-                        pos_label += 1
-                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
-                        initialLabelState['L' + i] = 'neg'
-                        neg_label += 1
-                    }
-                } else {
-                    initialLabelState['L' + i] = ""
-                }
-            }
-
-            return {
-                ...state,
-                elements: data['elements'],
-                focusedState: initialFocusedState,
-                focusedIndex: null,
-                labelState: initialLabelState,
-                ready: true,
-                pos_label_num_doc: pos_label,
-                neg_label_num_doc: neg_label
-            }
-        },
+        ...searchExtraReducers,
+        ...documentExtraReducers,
         [fetchCategories.fulfilled]: (state, action) => {
             const data = action.payload
 
             return {
                 ...state,
                 categories: data['categories']
-            }
-        },
-        [fetchDocuments.fulfilled]: (state, action) => {
-            const data = action.payload
-            return {
-                ...state,
-                documents: data['documents'],
-                curDocName: data['documents'][0]['document_id'],
-                curDocId: 0
-            }
-        },
-        [searchKeywords.fulfilled]: (state, action) => {
-            const data = action.payload
-            let initialSearchLabelState = _initNewLabelState(state, data.elements)  
-
-            return {
-                ...state,
-                searchResult: data.elements,
-                searchUniqueElemRes: data.hit_count_unique,
-                searchTotalElemRes: data.hit_count,
-                searchLabelState: initialSearchLabelState
             }
         },
         [getPositivePredictions.fulfilled]: (state, action) => {
@@ -974,7 +773,7 @@ const DataSlice = createSlice({
             }
         },
         
-        [getPosPredElementForCategory.fulfilled]: (state, action) => {
+        [getPositiveElementForCategory.fulfilled]: (state, action) => {
             const data = action.payload
 
             var elements = data['elements']
@@ -1042,90 +841,6 @@ const DataSlice = createSlice({
                 uploadingLabels: false
             }
         },
-        [fetchNextDocElements.fulfilled]: (state, action) => {
-            const data = action.payload
-
-            var initialFocusedState = {}
-
-            for (var i = 0; i < data['elements'].length; i++) {
-                initialFocusedState['L' + i] = false
-            }
-
-            var initialLabelState = {}
-
-            var pos_label = 0
-
-            var neg_label = 0
-
-            for (var i = 0; i < data['elements'].length; i++) {
-                if (state.curCategory in data['elements'][i]['user_labels']) {
-                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
-                        initialLabelState['L' + i] = 'pos'
-                        pos_label += 1
-                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
-                        initialLabelState['L' + i] = 'neg'
-                        neg_label += 1
-                    }
-                } else {
-                    initialLabelState['L' + i] = ""
-                }
-            }
-
-            return {
-                ...state,
-                elements: data['elements'],
-                curDocId: state.curDocId + 1,
-                curDocName: state['documents'][state.curDocId + 1]['document_id'],
-                focusedState: initialFocusedState,
-                focusedIndex: null,
-                labelState: initialLabelState,
-                ready: true,
-                pos_label_num_doc: pos_label,
-                neg_label_num_doc: neg_label
-            }
-        },
-        [fetchPrevDocElements.fulfilled]: (state, action) => {
-            const data = action.payload
-
-            var initialFocusedState = {}
-
-            for (var i = 0; i < data['elements'].length; i++) {
-                initialFocusedState['L' + i] = false
-            }
-
-            var initialLabelState = {}
-
-            var pos_label = 0
-
-            var neg_label = 0
-
-            for (var i = 0; i < data['elements'].length; i++) {
-                if (state.curCategory in data['elements'][i]['user_labels']) {
-                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
-                        initialLabelState['L' + i] = 'pos'
-                        pos_label += 1
-                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
-                        initialLabelState['L' + i] = 'neg'
-                        neg_label += 1
-                    }
-                } else {
-                    initialLabelState['L' + i] = ""
-                }
-            }
-
-            return {
-                ...state,
-                elements: data['elements'],
-                curDocId: state.curDocId - 1,
-                curDocName: state['documents'][state.curDocId - 1]['document_id'],
-                focusedState: initialFocusedState,
-                focusedIndex: null,
-                labelState: initialLabelState,
-                ready: true,
-                pos_label_num_doc: pos_label,
-                neg_label_num_doc: neg_label
-            }
-        },
         [setElementLabel.fulfilled]: (state, action) => {
             const {element} = action.payload
             const label = element.user_labels[state.curCategory]
@@ -1144,7 +859,7 @@ const DataSlice = createSlice({
                 posElemLabelState: _initNewLabelState(state, newPosElemResult)
             }
         },
-        [getLabelNext.fulfilled]: (state, action) => {
+        [getElementToLabel.fulfilled]: (state, action) => {
 
             const data = action.payload
 
@@ -1225,82 +940,6 @@ const DataSlice = createSlice({
                 }
             }
 
-        },
-        [fetchCertainDocument.fulfilled]: (state, action) => {
-
-            const response = action.payload
-            const data = response['data']
-            const eid = response['eid']
-            const status = response['switchStatus']
-
-            var initialFocusedState = {}
-
-            for (var i = 0; i < data['elements'].length; i++) {
-                initialFocusedState['L' + i] = false
-            }
-
-            initialFocusedState['L' + eid] = true
-            
-            /* TODO - check if it is still needed */
-
-            // var initialLabelState = null
-
-            // console.log(`status: ${status}`)
-
-            // if (status == 'switch') {
-
-            //     initialLabelState = {}
-
-            //     console.log(`switch status`)
-
-            //     for (var i = 0; i < data['elements'].length; i++) {
-            //         initialLabelState['L' + i] = ""
-            //     }
-            // } else {
-            //     console.log(`search status`)
-            //     initialLabelState = { ...state['labelState'] }
-            // }
-  
-            var initialLabelState = {}
-
-
-            for (var i = 0; i < data['elements'].length; i++) {
-                if (state.curCategory in data['elements'][i]['user_labels']) {
-                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
-                        initialLabelState['L' + i] = 'pos'
-                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
-                        initialLabelState['L' + i] = 'neg'
-                    }
-                } else {
-                    initialLabelState['L' + i] = ""
-                }
-            }
-
-            var DocId = -1
-
-
-            state.documents.map((d, i) => {
-                const curDocument = data['elements'][0]['docid']
-                if (d['document_id'] == curDocument) {
-                    DocId = i
-                    return
-                }
-            })
-
-            if (DocId == -1) {
-                console.log(`No Doc found with docid: ${data['elements'][0]['docid']}`)
-            }
-
-            return {
-                ...state,
-                elements: data['elements'],
-                curDocId: DocId,
-                curDocName: state['documents'][DocId]['document_id'],
-                focusedState: initialFocusedState,
-                focusedIndex: null,
-                labelState: initialLabelState,
-                ready: true,
-            }
         },
         [checkStatus.fulfilled]: (state, action) => {
             const response = action.payload

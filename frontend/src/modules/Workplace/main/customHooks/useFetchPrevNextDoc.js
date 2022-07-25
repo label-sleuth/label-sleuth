@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { fetchPrevDocElements, fetchNextDocElements, } from '../../DataSlice.jsx';
+import { fetchPrevDocElements, fetchNextDocElements, } from '../../redux/DataSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
 const useFetchPrevNextDoc = () => {

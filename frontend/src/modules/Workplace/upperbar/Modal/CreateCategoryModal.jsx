@@ -19,7 +19,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { useDispatch, useSelector } from 'react-redux';
-import { createCategoryOnServer, fetchCategories } from '../../DataSlice';
+import { createCategoryOnServer, fetchCategories } from '../../redux/DataSlice';
 import TextField from '@mui/material/TextField';
 import classes from './index.module.css';
 import {

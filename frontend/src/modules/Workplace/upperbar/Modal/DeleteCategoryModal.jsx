@@ -23,7 +23,7 @@ import {
   DialogContentText,
 } from "@mui/material";
 import { useSelector, useDispatch } from "react-redux";
-import { curCategoryNameSelector, deleteCategory } from "../../DataSlice";
+import { curCategoryNameSelector, deleteCategory } from "../../redux/DataSlice";
 import { notify } from "../../../../utils/notification";
 
 export default function DeleteCategoryModal({ open, setOpen }) {
