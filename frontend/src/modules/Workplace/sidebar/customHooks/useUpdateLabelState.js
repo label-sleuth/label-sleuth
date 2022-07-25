@@ -27,7 +27,7 @@ import {
     setSuspiciousElemLabelState,
     setContradictiveElemLabelState,
     setEvaluationLabelState
-} from '../../DataSlice';
+} from '../../redux/DataSlice';
 
 
 /**

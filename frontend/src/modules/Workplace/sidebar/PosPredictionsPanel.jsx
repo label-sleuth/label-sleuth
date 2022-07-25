@@ -20,7 +20,7 @@ import { useSelector } from "react-redux";
 import Element from "./Element";
 import useSearchElement from "./customHooks/useSearchElement";
 import useLabelState from "./customHooks/useLabelState";
-import { curCategoryNameSelector } from "../DataSlice";
+import { curCategoryNameSelector } from "../redux/DataSlice";
 
 const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
   const workspace = useSelector((state) => state.workspace);

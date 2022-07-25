@@ -13,7 +13,8 @@
     limitations under the License.
 */
 
-import { setElementLabel, 
+import { 
+    setElementLabel, 
     checkStatus, 
     setLabelState, 
     increaseIdInBatch, 
@@ -25,7 +26,8 @@ import { setElementLabel,
     setPosElemLabelState, 
     setSuspiciousElemLabelState, 
     setDisagreeElemLabelState, 
-    setContradictiveElemLabelState } from '../../DataSlice';
+    setContradictiveElemLabelState, 
+} from "../../redux/DataSlice";
 import { useDispatch, useSelector } from 'react-redux';
 import {
     sidebarOptionEnum

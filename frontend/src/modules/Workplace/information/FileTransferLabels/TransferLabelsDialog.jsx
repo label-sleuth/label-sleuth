@@ -9,7 +9,7 @@ import {
 import { Box, Modal, TextField } from "@mui/material";
 import "./styles.css";
 import { useDispatch } from "react-redux";
-import { uploadLabels, downloadLabels } from "../../DataSlice";
+import { uploadLabels, downloadLabels } from "../../redux/DataSlice";
 
 export const UploadLabelsDialog = ({ open, setOpen }) => {
   const dispatch = useDispatch();

@@ -32,7 +32,7 @@ import {
   startEvaluation,
   getEvaluationResults,
   cancelEvaluation,
-} from "../DataSlice";
+} from "../redux/DataSlice";
 
 import {
   START_EVALUATION_MSG,

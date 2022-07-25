@@ -14,7 +14,7 @@
 */
 
 import {
-  getLabelNext,
+  getElementToLabel,
   checkStatus,
   fetchCategories,
   fetchDocuments,
@@ -22,7 +22,7 @@ import {
   setIsCategoryLoaded,
   checkModelUpdate,
   fetchElements,
-  getPosPredElementForCategory,
+  getPositiveElementForCategory,
   setFocusedState,
   getPositivePredictions,
   setWorkspaceVisited,
@@ -30,7 +30,7 @@ import {
   getSuspiciousLabels,
   getAllPositiveLabels,
   cleanEvaluationState,
-} from "./DataSlice.jsx";
+} from "./redux/DataSlice";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -88,8 +88,8 @@ const useWorkspaceState = () => {
       // checking for nullity first because in js null >= 0
       if (workspace.model_version !== null && workspace.model_version >= 0) {
         dispatch(fetchElements())
-        dispatch(getLabelNext());
-        dispatch(getPosPredElementForCategory());
+        dispatch(getElementToLabel());
+        dispatch(getPositiveElementForCategory());
         dispatch(getPositivePredictions())
         // dispatch(getDisagreementsElements())
         dispatch(getSuspiciousLabels())
