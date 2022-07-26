@@ -13,108 +13,81 @@
     limitations under the License.
 */
 
-import {
-    setNumLabel,
-    setNumLabelGlobal,
-} from '../../redux/DataSlice';
-import { useSelector } from 'react-redux';
-
-
+import { updateDocumentLabelCountByDiff, setElementLabel, checkStatus, setLabelState } from "../../redux/DataSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { getNewLabelState, getBooleanLabel } from "../../../../utils/utils";
 /**
- * This custom hook is responsible for managing the labels states 
- ** for the current sidebar's active panels and for updating the main labels state panel. 
- * The labels states are managed per each category. 
- * When a user clicks on one of the positive or the negative element's icons in the current active sidebar panel, 
+ * This custom hook is responsible for managing the labels states
+ ** for the current sidebar's active panels and for updating the main labels state panel.
+ * The labels states are managed per each category.
+ * When a user clicks on one of the positive or the negative element's icons in the current active sidebar panel,
  ** this function will handle the appropriate states accordingly (i.e. positive, negative or none).
- * The updateMainLabelState and updatePanelLabelState props are returned 
+ * The updateMainLabelState and updatePanelLabelState props are returned
  ** from the useUpdateLabelState and passed as props to the active panel and
  *** update the current labels state
  * @param  {A new state for a current active panel } newPanelLabelState
  * @param  { The main panel's state } updateMainLabelState
  * @param  { The active sidebar's panel state} updatePanelLabelState
  */
-const useLabelState = (panelLabelState, updateMainLabelState, updatePanelLabelState, updateCounter=true) => {
-    const newPanelLabelState = {...panelLabelState}
-    const numLabel = useSelector(state => state.workspace.numLabel)
-    const numLabelGlobal = useSelector(state => state.workspace.numLabelGlobal)
+const useLabelState = (
+  panelLabelState,
+  updateMainLabelState,
+  updatePanelLabelState,
+  updateCounter=true
+) => {
+  const newPanelLabelState = {...panelLabelState}
+  const currentDocName = useSelector((state) => state.workspace.curDocName);
+  const mainLabelState = useSelector((state) => state.workspace.labelState)
+  const dispatch = useDispatch();
 
-    /**
-     * This function is reponsible for managing the positive elements state only
-     * @param  {Document id, i.e (dataset1-Giant otter) } docid
-     * @param  {Document id, i.e (dataset1-Giant otter-102)} id
-     * @param  {The element that was clicked on the sidebar panel and needs to be found on the main panel} searchedIndex
-     */
-    const handlePosLabelState = (docid, id, searchedIndex) => {
-        let label = "none"
-        let searchedElemIndex = `L${searchedIndex}-${id}`
+  /**
+   * This function is reponsible for managing sidebar elements label state and updating
+   * the main document view if needed
+   * @param  {Document id, i.e (dataset1-Giant otter) } docid
+   * @param  {Document id, i.e (dataset1-Giant otter-102)} id
+   * @param  {The element that was clicked on the sidebar panel and needs to be found on the main panel} searchedIndex
+   * @param  {The label action: can be 'pos' or 'neg'} labelAction
+   */
+  const handleLabelState = (docid, id, searchedElemIndex, labelAction) => {
+      
+    const { documentLabelCountChange, newLabel } = getNewLabelState(
+      newPanelLabelState[searchedElemIndex],
+      labelAction
+    );
 
-        if (newPanelLabelState[searchedElemIndex] == "pos") {
-            setNumLabel({ ...numLabel, "pos": numLabel['pos'] - 1 })
-            setNumLabelGlobal({ ...numLabelGlobal, "pos": numLabelGlobal['pos'] - 1 })
-            newPanelLabelState[searchedElemIndex] = label
-        }
-        else {
-            if (newPanelLabelState[searchedElemIndex] == "neg") {
-                setNumLabel({ "pos": numLabel['pos'] + 1, "neg": numLabel['neg'] - 1 })
-                setNumLabelGlobal({ "pos": numLabelGlobal['pos'] + 1, "neg": numLabelGlobal['neg'] - 1 })
-            }
-            else {
-                setNumLabel({ ...numLabel, "pos": numLabel['pos'] + 1 })
-                setNumLabelGlobal({ ...numLabelGlobal, "pos": numLabelGlobal['pos'] + 1 })
-            }
-            newPanelLabelState[searchedElemIndex] = "pos"
-            label = "true"
-        }
-        /**
-         * The following parameters are passed to setElementLabel function 
-         * @param  {Document id, i.e (dataset1-Giant otter) } docid
-         * @param  {Document id, i.e (dataset1-Giant otter-102)} id
-         * @param  {The current label value: true, false or none } label
-         */
-        updateMainLabelState(id, docid, label, updateCounter)
+    dispatch(setElementLabel({ element_id: id, docid: docid, label: getBooleanLabel(newLabel)})).then(() => {
+      dispatch(checkStatus())
 
-        /**
-         * @param  {The updated label state contains the current state of labeling 
-         * for each element in the active sidebar panel} newPanelLabelState
-         */
-        updatePanelLabelState(newPanelLabelState)
-    }
+      // if doc is L24-medium_wiki-Common house gecko-50 then elementMainIndex is L50
+      const elementMainIndex = id.split('-')[2]
 
-    /**
-     * This function is reponsible for managing the negative elements state only
-     * @param  {Document id, i.e (dataset1-Giant otter) } docid
-     * @param  {Document id, i.e (dataset1-Giant otter-102)} id
-     * @param  {The element that was clicked on the sidebar panel and needs to be found on the main panel} searchedIndex
-     */
-    const handleNegLabelState = (docid, id, searchedIndex) => {
-        let label = "none"
-        let searchedElemIndex = `L${searchedIndex}-${id}`
+      // Update main document view only if the side bar element belongs to the current main document
+      if (currentDocName === docid) {
+        dispatch(updateDocumentLabelCountByDiff(documentLabelCountChange));
+        const newMainLabelState = {...mainLabelState}
+        newMainLabelState[`L${elementMainIndex}`] = newLabel;
+        dispatch(setLabelState(newMainLabelState))
+      }
 
-        if (newPanelLabelState['L' + searchedIndex + '-' + id] == "neg") {
-            setNumLabel({ ...numLabel, "neg": numLabel['neg'] - 1 })
-            setNumLabelGlobal({ ...numLabelGlobal, "neg": numLabelGlobal['neg'] - 1 })
-            newPanelLabelState[searchedElemIndex] = label
-        }
-        else {
-            if (newPanelLabelState[searchedElemIndex] == "pos") {
-                setNumLabel({ "pos": numLabel['pos'] - 1, "neg": numLabel['neg'] + 1 })
-                setNumLabelGlobal({ "pos": numLabelGlobal['pos'] - 1, "neg": numLabelGlobal['neg'] + 1 })
-            }
-            else {
-                setNumLabel({ ...numLabel, "neg": numLabel['neg'] + 1 })
-                setNumLabelGlobal({ ...numLabelGlobal, "neg": numLabelGlobal['neg'] + 1 })
-            }
-            newPanelLabelState[searchedElemIndex] = "neg"
-            label = "false"
-        }
-        updateMainLabelState(id, docid, label, updateCounter)
-        updatePanelLabelState(newPanelLabelState)
-    }
+      updatePanelLabelState({
+        ...newPanelLabelState, 
+        [searchedElemIndex]: newLabel,
+      });
+    })
+  };
 
-    return {
-        handlePosLabelState,
-        handleNegLabelState,
-    }
+  const handlePosLabelState = (docid, id, searchedIndex) => {
+    handleLabelState(docid, id, searchedIndex, "pos");
+  };
+
+  const handleNegLabelState = (docid, id, searchedIndex) => {
+    handleLabelState(docid, id, searchedIndex, "neg");
+  };
+
+  return {
+    handlePosLabelState,
+    handleNegLabelState,
+  };
 };
 
 export default useLabelState;
