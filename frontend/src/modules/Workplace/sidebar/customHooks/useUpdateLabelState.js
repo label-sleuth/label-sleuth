@@ -17,7 +17,6 @@ import { useDispatch } from 'react-redux';
 import {
     checkStatus,
     fetchElements,
-    increaseIdInBatch,
     setElementLabel,
     setRecommendToLabelState,
     setSearchLabelState,
@@ -37,8 +36,6 @@ const useUpdateLabelState = () => {
     }
 
     const updateMainLabelState = (id, docid, label) => {
-        alert('here')
-        dispatch(increaseIdInBatch())
         dispatch(setElementLabel({ element_id: id, docid: docid, label: label })).then(() => {
             dispatch(checkStatus())
             dispatch(fetchElements())

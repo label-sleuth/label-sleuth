@@ -118,7 +118,7 @@ const MainPanel = ({ handleKeyEvent, open }) => {
                   keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
                   focusedState={workspace.focusedState}
                   index={index + firstPageIndex}
-                  element_id={element.id}
+                  elementURI={element.id}
                   prediction={element.model_predictions[workspace.curCategory]}
                   text={element['text']}
                 />

@@ -67,13 +67,13 @@ export default function Element(props) {
                 {workspace.curCategory !== null &&
                     <>
                         <div className={classes.resultbtn}
-                            onClick={(e) => { e.stopPropagation(); handlePosLabelState(docid, id, searchedIndex)}}>
+                            onClick={(e) => { e.stopPropagation(); handlePosLabelState(docid, id, searchedElemIndex)}}>
                             {labelState[searchedElemIndex] == 'pos' ?
                                 <img src={check} alt="checked" /> :
                                 <img className={classes.hovbtn} src={checking} alt="checking" />
                             }
                         </div>
-                        <div className={classes.resultbtn} positiveicon="false" onClick={(e) => {e.stopPropagation(); handleNegLabelState(docid, id, searchedIndex)}}>
+                        <div className={classes.resultbtn} positiveicon="false" onClick={(e) => {e.stopPropagation(); handleNegLabelState(docid, id, searchedElemIndex)}}>
                             {labelState[searchedElemIndex] == 'neg' ?
                                 <img src={cross} alt="crossed" /> :
                                 <img className={classes.hovbtn} src={crossing} alt="crossinging" />

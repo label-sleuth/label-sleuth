@@ -13,124 +13,114 @@
     limitations under the License.
 */
 
-import { setElementLabel, checkStatus, setLabelState, increaseIdInBatch, setSearchLabelState, setNumLabel, setNumLabelGlobal, setRecommendToLabelState, setPosPredLabelState } from '../../redux/DataSlice';
-import { useDispatch, useSelector } from 'react-redux';
-import { POS_PREDICTIONS, RCMD, SEARCH } from '../../../../const';
+import {
+  setElementLabel,
+  checkStatus,
+  setLabelState,
+  setSearchLabelState,
+  setRecommendToLabelState,
+  setPosPredLabelState,
+  updateDocumentLabelCountByDiff,
+} from "../../redux/DataSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { POS_PREDICTIONS, RCMD, SEARCH } from "../../../../const";
+import { getBooleanLabel, getNewLabelState } from "../../../../utils/utils";
 
-const useElemLabelState = ({ index, element_id }) => {
+const useElemLabelState = ({ index, elementURI }) => {
+  const dispatch = useDispatch();
+  const labelState = useSelector((state) => state.workspace.labelState);
+  const activePanel = useSelector((state) => state.workspace.activePanel);
+  const searchLabelState = useSelector((state) => state.workspace.searchLabelState);
+  const recommendToLabelState = useSelector((state) => state.workspace.recommendToLabelState);
+  const posPredLabelState = useSelector((state) => state.workspace.posPredLabelState);
+  const curDocName = useSelector((state) => state.workspace.curDocName);
 
-    const workspace = useSelector(state => state.workspace)
-    const numLabel = useSelector(state => state.workspace.numLabel)
-    const numLabelGlobal = useSelector(state => state.workspace.numLabelGlobal)
-    const dispatch = useDispatch()
-    const activePanel = useSelector(state => state.workspace.activePanel)
-    let newStateMain = { ...workspace.labelState }
-    let newPanelLabelState ={}
-    let searchPanelIndex = 0
- 
-    const getSearchPanelIndex = (newPanelLabelState) =>{
-        return Object.keys(newPanelLabelState).filter((id) => {
-            let index = id.indexOf('-');
-            let arr = [id.slice(0, index), id.slice(index + 1)];
-            if (arr[1] ==element_id) {
-                return id
-            }
-        })
+  /**
+   * Find the labeled main element in the opened sidebar panel. If it doesn't exist returns null
+   * @param {The list of element label state that is going to be updated} newPanelLabelState
+   * @returns The sidebarElementURI or null
+   */
+  const getSearchPanelIndex = (newPanelLabelState) => {
+    for (let sidebarElementURI in newPanelLabelState) {
+      if (
+        elementURI ===
+        sidebarElementURI.slice(sidebarElementURI.indexOf("-") + 1)
+      ) {
+        return sidebarElementURI;
+      }
     }
+    return null;
+  };
 
-       if(activePanel == SEARCH){
-        newPanelLabelState = { ...workspace.searchLabelState }
-        searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
-       }
-       else if(activePanel == RCMD){
-        newPanelLabelState = { ...workspace.recommendToLabelState }
-        searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
-       }
- 
-       else if(activePanel == POS_PREDICTIONS){
-        newPanelLabelState = { ...workspace.posPredLabelState }
-        searchPanelIndex = getSearchPanelIndex(newPanelLabelState)
-       }
-
-       const updateLabelsState = (element_id, label, newPanelLabelState, newMainState) => {
-        dispatch(increaseIdInBatch())
-        dispatch(setElementLabel({ element_id: element_id, docid: workspace.curDocName, label: label })).then(() => {
-            dispatch(checkStatus())
-        })
-        if(activePanel == SEARCH){
-            dispatch(setSearchLabelState(newPanelLabelState))
-        }
-        else if(activePanel == RCMD){
-            dispatch(setRecommendToLabelState(newPanelLabelState))
-        }
-        else if(activePanel == POS_PREDICTIONS){
-            dispatch(setPosPredLabelState(newPanelLabelState))
-        }
-        
-        dispatch(setLabelState(newMainState))
+  const getPanelElements = () => {
+    let newPanelLabelState = {};
+    let updatePanelLabelState
+    switch (activePanel) {
+      case SEARCH:
+        newPanelLabelState = { ...searchLabelState };
+        updatePanelLabelState = setSearchLabelState;
+        break;
+      case RCMD:
+        newPanelLabelState = { ...recommendToLabelState };
+        updatePanelLabelState = setRecommendToLabelState;
+        break;
+      case POS_PREDICTIONS:
+        newPanelLabelState = { ...posPredLabelState };
+        updatePanelLabelState = setPosPredLabelState;
     }
+    return { newPanelLabelState, updatePanelLabelState };
+  };
 
+  /**
+   * This function is reponsible for managing main elements label state and updating
+   * the sidebar panel view if needed
+   * @param  {The label action: can be 'pos' or 'neg'} labelAction
+   */
+  const handleLabelState = (labelAction) => {
+    const { newPanelLabelState, updatePanelLabelState } = getPanelElements();
+    const searchPanelIndex = getSearchPanelIndex(newPanelLabelState);
 
-    const handlePosLabelState = () => {
-        
-        let label = "none"
-        let mainElemIndex = `L${index}`
+    let mainElemIndex = `L${index}`;
+    const newMainLabelState = { ...labelState };
 
-        if (newStateMain[mainElemIndex] == "pos") {
-            setNumLabel({ ...numLabel, "pos": numLabel['pos'] - 1 })
-            setNumLabelGlobal({ ...numLabelGlobal, "pos": numLabelGlobal['pos'] - 1 })
-            newStateMain[mainElemIndex] = label
-            newPanelLabelState[searchPanelIndex] = label
-        }
-        else {
-            if (newStateMain[mainElemIndex] == "neg") {
-                setNumLabel({ "pos": numLabel['pos'] + 1, "neg": numLabel['neg'] - 1 })
-                setNumLabelGlobal({ "pos": numLabelGlobal['pos'] + 1, "neg": numLabelGlobal['neg'] - 1 })
-            }
-            else {
-                setNumLabel({ ...numLabel, "pos": numLabel['pos'] + 1 })
-                setNumLabelGlobal({ ...numLabelGlobal, "pos": numLabelGlobal['pos'] + 1 })
-            }
-            newStateMain[mainElemIndex] = "pos"
-            newPanelLabelState[searchPanelIndex] = "pos"
-            label = "true"
-        }
-        updateLabelsState(element_id, label, newPanelLabelState, newStateMain)
-    }
+    const { documentLabelCountChange, newLabel } = getNewLabelState(
+      newMainLabelState[mainElemIndex],
+      labelAction
+    );
 
+    newMainLabelState[mainElemIndex] = newLabel;
 
-    const handleNegLabelState = () => {
-        let label = "none"
-        let mainElemIndex = `L${index}`
+    dispatch(updateDocumentLabelCountByDiff(documentLabelCountChange));
 
-        if (newStateMain[mainElemIndex] == "neg") {
-            setNumLabel({ ...numLabel, "neg": numLabel['neg'] - 1 })
-            setNumLabelGlobal({ ...numLabelGlobal, "neg": numLabelGlobal['neg'] - 1 })
-            newStateMain[mainElemIndex] = label
-            newPanelLabelState[searchPanelIndex] = label
-        }
-        else {
-            if (newStateMain[mainElemIndex] == "pos") {
-                setNumLabel({ "pos": numLabel['pos'] - 1, "neg": numLabel['neg'] + 1 })
-                setNumLabelGlobal({ "pos": numLabelGlobal['pos'] - 1, "neg": numLabelGlobal['neg'] + 1 })
-            }
-            else {
-                setNumLabel({ ...numLabel, "neg": numLabel['neg'] + 1 })
-                setNumLabelGlobal({ ...numLabelGlobal, "neg": numLabelGlobal['neg'] + 1 })
-            }
-            newStateMain[mainElemIndex] = "neg"
-            newPanelLabelState[searchPanelIndex] = "neg"
-            label = "false"
-        }
-        updateLabelsState(element_id, label, newPanelLabelState, newStateMain)
-    }
+    newPanelLabelState[searchPanelIndex] = newLabel;
 
+    dispatch(
+      setElementLabel({
+        element_id: elementURI,
+        docid: curDocName,
+        label: getBooleanLabel(newLabel),
+      })
+    ).then(() => {
+      dispatch(checkStatus());
+      dispatch(setLabelState(newMainLabelState));
+      if (searchPanelIndex !== null) {
+        dispatch(updatePanelLabelState(newPanelLabelState));
+      }
+    });
+  };
 
+  const handlePosLabelState = () => {
+    handleLabelState("pos");
+  };
 
-    return {
-        handlePosLabelState,
-        handleNegLabelState,
-    }
+  const handleNegLabelState = () => {
+    handleLabelState("neg");
+  };
+
+  return {
+    handlePosLabelState,
+    handleNegLabelState,
+  };
 };
 
 export default useElemLabelState;
