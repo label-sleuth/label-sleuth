@@ -32,8 +32,6 @@ export const initialState = {
     elements: [],
     categories: [],
     curCategory: null,
-    ready: false,
-    num_cur_batch: 0,
     elementsToLabel: [],
     focusedIndex: null,
     focusedState: [],
@@ -61,12 +59,7 @@ export const initialState = {
     predictionForDocCat: [],
     modelUpdateProgress: 0,
     new_categories: [],
-    pos_label_num: 0,
-    neg_label_num: 0,
-    pos_label_num_doc: 0,
-    neg_label_num_doc: 0,
     training_batch: 5,
-    cur_completed_id_in_batch: 0,
     isDocLoaded: false,
     isCategoryLoaded: false,
     numLabel: { pos: 0, neg: 0 },
@@ -94,6 +87,12 @@ export const initialState = {
         initialLabelState: {},
         lastScore: null,
         scoreModelVersion: null,
+    },
+    labelCount: {
+        workspacePos: 0, 
+        workspaceNeg: 0,
+        documentPos: 0,
+        documentPos: 0
     },
 }
 
@@ -386,7 +385,6 @@ export const checkModelUpdate = createAsyncThunk('workspace/check_model_update',
 })
 
 export const setElementLabel = createAsyncThunk('workspace/set_element_label', async (request, { getState }) => {
-
     const state = getState()
 
     const { element_id, label, docid, update_counter } = request
@@ -563,6 +561,24 @@ const DataSlice = createSlice({
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
         },
+        updateDocumentLabelCountByDiff(state, action) { 
+            const diff = action.payload
+            return {
+                ...state,
+                labelCount: {
+                    ...state.labelCount,
+                    documentPos: state.labelCount.documentPos + diff.pos,
+                    documentNeg: state.labelCount.documentNeg + diff.neg,
+
+                }
+            }
+        },
+        setNumLabelGlobal(state, action) {
+            return {
+                ...state,
+                numLabelGlobal: action.payload
+            }
+        },
         setSearchedIndex(state, action) {
             state.searchedIndex = action.payload
         },
@@ -631,13 +647,6 @@ const DataSlice = createSlice({
             return {
                 ...state,
                 labelState: new_labeled_state
-            }
-        },
-        increaseIdInBatch(state, action) {
-            const cur_id_in_batch = state.cur_completed_id_in_batch
-            return {
-                ...state,
-                cur_completed_id_in_batch: cur_id_in_batch + 1
             }
         },
         cleanWorkplaceState(state, action) {
@@ -883,7 +892,6 @@ const DataSlice = createSlice({
                 ...state,
                 elementsToLabel: data['elements'],
                 recommendToLabelState: initRecommendToLabelState,
-                ready: true
             }
         },
         [checkModelUpdate.fulfilled]: (state, action) => {
@@ -944,38 +952,15 @@ const DataSlice = createSlice({
         [checkStatus.fulfilled]: (state, action) => {
             const response = action.payload
             const progress = response['progress']['all']
-            var new_id_in_batch = state.cur_completed_id_in_batch
-            var pos_label = state['pos_label_num']
-            var neg_label = state['neg_label_num']
-            // if (state.cur_completed_id_in_batch < state.training_batch - 1 ) {
-            //     status = "New model is not ready"
-            // } else if (state.cur_completed_id_in_batch == state.training_batch - 1) {
-            //     status = "New model is almost ready"
-            // } else {
-            //     status = "New model is ready"
-            // }
-            if (state.cur_completed_id_in_batch == state.training_batch) {
-                new_id_in_batch = 0
-            }
-
-            if ('true' in response['labeling_counts']) {
-                pos_label = response['labeling_counts']['true']
-            } else {
-                pos_label = 0
-            }
-
-            if ('false' in response['labeling_counts']) {
-                neg_label = response['labeling_counts']['false']
-            } else {
-                neg_label = 0
-            }
 
             return {
                 ...state,
                 modelUpdateProgress: progress,
-                cur_completed_id_in_batch: new_id_in_batch,
-                pos_label_num: pos_label,
-                neg_label_num: neg_label,
+                labelCount: {
+                    ...state.labelCount,
+                    workspacePos: response['labeling_counts']['true'] ?? 0,
+                    workspaceNeg: response['labeling_counts']['false'] ?? 0
+                },
                 nextModelShouldBeTraining: progress === 100 ? true : state.nextModelShouldBeTraining
             }
         },
@@ -1127,7 +1112,6 @@ export const curCategoryNameSelector = (state) => {
 export default DataSlice.reducer;
 export const { 
     updateCurCategory,
-    increaseIdInBatch,
     prevPrediction,
     setWorkspace,
     setFocusedState,
@@ -1146,7 +1130,7 @@ export const {
     setLabelState,
     cleanWorkplaceState,
     setNumLabelGlobal,
-    setNumLabel,
+    updateDocumentLabelCountByDiff,
     setSearchedIndex,
     setIsSearchActive,
     setActivePanel,

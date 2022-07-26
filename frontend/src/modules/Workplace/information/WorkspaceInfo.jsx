@@ -242,14 +242,14 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
 
     // placeholder for finding documents stats
     let doc_stats = {
-        pos: workspace.pos_label_num_doc,
-        neg: workspace.neg_label_num_doc,
+        pos: workspace.labelCount.documentPos,
+        neg: workspace.labelCount.documentNeg
     };
 
     // placeholder for finding workspace  stats
     let workspace_stats = {
-        pos: workspace.pos_label_num,
-        neg: workspace.neg_label_num,
+        pos: workspace.labelCount.workspacePos,
+        neg: workspace.labelCount.workspaceNeg,
     };
 
     const open_introSlides = function () {

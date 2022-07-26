@@ -99,7 +99,7 @@ function CategoryFormControl() {
   );
 }
 
-const UpperBar = ({ setNumLabel }) => {
+const UpperBar = () => {
   
   const curCategory = useSelector(state => state.workspace.curCategory)
   const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false)

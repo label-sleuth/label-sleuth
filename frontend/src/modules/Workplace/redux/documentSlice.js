@@ -176,13 +176,11 @@ export const reducers = {}
  */
 const parseElements = (elements, curCategory) => {
   
-  var initialFocusedState = {};
-  
-  var initialLabelState = {};
+  let initialFocusedState = {};
+  let initialLabelState = {};
 
-  var pos_label = 0;
-
-  var neg_label = 0;
+  let documentPos = 0;
+  let documentNeg = 0;
 
   for (const [i, element] of elements.entries()) {
     initialFocusedState["L" + i] = false;
@@ -190,12 +188,12 @@ const parseElements = (elements, curCategory) => {
     if (curCategory in userLabels) {
       if (userLabels[curCategory] == "true") {
         initialLabelState["L" + i] = "pos";
-        pos_label += 1;
+        documentPos += 1;
       } else if (
         userLabels[curCategory] == "false"
       ) {
         initialLabelState["L" + i] = "neg";
-        neg_label += 1;
+        documentNeg += 1;
       }
     } else {
       initialLabelState["L" + i] = "";
@@ -204,8 +202,8 @@ const parseElements = (elements, curCategory) => {
   return {
     initialFocusedState,
     initialLabelState,
-    pos_label,
-    neg_label
+    documentPos,
+    documentNeg
   }
 }
 
@@ -216,8 +214,8 @@ export const extraReducers = {
     const {
       initialFocusedState,
       initialLabelState,
-      pos_label,
-      neg_label
+      documentPos,
+      documentNeg
     } = parseElements(elements, state.curCategory)
 
     return {
@@ -227,8 +225,11 @@ export const extraReducers = {
       focusedIndex: null,
       labelState: initialLabelState,
       ready: true,
-      pos_label_num_doc: pos_label,
-      neg_label_num_doc: neg_label,
+      labelCount: {
+        ...state.labelCount,
+        documentPos,
+        documentNeg
+      },
     };
   },
   [fetchDocuments.fulfilled]: (state, action) => {
@@ -245,8 +246,8 @@ export const extraReducers = {
     const {
       initialFocusedState,
       initialLabelState,
-      pos_label,
-      neg_label
+      documentPos,
+      documentNeg
     } = parseElements(elements, state.curCategory)
 
     return {
@@ -256,9 +257,11 @@ export const extraReducers = {
       focusedIndex: null,
       labelState: initialLabelState,
       ready: true,
-      pos_label_num_doc: pos_label,
-      neg_label_num_doc: neg_label,
-
+      labelCount: {
+        ...state.labelCount,
+        documentPos,
+        documentNeg
+      },
       curDocId: state.curDocId + 1,
       curDocName: state.documents[state.curDocId + 1]["document_id"],
     };
@@ -268,8 +271,8 @@ export const extraReducers = {
     const {
       initialFocusedState,
       initialLabelState,
-      pos_label,
-      neg_label
+      documentPos,
+      documentNeg
     } = parseElements(elements, state.curCategory)
 
     return {
@@ -279,8 +282,11 @@ export const extraReducers = {
       focusedIndex: null,
       labelState: initialLabelState,
       ready: true,
-      pos_label_num_doc: pos_label,
-      neg_label_num_doc: neg_label,
+      labelCount: {
+        ...state.labelCount,
+        documentPos,
+        documentNeg
+      },
 
       curDocId: state.curDocId + 1,
       curDocName: state.documents[state.curDocId - 1]["document_id"],
@@ -292,8 +298,8 @@ export const extraReducers = {
     const {
       initialFocusedState,
       initialLabelState,
-      pos_label,
-      neg_label
+      documentPos,
+      documentNeg
     } = parseElements(elements, state.curCategory)
 
     const curDocument = elements[0]["docid"];
@@ -306,8 +312,11 @@ export const extraReducers = {
       focusedIndex: null,
       labelState: initialLabelState,
       ready: true,
-      pos_label_num_doc: pos_label,
-      neg_label_num_doc: neg_label,
+      labelCount: {
+        ...state.labelCount,
+        documentPos,
+        documentNeg
+      },
 
       curDocId: newDocId,
       curDocName: state["documents"][newDocId]["document_id"],
