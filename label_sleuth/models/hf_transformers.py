@@ -77,7 +77,7 @@ class HFTransformers(ModelAPI):
 
         ds = Dataset.from_dict({'text': [item['text'] for item in items_to_infer]})
         preds = []
-        for output in tqdm(pipeline(KeyDataset(ds, 'text'), batch_size=self.batch_size),
+        for output in tqdm(pipeline(KeyDataset(ds, 'text'), batch_size=self.batch_size, truncation=True),
                            total=len(items_to_infer), desc="classification inference"):
             preds.append(output)
 
