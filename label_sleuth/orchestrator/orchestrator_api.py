@@ -791,8 +791,11 @@ class OrchestratorApi:
                   DisplayFields.uri: le.uri,
                   DisplayFields.element_metadata: le.metadata,
                   DisplayFields.label: le.category_to_label[category_id].label,
-                  DisplayFields.label_metadata: le.category_to_label[category_id].metadata,
-                  DisplayFields.label_type: le.category_to_label[category_id].label_type.name}
+                  # TODO uncomment when adding metadata
+                  #DisplayFields.label_metadata: le.category_to_label[category_id].metadata,
+                  # TODO uncomment when adding support for exporting weak labels
+                  #DisplayFields.label_type: le.category_to_label[category_id].label_type.name
+                  }
                  for le in labeled_elements])
         return pd.DataFrame(list_of_dicts)
 
