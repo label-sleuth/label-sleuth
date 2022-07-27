@@ -31,7 +31,7 @@ from label_sleuth.models.core.tools import remove_stop_words_and_punctuation
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
 
 
-MIN_TOKEN_OVERLAP_THRESHOLD = 0.4
+MIN_TOKEN_OVERLAP_THRESHOLD = 0.6
 
 
 def get_disagreements_using_cross_validation(workspace_id, category_id: int, labeled_elements: List[TextElement],
