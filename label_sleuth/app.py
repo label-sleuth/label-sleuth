@@ -595,7 +595,7 @@ def set_element_label(workspace_id, element_id):
 @login_if_required
 @validate_category_id
 @validate_workspace_id
-def get_all_positive_labeled_elements_for_category(workspace_id):
+def get_all_positively_labeled_elements_for_category(workspace_id):
     """
     Return all elements that were assigned a positive label for the given category by the user
 
@@ -603,15 +603,47 @@ def get_all_positive_labeled_elements_for_category(workspace_id):
     :request_arg category_id:
     """
     category_id = int(request.args['category_id'])
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
-    positive_elements = [element for element in elements
-                         if element.category_to_label[category_id].label == LABEL_POSITIVE]
-
-    elements_transformed = elements_back_to_front(workspace_id, positive_elements, category_id)
+    elements_transformed = get_all_labeled_elements(workspace_id, category_id, label=LABEL_POSITIVE)
 
     res = {'positive_elements': elements_transformed}
     return jsonify(res)
+
+
+@main_blueprint.route("/workspace/<workspace_id>/negative_elements", methods=['GET'])
+@login_if_required
+@validate_category_id
+@validate_workspace_id
+def get_all_negatively_labeled_elements_for_category(workspace_id):
+    """
+    Return all elements that were assigned a negative label for the given category by the user
+
+    :param workspace_id:
+    :request_arg category_id:
+    """
+    category_id = int(request.args['category_id'])
+    elements_transformed = get_all_labeled_elements(workspace_id, category_id, label=LABEL_NEGATIVE)
+
+    res = {'negative_elements': elements_transformed}
+    return jsonify(res)
+
+
+def get_all_labeled_elements(workspace_id, category_id, label=None):
+    """
+    Return all elements that were assigned the given label, or all labeled elements if label is None
+
+    :param workspace_id:
+    :param category_id:
+    :param label:
+    """
+    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
+                                                                          remove_duplicates=True)
+
+    if label is not None:
+        elements = [element for element in elements
+                             if element.category_to_label[category_id].label == label]
+    elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
+    return elements_transformed
 
 
 @main_blueprint.route('/workspace/<workspace_id>/import_labels', methods=['POST'])
