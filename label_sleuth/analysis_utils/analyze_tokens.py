@@ -73,5 +73,5 @@ def get_token_overlap(text_a, text_b) -> float:
     a_tokens = set(text_a.lower().split())
     b_tokens = set(text_b.lower().split())
     intersection = a_tokens.intersection(b_tokens)
-    overlap = len(intersection) / min(len(a_tokens), len(b_tokens))
+    overlap = len(intersection) / max(len(a_tokens), len(b_tokens))
     return overlap
