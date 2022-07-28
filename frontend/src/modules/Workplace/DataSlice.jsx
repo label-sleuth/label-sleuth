@@ -113,7 +113,7 @@ export const fetchDocuments = createAsyncThunk('workspace/fetchDocuments', async
     return data
 })
 
-export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel', async (request, { getState }) => {
+export const getLabelNext = createAsyncThunk('workspace/getElementToLabel', async (request, { getState }) => {
 
     const state = getState()
     
@@ -157,7 +157,7 @@ export const getPosPredElementForCategory = createAsyncThunk('workspace/getPosPr
     return data
 })
 
-export const getPositiveElements = createAsyncThunk('workspace/getPositiveElements', async (request, { getState }) => {
+export const getAllPositiveLabels = createAsyncThunk('workspace/getPositiveElements', async (request, { getState }) => {
 
     const state = getState()
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
@@ -171,11 +171,10 @@ export const getPositiveElements = createAsyncThunk('workspace/getPositiveElemen
         },
         method: "GET"
     }).then(response => response.json())
-    console.log("positive elements:", data)
     return data
 })
 
-export const getDisagreeElements = createAsyncThunk('workspace/getDisagreeElements', async (request, { getState }) => {
+export const getDisagreementsElements = createAsyncThunk('workspace/getDisagreeElements', async (request, { getState }) => {
 
     const state = getState()
 
@@ -190,11 +189,10 @@ export const getDisagreeElements = createAsyncThunk('workspace/getDisagreeElemen
         },
         method: "GET"
     }).then(response => response.json())
-    console.log("disagree elements:", data)
     return data
 })
 
-export const getSuspiciousElements = createAsyncThunk('workspace/getSuspiciousElements', async (request, { getState }) => {
+export const getSuspiciousLabels = createAsyncThunk('workspace/getSuspiciousElements', async (request, { getState }) => {
 
     const state = getState()
     
@@ -209,12 +207,10 @@ export const getSuspiciousElements = createAsyncThunk('workspace/getSuspiciousEl
         },
         method: "GET"
     }).then(response => response.json())
-    console.log("suspicious elements:", data)
     return data
 })
 
-export const getContradictiveElements = createAsyncThunk('workspace/getContradictiveElements', async (request, { getState }) => {
-
+export const getContradictingLabels = createAsyncThunk('workspace/getContradictiveElements', async (request, { getState }) => {
     const state = getState()
     
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
@@ -228,7 +224,6 @@ export const getContradictiveElements = createAsyncThunk('workspace/getContradic
         },
         method: "GET"
     }).then(response => response.json())
-    console.log("contradictive elements:", data)
     return data
 })
 
@@ -564,9 +559,8 @@ export const checkStatus = createAsyncThunk('workspace/get_labelling_status', as
 })
 
 const _initNewLabelState = (state, elements)  => {
-
     let initialLabelState = {}
-    if(elements){
+    if (elements) {
         for (let i = 0; i < elements.length; i++) {
             if (state.curCategory in elements[i]['user_labels']) {
                 if (elements[i]['user_labels'][state.curCategory] == 'true') {
@@ -803,7 +797,7 @@ const DataSlice = createSlice({
                 posPredLabelState: _initNewLabelState(state, data.elements)
             }
         },
-        [getPositiveElements.fulfilled]: (state, action) => {
+        [getAllPositiveLabels.fulfilled]: (state, action) => {
             const data = action.payload
 
             return {
@@ -812,7 +806,7 @@ const DataSlice = createSlice({
                 posElemLabelState: _initNewLabelState(state, data.positive_elements) 
             }
         },
-        [getDisagreeElements.fulfilled]: (state, action) => {
+        [getDisagreementsElements.fulfilled]: (state, action) => {
             const data = action.payload  
 
             return {
@@ -821,7 +815,7 @@ const DataSlice = createSlice({
                 disagreeElemLabelState: _initNewLabelState(state, data.disagree_elements)
             }
         },
-        [getSuspiciousElements.fulfilled]: (state, action) => {
+        [getSuspiciousLabels.fulfilled]: (state, action) => {
             const data = action.payload  
 
             return {
@@ -830,7 +824,7 @@ const DataSlice = createSlice({
                 suspiciousElemLabelState: _initNewLabelState(state, data.elements)
             }
         },
-        [getContradictiveElements.fulfilled]: (state, action) => {
+        [getContradictingLabels.fulfilled]: (state, action) => {
             const data = action.payload  
             let initialContrLabelState = {}
             // let contradictiveElemPairsResult = []
@@ -1022,15 +1016,24 @@ const DataSlice = createSlice({
             }
         },
         [setElementLabel.fulfilled]: (state, action) => {
-            const data = action.payload
-
+            const {element} = action.payload
+            const label = element.user_labels[state.curCategory]
+            let newPosElemResult = [...state.posElemResult]
+            if (label === 'true') {
+                if (!state.posElemResult.some(e => e.id === element.id)) {
+                    newPosElemResult = [...newPosElemResult, element]
+                }
+            }
+            else {
+                newPosElemResult = newPosElemResult.filter(e => e.id !== element.id)
+            }
             return {
                 ...state,
-                num_cur_batch: state.num_cur_batch == 10 ? 0 : state.num_cur_batch + 1,
-                ready: true
+                posElemResult: newPosElemResult,
+                posElemLabelState: _initNewLabelState(state, newPosElemResult)
             }
         },
-        [getElementToLabel.fulfilled]: (state, action) => {
+        [getLabelNext.fulfilled]: (state, action) => {
 
             const data = action.payload
 

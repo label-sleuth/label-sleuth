@@ -224,7 +224,7 @@ export default function Workspace() {
                   componentId={"sidebar-pos-elem-button"}
                   imgSource={pos_elem_icon}
                   isSelected={togglePosElemPanel}
-                  alwaysEnabled={false}
+                  alwaysEnabled
                 />
                 <SidebarButton
                   tooltipMessage={DISAGREEMENTS_TOOLTIP_MSG}

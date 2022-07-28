@@ -50,7 +50,7 @@ const AllPositiveLabelsPanel = ({ updateMainLabelState, updateLabelState }) => {
           <strong>Positive labels</strong>
         </p>
       </Box>
-      {!posElemResult || posElemResult.length == 0 ? (
+      {!posElemResult || posElemResult.length === 0 ? (
         <Typography
           sx={{
             display: "flex",
