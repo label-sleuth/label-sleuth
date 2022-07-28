@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Stack } from "@mui/material";
+import { Stack, List, ListItem } from "@mui/material";
 import {
   LargeTitle,
   MainContent,
@@ -26,22 +26,37 @@ export const UploadLabelsDialog = ({ open, setOpen }) => {
     setOpen(false);
   };
 
+  const bullets = {
+    text: "all elements in the current workspace which are exactly equal to text will be assigned with label for category_name (overriding existing labels).",
+    category_name:
+      "the category for which the element islabeled. If this category does not exist in the current workspace, it will be automatically created.",
+    label: "true/false or 1/0.",
+    document_id:
+      "an optional column - if provided, label willbe applied only to the elements in document_id matching text (as opposed to in the entire current workspace).",
+  };
+
   return (
-    <Modal open={open} onClose={handleClose} disableRestoreFocus >
+    <Modal open={open} onClose={handleClose} disableRestoreFocus>
       <Box className="dialog-content">
         <div
           style={{
-            margin: "25px",
+            margin: "25px 15px 0 15px",
             display: "block",
           }}
         >
-          <LargeTitle>Upload labels to the workspace</LargeTitle>
+          <LargeTitle>Upload existing labels to the workspace</LargeTitle>
           <MainContent>
-            <p>
-              This action requires a csv file that must include <i>text</i>,{" "}
-              <i>category_name</i> and <i>label</i> columns, and may optionally
-              include a<i>document_id</i> column.
+            <p style={{ marginBotton: 0 }}>
+              This input is a CSV file, in which each row is a labeled element,
+              and its columns are: <br />
             </p>
+            <ul>
+              {Object.entries(bullets).map(([name, text]) => (
+                <li style={{paddingBottom:"10px"}}>
+                    <i>{name}</i>: {text}
+                </li>
+              ))}
+            </ul>
           </MainContent>
         </div>
         <Stack
@@ -49,7 +64,7 @@ export const UploadLabelsDialog = ({ open, setOpen }) => {
           justifyContent="flex-end"
           alignItems="flex-end"
           spacing={0}
-          style={{ width: "100%", order: 1, flexGrow: 0, marginTop: "15px" }}
+          style={{ width: "100%", order: 1, flexGrow: 0 }}
         >
           <SecondaryButton onClick={handleClose}>Cancel</SecondaryButton>
           <PrimaryButton component="label" sx={{ textTransform: "none" }}>
@@ -80,7 +95,7 @@ export const DownloadLabelsDialog = ({ open, setOpen }) => {
   };
 
   return (
-    <Modal open={open} onClose={handleClose}disableRestoreFocus >
+    <Modal open={open} onClose={handleClose} disableRestoreFocus>
       <Box className="dialog-content">
         <div
           style={{
@@ -91,9 +106,8 @@ export const DownloadLabelsDialog = ({ open, setOpen }) => {
           <LargeTitle>Download labels from the workspace</LargeTitle>
           <MainContent>
             <p>
-              Download all labels from the workspace as a csv
-              file. Each row in the csv is a label for a specific element for a
-              specific category.
+              Download all labels from the workspace as a csv file. Each row in
+              the csv is a label for a specific element for a specific category.
             </p>
           </MainContent>
         </div>
