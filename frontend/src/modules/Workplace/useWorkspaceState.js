@@ -14,7 +14,7 @@
 */
 
 import {
-  getElementToLabel,
+  getLabelNext,
   checkStatus,
   fetchCategories,
   fetchDocuments,
@@ -27,10 +27,10 @@ import {
   getPositivePredictions,
   setWorkspaceVisited,
   searchKeywords,
-  getDisagreeElements,
-  getSuspiciousElements,
-  getContradictiveElements,
-  getPositiveElements
+  getDisagreementsElements,
+  getSuspiciousLabels,
+  getContradictingLabels,
+  getAllPositiveLabels
 } from "./DataSlice.jsx";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -75,6 +75,7 @@ const useWorkspaceState = () => {
     // update the model version when the category changes (if any)
     if (workspace.curCategory !== null) {
       dispatch(checkModelUpdate());
+      dispatch(getAllPositiveLabels())
     }
   }, [workspace.curCategory, dispatch]);
 
@@ -84,15 +85,15 @@ const useWorkspaceState = () => {
     // also the status is updated
     if (workspace.curCategory !== null) {
       dispatch(checkStatus());
-      if (workspace.model_version >= 0) {
+      // checking for nullity first because in js null >= 0
+      if (workspace.model_version !== null && workspace.model_version >= 0) {
         dispatch(fetchElements())
-        dispatch(getElementToLabel());
+        dispatch(getLabelNext());
         dispatch(getPosPredElementForCategory());
         dispatch(getPositivePredictions())
-        dispatch(getPositiveElements())
-        dispatch(getDisagreeElements())
-        dispatch(getSuspiciousElements())
-        dispatch(getContradictiveElements())
+        dispatch(getDisagreementsElements())
+        dispatch(getSuspiciousLabels())
+        dispatch(getContradictingLabels())
       }
     }
   }, [workspace.curCategory, workspace.model_version, dispatch]);
@@ -107,6 +108,7 @@ const useWorkspaceState = () => {
       if (categories?.some(cat => cat.category_id == workspace.curCategory)) {
         dispatch(setIsCategoryLoaded(false));
         dispatch(setIsDocLoaded(false));
+        dispatch(getAllPositiveLabels())
         dispatch(fetchElements()).then(() => {
           if (workspace.searchInput) {
             dispatch(searchKeywords()).then(() => {
@@ -125,6 +127,15 @@ const useWorkspaceState = () => {
       }
     }
   }, [workspace.uploadedLabels]);
+
+
+  React.useEffect(() => {
+    // update the contradicting labels each time the label count changes
+    if (workspace.curCategory !== null &&  workspace.model_version !== null && workspace.model_version >= 0) { 
+      dispatch(getContradictingLabels())
+    }
+  }, [workspace.pos_label_num, workspace.neg_label_num])
 };
+
 
 export default useWorkspaceState;
