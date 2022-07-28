@@ -226,13 +226,13 @@ export default function Workspace() {
                   isSelected={togglePosElemPanel}
                   alwaysEnabled
                 />
-                <SidebarButton
+                {/* <SidebarButton
                   tooltipMessage={DISAGREEMENTS_TOOLTIP_MSG}
                   onClick={activateDisagreeElemLabelPanel}
                   componentId={"sidebar-disagree-elem-button"}
                   imgSource={disagree_elem_icon}
                   isSelected={toggleDisagreeElemPanel}
-                />
+                /> */}
                 <SidebarButton
                   tooltipMessage={SUSPICIOUS_LABELS_TOOLTIP_MSG}
                   onClick={activateSuspiciousElemLabelPanel}
