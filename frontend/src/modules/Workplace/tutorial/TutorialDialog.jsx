@@ -5,7 +5,7 @@ import {
   MainContent,
   PrimaryButton,
   SecondaryButton,
-} from "./components";
+} from "../../../components/dialog";
 import info_icon from "../../../assets/workspace/help.svg";
 import { Box, Modal } from "@mui/material";
 

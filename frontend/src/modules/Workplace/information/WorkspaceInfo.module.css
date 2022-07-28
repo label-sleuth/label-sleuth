@@ -126,44 +126,6 @@
     margin-top: 20px;
 }
 
-.hint {
-    display: relative;
-    z-index: 998;
-}
-/* 
-.hint > span {
-    font-family: 'IBM Plex Sans', sans-serif;
-    position: absolute;
-    width: 170px;
-    margin-left: -90px;
-    margin-top: 30px;
-    padding: 6px 9px;
-    border-radius: 2px;
-    font-size: 12px;
-    line-height: 16px;
-    background: gray;
-    color: #fff;
-    z-index: 999;
-    display: none;
-}
-
-.hint > span:after {
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    margin-left: -15px;
-    content: '';
-    width: 0;
-    height: 0;
-    border-bottom: solid 10px gray;
-    border-left: solid 15px transparent;
-    border-right: solid 15px transparent;
-}
-
-.hint:hover > span {
-    display: inline-block;
-} */
-
   /**
  * ==============================================
  * Dot Pulse
