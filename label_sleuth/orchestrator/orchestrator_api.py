@@ -189,7 +189,7 @@ class OrchestratorApi:
         return self.data_access.get_text_elements_by_uris(workspace_id, dataset_name, uris)
 
     def get_all_labeled_text_elements(self, workspace_id, dataset_name, category_id: int, remove_duplicates=False) -> \
-    List[TextElement]:
+            List[TextElement]:
         """
         Get all the text elements that were assigned user labels for the given category.
         :param workspace_id:
@@ -671,9 +671,21 @@ class OrchestratorApi:
     def get_suspicious_elements_report(self, workspace_id, category_id,
                                        model_type: ModelType = ModelsCatalog.SVM_ENSEMBLE) -> List[TextElement]:
         dataset_name = self.get_dataset_name(workspace_id)
-        labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
-        return get_disagreements_using_cross_validation(workspace_id, category_id, labeled_elements,
-                                                        self.model_factory, self.config.language, model_type)
+        labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
+                                                              remove_duplicates=self.config.apply_labels_to_duplicate_texts)
+        predictions = self.infer(workspace_id, category_id, labeled_elements)
+        disagreements = [text_element for text_element, prediction in zip(labeled_elements, predictions)
+                         if text_element.category_to_label[category_id].label != prediction.label]
+
+        cross_validation_disagreements = get_disagreements_using_cross_validation(workspace_id, category_id,
+                                                                                  labeled_elements,
+                                                                                  self.model_factory,
+                                                                                  self.config.language,
+                                                                                  model_type)
+        disagreement_uris = {text_element.uri for text_element in disagreements}
+        disagreements.extend([text_element for text_element in cross_validation_disagreements if
+                              text_element.uri not in disagreement_uris])
+        return disagreements
 
     def estimate_precision(self, workspace_id, category_id, ids, changed_elements_count, iteration_index):
         dataset_name = self.get_dataset_name(workspace_id)
@@ -792,9 +804,9 @@ class OrchestratorApi:
                   DisplayFields.element_metadata: le.metadata,
                   DisplayFields.label: le.category_to_label[category_id].label,
                   # TODO uncomment when adding metadata
-                  #DisplayFields.label_metadata: le.category_to_label[category_id].metadata,
+                  # DisplayFields.label_metadata: le.category_to_label[category_id].metadata,
                   # TODO uncomment when adding support for exporting weak labels
-                  #DisplayFields.label_type: le.category_to_label[category_id].label_type.name
+                  # DisplayFields.label_type: le.category_to_label[category_id].label_type.name
                   }
                  for le in labeled_elements])
         return pd.DataFrame(list_of_dicts)
