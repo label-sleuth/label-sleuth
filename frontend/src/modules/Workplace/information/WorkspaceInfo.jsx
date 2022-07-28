@@ -124,7 +124,7 @@ function a11yProps(index) {
 }
  
 
-export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelInterval=5000}) {
+export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelInterval=1000}) {
     const navigate = useNavigate()
     const theme = useTheme();
     const { logout } = useLogOut()
@@ -213,17 +213,26 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
 
     const dispatch = useDispatch();
 
+    /**
+     * Update the model state every checkModelInterval milliseconds
+     * Do it only if nextModelShouldBeTraining is true
+    */
     React.useEffect(() => {
         const interval = setInterval(() => {
-            if (workspace.curCategory != null) {
+            if (workspace.curCategory != null && workspace.nextModelShouldBeTraining) {
                 dispatch(checkModelUpdate())
             }
         }, checkModelInterval);
 
-        setModelVersionHasBeenSet(false)
-
         return () => clearInterval(interval);
-    }, [workspace.curCategory, checkModelInterval])
+    }, [workspace.curCategory, checkModelInterval, workspace.nextModelShouldBeTraining])
+
+
+    React.useEffect(() => {
+        setModelVersionHasBeenSet(false)
+    }, [workspace.curCategory])
+
+
 
     const handleChange = (event, newValue) => {
         setTabValue(newValue);
