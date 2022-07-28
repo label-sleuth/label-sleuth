@@ -48,8 +48,7 @@ import LinearWithValueLabel from './ModelProgressBar'
 import { Link } from "@mui/material";
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import { IconButton } from '@mui/material';
-import CircularProgress from '@mui/material/CircularProgress';
+import { UploadLabelsDialog, DownloadLabelsDialog } from './FileTransferLabels/TransferLabelsDialog';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -132,8 +131,9 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
     const workspace = useSelector(state => state.workspace)
     const [tabValue, setTabValue] = React.useState(0);
     const [tabStatus, setTabStatus] = React.useState(0)
+    const [uploadLabelsDialogOpen, setUploadLabelsDialogOpen] = React.useState(false)
+    const [downloadLabelsDialogOpen, setDownloadLabelsDialogOpen] = React.useState(false)
     const refAnimationInstance = useRef(null);
-    const uploadLabelsRef = useRef();
 
     // this state is used to not display the new model notififications the first time the model version is set
     const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false)
@@ -271,15 +271,7 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
         return prefix
     }
 
-    const handleFileSelection = (e) => {
-      const file = e.target.files[0];
-      const formData = new FormData();
-      formData.append("file", file);
-      dispatch(uploadLabels(formData));
-      if (uploadLabelsRef.current) {
-        uploadLabelsRef.current.value = ''
-    }
-    };  
+
 
     const getCategoriesString = (categories) => {
         if (categories.length === 1) return categories[0]
@@ -301,7 +293,8 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
 
     return (
         <>
-            {/* <Presentation /> */}
+            <UploadLabelsDialog open={uploadLabelsDialogOpen} setOpen={setUploadLabelsDialogOpen}/>
+            <DownloadLabelsDialog open={downloadLabelsDialogOpen} setOpen={setDownloadLabelsDialogOpen}/>
             <Box style={{
                 backgroundColor: '#161616',
                 width: drawerWidth,
@@ -316,7 +309,6 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                             width: drawerWidth,
                             boxSizing: 'border-box',
                             color: '#fff',
-                            zIndex: '1500',
                             background: 'transparent'
                         },
                     }}
@@ -378,7 +370,7 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                                 setTabStatus('workspace')
                             }}>
                                 <Stack spacing={0}>
-                                    <label style={{fontSize: '12px', opacity: 0.5}}>Labeled for Entire Workspace:</label>
+                                    <label style={{fontSize: '12px', opacity: 0.5}}>Labeled for entire workspace:</label>
                                     <StatsContainer>
                                         <Typography><strong>Positive</strong></Typography>
                                         <Typography sx={{ color: workspace_stats.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{workspace_stats.pos}</strong></Typography>
@@ -441,8 +433,8 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                             alignItems: "start",
                             padding: theme.spacing("24px", 2),
                         }}
-                        >
-                        <Typography>Labeled data:</Typography>
+                    >
+                        <Typography>Workspace labeled data:</Typography>
                         <Stack
                             direction="row"
                             sx={{
@@ -450,13 +442,12 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                             }}
                         >
                             <Button
-                                onClick={() => dispatch(downloadLabels())}
+                                onClick={() => setDownloadLabelsDialogOpen(true)}
                                 startIcon={<FileDownloadOutlinedIcon />}
                                 sx={{ textTransform: "none" }}
                             >
                                 Download
                             </Button>
-                            {workspace.downloadingLabels && <CircularProgress size={20} sx={{marginLeft: "15px"}}/>}
                         </Stack>
                         <Stack
                             direction="row"
@@ -467,18 +458,11 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                             <Button
                                 startIcon={<FileUploadOutlinedIcon />}
                                 component="label"
+                                onClick={() => setUploadLabelsDialogOpen(true)}
                                 sx={{ textTransform: "none" }}
                             >
                                 Upload
-                                <TextField
-                                    inputRef={uploadLabelsRef}
-                                    onChange={handleFileSelection}
-                                    sx={{ display: { xs: "none" } }}
-                                    type="file"
-                                    inputProps={{ accept: ".csv" }}
-                                />
                             </Button>
-                            {workspace.uploadingLabels && <CircularProgress size={20} sx={{marginLeft: "15px"}}/>}
                         </Stack>
                     </Stack>
                     <Link

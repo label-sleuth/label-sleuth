@@ -13,18 +13,27 @@
     limitations under the License.
 */
 
+// Tooltip messages
+// Sidebar tooltip messages
 export const SEARCH_ALL_DOCS_TOOLTIP_MSG = 'Search all documents'
 export const NEXT_TO_LABEL_TOOLTIP_MSG = 'Label next' 
+export const LABEL_NEXT_HELPER_MSG = 'The system suggests to label these elements next to best assist it to improve'
 export const POSITIVE_PRED_TOOLTIP_MSG = 'Positive predictions' 
+export const DISAGREEMENTS_TOOLTIP_MSG = 'label-prediction disagreements' 
+export const SUSPICIOUS_LABELS_TOOLTIP_MSG = 'Suspicious labels' 
+export const CONTRADICTING_LABELS_TOOLTIP_MSG = 'Contradicting labels' 
+
 export const PREV_DOC_TOOLTIP_MSG = "Go to previous document"
 export const NEXT_DOC_TOOLTIP_MSG = "Go to next document"
 export const LOGOUT_TOOLTIP_MSG = "Logout"
 export const GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG = "Go to workspace configuration"
-export const NO_MODEL_AVAILABLE_MSG = "not available yet"
-export const CREATE_NEW_CATEGORY_MODAL_MSG = "Create a new category"
 export const CREATE_NEW_CATEGORY_TOOLTIP_MSG = "Create new category"
 export const EDIT_CATEGORY_TOOLTIP_MSG = "Edit category"
 export const DELETE_CATEGORY_TOOLTIP_MSG = "Delete category"
+
+
+export const NO_MODEL_AVAILABLE_MSG = "not available yet"
+export const CREATE_NEW_CATEGORY_MODAL_MSG = "Create a new category"
 export const CREATE_NEW_CATEGORY_PLACEHOLDER_MSG = "New category name"
 export const UPLOAD_NEW_DATASET_MSG = "Upload new data"
 export const UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG = "Choose or set name"
@@ -33,14 +42,7 @@ export const UPLOAD_DOC_WAIT_MESSAGE = `Please wait while we upload your documen
 export const NEW_WORKSPACE_NAME_MSG = "Name your new workspace"
 export const NEW_WORKSPACE_NAME_PLACEHOLER_MSG = "e.g., my_new_workspace"
 export const LABEL_SLEUTH_SHORT_DESC = "Quickly create a text classifier"
-export const SEARCH = 'search'
-export const RCMD = 'rcmd'
-export const POS_PREDICTIONS = 'Positive predictions'
-export const POS_ELEMENTS = 'Positive labels'
-export const DISAGREE_ELEMENTS = 'Disagreements labels'
-export const SUSPICIOUS_ELEMENTS = 'Suspicious labels'
-export const CONTRADICTIVE_ELEMENTS = 'Contradictive labels'
-export const getPosPredTooltipMessage = (categoryName) => `These are the examples the model predicts to be related to the category ${categoryName} `
+export const ALL_POSITIVE_LABELS_TOOLTIP_MSG = 'All positive labels'
 export const RIGHT_DRAWER_WIDTH = 360
 export const DOC_ALREADY_EXISTS = "Document already exists"
 export const WORKSPACE_ALREADY_EXISTS = "Workspace already exists" 
@@ -56,3 +58,13 @@ export const WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES = `Name may only contain E
 export const WRONG_INPUT_NAME_BAD_CHARACTER = `Name may only contain English characters, digits, underscores and spaces`
 export const REGEX_LETTER_NUMBERS_UNDERSCORE = /^[a-zA-Z0-9_]*$/
 export const REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES = /^[a-zA-Z0-9_ ]*$/
+
+export const sidebarOptionEnum = {
+    LABEL_NEXT: "LABEL_NEXT",
+    SEARCH: "SEARCH",
+    POSITIVE_LABELS: "ALL_POSITIVE_LABELS",
+    CONTRADICTING_LABELS: 'CONTRADICTIVE_LABELS',
+    SUSPICIOUS_LABELS: 'SUSPICIOUS_LABELS',
+    POSITIVE_PREDICTIONS: 'POSITIVE_PREDICTIONS',
+    DISAGREEMENTS: 'DISAGREEMENTS',
+}

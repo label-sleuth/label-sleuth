@@ -10,7 +10,7 @@ import {
   InnerModal,
   OuterModal,
   StageCounter,
-} from "./components";
+} from "../../../components/dialog";
 import { useState, useEffect } from "react";
 import "./index.css";
 import check from "./assets/check.svg";
