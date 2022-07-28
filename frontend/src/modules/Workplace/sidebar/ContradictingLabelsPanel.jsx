@@ -16,29 +16,39 @@
 import { Box, Typography } from "@mui/material";
 import React from "react";
 import classes from "./index.module.css";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import Element from "./Element";
 import useSearchElement from "./customHooks/useSearchElement";
 import useLabelState from "./customHooks/useLabelState";
+import { getContradictingLabels } from "../DataSlice";
 
 const ContradictingLabelsPanel = ({
   updateMainLabelState,
   updateLabelState,
 }) => {
-  const workspace = useSelector((state) => state.workspace);
-  const contradictiveElemPairsResult = useSelector(
+
+  const ContradictingPairsResult = useSelector(
     (state) => state.workspace.contradictiveElemPairsResult
   );
-  let newContradElemPairLabelState = {
-    ...workspace.contradictiveElemPairsLabelState,
-  };
-  const currContradElemPairLabelState =
-    workspace.contradictiveElemPairsLabelState;
+  const contradictingPairsLabelState = useSelector(
+    (state) => state.workspace.contradictiveElemPairsLabelState
+  );
+  const curCategory = useSelector((state) => state.workspace.curCategory);
+  const neg_label_num = useSelector((state) => state.workspace.neg_label_num);
+  const pos_label_num = useSelector((state) => state.workspace.pos_label_num);
+
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    dispatch(getContradictingLabels());
+  }, [pos_label_num, neg_label_num]);
+
   const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    newContradElemPairLabelState,
+    contradictingPairsLabelState,
     updateMainLabelState,
     updateLabelState
   );
+
   const { handleSearchPanelClick, searchInput } = useSearchElement();
 
   return (
@@ -58,8 +68,7 @@ const ContradictingLabelsPanel = ({
           <strong>Contradicting labels</strong>
         </p>
       </Box>
-      {!contradictiveElemPairsResult ||
-      contradictiveElemPairsResult.length == 0 ? (
+      {!ContradictingPairsResult || ContradictingPairsResult.length == 0 ? (
         <Typography
           sx={{
             display: "flex",
@@ -88,35 +97,33 @@ const ContradictingLabelsPanel = ({
           }}
         >
           {`Review these ${
-            contradictiveElemPairsResult.length / 2
+            ContradictingPairsResult.length / 2
           } pairs of examples, which are semantically similar but were labeled by you with contradicting labels`}
         </Typography>
       )}
       <Box className={classes["search-results"]} sx={{ mt: 7 }}>
-        {contradictiveElemPairsResult &&
-          contradictiveElemPairsResult.map((res, i) => {
+        {ContradictingPairsResult &&
+          ContradictingPairsResult.map((res, i) => {
             return (
               <div
                 key={i}
                 className={
-                  contradictiveElemPairsResult.length > 2
-                    ? classes.separator
-                    : ""
+                  ContradictingPairsResult.length > 2 ? classes.separator : ""
                 }
               >
                 <Element
                   key={i}
                   searchedIndex={i}
-                  prediction={res.model_predictions[workspace.curCategory]}
+                  prediction={res.model_predictions[curCategory]}
                   text={res.text}
                   searchInput={searchInput}
                   id={res.id}
                   docid={res.docid}
-                  labelValue={res.user_labels[workspace.curCategory]}
+                  labelValue={res.user_labels[curCategory]}
                   handleSearchPanelClick={handleSearchPanelClick}
                   handlePosLabelState={handlePosLabelState}
                   handleNegLabelState={handleNegLabelState}
-                  labelState={currContradElemPairLabelState}
+                  labelState={contradictingPairsLabelState}
                 />
               </div>
             );

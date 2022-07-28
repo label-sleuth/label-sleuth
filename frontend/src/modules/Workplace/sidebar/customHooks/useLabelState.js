@@ -33,8 +33,8 @@ import { useSelector } from 'react-redux';
  * @param  { The main panel's state } updateMainLabelState
  * @param  { The active sidebar's panel state} updatePanelLabelState
  */
-const useLabelState = (newPanelLabelState, updateMainLabelState, updatePanelLabelState) => {
-
+const useLabelState = (panelLabelState, updateMainLabelState, updatePanelLabelState) => {
+    const newPanelLabelState = {...panelLabelState}
     const numLabel = useSelector(state => state.workspace.numLabel)
     const numLabelGlobal = useSelector(state => state.workspace.numLabelGlobal)
 
