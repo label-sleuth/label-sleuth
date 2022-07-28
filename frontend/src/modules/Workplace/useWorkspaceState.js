@@ -91,7 +91,7 @@ const useWorkspaceState = () => {
         dispatch(getLabelNext());
         dispatch(getPosPredElementForCategory());
         dispatch(getPositivePredictions())
-        dispatch(getDisagreementsElements())
+        // dispatch(getDisagreementsElements())
         dispatch(getSuspiciousLabels())
         dispatch(getContradictingLabels())
       }
