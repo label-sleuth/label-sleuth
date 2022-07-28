@@ -52,7 +52,7 @@ export const UploadLabelsDialog = ({ open, setOpen }) => {
             </p>
             <ul>
               {Object.entries(bullets).map(([name, text]) => (
-                <li style={{paddingBottom:"10px"}}>
+                <li key={name} style={{paddingBottom:"10px"}}>
                     <i>{name}</i>: {text}
                 </li>
               ))}
