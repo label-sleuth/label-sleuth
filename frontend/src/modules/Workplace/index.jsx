@@ -23,6 +23,7 @@ import {
   setSearchInput,
   resetSearchResults,
   curCategoryNameSelector,
+  setNumLabel,
 } from "./DataSlice.jsx";
 import WorkspaceInfo from "./information/WorkspaceInfo";
 import UpperBar from "./upperbar/UpperBar";
@@ -118,11 +119,10 @@ export default function Workspace() {
     clearSearchInput();
   }, [curCategory]);
 
-  const shouldDisableButtons =
-    curCategory === null || !model_version || model_version === -1;
+  const noCategory = curCategory === null
+  const noCategoryAndNoModel = noCategory || model_version === null || model_version === -1;
 
-  const SidebarButton = ({ tooltipMessage, onClick, componentId, imgSource, isSelected, alwaysEnabled }) => {
-    const disabled = !alwaysEnabled && shouldDisableButtons
+  const SidebarButton = ({ tooltipMessage, onClick, componentId, imgSource, isSelected, alwaysEnabled, disabled }) => {
     return (
       <Tooltip title={tooltipMessage} placement="left">
         <IconButton
@@ -199,7 +199,7 @@ export default function Workspace() {
                   componentId={"sidebar-search-button"}
                   imgSource={search_icon}
                   isSelected={toggleSearchPanel}
-                  alwaysEnabled
+                  disabled={false}
                 />
                 <SidebarButton
                   tooltipMessage={NEXT_TO_LABEL_TOOLTIP_MSG}
@@ -207,6 +207,7 @@ export default function Workspace() {
                   componentId={"sidebar-recommended-button"}
                   imgSource={recommend_icon}
                   isSelected={toggleRCMDPanel}
+                  disabled={noCategoryAndNoModel}
                 />
                 <SidebarButton
                   tooltipMessage={POSITIVE_PRED_TOOLTIP_MSG}
@@ -214,6 +215,7 @@ export default function Workspace() {
                   componentId={"sidebar-pos-pred-button"}
                   imgSource={pos_pred_icon}
                   isSelected={togglePosPredPanel}
+                  disabled={noCategoryAndNoModel}
                   />
               </Stack>
 
@@ -225,6 +227,7 @@ export default function Workspace() {
                   imgSource={pos_elem_icon}
                   isSelected={togglePosElemPanel}
                   alwaysEnabled
+                  disabled={noCategory}
                 />
                 {/* <SidebarButton
                   tooltipMessage={DISAGREEMENTS_TOOLTIP_MSG}
@@ -239,6 +242,7 @@ export default function Workspace() {
                   componentId={"sidebar-suspicious-elem-button"}
                   imgSource={suspicious_elem_icon}
                   isSelected={toggleSuspiciousElemPanel}
+                  disabled={noCategoryAndNoModel}
                 />
                 <SidebarButton
                   tooltipMessage={CONTRADICTING_LABELS_TOOLTIP_MSG}
@@ -246,6 +250,7 @@ export default function Workspace() {
                   componentId={'sidebar-contradictive-elem-button'}
                   imgSource={contradictive_elem_icon}
                   isSelected={toggleContrElemPanel}
+                  disabled={noCategory}
                 />
               </Stack>
               
