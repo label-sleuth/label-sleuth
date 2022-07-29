@@ -29,10 +29,10 @@ export const UploadLabelsDialog = ({ open, setOpen }) => {
   const bullets = {
     text: "all elements in the current workspace which are exactly equal to text will be assigned with label for category_name (overriding existing labels).",
     category_name:
-      "the category for which the element islabeled. If this category does not exist in the current workspace, it will be automatically created.",
+      "the category for which the element is labeled. If this category does not exist in the current workspace, it will be automatically created.",
     label: "true/false or 1/0.",
     document_id:
-      "an optional column - if provided, label willbe applied only to the elements in document_id matching text (as opposed to in the entire current workspace).",
+      "an optional column - if provided, label will be applied only to the elements in document_id matching text (as opposed to in the entire current workspace).",
   };
 
   return (
