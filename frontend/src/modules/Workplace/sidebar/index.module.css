@@ -68,15 +68,6 @@ display: inline-block;
     background: rgb(163, 216, 229);
 }
 
-.separator{
-    margin-bottom: 20px;
-    border-bottom: 40px solid white;
-}
-
-.separator:nth-child(2n+1){
-    border-bottom: none;  
-}
-
 .elem_text{
     padding: 1px 10px 1px 10px;
 }
@@ -171,3 +162,12 @@ display: inline-block;
     opacity: 0.1;
 }
  
+
+.dot-separator {
+    position: relative;
+    width: 7px;
+    height: 7px;
+    border-radius: 7px;
+    background-color: #babbbd;
+  }
+  
