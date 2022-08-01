@@ -80,7 +80,7 @@ export const StageCounter = styled("div")`
 export const MainContent = styled("div")`
   font-family: "IBM Plex Sans";
   font-style: normal;
-  font-weight: 350;
+  font-weight: 400;
   font-size: 18px;
   line-height: 25px;
   color: #ffffff;
