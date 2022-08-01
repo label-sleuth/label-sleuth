@@ -13,7 +13,13 @@
     limitations under the License.
 */
 
-import { Box, Stack, Typography, Divider } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Typography,
+  Divider,
+  CircularProgress,
+} from "@mui/material";
 import React from "react";
 import classes from "./index.module.css";
 import { useSelector, useDispatch } from "react-redux";
@@ -35,14 +41,18 @@ const ContradictingLabelsPanel = ({
     (state) => state.workspace.contradictiveElemPairsLabelState
   );
   const curCategory = useSelector((state) => state.workspace.curCategory);
-  const neg_label_num = useSelector((state) => state.workspace.neg_label_num);
-  const pos_label_num = useSelector((state) => state.workspace.pos_label_num);
+  const model_version = useSelector((state) => state.workspace.model_version);
+  const loadingContradictingLabels = useSelector(
+    (state) => state.workspace.loadingContradictingLabels
+  );
 
   const dispatch = useDispatch();
 
   React.useEffect(() => {
-    dispatch(getContradictingLabels());
-  }, [pos_label_num, neg_label_num]);
+    if (curCategory !== null && model_version !== null && model_version >= 0) {
+      dispatch(getContradictingLabels());
+    }
+  }, [curCategory]);
 
   const { handlePosLabelState, handleNegLabelState } = useLabelState(
     contradictingPairsLabelState,
@@ -51,6 +61,22 @@ const ContradictingLabelsPanel = ({
   );
 
   const { handleSearchPanelClick, searchInput } = useSearchElement();
+
+  const Separator = () => (
+    <Divider variant="middle" flexItem>
+      <Stack direction={"row"} sx={{ mt: "40px", mb: "40px" }}>
+        <div
+          className={classes["dot-separator"]}
+          style={{ marginRight: "6px" }}
+        />
+        <div
+          className={classes["dot-separator"]}
+          style={{ marginRight: "6px" }}
+        />
+        <div className={classes["dot-separator"]} />
+      </Stack>
+    </Divider>
+  );
 
   const ContradictingPair = ({ addSeparator, children }) => {
     const childrenArray = React.Children.toArray(children);
@@ -66,21 +92,7 @@ const ContradictingLabelsPanel = ({
           {"?"}
         </Box>
         {childrenArray[1]}
-        {addSeparator ? (
-            <Divider variant="middle" flexItem>
-              <Stack direction={"row"} sx={{ mt: "40px", mb: "40px" }}>
-                <div
-                  className={classes["dot-separator"]}
-                  style={{ marginRight: "6px" }}
-                />
-                <div
-                  className={classes["dot-separator"]}
-                  style={{ marginRight: "6px" }}
-                />
-                <div className={classes["dot-separator"]} />
-              </Stack>
-            </Divider>
-        ) : null}
+        {addSeparator ? <Separator /> : null}
       </Stack>
     );
   };
@@ -102,7 +114,17 @@ const ContradictingLabelsPanel = ({
           <strong>Contradicting labels</strong>
         </p>
       </Box>
-      {!contradictingPairsResult || contradictingPairsResult.length == 0 ? (
+      {loadingContradictingLabels ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "15px",
+          }}
+        >
+          <CircularProgress />
+        </div>
+      ) : !contradictingPairsResult || contradictingPairsResult.length === 0 ? (
         <Typography
           sx={{
             display: "flex",
@@ -115,7 +137,7 @@ const ContradictingLabelsPanel = ({
             ml: 1,
           }}
         >
-          {`No contradictiving pairs of examples were found which are semantically similar but were labeled by you with contradicting labels.`}
+          {`No contradicting pairs of examples were found which are semantically similar but were labeled by you with contradicting labels.`}
         </Typography>
       ) : (
         <Typography
@@ -135,21 +157,24 @@ const ContradictingLabelsPanel = ({
           } pairs of examples, which are semantically similar but were labeled by you with contradicting labels`}
         </Typography>
       )}
-      <Box className={classes["search-results"]} sx={{ mt: 7 }}>
-        {contradictingPairsResult &&
-          contradictingPairsResult.map((_, i) =>
-            i % 2 === 1 ? null : (
-              <ContradictingPair key={i} addSeparator={i + 1 !== contradictingPairsResult.length - 1}>
-                {contradictingPairsResult.slice(i, i + 2).map((res, j) => (
+      {!loadingContradictingLabels ? (
+        <Box className={classes["search-results"]} sx={{ mt: 7 }}>
+          {contradictingPairsResult &&
+            contradictingPairsResult.map((pair, i) => (
+              <ContradictingPair
+                key={i}
+                addSeparator={i !== contradictingPairsResult.length - 1}
+              >
+                {pair.map((element, j) => (
                   <Element
-                    key={i + j}
-                    searchedIndex={i + j}
-                    prediction={res.model_predictions[curCategory]}
-                    text={res.text}
+                    key={2 * i + j}
+                    searchedIndex={2 * i + j}
+                    prediction={element.model_predictions[curCategory]}
+                    text={element.text}
                     searchInput={searchInput}
-                    id={res.id}
-                    docid={res.docid}
-                    labelValue={res.user_labels[curCategory]}
+                    id={element.id}
+                    docid={element.docid}
+                    labelValue={element.user_labels[curCategory]}
                     handleSearchPanelClick={handleSearchPanelClick}
                     handlePosLabelState={handlePosLabelState}
                     handleNegLabelState={handleNegLabelState}
@@ -157,9 +182,9 @@ const ContradictingLabelsPanel = ({
                   />
                 ))}
               </ContradictingPair>
-            )
-          )}
-      </Box>
+            ))}
+        </Box>
+      ) : null}
     </Box>
   );
 };
