@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography, Divider } from "@mui/material";
 import React from "react";
 import classes from "./index.module.css";
 import { useSelector, useDispatch } from "react-redux";
@@ -67,17 +67,19 @@ const ContradictingLabelsPanel = ({
         </Box>
         {childrenArray[1]}
         {addSeparator ? (
-          <Stack direction={"row"} sx={{ mt: "40px", mb: "40px" }}>
-            <div
-              className={classes["dot-separator"]}
-              style={{ marginRight: "6px" }}
-            />
-            <div
-              className={classes["dot-separator"]}
-              style={{ marginRight: "6px" }}
-            />
-            <div className={classes["dot-separator"]} />
-          </Stack>
+            <Divider variant="middle" flexItem>
+              <Stack direction={"row"} sx={{ mt: "40px", mb: "40px" }}>
+                <div
+                  className={classes["dot-separator"]}
+                  style={{ marginRight: "6px" }}
+                />
+                <div
+                  className={classes["dot-separator"]}
+                  style={{ marginRight: "6px" }}
+                />
+                <div className={classes["dot-separator"]} />
+              </Stack>
+            </Divider>
         ) : null}
       </Stack>
     );
@@ -137,7 +139,7 @@ const ContradictingLabelsPanel = ({
         {contradictingPairsResult &&
           contradictingPairsResult.map((_, i) =>
             i % 2 === 1 ? null : (
-              <ContradictingPair addSeparator={i + 1 !== contradictingPairsResult.length - 1}>
+              <ContradictingPair key={i} addSeparator={i + 1 !== contradictingPairsResult.length - 1}>
                 {contradictingPairsResult.slice(i, i + 2).map((res, j) => (
                   <Element
                     key={i + j}
