@@ -77,7 +77,8 @@ export const initialState = {
     errorMessage: null,
     deletingCategory: false,
     uploadingLabels: false,
-    downloadingLabels: false
+    downloadingLabels: false,
+    loadingContradictingLabels: false
 }
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
@@ -824,12 +825,23 @@ const DataSlice = createSlice({
                 suspiciousElemLabelState: _initNewLabelState(state, data.elements)
             }
         },
+        [getContradictingLabels.pending]: (state, action) => {
+            return {
+                ...state,
+                loadingContradictingLabels: true,
+            }
+        },
+        [getContradictingLabels.rejected]: (state, action) => {
+            return {
+                ...state,
+                loadingContradictingLabels: false,
+            }
+        },
         [getContradictingLabels.fulfilled]: (state, action) => {
             const data = action.payload  
             let initialContrLabelState = {}
             // let contradictiveElemPairsResult = []
-            
- 
+
             if(data.pairs){
                 let count = 0
 
@@ -854,12 +866,13 @@ const DataSlice = createSlice({
                 })
             }
 
-     
+            const flattedPairs = data.pairs?.length ? data.pairs.flat() : []
             return {
                 ...state,
                 contradictiveElemDiffsResult: data.diffs,
-                contradictiveElemPairsResult: data.pairs.reduce((acc, val) => acc.concat(val), []),
-                contradictiveElemPairsLabelState: _initNewLabelState(state, data.pairs.reduce((acc, val) => acc.concat(val), []))
+                contradictiveElemPairsResult: data.pairs,
+                contradictiveElemPairsLabelState: _initNewLabelState(state, flattedPairs),
+                loadingContradictingLabels: false
             }
         },
         

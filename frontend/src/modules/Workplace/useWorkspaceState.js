@@ -27,9 +27,7 @@ import {
   getPositivePredictions,
   setWorkspaceVisited,
   searchKeywords,
-  getDisagreementsElements,
   getSuspiciousLabels,
-  getContradictingLabels,
   getAllPositiveLabels
 } from "./DataSlice.jsx";
 import * as React from "react";
@@ -93,7 +91,6 @@ const useWorkspaceState = () => {
         dispatch(getPositivePredictions())
         // dispatch(getDisagreementsElements())
         dispatch(getSuspiciousLabels())
-        dispatch(getContradictingLabels())
       }
     }
   }, [workspace.curCategory, workspace.model_version, dispatch]);
@@ -128,14 +125,6 @@ const useWorkspaceState = () => {
     }
   }, [workspace.uploadedLabels]);
 
-
-  React.useEffect(() => {
-    // update the contradicting labels each time the label count changes
-    if (workspace.curCategory !== null &&  workspace.model_version !== null && workspace.model_version >= 0) { 
-      dispatch(getContradictingLabels())
-    }
-  }, [workspace.pos_label_num, workspace.neg_label_num])
 };
-
 
 export default useWorkspaceState;
