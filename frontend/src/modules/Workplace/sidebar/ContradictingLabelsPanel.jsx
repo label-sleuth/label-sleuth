@@ -153,7 +153,7 @@ const ContradictingLabelsPanel = ({
           }}
         >
           {`Review these ${
-            contradictingPairsResult.length / 2
+            contradictingPairsResult.length
           } pairs of examples, which are semantically similar but were labeled by you with contradicting labels`}
         </Typography>
       )}
