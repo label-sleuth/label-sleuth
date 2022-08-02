@@ -24,12 +24,11 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
 from label_sleuth.analysis_utils.analyze_tokens import get_token_overlap
-from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, TextElement
+from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, TextElement, BINARY_LABELS
 from label_sleuth.models.core.languages import Language
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.core.tools import remove_stop_words_and_punctuation
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
-
 
 MIN_TOKEN_OVERLAP_THRESHOLD = 0.6
 
@@ -56,6 +55,8 @@ def get_disagreements_using_cross_validation(workspace_id, category_id: int, lab
     model predictions
     """
     start_time = time.time()
+    if {text_element.category_to_label[category_id].label for text_element in labeled_elements} != BINARY_LABELS:
+        return []
     model = model_factory.get_model(model_type)
 
     all_scores = []
@@ -198,5 +199,6 @@ def _filter_nearest_neighbor_pairs(pairs_list: List[Tuple[TextElement]], languag
     uri_counts = defaultdict(lambda: 0)
     filtered_pairs_list = [(source_element, neighbor) for source_element, neighbor in filtered_pairs_list
                            if uri_counts[neighbor.uri] <= 1 and not uri_counts.update({neighbor.uri:
-                                                                                       uri_counts[neighbor.uri] + 1})]
+                                                                                           uri_counts[
+                                                                                               neighbor.uri] + 1})]
     return filtered_pairs_list
