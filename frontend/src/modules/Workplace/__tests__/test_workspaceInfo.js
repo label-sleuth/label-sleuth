@@ -51,6 +51,7 @@ test("test that model version is updated if model changes", async () => {
           curCategory: 0,
           model_version: 4,
           workspaceId: "workspace_id",
+          nextModelShouldBeTraining: true
         },
         authenticate: {
           token: "token"
