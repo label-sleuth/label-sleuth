@@ -988,7 +988,7 @@ def run_precision_evaluation(workspace_id):
 
     :param workspace_id:
     :request_arg category_id:
-    :post_param model_id:
+    :post_param iteration:
     :post_param ids: element ids of the elements labeled for the purpose of precision evaluation
     :post_param changed_elements_count: the number of labels that were added/changed in the labeling of elements
     for evaluation. In order to avoid triggering a new iteration before evaluation is complete, labels set in the
@@ -999,9 +999,9 @@ def run_precision_evaluation(workspace_id):
     post_data = request.get_json(force=True)
     ids = post_data["ids"]
     changed_elements_count = post_data["changed_elements_count"]
-    model_id = post_data["model_id"]
+    iteration_index = post_data["iteration"]
     score = current_app.orchestrator_api.estimate_precision(workspace_id, category_id, ids, changed_elements_count,
-                                                            model_id)
+                                                            iteration_index)
     res = {'score': score}
     return jsonify(res)
 
