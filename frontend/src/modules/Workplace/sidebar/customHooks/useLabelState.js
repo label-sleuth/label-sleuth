@@ -33,7 +33,7 @@ import { useSelector } from 'react-redux';
  * @param  { The main panel's state } updateMainLabelState
  * @param  { The active sidebar's panel state} updatePanelLabelState
  */
-const useLabelState = (panelLabelState, updateMainLabelState, updatePanelLabelState) => {
+const useLabelState = (panelLabelState, updateMainLabelState, updatePanelLabelState, updateCounter=true) => {
     const newPanelLabelState = {...panelLabelState}
     const numLabel = useSelector(state => state.workspace.numLabel)
     const numLabelGlobal = useSelector(state => state.workspace.numLabelGlobal)
@@ -71,7 +71,7 @@ const useLabelState = (panelLabelState, updateMainLabelState, updatePanelLabelSt
          * @param  {Document id, i.e (dataset1-Giant otter-102)} id
          * @param  {The current label value: true, false or none } label
          */
-        updateMainLabelState(id, docid, label)
+        updateMainLabelState(id, docid, label, updateCounter)
 
         /**
          * @param  {The updated label state contains the current state of labeling 
@@ -107,7 +107,7 @@ const useLabelState = (panelLabelState, updateMainLabelState, updatePanelLabelSt
             newPanelLabelState[searchedElemIndex] = "neg"
             label = "false"
         }
-        updateMainLabelState(id, docid, label)
+        updateMainLabelState(id, docid, label, updateCounter)
         updatePanelLabelState(newPanelLabelState)
     }
 

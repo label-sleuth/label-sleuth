@@ -78,7 +78,13 @@ export const initialState = {
     deletingCategory: false,
     uploadingLabels: false,
     downloadingLabels: false,
-    loadingContradictingLabels: false
+    loadingContradictingLabels: false,
+    loadingEvaluation: false,
+    evaluationInProgress: false,
+    evaluationElements: [],
+    evaluationLabelState: {},
+    initialEvaluationLabelState: {},
+    evaluationScore: null,
 }
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
@@ -518,7 +524,7 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
 
     const state = getState()
 
-    const { element_id, label, docid } = request
+    const { element_id, label, docid, update_counter } = request
     
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
@@ -532,9 +538,59 @@ export const setElementLabel = createAsyncThunk('workspace/set_element_label', a
         body: JSON.stringify({
             'category_id': state.workspace.curCategory,
             'value': label,
-            'update_counter': true
+            'update_counter': update_counter
         }),
         method: "PUT"
+    }).then(response => response.json())
+
+    return data
+
+})
+
+export const startEvaluation = createAsyncThunk('workspace/startEvaluation', async (request, { dispatch }) => {
+    await dispatch(getEvaluationElements())
+})
+
+export const getEvaluationElements = createAsyncThunk('workspace/getEvaluationElements', async (request, { getState }) => {
+
+    const state = getState()
+
+    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
+
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/evaluation_elements${queryParams}`
+
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.authenticate.token}`
+        },
+        method: "GET"
+    }).then(response => response.json())
+
+    return data
+
+})
+
+export const getEvaluationResults = createAsyncThunk('workspace/getEvaluationResults', async (changed_elements_count, { getState }) => {
+    const state = getState()
+    
+    const ids = state.workspace.evaluationElements.map(e => e.id)
+    const iteration = state.workspace.model_version - 1
+
+    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
+    
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/estimate_precision${queryParams}`
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.authenticate.token}`
+        },
+        body: JSON.stringify({
+            ids, 
+            iteration, 
+            changed_elements_count
+        }),
+        method: "POST"
     }).then(response => response.json())
 
     return data
@@ -618,6 +674,9 @@ const DataSlice = createSlice({
          setContradictiveElemLabelState(state, action) {
             state.contradictiveElemPairsLabelState = action.payload
         },    
+        setEvaluationLabelState(state, action) {
+            state.evaluationLabelState = action.payload
+        },   
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
         },
@@ -715,7 +774,27 @@ const DataSlice = createSlice({
                 ...state,
                 errorMessage: null
             }
-        }
+        },
+        stopEvaluation(state, action) {
+            return {
+                ...state,
+                evaluationInProgress: false,
+                evaluationElements: [],
+                evaluationLabelState: {},
+                initialEvaluationLabelState: {},
+            }
+        },
+        cleanEvaluationState(state, action) {
+            return {
+                ...state,
+                loadingEvaluation: false,
+                evaluationInProgress: false,
+                evaluationElements: [],
+                evaluationLabelState: {},
+                evaluationScore: null,
+                initialEvaluationLabelState: {},
+            }  
+        },
     },
     extraReducers: {
         [fetchElements.fulfilled]: (state, action) => {
@@ -1284,6 +1363,58 @@ const DataSlice = createSlice({
                 errorMessage: handleError(action.error)
             }
         },
+        [startEvaluation.fulfilled]: (state, action) => {
+            return {
+                ...state,
+                evaluationInProgress: true,
+                evaluationScore: null,
+            }
+        },
+        [getEvaluationElements.fulfilled]: (state, action) => {
+            const { elements } = action.payload
+            const initialEvaluationLabelState = _initNewLabelState(state, elements)
+            return {
+                ...state,
+                evaluationElements: elements,
+                evaluationLabelState: initialEvaluationLabelState,
+                initialEvaluationLabelState,
+                loadingEvaluation: false
+            }
+        },
+        [getEvaluationElements.pending]: (state, action) => {
+            return {
+                ...state,
+                loadingEvaluation: true
+            }
+        },
+        [getEvaluationElements.rejected]: (state, action) => {
+            return {
+                ...state,
+                loadingEvaluation: false
+            }
+        },
+        [getEvaluationResults.fulfilled]: (state, action) => {
+            const { score } = action.payload
+
+            return {
+                ...state,
+                evaluationScore: score,
+                loadingEvaluation: false,
+                evaluationInProgress: false,
+            }
+        },
+        [getEvaluationResults.pending]: (state, action) => {
+            return {
+                ...state,
+                loadingEvaluation: true,
+            }
+        },
+        [getEvaluationResults.rejected]: (state, action) => {
+            return {
+                ...state,
+                loadingEvaluation: false,
+            }
+        },
     }
 })
 
@@ -1314,6 +1445,7 @@ export const {
     setDisagreeElemLabelState,
     setSuspiciousElemLabelState,
     setContradictiveElemLabelState,
+    setEvaluationLabelState,
     setLabelState,
     cleanWorkplaceState,
     setNumLabelGlobal,
@@ -1323,5 +1455,7 @@ export const {
     setActivePanel,
     setSearchInput,
     setWorkspaceVisited,
-    clearError
+    clearError,
+    stopEvaluation,
+    cleanEvaluationState
  } = DataSlice.actions;

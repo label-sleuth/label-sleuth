@@ -28,7 +28,8 @@ import {
   setWorkspaceVisited,
   searchKeywords,
   getSuspiciousLabels,
-  getAllPositiveLabels
+  getAllPositiveLabels,
+  cleanEvaluationState,
 } from "./DataSlice.jsx";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -74,6 +75,7 @@ const useWorkspaceState = () => {
     if (workspace.curCategory !== null) {
       dispatch(checkModelUpdate());
       dispatch(getAllPositiveLabels())
+      dispatch(cleanEvaluationState())
     }
   }, [workspace.curCategory, dispatch]);
 

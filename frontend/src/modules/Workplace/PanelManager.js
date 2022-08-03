@@ -40,6 +40,7 @@ export const PanelManager = ({
         updateDisagreelemLabelState,
         updateSuspiciouslemLabelState,
         updateContradictivelemLabelState,
+        updateEvaluationLabelState,
     } = useUpdateLabelState()
 
     const { handleSearchPanelClick,
@@ -115,6 +116,15 @@ export const PanelManager = ({
                     searchInput,
                     updateMainLabelState,
                     updateLabelState: updateContradictivelemLabelState,
+                    open,
+                });
+            }
+            else if (activePanel === sidebarOptionEnum.EVALUATION) {
+                return React.cloneElement(child, {
+                    handleSearchPanelClick,
+                    searchInput,
+                    updateMainLabelState,
+                    updateLabelState: updateEvaluationLabelState,
                     open,
                 });
             }

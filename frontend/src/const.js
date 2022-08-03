@@ -22,6 +22,7 @@ export const POSITIVE_PRED_TOOLTIP_MSG = 'Positive predictions'
 export const DISAGREEMENTS_TOOLTIP_MSG = 'label-prediction disagreements' 
 export const SUSPICIOUS_LABELS_TOOLTIP_MSG = 'Suspicious labels' 
 export const CONTRADICTING_LABELS_TOOLTIP_MSG = 'Contradicting labels' 
+export const EVALUATION_TOOLTIP_MSG = 'Evaluate model' 
 
 export const PREV_DOC_TOOLTIP_MSG = "Go to previous document"
 export const NEXT_DOC_TOOLTIP_MSG = "Go to next document"
@@ -67,4 +68,5 @@ export const sidebarOptionEnum = {
     SUSPICIOUS_LABELS: 'SUSPICIOUS_LABELS',
     POSITIVE_PREDICTIONS: 'POSITIVE_PREDICTIONS',
     DISAGREEMENTS: 'DISAGREEMENTS',
+    EVALUATION: 'EVALUATION'
 }
