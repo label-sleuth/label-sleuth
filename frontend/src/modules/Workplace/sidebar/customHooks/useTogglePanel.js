@@ -30,6 +30,7 @@ const useTogglePanel = (setOpen, textInput) => {
     const [toggleDisagreeElemPanel, setToggleDisagreeElemPanel] = useState(false)
     const [toggleSuspiciousElemPanel, setToggleSuspiciousElemPanel] = useState(false)
     const [toggleContrElemPanel, setToggleContrElemPanel] = useState(false)
+    const [toggleEvaluationPanel, setToggleEvaluationPanel] = useState(false)
     const elementsToLabel = useSelector(state => state.workspace.elementsToLabel)
 
     useEffect(() => {
@@ -43,19 +44,27 @@ const useTogglePanel = (setOpen, textInput) => {
     }, [elementsToLabel.length])
   
     useEffect(() => {
-        if (toggleSearchPanel || 
-            toggleRCMDPanel || 
-            togglePosPredPanel || 
-            togglePosElemPanel || 
-            toggleDisagreeElemPanel || 
-            toggleSuspiciousElemPanel  ||
-            toggleContrElemPanel) {
-            setOpen(true);
-        }
-        else {
-            setOpen(false);
-        }
-    }, [toggleRCMDPanel, toggleSearchPanel, togglePosPredPanel, togglePosElemPanel, toggleDisagreeElemPanel, toggleSuspiciousElemPanel, toggleContrElemPanel,  setOpen])
+      const aPanelIsOpen =
+        toggleSearchPanel ||
+        toggleRCMDPanel ||
+        togglePosPredPanel ||
+        togglePosElemPanel ||
+        toggleDisagreeElemPanel ||
+        toggleSuspiciousElemPanel ||
+        toggleContrElemPanel ||
+        toggleEvaluationPanel;
+      setOpen(aPanelIsOpen);
+    }, [
+      toggleRCMDPanel,
+      toggleSearchPanel,
+      togglePosPredPanel,
+      togglePosElemPanel,
+      toggleDisagreeElemPanel,
+      toggleSuspiciousElemPanel,
+      toggleContrElemPanel,
+      toggleEvaluationPanel,
+      setOpen,
+    ]);
 
     const activateSearchPanel = () => {
         if(textInput.current){
@@ -69,68 +78,73 @@ const useTogglePanel = (setOpen, textInput) => {
         setToggleDisagreeElemPanel(false)
         setToggleSuspiciousElemPanel(false)
         setToggleContrElemPanel(false)
+        setToggleEvaluationPanel(false)
     }
 
     const activateRecToLabelPanel = () => {
         dispatch(setActivePanel(sidebarOptionEnum.LABEL_NEXT))
+        setToggleRCMDPanel(!toggleRCMDPanel)
         setToggleSearchPanel(false)
         setTogglePosPredPanel(false)
         setTogglePosElemPanel(false)
         setToggleDisagreeElemPanel(false)
         setToggleSuspiciousElemPanel(false)
         setToggleContrElemPanel(false)
-        setToggleRCMDPanel(!toggleRCMDPanel)
+        setToggleEvaluationPanel(false)
     }
 
     const activatePosPredLabelPanel = () => {
         dispatch(setActivePanel(sidebarOptionEnum.POSITIVE_PREDICTIONS))
+        setTogglePosPredPanel(!togglePosPredPanel)
         setToggleSearchPanel(false)
         setToggleRCMDPanel(false)
         setTogglePosElemPanel(false)
         setToggleDisagreeElemPanel(false)
         setToggleSuspiciousElemPanel(false)
         setToggleContrElemPanel(false)
-        setTogglePosPredPanel(!togglePosPredPanel)
+        setToggleEvaluationPanel(false)
     }
 
     const activatePosElemLabelPanel = () => {
         dispatch(setActivePanel(sidebarOptionEnum.POSITIVE_LABELS))
+        setTogglePosElemPanel(!togglePosElemPanel)
         setToggleSearchPanel(false)
         setToggleRCMDPanel(false)
-        setTogglePosElemPanel(false)
         setTogglePosPredPanel(false)
         setToggleDisagreeElemPanel(false)
         setToggleSuspiciousElemPanel(false)
         setToggleContrElemPanel(false)
-        setTogglePosElemPanel(!togglePosElemPanel)
+        setToggleEvaluationPanel(false)
     }
 
-    const activateDisagreeElemLabelPanel = () => {
-        dispatch(setActivePanel(sidebarOptionEnum.DISAGREEMENTS))
-        setToggleSearchPanel(false)
-        setToggleRCMDPanel(false)
-        setTogglePosElemPanel(false)
-        setTogglePosPredPanel(false)
-        setTogglePosElemPanel(false)
-        setToggleSuspiciousElemPanel(false)
-        setToggleContrElemPanel(false)
-        setToggleDisagreeElemPanel(!toggleDisagreeElemPanel)
-    }
+    // const activateDisagreeElemLabelPanel = () => {
+    //     dispatch(setActivePanel(sidebarOptionEnum.DISAGREEMENTS))
+    //     setToggleDisagreeElemPanel(!toggleDisagreeElemPanel)
+    //     setToggleSearchPanel(false)
+    //     setToggleRCMDPanel(false)
+    //     setTogglePosElemPanel(false)
+    //     setTogglePosPredPanel(false)
+    //     setTogglePosElemPanel(false)
+    //     setToggleSuspiciousElemPanel(false)
+    //     setToggleContrElemPanel(false)
+    //     setToggleEvaluationPanel(false)
+    // }
 
     const activateSuspiciousElemLabelPanel = () => {
         dispatch(setActivePanel(sidebarOptionEnum.SUSPICIOUS_LABELS))
+        setToggleSuspiciousElemPanel(!toggleSuspiciousElemPanel)
         setToggleSearchPanel(false)
         setToggleRCMDPanel(false)
-        setTogglePosElemPanel(false)
         setTogglePosPredPanel(false)
         setTogglePosElemPanel(false)
         setToggleDisagreeElemPanel(false)
         setToggleContrElemPanel(false)
-        setToggleSuspiciousElemPanel(!toggleSuspiciousElemPanel)
+        setToggleEvaluationPanel(false)
     }
 
     const activateContrElemLabelPanel = () => {
         dispatch(setActivePanel(sidebarOptionEnum.CONTRADICTING_LABELS))
+        setToggleContrElemPanel(!toggleContrElemPanel)
         setToggleSearchPanel(false)
         setToggleRCMDPanel(false)
         setTogglePosElemPanel(false)
@@ -138,7 +152,20 @@ const useTogglePanel = (setOpen, textInput) => {
         setTogglePosElemPanel(false)
         setToggleDisagreeElemPanel(false)
         setToggleSuspiciousElemPanel(false)
-        setToggleContrElemPanel(!toggleContrElemPanel)
+        setToggleEvaluationPanel(false)
+    }
+
+    const activateEvaluationPanel = () => {
+        dispatch(setActivePanel(sidebarOptionEnum.EVALUATION))
+        setToggleSearchPanel(false)
+        setToggleRCMDPanel(false)
+        setTogglePosElemPanel(false)
+        setTogglePosPredPanel(false)
+        setTogglePosElemPanel(false)
+        setToggleDisagreeElemPanel(false)
+        setToggleSuspiciousElemPanel(false)
+        setToggleContrElemPanel(false)
+        setToggleEvaluationPanel(!toggleEvaluationPanel)
     }
 
     return {
@@ -146,9 +173,10 @@ const useTogglePanel = (setOpen, textInput) => {
         activateRecToLabelPanel,
         activatePosPredLabelPanel,
         activatePosElemLabelPanel,
-        activateDisagreeElemLabelPanel,
+        //activateDisagreeElemLabelPanel,
         activateSuspiciousElemLabelPanel,
         activateContrElemLabelPanel,
+        activateEvaluationPanel,
         toggleRCMDPanel,
         toggleSearchPanel,
         togglePosPredPanel,
@@ -156,6 +184,7 @@ const useTogglePanel = (setOpen, textInput) => {
         toggleDisagreeElemPanel,
         toggleSuspiciousElemPanel,
         toggleContrElemPanel,
+        toggleEvaluationPanel,
     }
 };
 

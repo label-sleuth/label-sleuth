@@ -124,7 +124,7 @@ function a11yProps(index) {
 }
  
 
-export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelInterval=1000}) {
+export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelInterval=2000}) {
     const navigate = useNavigate()
     const theme = useTheme();
     const { logout } = useLogOut()

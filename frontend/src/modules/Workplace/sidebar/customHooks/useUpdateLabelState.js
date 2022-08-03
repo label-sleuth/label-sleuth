@@ -25,7 +25,8 @@ import {
     setPosElemLabelState,
     setDisagreeElemLabelState,
     setSuspiciousElemLabelState,
-    setContradictiveElemLabelState
+    setContradictiveElemLabelState,
+    setEvaluationLabelState
 } from '../../DataSlice';
 
 
@@ -40,9 +41,9 @@ const useUpdateLabelState = () => {
         dispatch(setSearchLabelState(newPanelLabelState))
     }
 
-    const updateMainLabelState = (id, docid, label) => {
+    const updateMainLabelState = (id, docid, label, updateCounter) => {
         dispatch(increaseIdInBatch())
-        dispatch(setElementLabel({ element_id: id, docid: docid, label: label })).then(() => {
+        dispatch(setElementLabel({ element_id: id, docid: docid, label: label, update_counter: updateCounter })).then(() => {
             dispatch(checkStatus())
             dispatch(fetchElements())
         })
@@ -72,6 +73,11 @@ const useUpdateLabelState = () => {
         dispatch(setContradictiveElemLabelState(newPanelLabelState))
     }   
 
+
+    const updateEvaluationLabelState = (newPanelLabelState) => {
+        dispatch(setEvaluationLabelState(newPanelLabelState))
+    }   
+
     return {
         updateRecLabelState,
         updateMainLabelState,
@@ -80,7 +86,8 @@ const useUpdateLabelState = () => {
         updatePosElemLabelState,
         updateDisagreelemLabelState,
         updateSuspiciouslemLabelState,
-        updateContradictivelemLabelState
+        updateContradictivelemLabelState,
+        updateEvaluationLabelState,
     }
 };
 

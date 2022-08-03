@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import Box from "@mui/material/Box";
 import { Stack } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -22,8 +22,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   setSearchInput,
   resetSearchResults,
-  curCategoryNameSelector,
-  setNumLabel,
 } from "./DataSlice.jsx";
 import WorkspaceInfo from "./information/WorkspaceInfo";
 import UpperBar from "./upperbar/UpperBar";
@@ -35,17 +33,17 @@ import search_icon from "./Asset/search.svg";
 import recommend_icon from "./Asset/label_next.svg";
 import pos_pred_icon from "./Asset/positive_predictions.svg";
 import pos_elem_icon from "./Asset/positive_labels.svg";
-import disagree_elem_icon from "./Asset/disagreement.svg";
 import suspicious_elem_icon from "./Asset/suspicious.svg";
+import evaluation_icon from "./Asset/evaluation.svg";
 import contradictive_elem_icon from "./Asset/contradicting.svg";
 import {
   SEARCH_ALL_DOCS_TOOLTIP_MSG,
   NEXT_TO_LABEL_TOOLTIP_MSG,
   ALL_POSITIVE_LABELS_TOOLTIP_MSG,
-  DISAGREEMENTS_TOOLTIP_MSG,
   SUSPICIOUS_LABELS_TOOLTIP_MSG,
   CONTRADICTING_LABELS_TOOLTIP_MSG,
   POSITIVE_PRED_TOOLTIP_MSG,
+  EVALUATION_TOOLTIP_MSG,
   sidebarOptionEnum
 } from "../../const";
 import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
@@ -64,12 +62,12 @@ import AllPositiveLabelsPanel from "./sidebar/AllPositiveLabelsPanel";
 import DisagreementsPanel from "./sidebar/DisagreementsPanel";
 import SuspiciousLabelsPanel from "./sidebar/SuspiciousLabelsPanel";
 import ContradictingLabelsPanel from "./sidebar/ContradictingLabelsPanel";
+import EvaluationPanel from "./sidebar/EvaluationPanel.js";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem("workspaceId"));
   const [open, setOpen] = useState(false);
   const curCategory = useSelector((state) => state.workspace.curCategory);
-  const curCategoryName = useSelector(curCategoryNameSelector);
   const activePanel = useSelector((state) => state.workspace.activePanel);
   const model_version = useSelector((state) => state.workspace.model_version);
   const workspaceVisited = useSelector(
@@ -88,16 +86,16 @@ export default function Workspace() {
     activateRecToLabelPanel,
     activatePosPredLabelPanel,
     activatePosElemLabelPanel,
-    activateDisagreeElemLabelPanel,
     activateSuspiciousElemLabelPanel,
     activateContrElemLabelPanel,
+    activateEvaluationPanel,
     toggleSearchPanel,
     toggleRCMDPanel,
     togglePosPredPanel,
     togglePosElemPanel,
-    toggleDisagreeElemPanel,
     toggleSuspiciousElemPanel,
     toggleContrElemPanel,
+    toggleEvaluationPanel
   } = useTogglePanel(setOpen, textInput);
 
   const dispatch = useDispatch();
@@ -119,10 +117,11 @@ export default function Workspace() {
     clearSearchInput();
   }, [curCategory]);
 
-  const noCategory = curCategory === null
-  const noCategoryAndNoModel = noCategory || model_version === null || model_version === -1;
 
-  const SidebarButton = ({ tooltipMessage, onClick, componentId, imgSource, isSelected, alwaysEnabled, disabled }) => {
+  const noCategory = useMemo(() => curCategory === null, [curCategory])
+  const noCategoryAndNoModel = useMemo(() => noCategory || model_version === null || model_version === -1, [noCategory, model_version]);
+
+  const SidebarButton = ({ tooltipMessage, onClick, componentId, imgSource, isSelected, disabled }) => {
     return (
       <Tooltip title={tooltipMessage} placement="left">
         <IconButton
@@ -175,6 +174,7 @@ export default function Workspace() {
             {activePanel === sidebarOptionEnum.DISAGREEMENTS && <DisagreementsPanel />}
             {activePanel === sidebarOptionEnum.SUSPICIOUS_LABELS && <SuspiciousLabelsPanel />}
             {activePanel === sidebarOptionEnum.CONTRADICTING_LABELS && (<ContradictingLabelsPanel />)}
+            {activePanel === sidebarOptionEnum.EVALUATION && (<EvaluationPanel />)}
           </PanelManager>
           {/* Panel tabs  */}
           <Drawer
@@ -251,6 +251,14 @@ export default function Workspace() {
                   imgSource={contradictive_elem_icon}
                   isSelected={toggleContrElemPanel}
                   disabled={noCategory}
+                />
+                <SidebarButton
+                  tooltipMessage={EVALUATION_TOOLTIP_MSG}
+                  onClick={activateEvaluationPanel}
+                  componentId={'sidebar-contradictive-elem-button'}
+                  imgSource={evaluation_icon}
+                  isSelected={toggleEvaluationPanel}
+                  disabled={noCategoryAndNoModel}
                 />
               </Stack>
               
