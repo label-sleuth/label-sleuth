@@ -52,7 +52,7 @@ useEffect(()=>{
                 className={handleTextElemStyle()}
                 id={"L" + index}  >
                 <p className={classes.data_text} style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
-                <Stack className={classes.checking_buttons} direction="row" spacing={0}>
+                <Stack className={!workspace.evaluationInProgress && classes.checking_buttons} direction="row" spacing={0}>
                     <div
                         onClick={handlePosLabelState} style={{ cursor: "pointer" }}>
                         {workspace.labelState['L' + index] == 'pos' ?

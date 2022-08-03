@@ -161,6 +161,11 @@ display: inline-block;
     border-radius: 2px !important;
     opacity: 0.1;
 }
+
+.btndisabled img {
+    width: 100%;
+    height: 100%;
+}
  
 
 .dot-separator {
