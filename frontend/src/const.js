@@ -14,6 +14,7 @@
 */
 
 // Tooltip messages
+// *******************
 // Sidebar tooltip messages
 export const SEARCH_ALL_DOCS_TOOLTIP_MSG = 'Search all documents'
 export const NEXT_TO_LABEL_TOOLTIP_MSG = 'Label next' 
@@ -31,7 +32,14 @@ export const GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG = "Go to workspace configuration
 export const CREATE_NEW_CATEGORY_TOOLTIP_MSG = "Create new category"
 export const EDIT_CATEGORY_TOOLTIP_MSG = "Edit category"
 export const DELETE_CATEGORY_TOOLTIP_MSG = "Delete category"
+// *******************
 
+
+// Evaluation panel messages
+export const START_EVALUATION_MSG = "Click on Start precision evaluation to start the evaluation process"
+export const EVALUATION_IN_PROGRESS_MSG = "Label all the elements. Once its done, click on Submit to get the precision score."
+export const WAIT_NEW_MODEL_MSG = "Please wait till the next model is available to start the evaluation"
+export const PRECISION_RESULT_MSG = (precision) => `The precision is: ${precision}%`
 
 export const NO_MODEL_AVAILABLE_MSG = "not available yet"
 export const CREATE_NEW_CATEGORY_MODAL_MSG = "Create a new category"

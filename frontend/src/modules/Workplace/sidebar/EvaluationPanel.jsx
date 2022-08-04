@@ -31,8 +31,15 @@ import {
   checkStatus,
   startEvaluation,
   getEvaluationResults,
-  cancelEvaluation
+  cancelEvaluation,
 } from "../DataSlice";
+
+import {
+  START_EVALUATION_MSG,
+  EVALUATION_IN_PROGRESS_MSG,
+  PRECISION_RESULT_MSG,
+  WAIT_NEW_MODEL_MSG,
+} from "../../../const";
 
 const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
   const dispatch = useDispatch();
@@ -60,9 +67,7 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
     (state) => state.workspace.evaluationScore
   );
 
-  const curCategory = useSelector(
-    (state) => state.workspace.curCategory
-  );
+  const curCategory = useSelector((state) => state.workspace.curCategory);
 
   const nextModelShouldBeTraining = useSelector(
     (state) => state.workspace.nextModelShouldBeTraining
@@ -87,24 +92,24 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
   const { handleSearchPanelClick, searchInput } = useSearchElement();
 
   const onStartEvaluation = () => {
-    dispatch(startEvaluation())
+    dispatch(startEvaluation());
   };
 
   const calculateChangedCountAndDispatch = (action) => {
-    const changedElementsCount = Object.keys(evaluationLabelState).filter(k => evaluationLabelState[k] !== initialEvaluationLabelState[k]).length
+    const changedElementsCount = Object.keys(evaluationLabelState).filter(
+      (k) => evaluationLabelState[k] !== initialEvaluationLabelState[k]
+    ).length;
     dispatch(action(changedElementsCount)).then(() => {
-      dispatch(checkStatus())
+      dispatch(checkStatus());
     });
-  }
-  
-  
+  };
+
   const submitEvaluation = () => {
-    calculateChangedCountAndDispatch(getEvaluationResults)
-    
+    calculateChangedCountAndDispatch(getEvaluationResults);
   };
 
   const onCancelEvaluation = () => {
-    calculateChangedCountAndDispatch(cancelEvaluation)
+    calculateChangedCountAndDispatch(cancelEvaluation);
   };
 
   const typographyStyle = {
@@ -114,7 +119,7 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
     color: "rgba(0,0,0,.54)",
     mr: 1,
     ml: 1,
-  }
+  };
 
   return (
     <Box>
@@ -135,7 +140,10 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
       </Box>
       <Box sx={{ display: "flex", justifyContent: "center", mt: 3, mb: 2 }}>
         <Stack>
-          <Button onClick={onStartEvaluation} disabled={evaluationInProgress || nextModelShouldBeTraining}>
+          <Button
+            onClick={onStartEvaluation}
+            disabled={evaluationInProgress || nextModelShouldBeTraining}
+          >
             Start {evaluationScore ? "new" : ""} precision evaluation
           </Button>
           <Divider variant="middle" />
@@ -143,7 +151,10 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
             Submit
           </Button>
           <Divider variant="middle" />
-          <Button onClick={onCancelEvaluation} disabled={!!!evaluationInProgress}>
+          <Button
+            onClick={onCancelEvaluation}
+            disabled={!!!evaluationInProgress}
+          >
             Cancel evaluation
           </Button>
         </Stack>
@@ -162,12 +173,8 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
           </div>
         ) : evaluationInProgress ? (
           <Box>
-            <Typography
-              sx={typographyStyle}
-            >
-              {
-                "Label all the elements. Once its done, click on Submit to get the precision score."
-              }
+            <Typography sx={typographyStyle}>
+              {EVALUATION_IN_PROGRESS_MSG}
             </Typography>
             {evaluationElements.map((e, i) => {
               return (
@@ -188,30 +195,13 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
             })}
           </Box>
         ) : evaluationScore !== null ? (
-          <Typography
-            sx={{...typographyStyle, fontSize: "1rem"}}
-          >
-            The precision is:{" "}
-            {Math.round(evaluationScore * 100)}%
+          <Typography sx={{ ...typographyStyle, fontSize: "1rem" }}>
+            {PRECISION_RESULT_MSG(Math.round(evaluationScore * 100))}
           </Typography>
-        ) :
-        nextModelShouldBeTraining ? (
-          <Typography
-              sx={typographyStyle}
-            >
-              {
-                "Please wait till the next model is available to start the evaluation"
-              }
-            </Typography>
-        ) 
-        : (
-          <Typography
-            sx={typographyStyle}
-          >
-            {
-              "Click on Start precision evaluation to start the evaluation process"
-            }
-          </Typography>
+        ) : nextModelShouldBeTraining ? (
+          <Typography sx={typographyStyle}>{WAIT_NEW_MODEL_MSG}</Typography>
+        ) : (
+          <Typography sx={typographyStyle}>{START_EVALUATION_MSG}</Typography>
         )}
       </Box>
     </Box>
