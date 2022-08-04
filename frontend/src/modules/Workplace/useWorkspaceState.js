@@ -93,6 +93,8 @@ const useWorkspaceState = () => {
         dispatch(getPositivePredictions())
         // dispatch(getDisagreementsElements())
         dispatch(getSuspiciousLabels())
+        // updates search results because predictions may have changed
+        workspace.searchInput !== null && workspace.searchInput !== '' && dispatch(searchKeywords()) 
       }
     }
   }, [workspace.curCategory, workspace.model_version, dispatch]);
