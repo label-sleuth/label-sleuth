@@ -37,7 +37,6 @@ import {
 const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
   const dispatch = useDispatch();
 
-  const workspace = useSelector((state) => state.workspace);
   const evaluationInProgress = useSelector(
     (state) => state.workspace.evaluationInProgress
   );
@@ -59,6 +58,14 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
 
   const evaluationScore = useSelector(
     (state) => state.workspace.evaluationScore
+  );
+
+  const curCategory = useSelector(
+    (state) => state.workspace.curCategory
+  );
+
+  const nextModelShouldBeTraining = useSelector(
+    (state) => state.workspace.nextModelShouldBeTraining
   );
 
   const submitButtonDisabled = React.useMemo(() => {
@@ -100,6 +107,15 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
     calculateChangedCountAndDispatch(cancelEvaluation)
   };
 
+  const typographyStyle = {
+    display: "flex",
+    justifyContent: "center",
+    fontSize: "0.8rem",
+    color: "rgba(0,0,0,.54)",
+    mr: 1,
+    ml: 1,
+  }
+
   return (
     <Box>
       <Box
@@ -119,7 +135,7 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
       </Box>
       <Box sx={{ display: "flex", justifyContent: "center", mt: 3, mb: 2 }}>
         <Stack>
-          <Button onClick={onStartEvaluation} disabled={evaluationInProgress}>
+          <Button onClick={onStartEvaluation} disabled={evaluationInProgress || nextModelShouldBeTraining}>
             Start {evaluationScore ? "new" : ""} precision evaluation
           </Button>
           <Divider variant="middle" />
@@ -147,14 +163,7 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
         ) : evaluationInProgress ? (
           <Box>
             <Typography
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                fontSize: "0.8rem",
-                color: "rgba(0,0,0,.54)",
-                mr: 1,
-                ml: 1,
-              }}
+              sx={typographyStyle}
             >
               {
                 "Label all the elements. Once its done, click on Submit to get the precision score."
@@ -165,11 +174,11 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
                 <Element
                   key={i}
                   searchedIndex={i}
-                  prediction={e.model_predictions[workspace.curCategory]}
+                  prediction={e.model_predictions[curCategory]}
                   text={e.text}
                   id={e.id}
                   docid={e.docid}
-                  labelValue={e.user_labels[workspace.curCategory]}
+                  labelValue={e.user_labels[curCategory]}
                   handleSearchPanelClick={handleSearchPanelClick}
                   labelState={evaluationLabelState}
                   handlePosLabelState={handlePosLabelState}
@@ -180,30 +189,24 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
           </Box>
         ) : evaluationScore !== null ? (
           <Typography
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              fontSize: "1rem",
-              color: "rgba(0,0,0,.54)",
-              mt: 2,
-              mb: 2,
-              mr: 1,
-              ml: 1,
-            }}
+            sx={{...typographyStyle, fontSize: "1rem"}}
           >
             The precision is:{" "}
             {Math.round(evaluationScore * 100)}%
           </Typography>
-        ) : (
+        ) :
+        nextModelShouldBeTraining ? (
           <Typography
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              fontSize: "0.8rem",
-              color: "rgba(0,0,0,.54)",
-              mr: 1,
-              ml: 1,
-            }}
+              sx={typographyStyle}
+            >
+              {
+                "Please wait till the next model is available to start the evaluation"
+              }
+            </Typography>
+        ) 
+        : (
+          <Typography
+            sx={typographyStyle}
           >
             {
               "Click on Start precision evaluation to start the evaluation process"

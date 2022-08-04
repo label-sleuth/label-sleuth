@@ -70,6 +70,8 @@ export const initialState = {
     isSearchActive: false,
     activePanel: "",
     searchInput: null,
+    // tells if there is a model training. The word 'should' is used because the value is calculated 
+    // and it does not always come from the backend
     nextModelShouldBeTraining: false,
     // tells if the user visited the workspace at least once to open the tutorial the first time
     workspaceVisited: false,
