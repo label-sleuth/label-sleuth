@@ -50,7 +50,7 @@ const LabelNextPanel = ({ updateMainLabelState, updateLabelState }) => {
         }}
       >
         <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Label Next</strong>
+          <strong>Label next</strong>
         </p>
       </Box>
       <Typography
