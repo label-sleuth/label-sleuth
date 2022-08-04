@@ -951,7 +951,7 @@ Model evaluation
 """
 
 
-@main_blueprint.route("/workspace/<workspace_id>/evaluation_elements", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/precision_evaluation_elements", methods=['GET'])
 @login_if_required
 @validate_category_id
 @validate_workspace_id
@@ -976,7 +976,7 @@ def get_elements_for_precision_evaluation(workspace_id):
     return jsonify(res)
 
 
-@main_blueprint.route('/workspace/<workspace_id>/estimate_precision', methods=['POST'])
+@main_blueprint.route('/workspace/<workspace_id>/precision_evaluation_elements', methods=['POST'])
 @login_if_required
 @validate_category_id
 @validate_workspace_id
@@ -993,7 +993,7 @@ def run_precision_evaluation(workspace_id):
     :post_param changed_elements_count: the number of labels that were added/changed in the labeling of elements
     for evaluation. In order to avoid triggering a new iteration before evaluation is complete, labels set in the
     context of precision evaluation are not immediately reflected in the label change counter of the category, and the
-    counts are updated only when calling run_precision_evaluation()
+    counts are updated only when calling run_precision_evaluation() or cancel_precision_evaluation()
     """
     category_id = int(request.args['category_id'])
     post_data = request.get_json(force=True)
@@ -1003,6 +1003,32 @@ def run_precision_evaluation(workspace_id):
     score = current_app.orchestrator_api.estimate_precision(workspace_id, category_id, ids, changed_elements_count,
                                                             iteration_index)
     res = {'score': score}
+    return jsonify(res)
+
+
+@main_blueprint.route('/workspace/<workspace_id>/cancel_precision_evaluation', methods=['POST'])
+@login_if_required
+@validate_category_id
+@validate_workspace_id
+def cancel_precision_evaluation(workspace_id):
+    """
+    Exit the precision evaluation, and allow the evaluation elements labeled so far to be reflected in the
+    label change counter
+
+    :param workspace_id:
+    :request_arg category_id:
+    :post_param changed_elements_count: the number of labels that were added/changed in the labeling of elements
+    for evaluation. In order to avoid triggering a new iteration before evaluation is complete, labels set in the
+    context of precision evaluation are not immediately reflected in the label change counter of the category, and the
+    counts are updated only when calling run_precision_evaluation() or cancel_precision_evaluation()
+
+    """
+    category_id = int(request.args['category_id'])
+    post_data = request.get_json(force=True)
+    changed_elements_count = post_data["changed_elements_count"]
+    current_app.orchestrator_api.increase_label_change_count_since_last_train(workspace_id, category_id,
+                                                                              changed_elements_count)
+    res = {'canceled': 'OK'}
     return jsonify(res)
 
 
