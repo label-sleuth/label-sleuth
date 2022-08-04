@@ -703,6 +703,15 @@ class OrchestratorApi:
                                                                              changed_elements_count)
         return estimated_precision
 
+    def increase_label_change_count_since_last_train(self, workspace_id, category_id, changed_elements_count):
+        """
+        Labels set in certain contexts (like precision evaluation) are not immediately reflected in the label change
+        counter of the category in order to avoid triggering a new iteration. This method allows manually updating the
+        label change counter.
+        """
+        self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, category_id,
+                                                                             changed_elements_count)
+
     def sample_elements_by_prediction(self, workspace_id, category_id, sample_size: int = sys.maxsize,
                                       unlabeled_only=False, required_label=LABEL_POSITIVE,
                                       remove_duplicates=True, random_state: int = 0):
