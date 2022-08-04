@@ -30,8 +30,8 @@ import useLabelState from "./customHooks/useLabelState";
 import {
   checkStatus,
   startEvaluation,
-  stopEvaluation,
   getEvaluationResults,
+  cancelEvaluation
 } from "../DataSlice";
 
 const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
@@ -83,15 +83,21 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
     dispatch(startEvaluation())
   };
 
-  const onStopEvaluation = () => {
-    dispatch(stopEvaluation());
-  };
-
-  const submitEvaluation = () => {
+  const calculateChangedCountAndDispatch = (action) => {
     const changedElementsCount = Object.keys(evaluationLabelState).filter(k => evaluationLabelState[k] !== initialEvaluationLabelState[k]).length
-    dispatch(getEvaluationResults(changedElementsCount)).then(() => {
+    dispatch(action(changedElementsCount)).then(() => {
       dispatch(checkStatus())
     });
+  }
+  
+  
+  const submitEvaluation = () => {
+    calculateChangedCountAndDispatch(getEvaluationResults)
+    
+  };
+
+  const onCancelEvaluation = () => {
+    calculateChangedCountAndDispatch(cancelEvaluation)
   };
 
   return (
@@ -121,7 +127,7 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
             Submit
           </Button>
           <Divider variant="middle" />
-          <Button onClick={onStopEvaluation} disabled={!!!evaluationInProgress}>
+          <Button onClick={onCancelEvaluation} disabled={!!!evaluationInProgress}>
             Cancel evaluation
           </Button>
         </Stack>

@@ -62,7 +62,7 @@ import AllPositiveLabelsPanel from "./sidebar/AllPositiveLabelsPanel";
 import DisagreementsPanel from "./sidebar/DisagreementsPanel";
 import SuspiciousLabelsPanel from "./sidebar/SuspiciousLabelsPanel";
 import ContradictingLabelsPanel from "./sidebar/ContradictingLabelsPanel";
-import EvaluationPanel from "./sidebar/EvaluationPanel.js";
+import EvaluationPanel from "./sidebar/EvaluationPanel";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem("workspaceId"));
