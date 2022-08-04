@@ -557,7 +557,7 @@ export const getEvaluationElements = createAsyncThunk('workspace/getEvaluationEl
 
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
 
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/evaluation_elements${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/precision_evaluation_elements${queryParams}`
 
     const data = await fetch(url, {
         headers: {
@@ -579,7 +579,7 @@ export const getEvaluationResults = createAsyncThunk('workspace/getEvaluationRes
 
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
     
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/estimate_precision${queryParams}`
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/precision_evaluation_elements${queryParams}`
     const data = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
@@ -595,6 +595,26 @@ export const getEvaluationResults = createAsyncThunk('workspace/getEvaluationRes
 
     return data
 
+})
+
+export const cancelEvaluation = createAsyncThunk('workspace/cancelEvaluation', async (changed_elements_count, { getState }) => {
+    const state = getState()
+    
+    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
+    
+    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/cancel_precision_evaluation${queryParams}`
+    const data = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.authenticate.token}`
+        },
+        body: JSON.stringify({
+            changed_elements_count
+        }),
+        method: "POST"
+    }).then(response => response.json())
+
+    return data
 })
 
 export const checkStatus = createAsyncThunk('workspace/get_labelling_status', async (request, { getState }) => {
@@ -773,15 +793,6 @@ const DataSlice = createSlice({
             return {
                 ...state,
                 errorMessage: null
-            }
-        },
-        stopEvaluation(state, action) {
-            return {
-                ...state,
-                evaluationInProgress: false,
-                evaluationElements: [],
-                evaluationLabelState: {},
-                initialEvaluationLabelState: {},
             }
         },
         cleanEvaluationState(state, action) {
@@ -1415,6 +1426,15 @@ const DataSlice = createSlice({
                 loadingEvaluation: false,
             }
         },
+        [cancelEvaluation.fulfilled]: (state, action) => {
+            return {
+                ...state,
+                evaluationInProgress: false,
+                evaluationElements: [],
+                evaluationLabelState: {},
+                initialEvaluationLabelState: {},
+            }
+        },
     }
 })
 
@@ -1456,6 +1476,5 @@ export const {
     setSearchInput,
     setWorkspaceVisited,
     clearError,
-    stopEvaluation,
     cleanEvaluationState
  } = DataSlice.actions;
