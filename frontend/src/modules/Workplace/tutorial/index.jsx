@@ -159,7 +159,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       ),
     },
     {
-      largeTitle: "Label Next",
+      largeTitle: "Label next",
       content: (
         <div>
           <p>

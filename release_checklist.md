@@ -6,7 +6,7 @@ These are the steps for releasing a new version of the system:
 * Run the tests: `python -m unittest`
 
 For testing the system, either clear your browser cache or add `--port <PORT_NUMBER>` to the command with a different port number from what you usually use.
-* Assuming you have some existing workspaces/categories in the default output directory: start the system with `python -m label_sleuth.start_label_sleuth --port <PORT_NUMBER>`, open the system, label some elements in an existing category from different views (document, Label Next etc.)
+* Assuming you have some existing workspaces/categories in the default output directory: start the system with `python -m label_sleuth.start_label_sleuth --port <PORT_NUMBER>`, open the system, label some elements in an existing category from different views (document, Label next, etc.)
 * Delete or backup the output directory (usually `~/label-sleuth`)
 * Start Label Sleuth with `python -m label_sleuth.start_label_sleuth --load_sample_corpus wiki_animals_2000_pages --port <PORT_NUMBER>` to test loading the sample corpus
 * Upload an additional corpus
