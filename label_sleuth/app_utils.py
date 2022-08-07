@@ -101,22 +101,18 @@ def get_element(workspace_id, category_id, element_id):
 
 
 def extract_iteration_information_list(iterations: Sequence[Iteration]):
-    res_list = \
-        [{'model_id': iteration_index,  # TODO change key
+    return \
+        [{'iteration': iteration_index,
           'model_status': iteration.model.model_status.name,
           'creation_epoch': iteration.model.creation_date.timestamp(),
           'model_type': iteration.model.model_type.name,
+          **iteration.iteration_statistics,
           # The frontend expects a dict of string to int, and train counts contains a mix of boolean and string keys.
-          'model_metadata': {**iteration.model.train_statistics, **iteration.iteration_statistics,  # TODO change model_metadata key in coordination with frontend
+          'model_metadata': {**iteration.model.train_statistics,
                              TRAIN_COUNTS_STR_KEY: {str(k).lower(): v for k, v
                                                     in iteration.model.train_statistics[TRAIN_COUNTS_STR_KEY].items()}},
           'active_learning_status': iteration.status.name}
          for iteration_index, iteration in enumerate(iterations)]
-
-    res_sorted = [{**model_dict, 'iteration': i} for i, model_dict in enumerate(
-        sorted(res_list, key=lambda item: item['creation_epoch']))]
-
-    return res_sorted
 
 
 def extract_enriched_ngrams_and_weights_list(elements, boolean_labels):
