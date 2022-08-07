@@ -5,7 +5,7 @@
     "training_set_selection_strategy": "ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO",
     "model_policy": "STATIC_SVM_ENSEMBLE",
     "active_learning_strategy": "HARD_MINING",
-    "precision_evaluation_size": 5,
+    "precision_evaluation_size": 20,
     "apply_labels_to_duplicate_texts": true,
     "language": "ENGLISH",
     "login_required": false
