@@ -49,6 +49,7 @@ import { Link } from "@mui/material";
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { UploadLabelsDialog, DownloadLabelsDialog } from './FileTransferLabels/TransferLabelsDialog';
+import { getOrdinalSuffix } from '../../../utils/utils';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -257,30 +258,6 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
         
         setTutorialOpen(true)
     };
-
-    /**
-    * Returns the suffix of a number in its ordinal form
-    **/
-    const getOrdinalSuffix = (x) => {
-        // suffix pattern repeats every 100 numbers
-        x %= 100
-        let prefix = "th"
-        if (x <= 3 || x >= 21) {
-            switch (x % 10) {
-                case 1: 
-                    prefix = "st"
-                    break;
-                case 2: 
-                    prefix = "nd"
-                    break;
-                case 3: 
-                    prefix = "rd"
-            } 
-        }
-        return prefix
-    }
-
-
 
     const getCategoriesString = (categories) => {
         if (categories.length === 1) return categories[0]

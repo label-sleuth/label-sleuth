@@ -39,7 +39,22 @@ export const DELETE_CATEGORY_TOOLTIP_MSG = "Delete category"
 export const START_EVALUATION_MSG = "Click on Start precision evaluation to start the evaluation process"
 export const EVALUATION_IN_PROGRESS_MSG = "Label all the elements. Once its done, click on Submit to get the precision score."
 export const WAIT_NEW_MODEL_MSG = "Please wait till the next model is available to start the evaluation"
-export const PRECISION_RESULT_MSG = (precision) => `The precision is: ${precision}%`
+export const PRECISION_RESULT_MSG = (
+  precision,
+  currentModelVersion,
+  scoreModelVersion
+) =>
+  `
+    The precision of the ${scoreModelVersion}${getOrdinalSuffix(
+    scoreModelVersion
+  )} model is ${precision}%.` +
+  `${
+    scoreModelVersion !== currentModelVersion
+      ? ` Current model is ${currentModelVersion}${getOrdinalSuffix(
+        currentModelVersion
+        )}. Start a new precision evaluation to get the updated evaluation.`
+      : ""
+  }`;
 
 export const NO_MODEL_AVAILABLE_MSG = "not available yet"
 export const CREATE_NEW_CATEGORY_MODAL_MSG = "Create a new category"
