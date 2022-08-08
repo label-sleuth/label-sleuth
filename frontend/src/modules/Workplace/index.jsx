@@ -70,7 +70,7 @@ export default function Workspace() {
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const activePanel = useSelector((state) => state.workspace.activePanel);
   const model_version = useSelector((state) => state.workspace.model_version);
-  const evaluationInProgress = useSelector((state) => state.workspace.evaluationInProgress);
+  const evaluationIsInProgress = useSelector((state) => state.workspace.evaluation.isInProgress);
   const workspaceVisited = useSelector(
     (state) => state.workspace.workspaceVisited
   );
@@ -200,7 +200,7 @@ export default function Workspace() {
                   componentId={"sidebar-search-button"}
                   imgSource={search_icon}
                   isSelected={toggleSearchPanel}
-                  disabled={evaluationInProgress}
+                  disabled={evaluationIsInProgress}
                 />
                 <SidebarButton
                   tooltipMessage={NEXT_TO_LABEL_TOOLTIP_MSG}
@@ -208,7 +208,7 @@ export default function Workspace() {
                   componentId={"sidebar-recommended-button"}
                   imgSource={recommend_icon}
                   isSelected={toggleRCMDPanel}
-                  disabled={evaluationInProgress || noCategoryAndNoModel}
+                  disabled={evaluationIsInProgress || noCategoryAndNoModel}
                 />
                 <SidebarButton
                   tooltipMessage={POSITIVE_PRED_TOOLTIP_MSG}
@@ -216,7 +216,7 @@ export default function Workspace() {
                   componentId={"sidebar-pos-pred-button"}
                   imgSource={pos_pred_icon}
                   isSelected={togglePosPredPanel}
-                  disabled={evaluationInProgress || noCategoryAndNoModel}
+                  disabled={evaluationIsInProgress || noCategoryAndNoModel}
                   />
               </Stack>
 
@@ -228,7 +228,7 @@ export default function Workspace() {
                   imgSource={pos_elem_icon}
                   isSelected={togglePosElemPanel}
                   alwaysEnabled
-                  disabled={evaluationInProgress || noCategory}
+                  disabled={evaluationIsInProgress || noCategory}
                 />
                 {/* <SidebarButton
                   tooltipMessage={DISAGREEMENTS_TOOLTIP_MSG}
@@ -243,7 +243,7 @@ export default function Workspace() {
                   componentId={"sidebar-suspicious-elem-button"}
                   imgSource={suspicious_elem_icon}
                   isSelected={toggleSuspiciousElemPanel}
-                  disabled={evaluationInProgress || noCategoryAndNoModel}
+                  disabled={evaluationIsInProgress || noCategoryAndNoModel}
                 />
                 <SidebarButton
                   tooltipMessage={CONTRADICTING_LABELS_TOOLTIP_MSG}
@@ -251,7 +251,7 @@ export default function Workspace() {
                   componentId={'sidebar-contradictive-elem-button'}
                   imgSource={contradictive_elem_icon}
                   isSelected={toggleContrElemPanel}
-                  disabled={evaluationInProgress || noCategory}
+                  disabled={evaluationIsInProgress || noCategory}
                 />
                 <SidebarButton
                   tooltipMessage={EVALUATION_TOOLTIP_MSG}
