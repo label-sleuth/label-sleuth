@@ -57,6 +57,7 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
   );
 
   const curCategory = useSelector((state) => state.workspace.curCategory);
+  const model_version = useSelector((state) => state.workspace.model_version);
 
   const nextModelShouldBeTraining = useSelector(
     (state) => state.workspace.nextModelShouldBeTraining
@@ -185,7 +186,7 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
           </Box>
         ) : lastScore !== null ? (
           <Typography sx={{ ...typographyStyle, fontSize: "1rem" }}>
-            {PRECISION_RESULT_MSG(Math.round(evaluationScore * 100))}
+            {PRECISION_RESULT_MSG(Math.round(lastScore * 100), model_version, scoreModelVersion)}
           </Typography>
         ) : nextModelShouldBeTraining ? (
           <Typography sx={typographyStyle}>{WAIT_NEW_MODEL_MSG}</Typography>

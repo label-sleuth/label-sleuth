@@ -1394,7 +1394,6 @@ const DataSlice = createSlice({
                 evaluation: {
                     ...state.evaluation,
                     isInProgress: true,
-                    lastScore: null
                 }
             }
         },
