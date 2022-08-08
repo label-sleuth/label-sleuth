@@ -81,12 +81,15 @@ export const initialState = {
     uploadingLabels: false,
     downloadingLabels: false,
     loadingContradictingLabels: false,
-    loadingEvaluation: false,
-    evaluationInProgress: false,
-    evaluationElements: [],
-    evaluationLabelState: {},
-    initialEvaluationLabelState: {},
-    evaluationScore: null,
+    evaluation: {
+        isLoading: false,
+        isInProgress: false,
+        elements: [],
+        labelState: {},
+        initialLabelState: {},
+        lastScore: null,
+        scoreModelVersion: null,
+    },
 }
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
@@ -576,7 +579,7 @@ export const getEvaluationElements = createAsyncThunk('workspace/getEvaluationEl
 export const getEvaluationResults = createAsyncThunk('workspace/getEvaluationResults', async (changed_elements_count, { getState }) => {
     const state = getState()
     
-    const ids = state.workspace.evaluationElements.map(e => e.id)
+    const ids = state.workspace.evaluation.elements.map(e => e.id)
     const iteration = state.workspace.model_version - 1
 
     const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
@@ -697,7 +700,7 @@ const DataSlice = createSlice({
             state.contradictiveElemPairsLabelState = action.payload
         },    
         setEvaluationLabelState(state, action) {
-            state.evaluationLabelState = action.payload
+            state.evaluation.labelState = action.payload
         },   
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
@@ -800,12 +803,15 @@ const DataSlice = createSlice({
         cleanEvaluationState(state, action) {
             return {
                 ...state,
-                loadingEvaluation: false,
-                evaluationInProgress: false,
-                evaluationElements: [],
-                evaluationLabelState: {},
-                evaluationScore: null,
-                initialEvaluationLabelState: {},
+                evaluation: {
+                    isLoading: false,
+                    isInProgress: false,
+                    elements: [],
+                    labelState: {},
+                    initialLabelState: {},
+                    lastScore: null,
+                    scoreModelVersion: null,
+                },
             }  
         },
     },
@@ -1166,31 +1172,35 @@ const DataSlice = createSlice({
             }
         },
         [checkModelUpdate.fulfilled]: (state, action) => {
-            const data = action.payload
-            let latest_model_version = -1
-            let models = data['models']
-            let modelReadyFound = false
+            const { models } = action.payload
+            let updatedEvaluationState = {}
+            let latestReadyModelVersion = null
             let nextModelShouldBeTraining
-            while (models.length && !modelReadyFound) {
-                let last_model = models[models.length-1]
-                if (last_model['active_learning_status'] === 'READY') {
-                    latest_model_version = last_model['iteration']
-                    modelReadyFound = true
+
+            models.reverse().forEach(m => {
+                if (latestReadyModelVersion === null && m['active_learning_status'] === 'READY') {
+                    latestReadyModelVersion = m['iteration']
                 }
-                else {
-                    models.pop()
+                if (!('lastScore' in updatedEvaluationState) && "estimated_precision" in m) {
+                    updatedEvaluationState = {
+                        lastScore: m["estimated_precision"],
+                        scoreModelVersion: m["iteration"] + 1
+                    }
                 }
-            }
+            })
             
+            if (latestReadyModelVersion === null) {
+                latestReadyModelVersion = -1
+            }
             // if there is a model available, start counting the version from 1 (not 0)
-            if (latest_model_version >= 0) {
-                latest_model_version += 1
+            else if (latestReadyModelVersion >= 0) {
+                latestReadyModelVersion += 1
             }
 
             // logic to manage the next model status, it is first set to true in checkStatus when progress is 100
 
             // if there are non-ready models, it means that a model is training
-            if (!modelReadyFound && models.length) {
+            if (!latestReadyModelVersion && models.length) {
                 nextModelShouldBeTraining = true
             }
             // if there are no models yet, next model status depends on 
@@ -1201,16 +1211,18 @@ const DataSlice = createSlice({
             // if there is at least one ready model found, next model status depends on 
             // the last ready model is already known. If it is not the same means training has
             // finished
-            else if (modelReadyFound) {
-                nextModelShouldBeTraining = latest_model_version === state.model_version ? state.nextModelShouldBeTraining : false
+            else if (latestReadyModelVersion) {
+                nextModelShouldBeTraining = latestReadyModelVersion === state.model_version ? state.nextModelShouldBeTraining : false
             }            
-
-            // console.log(`models.length: ${models.length}\nfound: ${found}\nnextModelShouldBeTraining: ${state.nextModelShouldBeTraining}\nmodel_version: ${state.model_version}\nlatest_model_version: ${latest_model_version}\n\nnextModelShouldBeTraining: ${nextModelShouldBeTraining}`)
 
             return {
                 ...state,
-                model_version: latest_model_version,
-                nextModelShouldBeTraining: nextModelShouldBeTraining
+                model_version: latestReadyModelVersion,
+                nextModelShouldBeTraining: nextModelShouldBeTraining,
+                evaluation: {
+                    ...state.evaluation,
+                    ...updatedEvaluationState,
+                }
             }
 
         },
@@ -1379,31 +1391,43 @@ const DataSlice = createSlice({
         [startEvaluation.fulfilled]: (state, action) => {
             return {
                 ...state,
-                evaluationInProgress: true,
-                evaluationScore: null,
+                evaluation: {
+                    ...state.evaluation,
+                    isInProgress: true,
+                    lastScore: null
+                }
             }
         },
         [getEvaluationElements.fulfilled]: (state, action) => {
             const { elements } = action.payload
-            const initialEvaluationLabelState = _initNewLabelState(state, elements)
+            const initialLabelState = _initNewLabelState(state, elements)
             return {
                 ...state,
-                evaluationElements: elements,
-                evaluationLabelState: initialEvaluationLabelState,
-                initialEvaluationLabelState,
-                loadingEvaluation: false
+                evaluation: {
+                    ...state.evaluation,
+                    elements,
+                    initialLabelState,
+                    labelState: initialLabelState,
+                    isLoading: false
+                },
             }
         },
         [getEvaluationElements.pending]: (state, action) => {
             return {
                 ...state,
-                loadingEvaluation: true
+                evaluation: {
+                    ...state.evaluation,
+                    isLoading: true
+                }
             }
         },
         [getEvaluationElements.rejected]: (state, action) => {
             return {
                 ...state,
-                loadingEvaluation: false
+                evaluation: {
+                    ...state.evaluation,
+                    isLoading: false
+                }
             }
         },
         [getEvaluationResults.fulfilled]: (state, action) => {
@@ -1411,30 +1435,43 @@ const DataSlice = createSlice({
 
             return {
                 ...state,
-                evaluationScore: score,
-                loadingEvaluation: false,
-                evaluationInProgress: false,
+                evaluation: {
+                    ...state.evaluation,
+                    isLoading: false,
+                    isInProgress: false,
+                    lastScore: score,
+                    scoreModelVersion: state.model_version
+                }
             }
         },
         [getEvaluationResults.pending]: (state, action) => {
             return {
                 ...state,
-                loadingEvaluation: true,
+                evaluation: {
+                    ...state.evaluation,
+                    isLoading: true,
+                },
             }
         },
         [getEvaluationResults.rejected]: (state, action) => {
             return {
                 ...state,
-                loadingEvaluation: false,
+                evaluation: {
+                    ...state.evaluation,
+                    isLoading: false,
+                },
             }
         },
         [cancelEvaluation.fulfilled]: (state, action) => {
             return {
                 ...state,
-                evaluationInProgress: false,
-                evaluationElements: [],
-                evaluationLabelState: {},
-                initialEvaluationLabelState: {},
+                evaluation: {
+                    ...state.evaluation,
+                    isInProgress: false,
+                    elements: [],
+                    labelState: {},
+                    initialLabelState: {},
+                },
             }
         },
     }

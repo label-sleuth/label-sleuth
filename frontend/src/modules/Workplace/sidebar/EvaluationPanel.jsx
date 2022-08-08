@@ -44,27 +44,16 @@ import {
 const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
   const dispatch = useDispatch();
 
-  const evaluationInProgress = useSelector(
-    (state) => state.workspace.evaluationInProgress
-  );
-  const evaluationElements = useSelector(
-    (state) => state.workspace.evaluationElements
-  );
-
-  const evaluationLabelState = useSelector(
-    (state) => state.workspace.evaluationLabelState
-  );
-
-  const initialEvaluationLabelState = useSelector(
-    (state) => state.workspace.initialEvaluationLabelState
-  );
-
-  const loadingEvaluation = useSelector(
-    (state) => state.workspace.loadingEvaluation
-  );
-
-  const evaluationScore = useSelector(
-    (state) => state.workspace.evaluationScore
+  const {
+    isLoading,
+    isInProgress,
+    elements,
+    labelState,
+    initialLabelState,
+    lastScore,
+    scoreModelVersion,
+  } = useSelector(
+    (state) => state.workspace.evaluation
   );
 
   const curCategory = useSelector((state) => state.workspace.curCategory);
@@ -75,15 +64,15 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
 
   const submitButtonDisabled = React.useMemo(() => {
     return (
-      !evaluationInProgress ||
-      Object.values(evaluationLabelState).some(
+      !isInProgress ||
+      Object.values(labelState).some(
         (label) => label !== "pos" && label !== "neg"
       )
     );
-  }, [evaluationInProgress, evaluationLabelState]);
+  }, [isInProgress, labelState]);
 
   const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    evaluationLabelState,
+    labelState,
     updateMainLabelState,
     updateLabelState,
     false // updateCounter
@@ -96,8 +85,8 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
   };
 
   const calculateChangedCountAndDispatch = (action) => {
-    const changedElementsCount = Object.keys(evaluationLabelState).filter(
-      (k) => evaluationLabelState[k] !== initialEvaluationLabelState[k]
+    const changedElementsCount = Object.keys(labelState).filter(
+      (k) => labelState[k] !== initialLabelState[k]
     ).length;
     dispatch(action(changedElementsCount)).then(() => {
       dispatch(checkStatus());
@@ -142,9 +131,9 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
         <Stack>
           <Button
             onClick={onStartEvaluation}
-            disabled={evaluationInProgress || nextModelShouldBeTraining}
+            disabled={isInProgress || nextModelShouldBeTraining}
           >
-            Start {evaluationScore ? "new" : ""} precision evaluation
+            Start {lastScore ? "new" : ""} precision evaluation
           </Button>
           <Divider variant="middle" />
           <Button onClick={submitEvaluation} disabled={submitButtonDisabled}>
@@ -153,7 +142,7 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
           <Divider variant="middle" />
           <Button
             onClick={onCancelEvaluation}
-            disabled={!!!evaluationInProgress}
+            disabled={!!!isInProgress}
           >
             Cancel evaluation
           </Button>
@@ -161,7 +150,7 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
       </Box>
       <Box className={classes["search-results"]} sx={{ mt: 16 }}>
         <Divider sx={{ mb: 3 }} variant="middle" />
-        {loadingEvaluation ? (
+        {isLoading ? (
           <div
             style={{
               display: "flex",
@@ -171,12 +160,12 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
           >
             <CircularProgress />
           </div>
-        ) : evaluationInProgress ? (
+        ) : isInProgress ? (
           <Box>
             <Typography sx={typographyStyle}>
               {EVALUATION_IN_PROGRESS_MSG}
             </Typography>
-            {evaluationElements.map((e, i) => {
+            {elements.map((e, i) => {
               return (
                 <Element
                   key={i}
@@ -187,14 +176,14 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
                   docid={e.docid}
                   labelValue={e.user_labels[curCategory]}
                   handleSearchPanelClick={handleSearchPanelClick}
-                  labelState={evaluationLabelState}
+                  labelState={labelState}
                   handlePosLabelState={handlePosLabelState}
                   handleNegLabelState={handleNegLabelState}
                 />
               );
             })}
           </Box>
-        ) : evaluationScore !== null ? (
+        ) : lastScore !== null ? (
           <Typography sx={{ ...typographyStyle, fontSize: "1rem" }}>
             {PRECISION_RESULT_MSG(Math.round(evaluationScore * 100))}
           </Typography>

@@ -30,7 +30,9 @@ import { useEffect } from "react";
 export default function Element(props) {
 
     const { index, text, element_id } = props
-    const workspace = useSelector(state => state.workspace) 
+    const curCategory = useSelector(state => state.workspace.curCategory) 
+    const labelState = useSelector(state => state.workspace.labelState) 
+    const evaluationIsInProgress = useSelector(state => state.workspace.evaluation.isInProgress) 
     const isSearchActive = useSelector(state => state.workspace.isSearchActive) 
     const { handlePosLabelState, handleNegLabelState } = useMainLabelState({ ...props })
     const { handleTextElemStyle,  text_colors } = useElemStyles({ ...props })
@@ -43,7 +45,7 @@ useEffect(()=>{
   },[isSearchActive])
 
     return (
-        workspace.curCategory  === null ?
+        curCategory  === null ?
             <Box tabIndex="-1" className={handleTextElemStyle()} id={"L" + index}>
                 <p className={classes["nodata_text"]}>{text}</p>
             </Box>
@@ -51,17 +53,17 @@ useEffect(()=>{
             <Box tabIndex="-1"
                 className={handleTextElemStyle()}
                 id={"L" + index}  >
-                <p className={classes.data_text} style={(text_colors[workspace.labelState['L' + index]])}>{text}</p>
-                <Stack className={!workspace.evaluationInProgress && classes.checking_buttons} direction="row" spacing={0}>
+                <p className={classes.data_text} style={(text_colors[labelState['L' + index]])}>{text}</p>
+                <Stack className={!evaluationIsInProgress && classes.checking_buttons} direction="row" spacing={0}>
                     <div
                         onClick={handlePosLabelState} style={{ cursor: "pointer" }}>
-                        {workspace.labelState['L' + index] == 'pos' ?
+                        {labelState['L' + index] == 'pos' ?
                             <img className={classes.resultbtn} loading="eager" src={check} alt="checked" /> :
                                 <img className={classes.hovbtn} loading="eager" src={checking} alt="checking" />
                         }
                     </div>
                     <div onClick={handleNegLabelState} style={{ cursor: "pointer" }}>
-                        {workspace.labelState['L' + index] == 'neg' ?
+                        {labelState['L' + index] == 'neg' ?
                             <img className={classes.resultbtn}  loading="eager" src={cross} alt="crossed" /> :
                             <img className={classes.hovbtn}  loading="eager" src={crossing} alt="crossinging" />
                         }
