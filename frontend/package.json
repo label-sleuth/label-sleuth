@@ -32,13 +32,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start:dev": "env-cmd -f .env.development react-scripts start",
-    "start:prod": "env-cmd -f .env.production react-scripts start",
-    "start:remote": "env-cmd -f .env.remote react-scripts start",
-    "build:testing": "env-cmd -f .env.testing react-scripts build",
+    "start": "env-cmd -f .env.development react-scripts start",
     "build": "env-cmd -f .env.production react-scripts build",
-    "build:remote": "env-cmd -f .env.remote react-scripts build",
-    "build:development": "env-cmd -f .env.development react-scripts build",
     "build:production.auth": "env-cmd -f .env.production.auth react-scripts build",
     "test": "react-scripts test --verbose --transformIgnorePatterns \"node_modules/(?!@codemirror)/\""
   },
