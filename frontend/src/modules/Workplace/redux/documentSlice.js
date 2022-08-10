@@ -14,18 +14,49 @@
 */
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  BASE_URL,
-  WORKSPACE_API,
-} from "../../../config";
+import { BASE_URL, WORKSPACE_API } from "../../../config";
 import {
   getCategoryQueryString,
   getQueryParamsString,
+  parseElements,
 } from "../../../utils/utils";
 
-export { searchKeywords } from "./searchSlice";
-
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
+
+
+/**
+ * Updates the states when a new document has been fetched
+ * @param {the document elements} elements
+ * @param {the whole state, only curCategory and labelCount } state
+ * @param {the document id, i.g. 4} newDocId
+ * @param {the actual document id: i.g. medium-Andean condor} newDocName
+ * @returns {the state that has to be updated}
+ */
+const updateStateAfterFetchingDocument = (
+  elements,
+  state,
+  newDocId,
+  newDocName
+) => {
+  const { initialFocusedState, initialLabelState, documentPos, documentNeg } =
+    parseElements(elements, state.curCategory);
+
+  return {
+    ...state,
+    elements,
+    focusedState: initialFocusedState,
+    focusedIndex: null,
+    labelState: initialLabelState,
+    ready: true,
+    labelCount: {
+      ...state.labelCount,
+      documentPos,
+      documentNeg,
+    },
+    curDocId: newDocId,
+    curDocName: newDocName,
+  };
+};
 
 export const fetchDocuments = createAsyncThunk(
   "workspace/fetchDocuments",
@@ -166,72 +197,9 @@ export const fetchCertainDocument = createAsyncThunk(
   }
 );
 
-export const reducers = {}
-  
-/**
- * Parses the elements of a document extracting the user labels
- * @param {list of elements of a document} elements 
- * @param {The current selected category} curCategory 
- * @returns 
- */
-const parseElements = (elements, curCategory) => {
-  
-  let initialFocusedState = {};
-  let initialLabelState = {};
-
-  let documentPos = 0;
-  let documentNeg = 0;
-
-  for (const [i, element] of elements.entries()) {
-    initialFocusedState["L" + i] = false;
-    const userLabels = element['user_labels']
-    if (curCategory in userLabels) {
-      if (userLabels[curCategory] == "true") {
-        initialLabelState["L" + i] = "pos";
-        documentPos += 1;
-      } else if (
-        userLabels[curCategory] == "false"
-      ) {
-        initialLabelState["L" + i] = "neg";
-        documentNeg += 1;
-      }
-    } else {
-      initialLabelState["L" + i] = "";
-    }
-  }
-  return {
-    initialFocusedState,
-    initialLabelState,
-    documentPos,
-    documentNeg
-  }
-}
+export const reducers = {};
 
 export const extraReducers = {
-  [fetchElements.fulfilled]: (state, action) => {
-    const { elements } = action.payload;
-
-    const {
-      initialFocusedState,
-      initialLabelState,
-      documentPos,
-      documentNeg
-    } = parseElements(elements, state.curCategory)
-
-    return {
-      ...state,
-      elements,
-      focusedState: initialFocusedState,
-      focusedIndex: null,
-      labelState: initialLabelState,
-      ready: true,
-      labelCount: {
-        ...state.labelCount,
-        documentPos,
-        documentNeg
-      },
-    };
-  },
   [fetchDocuments.fulfilled]: (state, action) => {
     const { documents } = action.payload;
     return {
@@ -241,85 +209,56 @@ export const extraReducers = {
       curDocId: 0,
     };
   },
-  [fetchNextDocElements.fulfilled]: (state, action) => {
+  [fetchElements.fulfilled]: (state, action) => {
     const { elements } = action.payload;
-    const {
-      initialFocusedState,
-      initialLabelState,
-      documentPos,
-      documentNeg
-    } = parseElements(elements, state.curCategory)
 
     return {
-      ...state,
-      elements,
-      focusedState: initialFocusedState,
-      focusedIndex: null,
-      labelState: initialLabelState,
-      ready: true,
-      labelCount: {
-        ...state.labelCount,
-        documentPos,
-        documentNeg
-      },
-      curDocId: state.curDocId + 1,
-      curDocName: state.documents[state.curDocId + 1]["document_id"],
+      ...updateStateAfterFetchingDocument(
+        elements,
+        state,
+        state.curDocId,
+        state.curDocName
+      ),
+    };
+  },
+  [fetchNextDocElements.fulfilled]: (state, action) => {
+    const { elements } = action.payload;
+    return {
+      ...updateStateAfterFetchingDocument(
+        elements,
+        state,
+        state.curDocId + 1,
+        state.documents[state.curDocId + 1]["document_id"]
+      ),
     };
   },
   [fetchPrevDocElements.fulfilled]: (state, action) => {
     const { elements } = action.payload;
-    const {
-      initialFocusedState,
-      initialLabelState,
-      documentPos,
-      documentNeg
-    } = parseElements(elements, state.curCategory)
 
     return {
-      ...state,
-      elements,
-      focusedState: initialFocusedState,
-      focusedIndex: null,
-      labelState: initialLabelState,
-      ready: true,
-      labelCount: {
-        ...state.labelCount,
-        documentPos,
-        documentNeg
-      },
-
-      curDocId: state.curDocId + 1,
-      curDocName: state.documents[state.curDocId - 1]["document_id"],
+      ...updateStateAfterFetchingDocument(
+        elements,
+        state,
+        state.curDocId - 1,
+        state.documents[state.curDocId - 1]["document_id"]
+      ),
     };
   },
   [fetchCertainDocument.fulfilled]: (state, action) => {
     const { elements } = action.payload.data;
 
-    const {
-      initialFocusedState,
-      initialLabelState,
-      documentPos,
-      documentNeg
-    } = parseElements(elements, state.curCategory)
-
     const curDocument = elements[0]["docid"];
-    const newDocId = state.documents.findIndex(d => d['document_id'] === curDocument)
+    const newDocId = state.documents.findIndex(
+      (d) => d["document_id"] === curDocument
+    );
 
     return {
-      ...state,
-      elements,
-      focusedState: initialFocusedState,
-      focusedIndex: null,
-      labelState: initialLabelState,
-      ready: true,
-      labelCount: {
-        ...state.labelCount,
-        documentPos,
-        documentNeg
-      },
-
-      curDocId: newDocId,
-      curDocName: state["documents"][newDocId]["document_id"],
+      ...updateStateAfterFetchingDocument(
+        elements,
+        state,
+        newDocId,
+        state["documents"][newDocId]["document_id"]
+      ),
     };
   },
 };

@@ -14,15 +14,50 @@
 */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import fileDownload from 'js-file-download'
-import { sidebarOptionEnum } from '../../../const'
-import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../../config"
+import { BASE_URL, WORKSPACE_API } from "../../../config"
 import { reducers as searchReducers, extraReducers as searchExtraReducers } from './searchSlice'
-import { extraReducers as documentExtraReducers } from './documentSlice'
-import { handleError, getCategoryQueryString, getQueryParamsString } from '../../../utils/utils'
+import { reducers as documentReducers, extraReducers as documentExtraReducers } from './documentSlice'
+import { reducers as sidebarPanelsReducers, extraReducers as sidebarPanelsExtraReducers } from './sidebarPanelsSlice'
+import { reducers as labelReducers, extraReducers as labelExtraReducers } from './labelSlice'
+import { reducers as categoryReducers, extraReducers as categoryExtraReducers } from './categorySlice'
+import { reducers as evaluationReducers, extraReducers as evaluationExtraReducers } from './evaluationSlice'
+import { getCategoryQueryString, getQueryParamsString } from '../../../utils/utils'
 
-export { searchKeywords } from './searchSlice'
-export { fetchDocuments, fetchElements, fetchNextDocElements, fetchPrevDocElements, fetchCertainDocument } from './documentSlice'
+export { searchKeywords} from "./searchSlice";
+export {
+  fetchDocuments,
+  fetchElements,
+  fetchNextDocElements,
+  fetchPrevDocElements,
+  fetchCertainDocument,
+} from "./documentSlice";
+export {
+  getPositivePredictions,
+  getAllPositiveLabels,
+  getDisagreementsElements,
+  getSuspiciousLabels,
+  getContradictingLabels,
+  getPositiveElementForCategory,
+  getElementToLabel,
+} from "./sidebarPanelsSlice";
+export {
+    downloadLabels,
+    uploadLabels,
+    labelInfoGain,
+    setElementLabel,
+} from "./labelSlice"
+export {
+    fetchCategories,
+    createCategoryOnServer,
+    deleteCategory,
+    editCategory,
+} from './categorySlice'
+export {
+  startEvaluation,
+  getEvaluationElements,
+  getEvaluationResults,
+  cancelEvaluation,
+} from './evaluationSlice';
 
 export const initialState = {
     workspaceId: "",
@@ -59,7 +94,6 @@ export const initialState = {
     predictionForDocCat: [],
     modelUpdateProgress: 0,
     new_categories: [],
-    training_batch: 5,
     isDocLoaded: false,
     isCategoryLoaded: false,
     numLabel: { pos: 0, neg: 0 },
@@ -92,277 +126,11 @@ export const initialState = {
         workspacePos: 0, 
         workspaceNeg: 0,
         documentPos: 0,
-        documentPos: 0
+        documentNeg: 0
     },
 }
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`
-
-export const getElementToLabel = createAsyncThunk('workspace/getElementToLabel', async (request, { getState }) => {
-
-    const state = getState()
-    
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/active_learning${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const getPositiveElementForCategory = createAsyncThunk('workspace/getPositiveElementForCategory', async (request, { getState }) => {
-    const state = getState()
-
-    const curDocument = state.workspace.documents[state.workspace.curDocId]['document_id']
-    
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    //var url = `${getWorkspace_url}/${state.workspace.workspace}/positive_elements?${getCategoryQueryString(state.workspace.curCategory)}`)
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/document/${encodeURIComponent(curDocument)}${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const getAllPositiveLabels = createAsyncThunk('workspace/getPositiveElements', async (request, { getState }) => {
-
-    const state = getState()
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/positive_elements${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-    return data
-})
-
-export const getDisagreementsElements = createAsyncThunk('workspace/getDisagreeElements', async (request, { getState }) => {
-
-    const state = getState()
-
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/disagree_elements${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-    return data
-})
-
-export const getSuspiciousLabels = createAsyncThunk('workspace/getSuspiciousElements', async (request, { getState }) => {
-
-    const state = getState()
-    
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/suspicious_elements${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-    return data
-})
-
-export const getContradictingLabels = createAsyncThunk('workspace/getContradictiveElements', async (request, { getState }) => {
-    const state = getState()
-    
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/contradiction_elements${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-    return data
-})
-
-
-export const getPositivePredictions = createAsyncThunk('workspace/getPositivePredictions', async (request, { getState }) => {
-
-    const state = getState()
-    const queryParams = getQueryParamsString([
-        `size=100`, 
-        getCategoryQueryString(state.workspace.curCategory),
-        `start_idx=0`])
-    const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/positive_predictions${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const createCategoryOnServer = createAsyncThunk('workspace/createCategoryOnServer', async (request, { getState }) => {
-
-    const state = getState()
-
-    const { category } = request
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/category`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        body: JSON.stringify({
-            'category_name': category,
-            'category_description': "",
-            'update_counter': true
-        }),
-        method: "POST"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const deleteCategory = createAsyncThunk('workspace/deleteCategory', async (request, { getState }) => {
-
-    const state = getState()
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/category/${state.workspace.curCategory}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "DELETE"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const editCategory = createAsyncThunk('workspace/editCategory', async ({newCategoryName, newCategoryDescription}, { getState }) => {
-
-    const state = getState()
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/category/${state.workspace.curCategory}`
-
-    const body = JSON.stringify({
-        category_name: newCategoryName,
-        category_description: newCategoryDescription
-    })
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        body: body,
-        method: "PUT"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const downloadLabels = createAsyncThunk('workspace/downloadLabels', async (request, { getState }) => {
-
-    const state = getState()
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/${DOWNLOAD_LABELS_API}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'text/csv;charset=UTF-8',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(res => res.text())
-
-    return data
-})
-
-
-export const uploadLabels = createAsyncThunk(`workspace/uploadLabels`, async (formData, {getState}) => {
-    const state = getState()
-    let headers = {
-      "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${state.authenticate.token}`,
-    };
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/${UPLOAD_LABELS_API}`;
-    const data = await fetch(url, {
-      method: "POST",
-      header: headers,
-      body: formData,
-    }).then(res => res.json());
-    return data;
-  }
-);
-
-export const labelInfoGain = createAsyncThunk('workspace/labeled_info_gain', async (request, { getState }) => {
-
-    const state = getState()
-    
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/labeled_info_gain${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-})
-
-export const fetchCategories = createAsyncThunk('workspace/get_all_categories', async (request, { getState }) => {
-
-    const state = getState()
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/categories`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-})
 
 export const checkModelUpdate = createAsyncThunk('workspace/check_model_update', async (request, { getState }) => {
 
@@ -384,102 +152,6 @@ export const checkModelUpdate = createAsyncThunk('workspace/check_model_update',
 
 })
 
-export const setElementLabel = createAsyncThunk('workspace/set_element_label', async (request, { getState }) => {
-    const state = getState()
-
-    const { element_id, label, docid, update_counter } = request
-    
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/element/${encodeURIComponent(element_id)}${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        body: JSON.stringify({
-            'category_id': state.workspace.curCategory,
-            'value': label,
-            'update_counter': update_counter
-        }),
-        method: "PUT"
-    }).then(response => response.json())
-
-    return data
-
-})
-
-export const startEvaluation = createAsyncThunk('workspace/startEvaluation', async (request, { dispatch }) => {
-    await dispatch(getEvaluationElements())
-})
-
-export const getEvaluationElements = createAsyncThunk('workspace/getEvaluationElements', async (request, { getState }) => {
-
-    const state = getState()
-
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/precision_evaluation_elements${queryParams}`
-
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        method: "GET"
-    }).then(response => response.json())
-
-    return data
-
-})
-
-export const getEvaluationResults = createAsyncThunk('workspace/getEvaluationResults', async (changed_elements_count, { getState }) => {
-    const state = getState()
-    
-    const ids = state.workspace.evaluation.elements.map(e => e.id)
-    const iteration = state.workspace.model_version - 1
-
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-    
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/precision_evaluation_elements${queryParams}`
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        body: JSON.stringify({
-            ids, 
-            iteration, 
-            changed_elements_count
-        }),
-        method: "POST"
-    }).then(response => response.json())
-
-    return data
-
-})
-
-export const cancelEvaluation = createAsyncThunk('workspace/cancelEvaluation', async (changed_elements_count, { getState }) => {
-    const state = getState()
-    
-    const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)])
-    
-    var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/cancel_precision_evaluation${queryParams}`
-    const data = await fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.authenticate.token}`
-        },
-        body: JSON.stringify({
-            changed_elements_count
-        }),
-        method: "POST"
-    }).then(response => response.json())
-
-    return data
-})
-
 export const checkStatus = createAsyncThunk('workspace/get_labelling_status', async (request, { getState }) => {
     const state = getState()
 
@@ -498,33 +170,17 @@ export const checkStatus = createAsyncThunk('workspace/get_labelling_status', as
     return data
 })
 
-const _initNewLabelState = (state, elements)  => {
-    let initialLabelState = {}
-    if (elements) {
-        for (let i = 0; i < elements.length; i++) {
-            if (state.curCategory in elements[i]['user_labels']) {
-                if (elements[i]['user_labels'][state.curCategory] == 'true') {
-                    initialLabelState['L' + i+'-'+elements[i].id] = 'pos'
-                } else if (elements[i]['user_labels'][state.curCategory] == 'false') {
-                    initialLabelState['L' + i+'-'+elements[i].id] = 'neg'
-                }
-                else{
-                    initialLabelState['L' + i+'-'+elements[i].id] = ""
-                }
-            } else {
-                initialLabelState['L' + i+'-'+elements[i].id] = ""
-            }
-        }        
-    }
-
-    return initialLabelState
-}
 
 const DataSlice = createSlice({
     name: "workspace",
     initialState,
     reducers: {
         ...searchReducers,
+        ...documentReducers,
+        ...sidebarPanelsReducers,
+        ...labelReducers,
+        ...categoryReducers,
+        ...evaluationReducers,
         setWorkspaceId(state, action) {
             state.workspaceId = action.payload
         },
@@ -534,74 +190,14 @@ const DataSlice = createSlice({
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
         },
-        setSearchLabelState(state, action) {
-            state.searchLabelState = action.payload
-        }, 
-        setRecommendToLabelState(state, action) {
-            state.recommendToLabelState = action.payload
-        },
-        setPosPredLabelState(state, action) {
-            state.posPredLabelState = action.payload
-         },
-         setPosElemLabelState(state, action) {
-                 state.posElemLabelState = action.payload
-         },
-         setDisagreeElemLabelState(state, action) {
-             state.disagreeElemLabelState = action.payload
-         },
-         setSuspiciousElemLabelState(state, action) {
-             state.suspiciousElemLabelState = action.payload
-         },
-         setContradictiveElemLabelState(state, action) {
-            state.contradictiveElemPairsLabelState = action.payload
-        },    
-        setEvaluationLabelState(state, action) {
-            state.evaluation.labelState = action.payload
-        },   
         setIsDocLoaded(state, action) {
             state.isDocLoaded = action.payload
-        },
-        updateDocumentLabelCountByDiff(state, action) { 
-            const diff = action.payload
-            return {
-                ...state,
-                labelCount: {
-                    ...state.labelCount,
-                    documentPos: state.labelCount.documentPos + diff.pos,
-                    documentNeg: state.labelCount.documentNeg + diff.neg,
-
-                }
-            }
-        },
-        setNumLabelGlobal(state, action) {
-            return {
-                ...state,
-                numLabelGlobal: action.payload
-            }
         },
         setSearchedIndex(state, action) {
             state.searchedIndex = action.payload
         },
         setIsSearchActive(state, action) {
             state.isSearchActive = action.payload
-        },
-        setActivePanel(state, action) {
-            state.activePanel = action.payload
-        },
-        setSearchInput(state, action) {
-            state.searchInput = action.payload
-        },
-        setNumLabel(state, action) {
-            return {
-                ...state,
-                numLabel: action.payload
-            }
-        },
-        setNumLabelGlobal(state, action) {
-            return {
-                ...state,
-                numLabelGlobal: action.payload
-            }
         },
         prevPrediction(state, action) {
             const pred_index = state.indexPrediction
@@ -614,14 +210,6 @@ const DataSlice = createSlice({
                 return {
                     ...state
                 }
-            }
-        },
-        updateCurCategory(state, action) {
-            const c = action.payload
-            return {
-                ...state,
-                curCategory: c,
-                nextModelShouldBeTraining: false
             }
         },
         setFocusedState(state, action) {
@@ -639,14 +227,6 @@ const DataSlice = createSlice({
                 ...state,
                 focusedState: initialFocusedState,
                 focusedIndex: id
-            }
-        },
-        setLabelState(state, action) {
-            const new_labeled_state = action.payload
-            
-            return {
-                ...state,
-                labelState: new_labeled_state
             }
         },
         cleanWorkplaceState(state, action) {
@@ -667,233 +247,14 @@ const DataSlice = createSlice({
                 errorMessage: null
             }
         },
-        cleanEvaluationState(state, action) {
-            return {
-                ...state,
-                evaluation: {
-                    isLoading: false,
-                    isInProgress: false,
-                    elements: [],
-                    labelState: {},
-                    initialLabelState: {},
-                    lastScore: null,
-                    scoreModelVersion: null,
-                },
-            }  
-        },
     },
     extraReducers: {
         ...searchExtraReducers,
         ...documentExtraReducers,
-        [fetchCategories.fulfilled]: (state, action) => {
-            const data = action.payload
-
-            return {
-                ...state,
-                categories: data['categories']
-            }
-        },
-        [getPositivePredictions.fulfilled]: (state, action) => {
-            const data = action.payload
-
-            return {
-                ...state,
-                posPredResult: data.elements,
-                posPredFraction: data.positive_fraction,
-                posPredTotalElemRes: data.hit_count,
-                posPredLabelState: _initNewLabelState(state, data.elements)
-            }
-        },
-        [getAllPositiveLabels.fulfilled]: (state, action) => {
-            const data = action.payload
-
-            return {
-                ...state,
-                posElemResult: data.positive_elements,
-                posElemLabelState: _initNewLabelState(state, data.positive_elements) 
-            }
-        },
-        [getDisagreementsElements.fulfilled]: (state, action) => {
-            const data = action.payload  
-
-            return {
-                ...state,
-                disagreeElemResult: data.disagree_elements,
-                disagreeElemLabelState: _initNewLabelState(state, data.disagree_elements)
-            }
-        },
-        [getSuspiciousLabels.fulfilled]: (state, action) => {
-            const data = action.payload  
-
-            return {
-                ...state,
-                suspiciousElemResult: data.elements,
-                suspiciousElemLabelState: _initNewLabelState(state, data.elements)
-            }
-        },
-        [getContradictingLabels.pending]: (state, action) => {
-            return {
-                ...state,
-                loadingContradictingLabels: true,
-            }
-        },
-        [getContradictingLabels.rejected]: (state, action) => {
-            return {
-                ...state,
-                loadingContradictingLabels: false,
-            }
-        },
-        [getContradictingLabels.fulfilled]: (state, action) => {
-            const data = action.payload  
-            let initialContrLabelState = {}
-            // let contradictiveElemPairsResult = []
-
-            if(data.pairs){
-                let count = 0
-
-                let initialContrLabelState = {}
-
-                Object.keys(data.pairs).map((key, j) => {
-                    data.pairs[key].map((res, i) => {
-                        if (state.curCategory in res['user_labels']) {
-                            if (res['user_labels'][state.curCategory] == 'true') {
-                                initialContrLabelState['L' + count+'-'+res.id] = 'pos'
-                            } else if (res['user_labels'][state.curCategory] == 'false') {
-                                initialContrLabelState['L' + count+'-'+res.id] = 'neg'
-                            }
-                            else{
-                                initialContrLabelState['L' + count+'-'+res.id] = ""
-                            }
-                        } else {
-                            initialContrLabelState['L' + count+'-'+res.id] = ""
-                        }     
-                        count++
-                    })
-                })
-            }
-
-            const flattedPairs = data.pairs?.length ? data.pairs.flat() : []
-            return {
-                ...state,
-                contradictiveElemDiffsResult: data.diffs,
-                contradictiveElemPairsResult: data.pairs,
-                contradictiveElemPairsLabelState: _initNewLabelState(state, flattedPairs),
-                loadingContradictingLabels: false
-            }
-        },
-        
-        [getPositiveElementForCategory.fulfilled]: (state, action) => {
-            const data = action.payload
-
-            var elements = data['elements']
-
-            // var doc_elements = [ ... state.elements ]
-
-            var predictionForDocCat = Array(state.elements.length - 1).fill(false)
-
-            elements.map((e, i) => {
-                // const docid = e['docid']
-                // var eids = e['id'].split('-')
-                // const eid = parseInt(eids[eids.length-1])
-
-                // if(docid == state.curDocName) {
-                //     // console.log(`eid: ${eid}, i: ${i}`)
-
-                //     predictionForDocCat[eid] = true
-                // }
-
-                if (state.curCategory in e['model_predictions']) {
-                    const pred = e['model_predictions'][state.curCategory]
-
-                    if (pred == 'true') {
-                        predictionForDocCat[i] = true
-                    } else {
-                        predictionForDocCat[i] = false
-                    }
-                }
-
-
-            })
-
-            return {
-                ...state,
-                predictionForDocCat: predictionForDocCat
-            }
-        },
-        [downloadLabels.pending]: (state, action) => {
-            return {
-                ...state,
-                downloadingLabels: true
-            }
-        },
-        [downloadLabels.fulfilled]: (state, action) => {
-            const data = action.payload
-            const current = new Date();
-            const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`;
-            const fileName = `labeleddata_from_Label_Sleuth<${date}>.csv`
-            fileDownload(data, fileName)
-            return {
-                ...state,
-                downloadingLabels: false
-            }
-        },
-        [uploadLabels.pending]: (state, action) => {
-            return {
-                ...state,
-                uploadingLabels: true
-            }
-        },
-        [uploadLabels.fulfilled]: (state, action) => {
-            return {
-                ...state,
-                uploadedLabels: action.payload,
-                uploadingLabels: false
-            }
-        },
-        [setElementLabel.fulfilled]: (state, action) => {
-            const {element} = action.payload
-            const label = element.user_labels[state.curCategory]
-            let newPosElemResult = [...state.posElemResult]
-            if (label === 'true') {
-                if (!state.posElemResult.some(e => e.id === element.id)) {
-                    newPosElemResult = [...newPosElemResult, element]
-                }
-            }
-            else {
-                newPosElemResult = newPosElemResult.filter(e => e.id !== element.id)
-            }
-            return {
-                ...state,
-                posElemResult: newPosElemResult,
-                posElemLabelState: _initNewLabelState(state, newPosElemResult)
-            }
-        },
-        [getElementToLabel.fulfilled]: (state, action) => {
-
-            const data = action.payload
-
-            let initRecommendToLabelState = {}
-
-            for (let i = 0; i < data['elements'].length; i++) {
-                if (state.curCategory in data['elements'][i]['user_labels']) {
-                    if (data['elements'][i]['user_labels'][state.curCategory] == 'true') {
-                        initRecommendToLabelState['L' + i+'-'+data['elements'][i].id] = 'pos'
-                    } else if (data['elements'][i]['user_labels'][state.curCategory] == 'false') {
-                        initRecommendToLabelState['L' + i+'-'+data['elements'][i].id] = 'neg'
-                    }
-                    else{
-                        initRecommendToLabelState['L' + i+'-'+data['elements'][i].id] = ""
-                    }
-                } else {
-                    initRecommendToLabelState['L' + i+'-'+data['elements'][i].id] = ""
-                }
-            }
-            return {
-                ...state,
-                elementsToLabel: data['elements'],
-                recommendToLabelState: initRecommendToLabelState,
-            }
-        },
+        ...sidebarPanelsExtraReducers,
+        ...labelExtraReducers,
+        ...categoryExtraReducers,
+        ...evaluationExtraReducers,
         [checkModelUpdate.fulfilled]: (state, action) => {
             const { models } = action.payload
             let updatedEvaluationState = {}
@@ -964,139 +325,6 @@ const DataSlice = createSlice({
                 nextModelShouldBeTraining: progress === 100 ? true : state.nextModelShouldBeTraining
             }
         },
-        [createCategoryOnServer.fulfilled]: (state, action) => {
-            // TODO: action.payload has an update_counter field that is not used, remove it
-            return {
-                ...state,
-                curCategory: action.payload.category_id.toString(),
-                categories: [...state.categories, action.payload],
-                nextModelShouldBeTraining: false
-            }
-        },
-        [deleteCategory.pending]: (state, action) => {
-            return {
-                ...state,
-                deletingCategory: true
-            }
-        },
-        [deleteCategory.fulfilled]: (state, action) => {
-            return {
-                ...initialState,
-                curDocName: state.curDocName,
-                documents: state.documents,
-                elements: state.elements,
-                deletingCategory: false,
-                categories: state.categories.filter(c => c.category_id != state.curCategory),
-                activePanel: sidebarOptionEnum.SEARCH,
-                workspaceId: state.workspaceId
-            }
-        },
-        [editCategory.fulfilled]: (state, action) => {
-            const { category_name, category_description } = action.payload;
-            return {
-              ...state,
-              categories: state.categories.map((c) =>
-                c.category_id == state.curCategory
-                  ? {
-                      ...c,
-                      category_name,
-                      category_description,
-                    }
-                  : c
-              ),
-            };
-        },
-        [uploadLabels.rejected]: (state, action) => {
-            return {
-                ...state,
-                errorMessage: handleError(action.error)
-            }
-        },
-        [startEvaluation.fulfilled]: (state, action) => {
-            return {
-                ...state,
-                evaluation: {
-                    ...state.evaluation,
-                    isInProgress: true,
-                }
-            }
-        },
-        [getEvaluationElements.fulfilled]: (state, action) => {
-            const { elements } = action.payload
-            const initialLabelState = _initNewLabelState(state, elements)
-            return {
-                ...state,
-                evaluation: {
-                    ...state.evaluation,
-                    elements,
-                    initialLabelState,
-                    labelState: initialLabelState,
-                    isLoading: false
-                },
-            }
-        },
-        [getEvaluationElements.pending]: (state, action) => {
-            return {
-                ...state,
-                evaluation: {
-                    ...state.evaluation,
-                    isLoading: true
-                }
-            }
-        },
-        [getEvaluationElements.rejected]: (state, action) => {
-            return {
-                ...state,
-                evaluation: {
-                    ...state.evaluation,
-                    isLoading: false
-                }
-            }
-        },
-        [getEvaluationResults.fulfilled]: (state, action) => {
-            const { score } = action.payload
-
-            return {
-                ...state,
-                evaluation: {
-                    ...state.evaluation,
-                    isLoading: false,
-                    isInProgress: false,
-                    lastScore: score,
-                    scoreModelVersion: state.model_version
-                }
-            }
-        },
-        [getEvaluationResults.pending]: (state, action) => {
-            return {
-                ...state,
-                evaluation: {
-                    ...state.evaluation,
-                    isLoading: true,
-                },
-            }
-        },
-        [getEvaluationResults.rejected]: (state, action) => {
-            return {
-                ...state,
-                evaluation: {
-                    ...state.evaluation,
-                    isLoading: false,
-                },
-            }
-        },
-        [cancelEvaluation.fulfilled]: (state, action) => {
-            return {
-                ...state,
-                evaluation: {
-                    ...state.evaluation,
-                    isInProgress: false,
-                    elements: [],
-                    labelState: {},
-                    initialLabelState: {},
-                },
-            }
-        },
     }
 })
 
@@ -1106,8 +334,6 @@ export const curCategoryNameSelector = (state) => {
     (cat) => cat.category_id == state.workspace.curCategory
   )?.category_name;
 };
-
-  
 
 export default DataSlice.reducer;
 export const { 

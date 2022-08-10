@@ -107,3 +107,43 @@ export const getNewLabelState = (currentLabel, action) => {
 export const getBooleanLabel = (label) => {
     return label === "pos" ? "true" : label === "neg" ? "false" : "none";
 }
+
+/**
+ * Parses the elements of a document extracting the user labels
+ * @param {list of elements of a document} elements
+ * @param {The current selected category} curCategory
+ * @param {whether to add the id of the element in its entry key} includeId
+ * @returns
+ */
+ export const parseElements = (elements, curCategory, includeId=false) => {
+  let initialFocusedState = {};
+  let initialLabelState = {};
+
+  let documentPos = 0;
+  let documentNeg = 0; 
+
+  for (const [i, element] of elements.entries()) {
+    let index = "L" + i
+    index = includeId ? `L${i}-${element.id}` : `L${i}`
+    initialFocusedState[index] = false;
+    const userLabels = element["user_labels"];
+    if (curCategory in userLabels) {
+      const label = userLabels[curCategory]
+      if (label === "true") {
+        initialLabelState[index] = "pos";
+        documentPos += 1;
+      } else if (label === "false") {
+        initialLabelState[index] = "neg";
+        documentNeg += 1;
+      }
+    } else {
+      initialLabelState[index] = "";
+    }
+  }
+  return {
+    initialFocusedState,
+    initialLabelState,
+    documentPos,
+    documentNeg,
+  };
+};
