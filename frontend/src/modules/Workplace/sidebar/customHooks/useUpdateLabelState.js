@@ -56,7 +56,8 @@ const useUpdateLabelState = () => {
     }
 
     const updatePosElemLabelState = (newPanelLabelState) => {
-        dispatch(setPosElemLabelState(newPanelLabelState))
+        // elemLabelState update is manage in the setElementLabel.fulfilled action
+        return
     }   
 
     const updateDisagreelemLabelState = (newPanelLabelState) => {

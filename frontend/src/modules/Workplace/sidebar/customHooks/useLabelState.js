@@ -55,7 +55,12 @@ const useLabelState = (
       labelAction
     );
 
-    dispatch(setElementLabel({ element_id: id, docid: docid, label: getBooleanLabel(newLabel)})).then(() => {
+    dispatch(setElementLabel({ 
+      element_id: id, 
+      docid: docid, 
+      label: getBooleanLabel(newLabel), 
+      update_counter: updateCounter
+    })).then(() => {
       dispatch(checkStatus())
 
       // if doc is L24-medium_wiki-Common house gecko-50 then elementMainIndex is L50
