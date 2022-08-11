@@ -55,7 +55,19 @@ main_blueprint = Blueprint("main_blueprint", __name__)
 executor = ThreadPoolExecutor(20)
 
 
-def create_app(config: Configuration, output_dir) -> Flask:
+class LabelSleuthApp(Flask):
+    orchestrator_api: OrchestratorApi
+    users: dict
+    tokens: list
+
+
+# in order for the IDE to recognize custom objects within the Label Sleuth flask application -- and specifically
+# the methods of OrchestratorApi -- we define a class LabelSleuthApp with these objects and assign this type to
+# the flask "current_app" proxy object
+curr_app: LabelSleuthApp = current_app
+
+
+def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
     os.makedirs(output_dir, exist_ok=True)
     app = Flask(__name__, static_folder='./build')
     CORS(app)
@@ -91,10 +103,10 @@ def start_server(app, host, port, num_serving_threads):
 @main_blueprint.route("/", defaults={'path': ''})
 @main_blueprint.route('/<path:path>')  # catch all routes
 def serve(path):
-    if path != "" and os.path.exists(current_app.static_folder + '/' + path):
-        return send_from_directory(current_app.static_folder, path)
+    if path != "" and os.path.exists(curr_app.static_folder + '/' + path):
+        return send_from_directory(curr_app.static_folder, path)
 
-    return send_from_directory(current_app.static_folder, 'index.html')
+    return send_from_directory(curr_app.static_folder, 'index.html')
 
 
 @main_blueprint.route('/users/authenticate', methods=['POST'])
@@ -109,7 +121,7 @@ def login():
             'error': "wrong user or password"
         }), 401)
     else:
-        user = current_app.users.get(username)
+        user = curr_app.users.get(username)
         logging.info(f"LOGIN: {user.username}")
         return authenticate_response({
             'username': user.username,
@@ -129,7 +141,7 @@ def get_all_dataset_ids():
     """
     Get the names of all existing datasets
     """
-    all_datasets = current_app.orchestrator_api.get_all_dataset_names()
+    all_datasets = curr_app.orchestrator_api.get_all_dataset_names()
     res = {'datasets':
                [{"dataset_id": d} for d in all_datasets]}
     return jsonify(res)
@@ -154,13 +166,13 @@ def add_documents(dataset_name):
     try:
         csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
         df = pd.read_csv(csv_data)
-        temp_dir = os.path.join(current_app.config["output_dir"], "temp", "csv_upload")
+        temp_dir = os.path.join(curr_app.config["output_dir"], "temp", "csv_upload")
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
         os.makedirs(temp_dir, exist_ok=True)
         temp_file_path = os.path.join(temp_dir, temp_file_name)
         df.to_csv(os.path.join(temp_dir, temp_file_name))
         document_statistics, workspaces_to_update = \
-            current_app.orchestrator_api.add_documents_from_file(dataset_name, temp_file_path)
+            curr_app.orchestrator_api.add_documents_from_file(dataset_name, temp_file_path)
         return jsonify({"dataset_name": dataset_name,
                         "num_docs": document_statistics.documents_loaded,
                         "num_sentences": document_statistics.text_elements_loaded,
@@ -194,13 +206,13 @@ def create_workspace():
     workspace_id = post_data["workspace_id"]
     dataset_name = post_data["dataset_id"]
 
-    if current_app.orchestrator_api.workspace_exists(workspace_id):
+    if curr_app.orchestrator_api.workspace_exists(workspace_id):
         logging.info(f"Trying to create workspace '{workspace_id}' which already exists")
         return jsonify({"workspace_id": workspace_id, "error": "workspace already exist",
                         "error_code": 409}), 409
-    current_app.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
+    curr_app.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
-    all_document_ids = current_app.orchestrator_api.get_all_document_uris(workspace_id)
+    all_document_ids = curr_app.orchestrator_api.get_all_document_uris(workspace_id)
     first_document_id = all_document_ids[0]
 
     res = {'workspace': {'workspace_id': workspace_id,
@@ -216,7 +228,7 @@ def get_all_workspace_ids():
     """
     Get the ids of all existing workspaces
     """
-    res = {'workspaces': current_app.orchestrator_api.list_workspaces()}
+    res = {'workspaces': curr_app.orchestrator_api.list_workspaces()}
     return jsonify(res)
 
 
@@ -230,7 +242,7 @@ def delete_workspace(workspace_id):
 
     :param workspace_id:
     """
-    current_app.orchestrator_api.delete_workspace(workspace_id)
+    curr_app.orchestrator_api.delete_workspace(workspace_id)
     return jsonify({'workspace_id': workspace_id})
 
 
@@ -244,11 +256,11 @@ def get_workspace_info(workspace_id):
     :param workspace_id:
     :returns a dictionary containing ids for the workspace and dataset as well as for all the documents in the dataset
     """
-    document_ids = current_app.orchestrator_api.get_all_document_uris(workspace_id)
+    document_ids = curr_app.orchestrator_api.get_all_document_uris(workspace_id)
     first_document_id = document_ids[0]
 
     res = {'workspace': {'workspace_id': workspace_id,
-                         'dataset_name': current_app.orchestrator_api.get_dataset_name(workspace_id),
+                         'dataset_name': curr_app.orchestrator_api.get_dataset_name(workspace_id),
                          'first_document_id': first_document_id,
                          'document_ids': document_ids}}
     return jsonify(res)
@@ -275,12 +287,12 @@ def create_category(workspace_id):
     category_name = post_data["category_name"]
     category_description = post_data["category_description"]
     existing_category_names = [category.name for category
-                               in current_app.orchestrator_api.get_all_categories(workspace_id).values()]
+                               in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
     if category_name in existing_category_names:
         return jsonify({"workspace_id": workspace_id, "error": "category with this name already exists",
                         "category_name": category_name, "error_code": 409}), 409
 
-    category_id = current_app.orchestrator_api.create_new_category(workspace_id, category_name, category_description)
+    category_id = curr_app.orchestrator_api.create_new_category(workspace_id, category_name, category_description)
 
     post_data['category_id'] = str(category_id)
 
@@ -296,7 +308,7 @@ def get_all_categories(workspace_id):
 
     :param workspace_id:
     """
-    categories = current_app.orchestrator_api.get_all_categories(workspace_id)
+    categories = curr_app.orchestrator_api.get_all_categories(workspace_id)
     category_dicts = [{'category_id': id, 'category_name': category.name, 'category_description': category.description}
                       for id, category in categories.items()]
 
@@ -320,7 +332,7 @@ def update_category(workspace_id, category_id):
         return jsonify({"type": "category_id_error",
                         "title": f"category_id should be an integer (got {category_id}) "}), 400
 
-    if category_id not in current_app.orchestrator_api.get_all_categories(workspace_id):
+    if category_id not in curr_app.orchestrator_api.get_all_categories(workspace_id):
         return jsonify({"type": "category_id_does_not_exist",
                         "title": f"category_id {category_id} does not exist in workspace {workspace_id}"}), 404
 
@@ -328,12 +340,12 @@ def update_category(workspace_id, category_id):
     new_category_name = post_data["category_name"]
     new_category_description = post_data["category_description"]
     existing_category_names = [category.name for category
-                               in current_app.orchestrator_api.get_all_categories(workspace_id).values()]
+                               in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
     if new_category_name in existing_category_names:
         return jsonify({"workspace_id": workspace_id, "error": "category with this name already exists",
                         "category_name": new_category_name, "error_code": 409}), 409
 
-    current_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description)
+    curr_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description)
     return jsonify({"workspace_id": workspace_id, "category_id": str(category_id), "category_name": new_category_name,
                     "category_description": new_category_description})
 
@@ -354,11 +366,11 @@ def delete_category(workspace_id, category_id):
         return jsonify({"type": "category_id_error",
                         "title": f"category_id should be an integer (got {category_id}) "}), 400
 
-    if category_id not in current_app.orchestrator_api.get_all_categories(workspace_id):
+    if category_id not in curr_app.orchestrator_api.get_all_categories(workspace_id):
         return jsonify({"type": "category_id_does_not_exist",
                         "title": f"category_id {category_id} does not exist in workspace {workspace_id}"}), 404
 
-    current_app.orchestrator_api.delete_category(workspace_id, category_id)
+    curr_app.orchestrator_api.delete_category(workspace_id, category_id)
     return jsonify({"workspace_id": workspace_id, 'category_id': str(category_id)})
 
 
@@ -379,7 +391,7 @@ def get_all_document_uris(workspace_id):
     :param workspace_id:
     """
 
-    doc_uris = current_app.orchestrator_api.get_all_document_uris(workspace_id)
+    doc_uris = curr_app.orchestrator_api.get_all_document_uris(workspace_id)
     res = {"documents":
                [{"document_id": uri} for uri in doc_uris]}  # TODO change document_id to document_uri in the ui
     return jsonify(res)
@@ -396,8 +408,8 @@ def get_document_elements(workspace_id, document_uri):
     :param document_uri:
     :request_arg category_id:
     """
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    document = current_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_uri])[0]
+    dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
+    document = curr_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_uri])[0]
     elements = document.text_elements
     category_id = request.args.get('category_id')
     if category_id is not None:
@@ -427,16 +439,16 @@ def get_document_positive_predictions(workspace_id, document_uri):
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
 
-    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
-                                                                     IterationStatus.READY)) == 0:
+    if len(curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
+                                                                  IterationStatus.READY)) == 0:
         elements_transformed = []
     else:
-        dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-        document = current_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_uri])[0]
+        dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
+        document = curr_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_uri])[0]
 
         elements = document.text_elements
 
-        predictions = [pred.label for pred in current_app.orchestrator_api.infer(workspace_id, category_id, elements)]
+        predictions = [pred.label for pred in curr_app.orchestrator_api.infer(workspace_id, category_id, elements)]
         positive_predicted_elements = [element for element, prediction in zip(elements, predictions)
                                        if prediction == LABEL_POSITIVE]
 
@@ -464,15 +476,15 @@ def get_positive_predictions(workspace_id):
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
 
-    all_ready_iterations = current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
-                                                                                     IterationStatus.READY)
+    all_ready_iterations = curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
+                                                                                  IterationStatus.READY)
     if len(all_ready_iterations) == 0:
         return jsonify({'hit_count': 0, "positive_fraction": None, 'elements': []})
     else:
         # Where labels are applied to duplicate texts (the default behavior), we do not want duplicates to appear in
         # the positive predictions list
-        remove_duplicates = current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts
-        positive_predicted_elements = current_app.orchestrator_api.sample_elements_by_prediction(
+        remove_duplicates = curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts
+        positive_predicted_elements = curr_app.orchestrator_api.sample_elements_by_prediction(
             workspace_id, category_id, unlabeled_only=False, required_label=LABEL_POSITIVE,
             remove_duplicates=remove_duplicates)
         iteration, iteration_idx = all_ready_iterations[-1]
@@ -523,10 +535,10 @@ def query(workspace_id):
     sample_size = int(request.args.get('qry_size', 100))
     sample_start_idx = int(request.args.get('sample_start_idx', 0))
 
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    resp = current_app.orchestrator_api.query(workspace_id, dataset_name, category_id=None, query_regex=query_string,
-                                              unlabeled_only=False, sample_size=sample_size,
-                                              sample_start_idx=sample_start_idx, remove_duplicates=True)
+    dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
+    resp = curr_app.orchestrator_api.query(workspace_id, dataset_name, category_id=None, query_regex=query_string,
+                                           unlabeled_only=False, sample_size=sample_size,
+                                           sample_start_idx=sample_start_idx, remove_duplicates=True)
 
     sorted_elements = sorted(resp["results"], key=lambda te: get_natural_sort_key(te.uri))
     elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id)
@@ -568,9 +580,9 @@ def set_element_label(workspace_id, element_id):
     update_counter = post_data.get('update_counter', True)
 
     if value == 'none':
-        current_app.orchestrator_api. \
+        curr_app.orchestrator_api. \
             unset_labels(workspace_id, category_id, [element_id],
-                         apply_to_duplicate_texts=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
+                         apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
 
     else:
         if value in ['true', "True", "TRUE", True]:
@@ -581,9 +593,9 @@ def set_element_label(workspace_id, element_id):
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
 
         uri_with_updated_label = {element_id: {category_id: Label(value)}}
-        current_app.orchestrator_api. \
+        curr_app.orchestrator_api. \
             set_labels(workspace_id, uri_with_updated_label,
-                       apply_to_duplicate_texts=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts,
+                       apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts,
                        update_label_counter=update_counter)
 
     res = {'element': get_element(workspace_id, category_id, element_id), 'workspace_id': workspace_id,
@@ -635,13 +647,13 @@ def get_all_labeled_elements(workspace_id, category_id, label=None):
     :param category_id:
     :param label:
     """
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
-                                                                          remove_duplicates=True)
+    dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
+    elements = curr_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
+                                                                       remove_duplicates=True)
 
     if label is not None:
         elements = [element for element in elements
-                             if element.category_to_label[category_id].label == label]
+                    if element.category_to_label[category_id].label == label]
     elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
     return elements_transformed
 
@@ -666,7 +678,7 @@ def import_labels(workspace_id):
     csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
     df = pd.read_csv(csv_data)
 
-    return jsonify(current_app.orchestrator_api.import_category_labels(workspace_id, df))
+    return jsonify(curr_app.orchestrator_api.import_category_labels(workspace_id, df))
 
 
 @main_blueprint.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
@@ -679,7 +691,7 @@ def export_labels(workspace_id):
 
     :param workspace_id:
     """
-    return current_app.orchestrator_api.export_workspace_labels(workspace_id).to_csv(index=False)
+    return curr_app.orchestrator_api.export_workspace_labels(workspace_id).to_csv(index=False)
 
 
 """
@@ -705,15 +717,15 @@ def get_labelling_status(workspace_id):
     """
 
     category_id = int(request.args['category_id'])
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
 
-    labeling_counts = current_app.orchestrator_api. \
+    labeling_counts = curr_app.orchestrator_api. \
         get_label_counts(workspace_id, dataset_name, category_id,
-                         remove_duplicates=current_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
-    progress = current_app.orchestrator_api.get_progress(workspace_id, dataset_name, category_id)
+                         remove_duplicates=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
+    progress = curr_app.orchestrator_api.get_progress(workspace_id, dataset_name, category_id)
 
     # TODO move executor to the orchestrator
-    executor.submit(current_app.orchestrator_api.train_if_recommended, workspace_id, category_id)
+    executor.submit(curr_app.orchestrator_api.train_if_recommended, workspace_id, category_id)
 
     return jsonify({
         "labeling_counts": labeling_counts,
@@ -735,7 +747,7 @@ def get_all_models_for_category(workspace_id):
     :return: array of all iterations sorted from oldest to newest
     """
     category_id = int(request.args['category_id'])
-    iterations = current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id)
+    iterations = curr_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id)
     res = {'models': extract_iteration_information_list(iterations)}
     return jsonify(res)
 
@@ -758,11 +770,11 @@ def get_elements_to_label(workspace_id):
     size = int(request.args.get('size', 100))
     start_idx = int(request.args.get('start_idx', 0))
 
-    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
-                                                                     IterationStatus.READY)) == 0:
+    if len(curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
+                                                                  IterationStatus.READY)) == 0:
         return jsonify({"elements": []})
 
-    elements = current_app.orchestrator_api.get_elements_to_label(workspace_id, category_id, size, start_idx)
+    elements = curr_app.orchestrator_api.get_elements_to_label(workspace_id, category_id, size, start_idx)
     elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
 
     res = {'elements': elements_transformed}
@@ -781,11 +793,11 @@ def force_train_for_category(workspace_id):
     :request_arg category_id:
     """
     category_id = int(request.args['category_id'])
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
+    dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
 
-    model_id = current_app.orchestrator_api.train_if_recommended(workspace_id, category_id, force=True)
+    model_id = curr_app.orchestrator_api.train_if_recommended(workspace_id, category_id, force=True)
 
-    labeling_counts = current_app.orchestrator_api.get_label_counts(workspace_id, dataset_name, category_id)
+    labeling_counts = curr_app.orchestrator_api.get_label_counts(workspace_id, dataset_name, category_id)
     logging.info(f"force training a new model in workspace '{workspace_id}' for category '{category_id}', "
                  f"model id: {model_id}")
 
@@ -809,10 +821,10 @@ def export_predictions(workspace_id):
     """
     category_id = int(request.args['category_id'])
     iteration_index = request.args.get('iteration_index')
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    elements = current_app.orchestrator_api.get_all_text_elements(dataset_name)
-    infer_results = current_app.orchestrator_api.infer(workspace_id, category_id, elements,
-                                                       iteration_index=iteration_index)
+    dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
+    elements = curr_app.orchestrator_api.get_all_text_elements(dataset_name)
+    infer_results = curr_app.orchestrator_api.infer(workspace_id, category_id, elements,
+                                                    iteration_index=iteration_index)
     return pd.DataFrame([{**te.__dict__, "score": pred.score, 'predicted_label': pred.label} for te, pred
                          in zip(elements, infer_results)]).to_csv(index=False)
 
@@ -834,13 +846,13 @@ def export_model(workspace_id):
     category_id = int(request.args['category_id'])
     iteration_index = request.args.get('iteration_index', None)  # TODO update in UI model_id -> iteration_index
     if iteration_index is None:
-        iteration, _ = current_app.orchestrator_api. \
+        iteration, _ = curr_app.orchestrator_api. \
             get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
     else:
-        iteration = current_app.orchestrator_api. \
+        iteration = curr_app.orchestrator_api. \
             get_all_iterations_for_category(workspace_id, category_id)[iteration_index]
     model_id = iteration.model.model_id
-    model_dir = current_app.orchestrator_api.export_model(workspace_id, category_id, iteration_index)
+    model_dir = curr_app.orchestrator_api.export_model(workspace_id, category_id, iteration_index)
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
         for dirpath, dirnames, filenames in os.walk(model_dir):
@@ -872,8 +884,8 @@ def get_label_and_model_disagreements(workspace_id):
     """
 
     category_id = int(request.args['category_id'])
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
+    dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
+    elements = curr_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
     elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
 
     res = {'disagree_elements':
@@ -902,7 +914,7 @@ def get_suspicious_elements(workspace_id):
 
     category_id = int(request.args['category_id'])
     try:
-        suspicious_elements = current_app.orchestrator_api.get_suspicious_elements_report(workspace_id, category_id)
+        suspicious_elements = curr_app.orchestrator_api.get_suspicious_elements_report(workspace_id, category_id)
         elements_transformed = elements_back_to_front(workspace_id, suspicious_elements, category_id)
         res = {'elements': elements_transformed}
         return jsonify(res)
@@ -932,7 +944,7 @@ def get_contradicting_elements(workspace_id):
     """
     category_id = int(request.args['category_id'])
     try:
-        contradiction_elements_dict = current_app.orchestrator_api.get_contradiction_report(workspace_id, category_id)
+        contradiction_elements_dict = curr_app.orchestrator_api.get_contradiction_report(workspace_id, category_id)
         element_pairs_transformed = [elements_back_to_front(workspace_id, element_pair, category_id)
                                      for element_pair in contradiction_elements_dict['pairs']]
         diffs = [[list(element_a_unique_token_set), list(element_b_unique_token_set)]
@@ -964,10 +976,10 @@ def get_elements_for_precision_evaluation(workspace_id):
     :param workspace_id:
     :request_arg category_id:.
     """
-    size = current_app.config["CONFIGURATION"].precision_evaluation_size
+    size = curr_app.config["CONFIGURATION"].precision_evaluation_size
     category_id = int(request.args['category_id'])
-    random_state = len(current_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id))
-    positive_predicted_elements = current_app.orchestrator_api. \
+    random_state = len(curr_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id))
+    positive_predicted_elements = curr_app.orchestrator_api. \
         sample_elements_by_prediction(workspace_id, category_id, size, unlabeled_only=False,
                                       required_label=LABEL_POSITIVE, remove_duplicates=False, random_state=random_state)
     elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_id)
@@ -1000,8 +1012,8 @@ def run_precision_evaluation(workspace_id):
     ids = post_data["ids"]
     changed_elements_count = post_data["changed_elements_count"]
     iteration_index = post_data["iteration"]
-    score = current_app.orchestrator_api.estimate_precision(workspace_id, category_id, ids, changed_elements_count,
-                                                            iteration_index)
+    score = curr_app.orchestrator_api.estimate_precision(workspace_id, category_id, ids, changed_elements_count,
+                                                         iteration_index)
     res = {'score': score}
     return jsonify(res)
 
@@ -1026,8 +1038,8 @@ def cancel_precision_evaluation(workspace_id):
     category_id = int(request.args['category_id'])
     post_data = request.get_json(force=True)
     changed_elements_count = post_data["changed_elements_count"]
-    current_app.orchestrator_api.increase_label_change_count_since_last_train(workspace_id, category_id,
-                                                                              changed_elements_count)
+    curr_app.orchestrator_api.increase_label_change_count_since_last_train(workspace_id, category_id,
+                                                                           changed_elements_count)
     res = {'canceled': 'OK'}
     return jsonify(res)
 
@@ -1052,8 +1064,8 @@ def get_labeled_elements_enriched_tokens(workspace_id):
     :request_arg category_id:
     """
     category_id = int(request.args['category_id'])
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    elements = current_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
+    dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
+    elements = curr_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
     res = dict()
     if elements and len(elements) > 0:
         boolean_labels = [element.category_to_label[category_id].label == LABEL_POSITIVE for element in elements]
@@ -1080,17 +1092,17 @@ def get_predictions_enriched_tokens(workspace_id):
     res = dict()
 
     category_id = int(request.args['category_id'])
-    if len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
-                                                                     IterationStatus.READY)) == 0:
+    if len(curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
+                                                                  IterationStatus.READY)) == 0:
         res['info_gain'] = []
         return jsonify(res)
 
-    true_elements = current_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category_id, 1000,
-                                                                               unlabeled_only=True,
-                                                                               required_label=LABEL_POSITIVE)
-    false_elements = current_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category_id, 1000,
-                                                                                unlabeled_only=True,
-                                                                                required_label=LABEL_NEGATIVE)
+    true_elements = curr_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category_id, 1000,
+                                                                            unlabeled_only=True,
+                                                                            required_label=LABEL_POSITIVE)
+    false_elements = curr_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category_id, 1000,
+                                                                             unlabeled_only=True,
+                                                                             required_label=LABEL_NEGATIVE)
     elements = true_elements + false_elements
     boolean_labels = [LABEL_POSITIVE] * len(true_elements) + [LABEL_NEGATIVE] * len(false_elements)
 
