@@ -137,7 +137,7 @@ const ContradictingLabelsPanel = ({
             ml: 1,
           }}
         >
-          {`No contradicting pairs of examples were found which are semantically similar but were labeled by you with contradicting labels.`}
+          {`No contradicting pairs of examples were found.`}
         </Typography>
       ) : (
         <Typography

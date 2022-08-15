@@ -63,7 +63,7 @@ const AllPositiveLabelsPanel = ({ updateMainLabelState, updateLabelState }) => {
             ml: 1,
           }}
         >
-          {`You didn't label no elements as positive so far`}
+          {`You didn't label any elements as positive so far`}
         </Typography>
       ) : (
         <Typography
