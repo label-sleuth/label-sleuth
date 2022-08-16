@@ -227,36 +227,35 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual({'true': 3, 'false': 2},
                          res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
 
-
         # get positively labeled elements
         res = self.client.get(f"/workspace/{workspace_name}/positive_elements?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to get positively labeled elements")
         self.assertEqual({'positive_elements': [{'begin': 0,
-                        'docid': 'my_test_dataset-document3',
-                        'end': 53,
-                        'id': 'my_test_dataset-document3-0',
-                        'model_predictions': {'0': 'true'},
-                        'text': 'document 3 has three text elements, this is '
-                                'the first',
-                        'user_labels': {'0': 'true'}},
-                       {'begin': 47,
-                        'docid': 'my_test_dataset-document1',
-                        'end': 94,
-                        'id': 'my_test_dataset-document1-1',
-                        'model_predictions': {'0': 'true'},
-                        'text': 'this is the second text element of document '
-                                'one',
-                        'user_labels': {'0': 'true'}},
-                       {'begin': 142,
-                        'docid': 'my_test_dataset-document3',
-                        'end': 195,
-                        'id': 'my_test_dataset-document3-2',
-                        'model_predictions': {'0': 'true'},
-                        'text': 'document 3 has three text elements, this is '
-                                'the third',
-                        'user_labels': {'0': 'true'}}]},
+                                                 'docid': 'my_test_dataset-document3',
+                                                 'end': 53,
+                                                 'id': 'my_test_dataset-document3-0',
+                                                 'model_predictions': {'0': 'true'},
+                                                 'text': 'document 3 has three text elements, this is '
+                                                         'the first',
+                                                 'user_labels': {'0': 'true'}},
+                                                {'begin': 47,
+                                                 'docid': 'my_test_dataset-document1',
+                                                 'end': 94,
+                                                 'id': 'my_test_dataset-document1-1',
+                                                 'model_predictions': {'0': 'true'},
+                                                 'text': 'this is the second text element of document '
+                                                         'one',
+                                                 'user_labels': {'0': 'true'}},
+                                                {'begin': 142,
+                                                 'docid': 'my_test_dataset-document3',
+                                                 'end': 195,
+                                                 'id': 'my_test_dataset-document3-2',
+                                                 'model_predictions': {'0': 'true'},
+                                                 'text': 'document 3 has three text elements, this is '
+                                                         'the third',
+                                                 'user_labels': {'0': 'true'}}]},
                          res.get_json(), msg="diffs in positively labeled elements")
 
         # get negatively labeled elements
@@ -265,22 +264,21 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code,
                          msg="Failed to get negatively labeled elements")
         self.assertEqual({'negative_elements': [{'begin': 0,
-                        'docid': 'my_test_dataset-document2',
-                        'end': 45,
-                        'id': 'my_test_dataset-document2-0',
-                        'model_predictions': {'0': 'true'},
-                        'text': 'this is the only text element in document two',
-                        'user_labels': {'0': 'false'}},
-                       {'begin': 54,
-                        'docid': 'my_test_dataset-document3',
-                        'end': 141,
-                        'id': 'my_test_dataset-document3-1',
-                        'model_predictions': {'0': 'false'},
-                        'text': 'document 3 has three text elements, this is '
-                                'the second that will be labeled as negative',
-                        'user_labels': {'0': 'false'}}]},
+                                                 'docid': 'my_test_dataset-document2',
+                                                 'end': 45,
+                                                 'id': 'my_test_dataset-document2-0',
+                                                 'model_predictions': {'0': 'true'},
+                                                 'text': 'this is the only text element in document two',
+                                                 'user_labels': {'0': 'false'}},
+                                                {'begin': 54,
+                                                 'docid': 'my_test_dataset-document3',
+                                                 'end': 141,
+                                                 'id': 'my_test_dataset-document3-1',
+                                                 'model_predictions': {'0': 'false'},
+                                                 'text': 'document 3 has three text elements, this is '
+                                                         'the second that will be labeled as negative',
+                                                 'user_labels': {'0': 'false'}}]},
                          res.get_json(), msg="diffs in negatively labeled elements")
-
 
         # wait for the second models
         res = self.wait_for_new_iteration(category_id, res, workspace_name, 2)
@@ -320,7 +318,9 @@ class TestAppIntegration(unittest.TestCase):
 
     def wait_for_new_iteration(self, category_id, res, workspace_name, num_models):
         waiting_count = 0
-        MAX_WAITING_FOR_TRAINING = 50  # wait maximum 5 seconds for the training (should be much faster)
+        MAX_WAITING_FOR_TRAINING = 100
+        # wait maximum 10 seconds (100*0.1) for the training
+        # (should be much faster but it sometimes takes longer on github actions)
         while waiting_count < MAX_WAITING_FOR_TRAINING:
             # since get_status is asynchronously starting a new training, we need to wait until it added to the
             # iterations list and finishes successfully
