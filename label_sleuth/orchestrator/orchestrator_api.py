@@ -198,9 +198,9 @@ class OrchestratorApi:
         :param remove_duplicates:
         :return: a list of TextElement objects
         """
-        return self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
-                                                          sample_size=sys.maxsize, remove_duplicates=remove_duplicates)[
-            'results']
+        return self.data_access.get_labeled_text_elements(
+            workspace_id, dataset_name, category_id, sample_size=sys.maxsize,
+            remove_duplicates=remove_duplicates)['results']
 
     def get_all_unlabeled_text_elements(self, workspace_id, dataset_name, category_id: int, remove_duplicates=False) \
             -> List[TextElement]:
@@ -398,15 +398,15 @@ class OrchestratorApi:
 
         logging.info(f"workspace '{workspace_id}' training a model for category id '{category_id}', "
                      f"train_statistics: {train_statistics}")
-        model_id, _ = model.train(train_data=train_data, language=self.config.language,
-                                  done_callback=functools.partial(self._train_done_callback, workspace_id,
-                                                                  category_id, new_iteration_index))
+        model_id, future = model.train(train_data=train_data, language=self.config.language)
         model_status = model.get_model_status(model_id)
         model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
                                train_statistics=train_statistics, creation_date=datetime.now())
         self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_id=category_id,
                                               model_info=model_info)
-
+        # The train callback is added here to ensure it only runs after the iteration has been added
+        future.add_done_callback(functools.partial(self._train_done_callback, workspace_id, category_id,
+                                                   new_iteration_index))
         # The model id is returned almost immediately, but the training is performed in the background. Once training is
         # complete the iteration flow continues in the *_train_done_callback* method
         return model_id
