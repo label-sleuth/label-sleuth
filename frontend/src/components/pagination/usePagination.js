@@ -13,7 +13,6 @@
     limitations under the License.
 */
 
-import React from 'react';
 import { useMemo } from 'react';
 
 export const DOTS = '...';
