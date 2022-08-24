@@ -13,55 +13,75 @@
     limitations under the License.
 */
 
-import * as React from 'react';
-import { useSelector } from 'react-redux';
-import '../../../../components/pagination/pagination.css'
+import * as React from "react";
+import { useSelector } from "react-redux";
+import "../../../../components/pagination/pagination.css";
+import { panelIds } from "../../../../const";
 
-const useMainPagination = (searchedIndex, numOfElemPerPage) => {
+const useMainPagination = (numOfElemPerPage) => {
+  const curDocId = useSelector((state) => state.workspace.curDocId);
+  const elements = useSelector(
+    (state) => state.workspace.panels[panelIds.MAIN_PANEL].elements
+  );
+  const focusedElementId = useSelector(
+    (state) => state.workspace.panels.focusedElement.id
+  );
 
-    const workspace = useSelector(state => state.workspace)
-    const len_elements = workspace['elements'].length
-    const [currentPage, setCurrentPage] = React.useState(1);
-    let [firstPageIndex, setFirstPageIndex] = React.useState()
-    let [lastPageIndex, setLastPageIndex] = React.useState()
-    let currPageNum = Math.ceil(parseInt(searchedIndex) / parseInt(numOfElemPerPage))
-    let currPageNumMod = parseInt(searchedIndex)% parseInt(numOfElemPerPage)
+  const mainElementIndex = React.useMemo(
+    () =>
+      elements &&
+      focusedElementId &&
+      Object.values(elements).findIndex((e) => e.id === focusedElementId),
+    [elements, focusedElementId]
+  );
 
-    React.useEffect(() => {
-        if (!searchedIndex) {
-            setCurrentPage(1)
-        }
-        else {
-            if(currPageNumMod == 0){
-                setCurrentPage(currPageNum+1)
-            }
-            else{
-                setCurrentPage(currPageNum)
-            }
-        }
+  const [currentPage, setCurrentPage] = React.useState(1);
+  let [firstPageIndex, setFirstPageIndex] = React.useState();
+  let [lastPageIndex, setLastPageIndex] = React.useState();
 
-    }, [workspace.curDocId, setCurrentPage, searchedIndex, numOfElemPerPage])
+  let currPageNum = React.useMemo(
+    () => Math.ceil(mainElementIndex / numOfElemPerPage),
+    [mainElementIndex, numOfElemPerPage]
+  );
+  let currPageNumMod = React.useMemo(
+    () => mainElementIndex % numOfElemPerPage,
+    [mainElementIndex, numOfElemPerPage]
+  );
 
-    const currentContentData = React.useMemo(() => {
-        let firstPageIndex = 0;
-
-        if (currentPage > 0) {
-            firstPageIndex = (currentPage-1) * numOfElemPerPage;
-        }
-
-        const lastPageIndex = firstPageIndex + numOfElemPerPage;
-        setFirstPageIndex(firstPageIndex)
-        setLastPageIndex(lastPageIndex)
-        return workspace.elements.slice(firstPageIndex, lastPageIndex);
-    }, [workspace.elements, currentPage, numOfElemPerPage, workspace.curDocId, len_elements]);
-
-    return {
-        currentContentData,
-        setCurrentPage,
-        currentPage,
-        lastPageIndex,
-        firstPageIndex
+  React.useEffect(() => {
+    if (!focusedElementId) {
+      setCurrentPage(1);
+    } else {
+      if (currPageNumMod === 0) {
+        setCurrentPage(currPageNum + 1);
+      } else {
+        setCurrentPage(currPageNum);
+      }
     }
+  }, [curDocId, focusedElementId, setCurrentPage, currPageNum, currPageNumMod]);
+
+  const currentContentData = React.useMemo(() => {
+    if (elements) {
+      let firstPageIndex = 0;
+
+      if (currentPage > 0) {
+        firstPageIndex = (currentPage - 1) * numOfElemPerPage;
+      }
+
+      const lastPageIndex = firstPageIndex + numOfElemPerPage;
+      setFirstPageIndex(firstPageIndex);
+      setLastPageIndex(lastPageIndex);
+      return Object.values(elements).slice(firstPageIndex, lastPageIndex);
+    }
+  }, [elements, currentPage, numOfElemPerPage]);
+
+  return {
+    currentContentData,
+    setCurrentPage,
+    currentPage,
+    lastPageIndex,
+    firstPageIndex,
+  };
 };
 
 export default useMainPagination;

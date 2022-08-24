@@ -27,7 +27,7 @@ test("test that workspace information is displayed correctly", async () => {
         workspace: {
           ...initialWorkspaceState,
           curCategory: "cat1",
-          model_version: 4,
+          modelVersion: 4,
           workspaceId: "workspace_id",
         },
       },
@@ -49,7 +49,7 @@ test("test that model version is updated if model changes", async () => {
         workspace: {
           ...initialWorkspaceState,
           curCategory: 0,
-          model_version: 4,
+          modelVersion: 4,
           workspaceId: "workspace_id",
           nextModelShouldBeTraining: true
         },
@@ -76,7 +76,7 @@ test("test that model related information is not displayed if there is no catego
         workspace: {
           ...initialWorkspaceState,
           curCategory: null,
-          model_version: 4,
+          modelVersion: 4,
           workspaceId: "workspace_id",
         },
       },
@@ -96,7 +96,7 @@ test("test model version ordinal: st", async () => {
         workspace: {
           ...initialWorkspaceState,
           curCategory: 0,
-          model_version: 1,
+          modelVersion: 1,
           workspaceId: "workspace_id",
         },
       },
@@ -113,7 +113,7 @@ test("test model version ordinal: nd", async () => {
         workspace: {
           ...initialWorkspaceState,
           curCategory: 0,
-          model_version: 102,
+          modelVersion: 102,
         },
       },
     }
@@ -129,7 +129,7 @@ test("test model version ordinal: rd", async () => {
         workspace: {
           ...initialWorkspaceState,
           curCategory: 0,
-          model_version: 1123,
+          modelVersion: 1123,
         },
       },
     }
@@ -145,7 +145,7 @@ test("test model version ordinal: th", async () => {
         workspace: {
           ...initialWorkspaceState,
           curCategory: 0,
-          model_version: 12,
+          modelVersion: 12,
         },
       },
     }

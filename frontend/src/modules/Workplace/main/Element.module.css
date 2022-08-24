@@ -44,7 +44,9 @@
 .text_predict,
 .text_normal,
 .text_auto_focus,
+.text_auto_focus2,
 .text_auto_focus_pred,
+.text_auto_focus_pred2,
 .text_focus {
     color: #161616 !important;
     border: solid 2px transparent;
@@ -65,7 +67,9 @@
 .text_normal:hover,
 .text_predict:hover,
 .text_auto_focus:hover,
+.text_auto_focus2:hover,
 .text_auto_focus_pred:hover,
+.text_auto_focus_pred2:hover,
 .text_focus {
     background: #f4f4f4;
     color: #000 !important;
@@ -78,6 +82,15 @@
     animation: glow 5s;
 }
 
+/* duplicating animation to force re-running it whenan element is clicked twice in the sidebar panel */
+.text_auto_focus_pred2,
+.text_auto_focus2 {
+    background: none;
+    color: #000 !important;
+    animation: glow2 5s;
+}
+
+
 @keyframes glow { 
     0% { background-color:white; }
     50% { background-color:#FFFAA0; }
@@ -85,7 +98,15 @@
 } 
 
 
-.text_auto_focus_pred{
+@keyframes glow2 { 
+    0% { background-color:white; }
+    50% { background-color:#FFFAA0; }
+    100% { background-color:white; } 
+} 
+
+
+.text_auto_focus_pred,
+.text_auto_focus_pred2{
     border: dotted 2px #a3d8e5;
 }
 
@@ -112,7 +133,9 @@
 .text_normal:hover .hovbtn,
 .text_predict:hover .hovbtn,
 .text_auto_focus:hover .hovbtn,
+.text_auto_focus2:hover .hovbtn,
 .text_auto_focus_pred:hover .hovbtn, 
+.text_auto_focus_pred2:hover .hovbtn, 
 .text_focus:hover .hovbtn{
     margin-left: 5px;
     display: inline-block;

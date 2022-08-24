@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import { clearError } from "./redux/DataSlice";
+import { clearError } from "../redux/DataSlice";
 
 export const useErrorHandler = () => {
   const toastRef = useRef(null);

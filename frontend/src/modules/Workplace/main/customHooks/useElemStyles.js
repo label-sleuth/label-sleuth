@@ -13,41 +13,57 @@
     limitations under the License.
 */
 
+import classes from "../Element.module.css";
+import { useSelector } from "react-redux";
+import { useCallback, useMemo } from "react";
 
-import classes from '../Element.module.css';
-import { useSelector } from 'react-redux';
+/**
+ * Handle the styles of an element. There are four cases:
+ * - element is focused and predicted as positive.
+ * - element is focused and not predicted as positive.
+ * - element is not focused and predicted as positive.
+ * - element is not focused and not predicted as positive.
+ * @param { the id of the element component in the DOM } elementDOMId
+ * @param { the models prediction } prediction
+ * @returns
+ */
+const useElemStyles = (elementDOMId, prediction) => {
 
-const useElemStyles = ({ index, prediction }) => {
+  // The hackyToggle variable forces this custom hook to be executed even when the DOMkey is the same
+  // The scenario it covers is when the user clicks the same sidebar element twice
+  const { DOMKey: focusedElementDOMKey, hackyToggle } = useSelector(
+    (state) => state.workspace.panels.focusedElement
+  );
 
-    const workspace = useSelector(state => state.workspace)
-    let textElemStyle = classes["text_normal"]
 
-    const text_colors = {
-        'pos': { color: '#3092ab' },
-        'neg': { color: '#bd3951' },
-        'ques': { color: '#cfae44' }
+  const text_colors = useMemo(
+    () => ({
+      pos: { color: "#3092ab" },
+      neg: { color: "#bd3951" },
+    }),
+    []
+  );
+
+  const handleTextElemStyle = useCallback(() => {
+    let textElemStyle;
+    if (focusedElementDOMKey === elementDOMId) {
+      textElemStyle =
+        prediction === "pos" ? "text_auto_focus_pred" : "text_auto_focus";
+    } else {
+      textElemStyle = prediction === "pos" ? "text_predict" : "text_normal";
     }
 
-    const handleTextElemStyle = () => {
-        if (workspace["focusedIndex"] == index && (prediction == "false" || !prediction) ) {
-            textElemStyle = classes["text_auto_focus"] 
-        }
-        else if (workspace["focusedIndex"] == index && prediction == "true"){
-            textElemStyle = classes["text_auto_focus_pred"] 
-        }
-        else if (prediction == "true"){
-            textElemStyle = classes["text_predict"]
-        }
-        else {
-            textElemStyle = classes["text_normal"]
-        }
-        return textElemStyle
+    if (textElemStyle.startsWith("text_auto_focus")) {
+      textElemStyle = hackyToggle ? `${textElemStyle}2` : textElemStyle;
     }
+    const textElemStyleClass = classes[textElemStyle];
+    return textElemStyleClass;
+  }, [focusedElementDOMKey, hackyToggle, prediction, elementDOMId]);
 
-    return {
-        handleTextElemStyle,
-        text_colors,
-    }
+  return {
+    handleTextElemStyle,
+    text_colors,
+  };
 };
 
 export default useElemStyles;
