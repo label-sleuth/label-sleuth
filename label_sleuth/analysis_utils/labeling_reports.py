@@ -56,6 +56,7 @@ def get_disagreements_using_cross_validation(workspace_id, category_id: int, lab
     """
     start_time = time.time()
     if {text_element.category_to_label[category_id].label for text_element in labeled_elements} != BINARY_LABELS:
+        # if there are no positive labels or no negative labels, return an empty list
         return []
     model_api = model_factory.get_model_api(model_type)
 
@@ -63,6 +64,9 @@ def get_disagreements_using_cross_validation(workspace_id, category_id: int, lab
     random.Random(0).shuffle(labeled_elements)
     all_train_data = convert_text_elements_to_train_data(labeled_elements, category_id)
     train_splits = np.array_split(np.array(all_train_data), num_folds)
+    if any({x["label"] for x in train_splits[idx]} != BINARY_LABELS for idx in range(num_folds)):
+        # if there are no positive labels or no negative labels in one of the folds, return an empty list
+        return []
     for i in range(num_folds):
         # train split i is used for inference and left out of the train data
         left_out_data = train_splits[i]
