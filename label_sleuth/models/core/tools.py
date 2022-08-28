@@ -35,8 +35,8 @@ class RepresentationType(Enum):
 
 
 class SentenceEmbeddingService:
-    def __init__(self, output_dir, preload_spacy_model_name=None):
-        self.spacy_models_path = os.path.join(output_dir, "spacy_models")
+    def __init__(self, embedding_model_dir, preload_spacy_model_name=None):
+        self.spacy_models_path = os.path.join(embedding_model_dir, "spacy_models")
         os.makedirs(self.spacy_models_path, exist_ok=True)
         self.spacy_models = defaultdict(lambda: None)
         self.spacy_model_lock = threading.Lock()

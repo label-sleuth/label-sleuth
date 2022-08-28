@@ -30,24 +30,24 @@ class ModelFactory:
     """
     def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
                  sentence_embedding_service: SentenceEmbeddingService):
-        self.loaded_models = {}
+        self.loaded_model_apis = {}
         self.model_dependencies = ModelDependencies(
             output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
             sentence_embedding_service=sentence_embedding_service, model_factory=self)
 
-    def get_model(self, model_type: ModelType) -> ModelAPI:
-        if model_type not in self.loaded_models:
+    def get_model_api(self, model_type: ModelType) -> ModelAPI:
+        if model_type not in self.loaded_model_apis:
             try:
                 # check which of the model dependencies are used by this model implementation
                 model_input_args = inspect.signature(model_type.cls).parameters.keys()
                 kwargs = {k: v for k, v in self.model_dependencies.__dict__.items() if k in model_input_args}
                 # instantiate the model
-                model = model_type.cls(**kwargs)
-                self.loaded_models[model_type] = model
+                model_api = model_type.cls(**kwargs)
+                self.loaded_model_apis[model_type] = model_api
             except Exception:
                 logging.exception(f"Could not get model type {model_type.cls} from the model factory")
 
-        return self.loaded_models[model_type]
+        return self.loaded_model_apis[model_type]
 
 
 @dataclass

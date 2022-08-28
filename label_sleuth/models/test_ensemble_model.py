@@ -47,7 +47,7 @@ class TestEnsembleModel(unittest.TestCase):
                           for num in all_nums]
 
     def test_one_ensemble_model_fails(self):
-        self.ensemble.models[1]._train = train_failed_with_error
+        self.ensemble.model_apis[1]._train = train_failed_with_error
         ensemble_model_id, future = self.ensemble.train(self.sentences, Languages.ENGLISH)
         self.assertRaises(Exception, future.result)
 
@@ -55,16 +55,18 @@ class TestEnsembleModel(unittest.TestCase):
         ensemble_model_id, future = self.ensemble.train(self.sentences, Languages.ENGLISH)
 
         model_ids = ensemble_model_id.split(',')
-        self.assertEqual(len(model_ids), len(self.ensemble.models))
+        self.assertEqual(len(model_ids), len(self.ensemble.model_apis))
 
         future.result()
-        for model_id, model in zip(model_ids, self.ensemble.models):
-            self.assertEqual(model.get_model_status(model_id), ModelStatus.READY)
+        for model_id, model_api in zip(model_ids, self.ensemble.model_apis):
+            self.assertEqual(model_api.get_model_status(model_id), ModelStatus.READY)
 
-        ensemble_predictions = self.ensemble.infer(ensemble_model_id, self.sentences)
+        ensemble_predictions = self.ensemble.infer_by_id(ensemble_model_id, self.sentences)
         for ensemble_pred in ensemble_predictions:
             scores = [ensemble_pred.model_type_to_prediction[t.name].score for t in self.ensemble.model_types]
             self.assertEqual(ensemble_pred.score, self.ensemble.aggregation_func(scores))
+
+    #TODO add a test for ensemble model path validation once export is fully implemented
 
     def tearDown(self):
         self.temp_dir.cleanup()

@@ -51,25 +51,21 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
     """
     Base class for implementing a classification model.
     This base class provides general methods for training in the background, caching model predictions etc.,
-    while the _train() and _infer() methods are specific to each model implementation.
+    while the _train(), load_model() and infer() methods are specific to each model implementation.
     """
-    def __init__(self, models_background_jobs_manager: ModelsBackgroundJobsManager, gpu_support=False):
+    def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager, gpu_support=False):
         """
         Model implementations can require some or all of the parameters in models_factory.ModelDependencies
         in their __init__ method, as these will be passed to the model by the ModelFactory.
         Only parameters from ModelDependencies can be required by the __init__ of a new ModelAPI implementation.
         """
+        self.output_dir = output_dir
+        os.makedirs(self.get_models_dir(), exist_ok=True)
         self.models_background_jobs_manager = models_background_jobs_manager
         self.gpu_support = gpu_support
         self.model_locks = defaultdict(lambda: threading.Lock())
         self.cache = LRUCache(definitions.INFER_CACHE_SIZE)
         self.cache_lock = threading.Lock()
-
-    @abc.abstractmethod
-    def get_models_dir(self) -> str:
-        """
-        Returns the base output directory for saving the models and predictions cache.
-        """
 
     @abc.abstractmethod
     def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
@@ -84,11 +80,22 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def _infer(self, model_id, items_to_infer: Sequence[Mapping]) -> Sequence[Prediction]:
+    def load_model(self, model_path: str):
         """
-        Perform inference using *model_id* on *items_to_infer*, and return the predictions. This method is specific to
-        each classification model.
-        :param model_id: a unique_id for the model
+        Return an object for the model in *model_path*, that contains all the components that are necessary to
+        perform inference (e.g., the trained model itself, the language recognized by the model, a trained
+        vectorizer/tokenizer etc.).
+        This method is specific to each classification model, and each model implementation can return a different
+        object with different components.
+        :param model_path: path to a folder containing the model
+        """
+
+    @abc.abstractmethod
+    def infer(self, model_components, items_to_infer) -> Sequence[Prediction]:
+        """
+        Perform inference using *model_components* on *items_to_infer*, and return the predictions. This method is
+        specific to each classification model.
+        :param model_components: an object containing all the components that are necessary to perform inference.
         :param items_to_infer: a list of dictionaries with at least the "text" field, additional fields can be passed
         e.g. [{'text': 'text1', 'additional_field': 'value1'}, {'text': 'text2', 'additional_field': 'value2'}]
         :return: a list of Prediction objects - one for each item in *items_to_infer* - where Prediction.label is a
@@ -115,8 +122,8 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         :param train_data: a list of dictionaries with at least the "text" and "label" fields, additional fields can be
         passed e.g. [{'text': 'text1', 'label': True, 'additional_field': 'value1'}, {'text': 'text2', 'label': False,
         'additional_field': 'value2'}]
-        :param language: the language used to initialize the model. The implemented _train() and _infer() methods can
-        then access this parameter via the get_language() call
+        :param language: the language used to initialize the model. The implemented _train() and load_model() methods
+        can then access this parameter via the get_language() call
         :param model_params: dictionary for additional model parameters (can be None)
         :param done_callback: an optional function to be executed once the training job has completed
         :return: a unique identifier for the model, and a Future object for the training job that was submitted in the
@@ -147,9 +154,9 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
 
         return model_id
 
-    def infer(self, model_id, items_to_infer: Sequence[Mapping], use_cache=True) -> Sequence[Prediction]:
+    def infer_by_id(self, model_id, items_to_infer: Sequence[Mapping], use_cache=True) -> Sequence[Prediction]:
         """
-        Infer using *model_id* on *items_to_infer*, and return the predictions. This method wraps the model's _infer()
+        Infer using *model_id* on *items_to_infer*, and return the predictions. This method wraps the _infer_by_id()
         method which performs the inference itself, adding prediction caching functionality with both an in-memory
         cache and a prediction store on disk.
         Thus, if *use_cache* is True, inference is only performed on items for which there are no predictions in either
@@ -164,14 +171,14 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         if not use_cache:
             logging.info(f"Running infer without cache for {len(items_to_infer)} values in {self.__class__.__name__} "
                          f"model id {model_id}")
-            return self._infer(model_id, items_to_infer)
+            return self._infer_by_id(model_id, items_to_infer)
 
         in_memory_cache_keys = [(model_id, tuple(sorted(item.items()))) for item in items_to_infer]
         model_predictions_store_keys = [tuple(sorted(item.items())) for item in items_to_infer]
 
-        # If there are multiple calls to infer() using the same *model_id*, we do not want them to perform the below
-        # logic at the same time. Specifically, if two calls are asking for prediction results for the same element,
-        # the desired behavior is that just one of the calls will perform inference (if necessary) and save the
+        # If there are multiple calls to infer_by_id() using the same *model_id*, we do not want them to perform the
+        # below logic at the same time. Specifically, if two calls are asking for prediction results for the same
+        # element, the desired behavior is that just one of the calls will perform inference (if necessary) and save the
         # prediction results to the cache; after that, the other call can retrieve the results directly from the cache.
         # Thus, we use a lock per model_id.
         with self.model_locks[model_id]:
@@ -202,7 +209,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                                     and not uniques.add(frozenset(e.items()))]
 
                 # Run inference using the model for the missing elements
-                new_predictions = self._infer(model_id, uniques_to_infer)
+                new_predictions = self._infer_by_id(model_id, uniques_to_infer)
                 logging.info(f"finished running infer for {len(indices_not_in_cache)} values")
 
                 item_to_prediction = {frozenset(unique_item.items()): item_predictions
@@ -218,22 +225,23 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                                                     model_predictions_store)
             return infer_res
 
-    def infer_async(self, model_id, items_to_infer: Sequence[Mapping], done_callback=None):
+    def infer_by_id_async(self, model_id, items_to_infer: Sequence[Mapping], done_callback=None):
         """
         Used for launching an inference job in the background. This method has no return, and is suited for a situation
         where the goal is to run a (potentially) long inference job and cache the results. After this background
-        inference is complete, calls to infer() with *model_id* can fetch the prediction results from the cache.
+        inference is complete, calls to infer_by_id() with *model_id* can fetch the prediction results from the cache.
 
         :param model_id:
         :param items_to_infer: a list of dictionaries with at least the "text" field, additional fields can be passed
         e.g. [{'text': 'text1', 'additional_field': 'value1'}, {'text': 'text2', 'additional_field': 'value2'}]
         :param done_callback: an optional function to be executed once the inference job has completed
         """
-        self.models_background_jobs_manager.add_inference(model_id, self.infer, infer_args=(model_id, items_to_infer),
+        self.models_background_jobs_manager.add_inference(model_id, self.infer_by_id, infer_args=(model_id, items_to_infer),
                                                           use_gpu=self.gpu_support, done_callback=done_callback)
 
-    def get_model_dir_by_id(self, model_id):
-        return os.path.join(self.get_models_dir(), model_id)
+    def _infer_by_id(self, model_id, items_to_infer):
+        model_components = self.load_model(model_path=self.get_model_dir_by_id(model_id))
+        return self.infer(model_components, items_to_infer)
 
     def get_model_status(self, model_id) -> ModelStatus:
         if os.path.isfile(self.get_completed_flag_path(model_id)):
@@ -282,14 +290,16 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         with open(metadata_path, 'w') as f:
             f.write(jsonpickle.encode(model_metadata))
 
-    def get_metadata(self, model_id):
-        metadata_path = os.path.join(self.get_model_dir_by_id(model_id), 'model_metadata.json')
+    @staticmethod
+    def get_metadata(model_path: str):
+        metadata_path = os.path.join(model_path, 'model_metadata.json')
         with open(metadata_path, 'r') as f:
             metadata = jsonpickle.decode(f.read())
         return metadata
 
-    def get_language(self, model_id) -> Language:
-        language_name = self.get_metadata(model_id)[LANGUAGE_STR_KEY]
+    @staticmethod
+    def get_language(model_path: str) -> Language:
+        language_name = ModelAPI.get_metadata(model_path)[LANGUAGE_STR_KEY]
         return getattr(Languages, language_name.upper())
 
     def _load_model_prediction_store_to_cache(self, model_id):
@@ -303,3 +313,18 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
 
     def get_model_prediction_store_file(self, model_id):
         return os.path.join(self.get_models_dir(), PREDICTIONS_STORE_DIR_NAME, model_id + ".json")
+
+    def get_model_dir_by_id(self, model_id):
+        return os.path.join(self.get_models_dir(), model_id)
+
+    def get_models_dir(self) -> str:
+        """
+        Returns the base output directory for saving the models and predictions cache.
+        """
+        return os.path.join(self.output_dir, self.get_model_dir_name())
+
+    def get_model_dir_name(self):
+        """
+        The name of the directory inside self.output_dir in which models will be saved
+        """
+        return self.__class__.__name__

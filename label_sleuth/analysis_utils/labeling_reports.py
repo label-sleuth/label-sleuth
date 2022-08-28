@@ -57,7 +57,7 @@ def get_disagreements_using_cross_validation(workspace_id, category_id: int, lab
     start_time = time.time()
     if {text_element.category_to_label[category_id].label for text_element in labeled_elements} != BINARY_LABELS:
         return []
-    model = model_factory.get_model(model_type)
+    model_api = model_factory.get_model_api(model_type)
 
     all_scores = []
     random.Random(0).shuffle(labeled_elements)
@@ -68,14 +68,14 @@ def get_disagreements_using_cross_validation(workspace_id, category_id: int, lab
         left_out_data = train_splits[i]
         fold_train_data = \
             np.concatenate([part for j, part in enumerate(train_splits) if j != i])
-        model_id, future = model.train(fold_train_data, language=language)
+        model_id, future = model_api.train(fold_train_data, language=language)
         logging.info(f'Suspicious labels report fold {i}: training cross-validation model {model_id}')
         future.result(timeout=60)
         logging.info(f'Suspicious labels report fold {i}: done waiting for cross-validation model {model_id}, '
                      f'inferring on {len(left_out_data)} left-out examples')
-        fold_scores = [pred.score for pred in model.infer(model_id, left_out_data, use_cache=False)]
+        fold_scores = [pred.score for pred in model_api.infer_by_id(model_id, left_out_data, use_cache=False)]
         all_scores.extend(fold_scores)
-        model.delete_model(model_id)
+        model_api.delete_model(model_id)
     # We take elements where the fold model disagreed with the user label, but ignore model predictions that are close
     # to the decision boundary of 0.5
     disagreement_scores_and_elements = \
@@ -86,7 +86,7 @@ def get_disagreements_using_cross_validation(workspace_id, category_id: int, lab
                                         reverse=True)
     sorted_disagreement_elements = [text_element for score, text_element in sorted_scores_and_elements]
     logging.info(f"creating suspicious labels report for category_id '{category_id}' in workspace '{workspace_id}' "
-                 f"took {'{:.2f}'.format(time.time() - start_time)}")
+                 f"took {'{:.2f}'.format(time.time() - start_time)} seconds")
     return sorted_disagreement_elements
 
 

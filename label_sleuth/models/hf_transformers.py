@@ -13,20 +13,26 @@
 #  limitations under the License.
 #
 
-import os
-
+from dataclasses import dataclass
 from typing import List
 
 from datasets import Dataset
 from tqdm.auto import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, InputFeatures, Trainer, TrainingArguments, \
-    TextClassificationPipeline
+    TextClassificationPipeline, PreTrainedModel
 from transformers.pipelines.pt_utils import KeyDataset
 
+from label_sleuth.models.core.languages import Language
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.definitions import GPU_AVAILABLE
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.prediction import Prediction
+
+
+@dataclass
+class TransformerComponents:
+    model: PreTrainedModel
+    language: Language
 
 
 class HFTransformers(ModelAPI):
@@ -44,9 +50,7 @@ class HFTransformers(ModelAPI):
         :param learning_rate:
         :param num_train_epochs:
         """
-        super().__init__(models_background_jobs_manager, gpu_support=True)
-        self.model_dir = os.path.join(output_dir, "transformers")
-        os.makedirs(self.model_dir, exist_ok=True)
+        super().__init__(output_dir, models_background_jobs_manager, gpu_support=True)
         self.pretrained_model_name = pretrained_model
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -58,7 +62,7 @@ class HFTransformers(ModelAPI):
         texts = [element["text"] for element in train_data]
         labels = [element["label"] for element in train_data]
         train_dataset = self.process_train_inputs(texts, labels)
-        training_args = TrainingArguments(output_dir=self.model_dir,
+        training_args = TrainingArguments(output_dir=self.get_models_dir(),
                                           overwrite_output_dir=True,
                                           num_train_epochs=self.num_train_epochs,
                                           per_device_train_batch_size=self.batch_size,
@@ -68,12 +72,14 @@ class HFTransformers(ModelAPI):
         trainer.train()
         trainer.save_model(self.get_model_dir_by_id(model_id))
 
-    def _infer(self, model_id, items_to_infer):
-        device = 0 if GPU_AVAILABLE else -1
-        model_path = self.get_model_dir_by_id(model_id)
-
+    def load_model(self, model_path) -> TransformerComponents:
+        language = self.get_language(model_path)
         model = AutoModelForSequenceClassification.from_pretrained(model_path)
-        pipeline = TextClassificationPipeline(model=model, tokenizer=self.tokenizer, device=device)
+        return TransformerComponents(model=model, language=language)
+
+    def infer(self, model_components: TransformerComponents, items_to_infer):
+        device = 0 if GPU_AVAILABLE else -1
+        pipeline = TextClassificationPipeline(model=model_components.model, tokenizer=self.tokenizer, device=device)
 
         ds = Dataset.from_dict({'text': [item['text'] for item in items_to_infer]})
         preds = []
@@ -84,8 +90,8 @@ class HFTransformers(ModelAPI):
         scores = [pred['score'] for pred in preds]
         return [Prediction(label=score > 0.5, score=score) for score in scores]
 
-    def get_models_dir(self):
-        return self.model_dir
+    def get_model_dir_name(self): # for backward compatibility, we override the default get_model_dir_name()
+        return "transformers"
 
     def process_train_inputs(self, texts, labels) -> List[InputFeatures]:
         """
