@@ -40,25 +40,25 @@ class TestModelAPI(unittest.TestCase):
         self.sentences2 = [{'text': PREFIX + str(num)} for num in large_batch]
 
     def test_infer_no_cache(self):
-        self.model_api.infer(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=False)
+        self.model_api.infer_by_id(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=False)
         self.assertEqual(0, self.model_api.cache.get_current_size(), "cache size should be zero when use_cache=False")
 
     def test_additional_fields_are_part_of_cache_key(self):
-        self.model_api.infer(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
+        self.model_api.infer_by_id(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
         self.assertEqual(len(self.sentences1), self.model_api.cache.get_current_size(),
                          "cache size should be equals to the size of the inferred sentences")
         self.sentences1[0] = {**self.sentences1[0], "additional_field": "1"}
-        self.model_api.infer(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
+        self.model_api.infer_by_id(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
         self.assertEqual(len(self.sentences1)+1, self.model_api.cache.get_current_size(),
                          "now sentences[0] has an additional field so the cache size should be len(sentences)+1")
 
     def test_inferred_elements_cached(self):
-        self.model_api.infer(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
+        self.model_api.infer_by_id(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
         self.assertEqual(len(self.sentences1), self.model_api.cache.get_current_size(),
                          "cache size should be equal to the size of the inferred sentences")
         self.model_api._infer = MagicMock(name='_infer')
 
-        self.model_api.infer(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
+        self.model_api.infer_by_id(model_id=self.model_id, items_to_infer=self.sentences1, use_cache=True)
         self.model_api._infer.assert_not_called()
 
     def tearDown(self):

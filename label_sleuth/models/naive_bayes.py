@@ -17,13 +17,15 @@ import logging
 import os
 import pickle
 
+from dataclasses import dataclass
+
 import numpy as np
 
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import GaussianNB, MultinomialNB
+from sklearn.naive_bayes import GaussianNB, MultinomialNB, _BaseNB
 
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
-from label_sleuth.models.core.languages import Languages
+from label_sleuth.models.core.languages import Language, Languages
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.models.core.tools import RepresentationType, SentenceEmbeddingService
@@ -31,15 +33,19 @@ from label_sleuth.models.core.tools import RepresentationType, SentenceEmbedding
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 
+@dataclass
+class NaiveBayesModelComponents:
+    model: _BaseNB
+    vectorizer: None
+    language: Language
+
+
 class NaiveBayes(ModelAPI):
     def __init__(self, output_dir, representation_type: RepresentationType,
                  models_background_jobs_manager: ModelsBackgroundJobsManager,
                  sentence_embedding_service: SentenceEmbeddingService,
                  max_datapoints=10000):
-        super().__init__(models_background_jobs_manager)
-        self.model_dir = os.path.join(output_dir, "nb")
-        os.makedirs(self.model_dir, exist_ok=True)
-        self.features_num = 0
+        super().__init__(output_dir, models_background_jobs_manager)
         self.max_datapoints = max_datapoints
         self.infer_batch_size = max_datapoints
         self.representation_type = representation_type
@@ -48,7 +54,7 @@ class NaiveBayes(ModelAPI):
 
     def _train(self, model_id, train_data, model_params):
         model = MultinomialNB() if self.representation_type == RepresentationType.BOW else GaussianNB()
-        language = self.get_language(model_id)
+        language = self.get_language(self.get_model_dir_by_id(model_id))
         texts = [x['text'] for x in train_data]
         texts = texts[:self.max_datapoints]
         train_data_features, vectorizer = self.input_to_features(texts, language=language)
@@ -56,26 +62,29 @@ class NaiveBayes(ModelAPI):
         labels = labels[:self.max_datapoints]
         model.fit(train_data_features, labels)
 
-        with open(self.vectorizer_file_by_id(model_id), "wb") as fl:
+        with open(os.path.join(self.get_model_dir_by_id(model_id), "vectorizer"), "wb") as fl:
             pickle.dump(vectorizer, fl)
-        with open(self.model_file_by_id(model_id), "wb") as fl:
+        with open(os.path.join(self.get_model_dir_by_id(model_id), "model"), "wb") as fl:
             pickle.dump(model, fl)
 
-    def _infer(self, model_id, items_to_infer):
-        with open(self.vectorizer_file_by_id(model_id), "rb") as fl:
-            vectorizer = pickle.load(fl)
-        with open(self.model_file_by_id(model_id), "rb") as fl:
+    def load_model(self, model_path) -> NaiveBayesModelComponents:
+        with open(os.path.join(model_path, "model"), "rb") as fl:
             model = pickle.load(fl)
-        language = self.get_language(model_id)
+        with open(os.path.join(model_path, "vectorizer"), "rb") as fl:
+            vectorizer = pickle.load(fl)
+        language = self.get_language(model_path)
+        return NaiveBayesModelComponents(model=model, vectorizer=vectorizer, language=language)
 
+    def infer(self, model_components: NaiveBayesModelComponents, items_to_infer):
         items_to_infer = [x['text'] for x in items_to_infer]
         last_batch = 0
         predictions = []
         while last_batch < len(items_to_infer):
             batch = items_to_infer[last_batch:last_batch + self.infer_batch_size]
             last_batch += self.infer_batch_size
-            batch, _ = self.input_to_features(batch, language=language, vectorizer=vectorizer)
-            predictions.append(model.predict_proba(batch))
+            batch, _ = self.input_to_features(batch, language=model_components.language,
+                                              vectorizer=model_components.vectorizer)
+            predictions.append(model_components.model.predict_proba(batch))
         predictions = np.concatenate(predictions, axis=0)
 
         labels = [bool(np.argmax(prediction)) for prediction in predictions]
@@ -95,14 +104,8 @@ class NaiveBayes(ModelAPI):
         elif self.representation_type == RepresentationType.GLOVE:
             return self.sentence_embedding_service.get_glove_representation(texts, language=language), None
 
-    def model_file_by_id(self, model_id):
-        return os.path.join(self.get_model_dir_by_id(model_id), "model")
-
-    def vectorizer_file_by_id(self, model_id):
-        return os.path.join(self.get_model_dir_by_id(model_id), "vectorizer")
-
-    def get_models_dir(self):
-        return self.model_dir
+    def get_model_dir_name(self): # for backward compatibility, we override the default get_model_dir_name()
+        return "nb"
 
 
 class NaiveBayes_BOW(NaiveBayes):

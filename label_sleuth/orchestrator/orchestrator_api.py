@@ -325,11 +325,11 @@ class OrchestratorApi:
             raise Exception(f"Trying to delete model id {model_info.model_id} which is already in {ModelStatus.DELETED}"
                             f"from workspace '{workspace_id}' in category id '{category_id}'")
 
-        model = self.model_factory.get_model(model_info.model_type)
+        model_api = self.model_factory.get_model_api(model_info.model_type)
         logging.info(f"Marking iteration {iteration_index} model id {model_info.model_id} in "
                      f"workspace '{workspace_id}' in category id '{category_id}' as deleted, and deleting the model")
         self.orchestrator_state.mark_iteration_model_as_deleted(workspace_id, category_id, iteration_index)
-        model.delete_model(model_info.model_id)
+        model_api.delete_model(model_info.model_id)
 
     def _delete_category_models(self, workspace_id, category_id):
         workspace = self.orchestrator_state.get_workspace(workspace_id)
@@ -394,12 +394,12 @@ class OrchestratorApi:
         train_counts = _get_counts_per_label(train_data)
         train_data = convert_text_elements_to_train_data(train_data, category_id)
         train_statistics = {TRAIN_COUNTS_STR_KEY: train_counts}
-        model = self.model_factory.get_model(model_type)
+        model_api = self.model_factory.get_model_api(model_type)
 
         logging.info(f"workspace '{workspace_id}' training a model for category id '{category_id}', "
                      f"train_statistics: {train_statistics}")
-        model_id, future = model.train(train_data=train_data, language=self.config.language)
-        model_status = model.get_model_status(model_id)
+        model_id, future = model_api.train(train_data=train_data, language=self.config.language)
+        model_status = model_api.get_model_status(model_id)
         model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
                                train_statistics=train_statistics, creation_date=datetime.now())
         self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_id=category_id,
@@ -437,15 +437,15 @@ class OrchestratorApi:
                                                         IterationStatus.RUNNING_INFERENCE)
         iteration = self.get_all_iterations_for_category(workspace_id, category_id)[iteration_index]
         model_info = iteration.model
-        model = self.model_factory.get_model(model_info.model_type)
+        model_api = self.model_factory.get_model_api(model_info.model_type)
         dataset_name = self.get_dataset_name(workspace_id)
         elements = self.get_all_text_elements(dataset_name)
         logging.info(f"Successfully trained model id {model_id} for workspace '{workspace_id}' category id "
                      f"'{category_id}' iteration {iteration_index}. Running background inference for the full "
                      f"dataset ({len(elements)} items)")
-        model.infer_async(model_id, items_to_infer=[{"text": element.text} for element in elements],
-                          done_callback=functools.partial(self._infer_done_callback, workspace_id, category_id,
-                                                          iteration_index))
+        model_api.infer_by_id_async(model_id, items_to_infer=[{"text": element.text} for element in elements],
+                                    done_callback=functools.partial(self._infer_done_callback, workspace_id,
+                                                                    category_id, iteration_index))
         # Inference is performed in the background. Once the infer job is complete the iteration flow continues in the
         # *_infer_done_callback* method
 
@@ -568,7 +568,8 @@ class OrchestratorApi:
              if iteration.status == IterationStatus.READY]
 
         for candidate_iteration_index in ready_iteration_indices[:-NUMBER_OF_MODELS_TO_KEEP]:
-            logging.info(f"keep only {NUMBER_OF_MODELS_TO_KEEP} models, deleting iteration {candidate_iteration_index}")
+            logging.info(f"Deleting the model of iteration {candidate_iteration_index} as only "
+                         f"{NUMBER_OF_MODELS_TO_KEEP} models are kept.")
             self.delete_iteration_model(workspace_id, category_id, candidate_iteration_index)
 
     def train_if_recommended(self, workspace_id: str, category_id: int, force=False) -> Union[None, str]:
@@ -654,9 +655,10 @@ class OrchestratorApi:
             raise Exception(f"model id {model_info.model_id} is not in READY status"
                             f"while iteration status is {iteration.status}.  Something went wrong")
 
-        model = self.model_factory.get_model(model_info.model_type)
+        model_api = self.model_factory.get_model_api(model_info.model_type)
         list_of_dicts = [{"text": element.text} for element in elements_to_infer]
-        predictions = model.infer(model_id=model_info.model_id, items_to_infer=list_of_dicts, use_cache=use_cache)
+        predictions = model_api.infer_by_id(model_id=model_info.model_id, items_to_infer=list_of_dicts,
+                                            use_cache=use_cache)
         return predictions
 
     # Labeling/Evaluation reports
@@ -823,8 +825,8 @@ class OrchestratorApi:
     def export_model(self, workspace_id, category_id, iteration_index):
         iteration = self.orchestrator_state.get_all_iterations(workspace_id, category_id)[iteration_index]
 
-        model = self.model_factory.get_model(iteration.model.model_type)
-        exported_model_dir = model.export_model(iteration.model.model_id)
+        model_api = self.model_factory.get_model_api(iteration.model.model_type)
+        exported_model_dir = model_api.export_model(iteration.model.model_id)
         return exported_model_dir
 
     def add_documents_from_file(self, dataset_name, temp_file_path):

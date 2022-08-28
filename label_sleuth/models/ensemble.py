@@ -15,10 +15,11 @@
 
 import logging
 import os
+import re
 
 from concurrent.futures import Future
 from dataclasses import dataclass
-from typing import Iterable, Mapping, Sequence, Tuple
+from typing import Iterable, Mapping, Sequence, Tuple, List, Union
 
 import numpy as np
 
@@ -33,6 +34,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(f
 @dataclass
 class EnsemblePrediction(Prediction):
     model_type_to_prediction: dict
+
+
+@dataclass
+class EnsembleComponents:
+    models: List
 
 
 class Ensemble(ModelAPI):
@@ -51,12 +57,10 @@ class Ensemble(ModelAPI):
         array of scores (where dimension 0 is the model types and dimension 1 is the list of elements), and returns a
         vector of aggregated scores. Defaults to mean score aggregation.
         """
-        super().__init__(models_background_jobs_manager)
-        self.model_dir = os.path.join(output_dir, "ensemble")
-        os.makedirs(self.model_dir, exist_ok=True)
+        super().__init__(output_dir, models_background_jobs_manager)
         self.aggregation_func = aggregation_func
         self.model_types = model_types
-        self.models = [model_factory.get_model(model_type) for model_type in model_types]
+        self.model_apis = [model_factory.get_model_api(model_type) for model_type in model_types]
 
     def train(self, train_data, language, model_params=None, done_callback=None) -> Tuple[str, Future]:
         """
@@ -65,7 +69,7 @@ class Ensemble(ModelAPI):
         """
         if model_params is None:
             model_params = {}
-        model_ids_and_futures = [model.train(train_data, language, model_params) for model in self.models]
+        model_ids_and_futures = [model_api.train(train_data, language, model_params) for model_api in self.model_apis]
         ensemble_model_id = ",".join(model_id for model_id, future in model_ids_and_futures)
         self.mark_train_as_started(ensemble_model_id)
         self.save_metadata(ensemble_model_id, language, model_params)
@@ -100,15 +104,46 @@ class Ensemble(ModelAPI):
     def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: dict):
         pass
 
-    def _infer(self, model_id, items_to_infer) -> Sequence[EnsemblePrediction]:
+    def load_model(self, model_path: Union[str, List]) -> EnsembleComponents:
+        if isinstance(model_path, list):
+            # for internal use by the system, where paths for the constituting models are passed
+            # from Ensemble._infer_by_id()
+            model_paths = model_path
+        else:
+            # for external use, where the ensemble has been exported into a single folder containing all the models
+            model_path = model_path.rstrip("/")
+            model_prefixes = [model_api.__class__.__name__ for model_api in self.model_apis]
+            ensemble_id_regex = ','.join([f'{model_prefix}_[a-z0-9-]+' for model_prefix in model_prefixes])
+            if not re.fullmatch(ensemble_id_regex, os.path.basename(model_path)):
+                raise Exception(
+                    f"model {os.path.basename(model_path)} does not match the expected ensemble directory name "
+                    f"of <class_name1>_<guid1>,<class_name2>_<guid2> (for example "
+                    f"SVM_BOW_5e805580-1ee3-11ed-878b-0a94ef3e9940,SVM_GloVe_5e80af4e-1ee3-11ed-878b-0a94ef3e9940). "
+                    f"Exported model name should not be changed")
+
+            ensemble_model_id = os.path.basename(model_path)
+            model_paths = [os.path.join(model_path, model_id) for model_id in ensemble_model_id.split(",")]
+
+        models = [model_api.load_model(model_path) for model_api, model_path in zip(self.model_apis, model_paths)]
+        return EnsembleComponents(models=models)
+
+    def _infer_by_id(self, model_id, items_to_infer):
+        """
+        We override ModelAPI._infer as we need to extract the paths to all of the models constituting the ensemble
+        """
+        model_paths = [model_api.get_model_dir_by_id(m_id)
+                       for m_id, model_api in zip(model_id.split(","), self.model_apis)]
+        model = self.load_model(model_path=model_paths)
+        return self.infer(model, items_to_infer)
+
+    def infer(self, ensemble: EnsembleComponents, items_to_infer) -> Sequence[EnsemblePrediction]:
         """
         Aggregate the predictions returned by the different models using self.aggregation_func
         """
         type_to_all_predictions = {}
         all_scores = []
-        for model, model_type, m_id in zip(self.models, self.model_types, model_id.split(",")):
-            # no need to cache the results as the ensemble is caching the results
-            predictions = model.infer(m_id, items_to_infer, use_cache=False)
+        for model_api, model, model_type in zip(self.model_apis, ensemble.models, self.model_types):
+            predictions = model_api.infer(model, items_to_infer)
             type_to_all_predictions[model_type.name] = predictions
             all_scores.append([pred.score for pred in predictions])
         aggregated_scores = np.apply_along_axis(self.aggregation_func, arr=np.array(all_scores), axis=0)
@@ -118,12 +153,9 @@ class Ensemble(ModelAPI):
         return [EnsemblePrediction(label=label, score=score, model_type_to_prediction=type_to_prediction)
                 for label, score, type_to_prediction in zip(labels, aggregated_scores, type_to_prediction_per_element)]
 
-    def get_models_dir(self):
-        return self.model_dir
-
     def delete_model(self, model_id):
-        for model, m_id in zip(self.models, model_id.split(",")):
-            model.delete_model(m_id)
+        for model_api, m_id in zip(self.model_apis, model_id.split(",")):
+            model_api.delete_model(m_id)
 
     def get_prediction_class(self):
         return EnsemblePrediction

@@ -76,7 +76,7 @@ def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
     app.config["output_dir"] = output_dir
     app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.config["CONFIGURATION"].users}
     app.tokens = [user.token for user in app.users.values()]
-    sentence_embedding_service = SentenceEmbeddingService(output_dir,
+    sentence_embedding_service = SentenceEmbeddingService(embedding_model_dir=output_dir,
                                                           preload_spacy_model_name=config.language.spacy_model_name)
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),
                                            FileBasedDataAccess(output_dir),

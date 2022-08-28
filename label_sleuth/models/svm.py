@@ -17,27 +17,34 @@ import logging
 import os
 import pickle
 
+from dataclasses import dataclass
+from typing import Union
+
 import numpy as np
 
 import sklearn.svm
 from sklearn.feature_extraction.text import CountVectorizer
 
 from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
-from label_sleuth.models.core.languages import Languages
+from label_sleuth.models.core.languages import Language, Languages
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.models.core.tools import RepresentationType, SentenceEmbeddingService
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
+@dataclass
+class SVMModelComponents:
+    model: Union[sklearn.svm.LinearSVC, sklearn.svm.SVC]
+    vectorizer: None
+    language: Language
+
 
 class SVM(ModelAPI):
     def __init__(self, output_dir, representation_type: RepresentationType,
                  models_background_jobs_manager: ModelsBackgroundJobsManager,
                  sentence_embedding_service: SentenceEmbeddingService, kernel="linear"):
-        super().__init__(models_background_jobs_manager)
-        self.model_dir = os.path.join(output_dir, "svm")
-        os.makedirs(self.model_dir, exist_ok=True)
+        super().__init__(output_dir, models_background_jobs_manager)
         self.kernel = kernel
         self.representation_type = representation_type
         if self.representation_type == RepresentationType.GLOVE:
@@ -52,30 +59,34 @@ class SVM(ModelAPI):
         else:
             raise ValueError("Unknown kernel type")
 
-        language = self.get_language(model_id)
+        language = self.get_language(self.get_model_dir_by_id(model_id))
         texts = [x['text'] for x in train_data]
         train_data_features, vectorizer = self.input_to_features(texts, language=language)
         labels = np.array([x['label'] for x in train_data])
 
         model.fit(train_data_features, labels)
 
-        with open(self.vectorizer_file_by_id(model_id), "wb") as fl:
+        with open(os.path.join(self.get_model_dir_by_id(model_id), "vectorizer"), "wb") as fl:
             pickle.dump(vectorizer, fl)
-        with open(self.model_file_by_id(model_id), "wb") as fl:
+        with open(os.path.join(self.get_model_dir_by_id(model_id), "model"), "wb") as fl:
             pickle.dump(model, fl)
 
-    def _infer(self, model_id, items_to_infer):
-        with open(self.vectorizer_file_by_id(model_id), "rb") as fl:
-            vectorizer = pickle.load(fl)
-        with open(self.model_file_by_id(model_id), "rb") as fl:
+    def load_model(self, model_path) -> SVMModelComponents:
+        with open(os.path.join(model_path, "model"), "rb") as fl:
             model = pickle.load(fl)
-        language = self.get_language(model_id)
+        with open(os.path.join(model_path, "vectorizer"), "rb") as fl:
+            vectorizer = pickle.load(fl)
+        language = self.get_language(model_path)
 
-        features_all_texts, _ = self.input_to_features([x['text'] for x in items_to_infer], language=language,
-                                                       vectorizer=vectorizer)
-        labels = model.predict(features_all_texts).tolist()
+        return SVMModelComponents(model=model, vectorizer=vectorizer, language=language)
+
+    def infer(self, model_components: SVMModelComponents, items_to_infer):
+        features_all_texts, _ = self.input_to_features([x['text'] for x in items_to_infer],
+                                                       language=model_components.language,
+                                                       vectorizer=model_components.vectorizer)
+        labels = model_components.model.predict(features_all_texts).tolist()
         # The True label is in the second position as sorted([True, False]) is [False, True]
-        scores = [probs[1] for probs in self.get_probs(model, features_all_texts)]
+        scores = [probs[1] for probs in self.get_probs(model_components.model, features_all_texts)]
         return [Prediction(label=label, score=score) for label, score in zip(labels, scores)]
 
     @staticmethod
@@ -101,14 +112,8 @@ class SVM(ModelAPI):
         elif self.representation_type == RepresentationType.GLOVE:
             return self.sentence_embedding_service.get_glove_representation(texts, language=language), None
 
-    def model_file_by_id(self, model_id):
-        return os.path.join(self.get_model_dir_by_id(model_id), "model")
-
-    def vectorizer_file_by_id(self, model_id):
-        return os.path.join(self.get_model_dir_by_id(model_id), "vectorizer")
-
-    def get_models_dir(self):
-        return self.model_dir
+    def get_model_dir_name(self): # for backward compatibility, we override the default get_model_dir_name()
+        return "svm"
 
 
 class SVM_BOW(SVM):

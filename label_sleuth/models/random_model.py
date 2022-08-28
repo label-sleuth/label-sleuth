@@ -27,9 +27,7 @@ class RandomModel(ModelAPI):
     Mock classification model that does not train, and returns random classification predictions.
     """
     def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager):
-        super().__init__(models_background_jobs_manager)
-        self.model_dir = os.path.join(output_dir, "random")
-        os.makedirs(self.model_dir, exist_ok=True)
+        super().__init__(output_dir, models_background_jobs_manager)
 
         self.model_id_to_random_seed = {}
         self.random_seed = -1
@@ -39,8 +37,15 @@ class RandomModel(ModelAPI):
         self.model_id_to_random_seed[model_id] = seed
         self.random_seed = seed
 
-    def _infer(self, model_id, items_to_infer):
-        rand = random.Random(self.model_id_to_random_seed[model_id])
+    def load_model(self, model_path) -> int:
+        # RandomModel does not require loading any model objects from disk, we implement it this way for compatibility
+        # with the rest of the system
+        model_id = os.path.basename(model_path)
+        random_seed = self.model_id_to_random_seed[model_id]
+        return random_seed
+
+    def infer(self, random_seed: int, items_to_infer):
+        rand = random.Random(random_seed)
         scores = np.array([rand.random() for _ in range(len(items_to_infer))])
         labels = [score > 0.5 for score in scores]
         return [Prediction(label=label, score=score) for label, score in zip(labels, scores)]
@@ -49,9 +54,6 @@ class RandomModel(ModelAPI):
         if model_id in self.model_id_to_random_seed:
             return ModelStatus.READY
         return ModelStatus.ERROR
-
-    def get_models_dir(self):
-        return self.model_dir
 
     def delete_model(self, model_id):
         if model_id in self.model_id_to_random_seed:
