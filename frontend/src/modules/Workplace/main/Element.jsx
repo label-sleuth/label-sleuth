@@ -15,55 +15,54 @@
 
 import { Box } from "@mui/system";
 import Stack from '@mui/material/Stack';
-import { IconButton } from "@mui/material";
 import { useSelector } from 'react-redux';
 import checking from '../Asset/checking.svg';
 import check from '../Asset/check.svg';
 import crossing from '../Asset/crossing.svg';
 import cross from '../Asset/cross.svg';
 import classes from './Element.module.css';
-import useMainLabelState from './customHooks/useElemLabelState';
+import useMainLabelState from '../customHooks/useLabelState';
 import useElemStyles from "./customHooks/useElemStyles";
-import { useEffect } from "react";
+import { getMainPanelElementId } from "../../../utils/utils";
+import { panelIds } from "../../../const";
+export default function Element({ element }) {
+    
+    const { id, text, userLabel, modelPrediction } = element
 
-
-export default function Element(props) {
-
-    const { index, text, element_id } = props
     const curCategory = useSelector(state => state.workspace.curCategory) 
-    const labelState = useSelector(state => state.workspace.labelState) 
-    const evaluationIsInProgress = useSelector(state => state.workspace.evaluation.isInProgress) 
-    const isSearchActive = useSelector(state => state.workspace.isSearchActive) 
-    const { handlePosLabelState, handleNegLabelState } = useMainLabelState({ ...props })
-    const { handleTextElemStyle,  text_colors } = useElemStyles({ ...props })
-
-
-useEffect(()=>{
-    if(!isSearchActive ){
-        handleTextElemStyle()
-    }
-  },[isSearchActive])
-
+    const evaluationIsInProgress = useSelector(state => state.workspace.panels[panelIds.EVALUATION].isInProgress) 
+    const { handlePosLabelState, handleNegLabelState } = useMainLabelState({ elementURI: id })
+    const elementDOMId = getMainPanelElementId(id)
+    const { handleTextElemStyle,  text_colors } = useElemStyles(elementDOMId, modelPrediction)
+    
     return (
         curCategory  === null ?
-            <Box tabIndex="-1" className={handleTextElemStyle()} id={"L" + index}>
+            <Box 
+                tabIndex="-1" 
+                className={handleTextElemStyle()} 
+                id={elementDOMId}
+            >
                 <p className={classes["nodata_text"]}>{text}</p>
             </Box>
             :
             <Box tabIndex="-1"
                 className={handleTextElemStyle()}
-                id={"L" + index}  >
-                <p className={classes.data_text} style={(text_colors[labelState['L' + index]])}>{text}</p>
+                id={elementDOMId} 
+            >
+                <p className={classes.data_text} style={(text_colors[userLabel])}>{text}</p>
                 <Stack className={!evaluationIsInProgress && classes.checking_buttons} direction="row" spacing={0}>
                     <div
-                        onClick={handlePosLabelState} style={{ cursor: "pointer" }}>
-                        {labelState['L' + index] == 'pos' ?
+                        onClick={(e) => { e.stopPropagation(); handlePosLabelState(element)}}
+                        style={{ cursor: "pointer" }}>
+                        {userLabel === 'pos' ?
                             <img className={classes.resultbtn} loading="eager" src={check} alt="checked" /> :
                                 <img className={classes.hovbtn} loading="eager" src={checking} alt="checking" />
                         }
                     </div>
-                    <div onClick={handleNegLabelState} style={{ cursor: "pointer" }}>
-                        {labelState['L' + index] == 'neg' ?
+                    <div  
+                        onClick={(e) => { e.stopPropagation(); handleNegLabelState(element)}}
+                        style={{ cursor: "pointer" }}>
+                        {userLabel === 'neg' ?
                             <img className={classes.resultbtn}  loading="eager" src={cross} alt="crossed" /> :
                             <img className={classes.hovbtn}  loading="eager" src={crossing} alt="crossinging" />
                         }

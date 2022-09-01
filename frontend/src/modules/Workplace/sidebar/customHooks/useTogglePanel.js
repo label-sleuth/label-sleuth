@@ -13,178 +13,59 @@
     limitations under the License.
 */
 
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { sidebarOptionEnum} from '../../../../const';
-import { setActivePanel } from '../../redux/DataSlice';
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { panelIds } from "../../../../const";
+import { setActivePanel } from "../../redux/DataSlice";
 
-const useTogglePanel = (setOpen, textInput) => {
+/**
+ * Opens the sidebar Drawer if any panel is selected
+ * @param {*} setOpen 
+ */
+const useSidebarPanelIsOpen = (setOpen) => {
+  const activePanelId = useSelector(
+    (state) => state.workspace.panels.activePanelId
+  );
 
-    const dispatch = useDispatch()
-    const [toggleSearchPanel, setToggleSearchPanel] = useState(false)
-    const [toggleRCMDPanel, setToggleRCMDPanel] = useState(false)
-    const [togglePosPredPanel, setTogglePosPredPanel] = useState(false)
-    const [togglePosElemPanel, setTogglePosElemPanel] = useState(false)
-    const [toggleDisagreeElemPanel, setToggleDisagreeElemPanel] = useState(false)
-    const [toggleSuspiciousElemPanel, setToggleSuspiciousElemPanel] = useState(false)
-    const [toggleContrElemPanel, setToggleContrElemPanel] = useState(false)
-    const [toggleEvaluationPanel, setToggleEvaluationPanel] = useState(false)
-    const elementsToLabel = useSelector(state => state.workspace.elementsToLabel)
+  useEffect(() => {
+    setOpen(!!activePanelId);
+  }, [activePanelId]);
+};
 
-    useEffect(() => {
-        if(elementsToLabel.length == 0){
-          activateSearchPanel()
-        }
-        else{
-          activateRecToLabelPanel() 
-        }
-     
-    }, [elementsToLabel.length])
-  
-    useEffect(() => {
-      const aPanelIsOpen =
-        toggleSearchPanel ||
-        toggleRCMDPanel ||
-        togglePosPredPanel ||
-        togglePosElemPanel ||
-        toggleDisagreeElemPanel ||
-        toggleSuspiciousElemPanel ||
-        toggleContrElemPanel ||
-        toggleEvaluationPanel;
-      setOpen(aPanelIsOpen);
-    }, [
-      toggleRCMDPanel,
-      toggleSearchPanel,
-      togglePosPredPanel,
-      togglePosElemPanel,
-      toggleDisagreeElemPanel,
-      toggleSuspiciousElemPanel,
-      toggleContrElemPanel,
-      toggleEvaluationPanel,
-      setOpen,
-    ]);
+/**
+ * Decides which panel should be opened by default.
+ * If there is a model and LabelNext elements are available
+ * the LabelNext panel will be opened. If not, the search panel will
+ * be opened.
+ * @param {*} textInput 
+ */
+const useInitialOpenedSidebarPanel = (textInput) => {
+  const dispatch = useDispatch();
 
-    const activateSearchPanel = () => {
-        if(textInput.current){
-            textInput.current.focus()
-        }
-        dispatch(setActivePanel(sidebarOptionEnum.SEARCH))
-        setToggleSearchPanel(!toggleSearchPanel)
-        setTogglePosPredPanel(false)
-        setToggleRCMDPanel(false)
-        setTogglePosElemPanel(false)
-        setToggleDisagreeElemPanel(false)
-        setToggleSuspiciousElemPanel(false)
-        setToggleContrElemPanel(false)
-        setToggleEvaluationPanel(false)
+  const labelNextElements = useSelector(
+    (state) => state.workspace.panels[panelIds.LABEL_NEXT].elements
+  );
+
+  useEffect(() => {
+    if (!labelNextElements || Object.keys(labelNextElements).length === 0) {
+      dispatch(setActivePanel(panelIds.SEARCH));
+      if (textInput.current) {
+        textInput.current.focus();
+      }
+    } else {
+      dispatch(setActivePanel(panelIds.LABEL_NEXT));
     }
+  }, [labelNextElements]);
+};
 
-    const activateRecToLabelPanel = () => {
-        dispatch(setActivePanel(sidebarOptionEnum.LABEL_NEXT))
-        setToggleRCMDPanel(!toggleRCMDPanel)
-        setToggleSearchPanel(false)
-        setTogglePosPredPanel(false)
-        setTogglePosElemPanel(false)
-        setToggleDisagreeElemPanel(false)
-        setToggleSuspiciousElemPanel(false)
-        setToggleContrElemPanel(false)
-        setToggleEvaluationPanel(false)
-    }
-
-    const activatePosPredLabelPanel = () => {
-        dispatch(setActivePanel(sidebarOptionEnum.POSITIVE_PREDICTIONS))
-        setTogglePosPredPanel(!togglePosPredPanel)
-        setToggleSearchPanel(false)
-        setToggleRCMDPanel(false)
-        setTogglePosElemPanel(false)
-        setToggleDisagreeElemPanel(false)
-        setToggleSuspiciousElemPanel(false)
-        setToggleContrElemPanel(false)
-        setToggleEvaluationPanel(false)
-    }
-
-    const activatePosElemLabelPanel = () => {
-        dispatch(setActivePanel(sidebarOptionEnum.POSITIVE_LABELS))
-        setTogglePosElemPanel(!togglePosElemPanel)
-        setToggleSearchPanel(false)
-        setToggleRCMDPanel(false)
-        setTogglePosPredPanel(false)
-        setToggleDisagreeElemPanel(false)
-        setToggleSuspiciousElemPanel(false)
-        setToggleContrElemPanel(false)
-        setToggleEvaluationPanel(false)
-    }
-
-    // const activateDisagreeElemLabelPanel = () => {
-    //     dispatch(setActivePanel(sidebarOptionEnum.DISAGREEMENTS))
-    //     setToggleDisagreeElemPanel(!toggleDisagreeElemPanel)
-    //     setToggleSearchPanel(false)
-    //     setToggleRCMDPanel(false)
-    //     setTogglePosElemPanel(false)
-    //     setTogglePosPredPanel(false)
-    //     setTogglePosElemPanel(false)
-    //     setToggleSuspiciousElemPanel(false)
-    //     setToggleContrElemPanel(false)
-    //     setToggleEvaluationPanel(false)
-    // }
-
-    const activateSuspiciousElemLabelPanel = () => {
-        dispatch(setActivePanel(sidebarOptionEnum.SUSPICIOUS_LABELS))
-        setToggleSuspiciousElemPanel(!toggleSuspiciousElemPanel)
-        setToggleSearchPanel(false)
-        setToggleRCMDPanel(false)
-        setTogglePosPredPanel(false)
-        setTogglePosElemPanel(false)
-        setToggleDisagreeElemPanel(false)
-        setToggleContrElemPanel(false)
-        setToggleEvaluationPanel(false)
-    }
-
-    const activateContrElemLabelPanel = () => {
-        dispatch(setActivePanel(sidebarOptionEnum.CONTRADICTING_LABELS))
-        setToggleContrElemPanel(!toggleContrElemPanel)
-        setToggleSearchPanel(false)
-        setToggleRCMDPanel(false)
-        setTogglePosElemPanel(false)
-        setTogglePosPredPanel(false)
-        setTogglePosElemPanel(false)
-        setToggleDisagreeElemPanel(false)
-        setToggleSuspiciousElemPanel(false)
-        setToggleEvaluationPanel(false)
-    }
-
-    const activateEvaluationPanel = () => {
-        dispatch(setActivePanel(sidebarOptionEnum.EVALUATION))
-        setToggleSearchPanel(false)
-        setToggleRCMDPanel(false)
-        setTogglePosElemPanel(false)
-        setTogglePosPredPanel(false)
-        setTogglePosElemPanel(false)
-        setToggleDisagreeElemPanel(false)
-        setToggleSuspiciousElemPanel(false)
-        setToggleContrElemPanel(false)
-        setToggleEvaluationPanel(!toggleEvaluationPanel)
-    }
-
-    return {
-        activateSearchPanel,
-        activateRecToLabelPanel,
-        activatePosPredLabelPanel,
-        activatePosElemLabelPanel,
-        //activateDisagreeElemLabelPanel,
-        activateSuspiciousElemLabelPanel,
-        activateContrElemLabelPanel,
-        activateEvaluationPanel,
-        toggleRCMDPanel,
-        toggleSearchPanel,
-        togglePosPredPanel,
-        togglePosElemPanel,
-        toggleDisagreeElemPanel,
-        toggleSuspiciousElemPanel,
-        toggleContrElemPanel,
-        toggleEvaluationPanel,
-    }
+/**
+ * Manages the behaviour of the sidebar panels, when they should be opened and which one should be active.
+ * @param {*} setOpen 
+ * @param {*} textInputRef 
+ */
+const useTogglePanel = (setOpen, textInputRef) => {
+  useSidebarPanelIsOpen(setOpen);
+  useInitialOpenedSidebarPanel(textInputRef);
 };
 
 export default useTogglePanel;
-

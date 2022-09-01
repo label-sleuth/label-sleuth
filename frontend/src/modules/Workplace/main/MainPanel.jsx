@@ -17,7 +17,7 @@ import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Element from "./Element"
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Pagination from '../../../components/pagination/Pagination';
 import '../../../components/pagination/pagination.css';
 import useMainPagination from './customHooks/useMainPagination';
@@ -26,7 +26,10 @@ import left_icon from '../../../assets/workspace/doc_left.svg';
 import right_icon from '../../../assets/workspace/doc_right.svg'
 import useFetchPrevNextDoc from './customHooks/useFetchPrevNextDoc'
 import Tooltip from '@mui/material/Tooltip';
-import { PREV_DOC_TOOLTIP_MSG, NEXT_DOC_TOOLTIP_MSG } from '../../../const';
+import { PREV_DOC_TOOLTIP_MSG, NEXT_DOC_TOOLTIP_MSG, panelIds } from '../../../const';
+import { getMainPanelElementId } from '../../../utils/utils';
+import { fetchElements } from '../redux/DataSlice';
+import useScrollMainPanelElementIntoView from '../sidebar/customHooks/useScrollElementIntoView';
 
 const numOfElemPerPage = 500;
 const rightDrawerWidth = 360;
@@ -53,55 +56,75 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
 
 const MainPanel = ({ handleKeyEvent, open }) => {
 
-  const workspace = useSelector(state => state.workspace)
-  const isCategoryLoaded = useSelector(state => state.workspace.isCategoryLoaded)
-  const searchedIndex = useSelector(state => state.workspace.searchedIndex)
+  const curDocName = useSelector(state => state.workspace.curDocName)
   const curDocId = useSelector(state => state.workspace.curDocId)
   const documents = useSelector(state => state.workspace.documents)
-  const len_elements = workspace['elements'].length
-  const { currentContentData, currentPage, setCurrentPage, firstPageIndex } = useMainPagination(searchedIndex, numOfElemPerPage)
+  const elements = useSelector(state => state.workspace.panels[panelIds.MAIN_PANEL].elements)
+  const loading = useSelector(state => state.workspace.panels.loading[panelIds.MAIN_PANEL])
+  const isDocLoaded = useSelector(state => state.workspace.isDocLoaded)
+  const curCategory = useSelector(state => state.workspace.curCategory)
+  const modelVersion = useSelector(state => state.workspace.modelVersion)
+
+  const dispatch = useDispatch()
+
+  const { currentContentData, currentPage, setCurrentPage, firstPageIndex } = useMainPagination(numOfElemPerPage)
   const { handleFetchNextDoc, handleFetchPrevDoc } = useFetchPrevNextDoc()
 
   React.useEffect(() => {
-    if (isCategoryLoaded) {
+    if (isDocLoaded && elements === null) {
+      dispatch(fetchElements())
+    }
+  }, [isDocLoaded, elements, dispatch])
+
+  React.useEffect(() => {
+    // elements has to be re-fetched when the category changes
+    if (isDocLoaded) {
+      dispatch(fetchElements())
+    }
+  }, [isDocLoaded, curCategory, modelVersion, dispatch])
+
+  React.useEffect(() => {
+    if (isDocLoaded && !loading) {
       setCurrentPage(1)
     }
-  }, [setCurrentPage, isCategoryLoaded])
+  }, [setCurrentPage, loading, isDocLoaded])
+
+  useScrollMainPanelElementIntoView();
 
   return (
     <>
       <Main className={classes.main_content} open={open}>
         <div className={classes.doc_header}>
-          <Tooltip title={curDocId != 0 ? PREV_DOC_TOOLTIP_MSG : ""}
+          <Tooltip title={curDocId !== 0 ? PREV_DOC_TOOLTIP_MSG : ""}
             placement="right"
             componentsProps={{
               tooltip: {
                 sx: {
-                  bgcolor: curDocId != 0 ? 'common.black' : "transparent",
+                  bgcolor: curDocId !== 0 ? 'common.black' : "transparent",
                 },
               },
             }}
           >
-            <button className={curDocId == 0 ? classes["doc_button_disabled"] : classes["doc_button"]} onClick={handleFetchPrevDoc}>
-              <img src={left_icon} />
+            <button className={curDocId === 0 ? classes["doc_button_disabled"] : classes["doc_button"]} onClick={handleFetchPrevDoc}>
+              <img src={left_icon} alt={"previous document"}/>
             </button>
           </Tooltip>
           <div className={classes.doc_stats}>
-            <h6>{workspace.curDocName}</h6>
-            <em>Text Entries: {workspace.elements.length}</em>
+            <h6>{curDocName}</h6>
+            <em>Text Entries: {elements ? Object.keys(elements).length : 0}</em>
           </div>
-          <Tooltip title={documents.length - 1 != curDocId ? NEXT_DOC_TOOLTIP_MSG : ""}
+          <Tooltip title={documents.length - 1 !== curDocId ? NEXT_DOC_TOOLTIP_MSG : ""}
             placement="left"
             componentsProps={{
               tooltip: {
                 sx: {
-                  bgcolor: documents.length - 1 != curDocId ? 'common.black' : "transparent",
+                  bgcolor: documents.length - 1 !== curDocId ? 'common.black' : "transparent",
                 },
               },
             }}
           >
-            <button className={documents.length - 1 == curDocId ? classes["doc_button_disabled"] : classes["doc_button"]} onClick={handleFetchNextDoc}>
-              <img src={right_icon} />
+            <button className={documents.length - 1 === curDocId ? classes["doc_button_disabled"] : classes["doc_button"]} onClick={handleFetchNextDoc}>
+              <img src={right_icon} alt={"next document"} />
             </button>
           </Tooltip>
         </div>
@@ -110,17 +133,11 @@ const MainPanel = ({ handleKeyEvent, open }) => {
           </Box>
           <Box id="main-element-view">
             {
-              isCategoryLoaded && currentContentData.map((element, index) =>
+              currentContentData && currentContentData.map((element) =>
                 <Element
-                  searchedIndex={searchedIndex}
-                  numOfElemPerPage={numOfElemPerPage}
-                  key={index + firstPageIndex}
-                  keyEventHandler={(e) => handleKeyEvent(e, len_elements)}
-                  focusedState={workspace.focusedState}
-                  index={index + firstPageIndex}
-                  elementURI={element.id}
-                  prediction={element.model_predictions[workspace.curCategory]}
-                  text={element['text']}
+                  keyEventHandler={(e) => handleKeyEvent(e, Object.keys(elements).length)}
+                  element={element}  
+                  key={getMainPanelElementId(element.id)}
                 />
               )
             }
@@ -129,7 +146,7 @@ const MainPanel = ({ handleKeyEvent, open }) => {
         <div className={classes.pagination}>
           <Pagination
             currentPage={currentPage}
-            totalCount={workspace.elements.length}
+            totalCount={elements ? Object.values(elements).length : 0}
             pageSize={numOfElemPerPage}
             onPageChange={page => setCurrentPage(page)}
           />

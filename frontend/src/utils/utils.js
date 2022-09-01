@@ -1,3 +1,5 @@
+import { panelIds } from "../const"
+
 export const handleError = (err) => {
     return err.message || "An error ocurred"
 }
@@ -108,6 +110,10 @@ export const getBooleanLabel = (label) => {
     return label === "pos" ? "true" : label === "neg" ? "false" : "none";
 }
 
+export const getStringLabel = (label) => {
+  return label === "true" ? "pos" : label === "false" ? "neg" : "none";
+}
+
 /**
  * Parses the elements of a document extracting the user labels
  * @param {list of elements of a document} elements
@@ -115,35 +121,50 @@ export const getBooleanLabel = (label) => {
  * @param {whether to add the id of the element in its entry key} includeId
  * @returns
  */
- export const parseElements = (elements, curCategory, includeId=false) => {
-  let initialFocusedState = {};
-  let initialLabelState = {};
-
+ export const parseElements = (unparsedElements, curCategory) => {
+  let elements = {};
   let documentPos = 0;
   let documentNeg = 0; 
 
-  for (const [i, element] of elements.entries()) {
-    let index = "L" + i
-    index = includeId ? `L${i}-${element.id}` : `L${i}`
-    initialFocusedState[index] = false;
+  unparsedElements.forEach(element => {
     const userLabels = element["user_labels"];
+    elements[element.id] = parseElement(element, curCategory)
     if (curCategory in userLabels) {
-      const label = userLabels[curCategory]
-      if (label === "true") {
-        initialLabelState[index] = "pos";
-        documentPos += 1;
-      } else if (label === "false") {
-        initialLabelState[index] = "neg";
-        documentNeg += 1;
-      }
-    } else {
-      initialLabelState[index] = "";
+      documentPos += userLabels[curCategory] === "true" ? 1 : 0;
+      documentNeg += userLabels[curCategory] === "false" ? 1 : 0;
     }
-  }
+  })
+
   return {
-    initialFocusedState,
-    initialLabelState,
+    elements,
     documentPos,
     documentNeg,
   };
 };
+
+export const parseElement = ({docid, id, model_predictions, user_labels, text}, curCategory) => ({
+  docId: docid,
+  id: id,
+  modelPrediction: getStringLabel(model_predictions[curCategory]),
+  userLabel: getStringLabel(user_labels[curCategory]),
+  text,
+})
+
+export const getMainPanelElementId = (elementId) => `${panelIds.MAIN_PANEL}_${elementId}`
+
+export const synchronizeElement = (elementId, userLabel, panels) => {
+  Object.values(panels).forEach(panel => {
+    const elements = panel.elements
+    if (elements && elementId in elements) {
+      elements[elementId].userLabel = userLabel;
+    }
+  })
+  return panels
+}
+
+export const scrollIntoElementView = (element) => {
+  element && element.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+  })
+}
