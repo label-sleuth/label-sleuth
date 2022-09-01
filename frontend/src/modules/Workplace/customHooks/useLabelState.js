@@ -13,9 +13,11 @@
     limitations under the License.
 */
 
-import { updateDocumentLabelCountByDiff, setElementLabel, checkStatus, setLabelState } from "../../redux/DataSlice";
+import { updateDocumentLabelCountByDiff, setElementLabel, checkStatus } from "../redux/DataSlice";
 import { useSelector, useDispatch } from "react-redux";
-import { getNewLabelState, getBooleanLabel } from "../../../../utils/utils";
+import { getNewLabelState, getBooleanLabel } from "../../../utils/utils";
+import { activePanelSelector } from '../redux/DataSlice'
+
 /**
  * This custom hook is responsible for managing the labels states
  ** for the current sidebar's active panels and for updating the main labels state panel.
@@ -30,14 +32,9 @@ import { getNewLabelState, getBooleanLabel } from "../../../../utils/utils";
  * @param  { The active sidebar's panel state} updatePanelLabelState
  */
 const useLabelState = (
-  panelLabelState,
-  updateMainLabelState,
-  updatePanelLabelState,
-  updateCounter=true
+  updateCounter = true
 ) => {
-  const newPanelLabelState = {...panelLabelState}
   const currentDocName = useSelector((state) => state.workspace.curDocName);
-  const mainLabelState = useSelector((state) => state.workspace.labelState)
   const dispatch = useDispatch();
 
   /**
@@ -48,45 +45,31 @@ const useLabelState = (
    * @param  {The element that was clicked on the sidebar panel and needs to be found on the main panel} searchedIndex
    * @param  {The label action: can be 'pos' or 'neg'} labelAction
    */
-  const handleLabelState = (docid, id, searchedElemIndex, labelAction) => {
+  const handleLabelState = (element, labelAction) => {
       
     const { documentLabelCountChange, newLabel } = getNewLabelState(
-      newPanelLabelState[searchedElemIndex],
+      element.userLabel,
       labelAction
     );
-
     dispatch(setElementLabel({ 
-      element_id: id, 
-      docid: docid, 
+      element_id: element.id, 
       label: getBooleanLabel(newLabel), 
       update_counter: updateCounter
     })).then(() => {
       dispatch(checkStatus())
-
-      // if doc is L24-medium_wiki-Common house gecko-50 then elementMainIndex is L50
-      const elementMainIndex = id.split('-')[2]
-
       // Update main document view only if the side bar element belongs to the current main document
-      if (currentDocName === docid) {
+      if (currentDocName === element.docId) {
         dispatch(updateDocumentLabelCountByDiff(documentLabelCountChange));
-        const newMainLabelState = {...mainLabelState}
-        newMainLabelState[`L${elementMainIndex}`] = newLabel;
-        dispatch(setLabelState(newMainLabelState))
       }
-
-      updatePanelLabelState({
-        ...newPanelLabelState, 
-        [searchedElemIndex]: newLabel,
-      });
     })
   };
 
-  const handlePosLabelState = (docid, id, searchedIndex) => {
-    handleLabelState(docid, id, searchedIndex, "pos");
+  const handlePosLabelState = (element) => {
+    handleLabelState(element, "pos");
   };
 
-  const handleNegLabelState = (docid, id, searchedIndex) => {
-    handleLabelState(docid, id, searchedIndex, "neg");
+  const handleNegLabelState = (element) => {
+    handleLabelState(element, "neg");
   };
 
   return {

@@ -25,8 +25,6 @@ import {
 import classes from "./index.module.css";
 import { useSelector, useDispatch } from "react-redux";
 import Element from "./Element";
-import useSearchElement from "./customHooks/useSearchElement";
-import useLabelState from "./customHooks/useLabelState";
 import {
   checkStatus,
   startEvaluation,
@@ -39,25 +37,25 @@ import {
   EVALUATION_IN_PROGRESS_MSG,
   PRECISION_RESULT_MSG,
   WAIT_NEW_MODEL_MSG,
+  panelIds,
 } from "../../../const";
 
-const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
+const EvaluationPanel = () => {
   const dispatch = useDispatch();
 
   const {
-    isLoading,
-    isInProgress,
     elements,
-    labelState,
-    initialLabelState,
+    initialElements,
+    isInProgress,
     lastScore,
     scoreModelVersion,
   } = useSelector(
-    (state) => state.workspace.evaluation
+    (state) => state.workspace.panels[panelIds.EVALUATION]
   );
 
-  const curCategory = useSelector((state) => state.workspace.curCategory);
-  const model_version = useSelector((state) => state.workspace.model_version);
+  const isLoading = useSelector(state => state.workspace.panels.loading[panelIds.EVALUATION])
+
+  const modelVersion = useSelector((state) => state.workspace.modelVersion);
 
   const nextModelShouldBeTraining = useSelector(
     (state) => state.workspace.nextModelShouldBeTraining
@@ -66,28 +64,19 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
   const submitButtonDisabled = React.useMemo(() => {
     return (
       !isInProgress ||
-      Object.values(labelState).some(
-        (label) => label !== "pos" && label !== "neg"
+      Object.values(elements).some(
+        (element) => element.userLabel !== "pos" && element.userLabel !== "neg"
       )
     );
-  }, [isInProgress, labelState]);
-
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    labelState,
-    updateMainLabelState,
-    updateLabelState,
-    false // updateCounter
-  );
-
-  const { handleSearchPanelClick, searchInput } = useSearchElement();
+  }, [isInProgress, elements]);
 
   const onStartEvaluation = () => {
     dispatch(startEvaluation());
   };
 
   const calculateChangedCountAndDispatch = (action) => {
-    const changedElementsCount = Object.keys(labelState).filter(
-      (k) => labelState[k] !== initialLabelState[k]
+    const changedElementsCount = Object.keys(elements).filter(
+      (k) => elements[k].userLabel !== initialElements[k].userLabel
     ).length;
     dispatch(action(changedElementsCount)).then(() => {
       dispatch(checkStatus());
@@ -166,27 +155,19 @@ const EvaluationPanel = ({ updateMainLabelState, updateLabelState }) => {
             <Typography sx={typographyStyle}>
               {EVALUATION_IN_PROGRESS_MSG}
             </Typography>
-            {elements.map((e, i) => {
+            {Object.values(elements).map((element, i) => {
               return (
                 <Element
-                  key={i}
-                  searchedIndex={i}
-                  prediction={e.model_predictions[curCategory]}
-                  text={e.text}
-                  id={e.id}
-                  docid={e.docid}
-                  labelValue={e.user_labels[curCategory]}
-                  handleSearchPanelClick={handleSearchPanelClick}
-                  labelState={labelState}
-                  handlePosLabelState={handlePosLabelState}
-                  handleNegLabelState={handleNegLabelState}
+                  element={element}
+                  updateCounterOnLabeling={false}
+                  key={element.id}
                 />
               );
             })}
           </Box>
         ) : lastScore !== null ? (
           <Typography sx={{ ...typographyStyle, fontSize: "1rem" }}>
-            {PRECISION_RESULT_MSG(Math.round(lastScore * 100), model_version, scoreModelVersion)}
+            {PRECISION_RESULT_MSG(Math.round(lastScore * 100), modelVersion, scoreModelVersion)}
           </Typography>
         ) : nextModelShouldBeTraining ? (
           <Typography sx={typographyStyle}>{WAIT_NEW_MODEL_MSG}</Typography>

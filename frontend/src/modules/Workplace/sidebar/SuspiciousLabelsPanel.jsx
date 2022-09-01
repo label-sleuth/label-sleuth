@@ -18,22 +18,11 @@ import React from "react";
 import classes from "./index.module.css";
 import { useSelector } from "react-redux";
 import Element from "./Element";
-import useSearchElement from "./customHooks/useSearchElement";
-import useLabelState from "./customHooks/useLabelState";
+import { panelIds } from "../../../const";
 
-const SuspiciousLabelsPanel = ({ updateMainLabelState, updateLabelState }) => {
-  const workspace = useSelector((state) => state.workspace);
-  const suspiciousElemResult = useSelector(
-    (state) => state.workspace.suspiciousElemResult
-  );
-  let newSuspiciousElemLabelState = { ...workspace.suspiciousElemLabelState };
-  const currSuspiciousElemLabelState = workspace.suspiciousElemLabelState;
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    newSuspiciousElemLabelState,
-    updateMainLabelState,
-    updateLabelState
-  );
-  const { handleSearchPanelClick, searchInput } = useSearchElement();
+const SuspiciousLabelsPanel = () => {
+  const elements = useSelector((state) => state.workspace.panels[panelIds.SUSPICIOUS_LABELS].elements);
+
   return (
     <Box>
       <Box
@@ -51,7 +40,7 @@ const SuspiciousLabelsPanel = ({ updateMainLabelState, updateLabelState }) => {
           <strong>Suspicious labels</strong>
         </p>
       </Box>
-      {!suspiciousElemResult || suspiciousElemResult.length == 0 ? (
+      {!elements || elements.length === 0 ? (
         <Typography
           sx={{
             display: "flex",
@@ -85,22 +74,12 @@ const SuspiciousLabelsPanel = ({ updateMainLabelState, updateLabelState }) => {
         </Typography>
       )}
       <Box className={classes["search-results"]} sx={{ mt: 4 }}>
-        {suspiciousElemResult &&
-          suspiciousElemResult.map((res, i) => {
-            return (
+        {elements &&
+          Object.values(elements).map((element, i) => {
+            return (  
               <Element
-                key={i}
-                searchedIndex={i}
-                prediction={res.model_predictions[workspace.curCategory]}
-                text={res.text}
-                searchInput={searchInput}
-                id={res.id}
-                docid={res.docid}
-                labelValue={res.user_labels[workspace.curCategory]}
-                handleSearchPanelClick={handleSearchPanelClick}
-                handlePosLabelState={handlePosLabelState}
-                handleNegLabelState={handleNegLabelState}
-                labelState={currSuspiciousElemLabelState}
+                element={element}
+                key={element.id}
               />
             );
           })}
