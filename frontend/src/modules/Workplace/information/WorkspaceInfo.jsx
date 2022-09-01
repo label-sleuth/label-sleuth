@@ -129,7 +129,13 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
     const navigate = useNavigate()
     const theme = useTheme();
     const { logout } = useLogOut()
-    const workspace = useSelector(state => state.workspace)
+
+    const curCategory = useSelector(state => state.workspace.curCategory)
+    const labelCount = useSelector(state => state.workspace.labelCount)
+    const uploadedLabels = useSelector(state => state.workspace.uploadedLabels)
+    const modelVersion = useSelector(state => state.workspace.modelVersion)
+    const nextModelShouldBeTraining = useSelector(state => state.workspace.nextModelShouldBeTraining)
+
     const [tabValue, setTabValue] = React.useState(0);
     const [tabStatus, setTabStatus] = React.useState(0)
     const [uploadLabelsDialogOpen, setUploadLabelsDialogOpen] = React.useState(false)
@@ -148,19 +154,19 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
       }
 
     React.useEffect(() => {
-        if (workspace.curCategory !== null) {
+        if (curCategory !== null) {
             if (!modelVersionHasBeenSet) {
                 setModelVersionHasBeenSet(true)
             }
-            if (workspace.model_version && workspace.model_version > -1 && modelVersionHasBeenSet) {
+            if (modelVersion && modelVersion > -1 && modelVersionHasBeenSet) {
                 fire();
-                if (workspace.model_version === 1) {
+                if (modelVersion === 1) {
                     notifySuccess('A new model is available!', 'toast-new-model')
                     notifySuccess('There are new suggestions for labeling!', 'toast-new-suggestions-for-labelling')
                 }
             }
         }
-      }, [workspace.model_version])
+      }, [modelVersion])
     
     React.useEffect(()=>{
         if(workspaceId){
@@ -220,18 +226,18 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
     */
     React.useEffect(() => {
         const interval = setInterval(() => {
-            if (workspace.curCategory != null && workspace.nextModelShouldBeTraining) {
+            if (curCategory != null && nextModelShouldBeTraining) {
                 dispatch(checkModelUpdate())
             }
         }, checkModelInterval);
 
         return () => clearInterval(interval);
-    }, [workspace.curCategory, checkModelInterval, workspace.nextModelShouldBeTraining])
+    }, [curCategory, checkModelInterval, nextModelShouldBeTraining])
 
 
     React.useEffect(() => {
         setModelVersionHasBeenSet(false)
-    }, [workspace.curCategory])
+    }, [curCategory])
 
 
 
@@ -242,14 +248,14 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
 
     // placeholder for finding documents stats
     let doc_stats = {
-        pos: workspace.labelCount.documentPos,
-        neg: workspace.labelCount.documentNeg
+        pos: labelCount.documentPos,
+        neg: labelCount.documentNeg
     };
 
     // placeholder for finding workspace  stats
     let workspace_stats = {
-        pos: workspace.labelCount.workspacePos,
-        neg: workspace.labelCount.workspaceNeg,
+        pos: labelCount.workspacePos,
+        neg: labelCount.workspaceNeg,
     };
 
     const open_introSlides = function () {
@@ -268,12 +274,12 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
     }
 
     React.useEffect(() => {
-        if (workspace.uploadedLabels) {
-            const categoriesCreated = workspace.uploadedLabels.categoriesCreated
+        if (uploadedLabels) {
+            const categoriesCreated = uploadedLabels.categoriesCreated
             const createdCategoriesMessage = categoriesCreated.length ? `Added categories are ${getCategoriesString(categoriesCreated)}` : ''
             notifySuccess(`New labels have been added! ${createdCategoriesMessage}`, "toast-uploaded-labels");
         }
-    }, [workspace.uploadedLabels])
+    }, [uploadedLabels])
 
     return (
         <>
@@ -335,7 +341,7 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                     </DrawerHeader>
                     
                     <Divider />
-                    {workspace.curCategory !== null ? 
+                    {curCategory !== null ? 
                     
                     <Stack style={{paddingTop: '12px', paddingBottom: "24px"}}>
                         <Box sx={{ width: '100%', padding: theme.spacing(0, 2) }}>
@@ -370,7 +376,6 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                                 </Stack>
                             </TabPanel>
                             <TabPanel className={classes.entries_tab} value={tabValue} index={1} onClick={() => {
-                                console.log(`tab document`)
                                 setTabStatus('document')
                             }}>
                                 <Stack spacing={0}>
@@ -393,13 +398,13 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                         <ModelName>
                             <Typography>Current Model:</Typography>
                             {
-                               workspace.model_version && workspace.model_version > -1 ? <Typography id="model-version"><strong>{workspace.model_version}<sup>{getOrdinalSuffix(workspace.model_version)}</sup> version</strong></Typography>
+                               modelVersion && modelVersion > -1 ? <Typography id="model-version"><strong>{modelVersion}<sup>{getOrdinalSuffix(modelVersion)}</sup> version</strong></Typography>
                                     : <Typography id='model-version-unavailable'><strong>{NO_MODEL_AVAILABLE_MSG}</strong></Typography>
                             }
                         </ModelName>
                         <LinearWithValueLabel />
                         {
-                            workspace['nextModelShouldBeTraining'] ? (
+                            nextModelShouldBeTraining ? (
                                 <div style={{display: "flex", flexDirection: "row", alignItems: "flex-end"}}>
                                     <div className={classes.modelStatus}>{NEXT_MODEL_TRAINING_MSG}</div>    
                                     <div className={classes["dot-pulse"]}></div>

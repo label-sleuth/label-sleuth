@@ -18,19 +18,15 @@ import {
   checkStatus,
   fetchCategories,
   fetchDocuments,
-  setIsDocLoaded,
-  setIsCategoryLoaded,
   checkModelUpdate,
   fetchElements,
-  getPositiveElementForCategory,
-  setFocusedState,
   getPositivePredictions,
   setWorkspaceVisited,
-  searchKeywords,
   getSuspiciousLabels,
   getAllPositiveLabels,
   cleanEvaluationState,
-} from "./redux/DataSlice";
+  cleanUploadedLabels,
+} from "../redux/DataSlice";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -39,95 +35,69 @@ import { useDispatch, useSelector } from "react-redux";
  **/
 const useWorkspaceState = () => {
   const dispatch = useDispatch();
-  const workspace = useSelector((state) => state.workspace);
+  
+  const workspaceVisited = useSelector((state) => state.workspace.workspaceVisited);
+  const curCategory = useSelector((state) => state.workspace.curCategory);
+  const modelVersion = useSelector((state) => state.workspace.modelVersion);
+  const uploadedLabels = useSelector((state) => state.workspace.uploadedLabels);
 
   React.useEffect(() => {
     // fetch documents only once, they won't change
-    dispatch(setIsCategoryLoaded(false));
-    dispatch(setIsDocLoaded(false));
-    dispatch(fetchDocuments()).then(() => {
-      dispatch(fetchElements()).then(() => {
-        dispatch(setIsCategoryLoaded(true));
-        dispatch(setIsDocLoaded(true));
-      });
-    });
+    dispatch(fetchDocuments())
+    
     // fetch categories only once, they will be fetched again if a new category is added
     dispatch(fetchCategories());
 
-    if (!workspace.workspaceVisited) {
+    if (!workspaceVisited) {
       dispatch(setWorkspaceVisited())
     }
 
   }, [dispatch]);
 
   React.useEffect(() => {
-    // elements has to be re-fetched when the category changes
-    dispatch(setIsCategoryLoaded(false));
-    dispatch(setIsDocLoaded(false));
-    dispatch(fetchElements()).then(() => {
-      dispatch(setIsCategoryLoaded(true));
-      dispatch(setIsDocLoaded(true));
-    })
-
-    // reset the focused state when the category changes
-    dispatch(setFocusedState(null));
     // update the model version when the category changes (if any)
-    if (workspace.curCategory !== null) {
+    if (curCategory !== null) {
       dispatch(checkModelUpdate());
       dispatch(getAllPositiveLabels())
       dispatch(cleanEvaluationState())
     }
-  }, [workspace.curCategory, dispatch]);
+  }, [curCategory, dispatch]);
 
   React.useEffect(() => {
-    // category changes or model_version changes means
+    // category changes or modelVersion changes means
     // that recommend to label and positive predicted text entries has to be updated
     // also the status is updated
-    if (workspace.curCategory !== null) {
+    if (curCategory !== null) {
       dispatch(checkStatus());
       // checking for nullity first because in js null >= 0
-      if (workspace.model_version !== null && workspace.model_version >= 0) {
-        dispatch(fetchElements())
+      if (modelVersion !== null && modelVersion >= 0) {
         dispatch(getElementToLabel());
-        dispatch(getPositiveElementForCategory());
         dispatch(getPositivePredictions())
-        // dispatch(getDisagreementsElements())
         dispatch(getSuspiciousLabels())
-        // updates search results because predictions may have changed
-        workspace.searchInput !== null && workspace.searchInput !== '' && dispatch(searchKeywords()) 
+        dispatch(getAllPositiveLabels())
       }
     }
-  }, [workspace.curCategory, workspace.model_version, dispatch]);
+  }, [curCategory, modelVersion, dispatch]);
 
   React.useEffect(() => {
     // this useEffect manages the actions to be carried out when new labels have been imported
     // if new categories where added the category list is fetched again
     // if the user is currently in a category where labels have been added then the document is
     // fetched again, as well as the search bar results (in case element labels has to be updated there)
-    if (workspace.uploadedLabels) {
-      const { categories, categoriesCreated } = workspace.uploadedLabels;
-      if (categories?.some(cat => cat.category_id == workspace.curCategory)) {
-        dispatch(setIsCategoryLoaded(false));
-        dispatch(setIsDocLoaded(false));
+    if (uploadedLabels) {
+      const { categories, categoriesCreated } = uploadedLabels;
+      if (categories?.some(cat => cat.category_id == curCategory)) {
         dispatch(getAllPositiveLabels())
         dispatch(fetchElements()).then(() => {
-          if (workspace.searchInput) {
-            dispatch(searchKeywords()).then(() => {
-              dispatch(setIsCategoryLoaded(true));
-              dispatch(setIsDocLoaded(true));
-            });
-          } else {
-            dispatch(setIsCategoryLoaded(true));
-            dispatch(setIsDocLoaded(true));
-          }
           dispatch(checkStatus());
         });
       }
       if (categoriesCreated) {
         dispatch(fetchCategories());
       }
+      dispatch(cleanUploadedLabels())
     }
-  }, [workspace.uploadedLabels]);
+  }, [uploadedLabels]);
 
 };
 
