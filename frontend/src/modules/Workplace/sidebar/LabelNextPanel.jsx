@@ -18,23 +18,10 @@ import React from "react";
 import classes from "./index.module.css";
 import { useSelector } from "react-redux";
 import Element from "./Element";
-import useSearchElement from "./customHooks/useSearchElement";
-import useLabelState from "./customHooks/useLabelState";
-import { LABEL_NEXT_HELPER_MSG } from "../../../const";
+import { LABEL_NEXT_HELPER_MSG, panelIds } from "../../../const";
 
-const LabelNextPanel = ({ updateMainLabelState, updateLabelState }) => {
-  const workspace = useSelector((state) => state.workspace);
-  const elementsToLabel = useSelector(
-    (state) => state.workspace.elementsToLabel
-  );
-  let newRecLabelState = { ...workspace.recommendToLabelState };
-  const currRecLabelState = workspace.recommendToLabelState;
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    newRecLabelState,
-    updateMainLabelState,
-    updateLabelState
-  );
-  const { handleSearchPanelClick, searchInput } = useSearchElement();
+const LabelNextPanel = () => {
+  const elements = useSelector((state) => state.workspace.panels[panelIds.LABEL_NEXT].elements);
 
   return (
     <Box>
@@ -68,22 +55,12 @@ const LabelNextPanel = ({ updateMainLabelState, updateLabelState }) => {
         {LABEL_NEXT_HELPER_MSG}
       </Typography>
       <Stack className={classes["search-results"]} sx={{ mt: 4 }}>
-        {elementsToLabel &&
-          elementsToLabel.map((res, i) => {
+        {elements &&
+          Object.values(elements).map((element, i) => {
             return (
               <Element
-                key={i}
-                searchedIndex={i}
-                prediction={res.model_predictions[workspace.curCategory]}
-                text={res.text}
-                searchInput={searchInput}
-                id={res.id}
-                docid={res.docid}
-                labelValue={res.user_labels[workspace.curCategory]}
-                handleSearchPanelClick={handleSearchPanelClick}
-                handlePosLabelState={handlePosLabelState}
-                handleNegLabelState={handleNegLabelState}
-                labelState={currRecLabelState}
+                element={element}
+                key={element.id}
               />
             );
           })}

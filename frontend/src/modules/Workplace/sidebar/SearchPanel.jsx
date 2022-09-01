@@ -13,100 +13,130 @@
     limitations under the License.
 */
 
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import { InputBase, Paper, Typography } from '@mui/material';
-import ClearIcon from '@mui/icons-material/Clear';
-import SearchIcon from '@mui/icons-material/Search';
-import classes from './index.module.css';
-import useLabelState from './customHooks/useLabelState.js';
-import Element from './Element';
-import { forwardRef } from 'react';
-import { useSelector } from 'react-redux';
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import { InputBase, Paper, Typography } from "@mui/material";
+import ClearIcon from "@mui/icons-material/Clear";
+import SearchIcon from "@mui/icons-material/Search";
+import classes from "./index.module.css";
+import Element from "./Element";
+import { forwardRef } from "react";
+import { useSelector } from "react-redux";
+import { panelIds } from "../../../const";
+import useSearchElement from "./customHooks/useSearchElement";
 
-const SearchPanel = forwardRef(({
-    handleSearchPanelClick,
-    handleSearchInputEnterKey,
-    handleSearch,
-    clearSearchInput,
-    handleSearchInputChange,
-    searchInput,
-    updateMainLabelState,
-    updateLabelState
+const SearchPanel = forwardRef(({clearSearchInput}, textInputRef) => {
 
-}, ref) => {
+  const { handleSearchInputEnterKey, handleSearch, handleSearchInputChange } =
+    useSearchElement();
 
-    const workspace = useSelector(state => state.workspace)
-    let newSearchLabelState = { ...workspace.searchLabelState }
-    const currSearchLabelState = workspace.searchLabelState
-    const searchResult = workspace.searchResult
-    const searchUniqueElemRes = workspace.searchUniqueElemRes
-    const searchTotalElemRes = workspace.searchTotalElemRes
-    const { handlePosLabelState, handleNegLabelState } = useLabelState(newSearchLabelState, updateMainLabelState, updateLabelState)
+  const { elements, input, hitCount, uniqueHitCount } = useSelector(
+    (state) => state.workspace.panels[panelIds.SEARCH]
+  );
 
-    return (
-        <Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItem: 'center', marginTop: "19px", borderBottom: "1px solid #e2e2e2", pb: "20px", justifyContent: 'center' }} >
-                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 320, height: 40, marginLeft: 1 }}>
-                    <InputBase sx={{ ml: 1, flex: 1 }} placeholder="Search" inputProps={{ 'aria-label': 'search' }}
-                        onKeyPress={handleSearchInputEnterKey}
-                        onChange={handleSearchInputChange}
-                        inputRef={ref}
-                        defaultValue={searchInput}
-                        autoFocus= {true}
-                    />
-                    {searchInput &&
-                        <>
-                            <IconButton sx={{ p: '1px' }} aria-label="search" onClick={clearSearchInput} >
-                                <ClearIcon />
-                            </IconButton>
-                            {<IconButton sx={{ p: '1px' }} aria-label="search" onClick={handleSearch} >
-                                <SearchIcon />
-                            </IconButton>}
-                        </>
-                    }
-                </Paper>
-            </Box>
-            {searchResult && searchResult.length > 0 &&
-                <Box  sx={{ display: "flex", justifyContent: "center", mt:1, fontSize: "0.8rem", color: "rgba(0,0,0,.54)" }} >
-                    <Typography sx={{ display: "flex", justifyContent: "center", fontSize: "0.8rem", color: "rgba(0,0,0,.54)" }}>
-                        {`${searchUniqueElemRes} elements found (${searchTotalElemRes} including duplicates)`}
-                    </Typography>
-                </Box>}
-            <Box className={classes["search-results"]}  sx={{ mt:2 }} >
-                {searchResult &&
-                    ((searchResult.length == 0) ?
-                        <Box>
-                            <Typography sx={{ display: "flex", justifyContent: "center", fontSize: "0.9rem", color: "rgba(0,0,0,.54)" }}>
-                                No matching results were found.
-                            </Typography>
-                        </Box>
-                        :
-                        <Box>
-                            {searchResult.map((res, i) => {
-                                return (
-                                    <Element
-                                        key={i}
-                                        searchedIndex={i}
-                                        prediction={res.model_predictions[workspace.curCategory]}
-                                        text={res.text}
-                                        searchInput={searchInput}
-                                        id={res.id}
-                                        docid={res.docid}
-                                        labelValue={res.user_labels[workspace.curCategory]}
-                                        handleSearchPanelClick={handleSearchPanelClick}
-                                        handlePosLabelState={handlePosLabelState}
-                                        handleNegLabelState={handleNegLabelState}
-                                        labelState={currSearchLabelState}
-                                    />
-                                )
-                            })}
-                        </Box>
-                    )}
-            </Box>
-
+  return (
+    <Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          alignItem: "center",
+          marginTop: "19px",
+          borderBottom: "1px solid #e2e2e2",
+          pb: "20px",
+          justifyContent: "center",
+        }}
+      >
+        <Paper
+          component="form"
+          sx={{
+            p: "2px 4px",
+            display: "flex",
+            alignItems: "center",
+            width: 320,
+            height: 40,
+            marginLeft: 1,
+          }}
+        >
+          <InputBase
+            sx={{ ml: 1, flex: 1 }}
+            placeholder="Search"
+            inputProps={{ "aria-label": "search" }}
+            onKeyPress={handleSearchInputEnterKey}
+            onChange={handleSearchInputChange}
+            inputRef={textInputRef}
+            defaultValue={input}
+            autoFocus={true}
+          />
+          {input && (
+            <>
+              <IconButton
+                sx={{ p: "1px" }}
+                aria-label="search"
+                onClick={clearSearchInput}
+              >
+                <ClearIcon />
+              </IconButton>
+              {
+                <IconButton
+                  sx={{ p: "1px" }}
+                  aria-label="search"
+                  onClick={handleSearch}
+                >
+                  <SearchIcon />
+                </IconButton>
+              }
+            </>
+          )}
+        </Paper>
+      </Box>
+      {elements && Object.keys(elements).length > 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            mt: 1,
+            fontSize: "0.8rem",
+            color: "rgba(0,0,0,.54)",
+          }}
+        >
+          <Typography
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              fontSize: "0.8rem",
+              color: "rgba(0,0,0,.54)",
+            }}
+          >
+            {`${uniqueHitCount} elements found (${hitCount} including duplicates)`}
+          </Typography>
         </Box>
-    );
+      )}
+      <Box className={classes["search-results"]} sx={{ mt: 2 }}>
+        {elements &&
+          (Object.values(elements).length === 0 ? (
+            <Box>
+              <Typography
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  fontSize: "0.9rem",
+                  color: "rgba(0,0,0,.54)",
+                }}
+              >
+                No matching results were found.
+              </Typography>
+            </Box>
+          ) : (
+            <Box>
+              {Object.values(elements).map((element, i) => {
+                return <Element element={element} key={element.id} />;
+              })}
+            </Box>
+          ))}
+      </Box>
+    </Box>
+  );
 });
 
 export default SearchPanel;

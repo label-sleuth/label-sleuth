@@ -14,7 +14,7 @@
 */
 
 .text_predict,
-.text_confused {
+.text_normal {
     border: dotted 2px #d6d6d6 !important;
     color: #161616 !important;
     border: solid 2px transparent;
@@ -31,22 +31,22 @@
 }
 
 .text_predict:hover,
-.text_confused:hover{
+.text_normal:hover{
     background: #f4f4f4;
 }
 
 .text_predict:hover .hovbtn,
-.text_confused:hover .hovbtn {
+.text_normal:hover .hovbtn {
 display: inline-block;
   }
 
 .text_predict button ,
-.text_confused button {
+.text_normal button {
     border-radius: 0 !important;
 }
 
 .text_predict p, 
-.text_confused p {
+.text_normal p {
     margin: 15px 0;
     font-size: 14px !important;
     line-height: 18px !important;
@@ -112,8 +112,8 @@ display: inline-block;
 }
 
 .top_nav_icons {
-    width: 32px;
-    height: 32px;
+    width: 32px !important;
+    height: 32px !important;
     padding: 5px !important;
     background: none !important;
     border-radius: 2px !important;
