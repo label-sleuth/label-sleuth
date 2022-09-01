@@ -374,7 +374,7 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                                 setTabStatus('document')
                             }}>
                                 <Stack spacing={0}>
-                                    <label style={{fontSize: '12px', opacity: 0.5}}>Labeled for current document:</label>
+                                    <label style={{fontSize: '12px', opacity: 0.5}}>Labeled for Current Doc:</label>
                                     <StatsContainer>
                                         <Typography><strong>Positive</strong></Typography>
                                         <Typography sx={{ color: doc_stats.pos > 0 ? "#8ccad9" : "#fff" }}><strong>{doc_stats.pos}</strong></Typography>
