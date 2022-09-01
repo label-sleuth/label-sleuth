@@ -17,7 +17,8 @@ import { fetchPrevDocElements, fetchNextDocElements, } from '../../redux/DataSli
 import { useDispatch, useSelector } from 'react-redux';
 
 const useFetchPrevNextDoc = () => {
-    const workspace = useSelector(state => state.workspace)
+    const curDocId = useSelector(state => state.workspace.curDocId)
+    const documents = useSelector(state => state.workspace.documents)
     const dispatch = useDispatch()
 
     const scrollIntoElementView = () => {
@@ -29,7 +30,7 @@ const useFetchPrevNextDoc = () => {
     }
 
     const handleFetchNextDoc = () => {
-        if (workspace.curDocId < workspace.documents.length - 1) {
+        if (curDocId < documents.length - 1) {
             dispatch(fetchNextDocElements()).then(() => {
                 scrollIntoElementView()
             })
@@ -37,7 +38,7 @@ const useFetchPrevNextDoc = () => {
     }
 
     const handleFetchPrevDoc = () => {
-        if (workspace.curDocId > 0) {
+        if (curDocId > 0) {
             dispatch(fetchPrevDocElements()).then(() => {
                 scrollIntoElementView()
             })

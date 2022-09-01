@@ -13,16 +13,13 @@
     limitations under the License.
 */
 
-import React, { useRef, useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Box from "@mui/material/Box";
 import { Stack } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ToastContainer } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  setSearchInput,
-  resetSearchResults,
-} from './redux/DataSlice';
+import { setActivePanel } from "./redux/DataSlice";
 import WorkspaceInfo from "./information/WorkspaceInfo";
 import UpperBar from "./upperbar/UpperBar";
 import Backdrop from "@mui/material/Backdrop";
@@ -44,34 +41,28 @@ import {
   CONTRADICTING_LABELS_TOOLTIP_MSG,
   POSITIVE_PRED_TOOLTIP_MSG,
   EVALUATION_TOOLTIP_MSG,
-  sidebarOptionEnum
+  panelIds,
 } from "../../const";
 
-import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
 import Drawer from "@mui/material/Drawer";
 import { PanelManager } from "./PanelManager";
-import SearchPanel from "./sidebar/SearchPanel";
-import LabelNextPanel from "./sidebar/LabelNextPanel";
-import useWorkspaceState from "./useWorkspaceState";
+
+import useWorkspaceState from "./customHooks/useWorkspaceState";
 import Tutorial from "./tutorial";
-import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
 import TutorialDialog from "./tutorial/TutorialDialog";
 import useBackdrop from "../../customHooks/useBackdrop";
-import { useErrorHandler } from "./useErrorHandler";
-
-import AllPositiveLabelsPanel from "./sidebar/AllPositiveLabelsPanel";
-import DisagreementsPanel from "./sidebar/DisagreementsPanel";
-import SuspiciousLabelsPanel from "./sidebar/SuspiciousLabelsPanel";
-import ContradictingLabelsPanel from "./sidebar/ContradictingLabelsPanel";
-import EvaluationPanel from "./sidebar/EvaluationPanel";
+import { useErrorHandler } from "./customHooks/useErrorHandler";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem("workspaceId"));
-  const [open, setOpen] = useState(false);
   const curCategory = useSelector((state) => state.workspace.curCategory);
-  const activePanel = useSelector((state) => state.workspace.activePanel);
-  const model_version = useSelector((state) => state.workspace.model_version);
-  const evaluationIsInProgress = useSelector((state) => state.workspace.evaluation.isInProgress);
+  const activePanelId = useSelector(
+    (state) => state.workspace.panels.activePanelId
+  );
+  const modelVersion = useSelector((state) => state.workspace.modelVersion);
+  const evaluationIsInProgress = useSelector(
+    (state) => state.workspace.panels[panelIds.EVALUATION].isInProgress
+  );
   const workspaceVisited = useSelector(
     (state) => state.workspace.workspaceVisited
   );
@@ -79,67 +70,58 @@ export default function Workspace() {
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(
     !!!workspaceVisited
   );
-
-  const textInput = useRef(null);
+  
   const { openBackdrop } = useBackdrop();
 
-  const {
-    activateSearchPanel,
-    activateRecToLabelPanel,
-    activatePosPredLabelPanel,
-    activatePosElemLabelPanel,
-    activateSuspiciousElemLabelPanel,
-    activateContrElemLabelPanel,
-    activateEvaluationPanel,
-    toggleSearchPanel,
-    toggleRCMDPanel,
-    togglePosPredPanel,
-    togglePosElemPanel,
-    toggleSuspiciousElemPanel,
-    toggleContrElemPanel,
-    toggleEvaluationPanel
-  } = useTogglePanel(setOpen, textInput);
 
   const dispatch = useDispatch();
 
   useWorkspaceState();
   useErrorHandler();
 
-  const clearSearchInput = () => {
-    dispatch(setSearchInput(""));
-
-    dispatch(resetSearchResults());
-    if (textInput.current) {
-      textInput.current.value = "";
-      textInput.current.focus();
-    }
-  };
-
-  useEffect(() => {
-    clearSearchInput();
-  }, [curCategory]);
 
 
-  const noCategory = useMemo(() => curCategory === null, [curCategory])
-  const noCategoryAndNoModel = useMemo(() => noCategory || model_version === null || model_version === -1, [noCategory, model_version]);
+  const noCategory = useMemo(() => curCategory === null, [curCategory]);
+  const noCategoryAndNoModel = useMemo(
+    () => noCategory || modelVersion === null || modelVersion === -1,
+    [noCategory, modelVersion]
+  );
 
-  const SidebarButton = ({ tooltipMessage, onClick, componentId, imgSource, isSelected, disabled }) => {
-    return (
-      <Tooltip title={tooltipMessage} placement="left">
+  const SidebarButton = ({
+    tooltipMessage,
+    componentId,
+    imgSource,
+    disabled,
+    panelId,
+  }) => {
+
+    const isSelected = activePanelId === panelId
+    const onClick = () => dispatch(setActivePanel(panelId === activePanelId ? "" : panelId))
+
+    const Button = React.forwardRef((props, ref) => (
+      <div ref={ref} {...props}>
         <IconButton
           disabled={disabled}
-          className={
-            disabled ? classes.btndisabled : classes.top_nav_icons
-          }
+          className={disabled ? classes.btndisabled : classes.top_nav_icons}
           onClick={onClick}
           id={componentId}
         >
           <img
             src={imgSource}
-            className={isSelected ? classes['blue-filter'] : classes['gray-filter']}
+            className={
+              isSelected ? classes["blue-filter"] : classes["gray-filter"]
+            }
             alt={componentId}
           />
         </IconButton>
+      </div>
+    ));
+
+    return disabled ? (
+      <Button />
+    ) : (
+      <Tooltip title={tooltipMessage} placement="left">
+        <Button />
       </Tooltip>
     );
   };
@@ -163,21 +145,7 @@ export default function Workspace() {
         />
         <Box component="main" sx={{ padding: 0 }}>
           <UpperBar />
-          <PanelManager open={open}>
-            {open && activePanel === sidebarOptionEnum.SEARCH && (
-              <SearchPanel
-                ref={textInput}
-                clearSearchInput={clearSearchInput}
-              />
-            )}
-            {activePanel === sidebarOptionEnum.LABEL_NEXT && <LabelNextPanel />}
-            {activePanel === sidebarOptionEnum.POSITIVE_PREDICTIONS && <PosPredictionsPanel />}
-            {activePanel === sidebarOptionEnum.POSITIVE_LABELS && <AllPositiveLabelsPanel />}
-            {activePanel === sidebarOptionEnum.DISAGREEMENTS && <DisagreementsPanel />}
-            {activePanel === sidebarOptionEnum.SUSPICIOUS_LABELS && <SuspiciousLabelsPanel />}
-            {activePanel === sidebarOptionEnum.CONTRADICTING_LABELS && (<ContradictingLabelsPanel />)}
-            {activePanel === sidebarOptionEnum.EVALUATION && (<EvaluationPanel />)}
-          </PanelManager>
+          <PanelManager />
           {/* Panel tabs  */}
           <Drawer
             variant="permanent"
@@ -191,79 +159,63 @@ export default function Workspace() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 margin: "5px",
-                flexGrow: 1 // makes this stack to fill all available space
+                flexGrow: 1, // makes this stack to fill all available space
               }}
             >
               <Stack>
                 <SidebarButton
                   tooltipMessage={SEARCH_ALL_DOCS_TOOLTIP_MSG}
-                  onClick={activateSearchPanel}
                   componentId={"sidebar-search-button"}
                   imgSource={search_icon}
-                  isSelected={toggleSearchPanel}
                   disabled={evaluationIsInProgress}
+                  panelId={panelIds.SEARCH}
                 />
                 <SidebarButton
                   tooltipMessage={NEXT_TO_LABEL_TOOLTIP_MSG}
-                  onClick={activateRecToLabelPanel}
                   componentId={"sidebar-recommended-button"}
                   imgSource={recommend_icon}
-                  isSelected={toggleRCMDPanel}
                   disabled={evaluationIsInProgress || noCategoryAndNoModel}
+                  panelId={panelIds.LABEL_NEXT}
                 />
                 <SidebarButton
                   tooltipMessage={POSITIVE_PRED_TOOLTIP_MSG}
-                  onClick={activatePosPredLabelPanel}
                   componentId={"sidebar-pos-pred-button"}
                   imgSource={pos_pred_icon}
-                  isSelected={togglePosPredPanel}
                   disabled={evaluationIsInProgress || noCategoryAndNoModel}
-                  />
+                  panelId={panelIds.POSITIVE_PREDICTIONS}
+                />
               </Stack>
-
               <Stack>
                 <SidebarButton
                   tooltipMessage={ALL_POSITIVE_LABELS_TOOLTIP_MSG}
-                  onClick={activatePosElemLabelPanel}
                   componentId={"sidebar-pos-elem-button"}
                   imgSource={pos_elem_icon}
-                  isSelected={togglePosElemPanel}
                   alwaysEnabled
                   disabled={evaluationIsInProgress || noCategory}
+                  panelId={panelIds.POSITIVE_LABELS}
                 />
-                {/* <SidebarButton
-                  tooltipMessage={DISAGREEMENTS_TOOLTIP_MSG}
-                  onClick={activateDisagreeElemLabelPanel}
-                  componentId={"sidebar-disagree-elem-button"}
-                  imgSource={disagree_elem_icon}
-                  isSelected={toggleDisagreeElemPanel}
-                /> */}
                 <SidebarButton
                   tooltipMessage={SUSPICIOUS_LABELS_TOOLTIP_MSG}
-                  onClick={activateSuspiciousElemLabelPanel}
                   componentId={"sidebar-suspicious-elem-button"}
                   imgSource={suspicious_elem_icon}
-                  isSelected={toggleSuspiciousElemPanel}
                   disabled={evaluationIsInProgress || noCategoryAndNoModel}
+                  panelId={panelIds.SUSPICIOUS_LABELS}
                 />
                 <SidebarButton
                   tooltipMessage={CONTRADICTING_LABELS_TOOLTIP_MSG}
-                  onClick={activateContrElemLabelPanel}
-                  componentId={'sidebar-contradictive-elem-button'}
+                  componentId={"sidebar-contradictive-elem-button"}
                   imgSource={contradictive_elem_icon}
-                  isSelected={toggleContrElemPanel}
                   disabled={evaluationIsInProgress || noCategory}
+                  panelId={panelIds.CONTRADICTING_LABELS}
                 />
                 <SidebarButton
                   tooltipMessage={EVALUATION_TOOLTIP_MSG}
-                  onClick={activateEvaluationPanel}
-                  componentId={'sidebar-contradictive-elem-button'}
+                  componentId={"sidebar-contradictive-elem-button"}
                   imgSource={evaluation_icon}
-                  isSelected={toggleEvaluationPanel}
                   disabled={noCategoryAndNoModel}
+                  panelId={panelIds.EVALUATION}
                 />
               </Stack>
-              
             </Stack>
           </Drawer>
         </Box>

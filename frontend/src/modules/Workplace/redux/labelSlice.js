@@ -2,8 +2,9 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
   getCategoryQueryString,
   getQueryParamsString,
-  parseElements,
+  parseElement,
   handleError,
+  synchronizeElement
 } from "../../../utils/utils";
 import {
   BASE_URL,
@@ -12,6 +13,7 @@ import {
   UPLOAD_LABELS_API,
 } from "../../../config";
 import fileDownload from "js-file-download";
+import { panelIds } from "../../../const";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -86,7 +88,7 @@ export const setElementLabel = createAsyncThunk(
   async (request, { getState }) => {
     const state = getState();
 
-    const { element_id, label, docid, update_counter } = request;
+    const { element_id, label, update_counter } = request;
 
     const queryParams = getQueryParamsString([
       getCategoryQueryString(state.workspace.curCategory),
@@ -126,12 +128,6 @@ export const reducers = {
       numLabel: action.payload,
     };
   },
-  setNumLabelGlobal(state, action) {
-    return {
-      ...state,
-      numLabelGlobal: action.payload,
-    };
-  },
   setLabelState(state, action) {
     const new_labeled_state = action.payload;
 
@@ -150,6 +146,9 @@ export const reducers = {
         documentNeg: state.labelCount.documentNeg + diff.neg,
       },
     };
+  },
+  cleanUploadedLabels(state, action) {
+    state.uploadedLabels = null
   },
 };
 
@@ -186,35 +185,27 @@ export const extraReducers = {
       uploadingLabels: false,
     };
   },
-  [setElementLabel.fulfilled]: (state, action) => {
-    const { element } = action.payload;
-    const label = element.user_labels[state.curCategory];
-    let newPosElemResult = [...state.posElemResult];
-    if (label === "true") {
-      if (!state.posElemResult.some((e) => e.id === element.id)) {
-        newPosElemResult = [...newPosElemResult, element];
-      }
-    } else {
-      newPosElemResult = newPosElemResult.filter((e) => e.id !== element.id);
-    }
-
-    const { initialLabelState: posElemLabelState } = parseElements(
-      newPosElemResult,
-      state.curCategory,
-      true
-    );
-
-    return {
-      ...state,
-      posElemResult: newPosElemResult,
-      posElemLabelState
-    };
-  },
   [uploadLabels.rejected]: (state, action) => {
     return {
       ...state,
       errorMessage: handleError(action.error),
     };
+  },
+  [setElementLabel.fulfilled]: (state, action) => {
+    const { element: unparsedElement } = action.payload;
+    const element = parseElement(unparsedElement, state.curCategory);
+    
+    const panels = synchronizeElement(element.id, element.userLabel, state.panels)
+    
+    const elements = panels[panelIds.POSITIVE_LABELS].elements;
+    if (element.userLabel === "pos") {
+        elements[element.id] = element
+      }
+    else if (element.id in elements) {
+      delete elements[element.id]
+    }
+    panels[panelIds.POSITIVE_LABELS].elements = elements
+    state.panels = panels
   },
   [setElementLabel.rejected]: (state, action) => {
     return {

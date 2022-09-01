@@ -5,6 +5,7 @@ import {
   parseElements,
 } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
+import { panelIds } from "../../../const";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -44,9 +45,8 @@ export const getEvaluationResults = createAsyncThunk(
   async (changed_elements_count, { getState }) => {
     const state = getState();
 
-    const ids = state.workspace.evaluation.elements.map((e) => e.id);
-    const iteration = state.workspace.model_version - 1;
-
+    const ids = Object.values(state.workspace.panels[panelIds.EVALUATION].elements).map((e) => e.id);
+    const iteration = state.workspace.modelVersion - 1;
     const queryParams = getQueryParamsString([
       getCategoryQueryString(state.workspace.curCategory),
     ]);
@@ -100,109 +100,66 @@ export const cancelEvaluation = createAsyncThunk(
 
 export const reducers = {
   cleanEvaluationState(state, action) {
-    state.evaluation = {
-      isLoading: false,
+    state.panels[panelIds.EVALUATION] = {
+      ...state.panels[panelIds.EVALUATION],
       isInProgress: false,
-      elements: [],
-      labelState: {},
-      initialLabelState: {},
+      elements: null,
+      initialElements: null,
       lastScore: null,
       scoreModelVersion: null,
     };
-  },
-  setEvaluationLabelState(state, action) {
-    state.evaluation.labelState = action.payload;
   },
 };
 
 export const extraReducers = {
   [startEvaluation.fulfilled]: (state, action) => {
-    return {
-      ...state,
-      evaluation: {
-        ...state.evaluation,
-        isInProgress: true,
-      },
-    };
+    state.panels[panelIds.EVALUATION].isInProgress = true
   },
   [getEvaluationElements.fulfilled]: (state, action) => {
-    const { elements } = action.payload;
-    const { initialLabelState } = parseElements(
-      elements,
+    const { elements: unparsedElements } = action.payload;
+    const { elements: initialElements } = parseElements(
+      unparsedElements,
       state.curCategory,
-      true
     );
-    return {
-      ...state,
-      evaluation: {
-        ...state.evaluation,
-        elements,
-        initialLabelState,
-        labelState: initialLabelState,
-        isLoading: false,
-      },
-    };
+    state.panels.loading[panelIds.EVALUATION] = false
+    state.panels[panelIds.EVALUATION] = {
+      ...state.panels[panelIds.EVALUATION],
+      initialElements,
+      elements: initialElements,
+    }
   },
   [getEvaluationElements.pending]: (state, action) => {
-    return {
-      ...state,
-      evaluation: {
-        ...state.evaluation,
-        isLoading: true,
-      },
-    };
+    state.panels.loading[panelIds.EVALUATION] = true
   },
   [getEvaluationElements.rejected]: (state, action) => {
-    return {
-      ...state,
-      evaluation: {
-        ...state.evaluation,
-        isLoading: false,
-      },
-    };
+    state.panels.loading[panelIds.EVALUATION] = false
   },
   [getEvaluationResults.fulfilled]: (state, action) => {
     const { score } = action.payload;
-
-    return {
-      ...state,
-      evaluation: {
-        ...state.evaluation,
-        isLoading: false,
-        isInProgress: false,
-        lastScore: score,
-        scoreModelVersion: state.model_version,
-      },
-    };
+    state.panels.loading[panelIds.EVALUATION] = false
+    state.panels[panelIds.EVALUATION] = {
+      ...state.panels[panelIds.EVALUATION],
+      isInProgress: false,
+      lastScore: score,
+      scoreModelVersion: state.modelVersion,
+    }
   },
   [getEvaluationResults.pending]: (state, action) => {
-    return {
-      ...state,
-      evaluation: {
-        ...state.evaluation,
-        isLoading: true,
-      },
-    };
+    state.panels.loading[panelIds.EVALUATION] = true
   },
   [getEvaluationResults.rejected]: (state, action) => {
-    return {
-      ...state,
-      evaluation: {
-        ...state.evaluation,
-        isLoading: false,
-      },
-    };
+    state.panels.loading[panelIds.EVALUATION] = false
   },
-  [cancelEvaluation.fulfilled]: (state, action) => {
-    return {
-      ...state,
-      evaluation: {
-        ...state.evaluation,
+  [cancelEvaluation.pending]: (state, action) => {
+    state.panels.loading[panelIds.EVALUATION] = true
+  },
+    [cancelEvaluation.fulfilled]: (state, action) => {
+      state.panels.loading[panelIds.EVALUATION] = false
+      state.panels[panelIds.EVALUATION] = {
+        ...state.panels[panelIds.EVALUATION],
+        initialElements: {},
         isInProgress: false,
-        elements: [],
-        labelState: {},
-        initialLabelState: {},
-      },
-    };
+        elements: {},
+    }
   },
 };

@@ -18,28 +18,12 @@ import React from "react";
 import classes from "./index.module.css";
 import { useSelector } from "react-redux";
 import Element from "./Element";
-import useSearchElement from "./customHooks/useSearchElement";
-import useLabelState from "./customHooks/useLabelState";
 import { curCategoryNameSelector } from "../redux/DataSlice";
+import { panelIds } from "../../../const";
 
-const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
-  const workspace = useSelector((state) => state.workspace);
+const PosPredictionsPanel = () => {
   const curCategoryName = useSelector(curCategoryNameSelector)
-  const posPredTotalElemRes = useSelector(
-    (state) => state.workspace.posPredTotalElemRes
-  );
-  const posPredFraction = useSelector(
-    (state) => state.workspace.posPredFraction
-  );
-  const posPredResult = useSelector((state) => state.workspace.posPredResult);
-  let newPosPredLabelState = { ...workspace.posPredLabelState };
-  const currPosPredLabelState = workspace.posPredLabelState;
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    newPosPredLabelState,
-    updateMainLabelState,
-    updateLabelState
-  );
-  const { handleSearchPanelClick, searchInput } = useSearchElement();
+  const elements = useSelector((state) => state.workspace.panels[panelIds.POSITIVE_PREDICTIONS].elements);
 
   return (
     <Box>
@@ -73,22 +57,12 @@ const PosPredictionsPanel = ({ updateMainLabelState, updateLabelState }) => {
         {`The following examples are predicted by the system to be related to the category '${curCategoryName}'`}
       </Typography>
       <Box className={classes["search-results"]} sx={{ mt: 4 }}>
-        {posPredResult &&
-          posPredResult.map((res, i) => {
+        {elements &&
+          Object.values(elements).map((element, i) => {
             return (
               <Element
-                key={i}
-                searchedIndex={i}
-                prediction={res.model_predictions[workspace.curCategory]}
-                text={res.text}
-                searchInput={searchInput}
-                id={res.id}
-                docid={res.docid}
-                labelValue={res.user_labels[workspace.curCategory]}
-                handleSearchPanelClick={handleSearchPanelClick}
-                handlePosLabelState={handlePosLabelState}
-                handleNegLabelState={handleNegLabelState}
-                labelState={currPosPredLabelState}
+                element={element}
+                key={element.id}
               />
             );
           })}

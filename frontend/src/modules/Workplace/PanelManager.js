@@ -13,143 +13,72 @@
     limitations under the License.
 */
 
-import React from "react";
-import { Box } from '@mui/material';
-import useSearchElement from "./sidebar/customHooks/useSearchElement";
-import Drawer from '@mui/material/Drawer';
-import useUpdateLabelState from "./sidebar/customHooks/useUpdateLabelState";
-import {
-  RIGHT_DRAWER_WIDTH,
-  sidebarOptionEnum
-} from "../../const";
+import React, { useRef, useState } from "react";
+import { Box } from "@mui/material";
+import Drawer from "@mui/material/Drawer";
+import { RIGHT_DRAWER_WIDTH, panelIds } from "../../const";
 import MainPanel from "./main/MainPanel";
 import { useSelector } from "react-redux";
 
-export const PanelManager = ({ 
-    children,
-    handleKeyEvent,
-    open
-}) => {
-    const activePanel = useSelector(state => state.workspace.activePanel)
+import AllPositiveLabelsPanel from "./sidebar/AllPositiveLabelsPanel";
+import SuspiciousLabelsPanel from "./sidebar/SuspiciousLabelsPanel";
+import ContradictingLabelsPanel from "./sidebar/ContradictingLabelsPanel";
+import EvaluationPanel from "./sidebar/EvaluationPanel";
+import SearchPanel from "./sidebar/SearchPanel";
+import LabelNextPanel from "./sidebar/LabelNextPanel";
+import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
 
-    const { updateSearchLabelState,
-        updateRecLabelState,
-        updateMainLabelState,
-        updatePosPredLabelState,
-        updatePosElemLabelState,
-        updateDisagreelemLabelState,
-        updateSuspiciouslemLabelState,
-        updateContradictivelemLabelState,
-        updateEvaluationLabelState,
-    } = useUpdateLabelState()
+import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
 
-    const { handleSearchPanelClick,
-        handleSearchInputEnterKey,
-        handleSearch,
-        handleSearchInputChange,
-        searchInput } = useSearchElement()
+import { useUpdateSearch } from "./sidebar/customHooks/useUpdateSearch";
 
-    const activePanelWithProps = React.Children.map(children, child => {
+/**
+ * Manages the panels, that is, the sidebar panels and the main panels.
+ */
+export const PanelManager = ({ handleKeyEvent }) => {
+  const activePanelId = useSelector(
+    (state) => state.workspace.panels.activePanelId
+  );
 
-        if (child) {
-            if (activePanel === sidebarOptionEnum.SEARCH) {
-                return React.cloneElement(child, {
-                    handleSearchPanelClick,
-                    handleSearchInputEnterKey,
-                    handleSearch,
-                    handleSearchInputChange,
-                    searchInput,
-                    updateMainLabelState,
-                    updateLabelState: updateSearchLabelState,
-                    handleKeyEvent,
-                    open,
-                });
-            }
-            else if (activePanel === sidebarOptionEnum.LABEL_NEXT) {
-                return React.cloneElement(child, {
-                    handleSearchPanelClick,
-                    searchInput,
-                    updateMainLabelState,
-                    updateLabelState: updateRecLabelState,
-                    open,
-                });
-            }
-            else if (activePanel === sidebarOptionEnum.POSITIVE_PREDICTIONS) {
-                return React.cloneElement(child, {
-                    handleSearchPanelClick,
-                    searchInput,
-                    updateMainLabelState,
-                    updateLabelState: updatePosPredLabelState,
-                    open,
-                });
-            }
-            else if (activePanel === sidebarOptionEnum.POSITIVE_LABELS) {
-                return React.cloneElement(child, {
-                    handleSearchPanelClick,
-                    searchInput,
-                    updateMainLabelState,
-                    updateLabelState: updatePosElemLabelState,
-                    open,
-                });
-            }
-            else if (activePanel === sidebarOptionEnum.DISAGREEMENTS) {
-                return React.cloneElement(child, {
-                    handleSearchPanelClick,
-                    searchInput,
-                    updateMainLabelState,
-                    updateLabelState: updateDisagreelemLabelState,
-                    open,
-                });
-            }
-            else if (activePanel === sidebarOptionEnum.SUSPICIOUS_LABELS) {
-                return React.cloneElement(child, {
-                    handleSearchPanelClick,
-                    searchInput,
-                    updateMainLabelState,
-                    updateLabelState: updateSuspiciouslemLabelState,
-                    open,
-                });
-            }
-            else if (activePanel === sidebarOptionEnum.CONTRADICTING_LABELS) {
-                return React.cloneElement(child, {
-                    handleSearchPanelClick,
-                    searchInput,
-                    updateMainLabelState,
-                    updateLabelState: updateContradictivelemLabelState,
-                    open,
-                });
-            }
-            else if (activePanel === sidebarOptionEnum.EVALUATION) {
-                return React.cloneElement(child, {
-                    handleSearchPanelClick,
-                    searchInput,
-                    updateMainLabelState,
-                    updateLabelState: updateEvaluationLabelState,
-                    open,
-                });
-            }
-        }
-        else return child
-    });
+  const [open, setOpen] = useState(false);
+  const textInputRef = useRef(null);
 
-    return (
-        <Box>
-            <MainPanel handleKeyEvent={handleKeyEvent} open={open} />
-            <Drawer sx={{
-                width: RIGHT_DRAWER_WIDTH, flexShrink: 0,
-                '& .MuiDrawer-paper': {
-                    width: RIGHT_DRAWER_WIDTH,
-                    boxSizing: 'border-box',
-                }
-            }}
-                PaperProps={{ sx: { backgroundColor: "#f8f9fa !important", right: 50, } }}
-                variant="persistent"
-                anchor="right"
-                open={open}
-            >
-                {activePanelWithProps}
-            </Drawer>
-        </Box>
-    )
-}
+  useTogglePanel(setOpen, textInputRef);
+  
+  /**
+   * this custom hook is used here instead of in the Search sidebar panel
+   * because that panel gets unmounted when another sidebar panel gets selected
+   * and that makes useEffects hooks to be re-run each time it gets re-rendered
+   */
+  const clearSearchInput = useUpdateSearch(textInputRef)    
 
+  return (
+    <Box>
+      <MainPanel handleKeyEvent={handleKeyEvent} open={open} />
+      <Drawer
+        sx={{
+          width: RIGHT_DRAWER_WIDTH,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            width: RIGHT_DRAWER_WIDTH,
+            boxSizing: "border-box",
+          },
+        }}
+        PaperProps={{
+          sx: { backgroundColor: "#f8f9fa !important", right: 50 },
+        }}
+        variant="persistent"
+        anchor="right"
+        open={open}
+      >
+        {activePanelId === panelIds.SEARCH && <SearchPanel clearSearchInput={clearSearchInput} ref={textInputRef} />}
+        {activePanelId === panelIds.LABEL_NEXT && <LabelNextPanel />}
+        {activePanelId === panelIds.POSITIVE_PREDICTIONS && (<PosPredictionsPanel />)}
+        {activePanelId === panelIds.POSITIVE_LABELS && <AllPositiveLabelsPanel />}
+        {activePanelId === panelIds.SUSPICIOUS_LABELS && (<SuspiciousLabelsPanel />)}
+        {activePanelId === panelIds.CONTRADICTING_LABELS && ( <ContradictingLabelsPanel />)}
+        {activePanelId === panelIds.EVALUATION && <EvaluationPanel />}
+      </Drawer>
+    </Box>
+  );
+};

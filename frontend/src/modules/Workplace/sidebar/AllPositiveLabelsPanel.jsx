@@ -18,20 +18,10 @@ import React from "react";
 import classes from "./index.module.css";
 import { useSelector } from "react-redux";
 import Element from "./Element";
-import useSearchElement from "./customHooks/useSearchElement";
-import useLabelState from "./customHooks/useLabelState";
+import { panelIds } from "../../../const";
 
-const AllPositiveLabelsPanel = ({ updateMainLabelState, updateLabelState }) => {
-  const workspace = useSelector((state) => state.workspace);
-  const posElemResult = useSelector((state) => state.workspace.posElemResult);
-  let newPosElemLabelState = { ...workspace.posElemLabelState };
-  const currPosElemLabelState = workspace.posElemLabelState;
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    newPosElemLabelState,
-    updateMainLabelState,
-    updateLabelState
-  );
-  const { handleSearchPanelClick, searchInput } = useSearchElement();
+const AllPositiveLabelsPanel = () => {
+  const elements = useSelector((state) => state.workspace.panels[panelIds.POSITIVE_LABELS].elements);
 
   return (
     <Box>
@@ -50,7 +40,7 @@ const AllPositiveLabelsPanel = ({ updateMainLabelState, updateLabelState }) => {
           <strong>Positive labels</strong>
         </p>
       </Box>
-      {!posElemResult || posElemResult.length === 0 ? (
+      {!elements || elements.length === 0 ? (
         <Typography
           sx={{
             display: "flex",
@@ -82,21 +72,11 @@ const AllPositiveLabelsPanel = ({ updateMainLabelState, updateLabelState }) => {
         </Typography>
       )}
       <Box className={classes["search-results"]} sx={{ mt: 2 }}>
-        {posElemResult.map((res, i) => {
+        {Object.values(elements).map((element, i) => {
           return (
             <Element
-              key={i}
-              searchedIndex={i}
-              prediction={res.model_predictions[workspace.curCategory]}
-              text={res.text}
-              searchInput={searchInput}
-              id={res.id}
-              docid={res.docid}
-              labelValue={res.user_labels[workspace.curCategory]}
-              handleSearchPanelClick={handleSearchPanelClick}
-              handlePosLabelState={handlePosLabelState}
-              handleNegLabelState={handleNegLabelState}
-              labelState={currPosElemLabelState}
+              key={element.id}
+              element={element}
             />
           );
         })}

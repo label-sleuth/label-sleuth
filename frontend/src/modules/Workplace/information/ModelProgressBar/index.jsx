@@ -49,8 +49,8 @@ LinearProgressWithLabel.propTypes = {
 };
 
 export default function LinearWithValueLabel() {
-
-  const workspace = useSelector(state => state.workspace)
+  
+  const modelUpdateProgress = useSelector(state => state.workspace.modelUpdateProgress)
 
 //   React.useEffect(() => {
 //     const timer = setInterval(() => {
@@ -63,7 +63,7 @@ export default function LinearWithValueLabel() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <LinearProgressWithLabel value={workspace.modelUpdateProgress} />
+      <LinearProgressWithLabel value={modelUpdateProgress} />
     </Box>
   );
 }

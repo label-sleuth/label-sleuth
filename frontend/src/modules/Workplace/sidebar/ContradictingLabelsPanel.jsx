@@ -24,43 +24,28 @@ import React from "react";
 import classes from "./index.module.css";
 import { useSelector, useDispatch } from "react-redux";
 import Element from "./Element";
-import useSearchElement from "./customHooks/useSearchElement";
-import useLabelState from "./customHooks/useLabelState";
 import { getContradictingLabels } from "../redux/DataSlice";
 import contradictive_elem_icon from "../Asset/contradicting.svg";
+import { panelIds } from "../../../const";
 
-const ContradictingLabelsPanel = ({
-  updateMainLabelState,
-  updateLabelState,
-}) => {
-  const contradictingPairsResult = useSelector(
-    (state) => state.workspace.contradictiveElemPairsResult
+const ContradictingLabelsPanel = () => {
+  const { elements, pairs } = useSelector(
+    (state) => state.workspace.panels[panelIds.CONTRADICTING_LABELS]
+  );
+  const loading = useSelector(
+    (state) => state.workspace.panels.loading[panelIds.CONTRADICTING_LABELS]
   );
 
-  const contradictingPairsLabelState = useSelector(
-    (state) => state.workspace.contradictiveElemPairsLabelState
-  );
   const curCategory = useSelector((state) => state.workspace.curCategory);
-  const model_version = useSelector((state) => state.workspace.model_version);
-  const loadingContradictingLabels = useSelector(
-    (state) => state.workspace.loadingContradictingLabels
-  );
+  const modelVersion = useSelector((state) => state.workspace.modelVersion);
 
   const dispatch = useDispatch();
 
   React.useEffect(() => {
-    if (curCategory !== null && model_version !== null && model_version >= 0) {
+    if (curCategory !== null && modelVersion !== null && modelVersion >= 0) {
       dispatch(getContradictingLabels());
     }
   }, [curCategory]);
-
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    contradictingPairsLabelState,
-    updateMainLabelState,
-    updateLabelState
-  );
-
-  const { handleSearchPanelClick, searchInput } = useSearchElement();
 
   const Separator = () => (
     <Divider variant="middle" flexItem>
@@ -114,7 +99,7 @@ const ContradictingLabelsPanel = ({
           <strong>Contradicting labels</strong>
         </p>
       </Box>
-      {loadingContradictingLabels ? (
+      {loading ? (
         <div
           style={{
             display: "flex",
@@ -124,7 +109,7 @@ const ContradictingLabelsPanel = ({
         >
           <CircularProgress />
         </div>
-      ) : !contradictingPairsResult || contradictingPairsResult.length === 0 ? (
+      ) : !pairs || pairs.length === 0 ? (
         <Typography
           sx={{
             display: "flex",
@@ -153,34 +138,26 @@ const ContradictingLabelsPanel = ({
           }}
         >
           {`Review these ${
-            contradictingPairsResult.length
+            pairs.length
           } pairs of examples, which are semantically similar but were labeled by you with contradicting labels`}
         </Typography>
       )}
-      {!loadingContradictingLabels ? (
+      {!loading ? (
         <Box className={classes["search-results"]} sx={{ mt: 7 }}>
-          {contradictingPairsResult &&
-            contradictingPairsResult.map((pair, i) => (
+          {pairs &&
+            pairs.map((pair, i) => (
               <ContradictingPair
                 key={i}
-                addSeparator={i !== contradictingPairsResult.length - 1}
+                addSeparator={i !== pairs.length - 1}
               >
-                {pair.map((element, j) => (
-                  <Element
-                    key={2 * i + j}
-                    searchedIndex={2 * i + j}
-                    prediction={element.model_predictions[curCategory]}
-                    text={element.text}
-                    searchInput={searchInput}
-                    id={element.id}
-                    docid={element.docid}
-                    labelValue={element.user_labels[curCategory]}
-                    handleSearchPanelClick={handleSearchPanelClick}
-                    handlePosLabelState={handlePosLabelState}
-                    handleNegLabelState={handleNegLabelState}
-                    labelState={contradictingPairsLabelState}
-                  />
-                ))}
+                {pair.map((elementId, j) => {
+                  const element = elements[elementId]
+                  return (
+                    <Element
+                      key={2 * i + j}
+                      element={element}
+                    />
+                  )})}
               </ContradictingPair>
             ))}
         </Box>
