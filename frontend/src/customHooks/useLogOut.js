@@ -23,10 +23,10 @@ const useLogOut = () => {
 
     const logout = (e) => {
         e.preventDefault()
-        dispatch(clearState())
         if (localStorage.getItem('token')) {
           localStorage.removeItem('token')
         }
+        dispatch(clearState())
         navigate('/')
       }
 

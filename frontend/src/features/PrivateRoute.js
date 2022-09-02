@@ -14,12 +14,13 @@
 */
 
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../customHooks/useAuth'
 import { LOGIN_PATH } from '../config';
+import useAuthentication from '../modules/Login/customHooks/useAuthentication';
 
 export function PrivateRoute({ redirectPath = LOGIN_PATH, children, }) {
-  const auth = useAuth();
-  if (!auth) {
+  const {authenticationEnabled, authenticated} = useAuthentication();
+  
+  if (authenticationEnabled && !authenticated) {
     return <Navigate to={redirectPath} replace />;
   }
   return children;

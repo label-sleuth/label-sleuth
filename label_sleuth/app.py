@@ -1108,3 +1108,18 @@ def get_predictions_enriched_tokens(workspace_id):
 
     res['info_gain'] = extract_enriched_ngrams_and_weights_list(elements, boolean_labels)
     return jsonify(res)
+
+
+@main_blueprint.route("/feature_flags", methods=['GET'])
+def get_feature_flags():
+    """Returns the value of the feature flags
+
+    Feature flags are a subset of config["CONFIGURATION"].
+    """
+
+    res =  {
+        "login_required": curr_app.config['CONFIGURATION'].login_required
+    }
+    logging.debug(f'Feature flags are: {res}')
+    return jsonify(res) 
+    
