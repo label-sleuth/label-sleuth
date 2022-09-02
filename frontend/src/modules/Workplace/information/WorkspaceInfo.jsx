@@ -35,7 +35,7 @@ import { Tooltip } from '@mui/material';
 import useLogOut from '../../../customHooks/useLogOut';
 import { useNavigate } from 'react-router-dom';
 import classes from './WorkspaceInfo.module.css';
-import { WORKSPACE_CONFIG_PATH, AUTH_ENABLED } from '../../../config';
+import { WORKSPACE_CONFIG_PATH } from '../../../config';
 import { toast } from 'react-toastify';
 import {
   LOGOUT_TOOLTIP_MSG,
@@ -50,6 +50,7 @@ import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { UploadLabelsDialog, DownloadLabelsDialog } from './FileTransferLabels/TransferLabelsDialog';
 import { getOrdinalSuffix } from '../../../utils/utils';
+import useAuthentication from '../../Login/customHooks/useAuthentication';
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -144,6 +145,8 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
 
     // this state is used to not display the new model notififications the first time the model version is set
     const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false)
+
+    const { authenticationEnabled } = useAuthentication()
 
     function notifySuccess(message, toastId, autoClose=false) {
         toast(message, {
@@ -311,7 +314,7 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                             <img src={sleuth_logo} className={classes.sleuthlogo} alt="Sleuth Logo" />
                             <img id="workspace-tutorial-image" onClick={open_introSlides} src={info_icon} className={classes.moreinfo} alt="Open Tutorial"/>
                         </h2>
-                        { AUTH_ENABLED ?   
+                        { authenticationEnabled ?   
                             <Tooltip title={LOGOUT_TOOLTIP_MSG} placement='right'>
                                 <img onClick={logout} className={classes.logout} src={logout_icon}/>
                             </Tooltip>
@@ -324,7 +327,7 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                     
                     <DrawerHeader style={{padding: '12px 16px', alignItems: 'flex-end'}}>
                         <div className={classes.account_info}>
-                            {AUTH_ENABLED ? 
+                            {authenticationEnabled ? 
                             <div> 
                                 <label>User ID</label>
                                 <p>

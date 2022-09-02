@@ -64,6 +64,6 @@ Tests can be run executing `npm run test`. Testing is done using the [react-test
 Different environment variables can be configured. They are:
 
 - `REACT_APP_API_URL`: the URL used to make API requests to the backend.
-- `REACT_APP_AUTH_ENABLED`: feature flag that enables or disabled the login page and the need for an authorization token to be set.
+- `REACT_APP_AUTH_ENABLED`: feature flag that enables or disabled the login page and the need for an authorization token to be set. IMPORTANT: this is now set using the backend's `login_required` feature flag thanks to the feature flag management described in [this issue](https://github.com/label-sleuth/label-sleuth/issues/217).
 
 _Note: the environment variables defined in the `.env` files must start with `REACT_APP_`, eg. `REACT_APP_MY_ENV_VALUE`._
