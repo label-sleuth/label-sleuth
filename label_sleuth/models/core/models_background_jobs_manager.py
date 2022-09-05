@@ -18,7 +18,7 @@ import logging
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 
-from label_sleuth.definitions import CPU_WORKERS, GPU_WORKERS
+from label_sleuth.definitions import CPU_WORKERS, GPU_WORKERS, GPU_AVAILABLE
 
 
 class ModelsBackgroundJobsManager:
@@ -51,6 +51,6 @@ class ModelsBackgroundJobsManager:
         return future
 
     def get_executor(self, model_requested_gpu) -> ThreadPoolExecutor:
-        if model_requested_gpu and GPU_WORKERS > 0:
+        if model_requested_gpu and GPU_WORKERS > 0 and GPU_AVAILABLE:
             return self.gpu_executor
         return self.cpu_executor
