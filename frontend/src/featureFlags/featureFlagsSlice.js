@@ -13,48 +13,45 @@
     limitations under the License.
 */
 
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { BASE_URL } from '../config';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { BASE_URL } from "../config";
+import { client } from "../api/client";
 
 const initialState = {
-    authenticationEnabled: null,
-    loading: false,
-    fetched: false,
-}
+  authenticationEnabled: null,
+  loading: false,
+  fetched: false,
+};
 
-
-export const fetchFeatureFlags = createAsyncThunk('workspaces/fetchFeatureFlags', async (params) => {
+export const fetchFeatureFlags = createAsyncThunk(
+  "workspaces/fetchFeatureFlags",
+  async () => {
     const url = `${BASE_URL}/feature_flags`;
-    const featureFlags = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "GET",
-    }).then((response) => response.json());
+    const { data: featureFlags } = await client.get(url)
     return featureFlags;
-})
-
+  }
+);
 
 export const featureFlagsSlice = createSlice({
-    name: 'featureFlags',
-    initialState,
-    extraReducers: {
-        [fetchFeatureFlags.pending]: (state) => {
-            state.loading = true
-        },
-        [fetchFeatureFlags.fulfilled]: (state, { payload }) => {
-            const featureFlags = payload;
-            return {
-                ...state,
-                loading: false,
-                fetched: true,
-                authenticationEnabled: featureFlags['login_required'],
-            }
-        },
-        [fetchFeatureFlags.rejected]: (state, { error }) => {
-            state.loading = false
-        },
+  name: "featureFlags",
+  initialState,
+  extraReducers: {
+    [fetchFeatureFlags.pending]: (state) => {
+      state.loading = true;
     },
-})
+    [fetchFeatureFlags.fulfilled]: (state, { payload }) => {
+      const featureFlags = payload;
+      return {
+        ...state,
+        loading: false,
+        fetched: true,
+        authenticationEnabled: featureFlags["login_required"],
+      };
+    },
+    [fetchFeatureFlags.rejected]: (state, { error }) => {
+      state.loading = false;
+    },
+  },
+});
 
-export const featureFlagsReducer = featureFlagsSlice.reducer
+export const featureFlagsReducer = featureFlagsSlice.reducer;

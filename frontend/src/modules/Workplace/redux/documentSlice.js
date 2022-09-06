@@ -15,25 +15,19 @@
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
+import { client } from "../../../api/client";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
 export const fetchDocuments = createAsyncThunk(
   "workspace/fetchDocuments",
-  async (request, { getState }) => {
+  async (_, { getState }) => {
     const state = getState();
     var url = `${getWorkspace_url}/${encodeURIComponent(
       state.workspace.workspaceId
     )}/documents`;
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      method: "GET",
-    }).then((response) => response.json());
-
+    const { data } = await client.get(url);
     return data;
   }
 );

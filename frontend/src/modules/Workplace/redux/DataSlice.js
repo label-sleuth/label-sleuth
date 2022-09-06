@@ -15,6 +15,8 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
+import { client } from "../../../api/client";
+
 import {
   reducers as documentReducers,
   extraReducers as documentExtraReducers,
@@ -111,7 +113,7 @@ const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
 export const checkModelUpdate = createAsyncThunk(
   "workspace/check_model_update",
-  async (request, { getState }) => {
+  async (_, { getState }) => {
     const state = getState();
 
     const queryParams = getQueryParamsString([
@@ -122,21 +124,14 @@ export const checkModelUpdate = createAsyncThunk(
       state.workspace.workspaceId
     )}/models${queryParams}`;
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      method: "GET",
-    }).then((response) => response.json());
-
+    const { data } = await client.get(url);
     return data;
   }
 );
 
 export const checkStatus = createAsyncThunk(
   "workspace/get_labelling_status",
-  async (request, { getState }) => {
+  async (_, { getState }) => {
     const state = getState();
 
     const queryParams = getQueryParamsString([
@@ -147,14 +142,7 @@ export const checkStatus = createAsyncThunk(
       state.workspace.workspaceId
     )}/status${queryParams}`;
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      method: "GET",
-    }).then((response) => response.json());
-
+    const { data } = await client.get(url);
     return data;
   }
 );
@@ -185,12 +173,6 @@ const DataSlice = createSlice({
       return {
         ...state,
         workspaceVisited: true,
-      };
-    },
-    clearError(state, action) {
-      return {
-        ...state,
-        errorMessage: null,
       };
     },
   },
@@ -319,7 +301,6 @@ export const {
   setSearchInput,
   resetLastSearchString,
   setWorkspaceVisited,
-  clearError,
   cleanEvaluationState,
   updateMainPanelElement,
   cleanUploadedLabels,

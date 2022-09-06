@@ -16,8 +16,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { panelIds } from "../../../const";
-import { handleError } from "../../../utils/utils";
 import { initialState as panelsInitialState } from "./panelsSlice";
+import { client } from "../../../api/client";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -32,43 +32,27 @@ export const createCategoryOnServer = createAsyncThunk(
       state.workspace.workspaceId
     )}/category`;
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      body: JSON.stringify({
-        category_name: category,
-        category_description: "",
-        update_counter: true,
-      }),
-      method: "POST",
-    })
-      .then((response) => response.json())
-      .catch((err) => console.log(err));
+    const response = await client.post(url, {
+      category_name: category,
+      category_description: "",
+      update_counter: true,
+    });
 
-    return data;
+    return response.data
   }
 );
 
 export const deleteCategory = createAsyncThunk(
   "workspace/deleteCategory",
-  async (request, { getState }) => {
+  async (_, { getState }) => {
     const state = getState();
 
     var url = `${getWorkspace_url}/${encodeURIComponent(
       state.workspace.workspaceId
     )}/category/${state.workspace.curCategory}`;
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      method: "DELETE",
-    }).then((response) => response.json());
-
-    return data;
+    const response = await client.delete(url)
+    return response.data
   }
 );
 
@@ -81,42 +65,27 @@ export const editCategory = createAsyncThunk(
       state.workspace.workspaceId
     )}/category/${state.workspace.curCategory}`;
 
-    const body = JSON.stringify({
+    const body = {
       category_name: newCategoryName,
       category_description: newCategoryDescription,
-    });
+    };
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      body: body,
-      method: "PUT",
-    }).then((response) => response.json());
-
-    return data;
+    const response = await client.put(url, body)
+    return response.data
   }
 );
 
 export const fetchCategories = createAsyncThunk(
   "workspace/get_all_categories",
-  async (request, { getState }) => {
+  async (_, { getState }) => {
     const state = getState();
 
     var url = `${getWorkspace_url}/${encodeURIComponent(
       state.workspace.workspaceId
     )}/categories`;
-
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      method: "GET",
-    }).then((response) => response.json());
-
-    return data;
+    
+    const response = await client.get(url)
+    return response.data
   }
 );
 
@@ -133,7 +102,8 @@ export const reducers = {
 
 export const extraReducers = {
   [fetchCategories.fulfilled]: (state, action) => {
-    state.categories = action.payload["categories"];
+    const data = action.payload;
+    state.categories = data["categories"];
   },
   [createCategoryOnServer.fulfilled]: (state, action) => {
     // TODO: action.payload has an update_counter field that is not used, remove it
@@ -143,9 +113,6 @@ export const extraReducers = {
       categories: [...state.categories, action.payload],
       nextModelShouldBeTraining: false,
     };
-  },
-  [createCategoryOnServer.rejected]: (state, action) => {
-    state.errorMessage = handleError(action.error);
   },
   [deleteCategory.pending]: (state, action) => {
     state.deletingCategory = true;
@@ -158,10 +125,10 @@ export const extraReducers = {
     state.curCategory = null;
     state.modelVersion = null;
     state.panels = {
-        ...panelsInitialState.panels,
-        activePanelId: panelIds.SEARCH,
-        [panelIds.MAIN_PANEL]: panelsInitialState.panels[panelIds.MAIN_PANEL],
-    }
+      ...panelsInitialState.panels,
+      activePanelId: panelIds.SEARCH,
+      [panelIds.MAIN_PANEL]: panelsInitialState.panels[panelIds.MAIN_PANEL],
+    };
   },
   [editCategory.fulfilled]: (state, action) => {
     const { category_name, category_description } = action.payload;
