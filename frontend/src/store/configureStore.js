@@ -17,8 +17,9 @@ import { configureStore } from '@reduxjs/toolkit'
 import { workspacesReducer } from '../modules/Workspace-config/workspaceConfigSlice'
 import { authenticateReducer } from '../modules/Login/LoginSlice'
 import { featureFlagsReducer } from '../featureFlags/featureFlagsSlice'
-
 import workspaceReducer from '../modules/Workplace/redux/DataSlice'
+import { errorReducer } from '../error/errorSlice'
+import { errorMiddleware } from '../error/errorMiddleware'
 
 const setupStore = preloadedState => configureStore({
   reducer: {
@@ -26,8 +27,10 @@ const setupStore = preloadedState => configureStore({
     workspaces: workspacesReducer,
     workspace: workspaceReducer,
     featureFlags: featureFlagsReducer,
+    error: errorReducer,
   },
-  preloadedState
+  preloadedState,
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(errorMiddleware)
 })
 
 export default setupStore

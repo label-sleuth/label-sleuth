@@ -51,7 +51,6 @@ import useWorkspaceState from "./customHooks/useWorkspaceState";
 import Tutorial from "./tutorial";
 import TutorialDialog from "./tutorial/TutorialDialog";
 import useBackdrop from "../../customHooks/useBackdrop";
-import { useErrorHandler } from "./customHooks/useErrorHandler";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem("workspaceId"));
@@ -73,11 +72,9 @@ export default function Workspace() {
   
   const { openBackdrop } = useBackdrop();
 
-
   const dispatch = useDispatch();
 
   useWorkspaceState();
-  useErrorHandler();
 
 
 

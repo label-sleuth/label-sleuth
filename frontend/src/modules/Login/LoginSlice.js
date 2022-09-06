@@ -50,7 +50,6 @@ export const authenticateSlice = createSlice({
     reducers: {
         clearState: () => initialState,
         setAuthenticationEnabled: (state, action) => {
-            console.log(`In redux, action is ${JSON.stringify(action)}`)
             state.authenticationEnabled = action.payload;
         }
     },

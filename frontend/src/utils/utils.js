@@ -1,9 +1,5 @@
 import { panelIds } from "../const"
 
-export const handleError = (err) => {
-    return err.message || "An error ocurred"
-}
-
 /**
 * Returns the suffix of a number in its ordinal form
 **/
