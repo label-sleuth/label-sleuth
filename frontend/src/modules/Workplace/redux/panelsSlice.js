@@ -7,6 +7,7 @@ import {
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { panelIds } from "../../../const";
 import { getMainPanelElementId } from "../../../utils/utils";
+import { client } from "../../../api/client";
 
 /**
  * This file contains the Thunks, reducers, extraReducers and state to 
@@ -21,17 +22,11 @@ const getPanelElements = async (state, endpoint, extraQueryParams = []) => {
     ...extraQueryParams,
   ]);
 
-  var url = `${getWorkspace_url}/${encodeURIComponent(
+  const url = `${getWorkspace_url}/${encodeURIComponent(
     state.workspace.workspaceId
   )}/${endpoint}${queryParams}`;
-  const data = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${state.authenticate.token}`,
-    },
-    method: "GET",
-  }).then((response) => response.json());
 
+  const { data } = await client.get(url);
   return data;
 };
 

@@ -3,8 +3,7 @@ import {
   getCategoryQueryString,
   getQueryParamsString,
   parseElement,
-  handleError,
-  synchronizeElement
+  synchronizeElement,
 } from "../../../utils/utils";
 import {
   BASE_URL,
@@ -14,25 +13,25 @@ import {
 } from "../../../config";
 import fileDownload from "js-file-download";
 import { panelIds } from "../../../const";
+import { client } from "../../../api/client";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
 export const downloadLabels = createAsyncThunk(
   "workspace/downloadLabels",
-  async (request, { getState }) => {
+  async (_, { getState }) => {
     const state = getState();
 
-    var url = `${getWorkspace_url}/${encodeURIComponent(
+    const url = `${getWorkspace_url}/${encodeURIComponent(
       state.workspace.workspaceId
     )}/${DOWNLOAD_LABELS_API}`;
 
-    const data = await fetch(url, {
+    const { data } = await client.get(url, {
       headers: {
         "Content-Type": "text/csv;charset=UTF-8",
-        Authorization: `Bearer ${state.authenticate.token}`,
       },
-      method: "GET",
-    }).then((res) => res.text());
+      parseResponseBodyAs: "text",
+    });
 
     return data;
   }
@@ -42,18 +41,16 @@ export const uploadLabels = createAsyncThunk(
   `workspace/uploadLabels`,
   async (formData, { getState }) => {
     const state = getState();
+
     let headers = {
       "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${state.authenticate.token}`,
     };
+
     var url = `${getWorkspace_url}/${encodeURIComponent(
       state.workspace.workspaceId
     )}/${UPLOAD_LABELS_API}`;
-    const data = await fetch(url, {
-      method: "POST",
-      header: headers,
-      body: formData,
-    }).then((res) => res.json());
+
+    const { data } = await client.post(url, formData, { headers, stringifyBody: false });
     return data;
   }
 );
@@ -71,14 +68,7 @@ export const labelInfoGain = createAsyncThunk(
       state.workspace.workspaceId
     )}/labeled_info_gain${queryParams}`;
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      method: "GET",
-    }).then((response) => response.json());
-
+    const { data } = await client.get(url)
     return data;
   }
 );
@@ -98,19 +88,11 @@ export const setElementLabel = createAsyncThunk(
       state.workspace.workspaceId
     )}/element/${encodeURIComponent(element_id)}${queryParams}`;
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      body: JSON.stringify({
-        category_id: state.workspace.curCategory,
-        value: label,
-        update_counter: update_counter,
-      }),
-      method: "PUT",
-    }).then((response) => response.json());
-
+    const { data } = await client.put(url, {
+      category_id: state.workspace.curCategory,
+      value: label,
+      update_counter: update_counter,
+    });
     return data;
   }
 );
@@ -148,7 +130,7 @@ export const reducers = {
     };
   },
   cleanUploadedLabels(state, action) {
-    state.uploadedLabels = null
+    state.uploadedLabels = null;
   },
 };
 
@@ -185,32 +167,23 @@ export const extraReducers = {
       uploadingLabels: false,
     };
   },
-  [uploadLabels.rejected]: (state, action) => {
-    return {
-      ...state,
-      errorMessage: handleError(action.error),
-    };
-  },
   [setElementLabel.fulfilled]: (state, action) => {
     const { element: unparsedElement } = action.payload;
     const element = parseElement(unparsedElement, state.curCategory);
-    
-    const panels = synchronizeElement(element.id, element.userLabel, state.panels)
-    
+
+    const panels = synchronizeElement(
+      element.id,
+      element.userLabel,
+      state.panels
+    );
+
     const elements = panels[panelIds.POSITIVE_LABELS].elements;
     if (element.userLabel === "pos") {
-        elements[element.id] = element
-      }
-    else if (element.id in elements) {
-      delete elements[element.id]
+      elements[element.id] = element;
+    } else if (element.id in elements) {
+      delete elements[element.id];
     }
-    panels[panelIds.POSITIVE_LABELS].elements = elements
-    state.panels = panels
-  },
-  [setElementLabel.rejected]: (state, action) => {
-    return {
-      ...state,
-      errorMessage: handleError(action.error),
-    };
+    panels[panelIds.POSITIVE_LABELS].elements = elements;
+    state.panels = panels;
   },
 };

@@ -6,6 +6,7 @@ import {
 } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { panelIds } from "../../../const";
+import { client } from "../../../api/client";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -29,14 +30,8 @@ export const getEvaluationElements = createAsyncThunk(
       state.workspace.workspaceId
     )}/precision_evaluation_elements${queryParams}`;
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      method: "GET",
-    }).then((response) => response.json());
-    return data;
+    const response = await client.get(url);
+    return response.data;
   }
 );
 
@@ -45,7 +40,9 @@ export const getEvaluationResults = createAsyncThunk(
   async (changed_elements_count, { getState }) => {
     const state = getState();
 
-    const ids = Object.values(state.workspace.panels[panelIds.EVALUATION].elements).map((e) => e.id);
+    const ids = Object.values(
+      state.workspace.panels[panelIds.EVALUATION].elements
+    ).map((e) => e.id);
     const iteration = state.workspace.modelVersion - 1;
     const queryParams = getQueryParamsString([
       getCategoryQueryString(state.workspace.curCategory),
@@ -54,20 +51,14 @@ export const getEvaluationResults = createAsyncThunk(
     var url = `${getWorkspace_url}/${encodeURIComponent(
       state.workspace.workspaceId
     )}/precision_evaluation_elements${queryParams}`;
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      body: JSON.stringify({
-        ids,
-        iteration,
-        changed_elements_count,
-      }),
-      method: "POST",
-    }).then((response) => response.json());
 
-    return data;
+    const response = await client.post(url, {
+      ids,
+      iteration,
+      changed_elements_count,
+    });
+
+    return response.data;
   }
 );
 
@@ -83,18 +74,12 @@ export const cancelEvaluation = createAsyncThunk(
     var url = `${getWorkspace_url}/${encodeURIComponent(
       state.workspace.workspaceId
     )}/cancel_precision_evaluation${queryParams}`;
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      body: JSON.stringify({
-        changed_elements_count,
-      }),
-      method: "POST",
-    }).then((response) => response.json());
 
-    return data;
+
+    const response = await client.post(url, {
+      changed_elements_count,
+    });
+    return response.data;
   }
 );
 
@@ -113,53 +98,53 @@ export const reducers = {
 
 export const extraReducers = {
   [startEvaluation.fulfilled]: (state, action) => {
-    state.panels[panelIds.EVALUATION].isInProgress = true
+    state.panels[panelIds.EVALUATION].isInProgress = true;
   },
   [getEvaluationElements.fulfilled]: (state, action) => {
     const { elements: unparsedElements } = action.payload;
     const { elements: initialElements } = parseElements(
       unparsedElements,
-      state.curCategory,
+      state.curCategory
     );
-    state.panels.loading[panelIds.EVALUATION] = false
+    state.panels.loading[panelIds.EVALUATION] = false;
     state.panels[panelIds.EVALUATION] = {
       ...state.panels[panelIds.EVALUATION],
       initialElements,
       elements: initialElements,
-    }
+    };
   },
   [getEvaluationElements.pending]: (state, action) => {
-    state.panels.loading[panelIds.EVALUATION] = true
+    state.panels.loading[panelIds.EVALUATION] = true;
   },
   [getEvaluationElements.rejected]: (state, action) => {
-    state.panels.loading[panelIds.EVALUATION] = false
+    state.panels.loading[panelIds.EVALUATION] = false;
   },
   [getEvaluationResults.fulfilled]: (state, action) => {
     const { score } = action.payload;
-    state.panels.loading[panelIds.EVALUATION] = false
+    state.panels.loading[panelIds.EVALUATION] = false;
     state.panels[panelIds.EVALUATION] = {
       ...state.panels[panelIds.EVALUATION],
       isInProgress: false,
       lastScore: score,
       scoreModelVersion: state.modelVersion,
-    }
+    };
   },
   [getEvaluationResults.pending]: (state, action) => {
-    state.panels.loading[panelIds.EVALUATION] = true
+    state.panels.loading[panelIds.EVALUATION] = true;
   },
   [getEvaluationResults.rejected]: (state, action) => {
-    state.panels.loading[panelIds.EVALUATION] = false
+    state.panels.loading[panelIds.EVALUATION] = false;
   },
   [cancelEvaluation.pending]: (state, action) => {
-    state.panels.loading[panelIds.EVALUATION] = true
+    state.panels.loading[panelIds.EVALUATION] = true;
   },
-    [cancelEvaluation.fulfilled]: (state, action) => {
-      state.panels.loading[panelIds.EVALUATION] = false
-      state.panels[panelIds.EVALUATION] = {
-        ...state.panels[panelIds.EVALUATION],
-        initialElements: {},
-        isInProgress: false,
-        elements: {},
-    }
+  [cancelEvaluation.fulfilled]: (state, action) => {
+    state.panels.loading[panelIds.EVALUATION] = false;
+    state.panels[panelIds.EVALUATION] = {
+      ...state.panels[panelIds.EVALUATION],
+      initialElements: {},
+      isInProgress: false,
+      elements: {},
+    };
   },
 };
