@@ -30,10 +30,11 @@ import { Backdrop } from "@mui/material";
 import { CircularProgress } from "@mui/material";
 import useAuthentication from "./modules/Login/customHooks/useAuthentication";
 import { fetchFeatureFlags } from "./featureFlags/featureFlagsSlice";
+import { useErrorHandler } from "./error/useErrorHandler";
 
 const AppRoutes = () => {
   const { authenticated, authenticationEnabled } = useAuthentication();
-
+  
   return (
     <Routes>
       <Route
@@ -84,6 +85,8 @@ const App = () => {
   const dispatch = useDispatch();
 
   const featureFlags = useSelector((state) => state.featureFlags);
+
+  useErrorHandler()
 
   useEffect(() => {
     dispatch(fetchFeatureFlags());

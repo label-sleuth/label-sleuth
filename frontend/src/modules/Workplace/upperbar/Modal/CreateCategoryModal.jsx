@@ -13,80 +13,82 @@
     limitations under the License.
 */
 
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Modal from '@mui/material/Modal';
-import { useDispatch, useSelector } from 'react-redux';
-import { createCategoryOnServer, fetchCategories } from '../../redux/DataSlice';
-import TextField from '@mui/material/TextField';
-import classes from './index.module.css';
+import * as React from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Modal from "@mui/material/Modal";
+import { useDispatch } from "react-redux";
+import { isFulfilled } from "@reduxjs/toolkit";
+import { createCategoryOnServer } from "../../redux/DataSlice";
+import TextField from "@mui/material/TextField";
+import classes from "./index.module.css";
 import {
   CREATE_NEW_CATEGORY_MODAL_MSG,
   CREATE_NEW_CATEGORY_PLACEHOLDER_MSG,
   WRONG_INPUT_NAME_LENGTH,
   WRONG_INPUT_NAME_BAD_CHARACTER,
-  REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES
+  REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES,
 } from "../../../../const";
 import { notify } from "../../../../utils/notification";
 
 const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
   width: 350,
-  bgcolor: 'background.paper',
-  border: 'none',
+  bgcolor: "background.paper",
+  border: "none",
   boxShadow: 24,
   p: 4,
 };
 
 export default function CreateCategoryModal({ open, setOpen }) {
-
   const [text, setText] = React.useState("");
-  const [categoryNameError, setCategoryNameError] = React.useState("")
-  const dispatch = useDispatch()
+  const [categoryNameError, setCategoryNameError] = React.useState("");
+  const dispatch = useDispatch();
 
   const handleTextFieldChange = (e) => {
-    let text = e.target.value
+    let text = e.target.value;
     if (text) {
       if (text.length > 30) {
-        setCategoryNameError(WRONG_INPUT_NAME_LENGTH)
-      }
-      else if (!text.match(REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES)) {
-        setCategoryNameError(WRONG_INPUT_NAME_BAD_CHARACTER)
-      }
-      else setCategoryNameError('')
+        setCategoryNameError(WRONG_INPUT_NAME_LENGTH);
+      } else if (!text.match(REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES)) {
+        setCategoryNameError(WRONG_INPUT_NAME_BAD_CHARACTER);
+      } else setCategoryNameError("");
     } else {
-      setCategoryNameError('')
+      setCategoryNameError("");
     }
-    setText(text)
-  }
+    setText(text);
+  };
 
   const onKeyDown = (event) => {
-    event.preventDefault()
+    event.preventDefault();
     if (event.key === "Enter") {
-      onSubmit()
-    } 
-  }
+      onSubmit();
+    }
+  };
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     const newCategoryName = text.trim();
+
     dispatch(createCategoryOnServer({ category: newCategoryName }))
-      .then(() => setOpen(false))
-      .then(() =>
-      notify(`The category '${newCategoryName}' has been created`, {
-        type: "success",
-        autoClose: 5000,
-      }));
+      .then((actionResult) => {
+        if (isFulfilled(actionResult)) {
+          setOpen(false);
+          notify(`The category '${newCategoryName}' has been created`, {
+            type: "success",
+            autoClose: 5000,
+          });
+        }
+      });
   };
 
   const onModalClose = () => {
-    setOpen(false)
-    setCategoryNameError("")
-  }
+    setOpen(false);
+    setCategoryNameError("");
+  };
 
   return (
     <div>
@@ -98,17 +100,21 @@ export default function CreateCategoryModal({ open, setOpen }) {
         disableRestoreFocus
       >
         <Box sx={style}>
-          
-          <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ marginBottom: 2 }}>
+          <Typography
+            id="modal-modal-title"
+            variant="h6"
+            component="h2"
+            sx={{ marginBottom: 2 }}
+          >
             {CREATE_NEW_CATEGORY_MODAL_MSG}
           </Typography>
           <Box
             sx={{
-              display: 'grid',
+              display: "grid",
               gap: 1,
-              gridTemplateColumns: '60% 40%',
+              gridTemplateColumns: "60% 40%",
               alignItems: "center",
-              width: "300px"
+              width: "300px",
             }}
           >
             <TextField
