@@ -13,50 +13,65 @@
     limitations under the License.
 */
 
-export async function client(endpoint, { body, ...customConfig } = {}) {
-
-  let headers = { 'Content-Type': 'application/json' }
-
+export const client = async (
+  endpoint,
+  { body, method, headers, stringifyBody=true, parseResponseBodyAs="json",  ...customConfig } = {}
+) => {
+  let customHeaders = {
+    "Content-Type": "application/json",
+    ...headers,
+  };
   if (localStorage.token) {
-    headers = { ...headers, ...{ 'Authorization': `Bearer ${localStorage.token}` } };
+    customHeaders["Authorization"] = `Bearer ${localStorage.token}`;
   }
 
   const config = {
-    method: body ? 'POST' : 'GET',
     ...customConfig,
-    headers: {
-      ...headers,
-      ...customConfig.headers,
-    },
-  }
+    ...customHeaders,
+    method,
+  };
 
   if (body) {
-    config.body = JSON.stringify(body)
+    config.body = stringifyBody ? JSON.stringify(body) : body;
   }
 
-  let data
-  try {
-    const response = await window.fetch(endpoint, config)
-    data = await response.json()
+  return await fetch(endpoint, config).then(async (response) => {
     if (response.ok) {
-      // Return a result object similar to Axios
-      return {
+      let data
+      if (parseResponseBodyAs === "json") {
+        data = await response.json();
+      }
+      else if (parseResponseBodyAs === "text") {
+        data = await response.text();
+      }
+      else {
+        throw new Error("parseResponseBodyAs should be 'json' or 'text'")
+      }
+      return ({
         status: response.status,
         data,
         headers: response.headers,
         url: response.url,
-      }
+      });
+    } else {
+      const text = await response.text();
+      throw new Error(text);
     }
-    throw new Error(response.statusText)
-  } catch (err) {
-    return Promise.reject(err.message ? err.message : data)
-  }
-}
+  });
+};
 
-client.get = function (endpoint, customConfig = {}) {
-  return client(endpoint, { ...customConfig, method: 'GET' })
-}
+client.get = (endpoint, customConfig = {}) => {
+  return client(endpoint, { ...customConfig, method: "GET" });
+};
 
-client.post = function (endpoint, body, customConfig = {}) {
-  return client(endpoint, { ...customConfig, body })
-}
+client.post = (endpoint, body, customConfig = {}) => {
+  return client(endpoint, { ...customConfig, method: "POST", body });
+};
+
+client.delete = (endpoint, body, customConfig = {}) => {
+  return client(endpoint, { ...customConfig, method: "DELETE", body });
+};
+
+client.put = (endpoint, body, customConfig = {}) => {
+  return client(endpoint, { ...customConfig, method: "PUT", body });
+};
