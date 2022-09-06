@@ -8,27 +8,33 @@ To run the frontend you need to have intalled NodeJS (version 16.16 or higher) i
 
 ## Local development
 
-Below are instructions to run this website in your local environment
+Below are instructions to run this website in your local environment.
 
 ### Step 1
 
-Clone the repo to your local directory:\
+Clone the repo to your local directory:
 `git clone https://github.com/label-sleuth/label-sleuth.git`
 
 ### Step 2
 
-Go to the frontend folder:\
+Go to the frontend folder:
 `cd frontend`
 
 ### Step 3
 
-Install the dependencies:\
+Install the dependencies:
 `npm install`
 
 ### Step 4
 
-Under the cloned directory, run the app in the development mode:\
+Under the cloned directory, run the app in the development mode:
 `npm run start`
+
+## Step 5
+
+Run the backend by following the [installation guide](https://www.label-sleuth.org/docs/installation.html).
+
+_By default the React App will be served at `localhost:3000`. The compiled react app located at `/label_sleuth/build` will be statically served by the backend at `localhost:8000`._
 
 ## Build the application
 
@@ -40,7 +46,7 @@ Prepare a production ready application by running `npm run build`. This will cre
 
 Copy the `/build` folder inside the `/label_sleuth` folder. This is where the backend expects the compiled frontend files to be in order to serve them.
 
-_Note: The default `/build` folder inside `/label_sleuth` is always in sync with the main branch an is automatically updated anytime frontend changes are detected in the main branch_.
+_Note: The default `/build` folder inside `/label_sleuth` is always in sync with the main branch an it is automatically updated anytime frontend changes are detected in the main branch. Thus, there is **no need** to change and push the build files in your commits._
 
 ## Architecture
 
