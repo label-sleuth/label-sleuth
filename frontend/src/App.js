@@ -13,51 +13,100 @@
     limitations under the License.
 */
 
-import './App.css';
-import { Routes, Route } from 'react-router-dom';
-import Login from './modules/Login/index';
-import WorkspaceConfig from './modules/Workspace-config/index';
-import Workplace from './modules/Workplace';
-import { PrivateRoute } from './features/PrivateRoute'
-import {AUTH_ENABLED, WORKSPACE_CONFIG_PATH, WORKSPACE_PATH, LOGIN_PATH} from './config'
-import React from 'react';
-import { Navigate } from 'react-router-dom'
-import { useAuth } from './customHooks/useAuth';
+import "./App.css";
+import { Routes, Route } from "react-router-dom";
+import Login from "./modules/Login/index";
+import WorkspaceConfig from "./modules/Workspace-config/index";
+import Workplace from "./modules/Workplace";
+import { PrivateRoute } from "./features/PrivateRoute";
+import { WORKSPACE_CONFIG_PATH, WORKSPACE_PATH, LOGIN_PATH } from "./config";
+import React, { useEffect } from "react";
+import { Navigate } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
+import { ThemeProvider } from "@mui/material/styles";
+import { useDispatch, useSelector } from "react-redux";
+import theme from "./theme.jsx";
+import { Backdrop } from "@mui/material";
+import { CircularProgress } from "@mui/material";
+import useAuthentication from "./modules/Login/customHooks/useAuthentication";
+import { fetchFeatureFlags } from "./featureFlags/featureFlagsSlice";
 
-function App() {
-  const isAuthenticated = useAuth()
+const AppRoutes = () => {
+  const { authenticated, authenticationEnabled } = useAuthentication();
+
+  return (
+    <Routes>
+      <Route
+        path={LOGIN_PATH}
+        exact
+        element={
+          authenticationEnabled ? (
+            <Login />
+          ) : (
+            <Navigate to={WORKSPACE_CONFIG_PATH} />
+          )
+        }
+      />
+      <Route
+        path={WORKSPACE_CONFIG_PATH}
+        exact
+        element={
+          <PrivateRoute>
+            <WorkspaceConfig />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path={WORKSPACE_PATH}
+        exact
+        element={
+          <PrivateRoute>
+            <Workplace />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/"
+        exact
+        element={
+          !authenticationEnabled || authenticated ? (
+            <Navigate to={WORKSPACE_CONFIG_PATH} />
+          ) : (
+            <Navigate to={LOGIN_PATH} />
+          )
+        }
+      />
+    </Routes>
+  );
+};
+
+const App = () => {
+  const dispatch = useDispatch();
+
+  const featureFlags = useSelector((state) => state.featureFlags);
+
+  useEffect(() => {
+    dispatch(fetchFeatureFlags());
+  }, [dispatch]);
+
   return (
     <div>
-      <Routes>
-        {AUTH_ENABLED ? <Route path={LOGIN_PATH} exact element={<Login />}/> : null}
-        <Route
-          path={WORKSPACE_CONFIG_PATH}
-          exact
-          element={
-            <PrivateRoute>
-              <WorkspaceConfig />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path={WORKSPACE_PATH}
-          exact
-          element={
-            <PrivateRoute>
-              <Workplace />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/"
-          exact
-          element={
-            isAuthenticated ? <Navigate to={WORKSPACE_CONFIG_PATH}/> : <Navigate to={LOGIN_PATH}/> 
-          }
-        />
-      </Routes>
+      {featureFlags.fetched ? (
+        <ThemeProvider theme={theme}>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </ThemeProvider>
+      ) : (
+        <Backdrop
+          sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          open={true}
+        >
+          <CircularProgress color="inherit" />
+        </Backdrop>
+      )}
     </div>
   );
-}
+};
 
 export default App;

@@ -14,15 +14,17 @@
 */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { AUTHENTICATE_API, AUTH_ENABLED } from "../../config"
+import { AUTHENTICATE_API } from "../../config"
 import { client } from '../../api/client'
 
 const initialState = {
     username: '',
-    token: '',
+    // different redux thunk make request based on localStorage
+    // or using redux state. This should be unified
+    token: localStorage.token,
     loading: false,
     errorMessage: '',
-    isAuthenticated: !AUTH_ENABLED,
+    authenticated: !!localStorage.token,
 }
 
 const BASE_URL = process.env.REACT_APP_API_URL
@@ -37,16 +39,20 @@ export const getAuthenticated = createAsyncThunk('workspaces/getAuthenticated', 
     if(data.token){
         localStorage.setItem("token", data.token)
     }
+
     return data
 })
-
 
 
 export const authenticateSlice = createSlice({
     name: 'authenticate',
     initialState,
     reducers: {
-        clearState: () => initialState
+        clearState: () => initialState,
+        setAuthenticationEnabled: (state, action) => {
+            console.log(`In redux, action is ${JSON.stringify(action)}`)
+            state.authenticationEnabled = action.payload;
+        }
     },
     extraReducers: {
         [getAuthenticated.pending]: (state) => {
@@ -55,18 +61,19 @@ export const authenticateSlice = createSlice({
         [getAuthenticated.fulfilled]: (state, { payload }) => {
             state.loading = false
             state.token = payload.token
-            state.isAuthenticated = true
+            state.authenticated = true
         },
         [getAuthenticated.rejected]: (state, { error }) => {
             state.errorMessage = error.message
             state.loading = false
-            state.isAuthenticated = false
+            state.authenticated = false
         },
     },
 })
 
 export const {
-    clearState
+    clearState,
+    setAuthenticationEnabled,
 } = authenticateSlice.actions
 
 export const authenticateReducer = authenticateSlice.reducer
