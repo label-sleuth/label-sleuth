@@ -822,11 +822,11 @@ class OrchestratorApi:
                  for le in labeled_elements])
         return pd.DataFrame(list_of_dicts)
 
-    def export_model(self, workspace_id, category_id, iteration_index):
+    def copy_model_dir_for_export(self, workspace_id, category_id, iteration_index):
         iteration = self.orchestrator_state.get_all_iterations(workspace_id, category_id)[iteration_index]
 
         model_api = self.model_factory.get_model_api(iteration.model.model_type)
-        exported_model_dir = model_api.export_model(iteration.model.model_id)
+        exported_model_dir = model_api.copy_model_dir_for_export(iteration.model.model_id)
         return exported_model_dir
 
     def add_documents_from_file(self, dataset_name, temp_file_path):
