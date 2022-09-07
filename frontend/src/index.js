@@ -20,9 +20,17 @@ import App from "./App";
 import "react-toastify/dist/ReactToastify.css";
 import { Provider } from "react-redux";
 import setupStore from "./store/configureStore";
+import { ToastContainer } from "react-toastify";
+
 
 ReactDOM.render(
   <Provider store={setupStore()} >
+    <ToastContainer
+              position="top-center"
+              hideProgressBar={true}
+              autoClose={7000}
+              theme="dark"
+            />
     <App />
   </Provider>,
   document.getElementById("root")
