@@ -835,33 +835,54 @@ def export_predictions(workspace_id):
 @validate_workspace_id
 def export_model(workspace_id):
     """
-    Download the trained model files for the given category and (optionally) iteration index. In order for this
-    functionality to work, the ModelType currently in use must implement the ModelAPI.export_model() method.
+    Download the trained model files for the given category and (optionally) iteration index.
 
     :param workspace_id:
     :request_arg category_id:
     :request_arg iteration_index: optional. if not provided, the model from the latest iteration will be exported.
     """
 
+    usage_example = "from label_sleuth.models.util.standalone_inference import get_model_api\n" \
+                    "from label_sleuth.models.core.catalog import ModelsCatalog\n\n" \
+                    "model_path = \"<replace_with_the_exported_model_path>\"\n" \
+                    "items_to_infer = [{\"text\": \"I love dogs\"}, {\"text\": \"I love cats\"}]\n" \
+                    "model_api = get_model_api(ModelsCatalog.SVM_ENSEMBLE)\n" \
+                    "model = model_api.load_model(model_path)\n" \
+                    "predictions = model_api.infer(model, items_to_infer)\n" \
+                    "for sentence_dict, pred in zip(items_to_infer, predictions):\n" \
+                    "     print(f'sentence: \"{sentence_dict[\"text\"]}\" -> prediction: {pred}')\n"
     category_id = int(request.args['category_id'])
-    iteration_index = request.args.get('iteration_index', None)  # TODO update in UI model_id -> iteration_index
+    iteration_index = request.args.get('iteration_index', None)
+    logging.info(f"Exporting a model from workspace {workspace_id} category id {category_id}")
     if iteration_index is None:
-        iteration, _ = curr_app.orchestrator_api. \
+        _, iteration_index = curr_app.orchestrator_api. \
             get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
     else:
-        iteration = curr_app.orchestrator_api. \
-            get_all_iterations_for_category(workspace_id, category_id)[iteration_index]
-    model_id = iteration.model.model_id
-    model_dir = curr_app.orchestrator_api.export_model(workspace_id, category_id, iteration_index)
-    memory_file = BytesIO()
-    with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
-        for dirpath, dirnames, filenames in os.walk(model_dir):
-            for filename in filenames:
-                file_path = os.path.join(dirpath, filename)
-                archive_file_path = os.path.relpath(file_path, model_dir)
-                zf.write(file_path, archive_file_path)
-    memory_file.seek(0)
-    return send_file(memory_file, attachment_filename=f'{model_id}.zip', as_attachment=True)
+        iteration_index = int(iteration_index)
+
+    temp_model_dir = curr_app.orchestrator_api.copy_model_dir_for_export(workspace_id, category_id, iteration_index)
+    try:
+        memory_file = BytesIO()
+
+        with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+            for dirpath, dirnames, filenames in os.walk(temp_model_dir):
+                for filename in filenames:
+                    file_path = os.path.join(dirpath, filename)
+                    archive_file_path = os.path.relpath(file_path, temp_model_dir)
+                    zf.write(file_path, archive_file_path)
+
+            # write usage example python file
+            model_usage_example_file_path = os.path.join(temp_model_dir, "model_usage_example.py")
+            with open(model_usage_example_file_path,'w') as text_file:
+                text_file.write(usage_example)
+            archive_file_path = os.path.relpath(model_usage_example_file_path, temp_model_dir)
+            zf.write(model_usage_example_file_path, archive_file_path)
+
+        memory_file.seek(0)
+    finally:
+        if os.path.exists(temp_model_dir):
+            os.rmdir(temp_model_dir)
+    return send_file(memory_file, attachment_filename=f'model.zip', as_attachment=True)
 
 
 """
