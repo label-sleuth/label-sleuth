@@ -16,6 +16,7 @@
 import getpass
 import logging
 import os
+import shutil
 import tempfile
 import traceback
 import zipfile
@@ -842,11 +843,10 @@ def export_model(workspace_id):
     :request_arg iteration_index: optional. if not provided, the model from the latest iteration will be exported.
     """
 
-    usage_example = "from label_sleuth.models.util.standalone_inference import get_model_api\n" \
-                    "from label_sleuth.models.core.catalog import ModelsCatalog\n\n" \
+    usage_example = "from label_sleuth.models.util.standalone_inference import get_model_api\n\n" \
                     "model_path = \"<replace_with_the_exported_model_path>\"\n" \
                     "items_to_infer = [{\"text\": \"I love dogs\"}, {\"text\": \"I love cats\"}]\n" \
-                    "model_api = get_model_api(ModelsCatalog.SVM_ENSEMBLE)\n" \
+                    "model_api = get_model_api(model_path)\n" \
                     "model = model_api.load_model(model_path)\n" \
                     "predictions = model_api.infer(model, items_to_infer)\n" \
                     "for sentence_dict, pred in zip(items_to_infer, predictions):\n" \
@@ -881,7 +881,7 @@ def export_model(workspace_id):
         memory_file.seek(0)
     finally:
         if os.path.exists(temp_model_dir):
-            os.rmdir(temp_model_dir)
+            shutil.rmtree(temp_model_dir, ignore_errors=True)
     return send_file(memory_file, attachment_filename=f'model.zip', as_attachment=True)
 
 
