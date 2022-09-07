@@ -138,7 +138,6 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
     const nextModelShouldBeTraining = useSelector(state => state.workspace.nextModelShouldBeTraining)
 
     const [tabValue, setTabValue] = React.useState(0);
-    const [tabStatus, setTabStatus] = React.useState(0)
     const [uploadLabelsDialogOpen, setUploadLabelsDialogOpen] = React.useState(false)
     const [downloadLabelsDialogOpen, setDownloadLabelsDialogOpen] = React.useState(false)
     const refAnimationInstance = useRef(null);
@@ -246,7 +245,6 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
 
     const handleChange = (event, newValue) => {
         setTabValue(newValue);
-        setTabStatus(newValue)
     };
 
     // placeholder for finding documents stats
@@ -359,9 +357,7 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                                     <Tab label="Document" {...a11yProps(1)} className={classes.tabs}/>
                                 </Tabs>
                             </Box>
-                            <TabPanel className={classes.entries_tab} value={tabValue} index={0} onClick={() => {
-                                setTabStatus('workspace')
-                            }}>
+                            <TabPanel className={classes.entries_tab} value={tabValue} index={0}>
                                 <Stack spacing={0}>
                                     <label style={{fontSize: '12px', opacity: 0.5}}>Labeled for entire workspace:</label>
                                     <StatsContainer>
@@ -378,9 +374,7 @@ export default function WorkspaceInfo({workspaceId, setTutorialOpen, checkModelI
                                     </StatsContainer>
                                 </Stack>
                             </TabPanel>
-                            <TabPanel className={classes.entries_tab} value={tabValue} index={1} onClick={() => {
-                                setTabStatus('document')
-                            }}>
+                            <TabPanel className={classes.entries_tab} value={tabValue} index={1}>
                                 <Stack spacing={0}>
                                     <label style={{fontSize: '12px', opacity: 0.5}}>Labeled for Current Doc:</label>
                                     <StatsContainer>
