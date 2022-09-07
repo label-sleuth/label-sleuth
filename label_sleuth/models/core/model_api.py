@@ -19,6 +19,8 @@ import os
 import shutil
 import threading
 import uuid
+import tempfile
+import json
 
 from collections import defaultdict
 from concurrent.futures import Future
@@ -110,10 +112,6 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         predictions from the disk.
         """
         return Prediction
-
-    def export_model(self, model_id):
-        raise NotImplementedError(f"Model '{model_id}' cannot be exported as the 'export_model' method has not been "
-                                  f"implemented for {self.__class__.__name__}")
 
     def train(self, train_data: Sequence[Mapping], language: Language,
               model_params=None, done_callback=None) -> Tuple[str, Future]:
@@ -328,3 +326,11 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         The name of the directory inside self.output_dir in which models will be saved
         """
         return self.__class__.__name__
+
+    def copy_model_dir_for_export(self, model_id):
+        model_path = self.get_model_dir_by_id(model_id)
+        temp_path = str(tempfile.mkdtemp())
+        output_path = os.path.join(temp_path, os.path.basename(model_path))
+        shutil.copytree(model_path, output_path)
+
+        return output_path

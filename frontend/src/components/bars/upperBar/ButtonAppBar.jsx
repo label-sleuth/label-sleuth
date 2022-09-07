@@ -19,9 +19,11 @@ import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
 import sleuth_logo from '../../../assets/sleuth_logo_white.svg';
-import  {AUTH_ENABLED} from "../../../config"
+import useAuthentication from '../../../modules/Login/customHooks/useAuthentication';
 
 export default function ButtonAppBar({logout}) {
+  const { authenticationEnabled } = useAuthentication()
+
   return (
     <Box sx={{ flexGrow: 1  }}>
       <AppBar position="static" style={{boxShadow: 'none'}}>
@@ -35,7 +37,7 @@ export default function ButtonAppBar({logout}) {
             height: '48px'
           }}>
           <img src={sleuth_logo} style={{width: "160px"}}/>
-          {AUTH_ENABLED ? <Button color="inherit" onClick={logout}>Logout</Button> : null }
+          {authenticationEnabled ? <Button color="inherit" onClick={logout}>Logout</Button> : null }
         </Toolbar>
       </AppBar>
     </Box>

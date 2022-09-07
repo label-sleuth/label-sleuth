@@ -79,8 +79,6 @@ export const fetchDocumentElements = async (state, docId) => {
   return await getPanelElements(state, `document/${encodeURIComponent(docId)}`);
 };
 
-
-
 export const getElementToLabel = createAsyncThunk(
   "workspace/getElementToLabel",
   async (request, { getState }) => {
