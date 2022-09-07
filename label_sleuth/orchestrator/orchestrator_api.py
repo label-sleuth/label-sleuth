@@ -15,6 +15,7 @@
 
 import functools
 import logging
+import os
 import random
 import sys
 import time
@@ -24,6 +25,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime
 from typing import Mapping, List, Sequence, Union, Tuple
 
+import jsonpickle
 import pandas as pd
 
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
@@ -827,7 +829,12 @@ class OrchestratorApi:
 
         model_api = self.model_factory.get_model_api(iteration.model.model_type)
         exported_model_dir = model_api.copy_model_dir_for_export(iteration.model.model_id)
-        return exported_model_dir
+
+        exported_model_info = {'model_type': iteration.model.model_type}
+        model_info_encoded = jsonpickle.encode(exported_model_info)
+        with open(os.path.join(exported_model_dir, 'model_info.json'), 'w') as f:
+            f.write(model_info_encoded)
+        return os.path.join(exported_model_dir, os.pardir)
 
     def add_documents_from_file(self, dataset_name, temp_file_path):
         global new_data_infer_thread_pool

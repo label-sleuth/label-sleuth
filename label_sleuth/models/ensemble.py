@@ -164,12 +164,12 @@ class Ensemble(ModelAPI):
 
     def copy_model_dir_for_export(self, ensemble_model_id):
         temp_path = str(tempfile.mkdtemp())
+        ensemble_output_path = os.path.join(temp_path, os.path.basename(self.get_model_dir_by_id(ensemble_model_id)))
         for model_api, m_id in zip(self.model_apis, ensemble_model_id.split(",")):
             model_path = model_api.get_model_dir_by_id(m_id)
-            output_path = os.path.join(temp_path, os.path.basename(self.get_model_dir_by_id(ensemble_model_id)),
-                                       os.path.basename(model_path))
+            output_path = os.path.join(ensemble_output_path, os.path.basename(model_path))
             shutil.copytree(model_path, output_path)
-        return temp_path
+        return ensemble_output_path
 
 
 class SVM_Ensemble(Ensemble):

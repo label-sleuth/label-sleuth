@@ -333,4 +333,4 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         output_path = os.path.join(temp_path, os.path.basename(model_path))
         shutil.copytree(model_path, output_path)
 
-        return temp_path
+        return output_path
