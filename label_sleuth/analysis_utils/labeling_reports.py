@@ -138,6 +138,10 @@ def get_suspected_labeling_contradictions_by_distance(category_id, labeled_eleme
     :param language:
     :return: a list of text element pairs, sorted from high to low similarity between the pair text embeddings.
     """
+    if {text_element.category_to_label[category_id].label for text_element in labeled_elements} != BINARY_LABELS:
+        # if there are no positive labels or no negative labels, return an empty list
+        return []
+
     embedding_vectors = embedding_func([e.text for e in labeled_elements], language=language)
     sorted_pair_lists = []
     # for each positively labeled element we find the nearest neighbor with a negative label, and vice versa
