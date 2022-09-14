@@ -44,6 +44,9 @@ export const client = async (
       else if (parseResponseBodyAs === "text") {
         data = await response.text();
       }
+      else if (parseResponseBodyAs === "blob") {
+        data = await response.blob();
+      } 
       else {
         throw new Error("parseResponseBodyAs should be 'json' or 'text'")
       }
