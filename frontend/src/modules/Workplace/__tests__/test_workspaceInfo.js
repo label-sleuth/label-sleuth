@@ -36,8 +36,9 @@ test("test that workspace information is displayed correctly", async () => {
 
   expect(screen.getByText(/workspace_id/i)).toBeInTheDocument();
   expect(screen.queryByRole('tabpanel')).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /download/i})).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: "Download", exact: true})).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /upload/i})).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /download model/i, exact: true})).toBeInTheDocument();
   // TODO: add checking if username is present when authentication is enabled
 });
 

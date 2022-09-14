@@ -16,6 +16,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { client } from "../../../api/client";
+import fileDownload from "js-file-download";
 
 import {
   reducers as documentReducers,
@@ -101,6 +102,7 @@ export const initialState = {
   deletingCategory: false,
   uploadingLabels: false,
   downloadingLabels: false,
+  downloadingModel: false,
   labelCount: {
     workspacePos: 0,
     workspaceNeg: 0,
@@ -144,6 +146,34 @@ export const checkStatus = createAsyncThunk(
 
     const { data } = await client.get(url);
     return data;
+  }
+);
+
+export const downloadModel = createAsyncThunk(
+  "workspace/downloadModel",
+  async (_, { getState }) => {
+    const state = getState();
+    const queryParams = getQueryParamsString([
+      getCategoryQueryString(state.workspace.curCategory),
+    ]);
+    
+    const url = `${getWorkspace_url}/${encodeURIComponent(
+      state.workspace.workspaceId
+      )}/export_model${queryParams}`;
+      
+      const { data } = await client.get(url, {
+        headers: {
+          "Content-Type": "application/zip",
+        },
+        parseResponseBodyAs: "blob",
+      });
+      
+      const current = new Date();
+      const date = `${current.getDate()}/${
+        current.getMonth() + 1
+      }/${current.getFullYear()}`;
+    const fileName = `model-category_${curCategoryNameSelector(state)}-version_${state.workspace.modelVersion}-${date}.zip`;
+    fileDownload(data, fileName);
   }
 );
 
@@ -257,6 +287,12 @@ const DataSlice = createSlice({
           progress === 100 ? true : state.nextModelShouldBeTraining,
       };
     },
+    [downloadModel.pending]: (state, action) => {
+      state.downloadingModel = true;
+    },
+    [downloadModel.fulfilled]: (state, action) => {
+      state.downloadingModel = false;
+    },
   },
 });
 
@@ -275,7 +311,6 @@ export const curCategoryNameSelector = (state) => {
 export const activePanelSelector = (state) => {
   return state.workspace.panels[state.workspace.panels.activePanelId];
 };
-
 
 export default DataSlice.reducer;
 export const {

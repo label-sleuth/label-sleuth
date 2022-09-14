@@ -8,8 +8,13 @@ import {
 } from "../../../../components/dialog";
 import { Box, Modal, TextField } from "@mui/material";
 import "./styles.css";
-import { useDispatch } from "react-redux";
-import { uploadLabels, downloadLabels } from "../../redux/DataSlice";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  uploadLabels,
+  downloadLabels,
+  downloadModel,
+} from "../../redux/DataSlice";
+import { curCategoryNameSelector } from "../../redux/DataSlice";
 
 export const UploadLabelsDialog = ({ open, setOpen }) => {
   const dispatch = useDispatch();
@@ -52,8 +57,8 @@ export const UploadLabelsDialog = ({ open, setOpen }) => {
             </p>
             <ul>
               {Object.entries(bullets).map(([name, text]) => (
-                <li key={name} style={{paddingBottom:"10px"}}>
-                    <i>{name}</i>: {text}
+                <li key={name} style={{ paddingBottom: "10px" }}>
+                  <i>{name}</i>: {text}
                 </li>
               ))}
             </ul>
@@ -99,7 +104,7 @@ export const DownloadLabelsDialog = ({ open, setOpen }) => {
       <Box className="dialog-content">
         <div
           style={{
-            margin: "25px",
+            margin: "25px 25px 10px 25px",
             display: "block",
           }}
         >
@@ -108,6 +113,60 @@ export const DownloadLabelsDialog = ({ open, setOpen }) => {
             <p>
               Download all labels from the workspace as a csv file. Each row in
               the csv is a label for a specific element for a specific category.
+            </p>
+          </MainContent>
+        </div>
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          alignItems="flex-end"
+          spacing={0}
+          style={{ width: "100%", order: 1, flexGrow: 0, marginTop: "15px" }}
+        >
+          <SecondaryButton onClick={handleClose}>Cancel</SecondaryButton>
+          <PrimaryButton sx={{ textTransform: "none" }} onClick={onClick}>
+            Download
+          </PrimaryButton>
+        </Stack>
+      </Box>
+    </Modal>
+  );
+};
+
+export const DownloadModelDialog = ({
+  open,
+  setOpen,
+  modelVersion,
+  modelVersionSuffix,
+}) => {
+  const curCategoryName = useSelector(curCategoryNameSelector);
+  const dispatch = useDispatch();
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const onClick = () => {
+    dispatch(downloadModel());
+    setOpen(false);
+  };
+
+  return (
+    <Modal open={open} onClose={handleClose} disableRestoreFocus>
+      <Box className="dialog-content">
+        <div
+          style={{
+            margin: "25px 25px 10px 25px",
+            display: "block",
+          }}
+        >
+          <LargeTitle>Download the current model</LargeTitle>
+          <MainContent>
+            <p>
+              Download the latest ({modelVersion}
+              <sup>{modelVersionSuffix}</sup>) model version for the category '
+              {curCategoryName}'. In the downloaded zip file you will find the
+              model itself, as well as a code snippet demonstrating how it can
+              be used within a python application.
             </p>
           </MainContent>
         </div>
