@@ -22,9 +22,6 @@ import {
   ADD_DOCUMENTS_API,
 } from "../../config";
 import { client } from "../../api/client";
-import axios from "axios";
-
-const token = localStorage.getItem("token");
 
 const initialState = {
   document: {},
@@ -62,15 +59,8 @@ export const addDocuments = createAsyncThunk(
   `workspaces/getDatasets/dataset_name/addDocuments`,
   async (formData) => {
     const dataset_name = formData.get("dataset_name");
-    let headers = {
-      "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${token}`,
-    };
-    const { data } = await axios.post(
-      `${getDatasets_url}/${dataset_name}/${ADD_DOCUMENTS_API}`,
-      formData,
-      { headers }
-    );
+    const url = `${getDatasets_url}/${dataset_name}/${ADD_DOCUMENTS_API}`
+    const { data } = await client.post(url, formData, {stringifyBody: false, omitContentType: true})
     return data;
   }
 );

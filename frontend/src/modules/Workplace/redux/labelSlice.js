@@ -42,15 +42,13 @@ export const uploadLabels = createAsyncThunk(
   async (formData, { getState }) => {
     const state = getState();
 
-    let headers = {
-      "Content-Type": "multipart/form-data",
-    };
-
     var url = `${getWorkspace_url}/${encodeURIComponent(
       state.workspace.workspaceId
     )}/${UPLOAD_LABELS_API}`;
-
-    const { data } = await client.post(url, formData, { headers, stringifyBody: false });
+    const { data } = await client.post(url, formData, {
+      stringifyBody: false,
+      omitContentType: true,
+    });
     return data;
   }
 );
@@ -68,7 +66,7 @@ export const labelInfoGain = createAsyncThunk(
       state.workspace.workspaceId
     )}/labeled_info_gain${queryParams}`;
 
-    const { data } = await client.get(url)
+    const { data } = await client.get(url);
     return data;
   }
 );
@@ -154,11 +152,11 @@ export const extraReducers = {
       downloadingLabels: false,
     };
   },
+  [downloadLabels.rejected]: (state, action) => {
+    state.downloadingLabels = false;
+  },
   [uploadLabels.pending]: (state, action) => {
-    return {
-      ...state,
-      uploadingLabels: true,
-    };
+    state.uploadingLabels = true;
   },
   [uploadLabels.fulfilled]: (state, action) => {
     return {
@@ -166,6 +164,9 @@ export const extraReducers = {
       uploadedLabels: action.payload,
       uploadingLabels: false,
     };
+  },
+  [uploadLabels.rejected]: (state, action) => {
+    state.uploadingLabels = false;
   },
   [setElementLabel.fulfilled]: (state, action) => {
     const { element: unparsedElement } = action.payload;

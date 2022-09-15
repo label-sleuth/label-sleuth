@@ -15,19 +15,22 @@
 
 export const client = async (
   endpoint,
-  { body, method, headers, stringifyBody=true, parseResponseBodyAs="json",  ...customConfig } = {}
+  { body, method, headers, stringifyBody=true, parseResponseBodyAs="json", omitContentType=false, ...customConfig } = {}
 ) => {
-  let customHeaders = {
-    "Content-Type": "application/json",
-    ...headers,
-  };
+  let customHeaders = {...headers};
+  
+  if (!omitContentType) {
+  const defaultContentType = "application/json"
+  customHeaders["Content-Type"] = defaultContentType
+  }
+
   if (localStorage.token) {
     customHeaders["Authorization"] = `Bearer ${localStorage.token}`;
   }
 
   const config = {
     ...customConfig,
-    ...customHeaders,
+    headers: customHeaders,
     method,
   };
 
