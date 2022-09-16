@@ -748,8 +748,8 @@ class OrchestratorApi:
             elements = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category_id,
                                                             remove_duplicates=remove_duplicates)
         else:
-            elements = self.data_access.get_text_elements(
-                workspace_id=workspace_id, dataset_name=dataset_name, remove_duplicates=remove_duplicates)["results"]
+            elements = self.data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+                                                          remove_duplicates=remove_duplicates)["results"]
         predictions = self.infer(workspace_id, category_id, elements)
         elements_with_matching_prediction = [text_element for text_element, prediction in zip(elements, predictions)
                                              if prediction.label == required_label]

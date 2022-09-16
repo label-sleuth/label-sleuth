@@ -61,10 +61,8 @@ def filter_by_labeled_status(df: pd.DataFrame, labels: pd.Series, category_id: i
     """
     if labeled_status == LabeledStatus.UNLABELED:
         return df[labels.apply(lambda x: category_id not in x)]
-
     elif labeled_status == LabeledStatus.LABELED:
         return df[labels.apply(lambda x: category_id in x)]
-
     return df
 
 

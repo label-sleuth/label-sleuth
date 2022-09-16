@@ -309,7 +309,6 @@ class FileBasedDataAccess(DataAccessApi):
         """
         filter_func = lambda df, labels: \
             utils.filter_by_query_and_label_status(df, labels, category_id, LabeledStatus.LABELED, query, is_regex)
-
         with self._get_lock_object_for_workspace(workspace_id):
             results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                    filter_func=filter_func, sample_size=sample_size,
