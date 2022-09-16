@@ -48,11 +48,13 @@ export const authenticateSlice = createSlice({
     name: 'authenticate',
     initialState,
     reducers: {
-        clearState: () => initialState,
-        setAuthenticationEnabled: (state, action) => {
-            console.log(`In redux, action is ${JSON.stringify(action)}`)
-            state.authenticationEnabled = action.payload;
-        }
+        clearState: () => {
+            return {
+                ...initialState,
+                token: null,
+                authenticated: false,
+            }
+        },
     },
     extraReducers: {
         [getAuthenticated.pending]: (state) => {

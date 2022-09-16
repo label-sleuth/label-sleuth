@@ -209,7 +209,7 @@ def create_workspace():
 
     if curr_app.orchestrator_api.workspace_exists(workspace_id):
         logging.info(f"Trying to create workspace '{workspace_id}' which already exists")
-        return jsonify({"workspace_id": workspace_id, "error": "workspace already exist",
+        return jsonify({"workspace_id": workspace_id, "error": "Workspace already exist",
                         "error_code": 409}), 409
     curr_app.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
@@ -290,7 +290,7 @@ def create_category(workspace_id):
     existing_category_names = [category.name for category
                                in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
     if category_name in existing_category_names:
-        return jsonify({"workspace_id": workspace_id, "error": "category with this name already exists",
+        return jsonify({"workspace_id": workspace_id, "error": "A category with this name already exists",
                         "category_name": category_name, "error_code": 409}), 409
 
     category_id = curr_app.orchestrator_api.create_new_category(workspace_id, category_name, category_description)
@@ -343,7 +343,7 @@ def update_category(workspace_id, category_id):
     existing_category_names = [category.name for category
                                in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
     if new_category_name in existing_category_names:
-        return jsonify({"workspace_id": workspace_id, "error": "category with this name already exists",
+        return jsonify({"workspace_id": workspace_id, "error": "A category with this name already exists",
                         "category_name": new_category_name, "error_code": 409}), 409
 
     curr_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description)

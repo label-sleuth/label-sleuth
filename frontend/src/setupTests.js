@@ -71,7 +71,7 @@ const handlers = [
     );
   }),
   rest.put("/workspace/:workspace_id/category/:category_id", (req, res, ctx) => {
-    const {category_name, category_description} = req.body
+    const {category_name, category_description} = req.body;
     return res(
       ctx.delay(),
       ctx.json({

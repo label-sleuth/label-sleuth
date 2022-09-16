@@ -15,6 +15,9 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
+import { client } from "../../../api/client";
+import fileDownload from "js-file-download";
+
 import {
   reducers as documentReducers,
   extraReducers as documentExtraReducers,
@@ -99,6 +102,7 @@ export const initialState = {
   deletingCategory: false,
   uploadingLabels: false,
   downloadingLabels: false,
+  downloadingModel: false,
   labelCount: {
     workspacePos: 0,
     workspaceNeg: 0,
@@ -111,7 +115,7 @@ const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
 export const checkModelUpdate = createAsyncThunk(
   "workspace/check_model_update",
-  async (request, { getState }) => {
+  async (_, { getState }) => {
     const state = getState();
 
     const queryParams = getQueryParamsString([
@@ -122,21 +126,14 @@ export const checkModelUpdate = createAsyncThunk(
       state.workspace.workspaceId
     )}/models${queryParams}`;
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      method: "GET",
-    }).then((response) => response.json());
-
+    const { data } = await client.get(url);
     return data;
   }
 );
 
 export const checkStatus = createAsyncThunk(
   "workspace/get_labelling_status",
-  async (request, { getState }) => {
+  async (_, { getState }) => {
     const state = getState();
 
     const queryParams = getQueryParamsString([
@@ -147,15 +144,36 @@ export const checkStatus = createAsyncThunk(
       state.workspace.workspaceId
     )}/status${queryParams}`;
 
-    const data = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.authenticate.token}`,
-      },
-      method: "GET",
-    }).then((response) => response.json());
-
+    const { data } = await client.get(url);
     return data;
+  }
+);
+
+export const downloadModel = createAsyncThunk(
+  "workspace/downloadModel",
+  async (_, { getState }) => {
+    const state = getState();
+    const queryParams = getQueryParamsString([
+      getCategoryQueryString(state.workspace.curCategory),
+    ]);
+    
+    const url = `${getWorkspace_url}/${encodeURIComponent(
+      state.workspace.workspaceId
+      )}/export_model${queryParams}`;
+      
+      const { data } = await client.get(url, {
+        headers: {
+          "Content-Type": "application/zip",
+        },
+        parseResponseBodyAs: "blob",
+      });
+      
+      const current = new Date();
+      const date = `${current.getDate()}/${
+        current.getMonth() + 1
+      }/${current.getFullYear()}`;
+    const fileName = `model-category_${curCategoryNameSelector(state)}-version_${state.workspace.modelVersion}-${date}.zip`;
+    fileDownload(data, fileName);
   }
 );
 
@@ -185,12 +203,6 @@ const DataSlice = createSlice({
       return {
         ...state,
         workspaceVisited: true,
-      };
-    },
-    clearError(state, action) {
-      return {
-        ...state,
-        errorMessage: null,
       };
     },
   },
@@ -275,6 +287,12 @@ const DataSlice = createSlice({
           progress === 100 ? true : state.nextModelShouldBeTraining,
       };
     },
+    [downloadModel.pending]: (state, action) => {
+      state.downloadingModel = true;
+    },
+    [downloadModel.fulfilled]: (state, action) => {
+      state.downloadingModel = false;
+    },
   },
 });
 
@@ -293,7 +311,6 @@ export const curCategoryNameSelector = (state) => {
 export const activePanelSelector = (state) => {
   return state.workspace.panels[state.workspace.panels.activePanelId];
 };
-
 
 export default DataSlice.reducer;
 export const {
@@ -319,7 +336,6 @@ export const {
   setSearchInput,
   resetLastSearchString,
   setWorkspaceVisited,
-  clearError,
   cleanEvaluationState,
   updateMainPanelElement,
   cleanUploadedLabels,

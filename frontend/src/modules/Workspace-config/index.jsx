@@ -21,7 +21,6 @@ import ExistingWorkspace from "./ExistingWorkspaceForm"
 import NewWorkspace from "./NewWorkspaceForm"
 import LoadDocument from "./LoadDocumentForm"
 import ButtonAppBar from "../../components/bars/upperBar/ButtonAppBar"
-import { ToastContainer } from 'react-toastify';
 import { useDispatch } from 'react-redux'
 import useLoadDoc from './useLoadDoc';
 import useNewWorkspace from './useNewWorkspace';
@@ -62,7 +61,6 @@ const WorkspaceConfig = () => {
   return (
     <>
       <ButtonAppBar logout={logout} />
-      <ToastContainer position="top-center" theme='dark' limit={1} />
       <div className={classes.container}>
         <div />
         <div style={{maxWidth: "362px"}}>

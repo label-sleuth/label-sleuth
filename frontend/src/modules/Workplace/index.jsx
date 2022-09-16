@@ -17,7 +17,6 @@ import React, { useState, useMemo } from "react";
 import Box from "@mui/material/Box";
 import { Stack } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
-import { ToastContainer } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { setActivePanel } from "./redux/DataSlice";
 import WorkspaceInfo from "./information/WorkspaceInfo";
@@ -51,7 +50,6 @@ import useWorkspaceState from "./customHooks/useWorkspaceState";
 import Tutorial from "./tutorial";
 import TutorialDialog from "./tutorial/TutorialDialog";
 import useBackdrop from "../../customHooks/useBackdrop";
-import { useErrorHandler } from "./customHooks/useErrorHandler";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem("workspaceId"));
@@ -73,11 +71,9 @@ export default function Workspace() {
   
   const { openBackdrop } = useBackdrop();
 
-
   const dispatch = useDispatch();
 
   useWorkspaceState();
-  useErrorHandler();
 
 
 
@@ -133,12 +129,6 @@ export default function Workspace() {
         style={tutorialOpen ? { filter: "blur(2px)" } : null}
       >
         <CssBaseline />
-        <ToastContainer
-          position="top-center"
-          hideProgressBar={true}
-          autoClose={7000}
-          theme="dark"
-        />
         <WorkspaceInfo
           workspaceId={workspaceId}
           setTutorialOpen={setTutorialOpen}

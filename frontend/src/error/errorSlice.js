@@ -13,14 +13,24 @@
     limitations under the License.
 */
 
-import React from "react";
-import { screen } from "@testing-library/react";
-import { renderWithProviderAndRouter } from "../../../utils/test-utils";
-import WorkspaceConfig from '../index';
+import { createSlice } from '@reduxjs/toolkit'
 
-test("test that workspace configuration is displayed correctly", async () => {
-    renderWithProviderAndRouter(
-      <WorkspaceConfig/>
-    )
-    expect(screen.getByText(/Continue with Existing Workspace/i)).toBeInTheDocument()
-  });
+const initialState = {
+    errorMessage: null,
+}
+
+export const errorSlice = createSlice({
+    name: 'error',
+    initialState,
+    reducers: {
+        setError: (state, action) => {
+            state.errorMessage = action.payload;
+        },
+        clearError(state, _) {
+            state.errorMessage = null;
+        },
+    }
+})
+
+export const { setError, clearError } = errorSlice.actions;
+export const errorReducer = errorSlice.reducer
