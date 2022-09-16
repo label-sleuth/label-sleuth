@@ -218,7 +218,8 @@ class OrchestratorApi:
                                                             sample_size=sys.maxsize,
                                                             remove_duplicates=remove_duplicates)['results']
 
-    def query(self, workspace_id: str, dataset_name: str, category_id: Union[int, None], query_regex: str,
+    def query(self, workspace_id: str, dataset_name: str, category_id: Union[int, None],
+              query: str, is_regex: bool = False,
               sample_size: int = sys.maxsize, sample_start_idx: int = 0, unlabeled_only: bool = False,
               remove_duplicates=False) -> Mapping[str, object]:
         """
@@ -227,7 +228,8 @@ class OrchestratorApi:
         :param workspace_id:
         :param dataset_name:
         :param category_id: optional. If unlabeled_only is True category_id will be used for determining unlabeled
-        :param query_regex: string
+        :param query: string
+        :param is_regex: if True, the query string is interpreted as a regular expression (False by default)
         :param unlabeled_only: if True, filters out labeled elements
         :param sample_size: maximum items to return
         :param sample_start_idx: get elements starting from this index (for pagination)
@@ -247,7 +249,7 @@ class OrchestratorApi:
         else:
             return self.data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                       sample_size=sample_size, sample_start_idx=sample_start_idx,
-                                                      query_regex=query_regex, remove_duplicates=remove_duplicates)
+                                                      query=query, is_regex=is_regex, remove_duplicates=remove_duplicates)
 
     def set_labels(self, workspace_id: str, uri_to_label: Mapping[str, Mapping[int, Label]],
                    apply_to_duplicate_texts=True, update_label_counter=True):

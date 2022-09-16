@@ -68,16 +68,15 @@ def filter_by_labeled_status(df: pd.DataFrame, labels: pd.Series, category_id: i
     return df
 
 
-def filter_by_query_and_document_uri(df: pd.DataFrame, query, document_id=None, regex=False):
+def filter_by_query_and_document_uri(df: pd.DataFrame, query, is_regex: bool = False, document_id=None):
     if document_id is not None:
         df = df[df.uri.str.startswith(f"{document_id}-")]
     if query:
-        df = df[df.text.str.contains(query, flags=re.IGNORECASE, na=False, regex=regex)]
+        df = df[df.text.str.contains(query, flags=re.IGNORECASE, na=False, regex=is_regex)]
     return df
 
 
 def filter_by_query_and_label_status(df: pd.DataFrame, labels_series: pd.Series, category_id: int,
-                                     labeled_status: LabeledStatus, query: str):
+                                     labeled_status: LabeledStatus, query: str, is_regex: bool = False):
     df = filter_by_labeled_status(df, labels_series, category_id, labeled_status)
-    df = filter_by_query_and_document_uri(df, query)
-    return df
+    return filter_by_query_and_document_uri(df, query, is_regex)

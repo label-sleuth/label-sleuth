@@ -537,7 +537,8 @@ def query(workspace_id):
     sample_start_idx = int(request.args.get('sample_start_idx', 0))
 
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
-    resp = curr_app.orchestrator_api.query(workspace_id, dataset_name, category_id=None, query_regex=query_string,
+    resp = curr_app.orchestrator_api.query(workspace_id, dataset_name, category_id=None,
+                                           query=query_string, is_regex=False,
                                            unlabeled_only=False, sample_size=sample_size,
                                            sample_start_idx=sample_start_idx, remove_duplicates=True)
 
