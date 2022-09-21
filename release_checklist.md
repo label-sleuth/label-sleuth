@@ -21,7 +21,6 @@ For testing the system, either clear your browser cache or add `--port <PORT_NUM
 * Import the downloaded model to the new workspace and make sure the same elements appear on both workspaces
 
 *Only if all the above steps are in order*, create a new PyPi release by pushing a new version tag:
-* `git tag v<VERSION_NUMBER>` (e.g., `git tag v0.0.0`)
-* `git push --tags`
+create a new [GitHub release](https://github.com/label-sleuth/label-sleuth/releases), create a new tag with the new version number. Describe the changes and publish.
 
 Within a few minutes, you should see that the new version appears in https://pypi.org/project/label-sleuth/
