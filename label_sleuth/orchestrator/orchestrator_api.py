@@ -400,6 +400,7 @@ class OrchestratorApi:
 
         logging.info(f"workspace '{workspace_id}' training a model for category id '{category_id}', "
                      f"train_statistics: {train_statistics}")
+
         model_id, future = model_api.train(train_data=train_data, language=self.config.language)
         model_status = model_api.get_model_status(model_id)
         model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
@@ -425,7 +426,7 @@ class OrchestratorApi:
         try:
             model_id = future.result()
         except Exception:
-            logging.error(f"Train failed. Marking worspace '{workspace_id}' category id'{category_id}' "
+            logging.error(f"Train failed. Marking workspace '{workspace_id}' category id '{category_id}' "
                           f"iteration {iteration_index} as error")
             self.orchestrator_state.update_model_status(workspace_id=workspace_id, category_id=category_id,
                                                         iteration_index=iteration_index, new_status=ModelStatus.ERROR)
@@ -583,11 +584,14 @@ class OrchestratorApi:
         :param force: if True, launch an iteration regardless of whether the thresholds are met
         :return: None if no training was launched, else the model_id for the training job submitted in the background
         """
-        try:
-            workspace = self.orchestrator_state.get_workspace(workspace_id)
-            dataset_name = workspace.dataset_name
 
-            iterations = workspace.categories[category_id].iterations
+        workspace = self.orchestrator_state.get_workspace(workspace_id)
+        dataset_name = workspace.dataset_name
+
+        iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_id).copy()
+
+
+        try:
             iterations_without_errors = [iteration for iteration in iterations
                                          if iteration.status != IterationStatus.ERROR]
 
@@ -625,7 +629,27 @@ class OrchestratorApi:
                              f"(should be >={self.config.changed_element_threshold}). not training a new model")
                 return None
         except Exception:
-            logging.exception("train_if_recommended failed in a background thread. Model will not be trained")
+            iterations_latest = self.orchestrator_state.get_all_iterations(workspace_id, category_id)
+            if len(iterations) != len(iterations_latest):
+                # iteration was already created, set the status to error
+                iteration_index = len(iterations_latest) - 1
+                self.orchestrator_state.update_iteration_status(workspace_id, category_id, iteration_index,
+                                                                IterationStatus.ERROR)
+                self.orchestrator_state.update_model_status(workspace_id=workspace_id, category_id=category_id,
+                                                            iteration_index=iteration_index,
+                                                            new_status=ModelStatus.ERROR)
+            else:
+                # iteration yet to be created, add and set status to error
+                iteration_index = len(iterations_latest)
+                model_info = ModelInfo(model_id="error-did_not_start", model_status=ModelStatus.ERROR,
+                                       creation_date=datetime.now(), model_type=None, train_statistics={})
+                self.orchestrator_state.add_iteration(workspace_id, category_id, model_info=model_info)
+                self.orchestrator_state.update_iteration_status(workspace_id, category_id, iteration_index,
+                                                                IterationStatus.ERROR)
+
+            logging.exception(f"train_if_recommended failed in iteration {iteration_index}. Model will not be trained")
+
+
 
     def infer(self, workspace_id: str, category_id: int, elements_to_infer: Sequence[TextElement],
               iteration_index: int = None, use_cache: bool = True) -> Sequence[Prediction]:

@@ -34,6 +34,7 @@ def validate_workspace_id(function):
             return jsonify({"type": "workspace_id_does_not_exist",
                             "title": f"workspace_id {workspace_id} does not exist"}), 404
         return function(workspace_id, *args, **kwargs)
+
     return wrapper
 
 
@@ -49,6 +50,7 @@ def validate_category_id(function):
             return jsonify({"type": "category_id_does_not_exist",
                             "title": f"category_id {category_id} does not exist in workspace {workspace_id}"}), 404
         return function(workspace_id, *args, **kwargs)
+
     return wrapper
 
 
@@ -69,7 +71,8 @@ def elements_back_to_front(workspace_id: str, elements: List[TextElement], categ
               'begin': text_element.span[0][0],
               'end': text_element.span[0][1],
               'text': text_element.text,
-              'user_labels': {k: str(v.label).lower()  # TODO current UI is using true and false as strings. change to boolean in the new UI
+              'user_labels': {k: str(v.label).lower()
+                              # TODO current UI is using true and false as strings. change to boolean in the new UI
                               for k, v in text_element.category_to_label.items()},
               'model_predictions': {}
               }
@@ -105,12 +108,13 @@ def extract_iteration_information_list(iterations: Sequence[Iteration]):
         [{'iteration': iteration_index,
           'model_status': iteration.model.model_status.name,
           'creation_epoch': iteration.model.creation_date.timestamp(),
-          'model_type': iteration.model.model_type.name,
+          'model_type': iteration.model.model_type.name if iteration.model.model_type is not None else "Unknown",
           **iteration.iteration_statistics,
           # The frontend expects a dict of string to int, and train counts contains a mix of boolean and string keys.
           'model_metadata': {**iteration.model.train_statistics,
                              TRAIN_COUNTS_STR_KEY: {str(k).lower(): v for k, v
-                                                    in iteration.model.train_statistics[TRAIN_COUNTS_STR_KEY].items()}},
+                                                    in iteration.model.train_statistics.get(TRAIN_COUNTS_STR_KEY,
+                                                                                            {}).items()}},
           'active_learning_status': iteration.status.name}
          for iteration_index, iteration in enumerate(iterations)]
 
