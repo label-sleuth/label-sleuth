@@ -272,10 +272,10 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         os.remove(self.get_in_progress_flag_path(model_id))
 
     def get_completed_flag_path(self, model_id):
-        return os.path.join(self.get_model_dir_by_id(model_id), f'train_complete_for_{model_id}')
+        return os.path.join(self.get_model_dir_by_id(model_id), f'train_complete')
 
     def get_in_progress_flag_path(self, model_id):
-        return os.path.join(self.get_model_dir_by_id(model_id), f'train_in_progress_for_{model_id}')
+        return os.path.join(self.get_model_dir_by_id(model_id), f'train_in_progress')
 
     def save_metadata(self, model_id, language: Language, model_params: Mapping):
         """
