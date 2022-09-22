@@ -525,7 +525,7 @@ def query(workspace_id):
 
     :param workspace_id:
     :request_arg category_id:
-    :request_arg qry_string: regular expression
+    :request_arg qry_string: query string
     :request_arg qry_size: number of elements to return
     :request_arg sample_start_idx: get elements starting from this index (for pagination)
     """
