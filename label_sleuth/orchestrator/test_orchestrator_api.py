@@ -145,7 +145,7 @@ class TestOrchestratorAPI(unittest.TestCase):
 
         # use export_workspace_labels() to turn labeled_elements_for_export into a dataframe for export
         with patch.object(FileBasedDataAccess, 'get_labeled_text_elements', side_effect=mock_get_labeled_text_elements):
-            exported_df = self.orchestrator_api.export_workspace_labels('mock_workspace_1')
+            exported_df = self.orchestrator_api.export_workspace_labels('mock_workspace_1', True)
 
         for column in exported_df.columns:
             self.assertIn(column, DisplayFields.__dict__.values())

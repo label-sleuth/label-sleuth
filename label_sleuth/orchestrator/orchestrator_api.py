@@ -281,7 +281,8 @@ class OrchestratorApi:
         self.data_access.unset_labels(
             workspace_id, category_id, uris, apply_to_duplicate_texts=apply_to_duplicate_texts)
 
-    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False):
+    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False) -> \
+            Mapping[bool, int]:
         """
         Get the number of elements that were labeled for the given category.
         :param workspace_id:
@@ -590,7 +591,6 @@ class OrchestratorApi:
 
         iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_id).copy()
 
-
         try:
             iterations_without_errors = [iteration for iteration in iterations
                                          if iteration.status != IterationStatus.ERROR]
@@ -648,8 +648,6 @@ class OrchestratorApi:
                                                                 IterationStatus.ERROR)
 
             logging.exception(f"train_if_recommended failed in iteration {iteration_index}. Model will not be trained")
-
-
 
     def infer(self, workspace_id: str, category_id: int, elements_to_infer: Sequence[TextElement],
               iteration_index: int = None, use_cache: bool = True) -> Sequence[Prediction]:
@@ -820,32 +818,58 @@ class OrchestratorApi:
                'total': total}
         return res
 
-    def export_workspace_labels(self, workspace_id) -> pd.DataFrame:
+    def export_workspace_labels(self, workspace_id, labeled_only) -> pd.DataFrame:
+        """
+        get all user labels from the workspace as a Dataframe. Each row in the DataFrame is a label for a specific
+        element for a specific category. Column names for the various fields are listed under DisplayFields.
+
+        :param workspace_id:
+        :param labeled_only: only export elements as they were labeled by the user. If set to False, use the
+        TrainingSetSelectionStrategy to determine the exported elements
+        """
         dataset_name = self.get_dataset_name(workspace_id)
         categories = self.get_all_categories(workspace_id)
         list_of_dicts = []
+
         for category_id, category in categories.items():
-            label_count = sum(self.get_label_counts(workspace_id, dataset_name, category_id, False).values())
-            logging.info(f"Total label count in workspace '{workspace_id}' is {label_count}")
-            labeled_elements = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
-                                                                          remove_duplicates=False)['results']
-            logging.info(f"Exporting {len(labeled_elements)} unique labeled elements for category id '{category_id}'"
-                         f" from workspace '{workspace_id}'")
+            label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, False)
+            total_count = sum(self.get_label_counts(workspace_id, dataset_name, category_id, False).values())
+
+            if labeled_only or label_counts[LABEL_POSITIVE] == 0: # if there are no positive elements,
+                # training set selector cannot be used so we only use the labeled elements
+                logging.info(f"Labeled elements for category {category.name} ({category_id}) in workspace "
+                             f"'{workspace_id}' is {total_count}")
+                text_elements = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
+                                                                           remove_duplicates=False)['results']
+            else:
+                train_set_selector = get_training_set_selector(self.data_access,
+                                                               strategy=self.config.training_set_selection_strategy)
+                text_elements = train_set_selector.get_train_set(workspace_id=workspace_id,
+                                                                 train_dataset_name=dataset_name,
+                                                                 category_id=category_id)
+                logging.info(
+                    f"Labeled elements size for category {category.name} ({category_id}) in workspace "
+                    f"'{workspace_id}' is {total_count}, exported elements size is {len(text_elements)}")
+
             list_of_dicts.extend(
                 [{DisplayFields.workspace_id: workspace_id,
                   DisplayFields.category_name: category.name,
-                  DisplayFields.doc_id: le.uri.split('-')[1],  # TODO handle when handling uri/doc_id/element_id
+                  DisplayFields.doc_id: element.uri.split('-')[1],
+                  # TODO handle when handling uri/doc_id/element_id
                   DisplayFields.dataset: dataset_name,
-                  DisplayFields.text: le.text,
-                  DisplayFields.uri: le.uri,
-                  DisplayFields.element_metadata: le.metadata,
-                  DisplayFields.label: le.category_to_label[category_id].label,
+                  DisplayFields.text: element.text,
+                  DisplayFields.uri: element.uri,
+                  DisplayFields.element_metadata: element.metadata,
+                  DisplayFields.label: element.category_to_label[category_id].label,
                   # TODO uncomment when adding metadata
                   # DisplayFields.label_metadata: le.category_to_label[category_id].metadata,
-                  # TODO uncomment when adding support for exporting weak labels
-                  # DisplayFields.label_type: le.category_to_label[category_id].label_type.name
+                  DisplayFields.label_type: element.category_to_label[category_id].label_type.name
                   }
-                 for le in labeled_elements])
+                 for element in text_elements])
+
+        logging.info(
+            f"Exporting a total of {len(list_of_dicts)} elements from workspace '{workspace_id}'")
+
         return pd.DataFrame(list_of_dicts)
 
     def copy_model_dir_for_export(self, workspace_id, category_id, iteration_index):

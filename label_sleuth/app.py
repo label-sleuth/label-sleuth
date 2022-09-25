@@ -691,8 +691,13 @@ def export_labels(workspace_id):
     for a specific category. Column names for the various fields are listed under DisplayFields.
 
     :param workspace_id:
+    :request_arg labeled_only: only export elements as they were labeled by the user. If set to False, use the
+    TrainingSetSelectionStrategy to determine the exported elements
     """
-    return curr_app.orchestrator_api.export_workspace_labels(workspace_id).to_csv(index=False)
+    labeled_only = request.args.get('labeled_only', "true")
+    labeled_only = labeled_only.lower() == "true"
+
+    return curr_app.orchestrator_api.export_workspace_labels(workspace_id, labeled_only).to_csv(index=False)
 
 
 """
