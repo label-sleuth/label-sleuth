@@ -190,7 +190,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False) \
-            -> Mapping[str, int]:
+            -> Mapping[bool, int]:
         """
         Return for each label value, assigned to category_id, the total count of its appearances in dataset_name.
         :param workspace_id: the workspace_id of the labeling effort.
