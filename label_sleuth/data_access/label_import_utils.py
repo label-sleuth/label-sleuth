@@ -36,10 +36,9 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
     remove_duplicates = False if doc_uri is not None else True
     regex = '|'.join(f'^{re.escape(t)}$' for t in texts)
     elements = data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                             sample_size=sys.maxsize, query_regex=regex, document_uri=doc_uri,
-                                             remove_duplicates=remove_duplicates)['results']
-
-    return elements
+                                             sample_size=sys.maxsize, query=regex, is_regex=True,
+                                             document_uri=doc_uri, remove_duplicates=remove_duplicates)
+    return elements['results']
 
 
 def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_to_import: pd.DataFrame) \

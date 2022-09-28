@@ -125,8 +125,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize,
-                          sample_start_idx: int = 0, query_regex: str = None, remove_duplicates=False,
-                          document_uri=None, random_state: int = 0) -> Mapping:
+                          sample_start_idx: int = 0, query: str = None, is_regex: bool = False,
+                          remove_duplicates=False, document_uri=None, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query,
         and add their labels information for workspace_id, if available.
@@ -135,8 +135,9 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
-        no such filtering is performed.
+        :param query: a query string to search for in the sampled TextElements.
+                      If None, then no such filtering is performed.
+        :param is_regex: if True, the query string is interpreted as a regular expression (False by default)
         :param document_uri: get elements from a particular document
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
@@ -147,7 +148,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
-                                    sample_size: int = sys.maxsize, sample_start_idx: int = 0, query_regex: str = None,
+                                    sample_size: int = sys.maxsize, sample_start_idx: int = 0,
+                                    query: str = None, is_regex: bool = False,
                                     remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, unlabeled for category_id in workspace_id, optionally
@@ -158,8 +160,9 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param category_id: we demand that the elements are not labeled for this category
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
-        no such filtering is performed.
+        :param query: a query string to search for in the sampled TextElements.
+                      If None, then no such filtering is performed.
+        :param is_regex: if True, the query string is interpreted as a regular expression (False by default)
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
@@ -169,7 +172,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
-                                  sample_size: int = sys.maxsize, query_regex: str = None,
+                                  sample_size: int = sys.maxsize,
+                                  query: str = None, is_regex: bool = False,
                                   remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, labeled for category_id in workspace_id,
@@ -179,8 +183,9 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param category_id: we demand that the elements are labeled for this category
         :param sample_size: how many TextElements should be sampled
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
-        no such filtering is performed.
+        :param query: a query string to search for in the sampled TextElements.
+                      If None, then no such filtering is performed.
+        :param is_regex: if True, the query string is interpreted as a regular expression (False by default)
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose

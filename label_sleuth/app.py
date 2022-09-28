@@ -525,7 +525,7 @@ def query(workspace_id):
 
     :param workspace_id:
     :request_arg category_id:
-    :request_arg qry_string: regular expression
+    :request_arg qry_string: query string
     :request_arg qry_size: number of elements to return
     :request_arg sample_start_idx: get elements starting from this index (for pagination)
     """
@@ -535,17 +535,16 @@ def query(workspace_id):
     query_string = request.args.get('qry_string')
     sample_size = int(request.args.get('qry_size', 100))
     sample_start_idx = int(request.args.get('sample_start_idx', 0))
-
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
-    resp = curr_app.orchestrator_api.query(workspace_id, dataset_name, category_id=None, query_regex=query_string,
+    resp = curr_app.orchestrator_api.query(workspace_id, dataset_name, category_id=None,
+                                           query=query_string, is_regex=False,
                                            unlabeled_only=False, sample_size=sample_size,
                                            sample_start_idx=sample_start_idx, remove_duplicates=True)
-
     sorted_elements = sorted(resp["results"], key=lambda te: get_natural_sort_key(te.uri))
     elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id)
-
     res = {'elements': elements_transformed,
-           'hit_count': resp["hit_count"], 'hit_count_unique': resp["hit_count_unique"]}
+           'hit_count': resp["hit_count"],
+           'hit_count_unique': resp["hit_count_unique"]}
     return jsonify(res)
 
 

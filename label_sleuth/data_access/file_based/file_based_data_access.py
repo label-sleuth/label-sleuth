@@ -225,7 +225,7 @@ class FileBasedDataAccess(DataAccessApi):
         return utils.build_text_elements_from_dataframe_and_labels(self._get_ds_in_memory(dataset_name), labels_dict={})
 
     def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize,
-                          sample_start_idx: int = 0, query_regex: str = None, document_uri=None,
+                          sample_start_idx: int = 0, query: str = None, is_regex: bool = False, document_uri=None,
                           remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, optionally limiting to those matching a query,
@@ -235,8 +235,9 @@ class FileBasedDataAccess(DataAccessApi):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
-        no such filtering is performed.
+        :param query: a query string to search for in the sampled TextElements.
+                      If None, then no such filtering is performed.
+        :param is_regex: if True, the query string is interpreted as a regular expression (False by default)
         :param document_uri: get elements from a particular document
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
@@ -248,14 +249,15 @@ class FileBasedDataAccess(DataAccessApi):
             results_dict = \
                 self._get_text_elements(
                     workspace_id=workspace_id, dataset_name=dataset_name,
-                    filter_func=lambda df, _: utils.filter_by_query_and_document_uri(df, query_regex, document_uri),
+                    filter_func=lambda df, _: utils.filter_by_query_and_document_uri(df, query, is_regex, document_uri),
                     sample_size=sample_size, sample_start_idx=sample_start_idx,
                     remove_duplicates=remove_duplicates, random_state=random_state)
 
         return results_dict
 
     def get_unlabeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
-                                    sample_size: int = sys.maxsize, sample_start_idx: int = 0, query_regex: str = None,
+                                    sample_size: int = sys.maxsize, sample_start_idx: int = 0,
+                                    query: str = None, is_regex: bool = False,
                                     remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, unlabeled for category_id in workspace_id, optionally
@@ -266,8 +268,9 @@ class FileBasedDataAccess(DataAccessApi):
         :param category_id: we demand that the elements are not labeled for this category
         :param sample_size: how many TextElements should be sampled
         :param sample_start_idx: get elements starting from this index (for pagination). Default is 0
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
-        no such filtering is performed.
+        :param query: a query string to search for in the sampled TextElements.
+                      If None, then no such filtering is performed.
+        :param is_regex: if True, the query string is interpreted as a regular expression (False by default)
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
@@ -275,7 +278,7 @@ class FileBasedDataAccess(DataAccessApi):
         {'results': [TextElement], 'hit_count': int}
         """
         filter_func = lambda df, labels: \
-            utils.filter_by_query_and_label_status(df, labels, category_id, LabeledStatus.UNLABELED, query_regex)
+            utils.filter_by_query_and_label_status(df, labels, category_id, LabeledStatus.UNLABELED, query, is_regex)
 
         with self._get_lock_object_for_workspace(workspace_id):
             results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
@@ -285,7 +288,7 @@ class FileBasedDataAccess(DataAccessApi):
         return results_dict
 
     def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
-                                  sample_size: int = sys.maxsize, query_regex: str = None,
+                                  sample_size: int = sys.maxsize, query: str = None, is_regex: bool = False,
                                   remove_duplicates=False, random_state: int = 0) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, labeled for category_id in workspace_id,
@@ -295,8 +298,9 @@ class FileBasedDataAccess(DataAccessApi):
         :param dataset_name: the name of the dataset from which TextElements are sampled
         :param category_id: we demand that the elements are labeled for this category
         :param sample_size: how many TextElements should be sampled
-        :param query_regex: a regular expression that should be matched in the sampled TextElements. If None, then
-        no such filtering is performed.
+        :param query: a query string to search for in the sampled TextElements.
+                      If None, then no such filtering is performed.
+        :param is_regex: if True, the query string is interpreted as a regular expression (False by default)
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
@@ -304,8 +308,7 @@ class FileBasedDataAccess(DataAccessApi):
         {'results': [TextElement], 'hit_count': int}
         """
         filter_func = lambda df, labels: \
-            utils.filter_by_query_and_label_status(df, labels, category_id, LabeledStatus.LABELED, query_regex)
-
+            utils.filter_by_query_and_label_status(df, labels, category_id, LabeledStatus.LABELED, query, is_regex)
         with self._get_lock_object_for_workspace(workspace_id):
             results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                    filter_func=filter_func, sample_size=sample_size,
