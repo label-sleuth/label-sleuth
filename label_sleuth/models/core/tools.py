@@ -16,7 +16,11 @@
 import logging
 import re
 import os
+import shutil
 import string
+import sys
+import tarfile
+import tempfile
 import threading
 
 from collections import defaultdict
@@ -24,7 +28,9 @@ from enum import Enum
 from typing import List
 
 import numpy as np
+import requests
 import spacy
+from tqdm.auto import tqdm
 
 from label_sleuth.models.core.languages import Language, Languages
 
@@ -77,20 +83,54 @@ class SentenceEmbeddingService:
                 self.spacy_models[model_name] = self.load_or_download_spacy_model(model_name)
         return self.spacy_models[model_name]
 
+    @staticmethod
+    def download_spacy_model(model_name, output_path):
+        """
+        The default spacy download method installs spacy models via pip install, which is unsuitable for some
+        deployment and packaging scenarios. Thus, in this method we download the spacy model archive manually, and
+        then place the model files inside the Label Sleuth output directory.
+        See https://spacy.io/usage/models#download-manual
+
+        """
+        from spacy.cli._util import SDIST_SUFFIX
+        from spacy.cli.download import get_compatibility, get_version
+
+        # get the url for the relevant version of the requested spacy model
+        compatibility = get_compatibility()
+        model_version = get_version(model_name, compatibility)
+        model_with_version = f'{model_name}-{model_version}'
+        full_download_url = f'{spacy.about.__download_url__}/{model_with_version}/{model_with_version}{SDIST_SUFFIX}'
+
+        # download the archive file
+        temp_path = tempfile.TemporaryDirectory().name
+        with requests.get(full_download_url, stream=True) as response:
+            total_length = int(response.headers.get("Content-Length"))
+            with tqdm.wrapattr(response.raw, "read", total=total_length, desc="Downloading spacy model") as raw:
+                with open(temp_path, 'wb') as output:
+                    shutil.copyfileobj(raw, output)
+
+        tar = tarfile.open(temp_path)
+        temp_path_2 = tempfile.TemporaryDirectory().name
+        # extract the relevant directory from the archive (https://spacy.io/usage/models#download-manual)
+        path_to_model_files = f'{model_with_version}/{model_name}/{model_with_version}'
+        tar.extractall(members=[x for x in tarfile.open(temp_path).getmembers()
+                                if x.name.startswith(path_to_model_files)],
+                       path=temp_path_2)
+
+        # move the model files to the Label Sleuth output directory
+        shutil.move(os.path.join(temp_path_2, path_to_model_files), output_path)
+
     def load_or_download_spacy_model(self, model_name) -> spacy.Language:
         """
-        load or download spacy model by name.
-        Since there is no way to control the download destination for spacy models, the model is downloaded and then
-        saved into the output dir.
+        Load or download a spacy model by name, and place it inside self.spacy_models_path
         """
         model_path = os.path.join(self.spacy_models_path, model_name)
         if os.path.exists(model_path):
             return spacy.load(model_path)
-        logging.info(f"Spacy model does not exist in {model_path}, downloading...")
-        spacy.cli.download(model_name)
-        model = spacy.load(model_name)
-        model.to_disk(model_path)
 
+        logging.info(f"Spacy model does not exist in {model_path}, downloading...")
+        self.download_spacy_model(model_name, model_path)
+        model = spacy.load(model_path)
         return model
 
 
