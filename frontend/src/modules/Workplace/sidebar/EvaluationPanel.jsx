@@ -14,14 +14,7 @@
 */
 
 import React from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  CircularProgress,
-  Stack,
-  Divider,
-} from "@mui/material";
+import { Box, Button, Stack, Divider } from "@mui/material";
 import classes from "./index.module.css";
 import { useSelector, useDispatch } from "react-redux";
 import Element from "./Element";
@@ -39,9 +32,34 @@ import {
   WAIT_NEW_MODEL_MSG,
   panelIds,
 } from "../../../const";
+import {
+  Header,
+  PanelTypography,
+  Loading,
+} from "./components/commonComponents";
+import usePanelPagination from "../../../customHooks/usePanelPagination";
+import { CustomPagination } from "../../../components/pagination/CustomPagination";
 
 const EvaluationPanel = () => {
   const dispatch = useDispatch();
+
+  const sidebarPanelElementsPerPage = useSelector(
+    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  );
+  const loading = useSelector(
+    (state) => state.workspace.panels.loading[panelIds.EVALUATION]
+  );
+
+  const {
+    currentContentData,
+    currentPage,
+    onPageChange,
+    isPaginationRequired,
+  } = usePanelPagination({
+    elementsPerPage: sidebarPanelElementsPerPage,
+    panelId: panelIds.EVALUATION,
+    fakePagination: true,
+  });
 
   const {
     elements,
@@ -49,11 +67,11 @@ const EvaluationPanel = () => {
     isInProgress,
     lastScore,
     scoreModelVersion,
-  } = useSelector(
-    (state) => state.workspace.panels[panelIds.EVALUATION]
-  );
+  } = useSelector((state) => state.workspace.panels[panelIds.EVALUATION]);
 
-  const isLoading = useSelector(state => state.workspace.panels.loading[panelIds.EVALUATION])
+  const isLoading = useSelector(
+    (state) => state.workspace.panels.loading[panelIds.EVALUATION]
+  );
 
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
 
@@ -91,37 +109,14 @@ const EvaluationPanel = () => {
     calculateChangedCountAndDispatch(cancelEvaluation);
   };
 
-  const typographyStyle = {
-    display: "flex",
-    justifyContent: "center",
-    fontSize: "0.8rem",
-    color: "rgba(0,0,0,.54)",
-    mr: 1,
-    ml: 1,
-  };
-
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItem: "center",
-          marginTop: "11px",
-          borderBottom: "1px solid #e2e2e2",
-          pb: "12px",
-          justifyContent: "center",
-        }}
-      >
-        <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Precision evaluation</strong>
-        </p>
-      </Box>
+      <Header message={"Precision evaluation"} />
       <Box sx={{ display: "flex", justifyContent: "center", mt: 3, mb: 2 }}>
         <Stack>
           <Button
             onClick={onStartEvaluation}
-            disabled={isInProgress || nextModelShouldBeTraining}
+            disabled={loading || isInProgress || nextModelShouldBeTraining}
           >
             Start {lastScore ? "new" : ""} precision evaluation
           </Button>
@@ -130,32 +125,40 @@ const EvaluationPanel = () => {
             Submit
           </Button>
           <Divider variant="middle" />
-          <Button
-            onClick={onCancelEvaluation}
-            disabled={!!!isInProgress}
-          >
+          <Button onClick={onCancelEvaluation} disabled={!!!isInProgress}>
             Cancel evaluation
           </Button>
         </Stack>
       </Box>
-      <Box className={classes["search-results"]} sx={{ mt: 16 }}>
-        <Divider sx={{ mb: 3 }} variant="middle" />
+      <Divider variant="middle" />
+      <Box sx={{ mt: 2 }}>
+        {isLoading ? null : isInProgress ? (
+          <PanelTypography>{EVALUATION_IN_PROGRESS_MSG} </PanelTypography>
+        ) : lastScore !== null ? (
+          <PanelTypography sx={{ fontSize: "1rem" }}>
+            {PRECISION_RESULT_MSG(
+              Math.round(lastScore * 100),
+              modelVersion,
+              scoreModelVersion
+            )}
+          </PanelTypography>
+        ) : nextModelShouldBeTraining ? (
+          <PanelTypography>{WAIT_NEW_MODEL_MSG}</PanelTypography>
+        ) : (
+          <PanelTypography>{START_EVALUATION_MSG}</PanelTypography>
+        )}
+      </Box>
+      <Box
+        sx={{ mt: 20 }}
+        className={`${classes["element-list"]} ${
+          isPaginationRequired ? classes.pagination_margin : ""
+        }`}
+      >
         {isLoading ? (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "15px",
-            }}
-          >
-            <CircularProgress />
-          </div>
+          <Loading />
         ) : isInProgress ? (
           <Box>
-            <Typography sx={typographyStyle}>
-              {EVALUATION_IN_PROGRESS_MSG}
-            </Typography>
-            {Object.values(elements).map((element, i) => {
+            {currentContentData.map((element, i) => {
               return (
                 <Element
                   element={element}
@@ -165,16 +168,16 @@ const EvaluationPanel = () => {
               );
             })}
           </Box>
-        ) : lastScore !== null ? (
-          <Typography sx={{ ...typographyStyle, fontSize: "1rem" }}>
-            {PRECISION_RESULT_MSG(Math.round(lastScore * 100), modelVersion, scoreModelVersion)}
-          </Typography>
-        ) : nextModelShouldBeTraining ? (
-          <Typography sx={typographyStyle}>{WAIT_NEW_MODEL_MSG}</Typography>
-        ) : (
-          <Typography sx={typographyStyle}>{START_EVALUATION_MSG}</Typography>
-        )}
+        ) : null}
       </Box>
+      <CustomPagination
+        currentContentData={currentContentData}
+        hitCount={elements ? Object.keys(elements).length : 0}
+        sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
+        currentPage={currentPage}
+        onPageChange={onPageChange}
+        isPaginationRequired={isPaginationRequired}
+      />
     </Box>
   );
 };

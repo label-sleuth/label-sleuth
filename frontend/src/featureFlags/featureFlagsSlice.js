@@ -46,6 +46,8 @@ export const featureFlagsSlice = createSlice({
         loading: false,
         fetched: true,
         authenticationEnabled: featureFlags["login_required"],
+        mainPanelElementsPerPage: featureFlags["main_panel_elements_per_page"],
+        sidebarPanelElementsPerPage: featureFlags["sidebar_panel_elements_per_page"],
       };
     },
     [fetchFeatureFlags.rejected]: (state, { error }) => {

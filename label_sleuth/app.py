@@ -15,6 +15,7 @@
 
 import getpass
 import logging
+from operator import length_hint
 import os
 import shutil
 import tempfile
@@ -409,6 +410,9 @@ def get_document_elements(workspace_id, document_uri):
     :param document_uri:
     :request_arg category_id:
     """
+
+    size = int(request.args.get('size', 100))
+    start_idx = int(request.args.get('start_idx', 0))
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
     document = curr_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_uri])[0]
     elements = document.text_elements
@@ -416,8 +420,9 @@ def get_document_elements(workspace_id, document_uri):
     if category_id is not None:
         category_id = int(category_id)
     elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
+    elements_transformed = elements_transformed[start_idx: start_idx + size]
 
-    res = {'elements': elements_transformed}
+    res = {'elements': elements_transformed, 'hit_count': len(elements)}
     return jsonify(res)
 
 
@@ -533,8 +538,9 @@ def query(workspace_id):
     if category_id is not None:
         category_id = int(category_id)
     query_string = request.args.get('qry_string')
-    sample_size = int(request.args.get('qry_size', 100))
-    sample_start_idx = int(request.args.get('sample_start_idx', 0))
+    sample_size = int(request.args.get('size', 100))
+    sample_start_idx = int(request.args.get('start_idx', 0))
+
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
     resp = curr_app.orchestrator_api.query(workspace_id, dataset_name, category_id=None,
                                            query=query_string, is_regex=False,
@@ -614,10 +620,12 @@ def get_all_positively_labeled_elements_for_category(workspace_id):
     :param workspace_id:
     :request_arg category_id:
     """
+    size = int(request.args.get('size', 100))
+    start_idx = int(request.args.get('start_idx', 0))
     category_id = int(request.args['category_id'])
-    elements_transformed = get_all_labeled_elements(workspace_id, category_id, label=LABEL_POSITIVE)
+    elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_POSITIVE, size=size, start_idx=start_idx)
 
-    res = {'positive_elements': elements_transformed}
+    res = {'elements': elements, "hit_count": hit_count}
     return jsonify(res)
 
 
@@ -633,13 +641,16 @@ def get_all_negatively_labeled_elements_for_category(workspace_id):
     :request_arg category_id:
     """
     category_id = int(request.args['category_id'])
-    elements_transformed = get_all_labeled_elements(workspace_id, category_id, label=LABEL_NEGATIVE)
+    size = int(request.args.get('size', 100))
+    start_idx = int(request.args.get('start_idx', 0))
+   
+    elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_NEGATIVE, size=size, start_idx=start_idx)
 
-    res = {'negative_elements': elements_transformed}
+    res = {'elements': elements, "hit_count": hit_count}
     return jsonify(res)
 
 
-def get_all_labeled_elements(workspace_id, category_id, label=None):
+def get_all_labeled_elements(workspace_id, category_id, label=None, size: int = 100, start_idx: int = 0):
     """
     Return all elements that were assigned the given label, or all labeled elements if label is None
 
@@ -650,12 +661,13 @@ def get_all_labeled_elements(workspace_id, category_id, label=None):
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
     elements = curr_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
                                                                        remove_duplicates=True)
-
     if label is not None:
         elements = [element for element in elements
                     if element.category_to_label[category_id].label == label]
     elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
-    return elements_transformed
+    hit_count = len(elements_transformed)
+    elements_transformed = elements_transformed[start_idx: start_idx + size]
+    return elements_transformed, hit_count
 
 
 @main_blueprint.route('/workspace/<workspace_id>/import_labels', methods=['POST'])
@@ -779,10 +791,10 @@ def get_elements_to_label(workspace_id):
                                                                   IterationStatus.READY)) == 0:
         return jsonify({"elements": []})
 
-    elements = curr_app.orchestrator_api.get_elements_to_label(workspace_id, category_id, size, start_idx)
+    elements, hit_count = curr_app.orchestrator_api.get_elements_to_label(workspace_id, category_id, size, start_idx)
     elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
 
-    res = {'elements': elements_transformed}
+    res = {'elements': elements_transformed, 'hit_count': hit_count}
     return jsonify(res)
 
 
@@ -936,16 +948,22 @@ def get_suspicious_elements(workspace_id):
     :param workspace_id:
     :request_arg category_id:
     """
-
+    size = int(request.args.get('size', 100))
+    start_idx = int(request.args.get('start_idx', 0))
     category_id = int(request.args['category_id'])
+    size = int(request.args.get('size', 100))
+    start_idx = int(request.args.get('start_idx', 0))  
+    
     try:
         suspicious_elements = curr_app.orchestrator_api.get_suspicious_elements_report(workspace_id, category_id)
         elements_transformed = elements_back_to_front(workspace_id, suspicious_elements, category_id)
-        res = {'elements': elements_transformed}
+        hit_count = len(elements_transformed)
+        elements_transformed = elements_transformed[start_idx: start_idx + size]
+        res = {'elements': elements_transformed, 'hit_count': hit_count}
         return jsonify(res)
     except Exception:
         logging.exception("Failed to generate suspicious elements report")
-        res = {'elements': []}
+        res = {'elements': [], 'hit_count': 0}
         return jsonify(res)
 
 
@@ -968,13 +986,17 @@ def get_contradicting_elements(workspace_id):
     :request_arg category_id:
     """
     category_id = int(request.args['category_id'])
+    size = int(request.args.get('size', 100))
+    start_idx = int(request.args.get('start_idx', 0))
     try:
         contradiction_elements_dict = curr_app.orchestrator_api.get_contradiction_report(workspace_id, category_id)
         element_pairs_transformed = [elements_back_to_front(workspace_id, element_pair, category_id)
                                      for element_pair in contradiction_elements_dict['pairs']]
+        hit_count = len(element_pairs_transformed)
+        element_pairs_transformed = element_pairs_transformed[start_idx: start_idx + size]
         diffs = [[list(element_a_unique_token_set), list(element_b_unique_token_set)]
                  for element_a_unique_token_set, element_b_unique_token_set in contradiction_elements_dict['diffs']]
-        res = {'pairs': element_pairs_transformed, 'diffs': diffs}
+        res = {'pairs': element_pairs_transformed, 'diffs': diffs, 'hit_count': hit_count}
         return jsonify(res)
     except Exception:
         logging.exception(f"Failed to generate contradiction report for workspace "
@@ -1143,7 +1165,9 @@ def get_feature_flags():
     """
 
     res =  {
-        "login_required": curr_app.config['CONFIGURATION'].login_required
+        "login_required": curr_app.config['CONFIGURATION'].login_required,
+        "main_panel_elements_per_page": curr_app.config['CONFIGURATION'].main_panel_elements_per_page,
+        "sidebar_panel_elements_per_page": curr_app.config['CONFIGURATION'].sidebar_panel_elements_per_page
     }
     logging.debug(f'Feature flags are: {res}')
     return jsonify(res) 

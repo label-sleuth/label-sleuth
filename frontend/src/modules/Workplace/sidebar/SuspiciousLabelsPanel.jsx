@@ -13,77 +13,58 @@
     limitations under the License.
 */
 
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import React from "react";
-import classes from "./index.module.css";
 import { useSelector } from "react-redux";
-import Element from "./Element";
 import { panelIds } from "../../../const";
+import { ElementList, Header } from "./components/commonComponents";
+import usePanelPagination from "../../../customHooks/usePanelPagination";
+import { CustomPagination } from "../../../components/pagination/CustomPagination";
 
 const SuspiciousLabelsPanel = () => {
-  const elements = useSelector((state) => state.workspace.panels[panelIds.SUSPICIOUS_LABELS].elements);
+  const { hitCount } = useSelector(
+    (state) => state.workspace.panels[panelIds.SUSPICIOUS_LABELS]
+  );
+
+  const loading = useSelector(
+    (state) => state.workspace.panels.loading[panelIds.SUSPICIOUS_LABELS]
+  );
+
+  const sidebarPanelElementsPerPage = useSelector(
+    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  );
+
+  const {
+    currentContentData,
+    currentPage,
+    onPageChange,
+    isPaginationRequired,
+  } = usePanelPagination({
+    elementsPerPage: sidebarPanelElementsPerPage,
+    panelId: panelIds.SUSPICIOUS_LABELS,
+  });
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItem: "center",
-          marginTop: "11px",
-          borderBottom: "1px solid #e2e2e2",
-          pb: "12px",
-          justifyContent: "center",
-        }}
-      >
-        <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Suspicious labels</strong>
-        </p>
-      </Box>
-      {!elements || elements.length === 0 ? (
-        <Typography
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            fontSize: "0.8rem",
-            color: "rgba(0,0,0,.54)",
-            mt: 2,
-            mb: 2,
-            mr: 1,
-            ml: 1,
-          }}
-        >
-          {`No suspicious labels were found.`}
-        </Typography>
-      ) : (
-        <Typography
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            fontSize: "0.8rem",
-            color: "rgba(0,0,0,.54)",
-            mt: 2,
-            mb: 2,
-            mr: 1,
-            ml: 1,
-          }}
-        >
-          {
-            "Review the labels of these examples which the system suspects might be wrong"
-          }
-        </Typography>
-      )}
-      <Box className={classes["search-results"]} sx={{ mt: 4 }}>
-        {elements &&
-          Object.values(elements).map((element, i) => {
-            return (  
-              <Element
-                element={element}
-                key={element.id}
-              />
-            );
-          })}
-      </Box>
+      <Header message={"Suspicious labels"} />
+      <ElementList
+        elements={currentContentData}
+        loading={loading}
+        nonEmptyResultsMessage={
+          "Review the labels of these examples which the system suspects might be wrong"
+        }
+        emptyResultsMessage={"No suspicious labels were found."}
+        isPaginationRequired={isPaginationRequired}
+        elementsTopPadding={2}
+      />
+      <CustomPagination
+        currentContentData={currentContentData}
+        hitCount={hitCount}
+        sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
+        currentPage={currentPage}
+        onPageChange={onPageChange}
+        isPaginationRequired={isPaginationRequired}
+      />
     </Box>
   );
 };

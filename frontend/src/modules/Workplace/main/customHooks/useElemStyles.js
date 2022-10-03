@@ -15,8 +15,7 @@
 
 import classes from "../Element.module.css";
 import { useSelector } from "react-redux";
-import { useCallback, useMemo } from "react";
-
+import { useMemo } from "react";
 /**
  * Handle the styles of an element. There are four cases:
  * - element is focused and predicted as positive.
@@ -27,43 +26,74 @@ import { useCallback, useMemo } from "react";
  * @param { the models prediction } prediction
  * @returns
  */
-const useElemStyles = (elementDOMId, prediction) => {
-
-  // The hackyToggle variable forces this custom hook to be executed even when the DOMkey is the same
+const useElemStyles = (elementDOMId, prediction, userLabel) => {
+  // The hackyToggle variable forces this custom hook to be executed even when the DOMkey is the same document
   // The scenario it covers is when the user clicks the same sidebar element twice
-  const { DOMKey: focusedElementDOMKey, hackyToggle } = useSelector(
-    (state) => state.workspace.panels.focusedElement
-  );
+  const {
+    DOMKey: focusedElementDOMKey,
+    hackyToggle,
+    highlight,
+  } = useSelector((state) => state.workspace.panels.focusedElement);
 
-
-  const text_colors = useMemo(
+  const elemStyleClassesEnum = useMemo(
     () => ({
-      pos: { color: "#3092ab" },
-      neg: { color: "#bd3951" },
+      ANIMATION: "text_auto_focus",
+      PREDICT: "text_predict",
+      NON_PREDICT: "text_normal",
+      POS_USER_LABEL: "pos_user_label",
+      NEG_USER_LABEL: "neg_user_label",
     }),
     []
   );
 
-  const handleTextElemStyle = useCallback(() => {
-    let textElemStyle;
-    if (focusedElementDOMKey === elementDOMId) {
-      textElemStyle =
-        prediction === "pos" ? "text_auto_focus_pred" : "text_auto_focus";
-    } else {
-      textElemStyle = prediction === "pos" ? "text_predict" : "text_normal";
+  const elemStyle = useMemo(() => {
+    let style = {
+      animation: null,
+      prediction: null,
+      userLabel: null,
+    };
+
+    if (focusedElementDOMKey === elementDOMId && highlight === true) {
+      style.animation = elemStyleClassesEnum.ANIMATION;
     }
 
-    if (textElemStyle.startsWith("text_auto_focus")) {
-      textElemStyle = hackyToggle ? `${textElemStyle}2` : textElemStyle;
+    if (style.animation) {
+      style.animation = hackyToggle ? `${style.animation}2` : style.animation;
     }
-    const textElemStyleClass = classes[textElemStyle];
-    return textElemStyleClass;
-  }, [focusedElementDOMKey, hackyToggle, prediction, elementDOMId]);
 
-  return {
-    handleTextElemStyle,
-    text_colors,
-  };
+    style.prediction =
+      prediction === "pos"
+        ? elemStyleClassesEnum.PREDICT
+        : elemStyleClassesEnum.NON_PREDICT;
+
+    style.userLabel =
+      userLabel === "pos"
+        ? elemStyleClassesEnum.POS_USER_LABEL
+        : userLabel === "neg"
+        ? elemStyleClassesEnum.NEG_USER_LABEL
+        : null;
+
+    return style;
+  }, [
+    focusedElementDOMKey,
+    hackyToggle,
+    prediction,
+    elementDOMId,
+    highlight,
+    userLabel,
+    elemStyleClassesEnum,
+  ]);
+
+  const elemStyleClasses = useMemo(() => {
+    const styleClasses = {}
+    Object.keys(elemStyle).forEach(
+      (k) => (styleClasses[k] = elemStyle[k] ? classes[elemStyle[k]] : "")
+      );
+    return styleClasses;
+  }, [elemStyle]);
+
+
+  return elemStyleClasses;
 };
 
 export default useElemStyles;

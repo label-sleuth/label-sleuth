@@ -13,39 +13,38 @@
     limitations under the License.
 */
 
-import {
-  Box,
-  Stack,
-  Typography,
-  Divider,
-  CircularProgress,
-} from "@mui/material";
+import { Box, Stack, Divider } from "@mui/material";
 import React from "react";
 import classes from "./index.module.css";
 import { useSelector, useDispatch } from "react-redux";
 import Element from "./Element";
-import { getContradictingLabels } from "../redux/DataSlice";
 import contradictive_elem_icon from "../Asset/contradicting.svg";
 import { panelIds } from "../../../const";
+import { ElementList, Header } from "./components/commonComponents";
+import usePanelPagination from "../../../customHooks/usePanelPagination";
+import { CustomPagination } from "../../../components/pagination/CustomPagination";
 
 const ContradictingLabelsPanel = () => {
-  const { elements, pairs } = useSelector(
+  const sidebarPanelElementsPerPage = useSelector(
+    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  );
+
+  const {
+    currentContentData,
+    currentPage,
+    onPageChange,
+    isPaginationRequired,
+  } = usePanelPagination({
+    elementsPerPage: sidebarPanelElementsPerPage,
+    panelId: panelIds.CONTRADICTING_LABELS,
+  });
+
+  const { elements, pairs, hitCount } = useSelector(
     (state) => state.workspace.panels[panelIds.CONTRADICTING_LABELS]
   );
   const loading = useSelector(
     (state) => state.workspace.panels.loading[panelIds.CONTRADICTING_LABELS]
   );
-
-  const curCategory = useSelector((state) => state.workspace.curCategory);
-  const modelVersion = useSelector((state) => state.workspace.modelVersion);
-
-  const dispatch = useDispatch();
-
-  React.useEffect(() => {
-    if (curCategory !== null && modelVersion !== null && modelVersion >= 0) {
-      dispatch(getContradictingLabels());
-    }
-  }, [curCategory]);
 
   const Separator = () => (
     <Divider variant="middle" flexItem>
@@ -82,86 +81,44 @@ const ContradictingLabelsPanel = () => {
     );
   };
 
+  const PairList = ({ pairs }) => {
+    return (
+      <Box>
+        {pairs &&
+          pairs.map((pair, i) => (
+            <ContradictingPair key={i} addSeparator={i !== pairs.length - 1}>
+              {pair.map((elementId, j) => {
+                const element = elements[elementId];
+                return <Element key={2 * i + j} element={element} />;
+              })}
+            </ContradictingPair>
+          ))}
+      </Box>
+    );
+  };
+
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItem: "center",
-          marginTop: "11px",
-          borderBottom: "1px solid #e2e2e2",
-          pb: "12px",
-          justifyContent: "center",
-        }}
+      <Header message={"Contradicting labels"} />
+      <ElementList
+        elements={currentContentData}
+        loading={loading}
+        hitCount={hitCount}
+        nonEmptyResultsMessage={`Review these ${pairs.length} pairs of examples, which are semantically similar but were labeled by you with contradicting labels`}
+        emptyResultsMessage={"No contradicting pairs of examples were found."}
+        isPaginationRequired={isPaginationRequired}
+        elementsTopPadding={4}
       >
-        <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Contradicting labels</strong>
-        </p>
-      </Box>
-      {loading ? (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginTop: "15px",
-          }}
-        >
-          <CircularProgress />
-        </div>
-      ) : !pairs || pairs.length === 0 ? (
-        <Typography
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            fontSize: "0.8rem",
-            color: "rgba(0,0,0,.54)",
-            mt: 2,
-            mb: 2,
-            mr: 1,
-            ml: 1,
-          }}
-        >
-          {`No contradicting pairs of examples were found.`}
-        </Typography>
-      ) : (
-        <Typography
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            fontSize: "0.8rem",
-            color: "rgba(0,0,0,.54)",
-            mt: 2,
-            mb: 2,
-            mr: 1,
-            ml: 1,
-          }}
-        >
-          {`Review these ${
-            pairs.length
-          } pairs of examples, which are semantically similar but were labeled by you with contradicting labels`}
-        </Typography>
-      )}
-      {!loading ? (
-        <Box className={classes["search-results"]} sx={{ mt: 7 }}>
-          {pairs &&
-            pairs.map((pair, i) => (
-              <ContradictingPair
-                key={i}
-                addSeparator={i !== pairs.length - 1}
-              >
-                {pair.map((elementId, j) => {
-                  const element = elements[elementId]
-                  return (
-                    <Element
-                      key={2 * i + j}
-                      element={element}
-                    />
-                  )})}
-              </ContradictingPair>
-            ))}
-        </Box>
-      ) : null}
+        <PairList pairs={pairs} />
+      </ElementList>
+      <CustomPagination
+        currentContentData={currentContentData}
+        hitCount={hitCount}
+        sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
+        currentPage={currentPage}
+        onPageChange={onPageChange}
+        isPaginationRequired={isPaginationRequired}
+      />
     </Box>
   );
 };

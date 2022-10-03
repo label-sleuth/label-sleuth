@@ -57,10 +57,6 @@ export {
   getContradictingLabels,
   getElementToLabel,
   searchKeywords,
-  fetchElements,
-  fetchNextDocElements,
-  fetchPrevDocElements,
-  fetchCertainDocument,
 } from "./panelsSlice";
 export {
   downloadLabels,
@@ -231,4 +227,9 @@ export const {
   cleanEvaluationState,
   updateMainPanelElement,
   cleanUploadedLabels,
+  changeCurrentDocument,
+  setPage,
+  setRefetch,
+  focusFirstElement,
+  fetchElements,
 } = DataSlice.actions;

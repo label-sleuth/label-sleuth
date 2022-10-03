@@ -16,32 +16,26 @@
 import * as React from "react";
 import { useCallback, useRef } from "react";
 import ReactCanvasConfetti from "react-canvas-confetti";
-import { styled, useTheme } from "@mui/material/styles";
-import Box from "@mui/material/Box";
-import Drawer from "@mui/material/Drawer";
-import Typography from "@mui/material/Typography";
-import sleuth_logo from "../../../assets/sleuth_logo_white.svg";
-import info_icon from "../../../assets/workspace/help.svg";
-import logout_icon from "../../../assets/workspace/logout.svg";
-import workspace_icon from "../../../assets/workspace/change_catalog.svg";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  downloadLabels,
-  uploadLabels,
-  checkModelUpdate,
-  setWorkspaceId,
-} from "../redux/DataSlice";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import { TextField } from "@mui/material";
-import { Tooltip } from "@mui/material";
-import useLogOut from "../../../customHooks/useLogOut";
-import { useNavigate } from "react-router-dom";
-import classes from "./WorkspaceInfo.module.css";
-import { WORKSPACE_CONFIG_PATH } from "../../../config";
-import { toast } from "react-toastify";
+import { styled, useTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Drawer from '@mui/material/Drawer';
+import Typography from '@mui/material/Typography';
+import sleuth_logo from '../../../assets/sleuth_logo_white.svg';
+import info_icon from '../../../assets/workspace/help.svg';
+import logout_icon from '../../../assets/workspace/logout.svg';
+import workspace_icon from '../../../assets/workspace/change_catalog.svg';
+import { useDispatch, useSelector } from 'react-redux';
+import { checkModelUpdate, setWorkspaceId } from '../redux/DataSlice';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import { Tooltip } from '@mui/material';
+import useLogOut from '../../../customHooks/useLogOut';
+import { useNavigate } from 'react-router-dom';
+import classes from './WorkspaceInfo.module.css';
+import { WORKSPACE_CONFIG_PATH } from '../../../config';
+import { toast } from 'react-toastify';
 import {
   LOGOUT_TOOLTIP_MSG,
   GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG,
@@ -83,34 +77,24 @@ const StatsContainer = styled("div")(({ theme }) => ({
   paddingTop: theme.spacing(1),
 }));
 
-const AccountInfo = styled("div")(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  padding: theme.spacing(2, 2),
-}));
+const TabPanel = (props) => {
+    const { children, value, index, ...other } = props;
 
-const ModelName = styled("div")(({ theme }) => ({
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "start",
-  padding: theme.spacing(1, 2),
-}));
-
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`simple-tabpanel-${index}`}
+            aria-labelledby={`simple-tab-${index}`}
+            {...other}
+        >
+            {value === index && (
+                <Box sx={{ p: 3 }}>
+                    {children}
+                </Box>
+            )}
+        </div>
+    );
 }
 
 function a11yProps(index) {

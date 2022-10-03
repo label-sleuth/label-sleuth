@@ -39,6 +39,8 @@ class Configuration:
     apply_labels_to_duplicate_texts: bool
     language: Language
     login_required: bool
+    main_panel_elements_per_page: int = 500
+    sidebar_panel_elements_per_page: int = 2
     users: List[dict] = field(default_factory=list)
 
 

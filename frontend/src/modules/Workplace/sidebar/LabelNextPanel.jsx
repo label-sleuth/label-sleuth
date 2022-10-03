@@ -13,58 +13,56 @@
     limitations under the License.
 */
 
-import { Box, Typography, Stack } from "@mui/material";
+import { Box } from "@mui/material";
 import React from "react";
-import classes from "./index.module.css";
 import { useSelector } from "react-redux";
-import Element from "./Element";
-import { LABEL_NEXT_HELPER_MSG, panelIds } from "../../../const";
+import { panelIds } from "../../../const";
+import { ElementList, Header } from "./components/commonComponents";
+import usePanelPagination from "../../../customHooks/usePanelPagination";
+import { CustomPagination } from "../../../components/pagination/CustomPagination";
 
 const LabelNextPanel = () => {
-  const elements = useSelector((state) => state.workspace.panels[panelIds.LABEL_NEXT].elements);
+  const { hitCount } = useSelector(
+    (state) => state.workspace.panels[panelIds.LABEL_NEXT]
+  );
+
+  const loading = useSelector(
+    (state) => state.workspace.panels.loading[panelIds.LABEL_NEXT]
+  );
+
+  const sidebarPanelElementsPerPage = useSelector(
+    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  );
+
+  const {
+    currentContentData,
+    currentPage,
+    onPageChange,
+    isPaginationRequired,
+  } = usePanelPagination({
+    elementsPerPage: sidebarPanelElementsPerPage,
+    panelId: panelIds.LABEL_NEXT,
+  });
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItem: "center",
-          marginTop: "11px",
-          borderBottom: "1px solid #e2e2e2",
-          pb: "12px",
-          justifyContent: "center",
-        }}
-      >
-        <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Label next</strong>
-        </p>
-      </Box>
-      <Typography
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          fontSize: "0.8rem",
-          color: "rgba(0,0,0,.54)",
-          mt: 2,
-          mb: 2,
-          mr: 1,
-          ml: 1,
-        }}
-      >
-        {LABEL_NEXT_HELPER_MSG}
-      </Typography>
-      <Stack className={classes["search-results"]} sx={{ mt: 4 }}>
-        {elements &&
-          Object.values(elements).map((element, i) => {
-            return (
-              <Element
-                element={element}
-                key={element.id}
-              />
-            );
-          })}
-      </Stack>
+      <Header message={"Label next"} />
+      <ElementList
+        elements={currentContentData}
+        loading={loading}
+        nonEmptyResultsMessage={"Label this elements next"}
+        emptyResultsMessage={""}
+        isPaginationRequired={isPaginationRequired}
+        elementsTopPadding={-2}
+      />
+      <CustomPagination
+        currentContentData={currentContentData}
+        hitCount={hitCount}
+        sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
+        currentPage={currentPage}
+        onPageChange={onPageChange}
+        isPaginationRequired={isPaginationRequired}
+      />
     </Box>
   );
 };

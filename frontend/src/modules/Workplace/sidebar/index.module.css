@@ -102,13 +102,17 @@ display: inline-block;
     background: #d5d5d5 !important;
 }
 
-.search-results{
+.element-list{
     position: absolute;
     left: 0;
     right: 0;
-    top: 100px;
-    bottom: 0;
+    top: 130px;
+    bottom: 20px;
     overflow-y: auto;
+}
+
+.pagination_margin {
+    bottom: 60px;
 }
 
 .top_nav_icons {

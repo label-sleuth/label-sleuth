@@ -13,74 +13,75 @@
     limitations under the License.
 */
 
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import React from "react";
-import classes from "./index.module.css";
-import { useSelector } from "react-redux";
-import Element from "./Element";
+import { useDispatch, useSelector } from "react-redux";
 import { panelIds } from "../../../const";
+import { ElementList, Header } from "./components/commonComponents";
+import usePanelPagination from "../../../customHooks/usePanelPagination";
+import { CustomPagination } from "../../../components/pagination/CustomPagination";
+import { useFetchPanelElements } from "../customHooks/useFetchPanelElements";
+import { setRefetch } from "../redux/DataSlice";
 
 const AllPositiveLabelsPanel = () => {
-  const elements = useSelector((state) => state.workspace.panels[panelIds.POSITIVE_LABELS].elements);
+  const { hitCount, elements } = useSelector(
+    (state) => state.workspace.panels[panelIds.POSITIVE_LABELS]
+  );
+
+  const refetch = useSelector(
+    (state) => state.workspace.panels.refetch
+  )
+
+  const loading = useSelector(
+    (state) => state.workspace.panels.loading[panelIds.POSITIVE_LABELS]
+  );
+
+  const sidebarPanelElementsPerPage = useSelector(
+    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  );
+
+  const dispatch = useDispatch()
+
+  const {
+    currentContentData,
+    currentPage,
+    onPageChange,
+    isPaginationRequired,
+  } = usePanelPagination({
+    elementsPerPage: sidebarPanelElementsPerPage,
+    panelId: panelIds.POSITIVE_LABELS,
+  });
+
+  const { updateActivePanelElements } = useFetchPanelElements()
+
+  React.useEffect(() => {
+    if (refetch) {
+      updateActivePanelElements()
+      dispatch(setRefetch(false))
+    }
+  }, [refetch])
+  
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItem: "center",
-          marginTop: "11px",
-          borderBottom: "1px solid #e2e2e2",
-          pb: "12px",
-          justifyContent: "center",
-        }}
-      >
-        <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Positive labels</strong>
-        </p>
-      </Box>
-      {!elements || elements.length === 0 ? (
-        <Typography
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            fontSize: "0.8rem",
-            color: "rgba(0,0,0,.54)",
-            mt: 2,
-            mb: 2,
-            mr: 1,
-            ml: 1,
-          }}
-        >
-          {`You didn't label any elements as positive so far`}
-        </Typography>
-      ) : (
-        <Typography
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            fontSize: "0.8rem",
-            color: "rgba(0,0,0,.54)",
-            mt: 2,
-            mb: 2,
-            mr: 1,
-            ml: 1,
-          }}
-        >
-          {`These are all the examples labeled by you as positive`}
-        </Typography>
-      )}
-      <Box className={classes["search-results"]} sx={{ mt: 2 }}>
-        {Object.values(elements).map((element, i) => {
-          return (
-            <Element
-              key={element.id}
-              element={element}
-            />
-          );
-        })}
-      </Box>
+      <Header message={"Positive labels"} />
+      <ElementList
+        elements={currentContentData}
+        loading={loading}
+        nonEmptyResultsMessage={
+          "These are all the examples labeled by you as positive"
+        }
+        emptyResultsMessage={"You didn't label any elements as positive so far"}
+        isPaginationRequired={isPaginationRequired}
+      />
+      <CustomPagination
+        currentContentData={currentContentData}
+        hitCount={hitCount}
+        sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
+        currentPage={currentPage}
+        onPageChange={onPageChange}
+        isPaginationRequired={isPaginationRequired}
+      />
     </Box>
   );
 };

@@ -17,8 +17,7 @@ import * as React from "react";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Element from "./Element";
-import { useDispatch, useSelector } from "react-redux";
-import Pagination from "../../../components/pagination/Pagination";
+import { useSelector } from "react-redux";
 import "../../../components/pagination/pagination.css";
 import useMainPagination from "./customHooks/useMainPagination";
 import classes from "./MainPanel.module.css";
@@ -37,8 +36,8 @@ import {
 import { getMainPanelElementId } from "../../../utils/utils";
 import { fetchElements } from "../redux/DataSlice";
 import useScrollMainPanelElementIntoView from "../sidebar/customHooks/useScrollElementIntoView";
-
-const numOfElemPerPage = 500;
+import { useDispatch } from "react-redux";
+import { CustomPagination } from "../../../components/pagination/CustomPagination";
 
 const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(({ theme, open, rightDrawerWidth }) => ({
   position: "fixed",
@@ -63,24 +62,14 @@ const MainPanel = ({ handleKeyEvent, open, rightDrawerWidth }) => {
   const isDocLoaded = useSelector((state) => state.workspace.isDocLoaded);
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
+  const mainPanelElementsPerPage = useSelector((state) => state.featureFlags.mainPanelElementsPerPage);
 
   const dispatch = useDispatch();
 
-  const { currentContentData, currentPage, setCurrentPage, firstPageIndex } = useMainPagination(numOfElemPerPage);
+  const { currentContentData, hitCount, currentPage, onPageChange, isPaginationRequired, setCurrentPage } =
+    useMainPagination(mainPanelElementsPerPage);
+
   const { handleFetchNextDoc, handleFetchPrevDoc } = useFetchPrevNextDoc();
-
-  React.useEffect(() => {
-    if (isDocLoaded && elements === null) {
-      dispatch(fetchElements());
-    }
-  }, [isDocLoaded, elements, dispatch]);
-
-  React.useEffect(() => {
-    // elements has to be re-fetched when the category changes
-    if (isDocLoaded) {
-      dispatch(fetchElements());
-    }
-  }, [isDocLoaded, curCategory, modelVersion, dispatch]);
 
   React.useEffect(() => {
     if (isDocLoaded && !loading) {
@@ -92,7 +81,11 @@ const MainPanel = ({ handleKeyEvent, open, rightDrawerWidth }) => {
 
   return (
     <>
-      <Main open={open} rightDrawerWidth={rightDrawerWidth}>
+      <Main
+        className={`${classes.main_content} ${isPaginationRequired ? classes.pagination_margin : ""}`}
+        open={open}
+        rightDrawerWidth={rightDrawerWidth}
+      >
         <div className={classes.doc_header}>
           <Tooltip
             title={curDocId !== 0 ? PREV_DOC_TOOLTIP_MSG : ""}
@@ -114,7 +107,7 @@ const MainPanel = ({ handleKeyEvent, open, rightDrawerWidth }) => {
           </Tooltip>
           <div className={classes.doc_stats}>
             <h6>{curDocName}</h6>
-            <em>Text Entries: {elements ? Object.keys(elements).length : 0}</em>
+            <em>Text Entries: {hitCount ?? 0}</em>
           </div>
           <Tooltip
             title={documents.length - 1 !== curDocId ? NEXT_DOC_TOOLTIP_MSG : ""}
@@ -136,26 +129,27 @@ const MainPanel = ({ handleKeyEvent, open, rightDrawerWidth }) => {
           </Tooltip>
         </div>
         <div className={classes.doc_content}>
-          <Box></Box>
           <Box id="main-element-view">
             {currentContentData &&
               currentContentData.map((element) => (
                 <Element
-                  keyEventHandler={(e) => handleKeyEvent(e, Object.keys(elements).length)}
+                  keyEventHandler={(e) => handleKeyEvent(e, currentContentData.length)}
                   element={element}
                   key={getMainPanelElementId(element.id)}
                 />
               ))}
           </Box>
         </div>
-        <div className={classes.pagination}>
-          <Pagination
-            currentPage={currentPage}
-            totalCount={elements ? Object.values(elements).length : 0}
-            pageSize={numOfElemPerPage}
-            onPageChange={(page) => setCurrentPage(page)}
-          />
-        </div>
+        <CustomPagination
+          currentContentData={currentContentData}
+          hitCount={hitCount}
+          sidebarPanelElementsPerPage={mainPanelElementsPerPage}
+          currentPage={currentPage}
+          onPageChange={onPageChange}
+          size="medium"
+          sx={{ bottom: "-40px" }}
+          isPaginationRequired={isPaginationRequired}
+        />
       </Main>
     </>
   );

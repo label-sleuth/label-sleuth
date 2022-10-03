@@ -24,8 +24,8 @@ import classes from "./index.module.css";
 import { Box } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { panelIds } from "../../../const";
-import { setFocusedElement, fetchCertainDocument } from "../redux/DataSlice";
 import useLabelState from "../customHooks/useLabelState";
+import { changeCurrentDocument, setFocusedElement } from "../redux/DataSlice";
 
 const text_colors = {
   pos: { color: "#3092ab" },
@@ -49,16 +49,13 @@ const Element = ({ element, updateCounterOnLabeling = true }) => {
   const curDocName = useSelector((state) => state.workspace.curDocName);
   const searchInput = useSelector((state) => state.workspace.panels[panelIds.SEARCH].input);
 
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(updateCounterOnLabeling);
+  const { handlePosLabelState, handleNegLabelState } = useLabelState(
+    updateCounterOnLabeling
+  );
 
   const handleElementClick = async () => {
-    if (docId === curDocName) {
-      dispatch(setFocusedElement(id));
-    } else if (docId !== curDocName) {
-      dispatch(fetchCertainDocument({ docId })).then(() => {
-        dispatch(setFocusedElement(id));
-      });
-    }
+    dispatch(setFocusedElement({element, highlight: true}));
+    dispatch(changeCurrentDocument(docId));
   };
 
   return (

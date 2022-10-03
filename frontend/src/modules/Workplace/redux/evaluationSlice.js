@@ -111,6 +111,7 @@ export const extraReducers = {
       ...state.panels[panelIds.EVALUATION],
       initialElements,
       elements: initialElements,
+      hitCount: Object.keys(initialElements).length
     };
   },
   [getEvaluationElements.pending]: (state, action) => {
@@ -145,6 +146,7 @@ export const extraReducers = {
       initialElements: {},
       isInProgress: false,
       elements: {},
+      hitCount: null,
     };
   },
 };

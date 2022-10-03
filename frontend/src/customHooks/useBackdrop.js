@@ -38,8 +38,8 @@ const useBackdrop = () => {
           downloadingModel ||
           !curDocName ||
           !isDocLoaded ||
-          panelsLoading[panelIds.MAIN_PANEL],
-        panelsLoading[panelIds.LABEL_NEXT]
+          panelsLoading[panelIds.MAIN_PANEL] 
+          //panelsLoading[panelIds.LABEL_NEXT]
       );
     } else if (location.pathname === "/workspace_config") {
       setOpenBackdrop(uploadingDataset);

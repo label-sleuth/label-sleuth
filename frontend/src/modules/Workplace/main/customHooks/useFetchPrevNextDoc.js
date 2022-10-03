@@ -13,42 +13,36 @@
     limitations under the License.
 */
 
-import { fetchPrevDocElements, fetchNextDocElements, } from '../../redux/DataSlice';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
+import { panelIds } from "../../../../const";
+import { changeCurrentDocument, setPage, focusFirstElement } from "../../redux/DataSlice";
 
 const useFetchPrevNextDoc = () => {
-    const curDocId = useSelector(state => state.workspace.curDocId)
-    const documents = useSelector(state => state.workspace.documents)
-    const dispatch = useDispatch()
+  const curDocId = useSelector((state) => state.workspace.curDocId);
+  const documents = useSelector((state) => state.workspace.documents);
+  const dispatch = useDispatch();
 
-    const scrollIntoElementView = () => {
-        const element = document.getElementById('L0')
-        element && element.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        })
+  const handleFetchNextDoc = () => {
+    if (curDocId < documents.length - 1) {
+      dispatch(setPage({ panelId: panelIds.MAIN_PANEL, newPage: 1 }));
+      dispatch(changeCurrentDocument(documents[curDocId + 1]["document_id"]));
+      // this action is currently focusing the first element of the previous document
+      // it works, but ideally the first element of the new document should be focused
+      dispatch(focusFirstElement())
     }
+  };
 
-    const handleFetchNextDoc = () => {
-        if (curDocId < documents.length - 1) {
-            dispatch(fetchNextDocElements()).then(() => {
-                scrollIntoElementView()
-            })
-        }
+  const handleFetchPrevDoc = () => {
+    if (curDocId > 0) {
+      dispatch(setPage({ panelId: panelIds.MAIN_PANEL, newPage: 1 }));
+      dispatch(changeCurrentDocument(documents[curDocId - 1]["document_id"]));
+      dispatch(focusFirstElement())
     }
+  };
 
-    const handleFetchPrevDoc = () => {
-        if (curDocId > 0) {
-            dispatch(fetchPrevDocElements()).then(() => {
-                scrollIntoElementView()
-            })
-        }
-    }
-
-    return {
-        handleFetchPrevDoc,
-        handleFetchNextDoc,
-    }
-}
+  return {
+    handleFetchPrevDoc,
+    handleFetchNextDoc,
+  };
+};
 export default useFetchPrevNextDoc;
-

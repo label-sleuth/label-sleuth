@@ -13,74 +13,70 @@
     limitations under the License.
 */
 
-import * as React from "react";
+import { useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import "../../../../components/pagination/pagination.css";
 import { panelIds } from "../../../../const";
+import usePanelPagination from "../../../../customHooks/usePanelPagination";
+import { getElementIndex } from "../../../../utils/utils";
 
-const useMainPagination = (numOfElemPerPage) => {
-  const curDocId = useSelector((state) => state.workspace.curDocId);
-  const elements = useSelector(
-    (state) => state.workspace.panels[panelIds.MAIN_PANEL].elements
-  );
+const useUpdateFocusedPage = (
+  mainElementIndex,
+  elementsPerPage,
+  setCurrentPage
+) => {
+
+  /**
+   * Update the focused page when a main element has to be focused
+   */
+  useEffect(() => {
+    const focusedPage =
+      mainElementIndex !== null
+        ? Math.floor(mainElementIndex / elementsPerPage) + 1
+        : null;
+    focusedPage && setCurrentPage(focusedPage);
+  }, [mainElementIndex, elementsPerPage, setCurrentPage]);
+};
+
+const useMainPagination = (elementsPerPage) => {
+  const isDocLoaded = useSelector((state) => state.workspace.isDocLoaded);
+  const curDocId = useSelector((state) => state.workspace.curDocName);
+  const curCategory = useSelector((state) => state.workspace.curCategory);
+  const modelVersion = useSelector((state) => state.workspace.modelVersion);
   const focusedElementId = useSelector(
     (state) => state.workspace.panels.focusedElement.id
   );
 
-  const mainElementIndex = React.useMemo(
-    () =>
-      elements &&
-      focusedElementId &&
-      Object.values(elements).findIndex((e) => e.id === focusedElementId),
-    [elements, focusedElementId]
+  const mainElementIndex = useMemo(
+    () => (focusedElementId ? getElementIndex(focusedElementId) : null),
+    [focusedElementId]
   );
 
-  const [currentPage, setCurrentPage] = React.useState(1);
-  let [firstPageIndex, setFirstPageIndex] = React.useState();
-  let [lastPageIndex, setLastPageIndex] = React.useState();
+  const {
+    currentContentData,
+    hitCount,
+    setCurrentPage,
+    currentPage,
+    resetPagination,
+    onPageChange,
+    isPaginationRequired,
+  } = usePanelPagination({
+    elementsPerPage,
+    panelId: panelIds.MAIN_PANEL,
+    shouldFetch: isDocLoaded,
+    otherDependencies: [curDocId, isDocLoaded, curCategory, modelVersion],
+  });
 
-  let currPageNum = React.useMemo(
-    () => Math.ceil(mainElementIndex / numOfElemPerPage),
-    [mainElementIndex, numOfElemPerPage]
-  );
-  let currPageNumMod = React.useMemo(
-    () => mainElementIndex % numOfElemPerPage,
-    [mainElementIndex, numOfElemPerPage]
-  );
-
-  React.useEffect(() => {
-    if (!focusedElementId) {
-      setCurrentPage(1);
-    } else {
-      if (currPageNumMod === 0) {
-        setCurrentPage(currPageNum + 1);
-      } else {
-        setCurrentPage(currPageNum);
-      }
-    }
-  }, [curDocId, focusedElementId, setCurrentPage, currPageNum, currPageNumMod]);
-
-  const currentContentData = React.useMemo(() => {
-    if (elements) {
-      let firstPageIndex = 0;
-
-      if (currentPage > 0) {
-        firstPageIndex = (currentPage - 1) * numOfElemPerPage;
-      }
-
-      const lastPageIndex = firstPageIndex + numOfElemPerPage;
-      setFirstPageIndex(firstPageIndex);
-      setLastPageIndex(lastPageIndex);
-      return Object.values(elements).slice(firstPageIndex, lastPageIndex);
-    }
-  }, [elements, currentPage, numOfElemPerPage]);
+  useUpdateFocusedPage(mainElementIndex, elementsPerPage, setCurrentPage);
 
   return {
     currentContentData,
-    setCurrentPage,
+    hitCount,
     currentPage,
-    lastPageIndex,
-    firstPageIndex,
+    setCurrentPage,
+    resetPagination,
+    onPageChange,
+    isPaginationRequired,
   };
 };
 

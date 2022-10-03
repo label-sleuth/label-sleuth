@@ -355,12 +355,12 @@ class OrchestratorApi:
         :return: a list of *count* TextElement objects
         """
         recommended_uris = self.orchestrator_state.get_current_category_recommendations(workspace_id, category_id)
-
+        hit_count = len(recommended_uris)
         if start_index > len(recommended_uris):
             raise Exception(f"exceeded max recommended items. last element index is {len(recommended_uris) - 1}")
         recommended_uris = recommended_uris[start_index:start_index + count]
         dataset_name = self.get_dataset_name(workspace_id)
-        return self.get_text_elements_by_uris(workspace_id, dataset_name, recommended_uris)
+        return self.get_text_elements_by_uris(workspace_id, dataset_name, recommended_uris), hit_count
 
     # Iteration flow
 

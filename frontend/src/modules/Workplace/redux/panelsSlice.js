@@ -10,13 +10,23 @@ import { getMainPanelElementId } from "../../../utils/utils";
 import { client } from "../../../api/client";
 
 /**
- * This file contains the Thunks, reducers, extraReducers and state to 
+ * This file contains the Thunks, reducers, extraReducers and state to
  * manage the panels. The panels are the main panel and the sidebar panels
  */
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
-const getPanelElements = async (state, endpoint, extraQueryParams = []) => {
+const getPanelElements = async (
+  state,
+  endpoint,
+  extraQueryParams = [],
+  pagination = { startIndex: 0, elementsPerPage: null }
+) => {
+  pagination.startIndex !== null &&
+    extraQueryParams.push(`start_idx=${pagination.startIndex}`);
+  pagination.elementsPerPage !== null &&
+    extraQueryParams.push(`size=${pagination.elementsPerPage}`);
+
   const queryParams = getQueryParamsString([
     getCategoryQueryString(state.workspace.curCategory),
     ...extraQueryParams,
@@ -30,145 +40,90 @@ const getPanelElements = async (state, endpoint, extraQueryParams = []) => {
   return data;
 };
 
-/**
- * Updates the states when a new document has been fetched
- * @param {the document elements} elements
- * @param {the whole state, only curCategory and labelCount } state
- * @param {the document id, i.g. 4} newDocId
- * @param {the actual document id: i.g. medium-Andean condor} newDocName
- * @returns {the state that has to be updated}
- */
- const updateStateAfterFetchingDocument = (
-  unparsedElements,
-  state,
-  newDocId,
-  newDocName
-) => {
-  const { elements, documentPos, documentNeg } = parseElements(
-    unparsedElements,
-    state.curCategory
-  );
-  return {
-    ...state,
-    panels: {
-      ...state.panels,
-      [panelIds.MAIN_PANEL]: {
-        elements,
-      },
-      loading: {
-        ...state.panels.loading,
-        [panelIds.MAIN_PANEL]: false,
-      }
-    },
-    labelCount: {
-      ...state.labelCount,
-      documentPos,
-      documentNeg,
-    },
-    curDocId: newDocId,
-    curDocName: newDocName,
-  };
-};
-
-export const fetchDocumentElements = async (state, docId) => {
-  return await getPanelElements(state, `document/${encodeURIComponent(docId)}`);
-};
-
 export const getElementToLabel = createAsyncThunk(
   "workspace/getElementToLabel",
-  async (request, { getState }) => {
+  async ({ pagination }, { getState }) => {
     const state = getState();
-    return await getPanelElements(state, "active_learning");
+    return await getPanelElements(state, "active_learning", [], pagination);
   }
 );
 
 export const getAllPositiveLabels = createAsyncThunk(
   "workspace/getPositiveElements",
-  async (request, { getState }) => {
+  async ({ pagination }, { getState }) => {
     const state = getState();
-    return await getPanelElements(state, "positive_elements");
+    return await getPanelElements(state, "positive_elements", [], pagination);
   }
 );
 
 export const getSuspiciousLabels = createAsyncThunk(
   "workspace/getSuspiciousElements",
-  async (request, { getState }) => {
+  async ({ pagination }, { getState }) => {
     const state = getState();
-    return await getPanelElements(state, "suspicious_elements");
+    return await getPanelElements(state, "suspicious_elements", [], pagination);
   }
 );
 
 export const getContradictingLabels = createAsyncThunk(
   "workspace/getContradictiveElements",
-  async (request, { getState }) => {
+  async ({ pagination }, { getState }) => {
     const state = getState();
-    return await getPanelElements(state, "contradiction_elements");
+    return await getPanelElements(
+      state,
+      "contradiction_elements",
+      [],
+      pagination
+    );
   }
 );
 
 export const getPositivePredictions = createAsyncThunk(
   "workspace/getPositivePredictions",
-  async (request, { getState }) => {
+  async ({ pagination }, { getState }) => {
     const state = getState();
-    return await getPanelElements(state, "positive_predictions", [
-      "size=100",
-      "start_idx=0",
-    ]);
+    return await getPanelElements(
+      state,
+      "positive_predictions",
+      [],
+      pagination
+    );
   }
 );
 
-export const fetchNextDocElements = createAsyncThunk(
-  "workspace/fetchNextDoc",
-  async (request, { getState }) => {
+export const fetchDocumentElements = createAsyncThunk(
+  "workspace/fetchDocumentElements",
+  async (params, { getState }) => {
+    let docId;
     const state = getState();
-    const nextDocumentId =
-      state.workspace.documents[state.workspace.curDocId + 1]["document_id"];
-      return await fetchDocumentElements(state, nextDocumentId)
-
-  }
-);
-
-export const fetchPrevDocElements = createAsyncThunk(
-  "workspace/fetchPrevDoc",
-  async (request, { getState }) => {
-    const state = getState();
-    const prevDocumentId =
-      state.workspace.documents[state.workspace.curDocId - 1]["document_id"];
-      return await fetchDocumentElements(state, prevDocumentId)
- }
-);
-
-export const fetchElements = createAsyncThunk(
-  "workspace/fetchElements",
-  async (request, { getState }) => {
-    const state = getState();
-
-    const curDocumentId =
-      state.workspace.documents[state.workspace.curDocId]["document_id"];
-      return await fetchDocumentElements(state, curDocumentId)
-  }
-);
-
-export const fetchCertainDocument = createAsyncThunk(
-  "workspace/fetchCertainDocument",
-  async (request, { getState }) => {
-    const { docId } = request;
-    return await fetchDocumentElements(getState(), docId)
+    if (!("docId" in params)) {
+      docId = state.workspace.curDocName;
+    } else {
+      docId = params.docId;
+    }
+    return await getPanelElements(
+      state,
+      `document/${encodeURIComponent(docId)}`,
+      [],
+      params.pagination
+    );
   }
 );
 
 export const searchKeywords = createAsyncThunk(
   "workspace/searchKeywords",
-  async (useLastSearchString = false, { getState }) => {
+  async ({ useLastSearchString = false, pagination } = {}, { getState }) => {
     const state = getState();
-    const searchString = useLastSearchString
-      ? state.workspace.panels[panelIds.SEARCH].lastSearchString
-      : state.workspace.panels[panelIds.SEARCH].input;
+    const { input, lastSearchString } = state.workspace.panels[panelIds.SEARCH];
+    const searchString = useLastSearchString ? lastSearchString : input;
+    const extraQueryParams = [`qry_string=${searchString}`];
+
     return {
-      data: await getPanelElements(state, "query", [
-        `qry_string=${searchString}`,
-        "sample_start_idx=0",
-      ]),
+      data: await getPanelElements(
+        state,
+        "query",
+        extraQueryParams,
+        pagination
+      ),
       searchString,
     };
   }
@@ -183,16 +138,17 @@ export const searchKeywords = createAsyncThunk(
  */
 const elementsInitialState = {
   elements: null,
+  hitCount: null,
+  page: 1,
 };
 
 /**
  * Initial state of the loading state of the sidebar panels.
- * The loading object contains a key-value pair for each 
- * panel. 
+ * The loading object contains a key-value pair for each
+ * panel.
  */
 const loadingInitialState = {};
 Object.values(panelIds).forEach((pId) => (loadingInitialState[pId] = false));
-
 
 /**
  * The initial state for each of the panels. The key for each panel
@@ -207,7 +163,8 @@ export const initialState = {
     focusedElement: {
       id: null,
       DOMKey: null,
-      hackyToggle: false
+      hackyToggle: false,
+      highlight: false,
     },
     [panelIds.MAIN_PANEL]: {
       ...elementsInitialState,
@@ -216,7 +173,6 @@ export const initialState = {
       ...elementsInitialState,
       input: null,
       lastSearchString: null,
-      hitCount: null,
       uniqueHitCount: null,
     },
     [panelIds.LABEL_NEXT]: {
@@ -224,6 +180,7 @@ export const initialState = {
     },
     [panelIds.POSITIVE_PREDICTIONS]: {
       ...elementsInitialState,
+      refetch: false,
     },
     [panelIds.POSITIVE_LABELS]: {
       ...elementsInitialState,
@@ -259,13 +216,65 @@ export const reducers = {
     state.panels[panelIds.SEARCH].lastSearchString = null;
   },
   setFocusedElement(state, action) {
-    const elementId = action.payload;
-    state.panels.focusedElement = {
-      id: elementId,
-      DOMKey: getMainPanelElementId(elementId),
-      hackyToggle: !state.panels.focusedElement.hackyToggle,
-    }
+    const { element, highlight } = action.payload;
+    state.panels.focusedElement = getUpdatedFocusedElementState(
+      element,
+      state.panels.focusedElement.hackyToggle,
+      highlight,
+      initialState.panels.focusedElement,
+    )
   },
+  changeCurrentDocument(state, action) {
+    const newDocId = action.payload;
+    const curDocIndex = state.documents.findIndex(
+      (d) => d.document_id === newDocId
+    );
+    state.curDocName = newDocId;
+    state.curDocId = curDocIndex;
+  },
+  setPage(state, action) {
+    const { panelId, newPage } = action.payload;
+    state.panels[panelId].page = newPage;
+  },
+  setRefetch(state, action) {
+    state.panels.refetch = action.payload;
+  },
+  focusFirstElement(state, action) {
+    const  highlight = false
+    const elements = state.panels[panelIds.MAIN_PANEL].elements
+    const element = elements ? Object.values(elements)[0] : null
+    if (element) {
+      state.panels.focusedElement = getUpdatedFocusedElementState(
+        element,
+        state.panels.focusedElement.hackyToggle,
+        highlight,
+        initialState.panels.focusedElement,
+      )
+    }
+  }
+};
+
+const getUpdatedFocusedElementState = (
+  element,
+  hackyToggle,
+  highlight,
+  defaultState
+) => {
+  if (element) {
+    const { id: elementId, docId } = element;
+    return {
+      id: elementId,
+      docId,
+      DOMKey: elementId ? getMainPanelElementId(elementId) : null,
+      hackyToggle: !hackyToggle,
+      highlight,
+    };
+  } else {
+    return {
+      ...defaultState,
+      hackyToggle: hackyToggle,
+    };
+  }
 };
 
 export const extraReducers = {
@@ -274,12 +283,11 @@ export const extraReducers = {
     state.panels.loading[panelIds.POSITIVE_PREDICTIONS] = true;
   },
   [getPositivePredictions.fulfilled]: (state, action) => {
-    const {
-      elements: unparsedElements,
-    } = action.payload;
+    const { elements: unparsedElements, hit_count: hitCount } = action.payload;
     const { elements } = parseElements(unparsedElements, state.curCategory);
     state.panels.loading[panelIds.POSITIVE_PREDICTIONS] = false;
     state.panels[panelIds.POSITIVE_PREDICTIONS].elements = elements;
+    state.panels[panelIds.POSITIVE_PREDICTIONS].hitCount = hitCount;
   },
 
   // Positive labels panel extra reducers
@@ -287,10 +295,11 @@ export const extraReducers = {
     state.panels.loading[panelIds.POSITIVE_LABELS] = true;
   },
   [getAllPositiveLabels.fulfilled]: (state, action) => {
-    const { positive_elements: unparsedElements } = action.payload;
+    const { elements: unparsedElements, hit_count: hitCount } = action.payload;
     const { elements } = parseElements(unparsedElements, state.curCategory);
     state.panels.loading[panelIds.POSITIVE_LABELS] = false;
     state.panels[panelIds.POSITIVE_LABELS].elements = elements;
+    state.panels[panelIds.POSITIVE_LABELS].hitCount = hitCount;
   },
 
   // Positive predictions panel extra reducers
@@ -298,10 +307,11 @@ export const extraReducers = {
     state.panels.loading[panelIds.SUSPICIOUS_LABELS] = true;
   },
   [getSuspiciousLabels.fulfilled]: (state, action) => {
-    const { elements: unparsedElements } = action.payload;
+    const { elements: unparsedElements, hit_count: hitCount } = action.payload;
     const { elements } = parseElements(unparsedElements, state.curCategory);
     state.panels.loading[panelIds.SUSPICIOUS_LABELS] = false;
     state.panels[panelIds.SUSPICIOUS_LABELS].elements = elements;
+    state.panels[panelIds.SUSPICIOUS_LABELS].hitCount = hitCount;
   },
 
   // Contradicting labels panel extra reducers
@@ -312,7 +322,7 @@ export const extraReducers = {
     state.panels.loading[panelIds.CONTRADICTING_LABELS] = false;
   },
   [getContradictingLabels.fulfilled]: (state, action) => {
-    const { pairs } = action.payload;
+    const { pairs, hit_count: hitCount } = action.payload;
 
     const flattedPairs = pairs?.length ? pairs.flat() : [];
 
@@ -324,6 +334,7 @@ export const extraReducers = {
       elements,
       pairs: pairs.map((pair) => pair.map((element) => element.id)),
     };
+    state.panels[panelIds.CONTRADICTING_LABELS].hitCount = hitCount;
   },
 
   // Label next panel extra reducers
@@ -331,16 +342,23 @@ export const extraReducers = {
     state.panels.loading[panelIds.LABEL_NEXT] = true;
   },
   [getElementToLabel.fulfilled]: (state, action) => {
-    const { elements: unparsedElements } = action.payload;
+    const { elements: unparsedElements, hit_count: hitCount } = action.payload;
     const { elements } = parseElements(unparsedElements, state.curCategory);
 
     state.panels.loading[panelIds.LABEL_NEXT] = false;
     state.panels[panelIds.LABEL_NEXT].elements = elements;
+    state.panels[panelIds.LABEL_NEXT].hitCount = hitCount;
   },
 
   // Search panel extra reducers
-  [searchKeywords.pending]: (state, action) => {
+  [searchKeywords.pending]: (state, _) => {
     state.panels.loading[panelIds.SEARCH] = true;
+    // state.panels[panelIds.SEARCH].elements = null;
+    // state.panels[panelIds.SEARCH] = {
+    //   ...initialState.panels[panelIds.SEARCH],
+    //   input: state.panels[panelIds.SEARCH].input,
+    //   hitCount: state.panels[panelIds.SEARCH].hitCount,
+    // };
   },
   [searchKeywords.fulfilled]: (state, action) => {
     const { data, searchString } = action.payload;
@@ -361,62 +379,37 @@ export const extraReducers = {
       lastSearchString: searchString,
     };
   },
-  
+
   // Main panel extra reducers
-  [fetchElements.pending]: (state, action) => {
+  /**
+   * Updates the states when a new document has been fetched
+   * @param {the document elements} elements
+   * @param {the whole state, only curCategory and labelCount } state
+   * @param {the document id, i.g. 4} newDocId
+   * @param {the actual document id: i.g. medium-Andean condor} newDocName
+   * @returns {the state that has to be updated}
+   */
+  [fetchDocumentElements.pending]: (state, action) => {
     state.panels.loading[panelIds.MAIN_PANEL] = true;
   },
-  [fetchElements.fulfilled]: (state, action) => {
-    const { elements } = action.payload;
-    return updateStateAfterFetchingDocument(
-      elements,
-      state,
-      state.curDocId,
-      state.curDocName
-    );
-  },
-  [fetchNextDocElements.pending]: (state, action) => {
-    state.panels.loading[panelIds.MAIN_PANEL] = true;
-  },
-  [fetchNextDocElements.fulfilled]: (state, action) => {
-    const { elements } = action.payload;
+  [fetchDocumentElements.fulfilled]: (state, action) => {
+    const { elements: unparsedElements, hit_count: hitCount } = action.payload;
 
-    return updateStateAfterFetchingDocument(
-      elements,
-      state,
-      state.curDocId + 1,
-      state.documents[state.curDocId + 1]["document_id"]
-    );
-  },
-  [fetchPrevDocElements.pending]: (state, action) => {
-    state.panels.loading[panelIds.MAIN_PANEL] = true;
-  },
-  [fetchPrevDocElements.fulfilled]: (state, action) => {
-    const { elements } = action.payload;
-
-    return updateStateAfterFetchingDocument(
-      elements,
-      state,
-      state.curDocId - 1,
-      state.documents[state.curDocId - 1]["document_id"]
-    );
-  },
-  [fetchCertainDocument.pending]: (state, action) => {
-    state.panels.loading[panelIds.MAIN_PANEL] = true;
-  },
-  [fetchCertainDocument.fulfilled]: (state, action) => {
-    const { elements } = action.payload;
-
-    const curDocument = elements[0]["docid"];
-    const newDocId = state.documents.findIndex(
-      (d) => d["document_id"] === curDocument
+    const { elements, documentPos, documentNeg } = parseElements(
+      unparsedElements,
+      state.curCategory
     );
 
-    return updateStateAfterFetchingDocument(
+    state.panels[panelIds.MAIN_PANEL] = {
+      ...state.panels[panelIds.MAIN_PANEL],
       elements,
-      state,
-      newDocId,
-      state["documents"][newDocId]["document_id"]
-    );
+      hitCount,
+    };
+    state.panels.loading[panelIds.MAIN_PANEL] = false;
+    state.labelCount = {
+      ...state.labelCount,
+      documentPos,
+      documentNeg,
+    };
   },
 };

@@ -13,44 +13,46 @@
     limitations under the License.
 */
 
-import {
-    setSearchInput,
-    searchKeywords
-} from '../../redux/DataSlice';
-import { useDispatch, useSelector } from 'react-redux';
-import { panelIds } from '../../../../const';
+import { setSearchInput } from "../../redux/DataSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { panelIds } from "../../../../const";
+import { useFetchPanelElements } from "../../customHooks/useFetchPanelElements";
 
-const useSearchElement = () => {
+const useSearchElement = (resetPagination) => {
+  const searchInput = useSelector(
+    (state) => state.workspace.panels[panelIds.SEARCH].input
+  );
 
-    const searchInput = useSelector(state => state.workspace.panels[panelIds.SEARCH].input)
+  const dispatch = useDispatch();
 
-    const dispatch = useDispatch()
+  const { fetchPanelElements } = useFetchPanelElements();
 
-    const handleSearch = () => {
-        if (searchInput !== "") {
-            dispatch(searchKeywords())
-        }
+  const handleSearch = () => {
+    if (searchInput !== "") {
+      resetPagination();
+      fetchPanelElements({ panelId: panelIds.SEARCH });
     }
+  };
 
-    const handleSearchInputChange = (event) => {
-        dispatch(setSearchInput(event.target.value))
-    }
+  const handleSearchInputChange = (event) => {
+    dispatch(setSearchInput(event.target.value));
+  };
 
-    const handleSearchInputEnterKey = (ev) => {
-        if (ev && ev.key) {
-            if (ev.key === 'Enter') {
-                handleSearch()
-                ev.preventDefault();
-            }
-        }
+  const handleSearchInputEnterKey = (ev) => {
+    if (ev && ev.key) {
+      if (ev.key === "Enter") {
+        handleSearch();
+        ev.preventDefault();
+      }
     }
+  };
 
-    return {
-        handleSearch,
-        handleSearchInputChange,
-        searchInput,
-        handleSearchInputEnterKey
-    }
+  return {
+    handleSearch,
+    handleSearchInputChange,
+    searchInput,
+    handleSearchInputEnterKey,
+  };
 };
 
 export default useSearchElement;
