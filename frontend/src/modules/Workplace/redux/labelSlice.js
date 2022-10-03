@@ -19,12 +19,16 @@ const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
 export const downloadLabels = createAsyncThunk(
   "workspace/downloadLabels",
-  async (_, { getState }) => {
+  async ({labeledOnly}, { getState }) => {
     const state = getState();
+
+    const queryParam = `?labeled_only=${labeledOnly}`
 
     const url = `${getWorkspace_url}/${encodeURIComponent(
       state.workspace.workspaceId
-    )}/${DOWNLOAD_LABELS_API}`;
+    )}/${DOWNLOAD_LABELS_API}${queryParam}`;
+    
+
 
     const { data } = await client.get(url, {
       headers: {
