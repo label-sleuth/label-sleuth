@@ -55,6 +55,15 @@ export const createWorkspace = createAsyncThunk(
   }
 );
 
+export const deleteWorkspace = createAsyncThunk(
+  `workspaces/deleteWorkspace`,
+  async ({workspaceId}) => {
+    const url = `${BASE_URL}/workspace/${encodeURIComponent(workspaceId)}`;
+    const { data } = await client.delete(url);
+    return data.workspace_id;
+  }
+);
+
 export const addDocuments = createAsyncThunk(
   `workspaces/getDatasets/dataset_name/addDocuments`,
   async (formData) => {
@@ -115,6 +124,19 @@ export const workspacesSlice = createSlice({
     [createWorkspace.fulfilled]: (state, { payload }) => {
       state.loading = false;
       state.isWorkspaceAdded = true;
+    },
+    [deleteWorkspace.rejected]: (state, action) => {
+      state.loading = false;
+    },
+    [deleteWorkspace.pending]: (state) => {
+      state.loading = true;
+    },
+    [deleteWorkspace.fulfilled]: (state, action) => {
+      const deletedWorkspaceId = action.payload
+      state.loading = false;
+      state.workspaces = state.workspaces.filter(
+        (w) => w !== deletedWorkspaceId
+      );
     },
     [addDocuments.rejected]: (state, action) => {
       state.uploadingDataset = false;

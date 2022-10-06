@@ -13,14 +13,15 @@
     limitations under the License.
 */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux'
-import { getWorkspaces, setActiveWorkspace } from './workspaceConfigSlice'
+import { deleteWorkspace, getWorkspaces, setActiveWorkspace } from './workspaceConfigSlice'
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { WORKSPACE_PATH } from '../../config';
 import { SELECT_WORKSPACE } from '../../const'
+import { isFulfilled } from '@reduxjs/toolkit';
 
 const useExistWorkspace = (notify, toastId) => {
 
@@ -34,9 +35,14 @@ const useExistWorkspace = (notify, toastId) => {
     }, [dispatch])
 
     const [value, setValue] = useState('');
+
     const handleChange = (value) => {
         setValue(value);
     };
+
+    const deleteButtonEnabled = useMemo(() => {
+        return value !== null && value !== ''
+    }, [value])
 
     const handleClick = () => {
         if (!value) {
@@ -52,13 +58,36 @@ const useExistWorkspace = (notify, toastId) => {
         navigate(WORKSPACE_PATH)
     };
 
-    const options = workspaces.map((item) => ({ value: item, title: item }))
+    const handleDeleteWorkspace = () => {
+        // Change the value optimistically to avoid warnings about
+        // the value not being in the options array. If it fails
+        // select that option again
+        const prevValue = value;
+        setValue('');
+        dispatch(deleteWorkspace({workspaceId: value})).then(actionPromiseResult => {
+            if (isFulfilled(actionPromiseResult)) {
+                notify(`The workspace ${value} has been succesfully deleted`, function (message) {
+                    toast.update(toastId, {
+                        render: message,
+                        type: toast.TYPE.SUCCESS,
+                    })
+                })
+            }
+            else {
+                setValue(prevValue);
+            }
+        })
+    }
+
+    const options = useMemo(() => workspaces.map((item) => ({ value: item, title: item })), [workspaces])
 
     return {
         handleClick,
         handleChange,
+        handleDeleteWorkspace,
         value,
         options,
+        deleteButtonEnabled
     }
 };
 

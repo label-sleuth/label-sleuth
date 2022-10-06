@@ -22,8 +22,7 @@ import buttonIBMClasses from "../../components/buttons/Buttons.module.css"
 import 'react-toastify/dist/ReactToastify.css';
 import classes from "./workspace-config.module.css";
 
-const ExistingWorkspaceForm = ({ handleChange, handleClick, value, options }) => {
-
+const ExistingWorkspaceForm = ({ handleChange, handleClick, handleDeleteWorkspace, value, options, deleteButtonEnabled }) => {
     return (
         <Box className={classes.wrapper} style={{ borderBottom: 'solid 1px #8d8d8d' }}>
             <h2 style={{ padding: '25px', margin: 0 }}>Continue</h2>
@@ -38,6 +37,7 @@ const ExistingWorkspaceForm = ({ handleChange, handleClick, value, options }) =>
                     />
                 </FormControl>
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px' }}>
+                    <ButtonIBM disabled={!deleteButtonEnabled} style={{marginRight: "1px"}} onClick={handleDeleteWorkspace} className={  buttonIBMClasses["button-ibm"]} text="Delete" />
                     <ButtonIBM onClick={handleClick} className={  buttonIBMClasses["button-ibm"]} text="Go" />
                 </div>
             </FormControl>

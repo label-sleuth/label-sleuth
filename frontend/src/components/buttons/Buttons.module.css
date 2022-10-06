@@ -54,6 +54,7 @@
 }
 
 .button-ibm-disabled{
+  color: rgb(216, 212, 212);
   cursor: not-allowed;
   pointer-events: none;
   background-color: rgb(0 0 0 / 45%);
