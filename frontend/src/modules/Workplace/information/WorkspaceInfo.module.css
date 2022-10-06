@@ -218,3 +218,12 @@
   .import-export-buttons {
     text-transform: none;
   }
+
+  .alert :global .MuiAlert-icon {
+    margin-right: 5px;
+  }
+
+  .alert :global .MuiAlert-action {
+    padding: 0;
+    margin: 0;
+  }
