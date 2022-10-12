@@ -145,7 +145,7 @@ const SearchPanel = forwardRef(({ clearSearchInput }, textInputRef) => {
       <ElementList
         elements={currentContentData}
         loading={loading}
-        nonEmptyResultsMessage={`Showing ${sidebarPanelElementsPerPage} of ${uniqueHitCount} found elements ${
+        nonEmptyResultsMessage={`Showing ${currentContentData && currentContentData.length} of ${uniqueHitCount} found elements ${
           uniqueHitCount !== hitCount
             ? `(${hitCount} including duplicates)`
             : ""
