@@ -60,6 +60,7 @@ import {
 } from "./FileTransferLabels/TransferLabelsDialog";
 import { getOrdinalSuffix } from "../../../utils/utils";
 import useAuthentication from "../../Login/customHooks/useAuthentication";
+import { ModelErrorAlert } from "./ModelErrorAlert";
 
 const drawerWidth = 280; // left navigation panel width
 
@@ -136,7 +137,9 @@ const WorkspaceInfo = ({
   const nextModelShouldBeTraining = useSelector(
     (state) => state.workspace.nextModelShouldBeTraining
   );
-
+  const lastModelFailed = useSelector(
+    (state) => state.workspace.lastModelFailed
+  );
   const modelVersionSuffix = React.useMemo(
     () => getOrdinalSuffix(modelVersion),
     [modelVersion]
@@ -149,6 +152,7 @@ const WorkspaceInfo = ({
     React.useState(false);
   const [downloadModelDialogOpen, setDownloadModelDialogOpen] =
     React.useState(false);
+
   const refAnimationInstance = useRef(null);
 
   // this state is used to not display the new model notififications the first time the model version is set
@@ -566,6 +570,7 @@ const WorkspaceInfo = ({
                   <div className={classes["dot-pulse"]}></div>
                 </div>
               ) : null}
+              {lastModelFailed && <ModelErrorAlert/>}
             </Stack>
           ) : null}
           <Divider />
