@@ -115,7 +115,7 @@ def extract_iteration_information_list(iterations: Sequence[Iteration]):
                              TRAIN_COUNTS_STR_KEY: {str(k).lower(): v for k, v
                                                     in iteration.model.train_statistics.get(TRAIN_COUNTS_STR_KEY,
                                                                                             {}).items()}},
-          'active_learning_status': iteration.status.name}
+          'iteration_status': iteration.status.name}
          for iteration_index, iteration in enumerate(iterations)]
 
 

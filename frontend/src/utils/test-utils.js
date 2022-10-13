@@ -62,7 +62,7 @@ export const createCategory = async () => {
 export const modelUpdateExample = {
   models: [
     {
-      active_learning_status: "READY",
+      iteration_status: "READY",
       iteration: 4,
       model_status: "READY",
     },

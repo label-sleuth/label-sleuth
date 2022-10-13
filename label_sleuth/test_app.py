@@ -14,6 +14,7 @@
 #
 
 import io
+import logging
 import os
 import time
 import tempfile
@@ -327,9 +328,9 @@ class TestAppIntegration(unittest.TestCase):
             res = self.client.get(f"/workspace/{workspace_name}/models?category_id={category_id}",
                                   headers=HEADERS)
             response = res.get_json()
+            print(response)
             if res.status_code != 200 or (len(response["models"]) == num_models
-                                          and response['models'][0][
-                                              'active_learning_status'] == IterationStatus.READY.name):
+                                          and response['models'][0]['iteration_status'] == IterationStatus.READY.name):
                 break
             time.sleep(0.1)
             waiting_count += 1

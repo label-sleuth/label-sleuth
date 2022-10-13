@@ -153,3 +153,21 @@ test("test model version ordinal: th", async () => {
   );
   expect(screen.getByText("th", { exact: true })).toBeInTheDocument();
 });
+
+test("test model error is shown if model creation failed", async () => {
+  renderWithProviderAndRouter(
+    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} />,
+    {
+      preloadedState: {
+        workspace: {
+          ...initialWorkspaceState,
+          curCategory: 0,
+          modelVersion: 12,
+          lastModelFailed: true,
+        },
+      },
+    }
+  );
+  expect(await screen.findByRole("alert")).toBeInTheDocument();
+  expect(await screen.findByText(/Model creation failed/i)).toBeInTheDocument();
+});
