@@ -18,13 +18,8 @@ import { Box, Button, Stack, Divider } from "@mui/material";
 import classes from "./index.module.css";
 import { useSelector, useDispatch } from "react-redux";
 import Element from "./Element";
-import {
-  checkStatus,
-  startEvaluation,
-  getEvaluationResults,
-  cancelEvaluation,
-} from "../redux/DataSlice";
-
+import { checkStatus, startEvaluation, getEvaluationResults, cancelEvaluation } from "../redux/DataSlice";
+import { ButtonGroup } from "@mui/material";
 import {
   START_EVALUATION_MSG,
   EVALUATION_IN_PROGRESS_MSG,
@@ -32,61 +27,36 @@ import {
   WAIT_NEW_MODEL_MSG,
   panelIds,
 } from "../../../const";
-import {
-  Header,
-  PanelTypography,
-  Loading,
-} from "./components/commonComponents";
-import usePanelPagination from "../../../customHooks/usePanelPagination";
-import { CustomPagination } from "../../../components/pagination/CustomPagination";
+import { Header, PanelTypography, Loading } from "./components/commonComponents";
 
 const EvaluationPanel = () => {
   const dispatch = useDispatch();
 
-  const sidebarPanelElementsPerPage = useSelector(
-    (state) => state.featureFlags.sidebarPanelElementsPerPage
-  );
-  const loading = useSelector(
-    (state) => state.workspace.panels.loading[panelIds.EVALUATION]
+  const loading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
+
+  const { elements, initialElements, isInProgress, lastScore, scoreModelVersion } = useSelector(
+    (state) => state.workspace.panels[panelIds.EVALUATION]
   );
 
-  const {
-    currentContentData,
-    currentPage,
-    onPageChange,
-    isPaginationRequired,
-  } = usePanelPagination({
-    elementsPerPage: sidebarPanelElementsPerPage,
-    panelId: panelIds.EVALUATION,
-    fakePagination: true,
-  });
+  const currentContentData = React.useMemo(() => elements && Object.values(elements), [elements]);
 
-  const {
-    elements,
-    initialElements,
-    isInProgress,
-    lastScore,
-    scoreModelVersion,
-  } = useSelector((state) => state.workspace.panels[panelIds.EVALUATION]);
-
-  const isLoading = useSelector(
-    (state) => state.workspace.panels.loading[panelIds.EVALUATION]
-  );
+  const isLoading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
 
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
 
-  const nextModelShouldBeTraining = useSelector(
-    (state) => state.workspace.nextModelShouldBeTraining
+  const nextModelShouldBeTraining = useSelector((state) => state.workspace.nextModelShouldBeTraining);
+
+  const evaluationElementsCount = React.useMemo(
+    () =>
+      currentContentData
+        ? currentContentData.map((element) => element.userLabel !== "none").reduce((partialSum, a) => partialSum + a, 0)
+        : 0,
+    [elements]
   );
 
   const submitButtonDisabled = React.useMemo(() => {
-    return (
-      !isInProgress ||
-      Object.values(elements).some(
-        (element) => element.userLabel !== "pos" && element.userLabel !== "neg"
-      )
-    );
-  }, [isInProgress, elements]);
+    return !isInProgress || evaluationElementsCount !== currentContentData.length;
+  }, [isInProgress, evaluationElementsCount]);
 
   const onStartEvaluation = () => {
     dispatch(startEvaluation());
@@ -109,25 +79,27 @@ const EvaluationPanel = () => {
     calculateChangedCountAndDispatch(cancelEvaluation);
   };
 
+  const progressLabel = React.useMemo(() => {
+    return currentContentData && `(${evaluationElementsCount}/${currentContentData.length})`;
+  }, [evaluationElementsCount, currentContentData]);
+
   return (
     <Box>
       <Header message={"Precision evaluation"} />
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 3, mb: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 1, mb: 2 }}>
         <Stack>
-          <Button
-            onClick={onStartEvaluation}
-            disabled={loading || isInProgress || nextModelShouldBeTraining}
-          >
-            Start {lastScore ? "new" : ""} precision evaluation
-          </Button>
-          <Divider variant="middle" />
-          <Button onClick={submitEvaluation} disabled={submitButtonDisabled}>
-            Submit
-          </Button>
-          <Divider variant="middle" />
-          <Button onClick={onCancelEvaluation} disabled={!!!isInProgress}>
-            Cancel evaluation
-          </Button>
+        {isInProgress && <PanelTypography sx={{ fontSize: "1rem", pt: 2 }}>{`Progress: ${progressLabel}`}</PanelTypography>}
+          <ButtonGroup sx={{ pt: 2 }} variant="text" aria-label="text button group">
+            <Button sx={{ textTransform: "none" }} onClick={onStartEvaluation} disabled={loading || isInProgress || nextModelShouldBeTraining}>
+              Start
+            </Button>
+            <Button sx={{ textTransform: "none" }} onClick={submitEvaluation} disabled={submitButtonDisabled}>
+              Submit
+            </Button>
+            <Button sx={{ textTransform: "none" }} onClick={onCancelEvaluation} disabled={!!!isInProgress}>
+              Cancel
+            </Button>
+          </ButtonGroup>
         </Stack>
       </Box>
       <Divider variant="middle" />
@@ -135,12 +107,8 @@ const EvaluationPanel = () => {
         {isLoading ? null : isInProgress ? (
           <PanelTypography>{EVALUATION_IN_PROGRESS_MSG} </PanelTypography>
         ) : lastScore !== null ? (
-          <PanelTypography sx={{ fontSize: "1rem" }}>
-            {PRECISION_RESULT_MSG(
-              Math.round(lastScore * 100),
-              modelVersion,
-              scoreModelVersion
-            )}
+          <PanelTypography sx={{ fontSize: "1rem"}}>
+            {PRECISION_RESULT_MSG(Math.round(lastScore * 100), modelVersion, scoreModelVersion)}
           </PanelTypography>
         ) : nextModelShouldBeTraining ? (
           <PanelTypography>{WAIT_NEW_MODEL_MSG}</PanelTypography>
@@ -148,36 +116,17 @@ const EvaluationPanel = () => {
           <PanelTypography>{START_EVALUATION_MSG}</PanelTypography>
         )}
       </Box>
-      <Box
-        sx={{ mt: 20 }}
-        className={`${classes["element-list"]} ${
-          isPaginationRequired ? classes.pagination_margin : ""
-        }`}
-      >
+      <Box sx={{ mt: isInProgress ? 16 : 12 }} className={classes["element-list"]}>
         {isLoading ? (
           <Loading />
         ) : isInProgress ? (
           <Box>
             {currentContentData.map((element, i) => {
-              return (
-                <Element
-                  element={element}
-                  updateCounterOnLabeling={false}
-                  key={element.id}
-                />
-              );
+              return <Element element={element} updateCounterOnLabeling={false} key={element.id} />;
             })}
           </Box>
         ) : null}
       </Box>
-      <CustomPagination
-        currentContentData={currentContentData}
-        hitCount={elements ? Object.keys(elements).length : 0}
-        sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
-        currentPage={currentPage}
-        onPageChange={onPageChange}
-        isPaginationRequired={isPaginationRequired}
-      />
     </Box>
   );
 };
