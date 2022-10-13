@@ -13,36 +13,59 @@
     limitations under the License.
 */
 
-import React from 'react';
-import FormControl from '@mui/material/FormControl';
-import ControlledSelect from "../../components/dropdown/Dropdown"
-import Box from '@mui/material/Box';
+import React from "react";
+import FormControl from "@mui/material/FormControl";
+import ControlledSelect from "../../components/dropdown/Dropdown";
+import Box from "@mui/material/Box";
 import ButtonIBM from "../../components/buttons/ButtonIBM";
-import buttonIBMClasses from "../../components/buttons/Buttons.module.css"
-import 'react-toastify/dist/ReactToastify.css';
+import buttonIBMClasses from "../../components/buttons/Buttons.module.css";
+import "react-toastify/dist/ReactToastify.css";
 import classes from "./workspace-config.module.css";
+import DeleteCategoryModal from "./DeleteWorkspaceModal";
 
-const ExistingWorkspaceForm = ({ handleChange, handleClick, handleDeleteWorkspace, value, options, deleteButtonEnabled }) => {
-    return (
-        <Box className={classes.wrapper} style={{ borderBottom: 'solid 1px #8d8d8d' }}>
-            <h2 style={{ padding: '25px', margin: 0 }}>Continue</h2>
-            <FormControl variant="standard">
-                <FormControl variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px' }}>
-                    <ControlledSelect
-                        label="Continue with Existing Workspace"
-                        value={value}
-                        options={options}
-                        onChange={handleChange}
-                        placeholder="Choose from List"
-                    />
-                </FormControl>
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px' }}>
-                    <ButtonIBM disabled={!deleteButtonEnabled} style={{marginRight: "1px"}} onClick={handleDeleteWorkspace} className={  buttonIBMClasses["button-ibm"]} text="Delete" />
-                    <ButtonIBM onClick={handleClick} className={  buttonIBMClasses["button-ibm"]} text="Go" />
-                </div>
-            </FormControl>
-        </Box>
-    );
+const ExistingWorkspaceForm = ({
+  handleChange,
+  handleClick,
+  handleDeleteWorkspace,
+  value,
+  options,
+  deleteButtonEnabled,
+}) => {
+  const [deleteWorkspaceModalOpen, setDeleteWorkspaceModalOpen] = React.useState(false);
+
+  return (
+    <Box className={classes.wrapper} style={{ borderBottom: "solid 1px #8d8d8d" }}>
+      <DeleteCategoryModal
+        open={deleteWorkspaceModalOpen}
+        setOpen={setDeleteWorkspaceModalOpen}
+        handleDeleteWorkspace={handleDeleteWorkspace}
+        value={value}
+      />
+      <h2 style={{ padding: "25px", margin: 0 }}>Continue</h2>
+      <FormControl variant="standard">
+        <FormControl variant="standard" sx={{ minWidth: 300, ml: "25px", mr: "25px" }}>
+          <ControlledSelect
+            label="Continue with Existing Workspace"
+            value={value}
+            options={options}
+            onChange={handleChange}
+            placeholder="Choose from List"
+          />
+        </FormControl>
+        <div style={{ width: "100%", display: "flex", justifyContent: "right", marginTop: "20px" }}>
+          <ButtonIBM
+            disabled={!deleteButtonEnabled}
+            style={{ marginRight: "1px" }}
+            onClick={() => setDeleteWorkspaceModalOpen(true)}
+            className={buttonIBMClasses["button-ibm"]}
+            text="Delete"
+            secondary
+          />
+          <ButtonIBM onClick={handleClick} className={buttonIBMClasses["button-ibm"]} text="Go" />
+        </div>
+      </FormControl>
+    </Box>
+  );
 };
 
 export default ExistingWorkspaceForm;
