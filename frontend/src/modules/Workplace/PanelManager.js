@@ -16,7 +16,7 @@
 import React, { useRef, useState } from "react";
 import { Box } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
-import { RIGHT_DRAWER_WIDTH, panelIds } from "../../const";
+import { RIGHT_DRAWER_INITIAL_WIDTH, ACTIONS_DRAWER_WIDTH, panelIds } from "../../const";
 import MainPanel from "./main/MainPanel";
 import { useSelector } from "react-redux";
 
@@ -29,43 +29,56 @@ import LabelNextPanel from "./sidebar/LabelNextPanel";
 import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
 
 import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
-
+import useResize from "./customHooks/useResize";
 import { useUpdateSearch } from "./sidebar/customHooks/useUpdateSearch";
 
 /**
  * Manages the panels, that is, the sidebar panels and the main panels.
  */
 export const PanelManager = ({ handleKeyEvent }) => {
-  const activePanelId = useSelector(
-    (state) => state.workspace.panels.activePanelId
-  );
+  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
 
   const [open, setOpen] = useState(false);
   const textInputRef = useRef(null);
+  const [rightDrawerWidth, setRightDrawerWidth] = useState(RIGHT_DRAWER_INITIAL_WIDTH);
 
   useTogglePanel(setOpen, textInputRef);
-  
+
   /**
    * this custom hook is used here instead of in the Search sidebar panel
    * because that panel gets unmounted when another sidebar panel gets selected
    * and that makes useEffects hooks to be re-run each time it gets re-rendered
    */
-  const clearSearchInput = useUpdateSearch(textInputRef)    
+  const clearSearchInput = useUpdateSearch(textInputRef);
+
+  const { handleMouseDown } = useResize({ setWidth: setRightDrawerWidth });
 
   return (
     <Box>
-      <MainPanel handleKeyEvent={handleKeyEvent} open={open} />
+      <MainPanel handleKeyEvent={handleKeyEvent} rightDrawerWidth={rightDrawerWidth} open={open} />
+      {open && <div
+        style={{
+          width: "4px",
+          cursor: "ew-resize",
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          right: rightDrawerWidth + ACTIONS_DRAWER_WIDTH - 2,
+          backgroundColor: "transparent",
+        }}
+        onMouseDown={handleMouseDown}
+      />}
       <Drawer
         sx={{
-          width: RIGHT_DRAWER_WIDTH,
+          width: RIGHT_DRAWER_INITIAL_WIDTH,
           flexShrink: 0,
           "& .MuiDrawer-paper": {
-            width: RIGHT_DRAWER_WIDTH,
+            width: rightDrawerWidth,
             boxSizing: "border-box",
           },
         }}
         PaperProps={{
-          sx: { backgroundColor: "#f8f9fa !important", right: 50 },
+          sx: { backgroundColor: "#f8f9fa !important", right: ACTIONS_DRAWER_WIDTH },
         }}
         variant="persistent"
         anchor="right"
@@ -73,10 +86,10 @@ export const PanelManager = ({ handleKeyEvent }) => {
       >
         {activePanelId === panelIds.SEARCH && <SearchPanel clearSearchInput={clearSearchInput} ref={textInputRef} />}
         {activePanelId === panelIds.LABEL_NEXT && <LabelNextPanel />}
-        {activePanelId === panelIds.POSITIVE_PREDICTIONS && (<PosPredictionsPanel />)}
+        {activePanelId === panelIds.POSITIVE_PREDICTIONS && <PosPredictionsPanel />}
         {activePanelId === panelIds.POSITIVE_LABELS && <AllPositiveLabelsPanel />}
-        {activePanelId === panelIds.SUSPICIOUS_LABELS && (<SuspiciousLabelsPanel />)}
-        {activePanelId === panelIds.CONTRADICTING_LABELS && ( <ContradictingLabelsPanel />)}
+        {activePanelId === panelIds.SUSPICIOUS_LABELS && <SuspiciousLabelsPanel />}
+        {activePanelId === panelIds.CONTRADICTING_LABELS && <ContradictingLabelsPanel />}
         {activePanelId === panelIds.EVALUATION && <EvaluationPanel />}
       </Drawer>
     </Box>

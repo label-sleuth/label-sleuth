@@ -13,30 +13,34 @@
     limitations under the License.
 */
 
-import * as React from 'react';
-import { styled } from '@mui/material/styles';
-import Box from '@mui/material/Box';
+import * as React from "react";
+import { styled } from "@mui/material/styles";
+import Box from "@mui/material/Box";
 
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
-import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
-import ModeEditOutlineOutlinedIcon from '@mui/icons-material/ModeEditOutlineOutlined';
-import classes from './UpperBar.module.css';
-import useScrollTrigger from '@mui/material/useScrollTrigger';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateCurCategory } from '../redux/DataSlice';
-import FormControl from '@mui/material/FormControl';
-import ControlledSelect from '../../../components/dropdown/Dropdown';
-import Tooltip from '@mui/material/Tooltip';
-import { CREATE_NEW_CATEGORY_TOOLTIP_MSG, DELETE_CATEGORY_TOOLTIP_MSG, EDIT_CATEGORY_TOOLTIP_MSG } from '../../../const';
-import { CategoryCard } from './CategoryCard'
-import { IconButton } from '@mui/material';
-import { useState } from 'react';
-import CreateCategoryModal from './Modal/CreateCategoryModal'
-import DeleteCategoryModal from './Modal/DeleteCategoryModal';
-import EditCategoryModal from './Modal/EditCategoryModal';
-
-const rightDrawerWidth = 360;
-const leftDrawerWidthh = 280;
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
+import classes from "./UpperBar.module.css";
+import useScrollTrigger from "@mui/material/useScrollTrigger";
+import { useDispatch, useSelector } from "react-redux";
+import { updateCurCategory } from "../redux/DataSlice";
+import FormControl from "@mui/material/FormControl";
+import ControlledSelect from "../../../components/dropdown/Dropdown";
+import Tooltip from "@mui/material/Tooltip";
+import {
+  CREATE_NEW_CATEGORY_TOOLTIP_MSG,
+  DELETE_CATEGORY_TOOLTIP_MSG,
+  EDIT_CATEGORY_TOOLTIP_MSG,
+  RIGHT_DRAWER_INITIAL_WIDTH,
+  APPBAR_HEIGHT,
+  LEFT_DRAWER_WIDTH,
+} from "../../../const";
+import { CategoryCard } from "./CategoryCard";
+import { IconButton } from "@mui/material";
+import { useState } from "react";
+import CreateCategoryModal from "./Modal/CreateCategoryModal";
+import DeleteCategoryModal from "./Modal/DeleteCategoryModal";
+import EditCategoryModal from "./Modal/EditCategoryModal";
 
 function ElevationScroll(props) {
   const { children, window } = props;
@@ -54,39 +58,49 @@ function ElevationScroll(props) {
   });
 }
 
-const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== 'open', })(({ theme, open }) => ({
-  transition: theme.transitions.create(['padding', 'width'], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  ...(open && {
-    transition: theme.transitions.create(['padding', 'width'], {
-      easing: theme.transitions.easing.easeOut,
-      duration: theme.transitions.duration.enteringScreen,
+const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(
+  ({ theme, open }) => ({
+    position: "fixed",
+    top: 0,
+    left: LEFT_DRAWER_WIDTH,
+    right: 0,
+    height: APPBAR_HEIGHT,
+    transition: theme.transitions.create(["padding", "width"], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
     }),
-    paddingRight: `${rightDrawerWidth + 80}px`,
-  }),
-  // width: `calc(100vw - ${leftDrawerWidthh + 48}px)`,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-}));
+    ...(open && {
+      transition: theme.transitions.create(["padding", "width"], {
+        easing: theme.transitions.easing.easeOut,
+        duration: theme.transitions.duration.enteringScreen,
+      }),
+      paddingRight: RIGHT_DRAWER_INITIAL_WIDTH,
+    }),
+    // width: `calc(100vw - ${leftDrawerWidthh + 48}px)`,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  })
+);
 
 function CategoryFormControl() {
-  const curCategory = useSelector(state => state.workspace.curCategory)
-  const categories = useSelector(state => state.workspace.categories)
-  const dispatch = useDispatch()
-  
+  const curCategory = useSelector((state) => state.workspace.curCategory);
+  const categories = useSelector((state) => state.workspace.categories);
+  const dispatch = useDispatch();
+
   const options = categories
     .map((item) => ({ value: item.category_id, label: item.category_name }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
   const handleCategorySelect = (value) => {
-    dispatch(updateCurCategory(value))
-  }
+    dispatch(updateCurCategory(value));
+  };
 
-  return ( 
-    <FormControl variant="standard" sx={{ minWidth: '200px', marginBottom: '16px' }}>
+  return (
+    <FormControl
+      variant="standard"
+      sx={{ minWidth: "200px", marginBottom: "16px" }}
+    >
       <ControlledSelect
         id="label-select"
         value={curCategory}
@@ -100,38 +114,39 @@ function CategoryFormControl() {
 }
 
 const UpperBar = () => {
-  
-  const curCategory = useSelector(state => state.workspace.curCategory)
-  const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false)
-  const [deleteCategoryModalOpen, setDeleteCategoryModalOpen] = useState(false)
-  const [editCategoryModalOpen, setEditCategoryModalOpen] = useState(false)
-  const [cardOpen, setCardOpen] = React.useState(true)
+  const curCategory = useSelector((state) => state.workspace.curCategory);
+  const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false);
+  const [deleteCategoryModalOpen, setDeleteCategoryModalOpen] = useState(false);
+  const [editCategoryModalOpen, setEditCategoryModalOpen] = useState(false);
+  const [cardOpen, setCardOpen] = React.useState(true);
 
   const handleAddCategory = () => {
-    setCreateCategoryModalOpen(true)
-  }
+    setCreateCategoryModalOpen(true);
+  };
 
   const handleDeleteCategory = () => {
-    setDeleteCategoryModalOpen(true)
-  }
+    setDeleteCategoryModalOpen(true);
+  };
 
   const handleEditCategory = () => {
-    setEditCategoryModalOpen(true)
-  }
+    setEditCategoryModalOpen(true);
+  };
 
   React.useEffect(() => {
     if (curCategory !== null && cardOpen) {
-      setCardOpen(false)
-    } 
-  }, [curCategory])
+      setCardOpen(false);
+    }
+  }, [curCategory]);
 
   return (
     <ElevationScroll>
-      <AppBar className={classes.elevation_scroll} open={createCategoryModalOpen}>
+      <AppBar
+        className={classes.elevation_scroll}
+        open={createCategoryModalOpen}
+      >
         <div className={classes.upper}>
           <p>Category: </p>
-          <CategoryFormControl
-            placholder="placeholder" />
+          <CategoryFormControl placholder="placeholder" />
 
           <Tooltip title={CREATE_NEW_CATEGORY_TOOLTIP_MSG} disableFocusListener>
             <IconButton
@@ -140,24 +155,22 @@ const UpperBar = () => {
               id="upperbar-add-category"
               className={classes["category-action-button"]}
             >
-              <AddOutlinedIcon/>
+              <AddOutlinedIcon />
             </IconButton>
           </Tooltip>
-          {
-            curCategory !== null ? 
-            (
+          {curCategory !== null ? (
             <>
               <Tooltip title={DELETE_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-                <IconButton 
+                <IconButton
                   className={classes["category-action-button"]}
                   alt="Delete category"
                   onClick={handleDeleteCategory}
-              >
+                >
                   <DeleteOutlineOutlinedIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title={EDIT_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-                <IconButton 
+                <IconButton
                   className={classes["category-action-button"]}
                   alt="Edit category"
                   onClick={handleEditCategory}
@@ -166,14 +179,21 @@ const UpperBar = () => {
                 </IconButton>
               </Tooltip>
             </>
-            )
-            : null
-          }
+          ) : null}
           {cardOpen ? <CategoryCard setCardOpen={setCardOpen} /> : null}
         </div>
-        <CreateCategoryModal open={createCategoryModalOpen} setOpen={setCreateCategoryModalOpen} />
-        <DeleteCategoryModal open={deleteCategoryModalOpen} setOpen={setDeleteCategoryModalOpen} />
-        <EditCategoryModal open={editCategoryModalOpen} setOpen={setEditCategoryModalOpen} />
+        <CreateCategoryModal
+          open={createCategoryModalOpen}
+          setOpen={setCreateCategoryModalOpen}
+        />
+        <DeleteCategoryModal
+          open={deleteCategoryModalOpen}
+          setOpen={setDeleteCategoryModalOpen}
+        />
+        <EditCategoryModal
+          open={editCategoryModalOpen}
+          setOpen={setEditCategoryModalOpen}
+        />
       </AppBar>
     </ElevationScroll>
   );

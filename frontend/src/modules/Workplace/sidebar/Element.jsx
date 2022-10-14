@@ -24,10 +24,7 @@ import classes from "./index.module.css";
 import { Box } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { panelIds } from "../../../const";
-import {
-  setFocusedElement,
-  fetchCertainDocument,
-} from "../redux/DataSlice";
+import { setFocusedElement, fetchCertainDocument } from "../redux/DataSlice";
 import useLabelState from "../customHooks/useLabelState";
 
 const text_colors = {
@@ -37,30 +34,22 @@ const text_colors = {
 
 /**
  * Handle the style of the text of the sidebar element based on the models prediction
- * @param {*} modelPrediction 
- * @returns 
+ * @param {*} modelPrediction
+ * @returns
  */
 // this function is not returned by a custom hook as it is the case of the main panel equivalent
 const handleTextElemStyle = (modelPrediction) =>
   modelPrediction === "true" ? classes["text_predict"] : classes["text_normal"];
 
-
 const Element = ({ element, updateCounterOnLabeling = true }) => {
   const dispatch = useDispatch();
   const { id, docId, text, userLabel, modelPrediction } = element;
   const curCategory = useSelector((state) => state.workspace.curCategory);
-  const activePanelId = useSelector(
-    (state) => state.workspace.panels.activePanelId
-  );
+  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
   const curDocName = useSelector((state) => state.workspace.curDocName);
-  const searchInput = useSelector(
-    (state) => state.workspace.panels[panelIds.SEARCH].input
-  );
+  const searchInput = useSelector((state) => state.workspace.panels[panelIds.SEARCH].input);
 
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    updateCounterOnLabeling
-  );
-
+  const { handlePosLabelState, handleNegLabelState } = useLabelState(updateCounterOnLabeling);
 
   const handleElementClick = async () => {
     if (docId === curDocName) {
@@ -76,25 +65,17 @@ const Element = ({ element, updateCounterOnLabeling = true }) => {
     <Paper
       onClick={() => handleElementClick()}
       className={handleTextElemStyle(modelPrediction)}
-      sx={{ padding: "0 !important", mb: 2, ml: 1, mr: 0 }}
+      sx={{ padding: "0 !important", mb: 2, ml: 1, mr: 0, alignSelf: "stretch" }}
       style={{ cursor: "pointer" }}
     >
       <label
         style={{ cursor: "pointer" }}
-        className={
-          modelPrediction === "pos"
-            ? classes["pred_rec_doc_id"]
-            : classes["rec_doc_id"]
-        }
+        className={modelPrediction === "pos" ? classes["pred_rec_doc_id"] : classes["rec_doc_id"]}
       >
         {docId}
       </label>
       <Box>
-        <p
-          id={id}
-          className={classes["elem_text"]}
-          style={text_colors[userLabel]}
-        >
+        <p id={id} className={classes["elem_text"]} style={text_colors[userLabel]}>
           <Highlighter
             searchWords={activePanelId === panelIds.SEARCH ? [searchInput] : []}
             autoEscape={false}
@@ -141,11 +122,7 @@ const Element = ({ element, updateCounterOnLabeling = true }) => {
               {userLabel === "neg" ? (
                 <img src={cross} alt="crossed" />
               ) : (
-                <img
-                  className={classes.hovbtn}
-                  src={crossing}
-                  alt="crossinging"
-                />
+                <img className={classes.hovbtn} src={crossing} alt="crossinging" />
               )}
             </div>
           </>

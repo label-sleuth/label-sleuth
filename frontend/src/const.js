@@ -72,7 +72,6 @@ export const NEW_WORKSPACE_NAME_MSG = "Name your new workspace";
 export const NEW_WORKSPACE_NAME_PLACEHOLER_MSG = "e.g., my_new_workspace";
 export const LABEL_SLEUTH_SHORT_DESC = "Quickly create a text classifier";
 export const ALL_POSITIVE_LABELS_TOOLTIP_MSG = "All positive labels";
-export const RIGHT_DRAWER_WIDTH = 360;
 export const DOC_ALREADY_EXISTS = "Document already exists";
 export const WORKSPACE_ALREADY_EXISTS = "Workspace already exists";
 export const SERVER_ERROR_500 =
@@ -89,6 +88,15 @@ export const WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES = `Name may only contain E
 export const WRONG_INPUT_NAME_BAD_CHARACTER = `Name may only contain English characters, digits, underscores and spaces`;
 export const REGEX_LETTER_NUMBERS_UNDERSCORE = /^[a-zA-Z0-9_]*$/;
 export const REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES = /^[a-zA-Z0-9_ ]*$/;
+
+export const RIGHT_DRAWER_INITIAL_WIDTH = 350;
+export const RIGHT_DRAWER_MIN_WIDTH = 300;
+export const RIGHT_DRAWER_MAX_WIDTH = 800;
+export const LEFT_DRAWER_WIDTH = 300;
+export const ACTIONS_DRAWER_WIDTH = 50;
+export const APPBAR_HEIGHT = 80;
+
+
 
 export const panelIds = {
   MAIN_PANEL: "MAIN_PANEL",

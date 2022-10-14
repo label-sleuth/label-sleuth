@@ -66,14 +66,14 @@ const ContradictingLabelsPanel = () => {
   const ContradictingPair = ({ addSeparator, children }) => {
     const childrenArray = React.Children.toArray(children);
     return (
-      <Stack direction={"column"} sx={{ alignItems: "center" }}>
+      <Stack direction={"column"} sx={{ alignItems: "center",  }}>
         {childrenArray[0]}
         <Box sx={{ display: "flex", flexDirection: "row" }}>
           <img
             src={contradictive_elem_icon}
             alt={"contradictive element"}
             style={{ paddingRight: "5px" }}
-          />{" "}
+          />
           {"?"}
         </Box>
         {childrenArray[1]}

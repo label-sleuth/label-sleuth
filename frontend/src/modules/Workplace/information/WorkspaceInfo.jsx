@@ -48,6 +48,7 @@ import {
   NO_MODEL_AVAILABLE_MSG,
   LABEL_SLEUTH_SHORT_DESC,
   NEXT_MODEL_TRAINING_MSG,
+  LEFT_DRAWER_WIDTH
 } from "../../../const";
 import LinearWithValueLabel from "./ModelProgressBar";
 import { Link } from "@mui/material";
@@ -61,8 +62,6 @@ import {
 import { getOrdinalSuffix } from "../../../utils/utils";
 import useAuthentication from "../../Login/customHooks/useAuthentication";
 import { ModelErrorAlert } from "./ModelErrorAlert";
-
-const drawerWidth = 280; // left navigation panel width
 
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -319,7 +318,7 @@ const WorkspaceInfo = ({
       <Box
         style={{
           backgroundColor: "#161616",
-          width: drawerWidth,
+          width: LEFT_DRAWER_WIDTH,
           height: "100vh",
         }}
       >
@@ -329,10 +328,10 @@ const WorkspaceInfo = ({
         />
         <Drawer
           sx={{
-            width: drawerWidth,
+            width: LEFT_DRAWER_WIDTH,
             flexShrink: 0,
             "& .MuiDrawer-paper": {
-              width: drawerWidth,
+              width: LEFT_DRAWER_WIDTH,
               boxSizing: "border-box",
               color: "#fff",
               background: "transparent",
