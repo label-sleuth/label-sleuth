@@ -47,7 +47,6 @@ import {
   getCategoryQueryString,
   getQueryParamsString,
 } from "../../../utils/utils";
-import { panelIds } from "../../../const";
 
 export { fetchDocuments } from "./documentSlice";
 export {
@@ -205,7 +204,7 @@ export const {
   updateCurCategory,
   prevPrediction,
   setWorkspace,
-  setFocusedElement,
+  setFocusedMainPanelElement,
   setWorkspaceId,
   resetSearchResults,
   setSearchLabelState,
@@ -231,5 +230,11 @@ export const {
   setPage,
   setRefetch,
   focusFirstElement,
+  clearMainPanelFocusedElement,
   fetchElements,
+  setfocusedSidebarElementByIndex,
+  focusNextSidebarElement,
+  focusPreviousSidebarElement,
+  focusFirstSidebarElement,
+  focusLastSidebarElement,
 } = DataSlice.actions;

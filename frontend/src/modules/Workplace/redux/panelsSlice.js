@@ -1,13 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  getCategoryQueryString,
-  getQueryParamsString,
-  parseElements,
-} from "../../../utils/utils";
+import { getCategoryQueryString, getQueryParamsString, parseElements } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { panelIds } from "../../../const";
-import { getMainPanelElementId } from "../../../utils/utils";
+import { getPanelDOMKey } from "../../../utils/utils";
 import { client } from "../../../api/client";
+import { getElementIndex } from "../../../utils/utils";
+//import { current } from "@reduxjs/toolkit";
 
 /**
  * This file contains the Thunks, reducers, extraReducers and state to
@@ -22,19 +20,12 @@ const getPanelElements = async (
   extraQueryParams = [],
   pagination = { startIndex: 0, elementsPerPage: null }
 ) => {
-  pagination.startIndex !== null &&
-    extraQueryParams.push(`start_idx=${pagination.startIndex}`);
-  pagination.elementsPerPage !== null &&
-    extraQueryParams.push(`size=${pagination.elementsPerPage}`);
+  pagination.startIndex !== null && extraQueryParams.push(`start_idx=${pagination.startIndex}`);
+  pagination.elementsPerPage !== null && extraQueryParams.push(`size=${pagination.elementsPerPage}`);
 
-  const queryParams = getQueryParamsString([
-    getCategoryQueryString(state.workspace.curCategory),
-    ...extraQueryParams,
-  ]);
+  const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory), ...extraQueryParams]);
 
-  const url = `${getWorkspace_url}/${encodeURIComponent(
-    state.workspace.workspaceId
-  )}/${endpoint}${queryParams}`;
+  const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/${endpoint}${queryParams}`;
 
   const { data } = await client.get(url);
   return data;
@@ -68,12 +59,7 @@ export const getContradictingLabels = createAsyncThunk(
   "workspace/getContradictiveElements",
   async ({ pagination }, { getState }) => {
     const state = getState();
-    return await getPanelElements(
-      state,
-      "contradiction_elements",
-      [],
-      pagination
-    );
+    return await getPanelElements(state, "contradiction_elements", [], pagination);
   }
 );
 
@@ -81,12 +67,7 @@ export const getPositivePredictions = createAsyncThunk(
   "workspace/getPositivePredictions",
   async ({ pagination }, { getState }) => {
     const state = getState();
-    return await getPanelElements(
-      state,
-      "positive_predictions",
-      [],
-      pagination
-    );
+    return await getPanelElements(state, "positive_predictions", [], pagination);
   }
 );
 
@@ -100,12 +81,7 @@ export const fetchDocumentElements = createAsyncThunk(
     } else {
       docId = params.docId;
     }
-    return await getPanelElements(
-      state,
-      `document/${encodeURIComponent(docId)}`,
-      [],
-      params.pagination
-    );
+    return await getPanelElements(state, `document/${encodeURIComponent(docId)}`, [], params.pagination);
   }
 );
 
@@ -115,15 +91,11 @@ export const searchKeywords = createAsyncThunk(
     const state = getState();
     const { input, lastSearchString } = state.workspace.panels[panelIds.SEARCH];
     const searchString = useLastSearchString ? lastSearchString : input;
+    if (searchString === null || searchKeywords === '') return;
     const extraQueryParams = [`qry_string=${searchString}`];
 
     return {
-      data: await getPanelElements(
-        state,
-        "query",
-        extraQueryParams,
-        pagination
-      ),
+      data: await getPanelElements(state, "query", extraQueryParams, pagination),
       searchString,
     };
   }
@@ -136,7 +108,7 @@ export const searchKeywords = createAsyncThunk(
  * of the specific element (text, id, docId, userLabel and
  * modelPrediction)
  */
-const elementsInitialState = {
+export const elementsInitialState = {
   elements: null,
   hitCount: null,
   page: 1,
@@ -166,6 +138,9 @@ export const initialState = {
       hackyToggle: false,
       highlight: false,
     },
+    focusedSidebarElement: {
+      index: null,
+    },
     [panelIds.MAIN_PANEL]: {
       ...elementsInitialState,
     },
@@ -173,7 +148,7 @@ export const initialState = {
       ...elementsInitialState,
       input: null,
       lastSearchString: null,
-      uniqueHitCount: null,
+      hitCountWithDuplicates: null,
     },
     [panelIds.LABEL_NEXT]: {
       ...elementsInitialState,
@@ -215,22 +190,93 @@ export const reducers = {
   resetLastSearchString(state, action) {
     state.panels[panelIds.SEARCH].lastSearchString = null;
   },
-  setFocusedElement(state, action) {
+
+  // action reducers for focusing main panel elements
+  setFocusedMainPanelElement(state, action) {
     const { element, highlight } = action.payload;
     state.panels.focusedElement = getUpdatedFocusedElementState(
       element,
       state.panels.focusedElement.hackyToggle,
       highlight,
-      initialState.panels.focusedElement,
-    )
-  },
-  changeCurrentDocument(state, action) {
-    const newDocId = action.payload;
-    const curDocIndex = state.documents.findIndex(
-      (d) => d.document_id === newDocId
+      initialState.panels.focusedElement
     );
+  },
+  clearMainPanelFocusedElement(state, action) {
+    state.panels.focusedElement = initialState.panels.focusedElement;
+  },
+  focusFirstElement(state, action) {
+    const highlight = false;
+    const elements = state.panels[panelIds.MAIN_PANEL].elements;
+    const element = elements ? Object.values(elements)[0] : null;
+    if (element) {
+      state.panels.focusedElement = getUpdatedFocusedElementState(
+        element,
+        state.panels.focusedElement.hackyToggle,
+        highlight,
+        initialState.panels.focusedElement
+      );
+    }
+  },
+
+  // action reducers for focusing sidebar panel elements
+  setfocusedSidebarElementByIndex(state, action) {
+    const index = action.payload;
+    state.panels.focusedSidebarElement.index = index;
+  },
+  focusFirstSidebarElement(state, action) {
+    const currentSidebarElements = getCurrentSidebarElements(state);
+    if (currentSidebarElements === null || currentSidebarElements.length === 0) return;
+    state.panels.focusedSidebarElement.index = 0;
+  },
+  focusLastSidebarElement(state, action) {
+    const currentSidebarElements = getCurrentSidebarElements(state);
+    if (currentSidebarElements === null || currentSidebarElements.length === 0) return;
+    state.panels.focusedSidebarElement.index = currentSidebarElements.length - 1;
+  },
+  focusNextSidebarElement(state, action) {
+    const currentSidebarElements = getCurrentSidebarElements(state);
+    // abort if there are no elements
+    if (currentSidebarElements === null ||  currentSidebarElements.length === 0) return;
+    const currentFocusedSidebarElementIndex = state.panels.focusedSidebarElement.index;
+    // abort if there are is no next element in the current page
+    if (currentFocusedSidebarElementIndex === currentSidebarElements.length - 1) return;
+
+    state.panels.focusedSidebarElement.index += 1;
+  },
+  focusPreviousSidebarElement(state, action) {
+    const currentSidebarElements = getCurrentSidebarElements(state);
+    // abort if there are no elements
+    if (currentSidebarElements === null || currentSidebarElements.length === 0) return;
+    const currentFocusedSidebarElementIndex = state.panels.focusedSidebarElement.index;
+    // abort if there are is no next element in the current page
+    if (currentFocusedSidebarElementIndex === 0) return;
+
+    state.panels.focusedSidebarElement.index -= 1;
+  },
+
+  changeCurrentDocument(state, action) {
+    // mainPanelElementsPerPage has to be passed in as a parameter
+    // because the only part of the redux state is the workspace slice
+    // mainPanelElementsPerPage is needed to calculate the main panel page
+    const {newDocId, mainPanelElementsPerPage} = action.payload;
+    const curDocIndex = state.documents.findIndex((d) => d.document_id === newDocId);
     state.curDocName = newDocId;
     state.curDocId = curDocIndex;
+
+    // set the page of the new document based on the focused main panel element, if any
+    // IMPORTANT: when changing the document, the focused element has to be set first,
+    // so that both, the document and the page are set atomically. Setting those separately
+    // will cause elements to be fetched twice, once when document changes and once when 
+    // page changes
+    let page;
+    if (state.panels.focusedElement.id !== null) {
+      const mainElementIndex = getElementIndex(state.panels.focusedElement.id);
+      page = Math.floor(mainElementIndex / mainPanelElementsPerPage) + 1;
+    }
+    else {
+      page = 1;
+    }
+    state.panels[panelIds.MAIN_PANEL].page = page; 
   },
   setPage(state, action) {
     const { panelId, newPage } = action.payload;
@@ -239,33 +285,21 @@ export const reducers = {
   setRefetch(state, action) {
     state.panels.refetch = action.payload;
   },
-  focusFirstElement(state, action) {
-    const  highlight = false
-    const elements = state.panels[panelIds.MAIN_PANEL].elements
-    const element = elements ? Object.values(elements)[0] : null
-    if (element) {
-      state.panels.focusedElement = getUpdatedFocusedElementState(
-        element,
-        state.panels.focusedElement.hackyToggle,
-        highlight,
-        initialState.panels.focusedElement,
-      )
-    }
-  }
 };
 
 const getUpdatedFocusedElementState = (
   element,
   hackyToggle,
   highlight,
-  defaultState
+  defaultState,
+  panelId = panelIds.MAIN_PANEL
 ) => {
   if (element) {
     const { id: elementId, docId } = element;
     return {
       id: elementId,
       docId,
-      DOMKey: elementId ? getMainPanelElementId(elementId) : null,
+      DOMKey: elementId ? getPanelDOMKey(elementId, panelId) : null,
       hackyToggle: !hackyToggle,
       highlight,
     };
@@ -346,7 +380,7 @@ export const extraReducers = {
     const { elements } = parseElements(unparsedElements, state.curCategory);
 
     state.panels.loading[panelIds.LABEL_NEXT] = false;
-    state.panels[panelIds.LABEL_NEXT].elements = elements;
+    state.panels[panelIds.LABEL_NEXT].elements = {...elements};
     state.panels[panelIds.LABEL_NEXT].hitCount = hitCount;
   },
 
@@ -362,11 +396,7 @@ export const extraReducers = {
   },
   [searchKeywords.fulfilled]: (state, action) => {
     const { data, searchString } = action.payload;
-    const {
-      elements: unparsedElements,
-      hit_count_unique: uniqueHitCount,
-      hit_count: hitCount,
-    } = data;
+    const { elements: unparsedElements, hit_count_unique: hitCount, hit_count: hitCountWithDuplicates } = data;
 
     const { elements } = parseElements(unparsedElements, state.curCategory);
 
@@ -374,7 +404,7 @@ export const extraReducers = {
     state.panels[panelIds.SEARCH] = {
       ...state.panels[panelIds.SEARCH],
       elements,
-      uniqueHitCount,
+      hitCountWithDuplicates,
       hitCount,
       lastSearchString: searchString,
     };
@@ -395,10 +425,7 @@ export const extraReducers = {
   [fetchDocumentElements.fulfilled]: (state, action) => {
     const { elements: unparsedElements, hit_count: hitCount } = action.payload;
 
-    const { elements, documentPos, documentNeg } = parseElements(
-      unparsedElements,
-      state.curCategory
-    );
+    const { elements, documentPos, documentNeg } = parseElements(unparsedElements, state.curCategory);
 
     state.panels[panelIds.MAIN_PANEL] = {
       ...state.panels[panelIds.MAIN_PANEL],
@@ -411,5 +438,55 @@ export const extraReducers = {
       documentPos,
       documentNeg,
     };
+
+  // set page to 1 if focused element is not in current page
+
   },
 };
+
+/**
+ * Selector for getting the element object that is focused on the sidebar panel
+ * This information is not stored on the redux state because only the index
+ * of the element is needed to identify it
+ * @param {*} state 
+ * @returns the focused element with its id, text and docId
+ */
+export const focusedSidebarElementSelector = (state) => {
+  const activePanelId = state.workspace.panels.activePanelId;
+  const activePanel = state.workspace.panels[activePanelId];
+  const focusedSidebarElementIndex = state.workspace.panels.focusedSidebarElement.index;
+
+  if (activePanelId === null || activePanelId === "") return null;
+  let elementsDict = activePanel.elements;
+  if (elementsDict === null || focusedSidebarElementIndex === null) return null;
+
+  let elementKeysList;
+  if (activePanelId === panelIds.CONTRADICTING_LABELS) {
+    elementKeysList = activePanel.pairs.flat();
+  } else {
+    elementKeysList = Object.keys(elementsDict);
+  }
+
+  if (elementKeysList.length === 0) return null;
+  const elementId = elementKeysList[focusedSidebarElementIndex];
+  const element = elementsDict[elementId];
+  if (!element) return elementKeysList[0];
+  return element;
+};
+
+/**
+ * Returns the current sidebar elements list.
+ * If the active panel is the Contradicting labels panel
+ * the list returned is a flatten list from the list of 
+ * contradicting pairs
+ */
+const getCurrentSidebarElements = (state) => {
+  const activePanelId = state.panels.activePanelId;
+  if (state.panels.activePanelId === panelIds.CONTRADICTING_LABELS) {
+    return state.panels[activePanelId].pairs.flat();
+  } else {
+    const elementsDict = state.panels[activePanelId].elements
+    if (elementsDict === null) return null;
+    return Object.values(elementsDict);
+  }
+}

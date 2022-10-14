@@ -16,7 +16,7 @@
 import { Box, Stack, Divider } from "@mui/material";
 import React from "react";
 import classes from "./index.module.css";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import Element from "./Element";
 import contradictive_elem_icon from "../Asset/contradicting.svg";
 import { panelIds } from "../../../const";
@@ -89,7 +89,7 @@ const ContradictingLabelsPanel = () => {
             <ContradictingPair key={i} addSeparator={i !== pairs.length - 1}>
               {pair.map((elementId, j) => {
                 const element = elements[elementId];
-                return <Element key={2 * i + j} element={element} />;
+                return <Element key={2 * i + j} index={2 * i + j} element={element} />;
               })}
             </ContradictingPair>
           ))}

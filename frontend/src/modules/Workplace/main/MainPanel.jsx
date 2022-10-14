@@ -33,8 +33,7 @@ import {
   APPBAR_HEIGHT,
   panelIds,
 } from "../../../const";
-import { getMainPanelElementId } from "../../../utils/utils";
-import { fetchElements } from "../redux/DataSlice";
+import { getPanelDOMKey } from "../../../utils/utils";
 import useScrollMainPanelElementIntoView from "../sidebar/customHooks/useScrollElementIntoView";
 import { useDispatch } from "react-redux";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
@@ -53,29 +52,17 @@ const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(({ th
   }),
 }));
 
-const MainPanel = ({ handleKeyEvent, open, rightDrawerWidth }) => {
+const MainPanel = ({ open, rightDrawerWidth }) => {
   const curDocName = useSelector((state) => state.workspace.curDocName);
   const curDocId = useSelector((state) => state.workspace.curDocId);
   const documents = useSelector((state) => state.workspace.documents);
-  const elements = useSelector((state) => state.workspace.panels[panelIds.MAIN_PANEL].elements);
-  const loading = useSelector((state) => state.workspace.panels.loading[panelIds.MAIN_PANEL]);
-  const isDocLoaded = useSelector((state) => state.workspace.isDocLoaded);
-  const curCategory = useSelector((state) => state.workspace.curCategory);
-  const modelVersion = useSelector((state) => state.workspace.modelVersion);
   const mainPanelElementsPerPage = useSelector((state) => state.featureFlags.mainPanelElementsPerPage);
 
-  const dispatch = useDispatch();
-
-  const { currentContentData, hitCount, currentPage, onPageChange, isPaginationRequired, setCurrentPage } =
+  const { currentContentData, hitCount, currentPage, onPageChange, isPaginationRequired } =
     useMainPagination(mainPanelElementsPerPage);
 
   const { handleFetchNextDoc, handleFetchPrevDoc } = useFetchPrevNextDoc();
 
-  React.useEffect(() => {
-    if (isDocLoaded && !loading) {
-      setCurrentPage(1);
-    }
-  }, [setCurrentPage, loading, isDocLoaded]);
 
   useScrollMainPanelElementIntoView();
 
@@ -133,9 +120,8 @@ const MainPanel = ({ handleKeyEvent, open, rightDrawerWidth }) => {
             {currentContentData &&
               currentContentData.map((element) => (
                 <Element
-                  keyEventHandler={(e) => handleKeyEvent(e, currentContentData.length)}
                   element={element}
-                  key={getMainPanelElementId(element.id)}
+                  key={getPanelDOMKey(element.id, panelIds.MAIN_PANEL)}
                 />
               ))}
           </Box>
@@ -147,7 +133,7 @@ const MainPanel = ({ handleKeyEvent, open, rightDrawerWidth }) => {
           currentPage={currentPage}
           onPageChange={onPageChange}
           size="medium"
-          sx={{ bottom: "-40px" }}
+          sx={{ bottom: "-50px" }}
           isPaginationRequired={isPaginationRequired}
         />
       </Main>

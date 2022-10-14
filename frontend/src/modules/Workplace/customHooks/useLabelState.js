@@ -16,7 +16,7 @@
 import { updateDocumentLabelCountByDiff, setElementLabel, checkStatus } from "../redux/DataSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { getNewLabelState, getBooleanLabel } from "../../../utils/utils";
-import { activePanelSelector } from '../redux/DataSlice'
+import { activePanelSelector } from "../redux/DataSlice";
 
 /**
  * This custom hook is responsible for managing the labels states
@@ -31,9 +31,7 @@ import { activePanelSelector } from '../redux/DataSlice'
  * @param  { The main panel's state } updateMainLabelState
  * @param  { The active sidebar's panel state} updatePanelLabelState
  */
-const useLabelState = (
-  updateCounter = true
-) => {
+const useLabelState = (updateCounter = true) => {
   const currentDocName = useSelector((state) => state.workspace.curDocName);
   const dispatch = useDispatch();
 
@@ -46,22 +44,20 @@ const useLabelState = (
    * @param  {The label action: can be 'pos' or 'neg'} labelAction
    */
   const handleLabelState = (element, labelAction) => {
-      
-    const { documentLabelCountChange, newLabel } = getNewLabelState(
-      element.userLabel,
-      labelAction
-    );
-    dispatch(setElementLabel({ 
-      element_id: element.id, 
-      label: getBooleanLabel(newLabel), 
-      update_counter: updateCounter
-    })).then(() => {
-      dispatch(checkStatus())
+    const { documentLabelCountChange, newLabel } = getNewLabelState(element.userLabel, labelAction);
+    dispatch(
+      setElementLabel({
+        element_id: element.id,
+        label: getBooleanLabel(newLabel),
+        update_counter: updateCounter,
+      })
+    ).then(() => {
+      dispatch(checkStatus());
       // Update main document view only if the side bar element belongs to the current main document
       if (currentDocName === element.docId) {
         dispatch(updateDocumentLabelCountByDiff(documentLabelCountChange));
       }
-    })
+    });
   };
 
   const handlePosLabelState = (element) => {

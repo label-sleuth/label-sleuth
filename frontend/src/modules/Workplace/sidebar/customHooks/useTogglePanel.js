@@ -20,16 +20,14 @@ import { setActivePanel } from "../../redux/DataSlice";
 
 /**
  * Opens the sidebar Drawer if any panel is selected
- * @param {*} setOpen 
+ * @param {*} setOpen
  */
 const useSidebarPanelIsOpen = (setOpen) => {
-  const activePanelId = useSelector(
-    (state) => state.workspace.panels.activePanelId
-  );
+  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
 
   useEffect(() => {
     setOpen(!!activePanelId);
-  }, [activePanelId]);
+  }, [activePanelId, setOpen]);
 };
 
 /**
@@ -37,17 +35,15 @@ const useSidebarPanelIsOpen = (setOpen) => {
  * If there is a model and LabelNext elements are available
  * the LabelNext panel will be opened. If not, the search panel will
  * be opened.
- * @param {*} textInput 
+ * @param {*} textInput
  */
 const useInitialOpenedSidebarPanel = (textInput) => {
   const dispatch = useDispatch();
 
-  const labelNextElements = useSelector(
-    (state) => state.workspace.panels[panelIds.LABEL_NEXT].elements
-  );
+  const modelVersion = useSelector((state) => state.workspace.modelVersion);
 
   useEffect(() => {
-    if (!labelNextElements || Object.keys(labelNextElements).length === 0) {
+    if (modelVersion === null || modelVersion === -1) {
       dispatch(setActivePanel(panelIds.SEARCH));
       if (textInput.current) {
         textInput.current.focus();
@@ -55,13 +51,13 @@ const useInitialOpenedSidebarPanel = (textInput) => {
     } else {
       dispatch(setActivePanel(panelIds.LABEL_NEXT));
     }
-  }, [labelNextElements]);
+  }, [modelVersion, textInput, dispatch]);
 };
 
 /**
  * Manages the behaviour of the sidebar panels, when they should be opened and which one should be active.
- * @param {*} setOpen 
- * @param {*} textInputRef 
+ * @param {*} setOpen
+ * @param {*} textInputRef
  */
 const useTogglePanel = (setOpen, textInputRef) => {
   useSidebarPanelIsOpen(setOpen);

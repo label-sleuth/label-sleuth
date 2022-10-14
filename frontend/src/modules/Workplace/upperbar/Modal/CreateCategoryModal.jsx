@@ -50,6 +50,7 @@ export default function CreateCategoryModal({ open, setOpen }) {
   const dispatch = useDispatch();
 
   const handleTextFieldChange = (e) => {
+    e.preventDefault();
     let text = e.target.value;
     if (text) {
       if (text.length > 30) {
@@ -98,6 +99,7 @@ export default function CreateCategoryModal({ open, setOpen }) {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
         disableRestoreFocus
+        onKeyDown={e => e.stopPropagation()}
       >
         <Box sx={style}>
           <Typography

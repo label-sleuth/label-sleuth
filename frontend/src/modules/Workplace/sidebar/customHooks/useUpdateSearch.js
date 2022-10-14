@@ -1,10 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  resetSearchResults,
-  setSearchInput,
-  resetLastSearchString,
-} from "../../redux/DataSlice";
+import { resetSearchResults, setSearchInput, resetLastSearchString } from "../../redux/DataSlice";
 import { panelIds } from "../../../../const";
 import { useFetchPanelElements } from "../../customHooks/useFetchPanelElements";
 
@@ -16,13 +12,12 @@ import { useFetchPanelElements } from "../../customHooks/useFetchPanelElements";
 export const useUpdateSearch = (textInputRef) => {
   const uploadedLabels = useSelector((state) => state.workspace.uploadedLabels);
   const curCategory = useSelector((state) => state.workspace.curCategory);
-  const lastSearchString = useSelector(
-    (state) => state.workspace.panels[panelIds.SEARCH].lastSearchString
-  );
+  const lastSearchString = useSelector((state) => state.workspace.panels[panelIds.SEARCH].lastSearchString);
+  const modelVersion = useSelector((state) => state.workspace.modelVersion);
 
   const dispatch = useDispatch();
 
-  const { fetchPanelElements } = useFetchPanelElements();
+  const fetchSearchPanelElements = useFetchPanelElements({panelId: panelIds.SEARCH});
 
   /**
    * Clear the search sidebar panel by reseting the
@@ -58,13 +53,21 @@ export const useUpdateSearch = (textInputRef) => {
    * may have changed
    */
   useEffect(() => {
-    uploadedLabels &&
-      lastSearchString &&
-      fetchPanelElements({
-        panelId: panelIds.SEARCH,
-        useLastSearchString: true,
-      });
-  }, [uploadedLabels, lastSearchString, dispatch]);
+    if (uploadedLabels !== null && lastSearchString !== null) {
+      fetchSearchPanelElements({ useLastSearchString: true });
+    }
+  }, [uploadedLabels, lastSearchString, fetchSearchPanelElements, dispatch]);
+
+  /**
+   * When uploading labels, update the search results
+   * using the last searched string because user labels
+   * may have changed
+   */
+  useEffect(() => {
+    if (curCategory !== null && modelVersion !== null && modelVersion > 0 && lastSearchString !== null) {
+      fetchSearchPanelElements({ useLastSearchString: true });
+    }
+  }, [curCategory, modelVersion, dispatch]);
 
   return clearSearch;
 };

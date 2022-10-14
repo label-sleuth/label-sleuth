@@ -18,6 +18,9 @@ import { useDispatch, useSelector } from "react-redux";
 import "../components/pagination/pagination.css";
 import { setPage } from "../modules/Workplace/redux/DataSlice";
 import { useFetchPanelElements } from "../modules/Workplace/customHooks/useFetchPanelElements";
+import { getPageCount } from "../utils/utils";
+import { elementsInitialState } from "../modules/Workplace/redux/panelsSlice";
+import { panelIds } from "../const";
 
 const usePanelPagination = ({
   elementsPerPage,
@@ -27,14 +30,18 @@ const usePanelPagination = ({
   fakePagination = false,
   fetchOnFirstRender = true,
 }) => {
-  // useWhyDidYouUpdate("usePanelPagination", {panelId, shouldFetch, ...otherDependencies})
-  const { fetchPanelElements } = useFetchPanelElements();
+  const fetchPanelElements = useFetchPanelElements({ panelId });
 
   const {
     elements,
     hitCount,
     page: currentPage,
-  } = useSelector((state) => state.workspace.panels[panelId]);
+    pairs,
+  } = useSelector((state) => (panelId ? state.workspace.panels[panelId] : elementsInitialState));
+
+  const pageCount = React.useMemo(() => {
+    return getPageCount(elementsPerPage, hitCount);
+  }, [elementsPerPage, hitCount]);
 
   const dispatch = useDispatch();
   const firstRenderHappened = React.useRef(false);
@@ -51,15 +58,16 @@ const usePanelPagination = ({
     else {
       if (fakePagination) {
         const startIndex = (currentPage - 1) * elementsPerPage;
-        return Object.values(elements).slice(
-          startIndex,
-          startIndex + elementsPerPage
-        );
+        return Object.values(elements).slice(startIndex, startIndex + elementsPerPage);
       } else {
-        return Object.values(elements);
+        if (panelId === panelIds.CONTRADICTING_LABELS) {
+          return pairs.flat();
+        } else {
+          return Object.values(elements);
+        }
       }
     }
-  }, [elements, currentPage, elementsPerPage, fakePagination]);
+  }, [elements, currentPage, elementsPerPage, fakePagination, pairs, panelId]);
 
   const isPaginationRequired = React.useMemo(
     () => currentContentData !== null && hitCount > elementsPerPage,
@@ -67,33 +75,34 @@ const usePanelPagination = ({
   );
 
   React.useEffect(() => {
-    if (
-      !fakePagination &&
-      shouldFetch &&
-      (fetchOnFirstRender || firstRenderHappened.current)
-    ) {
-      fetchPanelElements({
-        panelId,
-      });
+    if (!fakePagination && shouldFetch && (fetchOnFirstRender || firstRenderHappened.current)) {
+      fetchPanelElements();
     }
   }, [
-    panelId,
     currentPage,
     fakePagination,
     dispatch,
     fetchOnFirstRender,
     firstRenderHappened,
+    fetchPanelElements,
     ...otherDependencies,
   ]);
 
   const resetPagination = () => dispatch(setPage({ panelId, newPage: 1 }));
 
-  const setCurrentPage = React.useCallback(
-    (newPage) => dispatch(setPage({ panelId, newPage })),
-    [panelId, dispatch]
-  );
+  const setCurrentPage = React.useCallback((newPage) => dispatch(setPage({ panelId, newPage })), [panelId, dispatch]);
 
   const onPageChange = (event, value) => setCurrentPage(value);
+
+  const nextPage = React.useCallback(() => {
+    if (currentPage === pageCount) return;
+    setCurrentPage(currentPage + 1);
+  }, [currentPage, pageCount, setCurrentPage]);
+
+  const previousPage = React.useCallback(() => {
+    if (currentPage === 1) return;
+    setCurrentPage(currentPage - 1);
+  }, [currentPage, setCurrentPage]);
 
   /**
    * IMPORTANT
@@ -118,6 +127,9 @@ const usePanelPagination = ({
     resetPagination,
     onPageChange,
     isPaginationRequired,
+    previousPage,
+    nextPage,
+    pageCount,
   };
 };
 

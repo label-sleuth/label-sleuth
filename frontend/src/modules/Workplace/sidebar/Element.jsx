@@ -25,7 +25,10 @@ import { Box } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { panelIds } from "../../../const";
 import useLabelState from "../customHooks/useLabelState";
-import { changeCurrentDocument, setFocusedElement } from "../redux/DataSlice";
+import { getPanelDOMKey } from "../../../utils/utils";
+import { useMemo, useCallback } from "react";
+import { useFocusMainPanelElement } from "../customHooks/useFocusMainPanelElement";
+import { setfocusedSidebarElementByIndex } from "../redux/DataSlice";
 
 const text_colors = {
   pos: { color: "#3092ab" },
@@ -41,29 +44,49 @@ const text_colors = {
 const handleTextElemStyle = (modelPrediction) =>
   modelPrediction === "true" ? classes["text_predict"] : classes["text_normal"];
 
-const Element = ({ element, updateCounterOnLabeling = true }) => {
+const Element = ({ element, updateCounterOnLabeling = true, index }) => {
   const dispatch = useDispatch();
   const { id, docId, text, userLabel, modelPrediction } = element;
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
-  const curDocName = useSelector((state) => state.workspace.curDocName);
   const searchInput = useSelector((state) => state.workspace.panels[panelIds.SEARCH].input);
+  const { index: focusedSidebarElementIndex } = useSelector((state) => state.workspace.panels.focusedSidebarElement);
 
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(
-    updateCounterOnLabeling
-  );
+  const isElementFocused = useMemo(() => index === focusedSidebarElementIndex, [index, focusedSidebarElementIndex]);
 
-  const handleElementClick = async () => {
-    dispatch(setFocusedElement({element, highlight: true}));
-    dispatch(changeCurrentDocument(docId));
+  const elementDOMkey = useMemo(() => getPanelDOMKey(id, activePanelId, index), [id, activePanelId, index]);
+
+  const handlePositiveLabelAction = (e) => {
+    e.stopPropagation();
+    // focus this element on the sidebar when labeled
+    dispatch(setfocusedSidebarElementByIndex(index));
+    handlePosLabelState(element);
   };
+
+  const handleNegativeLabelAction = (e) => {
+    e.stopPropagation();
+    // focus this element on the sidebar when labeled
+    dispatch(setfocusedSidebarElementByIndex(index));
+    handleNegLabelState(element);
+  };
+
+  const { handlePosLabelState, handleNegLabelState } = useLabelState(updateCounterOnLabeling);
+
+  const { focusMainPanelElement } = useFocusMainPanelElement();
+
+  const handleElementClick = useCallback((e) => {
+    dispatch(setfocusedSidebarElementByIndex(index));
+    focusMainPanelElement({ element, docId });
+    // focus this element on the sidebar when clicked
+  }, [element, docId, focusMainPanelElement, index, dispatch]);
 
   return (
     <Paper
-      onClick={() => handleElementClick()}
-      className={handleTextElemStyle(modelPrediction)}
+      onClick={handleElementClick}
+      className={`${handleTextElemStyle(modelPrediction)} ${isElementFocused ? classes["focused_element"] : ""}`}
       sx={{ padding: "0 !important", mb: 2, ml: 1, mr: 0, alignSelf: "stretch" }}
       style={{ cursor: "pointer" }}
+      id={elementDOMkey}
     >
       <label
         style={{ cursor: "pointer" }}
@@ -95,27 +118,14 @@ const Element = ({ element, updateCounterOnLabeling = true }) => {
       >
         {curCategory !== null && (
           <>
-            <div
-              className={classes.resultbtn}
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePosLabelState(element);
-              }}
-            >
+            <div className={classes.resultbtn} onClick={handlePositiveLabelAction}>
               {userLabel === "pos" ? (
                 <img src={check} alt="checked" />
               ) : (
                 <img className={classes.hovbtn} src={checking} alt="checking" />
               )}
             </div>
-            <div
-              className={classes.resultbtn}
-              positiveicon="false"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleNegLabelState(element);
-              }}
-            >
+            <div className={classes.resultbtn} positiveicon="false" onClick={handleNegativeLabelAction}>
               {userLabel === "neg" ? (
                 <img src={cross} alt="crossed" />
               ) : (

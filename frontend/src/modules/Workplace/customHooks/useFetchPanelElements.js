@@ -8,7 +8,7 @@ import { getAllPositiveLabels } from "../redux/panelsSlice";
 import { getSuspiciousLabels } from "../redux/panelsSlice";
 import { getContradictingLabels } from "../redux/panelsSlice";
 import { getEvaluationElements } from "../redux/evaluationSlice";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 const getFetchActionByPanelId = (panelId) => {
   switch (panelId) {
@@ -33,40 +33,45 @@ const getFetchActionByPanelId = (panelId) => {
   }
 };
 
-export const useFetchPanelElements = () => {
+export const useFetchPanelElements = ({ panelId }) => {
   const dispatch = useDispatch();
-  const { mainPanelElementsPerPage, sidebarPanelElementsPerPage } = useSelector(
-    (state) => state.featureFlags
+  const { mainPanelElementsPerPage, sidebarPanelElementsPerPage } = useSelector((state) => state.featureFlags);
+  const panel = useSelector((state) => state.workspace.panels[panelId]);
+  const page = useMemo(() => panel ? panel.page : null, [panel]);
+
+  const fetchPanelElements = useCallback(
+    (params = {}) => {
+      if (panelId) {
+        const elementsPerPage =
+          panelId === panelIds.MAIN_PANEL ? mainPanelElementsPerPage : sidebarPanelElementsPerPage;
+
+        const startIndex = (page - 1) * elementsPerPage;
+
+        const pagination = {
+          startIndex,
+          elementsPerPage,
+        };
+        const fetchAction = getFetchActionByPanelId(panelId);
+        dispatch(fetchAction({ pagination, ...params }));
+      }
+    },
+    [panelId, mainPanelElementsPerPage, sidebarPanelElementsPerPage, page, dispatch]
   );
-  const panels = useSelector((state) => state.workspace.panels);
 
-  const fetchPanelElements = ({ panelId, ...rest } = {}) => {
-    if (panelId) {
-      const elementsPerPage =
-        panelId === panelIds.MAIN_PANEL
-          ? mainPanelElementsPerPage
-          : sidebarPanelElementsPerPage;
-
-      const startIndex = (panels[panelId].page - 1) * elementsPerPage;
-
-      const pagination = {
-        startIndex,
-        elementsPerPage,
-      };
-      const fetchAction = getFetchActionByPanelId(panelId);
-      dispatch(fetchAction({ pagination, ...rest }));
-    }
-  };
-
-  const updateActivePanelElements = () => {
-    const activePanelId = panels.activePanelId;
-    if (
-      activePanelId !== panelIds.SEARCH ||
-      panels[panelIds.SEARCH].lastSearchString
-    ) {
-      fetchPanelElements({ panelId: activePanelId });
-    }
-  };
-
-  return { fetchPanelElements, updateActivePanelElements };
+  return fetchPanelElements;
 };
+
+export const useUpdateActivePanelElements = () => {
+  const lastSearchString = useSelector((state) => state.workspace.panels[panelIds.SEARCH].lastSearchString);
+  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
+
+  const fetchActivePanelElements = useFetchPanelElements({panelId: activePanelId});
+  
+  const updateActivePanelElements = useCallback(() => {
+    if (activePanelId !== panelIds.SEARCH || lastSearchString) {
+      fetchActivePanelElements();
+    };
+  }, [activePanelId, lastSearchString, fetchActivePanelElements]);
+
+  return { updateActivePanelElements }
+}

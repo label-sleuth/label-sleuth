@@ -14,29 +14,27 @@
 */
 
 import { useDispatch, useSelector } from "react-redux";
-import { panelIds } from "../../../../const";
-import { changeCurrentDocument, setPage, focusFirstElement } from "../../redux/DataSlice";
+import { changeCurrentDocument, clearMainPanelFocusedElement } from "../../redux/DataSlice";
 
 const useFetchPrevNextDoc = () => {
   const curDocId = useSelector((state) => state.workspace.curDocId);
   const documents = useSelector((state) => state.workspace.documents);
   const dispatch = useDispatch();
+  const mainPanelElementsPerPage = useSelector((state) => state.featureFlags.mainPanelElementsPerPage);
 
   const handleFetchNextDoc = () => {
     if (curDocId < documents.length - 1) {
-      dispatch(setPage({ panelId: panelIds.MAIN_PANEL, newPage: 1 }));
-      dispatch(changeCurrentDocument(documents[curDocId + 1]["document_id"]));
+      dispatch(clearMainPanelFocusedElement());
+      dispatch(changeCurrentDocument({ newDocId: documents[curDocId + 1]["document_id"], mainPanelElementsPerPage }));
       // this action is currently focusing the first element of the previous document
       // it works, but ideally the first element of the new document should be focused
-      dispatch(focusFirstElement())
     }
   };
 
   const handleFetchPrevDoc = () => {
     if (curDocId > 0) {
-      dispatch(setPage({ panelId: panelIds.MAIN_PANEL, newPage: 1 }));
-      dispatch(changeCurrentDocument(documents[curDocId - 1]["document_id"]));
-      dispatch(focusFirstElement())
+      dispatch(clearMainPanelFocusedElement());
+      dispatch(changeCurrentDocument({ newDocId: documents[curDocId - 1]["document_id"], mainPanelElementsPerPage }));
     }
   };
 

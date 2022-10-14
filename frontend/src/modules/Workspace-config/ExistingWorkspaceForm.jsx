@@ -59,7 +59,6 @@ const ExistingWorkspaceForm = ({
             onClick={() => setDeleteWorkspaceModalOpen(true)}
             className={buttonIBMClasses["button-ibm"]}
             text="Delete"
-            secondary
           />
           <ButtonIBM onClick={handleClick} className={buttonIBMClasses["button-ibm"]} text="Go" />
         </div>

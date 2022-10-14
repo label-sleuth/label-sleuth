@@ -21,6 +21,8 @@ import {
   setWorkspaceVisited,
   cleanEvaluationState,
   cleanUploadedLabels,
+  clearMainPanelFocusedElement,
+  setPage,
 } from "../redux/DataSlice";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -33,16 +35,14 @@ import { useFetchPanelElements } from "./useFetchPanelElements";
 const useWorkspaceState = () => {
   const dispatch = useDispatch();
 
-  const workspaceVisited = useSelector(
-    (state) => state.workspace.workspaceVisited
-  );
+  const workspaceVisited = useSelector((state) => state.workspace.workspaceVisited);
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
   const uploadedLabels = useSelector((state) => state.workspace.uploadedLabels);
-  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
 
-  const { fetchPanelElements, updateActivePanelElements } =
-    useFetchPanelElements();
+
+  const fetchMainPanelElements = useFetchPanelElements({ panelId: panelIds.MAIN_PANEL });
+  const fetchPositiveLabelsElements = useFetchPanelElements({ panelId: panelIds.POSITIVE_LABELS });
 
   React.useEffect(() => {
     if (!workspaceVisited) {
@@ -56,13 +56,14 @@ const useWorkspaceState = () => {
 
     // fetch categories only once, they will be fetched again if a new category is added
     dispatch(fetchCategories());
-  }, []);
+  }, [dispatch]);
 
   React.useEffect(() => {
     // update the model version when the category changes (if any)
     if (curCategory !== null) {
       dispatch(checkModelUpdate());
       dispatch(cleanEvaluationState());
+      dispatch(clearMainPanelFocusedElement());
     }
   }, [curCategory, dispatch]);
 
@@ -73,13 +74,15 @@ const useWorkspaceState = () => {
     if (curCategory !== null) {
       dispatch(checkStatus());
       // checking for nullity first because in js null >= 0
-      if (modelVersion !== null && modelVersion >= 0) {
-        // always fetch label next elements
-        fetchPanelElements({panelId: panelIds.LABEL_NEXT})
-        if (activePanelId !== panelIds.LABEL_NEXT) {
-          updateActivePanelElements();
-        }
-      }
+      const panelsToResetPagination = [
+        panelIds.LABEL_NEXT,
+        panelIds.POSITIVE_PREDICTIONS,
+        panelIds.SUSPICIOUS_LABELS,
+        panelIds.CONTRADICTING_LABELS,
+      ];
+      panelsToResetPagination.forEach((pId) => {
+        dispatch(setPage({ panelId: pId, newPage: 1 }));
+      });
     }
   }, [curCategory, modelVersion, dispatch]);
 
@@ -91,21 +94,16 @@ const useWorkspaceState = () => {
     if (uploadedLabels) {
       const { categories, categoriesCreated } = uploadedLabels;
       if (categories?.some((cat) => cat.category_id == curCategory)) {
-        fetchPanelElements({
-          panelId: panelIds.POSITIVE_LABELS,
-        });
-        fetchPanelElements({
-          panelId: panelIds.MAIN_PANEL,
-        }).then(() => {
-          dispatch(checkStatus());
-        });
+        fetchPositiveLabelsElements();
+        fetchMainPanelElements();
+        dispatch(checkStatus());
       }
       if (categoriesCreated) {
         dispatch(fetchCategories());
       }
       dispatch(cleanUploadedLabels());
     }
-  }, [uploadedLabels, curCategory, dispatch]);
+  }, [uploadedLabels, curCategory, fetchPositiveLabelsElements, fetchMainPanelElements, dispatch]);
 };
 
 export default useWorkspaceState;
