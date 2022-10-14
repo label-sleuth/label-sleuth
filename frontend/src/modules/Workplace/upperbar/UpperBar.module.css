@@ -14,13 +14,8 @@
 */
 
 .elevation_scroll {
-    position: fixed;
-    top: 0;
-    left: 280px;
-    right: 0;
     background: #f4f4f4;
     border-bottom: solid 1px #d6d6d6;
-    height: 80px;
     padding: 0 25px;
     z-index: 999;
 }
