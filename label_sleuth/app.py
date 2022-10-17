@@ -411,7 +411,7 @@ def get_document_elements(workspace_id, document_uri):
     :request_arg category_id:
     """
 
-    size = int(request.args.get('size', 100))
+    size = int(request.args.get('size', curr_app.config["CONFIGURATION"].main_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
     document = curr_app.orchestrator_api.get_documents(workspace_id, dataset_name, [document_uri])[0]
@@ -442,7 +442,7 @@ def get_document_positive_predictions(workspace_id, document_uri):
     :request_arg start_idx: get elements starting from this index (for pagination)
     """
     category_id = int(request.args['category_id'])
-    size = int(request.args.get('size', 100))
+    size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
 
     if len(curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
@@ -479,7 +479,7 @@ def get_positive_predictions(workspace_id):
     :request_arg start_idx: get elements starting from this index (for pagination)
     """
     category_id = int(request.args['category_id'])
-    size = int(request.args.get('size', 100))
+    size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
 
     all_ready_iterations = curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
@@ -538,7 +538,7 @@ def query(workspace_id):
     if category_id is not None:
         category_id = int(category_id)
     query_string = request.args.get('qry_string')
-    sample_size = int(request.args.get('size', 100))
+    sample_size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     sample_start_idx = int(request.args.get('start_idx', 0))
 
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
@@ -620,7 +620,7 @@ def get_all_positively_labeled_elements_for_category(workspace_id):
     :param workspace_id:
     :request_arg category_id:
     """
-    size = int(request.args.get('size', 100))
+    size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
     category_id = int(request.args['category_id'])
     elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_POSITIVE, size=size, start_idx=start_idx)
@@ -641,7 +641,7 @@ def get_all_negatively_labeled_elements_for_category(workspace_id):
     :request_arg category_id:
     """
     category_id = int(request.args['category_id'])
-    size = int(request.args.get('size', 100))
+    size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
    
     elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_NEGATIVE, size=size, start_idx=start_idx)
@@ -784,7 +784,7 @@ def get_elements_to_label(workspace_id):
     :request_arg start_idx: get elements starting from this index (for pagination)
     """
     category_id = int(request.args['category_id'])
-    size = int(request.args.get('size', 100))
+    size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
 
     if len(curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
@@ -948,11 +948,9 @@ def get_suspicious_elements(workspace_id):
     :param workspace_id:
     :request_arg category_id:
     """
-    size = int(request.args.get('size', 100))
+    size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
     category_id = int(request.args['category_id'])
-    size = int(request.args.get('size', 100))
-    start_idx = int(request.args.get('start_idx', 0))  
     
     try:
         suspicious_elements = curr_app.orchestrator_api.get_suspicious_elements_report(workspace_id, category_id)
@@ -986,7 +984,7 @@ def get_contradicting_elements(workspace_id):
     :request_arg category_id:
     """
     category_id = int(request.args['category_id'])
-    size = int(request.args.get('size', 100))
+    size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
     try:
         contradiction_elements_dict = curr_app.orchestrator_api.get_contradiction_report(workspace_id, category_id)

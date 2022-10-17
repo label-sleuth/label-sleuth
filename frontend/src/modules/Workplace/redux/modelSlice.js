@@ -79,7 +79,7 @@ export const downloadModel = createAsyncThunk(
         let latestReadyModelVersion = null;
         let nextModelShouldBeTraining;
   
-        const lastModelFailed = models.length && models[models.length - 1]['iteration_status'] === "ERROR"
+        const lastModelFailed = models.length ? models[models.length - 1]['iteration_status'] === "ERROR" : false;
   
         models.reverse().forEach((m) => {
           if (
