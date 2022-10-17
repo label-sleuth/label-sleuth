@@ -40,7 +40,7 @@ class Configuration:
     language: Language
     login_required: bool
     main_panel_elements_per_page: int = 500
-    sidebar_panel_elements_per_page: int = 2
+    sidebar_panel_elements_per_page: int = 50
     users: List[dict] = field(default_factory=list)
 
 
