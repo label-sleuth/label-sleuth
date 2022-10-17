@@ -8,5 +8,7 @@
     "precision_evaluation_size": 20,
     "apply_labels_to_duplicate_texts": true,
     "language": "ENGLISH",
-    "login_required": false
+    "login_required": false,
+    "main_panel_elements_per_page": 500,
+    "sidebar_panel_elements_per_page": 50
 }

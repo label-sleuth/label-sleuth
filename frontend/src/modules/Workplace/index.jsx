@@ -61,6 +61,9 @@ export default function Workspace() {
   const evaluationIsInProgress = useSelector(
     (state) => state.workspace.panels[panelIds.EVALUATION].isInProgress
   );
+  const evaluationLoading = useSelector(
+    (state) => state.workspace.panels.loading[panelIds.EVALUATION]
+  );
   const workspaceVisited = useSelector(
     (state) => state.workspace.workspaceVisited
   );
@@ -68,14 +71,12 @@ export default function Workspace() {
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(
     !!!workspaceVisited
   );
-  
+
   const { openBackdrop } = useBackdrop();
 
   const dispatch = useDispatch();
 
   useWorkspaceState();
-
-
 
   const noCategory = useMemo(() => curCategory === null, [curCategory]);
   const noCategoryAndNoModel = useMemo(
@@ -90,9 +91,9 @@ export default function Workspace() {
     disabled,
     panelId,
   }) => {
-
-    const isSelected = activePanelId === panelId
-    const onClick = () => dispatch(setActivePanel(panelId === activePanelId ? "" : panelId))
+    const isSelected = activePanelId === panelId;
+    const onClick = () =>
+      dispatch(setActivePanel(panelId === activePanelId ? "" : panelId));
 
     const Button = React.forwardRef((props, ref) => (
       <div ref={ref} {...props}>
@@ -157,21 +158,29 @@ export default function Workspace() {
                   tooltipMessage={SEARCH_ALL_DOCS_TOOLTIP_MSG}
                   componentId={"sidebar-search-button"}
                   imgSource={search_icon}
-                  disabled={evaluationIsInProgress}
+                  disabled={evaluationIsInProgress || evaluationLoading}
                   panelId={panelIds.SEARCH}
                 />
                 <SidebarButton
                   tooltipMessage={NEXT_TO_LABEL_TOOLTIP_MSG}
                   componentId={"sidebar-recommended-button"}
                   imgSource={recommend_icon}
-                  disabled={evaluationIsInProgress || noCategoryAndNoModel}
+                  disabled={
+                    evaluationIsInProgress ||
+                    evaluationLoading ||
+                    noCategoryAndNoModel
+                  }
                   panelId={panelIds.LABEL_NEXT}
                 />
                 <SidebarButton
                   tooltipMessage={POSITIVE_PRED_TOOLTIP_MSG}
                   componentId={"sidebar-pos-pred-button"}
                   imgSource={pos_pred_icon}
-                  disabled={evaluationIsInProgress || noCategoryAndNoModel}
+                  disabled={
+                    evaluationIsInProgress ||
+                    evaluationLoading ||
+                    noCategoryAndNoModel
+                  }
                   panelId={panelIds.POSITIVE_PREDICTIONS}
                 />
               </Stack>
@@ -181,21 +190,29 @@ export default function Workspace() {
                   componentId={"sidebar-pos-elem-button"}
                   imgSource={pos_elem_icon}
                   alwaysEnabled
-                  disabled={evaluationIsInProgress || noCategory}
+                  disabled={
+                    evaluationIsInProgress || evaluationLoading || noCategory
+                  }
                   panelId={panelIds.POSITIVE_LABELS}
                 />
                 <SidebarButton
                   tooltipMessage={SUSPICIOUS_LABELS_TOOLTIP_MSG}
                   componentId={"sidebar-suspicious-elem-button"}
                   imgSource={suspicious_elem_icon}
-                  disabled={evaluationIsInProgress || noCategoryAndNoModel}
+                  disabled={
+                    evaluationIsInProgress ||
+                    evaluationLoading ||
+                    noCategoryAndNoModel
+                  }
                   panelId={panelIds.SUSPICIOUS_LABELS}
                 />
                 <SidebarButton
                   tooltipMessage={CONTRADICTING_LABELS_TOOLTIP_MSG}
                   componentId={"sidebar-contradictive-elem-button"}
                   imgSource={contradictive_elem_icon}
-                  disabled={evaluationIsInProgress || noCategory}
+                  disabled={
+                    evaluationIsInProgress || evaluationLoading || noCategory
+                  }
                   panelId={panelIds.CONTRADICTING_LABELS}
                 />
                 <SidebarButton

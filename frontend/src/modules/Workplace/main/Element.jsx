@@ -12,7 +12,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
-
+import { useMemo } from "react";
 import { Box } from "@mui/system";
 import Stack from '@mui/material/Stack';
 import { useSelector } from 'react-redux';
@@ -25,32 +25,34 @@ import useMainLabelState from '../customHooks/useLabelState';
 import useElemStyles from "./customHooks/useElemStyles";
 import { getMainPanelElementId } from "../../../utils/utils";
 import { panelIds } from "../../../const";
+
 export default function Element({ element }) {
     
     const { id, text, userLabel, modelPrediction } = element
 
     const curCategory = useSelector(state => state.workspace.curCategory) 
     const evaluationIsInProgress = useSelector(state => state.workspace.panels[panelIds.EVALUATION].isInProgress) 
+    const evaluationLoading = useSelector(state => state.workspace.panels.loading[panelIds.EVALUATION])
     const { handlePosLabelState, handleNegLabelState } = useMainLabelState({ elementURI: id })
-    const elementDOMId = getMainPanelElementId(id)
-    const { handleTextElemStyle,  text_colors } = useElemStyles(elementDOMId, modelPrediction)
+    const elementDOMId = useMemo(() => getMainPanelElementId(id), [id])
+    const elemStyleClasses = useElemStyles(elementDOMId, modelPrediction, userLabel)
     
     return (
         curCategory  === null ?
             <Box 
                 tabIndex="-1" 
-                className={handleTextElemStyle()} 
+                className={`${elemStyleClasses.prediction} ${elemStyleClasses.animation}`} 
                 id={elementDOMId}
             >
                 <p className={classes["nodata_text"]}>{text}</p>
             </Box>
             :
             <Box tabIndex="-1"
-                className={handleTextElemStyle()}
+                className={`${elemStyleClasses.prediction} ${elemStyleClasses.animation}`}
                 id={elementDOMId} 
             >
-                <p className={classes.data_text} style={(text_colors[userLabel])}>{text}</p>
-                <Stack className={!evaluationIsInProgress && classes.checking_buttons} direction="row" spacing={0}>
+                <p className={`${classes.data_text} ${elemStyleClasses.userLabel}`} >{text}</p>
+                <Stack className={!evaluationLoading && !evaluationIsInProgress && classes.checking_buttons} direction="row" spacing={0}>
                     <div
                         onClick={(e) => { e.stopPropagation(); handlePosLabelState(element)}}
                         style={{ cursor: "pointer" }}>

@@ -124,11 +124,7 @@ export const extraReducers = {
     );
     state.curCategory = null;
     state.modelVersion = null;
-    state.panels = {
-      ...panelsInitialState.panels,
-      activePanelId: panelIds.SEARCH,
-      [panelIds.MAIN_PANEL]: panelsInitialState.panels[panelIds.MAIN_PANEL],
-    };
+    state.panels.activePanelId = panelIds.SEARCH;
   },
   [editCategory.fulfilled]: (state, action) => {
     const { category_name, category_description } = action.payload;

@@ -14,67 +14,71 @@
 */
 
 import {
-  getElementToLabel,
   checkStatus,
   fetchCategories,
   fetchDocuments,
   checkModelUpdate,
-  fetchElements,
-  getPositivePredictions,
   setWorkspaceVisited,
-  getSuspiciousLabels,
-  getAllPositiveLabels,
   cleanEvaluationState,
   cleanUploadedLabels,
 } from "../redux/DataSlice";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { panelIds } from "../../../const";
+import { useFetchPanelElements } from "./useFetchPanelElements";
 
 /**
  * Custom hook for dispatching workspace related actions
  **/
 const useWorkspaceState = () => {
   const dispatch = useDispatch();
-  
-  const workspaceVisited = useSelector((state) => state.workspace.workspaceVisited);
+
+  const workspaceVisited = useSelector(
+    (state) => state.workspace.workspaceVisited
+  );
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
   const uploadedLabels = useSelector((state) => state.workspace.uploadedLabels);
+  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
+
+  const { fetchPanelElements, updateActivePanelElements } =
+    useFetchPanelElements();
+
+  React.useEffect(() => {
+    if (!workspaceVisited) {
+      dispatch(setWorkspaceVisited());
+    }
+  }, [workspaceVisited, dispatch]);
 
   React.useEffect(() => {
     // fetch documents only once, they won't change
-    dispatch(fetchDocuments())
-    
+    dispatch(fetchDocuments());
+
     // fetch categories only once, they will be fetched again if a new category is added
     dispatch(fetchCategories());
-
-    if (!workspaceVisited) {
-      dispatch(setWorkspaceVisited())
-    }
-
-  }, [dispatch]);
+  }, []);
 
   React.useEffect(() => {
     // update the model version when the category changes (if any)
     if (curCategory !== null) {
       dispatch(checkModelUpdate());
-      dispatch(getAllPositiveLabels())
-      dispatch(cleanEvaluationState())
+      dispatch(cleanEvaluationState());
     }
   }, [curCategory, dispatch]);
 
   React.useEffect(() => {
     // category changes or modelVersion changes means
-    // that recommend to label and positive predicted text entries has to be updated
+    // that recommend to label and active panel has to be updated
     // also the status is updated
     if (curCategory !== null) {
       dispatch(checkStatus());
       // checking for nullity first because in js null >= 0
       if (modelVersion !== null && modelVersion >= 0) {
-        dispatch(getElementToLabel());
-        dispatch(getPositivePredictions())
-        dispatch(getSuspiciousLabels())
-        dispatch(getAllPositiveLabels())
+        // always fetch label next elements
+        fetchPanelElements({panelId: panelIds.LABEL_NEXT})
+        if (activePanelId !== panelIds.LABEL_NEXT) {
+          updateActivePanelElements();
+        }
       }
     }
   }, [curCategory, modelVersion, dispatch]);
@@ -86,19 +90,22 @@ const useWorkspaceState = () => {
     // fetched again, as well as the search bar results (in case element labels has to be updated there)
     if (uploadedLabels) {
       const { categories, categoriesCreated } = uploadedLabels;
-      if (categories?.some(cat => cat.category_id == curCategory)) {
-        dispatch(getAllPositiveLabels())
-        dispatch(fetchElements()).then(() => {
+      if (categories?.some((cat) => cat.category_id == curCategory)) {
+        fetchPanelElements({
+          panelId: panelIds.POSITIVE_LABELS,
+        });
+        fetchPanelElements({
+          panelId: panelIds.MAIN_PANEL,
+        }).then(() => {
           dispatch(checkStatus());
         });
       }
       if (categoriesCreated) {
         dispatch(fetchCategories());
       }
-      dispatch(cleanUploadedLabels())
+      dispatch(cleanUploadedLabels());
     }
-  }, [uploadedLabels]);
-
+  }, [uploadedLabels, curCategory, dispatch]);
 };
 
 export default useWorkspaceState;

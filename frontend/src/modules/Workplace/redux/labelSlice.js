@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
   getCategoryQueryString,
+  getPageCount,
   getQueryParamsString,
   parseElement,
   synchronizeElement,
@@ -95,7 +96,10 @@ export const setElementLabel = createAsyncThunk(
       value: label,
       update_counter: update_counter,
     });
-    return data;
+
+    const sidebarPanelElementsPerPage =
+      state.featureFlags.sidebarPanelElementsPerPage;
+    return { data, sidebarPanelElementsPerPage };
   }
 );
 
@@ -173,21 +177,62 @@ export const extraReducers = {
     state.uploadingLabels = false;
   },
   [setElementLabel.fulfilled]: (state, action) => {
-    const { element: unparsedElement } = action.payload;
+    const { data, sidebarPanelElementsPerPage } = action.payload;
+    const { element: unparsedElement } = data;
     const element = parseElement(unparsedElement, state.curCategory);
 
-    const panels = synchronizeElement(
+    const { panels, previousLabel } = synchronizeElement(
       element.id,
       element.userLabel,
       state.panels
     );
 
-    const elements = panels[panelIds.POSITIVE_LABELS].elements;
-    if (element.userLabel === "pos") {
-      elements[element.id] = element;
-    } else if (element.id in elements) {
-      delete elements[element.id];
+    // Positive labels panel management
+    const { elements, page, hitCount } = panels[panelIds.POSITIVE_LABELS];
+
+    // have to do something if:
+    // - positive labels panels is active
+    if (panels.activePanelId === panelIds.POSITIVE_LABELS) {
+      // - label is pos,
+      if (element.userLabel === "pos") {
+        panels[panelIds.POSITIVE_LABELS].hitCount += 1;
+        if (elements === null) {
+          elements = {};
+        }
+        // - last page is not full
+        if (Object.keys(elements).length < sidebarPanelElementsPerPage) {
+          // - and if it is in the last page add it to the last page
+          const positiveLabelsPanelPageCount = getPageCount(
+            sidebarPanelElementsPerPage,
+            hitCount
+          );
+          if (positiveLabelsPanelPageCount === page) {
+            elements[element.id] = element;
+          }
+        }
+      }
+      // if element was positive label
+      // update hitCount and remove it if it is in the current page
+      else if (previousLabel === "pos") {
+        // manually manage case where labeled element
+        // is present in the current page
+        const positiveLabelsPanelPageCount = getPageCount(
+          sidebarPanelElementsPerPage,
+          hitCount
+        );
+        if (
+          element.id in elements &&
+          Object.keys(elements).length === 1 &&
+          page === positiveLabelsPanelPageCount
+        ) {
+          panels[panelIds.POSITIVE_LABELS].page = page - 1;
+        }
+        // mechanism is too complex when elements are removed from another page
+        // lets refetch for the moment :)
+        panels.refetch = true;
+      }
     }
+
     panels[panelIds.POSITIVE_LABELS].elements = elements;
     state.panels = panels;
   },

@@ -15,126 +15,152 @@
 
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
-import { InputBase, Paper, Typography } from "@mui/material";
+import { InputBase, Paper } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import classes from "./index.module.css";
-import Element from "./Element";
-import { forwardRef } from "react";
+import { forwardRef, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { panelIds } from "../../../const";
 import useSearchElement from "./customHooks/useSearchElement";
+import usePanelPagination from "../../../customHooks/usePanelPagination";
+import { ElementList } from "./components/commonComponents";
+import { CustomPagination } from "../../../components/pagination/CustomPagination";
 
-const SearchPanel = forwardRef(({clearSearchInput}, textInputRef) => {
-
+const SearchInput = ({
+  textInputRef,
+  input,
+  clearSearchInput,
+  resetPagination,
+}) => {
   const { handleSearchInputEnterKey, handleSearch, handleSearchInputChange } =
-    useSearchElement();
+    useSearchElement(resetPagination);
 
-  const { elements, input, hitCount, uniqueHitCount } = useSelector(
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "row",
+        alignItem: "center",
+        marginTop: "19px",
+        borderBottom: "1px solid #e2e2e2",
+        pb: "20px",
+        justifyContent: "center",
+      }}
+    >
+      <Paper
+        component="form"
+        sx={{
+          p: "2px 4px",
+          display: "flex",
+          alignItems: "center",
+          width: 320,
+          height: 40,
+          marginLeft: 1,
+        }}
+      >
+        <InputBase
+          sx={{ ml: 1, flex: 1 }}
+          placeholder="Search"
+          inputProps={{ "aria-label": "search" }}
+          onKeyPress={handleSearchInputEnterKey}
+          onChange={handleSearchInputChange}
+          inputRef={textInputRef}
+          defaultValue={input}
+          autoFocus={true}
+        />
+        {input && (
+          <>
+            <IconButton
+              sx={{ p: "1px" }}
+              aria-label="search"
+              onClick={clearSearchInput}
+            >
+              <ClearIcon />
+            </IconButton>
+            {
+              <IconButton
+                sx={{ p: "1px" }}
+                aria-label="search"
+                onClick={handleSearch}
+              >
+                <SearchIcon />
+              </IconButton>
+            }
+          </>
+        )}
+      </Paper>
+    </Box>
+  );
+};
+
+const SearchPanel = forwardRef(({ clearSearchInput }, textInputRef) => {
+  const { input, lastSearchString, hitCount, uniqueHitCount } = useSelector(
     (state) => state.workspace.panels[panelIds.SEARCH]
+  );
+
+  const sidebarPanelElementsPerPage = useSelector(
+    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  );
+
+  const loading = useSelector(
+    (state) => state.workspace.panels.loading[panelIds.SEARCH]
+  );
+
+  const {
+    currentContentData,
+    currentPage,
+    resetPagination,
+    onPageChange,
+    isPaginationRequired,
+   } = usePanelPagination({
+    elementsPerPage: sidebarPanelElementsPerPage,
+    panelId: panelIds.SEARCH,
+    shouldFetch: input !== null && input !== "",
+    fetchOnFirstRender: false,
+  });
+
+  const emptyResults = useMemo(
+    () => currentContentData && currentContentData.length === 0,
+    [currentContentData]
+  );
+
+  const nonEmptyResults = useMemo(
+    () => currentContentData && currentContentData.length > 0,
+    [currentContentData]
+  );
+
+  const noSearchDone = useMemo(
+    () => !emptyResults && !nonEmptyResults,
+    [nonEmptyResults, emptyResults]
   );
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItem: "center",
-          marginTop: "19px",
-          borderBottom: "1px solid #e2e2e2",
-          pb: "20px",
-          justifyContent: "center",
-        }}
-      >
-        <Paper
-          component="form"
-          sx={{
-            p: "2px 4px",
-            display: "flex",
-            alignItems: "center",
-            width: 320,
-            height: 40,
-            marginLeft: 1,
-          }}
-        >
-          <InputBase
-            sx={{ ml: 1, flex: 1 }}
-            placeholder="Search"
-            inputProps={{ "aria-label": "search" }}
-            onKeyPress={handleSearchInputEnterKey}
-            onChange={handleSearchInputChange}
-            inputRef={textInputRef}
-            defaultValue={input}
-            autoFocus={true}
-          />
-          {input && (
-            <>
-              <IconButton
-                sx={{ p: "1px" }}
-                aria-label="search"
-                onClick={clearSearchInput}
-              >
-                <ClearIcon />
-              </IconButton>
-              {
-                <IconButton
-                  sx={{ p: "1px" }}
-                  aria-label="search"
-                  onClick={handleSearch}
-                >
-                  <SearchIcon />
-                </IconButton>
-              }
-            </>
-          )}
-        </Paper>
-      </Box>
-      {elements && Object.keys(elements).length > 0 && (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mt: 1,
-            fontSize: "0.8rem",
-            color: "rgba(0,0,0,.54)",
-          }}
-        >
-          <Typography
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              fontSize: "0.8rem",
-              color: "rgba(0,0,0,.54)",
-            }}
-          >
-            {`${uniqueHitCount} elements found (${hitCount} including duplicates)`}
-          </Typography>
-        </Box>
-      )}
-      <Box className={classes["search-results"]} sx={{ mt: 2 }}>
-        {elements &&
-          (Object.values(elements).length === 0 ? (
-            <Box>
-              <Typography
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  fontSize: "0.9rem",
-                  color: "rgba(0,0,0,.54)",
-                }}
-              >
-                No matching results were found.
-              </Typography>
-            </Box>
-          ) : (
-            <Box>
-              {Object.values(elements).map((element, i) => {
-                return <Element element={element} key={element.id} />;
-              })}
-            </Box>
-          ))}
-      </Box>
+      <SearchInput
+        textInputRef={textInputRef}
+        input={input}
+        clearSearchInput={clearSearchInput}
+        resetPagination={resetPagination}
+      />
+      <ElementList
+        elements={currentContentData}
+        loading={loading}
+        nonEmptyResultsMessage={`Showing ${currentContentData && currentContentData.length} of ${uniqueHitCount} found elements ${
+          uniqueHitCount !== hitCount
+            ? `(${hitCount} including duplicates)`
+            : ""
+        }`}
+        emptyResultsMessage={"No matching results were found."}
+        isPaginationRequired={isPaginationRequired}
+      />
+      <CustomPagination
+        currentContentData={currentContentData}
+        hitCount={uniqueHitCount}
+        sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
+        currentPage={currentPage}
+        onPageChange={onPageChange}
+        isPaginationRequired={isPaginationRequired}
+      />
     </Box>
   );
 });

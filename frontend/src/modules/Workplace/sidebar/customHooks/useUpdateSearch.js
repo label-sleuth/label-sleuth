@@ -4,9 +4,9 @@ import {
   resetSearchResults,
   setSearchInput,
   resetLastSearchString,
-  searchKeywords,
 } from "../../redux/DataSlice";
 import { panelIds } from "../../../../const";
+import { useFetchPanelElements } from "../../customHooks/useFetchPanelElements";
 
 /**
  * Custom hook that manages the state of the search sidebal panel.
@@ -21,6 +21,8 @@ export const useUpdateSearch = (textInputRef) => {
   );
 
   const dispatch = useDispatch();
+
+  const { fetchPanelElements } = useFetchPanelElements();
 
   /**
    * Clear the search sidebar panel by reseting the
@@ -56,7 +58,12 @@ export const useUpdateSearch = (textInputRef) => {
    * may have changed
    */
   useEffect(() => {
-    uploadedLabels && lastSearchString && dispatch(searchKeywords(true));
+    uploadedLabels &&
+      lastSearchString &&
+      fetchPanelElements({
+        panelId: panelIds.SEARCH,
+        useLastSearchString: true,
+      });
   }, [uploadedLabels, lastSearchString, dispatch]);
 
   return clearSearch;

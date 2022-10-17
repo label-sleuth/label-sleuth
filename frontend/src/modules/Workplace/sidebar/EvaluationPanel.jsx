@@ -14,24 +14,12 @@
 */
 
 import React from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  CircularProgress,
-  Stack,
-  Divider,
-} from "@mui/material";
+import { Box, Button, Stack, Divider } from "@mui/material";
 import classes from "./index.module.css";
 import { useSelector, useDispatch } from "react-redux";
 import Element from "./Element";
-import {
-  checkStatus,
-  startEvaluation,
-  getEvaluationResults,
-  cancelEvaluation,
-} from "../redux/DataSlice";
-
+import { checkStatus, startEvaluation, getEvaluationResults, cancelEvaluation } from "../redux/DataSlice";
+import { ButtonGroup } from "@mui/material";
 import {
   START_EVALUATION_MSG,
   EVALUATION_IN_PROGRESS_MSG,
@@ -39,36 +27,36 @@ import {
   WAIT_NEW_MODEL_MSG,
   panelIds,
 } from "../../../const";
+import { Header, PanelTypography, Loading } from "./components/commonComponents";
 
 const EvaluationPanel = () => {
   const dispatch = useDispatch();
 
-  const {
-    elements,
-    initialElements,
-    isInProgress,
-    lastScore,
-    scoreModelVersion,
-  } = useSelector(
+  const loading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
+
+  const { elements, initialElements, isInProgress, lastScore, scoreModelVersion } = useSelector(
     (state) => state.workspace.panels[panelIds.EVALUATION]
   );
 
-  const isLoading = useSelector(state => state.workspace.panels.loading[panelIds.EVALUATION])
+  const currentContentData = React.useMemo(() => elements && Object.values(elements), [elements]);
+
+  const isLoading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
 
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
 
-  const nextModelShouldBeTraining = useSelector(
-    (state) => state.workspace.nextModelShouldBeTraining
+  const nextModelShouldBeTraining = useSelector((state) => state.workspace.nextModelShouldBeTraining);
+
+  const evaluationElementsCount = React.useMemo(
+    () =>
+      currentContentData
+        ? currentContentData.map((element) => element.userLabel !== "none").reduce((partialSum, a) => partialSum + a, 0)
+        : 0,
+    [elements]
   );
 
   const submitButtonDisabled = React.useMemo(() => {
-    return (
-      !isInProgress ||
-      Object.values(elements).some(
-        (element) => element.userLabel !== "pos" && element.userLabel !== "neg"
-      )
-    );
-  }, [isInProgress, elements]);
+    return !isInProgress || evaluationElementsCount !== currentContentData.length;
+  }, [isInProgress, evaluationElementsCount]);
 
   const onStartEvaluation = () => {
     dispatch(startEvaluation());
@@ -91,89 +79,53 @@ const EvaluationPanel = () => {
     calculateChangedCountAndDispatch(cancelEvaluation);
   };
 
-  const typographyStyle = {
-    display: "flex",
-    justifyContent: "center",
-    fontSize: "0.8rem",
-    color: "rgba(0,0,0,.54)",
-    mr: 1,
-    ml: 1,
-  };
+  const progressLabel = React.useMemo(() => {
+    return currentContentData && `(${evaluationElementsCount}/${currentContentData.length})`;
+  }, [evaluationElementsCount, currentContentData]);
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItem: "center",
-          marginTop: "11px",
-          borderBottom: "1px solid #e2e2e2",
-          pb: "12px",
-          justifyContent: "center",
-        }}
-      >
-        <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Precision evaluation</strong>
-        </p>
-      </Box>
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 3, mb: 2 }}>
+      <Header message={"Precision evaluation"} />
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 1, mb: 2 }}>
         <Stack>
-          <Button
-            onClick={onStartEvaluation}
-            disabled={isInProgress || nextModelShouldBeTraining}
-          >
-            Start {lastScore ? "new" : ""} precision evaluation
-          </Button>
-          <Divider variant="middle" />
-          <Button onClick={submitEvaluation} disabled={submitButtonDisabled}>
-            Submit
-          </Button>
-          <Divider variant="middle" />
-          <Button
-            onClick={onCancelEvaluation}
-            disabled={!!!isInProgress}
-          >
-            Cancel evaluation
-          </Button>
+        {isInProgress && <PanelTypography sx={{ fontSize: "1rem", pt: 2 }}>{`Progress: ${progressLabel}`}</PanelTypography>}
+          <ButtonGroup sx={{ pt: 2 }} variant="text" aria-label="text button group">
+            <Button sx={{ textTransform: "none" }} onClick={onStartEvaluation} disabled={loading || isInProgress || nextModelShouldBeTraining}>
+              Start
+            </Button>
+            <Button sx={{ textTransform: "none" }} onClick={submitEvaluation} disabled={submitButtonDisabled}>
+              Submit
+            </Button>
+            <Button sx={{ textTransform: "none" }} onClick={onCancelEvaluation} disabled={!!!isInProgress}>
+              Cancel
+            </Button>
+          </ButtonGroup>
         </Stack>
       </Box>
-      <Box className={classes["search-results"]} sx={{ mt: 16 }}>
-        <Divider sx={{ mb: 3 }} variant="middle" />
+      <Divider variant="middle" />
+      <Box sx={{ mt: 2 }}>
+        {isLoading ? null : isInProgress ? (
+          <PanelTypography>{EVALUATION_IN_PROGRESS_MSG} </PanelTypography>
+        ) : lastScore !== null ? (
+          <PanelTypography sx={{ fontSize: "1rem"}}>
+            {PRECISION_RESULT_MSG(Math.round(lastScore * 100), modelVersion, scoreModelVersion)}
+          </PanelTypography>
+        ) : nextModelShouldBeTraining ? (
+          <PanelTypography>{WAIT_NEW_MODEL_MSG}</PanelTypography>
+        ) : (
+          <PanelTypography>{START_EVALUATION_MSG}</PanelTypography>
+        )}
+      </Box>
+      <Box sx={{ mt: isInProgress ? 16 : 12 }} className={classes["element-list"]}>
         {isLoading ? (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "15px",
-            }}
-          >
-            <CircularProgress />
-          </div>
+          <Loading />
         ) : isInProgress ? (
           <Box>
-            <Typography sx={typographyStyle}>
-              {EVALUATION_IN_PROGRESS_MSG}
-            </Typography>
-            {Object.values(elements).map((element, i) => {
-              return (
-                <Element
-                  element={element}
-                  updateCounterOnLabeling={false}
-                  key={element.id}
-                />
-              );
+            {currentContentData.map((element, i) => {
+              return <Element element={element} updateCounterOnLabeling={false} key={element.id} />;
             })}
           </Box>
-        ) : lastScore !== null ? (
-          <Typography sx={{ ...typographyStyle, fontSize: "1rem" }}>
-            {PRECISION_RESULT_MSG(Math.round(lastScore * 100), modelVersion, scoreModelVersion)}
-          </Typography>
-        ) : nextModelShouldBeTraining ? (
-          <Typography sx={typographyStyle}>{WAIT_NEW_MODEL_MSG}</Typography>
-        ) : (
-          <Typography sx={typographyStyle}>{START_EVALUATION_MSG}</Typography>
-        )}
+        ) : null}
       </Box>
     </Box>
   );

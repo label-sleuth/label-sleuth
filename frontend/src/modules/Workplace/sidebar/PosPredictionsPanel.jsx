@@ -20,53 +20,54 @@ import { useSelector } from "react-redux";
 import Element from "./Element";
 import { curCategoryNameSelector } from "../redux/DataSlice";
 import { panelIds } from "../../../const";
+import { ElementList, Header } from "./components/commonComponents";
+import usePanelPagination from "../../../customHooks/usePanelPagination";
+import { CustomPagination } from "../../../components/pagination/CustomPagination";
 
 const PosPredictionsPanel = () => {
-  const curCategoryName = useSelector(curCategoryNameSelector)
-  const elements = useSelector((state) => state.workspace.panels[panelIds.POSITIVE_PREDICTIONS].elements);
+  const curCategoryName = useSelector(curCategoryNameSelector);
+
+  const { hitCount } = useSelector(
+    (state) => state.workspace.panels[panelIds.POSITIVE_PREDICTIONS]
+  );
+
+  const loading = useSelector(
+    (state) => state.workspace.panels.loading[panelIds.POSITIVE_PREDICTIONS]
+  );
+
+  const sidebarPanelElementsPerPage = useSelector(
+    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  );
+
+  const {
+    currentContentData,
+    currentPage,
+    onPageChange,
+    isPaginationRequired,
+  } = usePanelPagination({
+    elementsPerPage: sidebarPanelElementsPerPage,
+    panelId: panelIds.POSITIVE_PREDICTIONS,
+  });
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItem: "center",
-          marginTop: "11px",
-          borderBottom: "1px solid #e2e2e2",
-          pb: "12px",
-          justifyContent: "center",
-        }}
-      >
-        <p style={{ width: "100%", textAlign: "center" }}>
-          <strong>Positive predictions</strong>
-        </p>
-      </Box>
-      <Typography
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          fontSize: "0.8rem",
-          color: "rgba(0,0,0,.54)",
-          mt: 2,
-          mb: 2,
-          mr: 1,
-          ml: 1,
-        }}
-      >
-        {`The following examples are predicted by the system to be related to the category '${curCategoryName}'`}
-      </Typography>
-      <Box className={classes["search-results"]} sx={{ mt: 4 }}>
-        {elements &&
-          Object.values(elements).map((element, i) => {
-            return (
-              <Element
-                element={element}
-                key={element.id}
-              />
-            );
-          })}
-      </Box>
+      <Header message={"Positive predictions"} />
+      <ElementList
+        elements={currentContentData}
+        loading={loading}
+        nonEmptyResultsMessage={`The following examples are predicted by the system to be related to the category '${curCategoryName}'`}
+        emptyResultsMessage={""}
+        isPaginationRequired={isPaginationRequired}
+        elementsTopPadding={2}
+      />
+      <CustomPagination
+        currentContentData={currentContentData}
+        hitCount={hitCount}
+        sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
+        currentPage={currentPage}
+        onPageChange={onPageChange}
+        isPaginationRequired={isPaginationRequired}
+      />
     </Box>
   );
 };

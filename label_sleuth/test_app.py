@@ -19,7 +19,6 @@ import os
 import time
 import tempfile
 import unittest
-
 from label_sleuth import app, config
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus
 
@@ -182,7 +181,7 @@ class TestAppIntegration(unittest.TestCase):
              'user_labels': {}},
             {'begin': 0, 'docid': 'my_test_dataset-document1', 'end': 46, 'id': 'my_test_dataset-document1-0',
              'model_predictions': {str(category_id): 'true'}, 'text': 'this is the first text element of document one',
-             'user_labels': {}}]},
+             'user_labels': {}}], 'hit_count': 3},
             active_learning_response)
 
         # set the first label according to the active learning recommendations
@@ -233,53 +232,57 @@ class TestAppIntegration(unittest.TestCase):
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to get positively labeled elements")
-        self.assertEqual({'positive_elements': [{'begin': 0,
-                                                 'docid': 'my_test_dataset-document3',
-                                                 'end': 53,
-                                                 'id': 'my_test_dataset-document3-0',
-                                                 'model_predictions': {'0': 'true'},
-                                                 'text': 'document 3 has three text elements, this is '
-                                                         'the first',
-                                                 'user_labels': {'0': 'true'}},
-                                                {'begin': 47,
-                                                 'docid': 'my_test_dataset-document1',
-                                                 'end': 94,
-                                                 'id': 'my_test_dataset-document1-1',
-                                                 'model_predictions': {'0': 'true'},
-                                                 'text': 'this is the second text element of document '
-                                                         'one',
-                                                 'user_labels': {'0': 'true'}},
-                                                {'begin': 142,
-                                                 'docid': 'my_test_dataset-document3',
-                                                 'end': 195,
-                                                 'id': 'my_test_dataset-document3-2',
-                                                 'model_predictions': {'0': 'true'},
-                                                 'text': 'document 3 has three text elements, this is '
-                                                         'the third',
-                                                 'user_labels': {'0': 'true'}}]},
-                         res.get_json(), msg="diffs in positively labeled elements")
+        self.assertEqual({'elements': [
+                            {'begin': 0,
+                            'docid': 'my_test_dataset-document3',
+                            'end': 53,
+                            'id': 'my_test_dataset-document3-0',
+                            'model_predictions': {'0': 'true'},
+                            'text': 'document 3 has three text elements, this is '
+                                    'the first',
+                            'user_labels': {'0': 'true'}},
+                            {'begin': 47,
+                            'docid': 'my_test_dataset-document1',
+                            'end': 94,
+                            'id': 'my_test_dataset-document1-1',
+                            'model_predictions': {'0': 'true'},
+                            'text': 'this is the second text element of document '
+                                    'one',
+                            'user_labels': {'0': 'true'}},
+                            {'begin': 142,
+                            'docid': 'my_test_dataset-document3',
+                            'end': 195,
+                            'id': 'my_test_dataset-document3-2',
+                            'model_predictions': {'0': 'true'},
+                            'text': 'document 3 has three text elements, this is '
+                                    'the third',
+                            'user_labels': {'0': 'true'}}], 
+                        'hit_count': 3},
+                        res.get_json(), msg="diffs in positively labeled elements")
 
         # get negatively labeled elements
         res = self.client.get(f"/workspace/{workspace_name}/negative_elements?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to get negatively labeled elements")
-        self.assertEqual({'negative_elements': [{'begin': 0,
-                                                 'docid': 'my_test_dataset-document2',
-                                                 'end': 45,
-                                                 'id': 'my_test_dataset-document2-0',
-                                                 'model_predictions': {'0': 'true'},
-                                                 'text': 'this is the only text element in document two',
-                                                 'user_labels': {'0': 'false'}},
-                                                {'begin': 54,
-                                                 'docid': 'my_test_dataset-document3',
-                                                 'end': 141,
-                                                 'id': 'my_test_dataset-document3-1',
-                                                 'model_predictions': {'0': 'false'},
-                                                 'text': 'document 3 has three text elements, this is '
-                                                         'the second that will be labeled as negative',
-                                                 'user_labels': {'0': 'false'}}]},
-                         res.get_json(), msg="diffs in negatively labeled elements")
+        self.assertEqual({'elements': [
+                            {'begin': 0,
+                            'docid': 'my_test_dataset-document2',
+                            'end': 45,
+                            'id': 'my_test_dataset-document2-0',
+                            'model_predictions': {'0': 'true'},
+                            'text': 'this is the only text element in document two',
+                            'user_labels': {'0': 'false'}},
+                            {'begin': 54,
+                            'docid': 'my_test_dataset-document3',
+                            'end': 141,
+                            'id': 'my_test_dataset-document3-1',
+                            'model_predictions': {'0': 'false'},
+                            'text': 'document 3 has three text elements, this is '
+                                    'the second that will be labeled as negative',
+                            'user_labels': {'0': 'false'}}],
+                        'hit_count': 2},
+                        res.get_json(), msg="diffs in negatively labeled elements")
 
         # wait for the second models
         res = self.wait_for_new_iteration(category_id, res, workspace_name, 2)
