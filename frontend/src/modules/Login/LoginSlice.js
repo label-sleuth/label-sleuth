@@ -23,7 +23,6 @@ const initialState = {
     // or using redux state. This should be unified
     token: localStorage.token,
     loading: false,
-    errorMessage: '',
     authenticated: !!localStorage.token,
 }
 
@@ -65,8 +64,7 @@ export const authenticateSlice = createSlice({
             state.token = payload.token
             state.authenticated = true
         },
-        [getAuthenticated.rejected]: (state, { error }) => {
-            state.errorMessage = error.message
+        [getAuthenticated.rejected]: (state, _) => {
             state.loading = false
             state.authenticated = false
         },

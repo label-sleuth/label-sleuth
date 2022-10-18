@@ -32,7 +32,7 @@ const LoginForm = () => {
     
     let navigate = useNavigate();
     const dispatch = useDispatch()
-    const { token, errorMessage } = useSelector((state) => state.authenticate)
+    const { token } = useSelector((state) => state.authenticate)
 
     useEffect(() => {
         if (token) {
@@ -115,9 +115,6 @@ const LoginForm = () => {
                             placeholder="***"
                         />
                     </FormControl>
-                    {errorMessage &&
-                        <label className={classes.login_error}><b style={{fontWeight: 600}}>Login Error:</b> An Unexpected Error Occurred</label>
-                    }
                     <div style={{width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px'}}>
                         <ButtonIBM onClick={handleLogin} text="Log In" className={buttonIBMClasses["button-ibm"]}/>
                     </div>
