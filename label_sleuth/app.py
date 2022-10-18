@@ -120,7 +120,7 @@ def login():
     if not verify_password(username, password):
         logging.warning(f"LOGIN FAILED: {username} {password}")
         return make_response(jsonify({
-            'error': "wrong user or password"
+            'error': "Login failed: wrong user or password"
         }), 401)
     else:
         user = curr_app.users.get(username)
