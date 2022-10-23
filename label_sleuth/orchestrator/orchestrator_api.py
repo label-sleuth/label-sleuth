@@ -221,7 +221,7 @@ class OrchestratorApi:
     def query(self, workspace_id: str, dataset_name: str, category_id: Union[int, None],
               query: str, is_regex: bool = False,
               sample_size: int = sys.maxsize, sample_start_idx: int = 0, unlabeled_only: bool = False,
-              remove_duplicates=False) -> Mapping[str, object]:
+              remove_duplicates=False) -> Mapping[str, Union[List[TextElement], int]]:
         """
         Query a dataset using the given regex, returning up to *sample_size* elements that meet the query
     
@@ -338,13 +338,13 @@ class OrchestratorApi:
 
     def _delete_category_models(self, workspace_id, category_id):
         workspace = self.orchestrator_state.get_workspace(workspace_id)
-        if workspace.categories[category_id] != None:
+        if workspace.categories[category_id] is not None:
             for idx in range(len(workspace.categories[category_id].iterations)):
                 if workspace.categories[category_id].iterations[idx].model.model_status != ModelStatus.DELETED:
                     self.delete_iteration_model(workspace_id, category_id, idx)
 
     def get_elements_to_label(self, workspace_id: str, category_id: int, count: int, start_index: int = 0) \
-            -> List[TextElement]:
+            -> Tuple[List[TextElement], int]:
         """
         Returns a list of *count* elements recommended for labeling by the active learning module for the latest
         iteration in READY status.
@@ -597,7 +597,6 @@ class OrchestratorApi:
         try:
             iterations_without_errors = [iteration for iteration in iterations
                                          if iteration.status != IterationStatus.ERROR]
-
             label_counts = self.data_access.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
                                                              category_id=category_id, remove_duplicates=True)
             changes_since_last_model = \
@@ -667,7 +666,7 @@ class OrchestratorApi:
             return []
 
         iterations = self.get_all_iterations_for_category(workspace_id, category_id)
-        if iteration_index is None:  # use latest ready model
+        if iteration_index is None:  # use the latest ready model
             iteration = [it for it in iterations if it.status == IterationStatus.READY][-1]
         else:
             iteration = iterations[iteration_index]
@@ -838,8 +837,8 @@ class OrchestratorApi:
             label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, False)
             total_count = sum(self.get_label_counts(workspace_id, dataset_name, category_id, False).values())
 
-            if labeled_only or label_counts[LABEL_POSITIVE] == 0: # if there are no positive elements,
-                # training set selector cannot be used so we only use the labeled elements
+            if labeled_only or label_counts[LABEL_POSITIVE] == 0:  # if there are no positive elements,
+                # training set selector cannot be used, so we only use the labeled elements
                 logging.info(f"Labeled elements for category {category.name} ({category_id}) in workspace "
                              f"'{workspace_id}' is {total_count}")
                 text_elements = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
@@ -943,7 +942,7 @@ class OrchestratorApi:
                      f"'{workspace_id}' after new documents were loaded to dataset '{dataset_name}' "
                      f"using model {iteration_index}")
         # Currently, there is no indication to the user that inference is running on the new documents, and there is no
-        # indication for when this inferences ends. Can be added and reflected in the UI in the future
+        # indication for when this inference ends. Can be added and reflected in the UI in the future
         self.infer(workspace_id, category_id, self.get_all_text_elements(dataset_name), iteration_index)
         logging.info(f"completed inference with the latest model for category id {category_id} in workspace "
                      f"'{workspace_id}' after new documents were loaded to dataset '{dataset_name}',"
