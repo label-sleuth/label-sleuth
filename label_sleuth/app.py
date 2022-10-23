@@ -15,7 +15,6 @@
 
 import getpass
 import logging
-from operator import length_hint
 import os
 import shutil
 import tempfile
@@ -409,6 +408,8 @@ def get_document_elements(workspace_id, document_uri):
     :param workspace_id:
     :param document_uri:
     :request_arg category_id:
+    :request_arg size: number of elements to return
+    :request_arg start_idx: get elements starting from this index (for pagination)
     """
 
     size = int(request.args.get('size', curr_app.config["CONFIGURATION"].main_panel_elements_per_page))
@@ -493,14 +494,14 @@ def get_positive_predictions(workspace_id):
         positive_predicted_elements = curr_app.orchestrator_api.sample_elements_by_prediction(
             workspace_id, category_id, unlabeled_only=False, required_label=LABEL_POSITIVE,
             remove_duplicates=remove_duplicates)
-        iteration, iteration_idx = all_ready_iterations[-1]
+        iteration, _ = all_ready_iterations[-1]
 
         sorted_elements = sorted(positive_predicted_elements, key=lambda te: get_natural_sort_key(te.uri))
         elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id)
         elements_transformed = elements_transformed[start_idx: start_idx + size]
 
         res = {'hit_count': len(positive_predicted_elements), "positive_fraction":
-            iteration.iteration_statistics["positive_fraction"], 'elements': elements_transformed}
+               iteration.iteration_statistics["positive_fraction"], 'elements': elements_transformed}
         return jsonify(res)
 
 
@@ -531,8 +532,8 @@ def query(workspace_id):
     :param workspace_id:
     :request_arg category_id:
     :request_arg qry_string: query string
-    :request_arg qry_size: number of elements to return
-    :request_arg sample_start_idx: get elements starting from this index (for pagination)
+    :request_arg size: number of elements to return
+    :request_arg start_idx: get elements starting from this index (for pagination)
     """
     category_id = request.args.get('category_id')
     if category_id is not None:
@@ -619,11 +620,14 @@ def get_all_positively_labeled_elements_for_category(workspace_id):
 
     :param workspace_id:
     :request_arg category_id:
+    :request_arg size: number of elements to return
+    :request_arg start_idx: get elements starting from this index (for pagination)
     """
     size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
     category_id = int(request.args['category_id'])
-    elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_POSITIVE, size=size, start_idx=start_idx)
+    elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_POSITIVE, size=size,
+                                                   start_idx=start_idx)
 
     res = {'elements': elements, "hit_count": hit_count}
     return jsonify(res)
@@ -639,12 +643,15 @@ def get_all_negatively_labeled_elements_for_category(workspace_id):
 
     :param workspace_id:
     :request_arg category_id:
+    :request_arg size: number of elements to return
+    :request_arg start_idx: get elements starting from this index (for pagination)
     """
     category_id = int(request.args['category_id'])
     size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
    
-    elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_NEGATIVE, size=size, start_idx=start_idx)
+    elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_NEGATIVE, size=size,
+                                                   start_idx=start_idx)
 
     res = {'elements': elements, "hit_count": hit_count}
     return jsonify(res)
@@ -656,7 +663,9 @@ def get_all_labeled_elements(workspace_id, category_id, label=None, size: int = 
 
     :param workspace_id:
     :param category_id:
-    :param label:
+    :param label: return only elements assigned this label; if None, return all labeled elements
+    :param size: number of elements to return
+    :param start_idx: get elements starting from this index (for pagination)
     """
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
     elements = curr_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
@@ -947,6 +956,8 @@ def get_suspicious_elements(workspace_id):
 
     :param workspace_id:
     :request_arg category_id:
+    :request_arg size: number of elements to return
+    :request_arg start_idx: get elements starting from this index (for pagination)
     """
     size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
@@ -982,6 +993,8 @@ def get_contradicting_elements(workspace_id):
 
     :param workspace_id:
     :request_arg category_id:
+    :request_arg size: number of elements to return
+    :request_arg start_idx: get elements starting from this index (for pagination)
     """
     category_id = int(request.args['category_id'])
     size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
