@@ -31,7 +31,7 @@ from typing import Sequence, Iterable, Mapping, List, Union
 import label_sleuth.data_access.file_based.utils as utils
 from label_sleuth.data_access.core.data_structs import Document, Label, TextElement
 from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, \
-    LabeledStatus, get_document_uri
+    LabeledStatus
 
 
 class FileBasedDataAccess(DataAccessApi):
@@ -79,8 +79,9 @@ class FileBasedDataAccess(DataAccessApi):
             doc_ids = {document.uri for document in documents}
             intersection = doc_ids.intersection(set(self.get_all_document_uris(dataset_name)))
             if len(intersection) > 0:
-                raise AlreadyExistsException(f"{len(intersection)} documents are already in dataset '{dataset_name}'."
-                                             f" uris: ({intersection})", list(intersection))
+                raise AlreadyExistsException(f"{len(intersection)} documents are already in dataset '{dataset_name}'. "
+                                             f"uris: ({list(intersection)[:5]}{'...' if len(intersection)>5 else ''})",
+                                             list(intersection))
 
         for doc in documents:
             # save doc to file
