@@ -327,17 +327,16 @@ class FileBasedDataAccess(DataAccessApi):
         :return: a map whose keys are label values, and the values are the number of TextElements this label was
         assigned to.
         """
-        labels_by_uri = self._get_labels(workspace_id=workspace_id, dataset_name=dataset_name)
+        labels_by_uri = self._get_labels(workspace_id=workspace_id, dataset_name=dataset_name).copy()
         if remove_duplicates:
             corpus_df = self._get_ds_in_memory(dataset_name=dataset_name)
             labeled_df = corpus_df[corpus_df['uri'].isin(labels_by_uri)]
-            unique_texts = set()
-            uris_to_keep = {t.uri for t in labeled_df.itertuples()
-                            if t.text not in unique_texts and not unique_texts.add(t.text)}
-            labels_by_uri = {key: value for key, value in labels_by_uri.items() if key in uris_to_keep}
+            uris_to_keep = set(labeled_df.drop_duplicates(subset=['text'])['uri'])
+            labels_by_uri = {uri: category_to_label for uri, category_to_label in labels_by_uri.items()
+                             if uri in uris_to_keep}
         category_label_list = \
-            [labels_by_uri[uri][category_id].label for uri in labels_by_uri
-             if category_id in labels_by_uri[uri]]
+            [category_to_label[category_id].label for category_to_label in labels_by_uri.values()
+             if category_id in category_to_label]
         category_label_counts = Counter(category_label_list)
         return category_label_counts
 
