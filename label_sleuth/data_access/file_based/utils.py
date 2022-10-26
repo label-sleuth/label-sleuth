@@ -70,7 +70,7 @@ def filter_by_query_and_document_uri(df: pd.DataFrame, query, is_regex: bool = F
     if document_id is not None:
         df = df[df.uri.str.startswith(f"{document_id}-")]
     if query:
-        df = df[df.text.str.contains(query, flags=re.IGNORECASE, na=False, regex=is_regex)]
+        df = df[df.text.str.contains(query, case=False, na=False, regex=is_regex)]
     return df
 
 
