@@ -51,12 +51,12 @@ const EvaluationPanel = () => {
       currentContentData
         ? currentContentData.map((element) => element.userLabel !== "none").reduce((partialSum, a) => partialSum + a, 0)
         : 0,
-    [elements]
+    [currentContentData]
   );
 
   const submitButtonDisabled = React.useMemo(() => {
     return !isInProgress || evaluationElementsCount !== currentContentData.length;
-  }, [isInProgress, evaluationElementsCount]);
+  }, [isInProgress, evaluationElementsCount, currentContentData]);
 
   const onStartEvaluation = () => {
     dispatch(startEvaluation());
@@ -88,9 +88,15 @@ const EvaluationPanel = () => {
       <Header message={"Precision evaluation"} />
       <Box sx={{ display: "flex", justifyContent: "center", mt: 1, mb: 2 }}>
         <Stack>
-        {isInProgress && <PanelTypography sx={{ fontSize: "1rem", pt: 2 }}>{`Progress: ${progressLabel}`}</PanelTypography>}
+          {isInProgress && (
+            <PanelTypography sx={{ fontSize: "1rem", pt: 2 }}>{`Progress: ${progressLabel}`}</PanelTypography>
+          )}
           <ButtonGroup sx={{ pt: 2 }} variant="text" aria-label="text button group">
-            <Button sx={{ textTransform: "none" }} onClick={onStartEvaluation} disabled={loading || isInProgress || nextModelShouldBeTraining}>
+            <Button
+              sx={{ textTransform: "none" }}
+              onClick={onStartEvaluation}
+              disabled={loading || isInProgress || nextModelShouldBeTraining}
+            >
               Start
             </Button>
             <Button sx={{ textTransform: "none" }} onClick={submitEvaluation} disabled={submitButtonDisabled}>
@@ -107,7 +113,7 @@ const EvaluationPanel = () => {
         {isLoading ? null : isInProgress ? (
           <PanelTypography>{EVALUATION_IN_PROGRESS_MSG} </PanelTypography>
         ) : lastScore !== null ? (
-          <PanelTypography sx={{ fontSize: "1rem"}}>
+          <PanelTypography sx={{ fontSize: "1rem" }}>
             {PRECISION_RESULT_MSG(Math.round(lastScore * 100), modelVersion, scoreModelVersion)}
           </PanelTypography>
         ) : nextModelShouldBeTraining ? (
@@ -121,9 +127,9 @@ const EvaluationPanel = () => {
           <Loading />
         ) : isInProgress ? (
           <Box>
-            {currentContentData.map((element, i) => {
-              return <Element element={element} updateCounterOnLabeling={false} key={element.id} />;
-            })}
+            {currentContentData.map((element, i) => (
+              <Element element={element} updateCounterOnLabeling={false} key={element.id} index={i} />
+            ))}
           </Box>
         ) : null}
       </Box>

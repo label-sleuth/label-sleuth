@@ -19,18 +19,16 @@ import { panelIds } from "../../../../const";
 import { useFetchPanelElements } from "../../customHooks/useFetchPanelElements";
 
 const useSearchElement = (resetPagination) => {
-  const searchInput = useSelector(
-    (state) => state.workspace.panels[panelIds.SEARCH].input
-  );
+  const searchInput = useSelector((state) => state.workspace.panels[panelIds.SEARCH].input);
 
   const dispatch = useDispatch();
 
-  const { fetchPanelElements } = useFetchPanelElements();
+  const fetchSearchPanelElements = useFetchPanelElements({ panelId: panelIds.SEARCH });
 
   const handleSearch = () => {
     if (searchInput !== "") {
       resetPagination();
-      fetchPanelElements({ panelId: panelIds.SEARCH });
+      fetchSearchPanelElements();
     }
   };
 

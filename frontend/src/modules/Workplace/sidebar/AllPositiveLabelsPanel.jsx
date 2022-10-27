@@ -20,11 +20,11 @@ import { panelIds } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
-import { useFetchPanelElements } from "../customHooks/useFetchPanelElements";
+import { useUpdateActivePanelElements } from "../customHooks/useFetchPanelElements";
 import { setRefetch } from "../redux/DataSlice";
 
 const AllPositiveLabelsPanel = () => {
-  const { hitCount, elements } = useSelector(
+  const { hitCount } = useSelector(
     (state) => state.workspace.panels[panelIds.POSITIVE_LABELS]
   );
 
@@ -52,14 +52,14 @@ const AllPositiveLabelsPanel = () => {
     panelId: panelIds.POSITIVE_LABELS,
   });
 
-  const { updateActivePanelElements } = useFetchPanelElements()
+  const { updateActivePanelElements } = useUpdateActivePanelElements()
 
   React.useEffect(() => {
     if (refetch) {
       updateActivePanelElements()
       dispatch(setRefetch(false))
     }
-  }, [refetch])
+  }, [updateActivePanelElements, refetch, dispatch])
   
 
   return (

@@ -23,7 +23,7 @@ import cross from '../Asset/cross.svg';
 import classes from './Element.module.css';
 import useMainLabelState from '../customHooks/useLabelState';
 import useElemStyles from "./customHooks/useElemStyles";
-import { getMainPanelElementId } from "../../../utils/utils";
+import { getPanelDOMKey } from "../../../utils/utils";
 import { panelIds } from "../../../const";
 
 export default function Element({ element }) {
@@ -34,7 +34,7 @@ export default function Element({ element }) {
     const evaluationIsInProgress = useSelector(state => state.workspace.panels[panelIds.EVALUATION].isInProgress) 
     const evaluationLoading = useSelector(state => state.workspace.panels.loading[panelIds.EVALUATION])
     const { handlePosLabelState, handleNegLabelState } = useMainLabelState({ elementURI: id })
-    const elementDOMId = useMemo(() => getMainPanelElementId(id), [id])
+    const elementDOMId = useMemo(() => getPanelDOMKey(id, panelIds.MAIN_PANEL), [id])
     const elemStyleClasses = useElemStyles(elementDOMId, modelPrediction, userLabel)
     
     return (

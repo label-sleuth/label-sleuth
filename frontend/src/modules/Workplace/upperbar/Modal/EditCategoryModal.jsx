@@ -99,6 +99,7 @@ export default function EditCategoryModal({ open, setOpen }) {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
         disableRestoreFocus
+        onKeyDown={e => e.stopPropagation()}
       >
         <Box sx={style}>
           <Typography

@@ -50,7 +50,7 @@ const LabelNextPanel = () => {
       <ElementList
         elements={currentContentData}
         loading={loading}
-        nonEmptyResultsMessage={"Label this elements next"}
+        nonEmptyResultsMessage={"Label these elements next"}
         emptyResultsMessage={""}
         isPaginationRequired={isPaginationRequired}
         elementsTopPadding={-2}

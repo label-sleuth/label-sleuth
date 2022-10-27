@@ -18,7 +18,7 @@ import IconButton from "@mui/material/IconButton";
 import { InputBase, Paper } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import { forwardRef, useMemo } from "react";
+import { forwardRef } from "react";
 import { useSelector } from "react-redux";
 import { panelIds } from "../../../const";
 import useSearchElement from "./customHooks/useSearchElement";
@@ -66,6 +66,7 @@ const SearchInput = ({
           onChange={handleSearchInputChange}
           inputRef={textInputRef}
           defaultValue={input}
+          onKeyDown={e => e.stopPropagation()}
           autoFocus={true}
         />
         {input && (
@@ -94,7 +95,7 @@ const SearchInput = ({
 };
 
 const SearchPanel = forwardRef(({ clearSearchInput }, textInputRef) => {
-  const { input, lastSearchString, hitCount, uniqueHitCount } = useSelector(
+  const { input, hitCountWithDuplicates, hitCount } = useSelector(
     (state) => state.workspace.panels[panelIds.SEARCH]
   );
 
@@ -119,21 +120,6 @@ const SearchPanel = forwardRef(({ clearSearchInput }, textInputRef) => {
     fetchOnFirstRender: false,
   });
 
-  const emptyResults = useMemo(
-    () => currentContentData && currentContentData.length === 0,
-    [currentContentData]
-  );
-
-  const nonEmptyResults = useMemo(
-    () => currentContentData && currentContentData.length > 0,
-    [currentContentData]
-  );
-
-  const noSearchDone = useMemo(
-    () => !emptyResults && !nonEmptyResults,
-    [nonEmptyResults, emptyResults]
-  );
-
   return (
     <Box>
       <SearchInput
@@ -145,9 +131,9 @@ const SearchPanel = forwardRef(({ clearSearchInput }, textInputRef) => {
       <ElementList
         elements={currentContentData}
         loading={loading}
-        nonEmptyResultsMessage={`Showing ${currentContentData && currentContentData.length} of ${uniqueHitCount} found elements ${
-          uniqueHitCount !== hitCount
-            ? `(${hitCount} including duplicates)`
+        nonEmptyResultsMessage={`Showing ${currentContentData && currentContentData.length} of ${hitCount} found elements ${
+          hitCount !== hitCountWithDuplicates
+            ? `(${hitCountWithDuplicates} including duplicates)`
             : ""
         }`}
         emptyResultsMessage={"No matching results were found."}
@@ -155,7 +141,7 @@ const SearchPanel = forwardRef(({ clearSearchInput }, textInputRef) => {
       />
       <CustomPagination
         currentContentData={currentContentData}
-        hitCount={uniqueHitCount}
+        hitCount={hitCount}
         sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
         currentPage={currentPage}
         onPageChange={onPageChange}

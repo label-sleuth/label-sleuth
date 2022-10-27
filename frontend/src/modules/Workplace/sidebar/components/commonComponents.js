@@ -80,7 +80,7 @@ export const ElementList = ({
           { ...children }
         ) : elements && elements.length > 0 ? (
           elements.map((element, i) => (
-            <Element element={element} key={element.id} />
+            <Element element={element} key={element.id} index={i} />
           ))
         ) : null}
       </Box>

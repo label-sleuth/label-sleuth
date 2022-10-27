@@ -27,13 +27,10 @@ export const getCategoryQueryString = (curCategory) => {
 export const getQueryParamsString = (queryParams) => {
   let queryParamsString = "";
   queryParams.forEach((param) => {
-    queryParamsString = param
-      ? `${queryParamsString}${param}&`
-      : queryParamsString;
+    queryParamsString = param ? `${queryParamsString}${param}&` : queryParamsString;
   });
   // add leading '?' removes last '&'
-  queryParamsString =
-    "?" + queryParamsString.substring(0, queryParamsString.length - 1);
+  queryParamsString = "?" + queryParamsString.substring(0, queryParamsString.length - 1);
   // return an empty string if there are no query params
   return queryParamsString === "?" ? "" : queryParamsString;
 };
@@ -140,10 +137,7 @@ export const parseElements = (unparsedElements, curCategory) => {
   };
 };
 
-export const parseElement = (
-  { docid, id, model_predictions, user_labels, text },
-  curCategory
-) => ({
+export const parseElement = ({ docid, id, model_predictions, user_labels, text }, curCategory) => ({
   docId: docid,
   id: id,
   modelPrediction: getStringLabel(model_predictions[curCategory]),
@@ -151,8 +145,13 @@ export const parseElement = (
   text,
 });
 
-export const getMainPanelElementId = (elementId) =>
-  `${panelIds.MAIN_PANEL}_${elementId}`;
+export const getPanelDOMKey = (elementId, panelId, index = "") => {
+  let res = `${panelId}_${elementId}`;
+  if (index !== "") {
+    res = `${res}_${index}`;
+  }
+  return res;
+};
 
 export const synchronizeElement = (elementId, userLabel, panels) => {
   let previousLabel = null;
@@ -173,24 +172,22 @@ export const synchronizeElement = (elementId, userLabel, panels) => {
   };
 };
 
-export const scrollIntoElementView = (element) => {
+export const scrollIntoElementView = (element, smoothly = true) => {
   element &&
     element.scrollIntoView({
-      behavior: "smooth",
+      behavior: smoothly ? "smooth" : "auto",
       block: "center",
     });
 };
 
-export const getElementIndex = (elementId) =>
-  parseInt(elementId.substring(elementId.lastIndexOf("-") + 1));
+export const getElementIndex = (elementId) => parseInt(elementId.substring(elementId.lastIndexOf("-") + 1));
 
 /**
  * Get the number of pages based on the elements
  * per page and the total elements count. The count
- * starts from 1. To avoid 
- * @param {*} elementsPerPage 
- * @param {*} elementsCount 
- * @returns 
+ * starts from 1. To avoid
+ * @param {*} elementsPerPage
+ * @param {*} elementsCount
+ * @returns
  */
-export const getPageCount = (elementsPerPage, elementsCount) =>
-  Math.ceil((elementsCount) / elementsPerPage);
+export const getPageCount = (elementsPerPage, elementsCount) => Math.ceil(elementsCount / elementsPerPage);

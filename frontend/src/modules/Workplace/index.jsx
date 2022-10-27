@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Box from "@mui/material/Box";
 import { Stack } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -50,27 +50,22 @@ import useWorkspaceState from "./customHooks/useWorkspaceState";
 import Tutorial from "./tutorial";
 import TutorialDialog from "./tutorial/TutorialDialog";
 import useBackdrop from "../../customHooks/useBackdrop";
+import { useSidebarLabelingShortcuts } from "./customHooks/useSidebarLabelingShorcuts";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem("workspaceId"));
   const curCategory = useSelector((state) => state.workspace.curCategory);
-  const activePanelId = useSelector(
-    (state) => state.workspace.panels.activePanelId
-  );
+  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
-  const evaluationIsInProgress = useSelector(
-    (state) => state.workspace.panels[panelIds.EVALUATION].isInProgress
-  );
-  const evaluationLoading = useSelector(
-    (state) => state.workspace.panels.loading[panelIds.EVALUATION]
-  );
-  const workspaceVisited = useSelector(
-    (state) => state.workspace.workspaceVisited
-  );
+  const evaluationIsInProgress = useSelector((state) => state.workspace.panels[panelIds.EVALUATION].isInProgress);
+  const evaluationLoading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
+  const workspaceVisited = useSelector((state) => state.workspace.workspaceVisited);
   const [tutorialOpen, setTutorialOpen] = useState(false);
-  const [tutorialDialogOpen, setTutorialDialogOpen] = useState(
-    !!!workspaceVisited
-  );
+  const [tutorialDialogOpen, setTutorialDialogOpen] = useState(!!!workspaceVisited);
+
+  const workspaceRef = useRef();
+
+  useSidebarLabelingShortcuts();
 
   const { openBackdrop } = useBackdrop();
 
@@ -84,16 +79,9 @@ export default function Workspace() {
     [noCategory, modelVersion]
   );
 
-  const SidebarButton = ({
-    tooltipMessage,
-    componentId,
-    imgSource,
-    disabled,
-    panelId,
-  }) => {
+  const SidebarButton = ({ tooltipMessage, componentId, imgSource, disabled, panelId }) => {
     const isSelected = activePanelId === panelId;
-    const onClick = () =>
-      dispatch(setActivePanel(panelId === activePanelId ? "" : panelId));
+    const onClick = () => dispatch(setActivePanel(panelId === activePanelId ? "" : panelId));
 
     const Button = React.forwardRef((props, ref) => (
       <div ref={ref} {...props}>
@@ -105,9 +93,7 @@ export default function Workspace() {
         >
           <img
             src={imgSource}
-            className={
-              isSelected ? classes["blue-filter"] : classes["gray-filter"]
-            }
+            className={isSelected ? classes["blue-filter"] : classes["gray-filter"]}
             alt={componentId}
           />
         </IconButton>
@@ -125,24 +111,14 @@ export default function Workspace() {
 
   return (
     <>
-      <Box
-        sx={{ display: "flex" }}
-        style={tutorialOpen ? { filter: "blur(2px)" } : null}
-      >
+      <Box sx={{ display: "flex" }} style={tutorialOpen ? { filter: "blur(2px)" } : null} ref={workspaceRef}>
         <CssBaseline />
-        <WorkspaceInfo
-          workspaceId={workspaceId}
-          setTutorialOpen={setTutorialOpen}
-        />
+        <WorkspaceInfo workspaceId={workspaceId} setTutorialOpen={setTutorialOpen} />
         <Box component="main" sx={{ padding: 0 }}>
           <UpperBar />
           <PanelManager />
           {/* Panel tabs  */}
-          <Drawer
-            variant="permanent"
-            anchor="right"
-            PaperProps={{ sx: { minWidth: 50 } }}
-          >
+          <Drawer variant="permanent" anchor="right" PaperProps={{ sx: { minWidth: 50 } }}>
             <Stack
               sx={{
                 display: "flex",
@@ -165,22 +141,14 @@ export default function Workspace() {
                   tooltipMessage={NEXT_TO_LABEL_TOOLTIP_MSG}
                   componentId={"sidebar-recommended-button"}
                   imgSource={recommend_icon}
-                  disabled={
-                    evaluationIsInProgress ||
-                    evaluationLoading ||
-                    noCategoryAndNoModel
-                  }
+                  disabled={evaluationIsInProgress || evaluationLoading || noCategoryAndNoModel}
                   panelId={panelIds.LABEL_NEXT}
                 />
                 <SidebarButton
                   tooltipMessage={POSITIVE_PRED_TOOLTIP_MSG}
                   componentId={"sidebar-pos-pred-button"}
                   imgSource={pos_pred_icon}
-                  disabled={
-                    evaluationIsInProgress ||
-                    evaluationLoading ||
-                    noCategoryAndNoModel
-                  }
+                  disabled={evaluationIsInProgress || evaluationLoading || noCategoryAndNoModel}
                   panelId={panelIds.POSITIVE_PREDICTIONS}
                 />
               </Stack>
@@ -190,29 +158,21 @@ export default function Workspace() {
                   componentId={"sidebar-pos-elem-button"}
                   imgSource={pos_elem_icon}
                   alwaysEnabled
-                  disabled={
-                    evaluationIsInProgress || evaluationLoading || noCategory
-                  }
+                  disabled={evaluationIsInProgress || evaluationLoading || noCategory}
                   panelId={panelIds.POSITIVE_LABELS}
                 />
                 <SidebarButton
                   tooltipMessage={SUSPICIOUS_LABELS_TOOLTIP_MSG}
                   componentId={"sidebar-suspicious-elem-button"}
                   imgSource={suspicious_elem_icon}
-                  disabled={
-                    evaluationIsInProgress ||
-                    evaluationLoading ||
-                    noCategoryAndNoModel
-                  }
+                  disabled={evaluationIsInProgress || evaluationLoading || noCategoryAndNoModel}
                   panelId={panelIds.SUSPICIOUS_LABELS}
                 />
                 <SidebarButton
                   tooltipMessage={CONTRADICTING_LABELS_TOOLTIP_MSG}
                   componentId={"sidebar-contradictive-elem-button"}
                   imgSource={contradictive_elem_icon}
-                  disabled={
-                    evaluationIsInProgress || evaluationLoading || noCategory
-                  }
+                  disabled={evaluationIsInProgress || evaluationLoading || noCategory}
                   panelId={panelIds.CONTRADICTING_LABELS}
                 />
                 <SidebarButton
@@ -226,15 +186,8 @@ export default function Workspace() {
             </Stack>
           </Drawer>
         </Box>
-        <Tutorial
-          tutorialOpen={tutorialOpen}
-          setTutorialOpen={setTutorialOpen}
-        />
-        <TutorialDialog
-          open={tutorialDialogOpen}
-          setOpen={setTutorialDialogOpen}
-          setTutorialOpen={setTutorialOpen}
-        />
+        <Tutorial tutorialOpen={tutorialOpen} setTutorialOpen={setTutorialOpen} />
+        <TutorialDialog open={tutorialDialogOpen} setOpen={setTutorialDialogOpen} setTutorialOpen={setTutorialOpen} />
       </Box>
       <Backdrop sx={{ color: "#fff", zIndex: 10000 }} open={openBackdrop}>
         <CircularProgress color="inherit" />

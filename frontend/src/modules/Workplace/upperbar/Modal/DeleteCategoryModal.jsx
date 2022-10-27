@@ -16,12 +16,7 @@
 import * as React from "react";
 import Button from "@mui/material/Button";
 import { Dialog } from "@mui/material";
-import {
-  DialogTitle,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-} from "@mui/material";
+import { DialogTitle, DialogActions, DialogContent, DialogContentText } from "@mui/material";
 import { useSelector, useDispatch } from "react-redux";
 import { curCategoryNameSelector, deleteCategory } from "../../redux/DataSlice";
 import { notify } from "../../../../utils/notification";
@@ -46,15 +41,12 @@ export default function DeleteCategoryModal({ open, setOpen }) {
 
   return (
     <div>
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>
-          {`Are you sure you want to delete the category '${curCategoryName}'?`}
-        </DialogTitle>
+      <Dialog open={open} onClose={handleClose} onKeyDown={(e) => e.stopPropagation()} autoFocus>
+        <DialogTitle>{`Are you sure you want to delete the category '${curCategoryName}'?`}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This action will permanently delete the category along with all the
-            labels and models associated with it. The deletion cannot be
-            reversed
+            This action will permanently delete the category along with all the labels and models associated with it.
+            The deletion cannot be reversed
           </DialogContentText>
         </DialogContent>
         <DialogActions>

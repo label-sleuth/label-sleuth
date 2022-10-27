@@ -27,10 +27,27 @@ import EvaluationPanel from "./sidebar/EvaluationPanel";
 import SearchPanel from "./sidebar/SearchPanel";
 import LabelNextPanel from "./sidebar/LabelNextPanel";
 import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
-
 import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
 import useResize from "./customHooks/useResize";
 import { useUpdateSearch } from "./sidebar/customHooks/useUpdateSearch";
+import { useFocusSidebarElement } from "./customHooks/useFocusSidebarElement";
+
+const ResizableDiv = ({onMouseDown, rightDrawerWidth}) => {
+  return (
+    <div
+      style={{
+        width: "4px",
+        cursor: "ew-resize",
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        right: rightDrawerWidth + ACTIONS_DRAWER_WIDTH - 2,
+        backgroundColor: "transparent",
+      }}
+      onMouseDown={onMouseDown}
+    />
+  )
+}
 
 /**
  * Manages the panels, that is, the sidebar panels and the main panels.
@@ -44,6 +61,8 @@ export const PanelManager = ({ handleKeyEvent }) => {
 
   useTogglePanel(setOpen, textInputRef);
 
+  useFocusSidebarElement();
+
   /**
    * this custom hook is used here instead of in the Search sidebar panel
    * because that panel gets unmounted when another sidebar panel gets selected
@@ -54,20 +73,9 @@ export const PanelManager = ({ handleKeyEvent }) => {
   const { handleMouseDown } = useResize({ setWidth: setRightDrawerWidth });
 
   return (
-    <Box>
+    <Box auto>
       <MainPanel handleKeyEvent={handleKeyEvent} rightDrawerWidth={rightDrawerWidth} open={open} />
-      {open && <div
-        style={{
-          width: "4px",
-          cursor: "ew-resize",
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          right: rightDrawerWidth + ACTIONS_DRAWER_WIDTH - 2,
-          backgroundColor: "transparent",
-        }}
-        onMouseDown={handleMouseDown}
-      />}
+      {open && <ResizableDiv onMouseDown={handleMouseDown} rightDrawerWidth={rightDrawerWidth}/>}
       <Drawer
         sx={{
           width: RIGHT_DRAWER_INITIAL_WIDTH,
