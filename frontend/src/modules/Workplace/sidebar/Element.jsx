@@ -42,7 +42,7 @@ const text_colors = {
  */
 // this function is not returned by a custom hook as it is the case of the main panel equivalent
 const handleTextElemStyle = (modelPrediction) =>
-  modelPrediction === "true" ? classes["text_predict"] : classes["text_normal"];
+  modelPrediction === "pos" ? classes["text_predict"] : classes["text_normal"];
 
 const Element = ({ element, updateCounterOnLabeling = true, index }) => {
   const dispatch = useDispatch();
@@ -79,6 +79,9 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
     focusMainPanelElement({ element, docId });
     // focus this element on the sidebar when clicked
   }, [element, docId, focusMainPanelElement, index, dispatch]);
+
+  console.log(handleTextElemStyle(modelPrediction))
+  console.log(modelPrediction)
 
   return (
     <Paper
