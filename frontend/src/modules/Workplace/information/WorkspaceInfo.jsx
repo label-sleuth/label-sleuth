@@ -464,7 +464,7 @@ const WorkspaceInfo = ({
                 >
                   <Stack spacing={0}>
                     <label style={{ fontSize: "12px", opacity: 0.5 }}>
-                      Labeled for Current Doc:
+                      Labeled for current document:
                     </label>
                     <StatsContainer>
                       <Typography>
