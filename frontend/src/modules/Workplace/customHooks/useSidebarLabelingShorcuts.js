@@ -130,13 +130,13 @@ export const useSidebarLabelingShortcuts = () => {
       if (focusedElement) {
         if (curCategory !== null) {
           if (event.key === "ArrowLeft") {
-           handlePosLabelState(focusedElement);
+            handleNegLabelState(focusedElement);
             if (focusNextElementOnLabeling) {
               focusNextElement();
             }
           }
           if (event.key === "ArrowRight") {
-            handleNegLabelState(focusedElement);
+            handlePosLabelState(focusedElement);
             if (focusNextElementOnLabeling) {
               focusNextElement();
             }

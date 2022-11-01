@@ -53,20 +53,20 @@ export default function Element({ element }) {
             >
                 <p className={`${classes.data_text} ${elemStyleClasses.userLabel}`} >{text}</p>
                 <Stack className={!evaluationLoading && !evaluationIsInProgress && classes.checking_buttons} direction="row" spacing={0}>
-                    <div
-                        onClick={(e) => { e.stopPropagation(); handlePosLabelState(element)}}
-                        style={{ cursor: "pointer" }}>
-                        {userLabel === 'pos' ?
-                            <img className={classes.resultbtn} loading="eager" src={check} alt="checked" /> :
-                                <img className={classes.hovbtn} loading="eager" src={checking} alt="checking" />
-                        }
-                    </div>
                     <div  
                         onClick={(e) => { e.stopPropagation(); handleNegLabelState(element)}}
                         style={{ cursor: "pointer" }}>
                         {userLabel === 'neg' ?
                             <img className={classes.resultbtn}  loading="eager" src={cross} alt="crossed" /> :
                             <img className={classes.hovbtn}  loading="eager" src={crossing} alt="crossinging" />
+                        }
+                    </div>
+                    <div
+                        onClick={(e) => { e.stopPropagation(); handlePosLabelState(element)}}
+                        style={{ cursor: "pointer" }}>
+                        {userLabel === 'pos' ?
+                            <img className={classes.resultbtn} loading="eager" src={check} alt="checked" /> :
+                                <img className={classes.hovbtn} loading="eager" src={checking} alt="checking" />
                         }
                     </div>
                 </Stack>

@@ -80,9 +80,6 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
     // focus this element on the sidebar when clicked
   }, [element, docId, focusMainPanelElement, index, dispatch]);
 
-  console.log(handleTextElemStyle(modelPrediction))
-  console.log(modelPrediction)
-
   return (
     <Paper
       onClick={handleElementClick}
@@ -121,18 +118,18 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
       >
         {curCategory !== null && (
           <>
-            <div className={classes.resultbtn} onClick={handlePositiveLabelAction}>
-              {userLabel === "pos" ? (
-                <img src={check} alt="checked" />
-              ) : (
-                <img className={classes.hovbtn} src={checking} alt="checking" />
-              )}
-            </div>
             <div className={classes.resultbtn} positiveicon="false" onClick={handleNegativeLabelAction}>
               {userLabel === "neg" ? (
                 <img src={cross} alt="crossed" />
               ) : (
                 <img className={classes.hovbtn} src={crossing} alt="crossinging" />
+              )}
+            </div>
+            <div className={classes.resultbtn} onClick={handlePositiveLabelAction}>
+              {userLabel === "pos" ? (
+                <img src={check} alt="checked" />
+              ) : (
+                <img className={classes.hovbtn} src={checking} alt="checking" />
               )}
             </div>
           </>
