@@ -43,6 +43,7 @@ const useWorkspaceState = () => {
 
   const fetchMainPanelElements = useFetchPanelElements({ panelId: panelIds.MAIN_PANEL });
   const fetchPositiveLabelsElements = useFetchPanelElements({ panelId: panelIds.POSITIVE_LABELS });
+  const fetchLabelNextElements = useFetchPanelElements({ panelId: panelIds.LABEL_NEXT });
 
   React.useEffect(() => {
     if (!workspaceVisited) {
@@ -83,6 +84,7 @@ const useWorkspaceState = () => {
       panelsToResetPagination.forEach((pId) => {
         dispatch(setPage({ panelId: pId, newPage: 1 }));
       });
+      fetchLabelNextElements()
     }
   }, [curCategory, modelVersion, dispatch]);
 
