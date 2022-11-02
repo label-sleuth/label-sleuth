@@ -175,11 +175,14 @@ def _get_nearest_neighbors_with_opposite_label(all_elements: List[TextElement], 
     nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(opposite_label_embeddings)
     distances_to_closest_opposite, indices_of_closest_opposite = nbrs.kneighbors(source_label_embeddings)
 
+    distances_to_closest_opposite = [d[0] for d in distances_to_closest_opposite] # one neighbor for each element
+    indices_of_closest_opposite = [d[0] for d in indices_of_closest_opposite]
+
     distances_and_pairs = \
         [(distance,
           (all_elements[source_label_idxs[i]], all_elements[opposite_label_idxs[opposite_neighbor_idx]]))
-         for i, (distance, opposite_neighbor_idx) in enumerate(zip(np.squeeze(distances_to_closest_opposite),
-                                                                   np.squeeze(indices_of_closest_opposite)))]
+         for i, (distance, opposite_neighbor_idx) in enumerate(zip(distances_to_closest_opposite,
+                                                                   indices_of_closest_opposite))]
     return distances_and_pairs
 
 
