@@ -49,7 +49,7 @@ class TextElement:
     text: str
     span: List[Tuple]
     metadata: Mapping
-    category_to_label: Mapping[str, Label]
+    category_to_label: Mapping[int, Label]
 
     @classmethod
     def get_field_names(cls):
