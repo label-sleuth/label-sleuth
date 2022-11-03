@@ -13,11 +13,16 @@
     limitations under the License.
 */
 
-import { updateDocumentLabelCountByDiff, setElementLabel, checkStatus } from "../redux/DataSlice";
+import {
+  updateDocumentLabelCountByDiff,
+  setElementLabel,
+  checkStatus,
+  updateElementOptimistically,
+  reverseOptimisticUpdate,
+} from "../redux/DataSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { getNewLabelState, getBooleanLabel } from "../../../utils/utils";
-import { activePanelSelector } from "../redux/DataSlice";
-
+import { isRejected } from "@reduxjs/toolkit";
 /**
  * This custom hook is responsible for managing the labels states
  ** for the current sidebar's active panels and for updating the main labels state panel.
@@ -34,6 +39,7 @@ import { activePanelSelector } from "../redux/DataSlice";
 const useLabelState = (updateCounter = true) => {
   const currentDocName = useSelector((state) => state.workspace.curDocName);
   const dispatch = useDispatch();
+  const { sidebarPanelElementsPerPage } = useSelector((state) => state.featureFlags);
 
   /**
    * This function is reponsible for managing sidebar elements label state and updating
@@ -45,17 +51,22 @@ const useLabelState = (updateCounter = true) => {
    */
   const handleLabelState = (element, labelAction) => {
     const { documentLabelCountChange, newLabel } = getNewLabelState(element.userLabel, labelAction);
+    dispatch(updateElementOptimistically({ element, newLabel, sidebarPanelElementsPerPage }));
     dispatch(
       setElementLabel({
         element_id: element.id,
         label: getBooleanLabel(newLabel),
         update_counter: updateCounter,
       })
-    ).then(() => {
-      dispatch(checkStatus());
-      // Update main document view only if the side bar element belongs to the current main document
-      if (currentDocName === element.docId) {
-        dispatch(updateDocumentLabelCountByDiff(documentLabelCountChange));
+    ).then((action) => {
+      if (isRejected(action)) {
+        dispatch(reverseOptimisticUpdate({ element, sidebarPanelElementsPerPage }));
+      } else {
+        dispatch(checkStatus());
+        // Update main document view only if the sidebar element belongs to the current main document
+        if (currentDocName === element.docId) {
+          dispatch(updateDocumentLabelCountByDiff(documentLabelCountChange));
+        }
       }
     });
   };

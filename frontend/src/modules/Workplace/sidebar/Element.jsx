@@ -55,6 +55,7 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
   const isElementFocused = useMemo(() => index === focusedSidebarElementIndex, [index, focusedSidebarElementIndex]);
 
   const elementDOMkey = useMemo(() => getPanelDOMKey(id, activePanelId, index), [id, activePanelId, index]);
+  const { handlePosLabelState, handleNegLabelState } = useLabelState(updateCounterOnLabeling);
 
   const handlePositiveLabelAction = (e) => {
     e.stopPropagation();
@@ -70,7 +71,6 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
     handleNegLabelState(element);
   };
 
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(updateCounterOnLabeling);
 
   const { focusMainPanelElement } = useFocusMainPanelElement();
 
