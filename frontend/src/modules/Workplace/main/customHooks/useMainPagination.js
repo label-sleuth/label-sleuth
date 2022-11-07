@@ -33,7 +33,9 @@ const useMainPagination = (elementsPerPage) => {
   //   () => (focusedElementId ? getElementIndex(focusedElementId) : null),
   //   [focusedElementId]
   // );
-
+  
+  // (curCategory === null || modelVersion !== null) means category isn't selected or model version has been set
+  // note: when modelVersion is null means that it hasn't been set
   const {
     currentContentData,
     hitCount,
@@ -45,7 +47,8 @@ const useMainPagination = (elementsPerPage) => {
   } = usePanelPagination({
     elementsPerPage,
     panelId: panelIds.MAIN_PANEL,
-    shouldFetch: isDocLoaded && page!==null,
+    shouldFetch: isDocLoaded && page!==null && (curCategory === null || modelVersion !== null),
+    modelAvailableRequired: false,
     otherDependencies: [curDocId, isDocLoaded, curCategory, modelVersion],
   });
 

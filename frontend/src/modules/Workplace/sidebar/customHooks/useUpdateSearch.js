@@ -14,10 +14,11 @@ export const useUpdateSearch = (textInputRef) => {
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const lastSearchString = useSelector((state) => state.workspace.panels[panelIds.SEARCH].lastSearchString);
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
+  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
 
   const dispatch = useDispatch();
 
-  const fetchSearchPanelElements = useFetchPanelElements({panelId: panelIds.SEARCH});
+  const fetchSearchPanelElements = useFetchPanelElements({ panelId: panelIds.SEARCH });
 
   /**
    * Clear the search sidebar panel by reseting the
@@ -57,17 +58,6 @@ export const useUpdateSearch = (textInputRef) => {
       fetchSearchPanelElements({ useLastSearchString: true });
     }
   }, [uploadedLabels, lastSearchString, fetchSearchPanelElements, dispatch]);
-
-  /**
-   * When uploading labels, update the search results
-   * using the last searched string because user labels
-   * may have changed
-   */
-  useEffect(() => {
-    if (curCategory !== null && modelVersion !== null && modelVersion > 0 && lastSearchString !== null) {
-      fetchSearchPanelElements({ useLastSearchString: true });
-    }
-  }, [curCategory, modelVersion, dispatch]);
 
   return clearSearch;
 };

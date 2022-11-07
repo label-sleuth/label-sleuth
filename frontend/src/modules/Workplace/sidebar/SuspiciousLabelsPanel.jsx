@@ -42,6 +42,7 @@ const SuspiciousLabelsPanel = () => {
   } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: panelIds.SUSPICIOUS_LABELS,
+    modelAvailableRequired: true,
   });
 
   return (

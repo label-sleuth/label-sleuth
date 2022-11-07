@@ -70,21 +70,10 @@ const useWorkspaceState = () => {
 
   React.useEffect(() => {
     // category changes or modelVersion changes means
-    // that recommend to label and active panel has to be updated
+    // run only if category is not null and the model version has been set
     // also the status is updated
-    if (curCategory !== null) {
+    if (curCategory !== null && modelVersion !== null) {
       dispatch(checkStatus());
-      // checking for nullity first because in js null >= 0
-      const panelsToResetPagination = [
-        panelIds.LABEL_NEXT,
-        panelIds.POSITIVE_PREDICTIONS,
-        panelIds.SUSPICIOUS_LABELS,
-        panelIds.CONTRADICTING_LABELS,
-      ];
-      panelsToResetPagination.forEach((pId) => {
-        dispatch(setPage({ panelId: pId, newPage: 1 }));
-      });
-      fetchLabelNextElements()
     }
   }, [curCategory, modelVersion, dispatch]);
 

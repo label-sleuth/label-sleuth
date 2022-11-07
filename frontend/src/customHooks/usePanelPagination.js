@@ -29,6 +29,7 @@ const usePanelPagination = ({
   otherDependencies = [],
   fakePagination = false,
   fetchOnFirstRender = true,
+  modelAvailableRequired,
 }) => {
   const fetchPanelElements = useFetchPanelElements({ panelId });
 
@@ -39,12 +40,17 @@ const usePanelPagination = ({
     pairs,
   } = useSelector((state) => (panelId ? state.workspace.panels[panelId] : elementsInitialState));
 
+  const curCategory = useSelector((state) => state.workspace.curCategory);
+  const modelVersion = useSelector((state) => state.workspace.modelVersion);
+
   const pageCount = React.useMemo(() => {
     return getPageCount(elementsPerPage, hitCount);
   }, [elementsPerPage, hitCount]);
 
   const dispatch = useDispatch();
   const firstRenderHappened = React.useRef(false);
+
+  const modelAvailable = React.useMemo(() => curCategory !== null && modelVersion !== null && modelVersion > 0);
 
   /**
    * The elements that has to be displayed in the current page
@@ -75,7 +81,15 @@ const usePanelPagination = ({
   );
 
   React.useEffect(() => {
-    if (!fakePagination && shouldFetch && (fetchOnFirstRender || firstRenderHappened.current)) {
+    if (
+      !fakePagination &&
+      shouldFetch &&
+      (fetchOnFirstRender || firstRenderHappened.current) &&
+      (!modelAvailableRequired || modelAvailable)
+    ) {
+      // console.log(panelId)
+      // console.log(`modelAvailableRequired: ${modelAvailableRequired}`)
+      // console.log(`modelAvailable: ${modelAvailable}`)
       fetchPanelElements();
     }
   }, [
@@ -85,6 +99,8 @@ const usePanelPagination = ({
     fetchOnFirstRender,
     firstRenderHappened,
     fetchPanelElements,
+    modelAvailableRequired,
+    modelAvailable,
     ...otherDependencies,
   ]);
 

@@ -13,11 +13,9 @@
     limitations under the License.
 */
 
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import React from "react";
-import classes from "./index.module.css";
 import { useSelector } from "react-redux";
-import Element from "./Element";
 import { curCategoryNameSelector } from "../redux/DataSlice";
 import { panelIds } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
@@ -47,6 +45,7 @@ const PosPredictionsPanel = () => {
   } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: panelIds.POSITIVE_PREDICTIONS,
+    modelAvailableRequired: true,
   });
 
   return (
