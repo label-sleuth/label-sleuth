@@ -43,7 +43,6 @@ import {
 } from "../../redux/DataSlice";
 import { curCategoryNameSelector } from "../../redux/DataSlice";
 import { blue } from "@mui/material/colors";
-import { styled } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 export const UploadLabelsDialog = ({ open, setOpen }) => {
@@ -260,6 +259,11 @@ export const DownloadModelDialog = ({
     setOpen(false);
   };
 
+  const bullets =  [
+    "the model itself",
+    "a code snippet demonstrating how it can be used within a Python application",
+  ];
+
   return (
     <Modal open={open} onClose={handleClose} disableRestoreFocus>
       <Box className="dialog-content">
@@ -269,15 +273,23 @@ export const DownloadModelDialog = ({
             display: "block",
           }}
         >
-          <LargeTitle>Download the current model</LargeTitle>
+          <LargeTitle>Download current model</LargeTitle>
           <MainContent>
             <p>
-              Download the latest ({modelVersion}
-              <sup>{modelVersionSuffix}</sup>) model version for the category '
-              {curCategoryName}'. In the downloaded zip file you will find the
-              model itself, as well as a code snippet demonstrating how it can
-              be used within a python application.
+              Download latest ({modelVersion}
+              <sup>{modelVersionSuffix}</sup>) model version for category '
+              {curCategoryName}'. 
             </p>
+            <p>
+              In the downloaded zip file you will find:
+            </p>
+            <ul>
+              {Object.values(bullets).map((item) => (
+                <li key={item} style={{ paddingBottom: "10px" }}>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </MainContent>
         </div>
         <Stack
