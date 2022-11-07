@@ -22,11 +22,11 @@ def load_model_prediction_store_from_disk(path_to_store: str, prediction_class: 
 
     if not os.path.isfile(path_to_store):
         return {}
-
     with open(path_to_store) as reader:
         model_prediction_store = ujson.load(reader)
-    return {ast.literal_eval(k): prediction_class(**v) for k, v in model_prediction_store.items()}
+    res =  {k: prediction_class(**v) for k, v in model_prediction_store.items()}
 
+    return res
 
 def save_model_prediction_store_to_disk(path_to_store: str, model_cache: Dict[Tuple, Prediction]):
     """

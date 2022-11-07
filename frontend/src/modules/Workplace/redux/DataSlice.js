@@ -237,4 +237,6 @@ export const {
   focusPreviousSidebarElement,
   focusFirstSidebarElement,
   focusLastSidebarElement,
+  updateElementOptimistically,
+  reverseOptimisticUpdate,
 } = DataSlice.actions;

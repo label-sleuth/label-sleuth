@@ -21,7 +21,7 @@ import check from '../Asset/check.svg';
 import crossing from '../Asset/crossing.svg';
 import cross from '../Asset/cross.svg';
 import classes from './Element.module.css';
-import useMainLabelState from '../customHooks/useLabelState';
+import useLabelState from '../customHooks/useLabelState';
 import useElemStyles from "./customHooks/useElemStyles";
 import { getPanelDOMKey } from "../../../utils/utils";
 import { panelIds } from "../../../const";
@@ -33,7 +33,7 @@ export default function Element({ element }) {
     const curCategory = useSelector(state => state.workspace.curCategory) 
     const evaluationIsInProgress = useSelector(state => state.workspace.panels[panelIds.EVALUATION].isInProgress) 
     const evaluationLoading = useSelector(state => state.workspace.panels.loading[panelIds.EVALUATION])
-    const { handlePosLabelState, handleNegLabelState } = useMainLabelState({ elementURI: id })
+    const { handlePosLabelState, handleNegLabelState } = useLabelState()
     const elementDOMId = useMemo(() => getPanelDOMKey(id, panelIds.MAIN_PANEL), [id])
     const elemStyleClasses = useElemStyles(elementDOMId, modelPrediction, userLabel)
     

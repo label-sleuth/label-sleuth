@@ -3,105 +3,76 @@ import {
   getCategoryQueryString,
   getPageCount,
   getQueryParamsString,
-  parseElement,
   synchronizeElement,
 } from "../../../utils/utils";
-import {
-  BASE_URL,
-  WORKSPACE_API,
-  DOWNLOAD_LABELS_API,
-  UPLOAD_LABELS_API,
-} from "../../../config";
+import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../../config";
 import fileDownload from "js-file-download";
 import { panelIds } from "../../../const";
 import { client } from "../../../api/client";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
-export const downloadLabels = createAsyncThunk(
-  "workspace/downloadLabels",
-  async ({labeledOnly}, { getState }) => {
-    const state = getState();
+export const downloadLabels = createAsyncThunk("workspace/downloadLabels", async ({ labeledOnly }, { getState }) => {
+  const state = getState();
 
-    const queryParam = `?labeled_only=${labeledOnly}`
+  const queryParam = `?labeled_only=${labeledOnly}`;
 
-    const url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
-    )}/${DOWNLOAD_LABELS_API}${queryParam}`;
-    
+  const url = `${getWorkspace_url}/${encodeURIComponent(
+    state.workspace.workspaceId
+  )}/${DOWNLOAD_LABELS_API}${queryParam}`;
 
+  const { data } = await client.get(url, {
+    headers: {
+      "Content-Type": "text/csv;charset=UTF-8",
+    },
+    parseResponseBodyAs: "text",
+  });
 
-    const { data } = await client.get(url, {
-      headers: {
-        "Content-Type": "text/csv;charset=UTF-8",
-      },
-      parseResponseBodyAs: "text",
-    });
+  return data;
+});
 
-    return data;
-  }
-);
+export const uploadLabels = createAsyncThunk(`workspace/uploadLabels`, async (formData, { getState }) => {
+  const state = getState();
 
-export const uploadLabels = createAsyncThunk(
-  `workspace/uploadLabels`,
-  async (formData, { getState }) => {
-    const state = getState();
+  var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/${UPLOAD_LABELS_API}`;
+  const { data } = await client.post(url, formData, {
+    stringifyBody: false,
+    omitContentType: true,
+  });
+  return data;
+});
 
-    var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
-    )}/${UPLOAD_LABELS_API}`;
-    const { data } = await client.post(url, formData, {
-      stringifyBody: false,
-      omitContentType: true,
-    });
-    return data;
-  }
-);
+export const labelInfoGain = createAsyncThunk("workspace/labeled_info_gain", async (request, { getState }) => {
+  const state = getState();
 
-export const labelInfoGain = createAsyncThunk(
-  "workspace/labeled_info_gain",
-  async (request, { getState }) => {
-    const state = getState();
+  const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
 
-    const queryParams = getQueryParamsString([
-      getCategoryQueryString(state.workspace.curCategory),
-    ]);
+  var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/labeled_info_gain${queryParams}`;
 
-    var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
-    )}/labeled_info_gain${queryParams}`;
+  const { data } = await client.get(url);
+  return data;
+});
 
-    const { data } = await client.get(url);
-    return data;
-  }
-);
+export const setElementLabel = createAsyncThunk("workspace/set_element_label", async (request, { getState }) => {
+  const state = getState();
 
-export const setElementLabel = createAsyncThunk(
-  "workspace/set_element_label",
-  async (request, { getState }) => {
-    const state = getState();
+  const { element_id, label, update_counter } = request;
 
-    const { element_id, label, update_counter } = request;
+  const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
 
-    const queryParams = getQueryParamsString([
-      getCategoryQueryString(state.workspace.curCategory),
-    ]);
+  var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/element/${encodeURIComponent(
+    element_id
+  )}${queryParams}`;
 
-    var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
-    )}/element/${encodeURIComponent(element_id)}${queryParams}`;
+  const { data } = await client.put(url, {
+    category_id: state.workspace.curCategory,
+    value: label,
+    update_counter: update_counter,
+  });
 
-    const { data } = await client.put(url, {
-      category_id: state.workspace.curCategory,
-      value: label,
-      update_counter: update_counter,
-    });
-
-    const sidebarPanelElementsPerPage =
-      state.featureFlags.sidebarPanelElementsPerPage;
-    return { data, sidebarPanelElementsPerPage };
-  }
-);
+  const sidebarPanelElementsPerPage = state.featureFlags.sidebarPanelElementsPerPage;
+  return { data, sidebarPanelElementsPerPage };
+});
 
 export const reducers = {
   setNumLabelGlobal(state, action) {
@@ -138,6 +109,97 @@ export const reducers = {
   cleanUploadedLabels(state, action) {
     state.uploadedLabels = null;
   },
+  updateElementOptimistically(state, action) {
+    const { element, newLabel, sidebarPanelElementsPerPage } = action.payload;
+    const updatedElement = {
+      ...element,
+      userLabel: newLabel,
+    }
+    const { panels, previousLabel } = synchronizeElement(updatedElement.id, updatedElement.userLabel, state.panels);
+
+    // Positive labels panel management
+    const { elements, page, hitCount } = panels[panelIds.POSITIVE_LABELS];
+
+    // have to do something if:
+    // - positive labels panels is active
+    if (panels.activePanelId === panelIds.POSITIVE_LABELS) {
+      // - label is pos,
+      if (updatedElement.userLabel === "pos") {
+        panels[panelIds.POSITIVE_LABELS].hitCount += 1;
+        if (elements === null) {
+          elements = {};
+        }
+        // - last page is not full
+        if (Object.keys(elements).length < sidebarPanelElementsPerPage) {
+          // - and if it is in the last page add it to the last page
+          const positiveLabelsPanelPageCount = getPageCount(sidebarPanelElementsPerPage, hitCount);
+          if (positiveLabelsPanelPageCount === page) {
+            elements[element.id] = updatedElement;
+          }
+        }
+      }
+      // if element was positive label
+      // update hitCount and remove it if it is in the current page
+      else if (previousLabel === "pos") {
+        // manually manage case where labeled element
+        // is present in the current page
+        const positiveLabelsPanelPageCount = getPageCount(sidebarPanelElementsPerPage, hitCount);
+        if (updatedElement.id in elements && Object.keys(elements).length === 1 && page === positiveLabelsPanelPageCount) {
+          panels[panelIds.POSITIVE_LABELS].page = page - 1;
+        }
+        // mechanism is too complex when elements are removed from another page
+        // lets refetch for the moment :)
+        panels.refetch = true;
+      }
+    }
+
+    panels[panelIds.POSITIVE_LABELS].elements = elements;
+    state.panels = panels;
+  },
+  reverseOptimisticUpdate(state, action) {
+    const { element, sidebarPanelElementsPerPage } = action.payload;
+    console.log(element)
+    const { panels, previousLabel } = synchronizeElement(element.id, element.userLabel, state.panels);
+
+    // Positive labels panel management
+    const { elements, page, hitCount } = panels[panelIds.POSITIVE_LABELS];
+
+    // have to do something if:
+    // - positive labels panels is active
+    if (panels.activePanelId === panelIds.POSITIVE_LABELS) {
+      // - label is pos,
+      if (element.userLabel === "pos") {
+        panels[panelIds.POSITIVE_LABELS].hitCount += 1;
+        if (elements === null) {
+          elements = {};
+        }
+        // - last page is not full
+        if (Object.keys(elements).length < sidebarPanelElementsPerPage) {
+          // - and if it is in the last page add it to the last page
+          const positiveLabelsPanelPageCount = getPageCount(sidebarPanelElementsPerPage, hitCount);
+          if (positiveLabelsPanelPageCount === page) {
+            elements[element.id] = element;
+          }
+        }
+      }
+      // if element was positive label
+      // update hitCount and remove it if it is in the current page
+      else if (previousLabel === "pos") {
+        // manually manage case where labeled element
+        // is present in the current page
+        const positiveLabelsPanelPageCount = getPageCount(sidebarPanelElementsPerPage, hitCount);
+        if (element.id in elements && Object.keys(elements).length === 1 && page === positiveLabelsPanelPageCount) {
+          panels[panelIds.POSITIVE_LABELS].page = page - 1;
+        }
+        // mechanism is too complex when elements are removed from another page
+        // lets refetch for the moment :)
+        panels.refetch = true;
+      }
+    }
+
+    panels[panelIds.POSITIVE_LABELS].elements = elements;
+    state.panels = panels;
+  }
 };
 
 export const extraReducers = {
@@ -150,9 +212,7 @@ export const extraReducers = {
   [downloadLabels.fulfilled]: (state, action) => {
     const data = action.payload;
     const current = new Date();
-    const date = `${current.getDate()}/${
-      current.getMonth() + 1
-    }/${current.getFullYear()}`;
+    const date = `${current.getDate()}/${current.getMonth() + 1}/${current.getFullYear()}`;
     const fileName = `labeleddata_from_Label_Sleuth<${date}>.csv`;
     fileDownload(data, fileName);
     return {
@@ -177,63 +237,5 @@ export const extraReducers = {
     state.uploadingLabels = false;
   },
   [setElementLabel.fulfilled]: (state, action) => {
-    const { data, sidebarPanelElementsPerPage } = action.payload;
-    const { element: unparsedElement } = data;
-    const element = parseElement(unparsedElement, state.curCategory);
-
-    const { panels, previousLabel } = synchronizeElement(
-      element.id,
-      element.userLabel,
-      state.panels
-    );
-
-    // Positive labels panel management
-    const { elements, page, hitCount } = panels[panelIds.POSITIVE_LABELS];
-
-    // have to do something if:
-    // - positive labels panels is active
-    if (panels.activePanelId === panelIds.POSITIVE_LABELS) {
-      // - label is pos,
-      if (element.userLabel === "pos") {
-        panels[panelIds.POSITIVE_LABELS].hitCount += 1;
-        if (elements === null) {
-          elements = {};
-        }
-        // - last page is not full
-        if (Object.keys(elements).length < sidebarPanelElementsPerPage) {
-          // - and if it is in the last page add it to the last page
-          const positiveLabelsPanelPageCount = getPageCount(
-            sidebarPanelElementsPerPage,
-            hitCount
-          );
-          if (positiveLabelsPanelPageCount === page) {
-            elements[element.id] = element;
-          }
-        }
-      }
-      // if element was positive label
-      // update hitCount and remove it if it is in the current page
-      else if (previousLabel === "pos") {
-        // manually manage case where labeled element
-        // is present in the current page
-        const positiveLabelsPanelPageCount = getPageCount(
-          sidebarPanelElementsPerPage,
-          hitCount
-        );
-        if (
-          element.id in elements &&
-          Object.keys(elements).length === 1 &&
-          page === positiveLabelsPanelPageCount
-        ) {
-          panels[panelIds.POSITIVE_LABELS].page = page - 1;
-        }
-        // mechanism is too complex when elements are removed from another page
-        // lets refetch for the moment :)
-        panels.refetch = true;
-      }
-    }
-
-    panels[panelIds.POSITIVE_LABELS].elements = elements;
-    state.panels = panels;
   },
 };
