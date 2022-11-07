@@ -21,7 +21,7 @@ import threading
 import uuid
 import tempfile
 import json
-
+import time
 from collections import defaultdict
 from concurrent.futures import Future
 from enum import Enum
@@ -142,6 +142,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         """
         Run the model _train() function, and return *model_id* if it has finished successfully.
         """
+        start_time = time.time()
         try:
             self._train(model_id, *args)
             self.mark_train_as_completed(model_id)
@@ -149,7 +150,9 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
             logging.exception(f'model {model_id} failed with exception')
             self.mark_train_as_error(model_id)
             raise
-
+        end_time = time.time()
+        total_time = round((end_time - start_time) / 60, 2)
+        logging.info(f'train_and_update_status of model {model_id} took {total_time}')
         return model_id
 
     @staticmethod
@@ -175,10 +178,15 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         :param use_cache: determines whether to use the caching functionality. Default is True
         :return: a list of Prediction objects, one for each item in *items_to_infer*
         """
+        start_time = time.time()
         if not use_cache:
             logging.info(f"Running infer without cache for {len(items_to_infer)} values in {self.__class__.__name__} "
                          f"model id {model_id}")
-            return self._infer_by_id(model_id, items_to_infer)
+            res = self._infer_by_id(model_id, items_to_infer)
+            end_time = time.time()
+            total_time = round((end_time - start_time) / 60, 2)
+            logging.info(f'infer_by_id for model {model_id} took {total_time} without cache')
+            return res
 
         in_memory_cache_keys = [(model_id, self._infer_item_to_cache_key(item)) for item in items_to_infer]
 
@@ -188,7 +196,6 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         # prediction results to the cache; after that, the other call can retrieve the results directly from the cache.
         # Thus, we use a lock per model_id.
         with self.model_locks[model_id]:
-
             # Try to get the predictions from the in-memory cache.
             with self.cache_lock:  # we avoid different threads reading and writing to the cache at the same time
                 infer_res = [self.cache.get(cache_key) for cache_key in in_memory_cache_keys]
@@ -233,6 +240,9 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                         model_predictions_store[model_predictions_store_keys[idx]] = prediction
                 save_model_prediction_store_to_disk(self.get_model_prediction_store_file(model_id),
                                                     model_predictions_store)
+            end_time = time.time()
+            total_time = round((end_time - start_time) / 60, 2)
+            logging.info(f'infer_by_id for model {model_id} took {total_time} using cache')
             return infer_res
 
     def infer_by_id_async(self, model_id, items_to_infer: Sequence[Mapping], done_callback=None):

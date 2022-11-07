@@ -13,13 +13,22 @@
 #  limitations under the License.
 #
 
+from enum import Enum
 import logging
 
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
+from concurrent.futures.process import ProcessPoolExecutor
 
 from label_sleuth.definitions import CPU_WORKERS, GPU_WORKERS, GPU_AVAILABLE
 
+class ExecutorEnvEnum(Enum):
+    CPU = 'cpu'
+    GPU = 'gpu'
+
+class ExecutorTypeEnum(Enum):
+    THREAD = 'thread'
+    PROCESS = 'process'
 
 class ModelsBackgroundJobsManager:
     """
@@ -27,30 +36,47 @@ class ModelsBackgroundJobsManager:
     The number of jobs running on CPU/GPU at the same time is limited by the CPU_WORKERS/GPU_WORKERS parameters.
     """
     def __init__(self):
-        self.cpu_executor = ThreadPoolExecutor(CPU_WORKERS, thread_name_prefix=f"CPU_{CPU_WORKERS}_threadpool")
-        self.gpu_executor = ThreadPoolExecutor(GPU_WORKERS, thread_name_prefix=f"GPU_{GPU_WORKERS}_threadpool")
+        # self.cpu_executor = ThreadPoolExecutor(CPU_WORKERS, thread_name_prefix=f"CPU_{CPU_WORKERS}_threadpool")
+        # self.gpu_executor = ThreadPoolExecutor(GPU_WORKERS, thread_name_prefix=f"GPU_{GPU_WORKERS}_threadpool")
+        self.executors = {
+            ExecutorTypeEnum.THREAD: {
+                ExecutorEnvEnum.CPU: ThreadPoolExecutor(CPU_WORKERS, thread_name_prefix=f"CPU_{CPU_WORKERS}_threadpool"),
+                ExecutorEnvEnum.GPU: ThreadPoolExecutor(GPU_WORKERS, thread_name_prefix=f"GPU_{GPU_WORKERS}_threadpool")
+            },
+            ExecutorTypeEnum.PROCESS: {
+                ExecutorEnvEnum.CPU: ProcessPoolExecutor(CPU_WORKERS),
+                ExecutorEnvEnum.GPU: ProcessPoolExecutor(GPU_WORKERS),
+            }
+        }
 
     def add_training(self, model_id, train_method, train_args, use_gpu, done_callback) -> Future:
-        executor = self.get_executor(use_gpu)
+        executor = self.get_executor(use_gpu, use_process_pool=False)
         future = executor.submit(train_method, *train_args)
 
         logging.info(f"Adding training for model id {model_id} into the {executor._thread_name_prefix}")
-
+        
         if done_callback is not None:
             future.add_done_callback(done_callback)
         return future
 
     def add_inference(self, model_id, infer_method, infer_args, use_gpu, done_callback) -> Future:
-        executor = self.get_executor(use_gpu)
+        executor = self.get_executor(use_gpu, use_process_pool=True)
         future = executor.submit(infer_method, *infer_args)
 
-        logging.info(f"Adding inference for model id {model_id} into the {executor._thread_name_prefix}")
+        logging.info(f"Adding inference for model id {model_id}")
 
         if done_callback is not None:
             future.add_done_callback(done_callback)
         return future
 
-    def get_executor(self, model_requested_gpu) -> ThreadPoolExecutor:
+    def get_executor(self, model_requested_gpu, use_process_pool) -> ThreadPoolExecutor:
+        executor_type = ExecutorTypeEnum.PROCESS if use_process_pool else ExecutorTypeEnum.THREAD
         if model_requested_gpu and GPU_WORKERS > 0 and GPU_AVAILABLE:
-            return self.gpu_executor
-        return self.cpu_executor
+            executor = self.executors[executor_type][ExecutorEnvEnum.GPU]
+        else: 
+            executor = self.executors[executor_type][ExecutorEnvEnum.CPU]
+            logging.info(f'[{executor_type}][{ExecutorEnvEnum.CPU}]')
+        logging.info('The executor is: ')
+        logging.info(executor)
+        return executor
+
