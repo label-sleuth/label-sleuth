@@ -152,6 +152,15 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
 
         return model_id
 
+    @staticmethod
+    def _infer_item_to_cache_key(item:Mapping):
+        """
+        returns the unique identifier of an item sent to inference. Currently an item consists only of a text field.
+        * The return value is somewhat complex for backward compatability. In the next breaking change, this could
+        be changed to items's text only
+        """
+        return str(tuple(sorted(item.items())))
+
     def infer_by_id(self, model_id, items_to_infer: Sequence[Mapping], use_cache=True) -> Sequence[Prediction]:
         """
         Infer using *model_id* on *items_to_infer*, and return the predictions. This method wraps the _infer_by_id()
@@ -171,8 +180,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                          f"model id {model_id}")
             return self._infer_by_id(model_id, items_to_infer)
 
-        in_memory_cache_keys = [(model_id, tuple(sorted(item.items()))) for item in items_to_infer]
-        model_predictions_store_keys = [tuple(sorted(item.items())) for item in items_to_infer]
+        in_memory_cache_keys = [(model_id, self._infer_item_to_cache_key(item)) for item in items_to_infer]
 
         # If there are multiple calls to infer_by_id() using the same *model_id*, we do not want them to perform the
         # below logic at the same time. Specifically, if two calls are asking for prediction results for the same
@@ -212,6 +220,10 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
 
                 item_to_prediction = {frozenset(unique_item.items()): item_predictions
                                       for unique_item, item_predictions in zip(uniques_to_infer, new_predictions)}
+
+                # each model has a separate store so model id should not be part of the cache key
+                model_predictions_store_keys = [cache_key[1] for cache_key in in_memory_cache_keys]
+
                 # Update cache and prediction store with predictions for the newly inferred elements
                 with self.cache_lock:
                     for idx, entry in zip(indices_not_in_cache, missing_items_to_infer):
@@ -301,10 +313,10 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         return getattr(Languages, language_name.upper())
 
     def _load_model_prediction_store_to_cache(self, model_id):
-        logging.debug("start loading cache from disk")
+        logging.debug(f"start loading cache from disk from {self.get_model_prediction_store_file(model_id)}")
         model_predictions_store = load_model_prediction_store_from_disk(self.get_model_prediction_store_file(model_id),
                                                                         self.get_prediction_class())
-        logging.debug("done loading cache from disk")
+        logging.debug(f"done loading cache from disk from {self.get_model_prediction_store_file(model_id)}")
         for key, value in model_predictions_store.items():
             self.cache.set((model_id, key), value)
         return model_predictions_store

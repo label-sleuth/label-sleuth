@@ -8,10 +8,9 @@ from label_sleuth.models.util.disk_cache import save_model_prediction_store_to_d
 
 class TestDiskCache(unittest.TestCase):
     def test_save_equals_load(self):
-        # [frozenset("text", "I love dogs"])
         cache = {
-            ('SVM_mid', (('text', 'Embrace growth and innovation!'),)): Prediction(True, 0.9),
-            ('SVM_mid', (('text', 'parking lot'),)): Prediction(False, 0.4)
+            str(('SVM_mid', (('text', 'Embrace growth and innovation!'),)),): Prediction(True, 0.9),
+            str(('SVM_mid', (('text', 'parking lot'),)),): Prediction(False, 0.4)
         }
         temp_dir = tempfile.TemporaryDirectory()
         cache_file_path = os.path.join(temp_dir.name, "cache.json")
