@@ -56,6 +56,7 @@ import {
 import { getOrdinalSuffix } from "../../../utils/utils";
 import useAuthentication from "../../Login/customHooks/useAuthentication";
 import { ModelErrorAlert } from "./ModelErrorAlert";
+import { fetchVersion } from "../redux/DataSlice";
 
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -109,6 +110,7 @@ const WorkspaceInfo = ({ workspaceId, setTutorialOpen, checkModelInterval = 2000
   const labelCount = useSelector((state) => state.workspace.labelCount);
   const uploadedLabels = useSelector((state) => state.workspace.uploadedLabels);
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
+  const systemVersion = useSelector((state) => state.workspace.systemVersion);
   const nextModelShouldBeTraining = useSelector((state) => state.workspace.nextModelShouldBeTraining);
   const lastModelFailed = useSelector((state) => state.workspace.lastModelFailed);
   const modelVersionSuffix = React.useMemo(() => getOrdinalSuffix(modelVersion), [modelVersion]);
@@ -153,6 +155,10 @@ const WorkspaceInfo = ({ workspaceId, setTutorialOpen, checkModelInterval = 2000
       dispatch(setWorkspaceId(workspaceId));
     }
   }, [workspaceId]);
+
+  React.useEffect(() => {
+    dispatch(fetchVersion())
+  }, [])
 
   const getInstance = useCallback((instance) => {
     refAnimationInstance.current = instance;
@@ -526,6 +532,10 @@ const WorkspaceInfo = ({ workspaceId, setTutorialOpen, checkModelInterval = 2000
           >
             Visit the website
           </Link>
+          {systemVersion && 
+            <Typography className={classes["system-version"]}>
+              Version: {systemVersion}
+            </Typography>}
         </Drawer>
       </Box>
     </>
