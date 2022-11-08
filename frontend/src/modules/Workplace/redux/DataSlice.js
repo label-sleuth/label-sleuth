@@ -17,36 +17,22 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { client } from "../../../api/client";
 
-import {
-  reducers as documentReducers,
-  extraReducers as documentExtraReducers,
-} from "./documentSlice";
+import { reducers as documentReducers, extraReducers as documentExtraReducers } from "./documentSlice";
 import {
   initialState as initialPanelsState,
   reducers as panelsReducers,
   extraReducers as panelsExtraReducers,
 } from "./panelsSlice";
-import {
-  reducers as labelReducers,
-  extraReducers as labelExtraReducers,
-} from "./labelSlice";
-import {
-  reducers as categoryReducers,
-  extraReducers as categoryExtraReducers,
-} from "./categorySlice";
-import {
-  reducers as evaluationReducers,
-  extraReducers as evaluationExtraReducers,
-} from "./evaluationSlice";
+import { reducers as labelReducers, extraReducers as labelExtraReducers } from "./labelSlice";
+import { reducers as categoryReducers, extraReducers as categoryExtraReducers } from "./categorySlice";
+import { reducers as evaluationReducers, extraReducers as evaluationExtraReducers } from "./evaluationSlice";
 import {
   initialState as initialModelState,
   reducers as modelReducers,
   extraReducers as modelExtraReducers,
 } from "./modelSlice";
-import {
-  getCategoryQueryString,
-  getQueryParamsString,
-} from "../../../utils/utils";
+import { getCategoryQueryString, getQueryParamsString } from "../../../utils/utils";
+import { setActiveWorkspace } from "../../Workspace-config/workspaceConfigSlice";
 
 export { fetchDocuments } from "./documentSlice";
 export {
@@ -57,25 +43,10 @@ export {
   getElementToLabel,
   searchKeywords,
 } from "./panelsSlice";
-export {
-  downloadLabels,
-  uploadLabels,
-  labelInfoGain,
-  setElementLabel,
-} from "./labelSlice";
-export {
-  fetchCategories,
-  createCategoryOnServer,
-  deleteCategory,
-  editCategory,
-} from "./categorySlice";
-export {
-  startEvaluation,
-  getEvaluationElements,
-  getEvaluationResults,
-  cancelEvaluation,
-} from "./evaluationSlice";
-export {checkModelUpdate, downloadModel} from './modelSlice'
+export { downloadLabels, uploadLabels, labelInfoGain, setElementLabel } from "./labelSlice";
+export { fetchCategories, createCategoryOnServer, deleteCategory, editCategory } from "./categorySlice";
+export { startEvaluation, getEvaluationElements, getEvaluationResults, cancelEvaluation } from "./evaluationSlice";
+export { checkModelUpdate, downloadModel } from "./modelSlice";
 
 export const initialState = {
   ...initialPanelsState,
@@ -102,28 +73,22 @@ export const initialState = {
     documentPos: 0,
     documentNeg: 0,
   },
+  systemVersion: null,
 };
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
+export const checkStatus = createAsyncThunk("workspace/get_labelling_status", async (_, { getState }) => {
+  const state = getState();
 
-export const checkStatus = createAsyncThunk(
-  "workspace/get_labelling_status",
-  async (_, { getState }) => {
-    const state = getState();
+  const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
 
-    const queryParams = getQueryParamsString([
-      getCategoryQueryString(state.workspace.curCategory),
-    ]);
+  const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/status${queryParams}`;
 
-    var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
-    )}/status${queryParams}`;
+  const { data } = await client.get(url);
+  return data;
+});
 
-    const { data } = await client.get(url);
-    return data;
-  }
-);
 export const fetchVersion = createAsyncThunk("workspace/get_version", async (_, { getState }) => {
   const url = `${BASE_URL}/version`;
   const { data } = await client.get(url);
@@ -172,8 +137,7 @@ const DataSlice = createSlice({
           workspacePos: response["labeling_counts"]["true"] ?? 0,
           workspaceNeg: response["labeling_counts"]["false"] ?? 0,
         },
-        nextModelShouldBeTraining:
-          progress === 100 ? true : state.nextModelShouldBeTraining,
+        nextModelShouldBeTraining: progress === 100 ? true : state.nextModelShouldBeTraining,
       };
     },
     [fetchVersion.fulfilled]: (state, action) => {
@@ -193,9 +157,7 @@ export const curCategoryNameSelector = (state) => {
    * is not clear which is the type of the
    * categoryId.
    */
-  return state.workspace.categories.find(
-    (cat) => cat.category_id == state.workspace.curCategory
-  )?.category_name;
+  return state.workspace.categories.find((cat) => cat.category_id == state.workspace.curCategory)?.category_name;
 };
 
 export const activePanelSelector = (state) => {
