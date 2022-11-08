@@ -124,6 +124,11 @@ export const checkStatus = createAsyncThunk(
     return data;
   }
 );
+export const fetchVersion = createAsyncThunk("workspace/get_version", async (_, { getState }) => {
+  const url = `${BASE_URL}/version`;
+  const { data } = await client.get(url);
+  return data;
+});
 
 /**
  * This is the main slice of the workspace. It adds reducers and extrareducers (the reducers
@@ -170,6 +175,13 @@ const DataSlice = createSlice({
         nextModelShouldBeTraining:
           progress === 100 ? true : state.nextModelShouldBeTraining,
       };
+    },
+    [fetchVersion.fulfilled]: (state, action) => {
+      const { version, origin } = action.payload;
+      console.log(action.payload);
+      if (version !== null) {
+        state.systemVersion = version;
+      }
     },
   },
 });
