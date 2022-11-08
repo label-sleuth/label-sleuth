@@ -16,6 +16,7 @@ spacy==3.2.4
 torch==1.10.2
 tqdm==4.62.3
 transformers==4.16.2
+GitPython==3.1.29
 
 # secondary dependencies
 

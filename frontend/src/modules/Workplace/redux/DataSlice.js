@@ -141,7 +141,7 @@ const DataSlice = createSlice({
       };
     },
     [fetchVersion.fulfilled]: (state, action) => {
-      const { version, origin } = action.payload;
+      const { version } = action.payload;
       console.log(action.payload);
       if (version !== null) {
         state.systemVersion = version;

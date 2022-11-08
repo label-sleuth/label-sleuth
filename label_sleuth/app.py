@@ -20,6 +20,8 @@ import shutil
 import tempfile
 import traceback
 import zipfile
+import git
+import pkg_resources
 
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
@@ -1185,3 +1187,30 @@ def get_feature_flags():
     logging.debug(f'Feature flags are: {res}')
     return jsonify(res) 
     
+
+@main_blueprint.route("/version", methods=['GET'])
+def get_git_describe():
+    """Retrieves the system version 
+
+    Git version is given priority, thus if git is installed 
+    in the system and a .git folder is present, the output
+    of 'git describe' is returned. If that fails, the package
+    version is returned. If that fails too, the string 'not
+    available' is returned instead.
+
+    Returns:
+        an object with version and source fields
+    """
+    try: 
+        repo = git.repo.Repo('./')
+        version = repo.git.describe(tags=False)
+        source = 'git'
+    except:
+        try:
+            version = pkg_resources.require("label-sleuth")[0].version
+            source = 'pypi'
+        except:
+            version = 'Not available'
+            source = None
+
+    return {'version': version, 'source': source}
