@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import Box from "@mui/material/Box";
 import { Stack } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -51,6 +51,7 @@ import Tutorial from "./tutorial";
 import TutorialDialog from "./tutorial/TutorialDialog";
 import useBackdrop from "../../customHooks/useBackdrop";
 import { useSidebarLabelingShortcuts } from "./customHooks/useSidebarLabelingShorcuts";
+import { useWorkspaceVisited } from "./customHooks/useWorkspaceVisited";
 
 export default function Workspace() {
   const workspaceId = JSON.parse(window.localStorage.getItem("workspaceId"));
@@ -59,8 +60,10 @@ export default function Workspace() {
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
   const evaluationIsInProgress = useSelector((state) => state.workspace.panels[panelIds.EVALUATION].isInProgress);
   const evaluationLoading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
-  const workspaceVisited = useSelector((state) => state.workspace.workspaceVisited);
   const [tutorialOpen, setTutorialOpen] = useState(false);
+
+  const workspaceVisited = useWorkspaceVisited()
+
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(!!!workspaceVisited);
 
   const workspaceRef = useRef();

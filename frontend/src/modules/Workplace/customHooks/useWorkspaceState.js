@@ -18,11 +18,9 @@ import {
   fetchCategories,
   fetchDocuments,
   checkModelUpdate,
-  setWorkspaceVisited,
   cleanEvaluationState,
   cleanUploadedLabels,
   clearMainPanelFocusedElement,
-  setPage,
 } from "../redux/DataSlice";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -35,7 +33,6 @@ import { useFetchPanelElements } from "./useFetchPanelElements";
 const useWorkspaceState = () => {
   const dispatch = useDispatch();
 
-  const workspaceVisited = useSelector((state) => state.workspace.workspaceVisited);
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
   const uploadedLabels = useSelector((state) => state.workspace.uploadedLabels);
@@ -43,13 +40,6 @@ const useWorkspaceState = () => {
 
   const fetchMainPanelElements = useFetchPanelElements({ panelId: panelIds.MAIN_PANEL });
   const fetchPositiveLabelsElements = useFetchPanelElements({ panelId: panelIds.POSITIVE_LABELS });
-  const fetchLabelNextElements = useFetchPanelElements({ panelId: panelIds.LABEL_NEXT });
-
-  React.useEffect(() => {
-    if (!workspaceVisited) {
-      dispatch(setWorkspaceVisited());
-    }
-  }, [workspaceVisited, dispatch]);
 
   React.useEffect(() => {
     // fetch documents only once, they won't change

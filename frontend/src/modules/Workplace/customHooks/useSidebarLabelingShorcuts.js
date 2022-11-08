@@ -15,6 +15,7 @@
 
 import { useCallback, useMemo, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useEventListener } from 'usehooks-ts';
 import useLabelState from "./useLabelState";
 import {
   focusNextSidebarElement,
@@ -22,7 +23,6 @@ import {
   focusFirstSidebarElement,
   focusLastSidebarElement,
 } from "../redux/DataSlice";
-import { useEventListener } from "../../../customHooks/useEventListener";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { panelIds } from "../../../const";
 import { usePrevious } from "../../../customHooks/usePrevious";

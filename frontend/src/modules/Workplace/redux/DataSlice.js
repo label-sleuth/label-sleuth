@@ -91,8 +91,6 @@ export const initialState = {
   numLabel: { pos: 0, neg: 0 },
   numLabelGlobal: {},
   isSearchActive: false,
-  // tells if the user visited the workspace at least once to open the tutorial the first time
-  workspaceVisited: false,
   uploadedLabels: null,
   errorMessage: null,
   deletingCategory: false,
@@ -143,18 +141,6 @@ const DataSlice = createSlice({
     ...modelReducers,
     setWorkspaceId(state, action) {
       state.workspaceId = action.payload;
-    },
-    cleanWorkplaceState(state, action) {
-      return {
-        ...initialState,
-        workspaceVisited: state.workspaceVisited,
-      };
-    },
-    setWorkspaceVisited(state, action) {
-      return {
-        ...state,
-        workspaceVisited: true,
-      };
     },
   },
   extraReducers: {
@@ -222,7 +208,6 @@ export const {
   setActivePanel,
   setSearchInput,
   resetLastSearchString,
-  setWorkspaceVisited,
   cleanEvaluationState,
   updateMainPanelElement,
   cleanUploadedLabels,
