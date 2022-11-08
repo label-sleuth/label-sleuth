@@ -96,6 +96,10 @@ export const reducers = {
       ...state,
       curCategory: c,
       nextModelShouldBeTraining: false,
+      // set modelVersion to null to have a way to
+      // distiguish between: 1) we don't have model info (null)
+      // and there is no model available for cur cat (-1)
+      modelVersion: null,
     };
   },
 };

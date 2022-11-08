@@ -118,6 +118,7 @@ const SearchPanel = forwardRef(({ clearSearchInput }, textInputRef) => {
     panelId: panelIds.SEARCH,
     shouldFetch: input !== null && input !== "",
     fetchOnFirstRender: false,
+    modelAvailableRequired: true,
   });
 
   return (

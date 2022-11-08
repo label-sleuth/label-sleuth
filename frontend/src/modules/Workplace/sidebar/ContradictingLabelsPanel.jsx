@@ -37,6 +37,7 @@ const ContradictingLabelsPanel = () => {
   } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: panelIds.CONTRADICTING_LABELS,
+    modelAvailableRequired: false,
   });
 
   const { elements, pairs, hitCount } = useSelector(

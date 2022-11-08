@@ -20,7 +20,7 @@ import { panelIds } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
-import { useUpdateActivePanelElements } from "../customHooks/useFetchPanelElements";
+import { useFetchPanelElements } from "../customHooks/useFetchPanelElements";
 import { setRefetch } from "../redux/DataSlice";
 
 const AllPositiveLabelsPanel = () => {
@@ -50,16 +50,17 @@ const AllPositiveLabelsPanel = () => {
   } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: panelIds.POSITIVE_LABELS,
+    modelAvailableRequired: false,
   });
 
-  const { updateActivePanelElements } = useUpdateActivePanelElements()
+  const fetchPositiveLabelsElements = useFetchPanelElements({panelId: panelIds.POSITIVE_LABELS})
 
   React.useEffect(() => {
     if (refetch) {
-      updateActivePanelElements()
+      fetchPositiveLabelsElements()
       dispatch(setRefetch(false))
     }
-  }, [updateActivePanelElements, refetch, dispatch])
+  }, [fetchPositiveLabelsElements, refetch, dispatch])
   
 
   return (

@@ -34,6 +34,8 @@ const LabelNextPanel = () => {
     (state) => state.featureFlags.sidebarPanelElementsPerPage
   );
 
+  const modelVersion = useSelector((state) => state.workspace.modelVersion);
+
   const {
     currentContentData,
     currentPage,
@@ -42,6 +44,10 @@ const LabelNextPanel = () => {
   } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: panelIds.LABEL_NEXT,
+    modelAvailableRequired: true,
+    // update elements when model version changes and is not because it is null
+    otherDependencies: [modelVersion],
+    shouldFetch: modelVersion !== null,
   });
 
   return (
