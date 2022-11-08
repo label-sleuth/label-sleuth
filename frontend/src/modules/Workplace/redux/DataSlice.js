@@ -142,6 +142,11 @@ const DataSlice = createSlice({
     setWorkspaceId(state, action) {
       state.workspaceId = action.payload;
     },
+    cleanWorkplaceState(state, action) {
+      return {
+        ...initialState,
+      };
+    },
   },
   extraReducers: {
     ...documentExtraReducers,
