@@ -16,33 +16,33 @@
 import * as React from "react";
 import { useCallback, useRef } from "react";
 import ReactCanvasConfetti from "react-canvas-confetti";
-import { styled, useTheme } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
-import Typography from '@mui/material/Typography';
-import sleuth_logo from '../../../assets/sleuth_logo_white.svg';
-import info_icon from '../../../assets/workspace/help.svg';
-import logout_icon from '../../../assets/workspace/logout.svg';
-import workspace_icon from '../../../assets/workspace/change_catalog.svg';
-import { useDispatch, useSelector } from 'react-redux';
-import { checkModelUpdate, setWorkspaceId } from '../redux/DataSlice';
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import { Tooltip } from '@mui/material';
-import useLogOut from '../../../customHooks/useLogOut';
-import { useNavigate } from 'react-router-dom';
-import classes from './WorkspaceInfo.module.css';
-import { WORKSPACE_CONFIG_PATH } from '../../../config';
-import { toast } from 'react-toastify';
+import { styled, useTheme } from "@mui/material/styles";
+import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
+import Typography from "@mui/material/Typography";
+import sleuth_logo from "../../../assets/sleuth_logo_white.svg";
+import info_icon from "../../../assets/workspace/help.svg";
+import logout_icon from "../../../assets/workspace/logout.svg";
+import workspace_icon from "../../../assets/workspace/change_catalog.svg";
+import { useDispatch, useSelector } from "react-redux";
+import { checkModelUpdate, setWorkspaceId } from "../redux/DataSlice";
+import Stack from "@mui/material/Stack";
+import Button from "@mui/material/Button";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import { Tooltip } from "@mui/material";
+import useLogOut from "../../../customHooks/useLogOut";
+import { useNavigate } from "react-router-dom";
+import classes from "./WorkspaceInfo.module.css";
+import { WORKSPACE_CONFIG_PATH } from "../../../config";
+import { toast } from "react-toastify";
 import {
   LOGOUT_TOOLTIP_MSG,
   GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG,
   NO_MODEL_AVAILABLE_MSG,
   LABEL_SLEUTH_SHORT_DESC,
   NEXT_MODEL_TRAINING_MSG,
-  LEFT_DRAWER_WIDTH
+  LEFT_DRAWER_WIDTH,
 } from "../../../const";
 import LinearWithValueLabel from "./ModelProgressBar";
 import { Link } from "@mui/material";
@@ -78,24 +78,20 @@ const StatsContainer = styled("div")(({ theme }) => ({
 }));
 
 const TabPanel = (props) => {
-    const { children, value, index, ...other } = props;
+  const { children, value, index, ...other } = props;
 
-    return (
-        <div
-            role="tabpanel"
-            hidden={value !== index}
-            id={`simple-tabpanel-${index}`}
-            aria-labelledby={`simple-tab-${index}`}
-            {...other}
-        >
-            {value === index && (
-                <Box sx={{ p: 3 }}>
-                    {children}
-                </Box>
-            )}
-        </div>
-    );
-}
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+};
 
 function a11yProps(index) {
   return {
@@ -104,11 +100,7 @@ function a11yProps(index) {
   };
 }
 
-const WorkspaceInfo = ({
-  workspaceId,
-  setTutorialOpen,
-  checkModelInterval = 2000,
-}) => {
+const WorkspaceInfo = ({ workspaceId, setTutorialOpen, checkModelInterval = 2000 }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { logout } = useLogOut();
@@ -117,30 +109,19 @@ const WorkspaceInfo = ({
   const labelCount = useSelector((state) => state.workspace.labelCount);
   const uploadedLabels = useSelector((state) => state.workspace.uploadedLabels);
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
-  const nextModelShouldBeTraining = useSelector(
-    (state) => state.workspace.nextModelShouldBeTraining
-  );
-  const lastModelFailed = useSelector(
-    (state) => state.workspace.lastModelFailed
-  );
-  const modelVersionSuffix = React.useMemo(
-    () => getOrdinalSuffix(modelVersion),
-    [modelVersion]
-  );
+  const nextModelShouldBeTraining = useSelector((state) => state.workspace.nextModelShouldBeTraining);
+  const lastModelFailed = useSelector((state) => state.workspace.lastModelFailed);
+  const modelVersionSuffix = React.useMemo(() => getOrdinalSuffix(modelVersion), [modelVersion]);
 
   const [tabValue, setTabValue] = React.useState(0);
-  const [uploadLabelsDialogOpen, setUploadLabelsDialogOpen] =
-    React.useState(false);
-  const [downloadLabelsDialogOpen, setDownloadLabelsDialogOpen] =
-    React.useState(false);
-  const [downloadModelDialogOpen, setDownloadModelDialogOpen] =
-    React.useState(false);
+  const [uploadLabelsDialogOpen, setUploadLabelsDialogOpen] = React.useState(false);
+  const [downloadLabelsDialogOpen, setDownloadLabelsDialogOpen] = React.useState(false);
+  const [downloadModelDialogOpen, setDownloadModelDialogOpen] = React.useState(false);
 
   const refAnimationInstance = useRef(null);
 
   // this state is used to not display the new model notififications the first time the model version is set
-  const [modelVersionHasBeenSet, setModelVersionHasBeenSet] =
-    React.useState(false);
+  const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false);
 
   const { authenticationEnabled } = useAuthentication();
 
@@ -161,10 +142,7 @@ const WorkspaceInfo = ({
         fire();
         if (modelVersion === 1) {
           notifySuccess("A new model is available!", "toast-new-model");
-          notifySuccess(
-            "There are new suggestions for labeling!",
-            "toast-new-suggestions-for-labelling"
-          );
+          notifySuccess("There are new suggestions for labeling!", "toast-new-suggestions-for-labelling");
         }
       }
     }
@@ -263,8 +241,7 @@ const WorkspaceInfo = ({
     if (categories.length === 1) return categories[0];
     else {
       let res = "";
-      if (categories.length > 2)
-        categories.slice(0, -2).forEach((c) => (res += `${c}, `));
+      if (categories.length > 2) categories.slice(0, -2).forEach((c) => (res += `${c}, `));
       res += categories.slice(-2, -1)[0] + " and " + categories.slice(-1)[0];
       return res;
     }
@@ -276,23 +253,14 @@ const WorkspaceInfo = ({
       const createdCategoriesMessage = categoriesCreated.length
         ? `Added categories are ${getCategoriesString(categoriesCreated)}`
         : "";
-      notifySuccess(
-        `New labels have been added! ${createdCategoriesMessage}`,
-        "toast-uploaded-labels"
-      );
+      notifySuccess(`New labels have been added! ${createdCategoriesMessage}`, "toast-uploaded-labels");
     }
   }, [uploadedLabels]);
 
   return (
     <>
-      <UploadLabelsDialog
-        open={uploadLabelsDialogOpen}
-        setOpen={setUploadLabelsDialogOpen}
-      />
-      <DownloadLabelsDialog
-        open={downloadLabelsDialogOpen}
-        setOpen={setDownloadLabelsDialogOpen}
-      />
+      <UploadLabelsDialog open={uploadLabelsDialogOpen} setOpen={setUploadLabelsDialogOpen} />
+      <DownloadLabelsDialog open={downloadLabelsDialogOpen} setOpen={setDownloadLabelsDialogOpen} />
       <DownloadModelDialog
         open={downloadModelDialogOpen}
         setOpen={setDownloadModelDialogOpen}
@@ -306,10 +274,7 @@ const WorkspaceInfo = ({
           height: "100vh",
         }}
       >
-        <ReactCanvasConfetti
-          refConfetti={getInstance}
-          className={classes.confetti_canvas}
-        />
+        <ReactCanvasConfetti refConfetti={getInstance} className={classes.confetti_canvas} />
         <Drawer
           sx={{
             width: LEFT_DRAWER_WIDTH,
@@ -327,11 +292,7 @@ const WorkspaceInfo = ({
         >
           <DrawerHeader>
             <h2 className={classes.sleuth_title}>
-              <img
-                src={sleuth_logo}
-                className={classes.sleuthlogo}
-                alt="Sleuth Logo"
-              />
+              <img src={sleuth_logo} className={classes.sleuthlogo} alt="Sleuth Logo" />
               <img
                 id="workspace-tutorial-image"
                 onClick={open_introSlides}
@@ -342,11 +303,7 @@ const WorkspaceInfo = ({
             </h2>
             {authenticationEnabled ? (
               <Tooltip title={LOGOUT_TOOLTIP_MSG} placement="right">
-                <img
-                  onClick={logout}
-                  className={classes.logout}
-                  src={logout_icon}
-                />
+                <img onClick={logout} className={classes.logout} src={logout_icon} />
               </Tooltip>
             ) : null}
           </DrawerHeader>
@@ -355,9 +312,7 @@ const WorkspaceInfo = ({
 
           <Divider />
 
-          <DrawerHeader
-            style={{ padding: "12px 16px", alignItems: "flex-end" }}
-          >
+          <DrawerHeader style={{ padding: "12px 16px", alignItems: "flex-end" }}>
             <div className={classes.account_info}>
               {authenticationEnabled ? (
                 <div>
@@ -372,10 +327,7 @@ const WorkspaceInfo = ({
                 <b>{workspaceId}</b>
               </p>
             </div>
-            <Tooltip
-              title={GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG}
-              placement="right"
-            >
+            <Tooltip title={GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG} placement="right">
               <img
                 onClick={() => {
                   navigate(WORKSPACE_CONFIG_PATH);
@@ -400,27 +352,13 @@ const WorkspaceInfo = ({
                     aria-label="workspace toggle tab"
                     variant="fullWidth"
                   >
-                    <Tab
-                      label="Workspace"
-                      {...a11yProps(0)}
-                      className={classes.tabs}
-                    />
-                    <Tab
-                      label="Document"
-                      {...a11yProps(1)}
-                      className={classes.tabs}
-                    />
+                    <Tab label="Workspace" {...a11yProps(0)} className={classes.tabs} />
+                    <Tab label="Document" {...a11yProps(1)} className={classes.tabs} />
                   </Tabs>
                 </Box>
-                <TabPanel
-                  className={classes.entries_tab}
-                  value={tabValue}
-                  index={0}
-                >
+                <TabPanel className={classes.entries_tab} value={tabValue} index={0}>
                   <Stack spacing={0}>
-                    <label style={{ fontSize: "12px", opacity: 0.5 }}>
-                      Labeled for entire workspace:
-                    </label>
+                    <label style={{ fontSize: "12px", opacity: 0.5 }}>Labeled for entire workspace:</label>
                     <StatsContainer>
                       <Typography>
                         <strong>Positive</strong>
@@ -450,29 +388,19 @@ const WorkspaceInfo = ({
                         <strong>Total</strong>
                       </Typography>
                       <Typography>
-                        <strong>
-                          {workspace_stats.pos + workspace_stats.neg}
-                        </strong>
+                        <strong>{workspace_stats.pos + workspace_stats.neg}</strong>
                       </Typography>
                     </StatsContainer>
                   </Stack>
                 </TabPanel>
-                <TabPanel
-                  className={classes.entries_tab}
-                  value={tabValue}
-                  index={1}
-                >
+                <TabPanel className={classes.entries_tab} value={tabValue} index={1}>
                   <Stack spacing={0}>
-                    <label style={{ fontSize: "12px", opacity: 0.5 }}>
-                      Labeled for current document:
-                    </label>
+                    <label style={{ fontSize: "12px", opacity: 0.5 }}>Labeled for current document:</label>
                     <StatsContainer>
                       <Typography>
                         <strong>Positive</strong>
                       </Typography>
-                      <Typography
-                        sx={{ color: doc_stats.pos > 0 ? "#8ccad9" : "#fff" }}
-                      >
+                      <Typography sx={{ color: doc_stats.pos > 0 ? "#8ccad9" : "#fff" }}>
                         <strong>{doc_stats.pos}</strong>
                       </Typography>
                     </StatsContainer>
@@ -480,9 +408,7 @@ const WorkspaceInfo = ({
                       <Typography>
                         <strong>Negative</strong>
                       </Typography>
-                      <Typography
-                        sx={{ color: doc_stats.neg > 0 ? "#ff758f" : "#fff" }}
-                      >
+                      <Typography sx={{ color: doc_stats.neg > 0 ? "#ff758f" : "#fff" }}>
                         <strong>{doc_stats.neg}</strong>
                       </Typography>
                     </StatsContainer>
@@ -509,10 +435,7 @@ const WorkspaceInfo = ({
                 }}
               >
                 {modelVersion && modelVersion > -1 ? (
-                  <Typography
-                    id="model-version"
-                    style={{ whiteSpace: "nowrap" }}
-                  >
+                  <Typography id="model-version" style={{ whiteSpace: "nowrap" }}>
                     {"Current model: "}
                     <strong>
                       {modelVersion}
@@ -547,13 +470,11 @@ const WorkspaceInfo = ({
                     alignItems: "flex-end",
                   }}
                 >
-                  <div className={classes.modelStatus}>
-                    {NEXT_MODEL_TRAINING_MSG}
-                  </div>
+                  <div className={classes.modelStatus}>{NEXT_MODEL_TRAINING_MSG}</div>
                   <div className={classes["dot-pulse"]}></div>
                 </div>
               ) : null}
-              {lastModelFailed && <ModelErrorAlert/>}
+              {lastModelFailed && <ModelErrorAlert />}
             </Stack>
           ) : null}
           <Divider />
@@ -563,6 +484,7 @@ const WorkspaceInfo = ({
               flexDirection: "column",
               alignItems: "start",
               padding: theme.spacing("24px", 2),
+              flexGrow: "1"
             }}
           >
             <Typography>Workspace labeled data:</Typography>
