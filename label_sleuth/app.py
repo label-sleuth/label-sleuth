@@ -420,10 +420,11 @@ def get_document_elements(workspace_id, document_uri):
     category_id = request.args.get('category_id')
     if category_id is not None:
         category_id = int(category_id)
+    hit_count = len(elements)
+    elements = elements[start_idx: start_idx + size]
     elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
-    elements_transformed = elements_transformed[start_idx: start_idx + size]
 
-    res = {'elements': elements_transformed, 'hit_count': len(elements)}
+    res = {'elements': elements_transformed, 'hit_count': hit_count}
     return jsonify(res)
 
 
@@ -459,8 +460,8 @@ def get_document_positive_predictions(workspace_id, document_uri):
         positive_predicted_elements = [element for element, prediction in zip(elements, predictions)
                                        if prediction == LABEL_POSITIVE]
 
+        positive_predicted_elements = positive_predicted_elements[start_idx: start_idx + size]
         elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_id)
-        elements_transformed = elements_transformed[start_idx: start_idx + size]
     res = {'elements': elements_transformed}
     return jsonify(res)
 
@@ -496,12 +497,13 @@ def get_positive_predictions(workspace_id):
             remove_duplicates=remove_duplicates)
         iteration, _ = all_ready_iterations[-1]
 
+        hit_count = len(positive_predicted_elements)
         sorted_elements = sorted(positive_predicted_elements, key=lambda te: get_natural_sort_key(te.uri))
+        sorted_elements = sorted_elements[start_idx: start_idx + size]
         elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id)
-        elements_transformed = elements_transformed[start_idx: start_idx + size]
 
-        res = {'hit_count': len(positive_predicted_elements), "positive_fraction":
-               iteration.iteration_statistics["positive_fraction"], 'elements': elements_transformed}
+        res = {'hit_count': hit_count, "positive_fraction": iteration.iteration_statistics["positive_fraction"],
+               'elements': elements_transformed}
         return jsonify(res)
 
 
@@ -673,9 +675,9 @@ def get_all_labeled_elements(workspace_id, category_id, label=None, size: int = 
     if label is not None:
         elements = [element for element in elements
                     if element.category_to_label[category_id].label == label]
+    hit_count = len(elements)
+    elements = elements[start_idx: start_idx + size]
     elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
-    hit_count = len(elements_transformed)
-    elements_transformed = elements_transformed[start_idx: start_idx + size]
     return elements_transformed, hit_count
 
 
@@ -965,9 +967,9 @@ def get_suspicious_elements(workspace_id):
     
     try:
         suspicious_elements = curr_app.orchestrator_api.get_suspicious_elements_report(workspace_id, category_id)
+        hit_count = len(suspicious_elements)
+        suspicious_elements = suspicious_elements[start_idx: start_idx + size]
         elements_transformed = elements_back_to_front(workspace_id, suspicious_elements, category_id)
-        hit_count = len(elements_transformed)
-        elements_transformed = elements_transformed[start_idx: start_idx + size]
         res = {'elements': elements_transformed, 'hit_count': hit_count}
         return jsonify(res)
     except Exception:
