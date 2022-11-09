@@ -1202,8 +1202,8 @@ def get_git_describe():
         an object with version and source fields
     """
     try: 
-        repo = git.repo.Repo('./')
-        version = repo.git.describe(tags=False)
+        repo = git.repo.Repo(os.path.abspath(os.path.join(__file__, os.pardir, os.pardir)))
+        version = repo.git.describe(tags=True)
         source = 'git'
     except:
         try:
