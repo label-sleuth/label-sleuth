@@ -1212,5 +1212,6 @@ def get_git_describe():
         except:
             version = 'Not available'
             source = None
+            logging.warning(f'Could not get Label Sleuth version information')
 
     return {'version': version, 'source': source}
