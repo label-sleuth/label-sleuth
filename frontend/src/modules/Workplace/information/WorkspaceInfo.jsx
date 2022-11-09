@@ -101,7 +101,11 @@ function a11yProps(index) {
   };
 }
 
-const WorkspaceInfo = ({ workspaceId, setTutorialOpen, checkModelInterval = 2000 }) => {
+const WorkspaceInfo = ({
+  workspaceId,
+  setTutorialOpen,
+  checkModelInterval = 5000,
+}) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { logout } = useLogOut();
