@@ -418,8 +418,8 @@ class FileBasedDataAccess(DataAccessApi):
                     logging.info(f"csv file for dataset '{dataset_name}' read successfully")
                     # convert value of TextElement fields to their proper formats
                     df = df.where(pd.notnull(df), None)
-                    for field in ['span', 'metadata']:
-                        df[field] = [ast.literal_eval(x) if x is not None else {} for x in df[field].values]
+                    df['span'] = df['span'].apply(lambda row: [tuple(int(x) for x in row[2:-2].split(','))])
+                    df['metadata'] = [ast.literal_eval(x) if x != '{}' else {} for x in df['metadata'].values]
                 else:
                     raise Exception(f'Dataset "{dataset_name}" does not exist.')
                 self.ds_in_memory[dataset_name] = df
