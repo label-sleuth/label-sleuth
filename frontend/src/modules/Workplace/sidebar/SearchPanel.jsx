@@ -33,7 +33,7 @@ const SearchInput = ({
   resetPagination,
 }) => {
   const { handleSearchInputEnterKey, handleSearch, handleSearchInputChange } =
-    useSearchElement(resetPagination);
+    useSearchElement({textInputRef, resetPagination});
 
   return (
     <Box
