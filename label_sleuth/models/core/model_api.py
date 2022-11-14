@@ -49,6 +49,9 @@ class ModelStatus(Enum):
     DELETED = 3
 
 
+
+
+
 class ModelAPI(object, metaclass=abc.ABCMeta):
     """
     Base class for implementing a classification model.
@@ -65,6 +68,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         os.makedirs(self.get_models_dir(), exist_ok=True)
         self.models_background_jobs_manager = models_background_jobs_manager
         self.gpu_support = gpu_support
+        self.primary_lock = threading.Lock()
         self.model_locks = defaultdict(lambda: threading.Lock())
         self.cache = LRUCache(definitions.INFER_CACHE_SIZE)
         self.cache_lock = threading.Lock()
@@ -187,8 +191,8 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         # element, the desired behavior is that just one of the calls will perform inference (if necessary) and save the
         # prediction results to the cache; after that, the other call can retrieve the results directly from the cache.
         # Thus, we use a lock per model_id.
-        with self.model_locks[model_id]:
-
+        model_lock_object = self._get_model_lock_object(model_id)
+        with model_lock_object:
             # Try to get the predictions from the in-memory cache.
             with self.cache_lock:  # we avoid different threads reading and writing to the cache at the same time
                 infer_res = [self.cache.get(cache_key) for cache_key in in_memory_cache_keys]
@@ -346,3 +350,10 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         shutil.copytree(model_path, output_path)
 
         return output_path
+
+    def _get_model_lock_object(self, model_id):
+        """
+        Get a lock for a model. self.primary_lock is necessary because self.model_locks is not thread safe
+        """
+        with self.primary_lock:
+            return self.model_locks[model_id]
