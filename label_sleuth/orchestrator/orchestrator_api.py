@@ -947,3 +947,10 @@ class OrchestratorApi:
         logging.info(f"completed inference with the latest model for category id {category_id} in workspace "
                      f"'{workspace_id}' after new documents were loaded to dataset '{dataset_name}',"
                      f"using model {iteration_index}")
+
+    def preload_dataset(self, workspace_id):
+        """
+
+        """
+        dataset_name = self.get_dataset_name(workspace_id)
+        return self.data_access.preload_dataset(dataset_name)
