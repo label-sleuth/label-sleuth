@@ -82,13 +82,14 @@ class HFTransformers(ModelAPI):
         pipeline = TextClassificationPipeline(model=model_components.model, tokenizer=self.tokenizer, device=device)
 
         ds = Dataset.from_dict({'text': [item['text'] for item in items_to_infer]})
-        preds = []
+        predictions = []
         for output in tqdm(pipeline(KeyDataset(ds, 'text'), batch_size=self.batch_size, truncation=True),
                            total=len(items_to_infer), desc="classification inference"):
-            preds.append(output)
+            label = output['label'] == 'LABEL_1'
+            score = output['score'] if label is True else 1-output['score']
 
-        scores = [pred['score'] for pred in preds]
-        return [Prediction(label=score > 0.5, score=score) for score in scores]
+            predictions.append(Prediction(label=label, score=score))
+        return predictions
 
     def get_model_dir_name(self): # for backward compatibility, we override the default get_model_dir_name()
         return "transformers"
