@@ -18,7 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { panelIds } from "../../../../const";
 import { useFetchPanelElements } from "../../customHooks/useFetchPanelElements";
 
-const useSearchElement = (resetPagination) => {
+const useSearchElement = ({textInputRef, resetPagination}) => {
   const searchInput = useSelector((state) => state.workspace.panels[panelIds.SEARCH].input);
 
   const dispatch = useDispatch();
@@ -29,6 +29,7 @@ const useSearchElement = (resetPagination) => {
     if (searchInput !== "") {
       resetPagination();
       fetchSearchPanelElements();
+      textInputRef.current.blur();
     }
   };
 
