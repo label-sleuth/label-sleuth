@@ -245,3 +245,10 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         Delete dataset by name
         :param dataset_name:
         """
+
+    @abc.abstractmethod
+    def preload_dataset(self, dataset_name):
+        """
+        Preload dataset to memory
+        :param dataset_name:
+        """

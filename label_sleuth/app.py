@@ -269,6 +269,22 @@ def get_workspace_info(workspace_id):
     return jsonify(res)
 
 
+@main_blueprint.route("/workspace/<workspace_id>/load_dataset", methods=['GET'])
+@login_if_required
+@validate_workspace_id
+def load_dataset(workspace_id):
+    """
+    Initial load of large datasets can take a while. The UI can call this endpoint to start a background loading of the
+    dataset to the memory immediately after the workspace was selected. This will save time in subsequent calls to
+    endpoints which require the dataset.
+
+    :param workspace_id:
+    """
+
+    executor.submit(curr_app.orchestrator_api.preload_dataset, workspace_id)
+
+
+
 """
 Category endpoints. A category is defined in the context of a particular workspace. As a user works on the system, all
 the labels, classification models etc. are associated with a specific category.
@@ -316,6 +332,7 @@ def get_all_categories(workspace_id):
                       for id, category in categories.items()]
 
     res = {'categories': category_dicts}
+
     return jsonify(res)
 
 
@@ -395,8 +412,7 @@ def get_all_document_uris(workspace_id):
     """
 
     doc_uris = curr_app.orchestrator_api.get_all_document_uris(workspace_id)
-    res = {"documents":
-               [{"document_id": uri} for uri in doc_uris]}  # TODO change document_id to document_uri in the ui
+    res = {"documents": [{"document_id": uri} for uri in doc_uris]}
     return jsonify(res)
 
 
@@ -1104,6 +1120,7 @@ def cancel_precision_evaluation(workspace_id):
                                                                            changed_elements_count)
     res = {'canceled': 'OK'}
     return jsonify(res)
+
 
 
 """

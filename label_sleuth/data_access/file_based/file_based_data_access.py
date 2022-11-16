@@ -80,7 +80,7 @@ class FileBasedDataAccess(DataAccessApi):
             intersection = doc_ids.intersection(set(self.get_all_document_uris(dataset_name)))
             if len(intersection) > 0:
                 raise AlreadyExistsException(f"{len(intersection)} documents are already in dataset '{dataset_name}'. "
-                                             f"uris: ({list(intersection)[:5]}{'...' if len(intersection)>5 else ''})",
+                                             f"uris: ({list(intersection)[:5]}{'...' if len(intersection) > 5 else ''})",
                                              list(intersection))
 
         for doc in documents:
@@ -176,6 +176,7 @@ class FileBasedDataAccess(DataAccessApi):
         :return: a List of Document objects, from the given dataset_name, matching the uris provided, containing label
         information for the TextElements of these Documents, if available.
         """
+
         def load_doc(uri):
             filename = utils.uri_to_filename(uri)
             file_path = os.path.join(doc_dump_dir, filename)
@@ -414,12 +415,12 @@ class FileBasedDataAccess(DataAccessApi):
                 if self._dataset_exists(dataset_name):
                     logging.info(f"reading dataset '{dataset_name}' csv file")
                     dataset_file_path = self._get_dataset_dump_filename(dataset_name)
-                    df = pd.read_csv(dataset_file_path)
-                    logging.info(f"csv file for dataset '{dataset_name}' read successfully")
-                    # convert value of TextElement fields to their proper formats
-                    df = df.where(pd.notnull(df), None)
-                    for field in ['span', 'metadata']:
-                        df[field] = [ast.literal_eval(x) if x is not None else {} for x in df[field].values]
+
+                    df = pd.read_csv(dataset_file_path, converters=
+                            {"span": lambda span: [tuple(int(x) for x in span[2:-2].split(','))],
+                             "metadata": lambda metadata: ast.literal_eval(metadata) if metadata != '{}' else {}})
+
+                    logging.info(f"csv file for dataset '{dataset_name}' read and processed successfully")
                 else:
                     raise Exception(f'Dataset "{dataset_name}" does not exist.')
                 self.ds_in_memory[dataset_name] = df
@@ -518,7 +519,7 @@ class FileBasedDataAccess(DataAccessApi):
         """
         unique_to_id = {}
         df['text_unique_id'] = df['text'].apply(
-            lambda x: len(unique_to_id)-1 if x not in unique_to_id and not unique_to_id.update({x: len(unique_to_id)})
+            lambda x: len(unique_to_id) - 1 if x not in unique_to_id and not unique_to_id.update({x: len(unique_to_id)})
             else unique_to_id[x])
         return df
 
@@ -550,3 +551,6 @@ class FileBasedDataAccess(DataAccessApi):
 
     def _get_workspace_labels_dir(self, workspace_id):
         return os.path.join(self.output_dir, 'user_labels', str(workspace_id))
+
+    def preload_dataset(self, dataset_name):
+        self._get_ds_in_memory(dataset_name)
