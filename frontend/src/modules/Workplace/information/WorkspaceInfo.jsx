@@ -57,6 +57,7 @@ import { getOrdinalSuffix } from "../../../utils/utils";
 import useAuthentication from "../../Login/customHooks/useAuthentication";
 import { ModelErrorAlert } from "./ModelErrorAlert";
 import { fetchVersion } from "../redux/DataSlice";
+import { SupportIconsBar } from "./SupportIconsBar";
 
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -528,14 +529,7 @@ const WorkspaceInfo = ({
               </Button>
             </Stack>
           </Stack>
-          <Link
-            className={classes["link-to-website"]}
-            href="https://ibm.biz/label-sleuth"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Visit the website
-          </Link>
+          <SupportIconsBar />
           {systemVersion && 
             <Typography className={classes["system-version"]}>
               Version: {systemVersion}
