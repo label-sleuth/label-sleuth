@@ -531,7 +531,7 @@ const WorkspaceInfo = ({
           </Stack>
           <SupportIconsBar />
           {systemVersion && 
-            <Typography className={classes["system-version"]}>
+            <Typography variant="body2" className={classes["system-version"]}>
               Version: {systemVersion}
             </Typography>}
         </Drawer>
