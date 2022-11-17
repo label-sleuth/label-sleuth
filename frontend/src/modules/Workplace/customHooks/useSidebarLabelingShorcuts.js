@@ -117,7 +117,7 @@ export const useSidebarLabelingShortcuts = () => {
       // prevent default behaviour for arrow events
       // letters shouldn't be prevented so user can type
       // and use native shorcut like refreshing the page
-      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      if (event.key.startsWith("Arrow")) {
         event.preventDefault();
       }
 
