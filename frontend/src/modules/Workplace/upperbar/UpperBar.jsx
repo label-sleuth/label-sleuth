@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import * as React from "react";
+import React from "react";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 
@@ -36,11 +36,14 @@ import {
   LEFT_DRAWER_WIDTH,
 } from "../../../const";
 import { CategoryCard } from "./CategoryCard";
-import { IconButton } from "@mui/material";
+import { IconButton, Typography } from "@mui/material";
 import { useState } from "react";
 import CreateCategoryModal from "./Modal/CreateCategoryModal";
 import DeleteCategoryModal from "./Modal/DeleteCategoryModal";
 import EditCategoryModal from "./Modal/EditCategoryModal";
+import { toast } from "react-toastify";
+import { useLocalStorage } from "usehooks-ts";
+import { Keyboard } from "../../../components/Keyboard"
 
 function ElevationScroll(props) {
   const { children, window } = props;
@@ -87,14 +90,38 @@ function CategoryFormControl() {
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const categories = useSelector((state) => state.workspace.categories);
   const dispatch = useDispatch();
+  const [showShortcutsNotification, setShowShortcutsNotification] = useLocalStorage('showShortcutsNotification', true)
 
   const options = categories
     .map((item) => ({ value: item.category_id, label: item.category_name }))
     .sort((a, b) => a.label.localeCompare(b.label));
+  
 
+  const ShortcutsMessageComponent = () => (
+    <Typography>
+      Press <Keyboard kbd={"Shift"}/>{" "}+{" "}<Keyboard kbd={"?"}/> to see the available keyboard shortcuts
+    </Typography>
+  )
+
+  React.useEffect(() => {
+    if (curCategory !== null && showShortcutsNotification === true) {
+      console.log('here')
+      notify(<ShortcutsMessageComponent />, "info-shortcuts", toast.TYPE.INFO)
+      setShowShortcutsNotification(false)
+    }
+  }, [curCategory, showShortcutsNotification, setShowShortcutsNotification])
+  
   const handleCategorySelect = (value) => {
     dispatch(updateCurCategory(value));
   };
+
+  const notify = (message, toastId, type, autoClose = false) => {
+    toast(message, {
+      autoClose: autoClose,
+      type: type || toast.TYPE.SUCCESS,
+      toastId: toastId,
+    });
+  }
 
   return (
     <FormControl
@@ -136,7 +163,7 @@ const UpperBar = () => {
     if (curCategory !== null && cardOpen) {
       setCardOpen(false);
     }
-  }, [curCategory]);
+  }, [curCategory, cardOpen]);
 
   return (
     <ElevationScroll>

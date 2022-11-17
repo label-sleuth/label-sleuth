@@ -35,7 +35,6 @@ import {
 } from "../../../const";
 import { getPanelDOMKey } from "../../../utils/utils";
 import useScrollMainPanelElementIntoView from "../sidebar/customHooks/useScrollElementIntoView";
-import { useDispatch } from "react-redux";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
 
 const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(({ theme, open, rightDrawerWidth }) => ({
@@ -62,7 +61,6 @@ const MainPanel = ({ open, rightDrawerWidth }) => {
     useMainPagination(mainPanelElementsPerPage);
 
   const { handleFetchNextDoc, handleFetchPrevDoc } = useFetchPrevNextDoc();
-
 
   useScrollMainPanelElementIntoView();
 

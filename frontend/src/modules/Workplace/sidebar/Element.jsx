@@ -21,7 +21,7 @@ import checking from "../Asset/checking.svg";
 import crossing from "../Asset/crossing.svg";
 import cross from "../Asset/cross.svg";
 import classes from "./index.module.css";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { panelIds } from "../../../const";
 import useLabelState from "../customHooks/useLabelState";
@@ -29,6 +29,10 @@ import { getPanelDOMKey } from "../../../utils/utils";
 import { useMemo, useCallback } from "react";
 import { useFocusMainPanelElement } from "../customHooks/useFocusMainPanelElement";
 import { setfocusedSidebarElementByIndex } from "../redux/DataSlice";
+import { Tooltip } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { Keyboard } from "../../../components/Keyboard";
 
 const text_colors = {
   pos: { color: "#3092ab" },
@@ -43,6 +47,19 @@ const text_colors = {
 // this function is not returned by a custom hook as it is the case of the main panel equivalent
 const handleTextElemStyle = (modelPrediction) =>
   modelPrediction === "pos" ? classes["text_predict"] : classes["text_normal"];
+
+const TooltipTitleWithShortcut = ({ icon, title }) => {
+  return (
+    <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+      <Typography fontSize={11}>
+        {title} {"("}
+      </Typography>
+      &nbsp;
+      {icon}
+      &nbsp;<Typography fontSize={11}>{" )"}</Typography>
+    </div>
+  );
+};
 
 const Element = ({ element, updateCounterOnLabeling = true, index }) => {
   const dispatch = useDispatch();
@@ -71,14 +88,16 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
     handleNegLabelState(element);
   };
 
-
   const { focusMainPanelElement } = useFocusMainPanelElement();
 
-  const handleElementClick = useCallback((e) => {
-    dispatch(setfocusedSidebarElementByIndex(index));
-    focusMainPanelElement({ element, docId });
-    // focus this element on the sidebar when clicked
-  }, [element, docId, focusMainPanelElement, index, dispatch]);
+  const handleElementClick = useCallback(
+    (e) => {
+      dispatch(setfocusedSidebarElementByIndex(index));
+      focusMainPanelElement({ element, docId });
+      // focus this element on the sidebar when clicked
+    },
+    [element, docId, focusMainPanelElement, index, dispatch]
+  );
 
   return (
     <Paper
@@ -118,20 +137,32 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
       >
         {curCategory !== null && (
           <>
-            <div className={classes.resultbtn} positiveicon="false" onClick={handleNegativeLabelAction}>
-              {userLabel === "neg" ? (
-                <img src={cross} alt="crossed" />
-              ) : (
-                <img className={classes.hovbtn} src={crossing} alt="crossinging" />
-              )}
-            </div>
-            <div className={classes.resultbtn} onClick={handlePositiveLabelAction}>
-              {userLabel === "pos" ? (
-                <img src={check} alt="checked" />
-              ) : (
-                <img className={classes.hovbtn} src={checking} alt="checking" />
-              )}
-            </div>
+            <Tooltip
+              arrow
+              title={<TooltipTitleWithShortcut title={"Negative label"} icon={<Keyboard kbd={"←"} />} />}
+              enterDelay={500}
+            >
+              <div className={classes.resultbtn} positiveicon="false" onClick={handleNegativeLabelAction}>
+                {userLabel === "neg" ? (
+                  <img src={cross} alt="crossed" />
+                ) : (
+                  <img className={classes.hovbtn} src={crossing} alt="crossinging" />
+                )}
+              </div>
+            </Tooltip>
+            <Tooltip
+              arrow
+              title={<TooltipTitleWithShortcut title={"Positive label"} icon={<Keyboard kbd={"→"} />} />}
+              enterDelay={500}
+            >
+              <div className={classes.resultbtn} onClick={handlePositiveLabelAction}>
+                {userLabel === "pos" ? (
+                  <img src={check} alt="checked" />
+                ) : (
+                  <img className={classes.hovbtn} src={checking} alt="checking" />
+                )}
+              </div>
+            </Tooltip>
           </>
         )}
       </Stack>
