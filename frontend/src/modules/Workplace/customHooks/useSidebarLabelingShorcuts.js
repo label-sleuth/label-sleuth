@@ -13,9 +13,9 @@
     limitations under the License.
 */
 
-import { useCallback, useMemo, useEffect, useState, useRef } from "react";
+import { useCallback, useMemo, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEventListener } from "usehooks-ts";
+import { useEventListener } from 'usehooks-ts';
 import useLabelState from "./useLabelState";
 import {
   focusNextSidebarElement,
@@ -29,18 +29,17 @@ import { usePrevious } from "../../../customHooks/usePrevious";
 import { useFocusMainPanelElement } from "../customHooks/useFocusMainPanelElement";
 import { focusNextOnLabelingPanels } from "../../../const";
 import { focusedSidebarElementSelector } from "../redux/panelsSlice";
-import { KeyboardKeysEnum } from "../../../const";
 
 /**
  * Custom hook for adding shortcuts to the
  * right sidebar panels. It does so by adding
  * event listeners to the corresponding key down events
  */
-export const useSidebarLabelingShortcuts = ({setShortcutsModalOpen}) => {
+export const useSidebarLabelingShortcuts = () => {
   const [focusLastElementOnPageChange, setFocusLastElementOnPageChange] = useState(false);
   const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
   const dispatch = useDispatch();
-  const pressedKeys = useRef({})
+
   // useLabelState needs to know whether to update the counter on labeling,
   // which is false only in the evalaution panel
   const { handlePosLabelState, handleNegLabelState } = useLabelState(activePanelId !== panelIds.EVALUATION);
@@ -91,8 +90,6 @@ export const useSidebarLabelingShortcuts = ({setShortcutsModalOpen}) => {
     }
   }, [elementsFetched, focusLastElementOnPageChange, dispatch]);
 
-  
-
   const focusNextElement = useCallback(() => {
     if (isLastElementFocused) {
       if (currentPage === pageCount) return;
@@ -115,54 +112,52 @@ export const useSidebarLabelingShortcuts = ({setShortcutsModalOpen}) => {
 
   const { focusMainPanelElement } = useFocusMainPanelElement();
 
-  const onKeyDown = (event) => {
-    pressedKeys.current[event.key] = true
-  }
+  const onKeyDown = useCallback(
+    (event) => {
+      // prevent default behaviour for arrow events
+      // letters shouldn't be prevented so user can type
+      // and use native shorcut like refreshing the page
+      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault();
+      }
 
-  const onKeyUp = (event) => {
-    pressedKeys.current[event.key] = false
-  }
-
-  const onKeyDownShurtcuts = (event) => {
-    // prevent default behaviour for arrow events
-    // letters shouldn't be prevented so user can type
-    // and use native shorcut like refreshing the page
-    if (event.key.startsWith("Arrow")) {
-      event.preventDefault();
-    }
-
-    if (event.key === KeyboardKeysEnum.ARROW_DOWN) {
-      focusNextElement();
-    }
-    if (event.key === KeyboardKeysEnum.ARROW_UP) {
-      focusPreviousElement();
-    }
-
-    if (focusedElement) {
-      if (curCategory !== null) {
-        if (event.key === KeyboardKeysEnum.ARROW_LEFT) {
-          handleNegLabelState(focusedElement);
-          if (focusNextElementOnLabeling) {
-            focusNextElement();
+      if (event.key === "ArrowDown") {
+        focusNextElement();
+      }
+      if (event.key === "ArrowUp") {
+        focusPreviousElement();
+      }
+      if (focusedElement) {
+        if (curCategory !== null) {
+          if (event.key === "ArrowLeft") {
+            handleNegLabelState(focusedElement);
+            if (focusNextElementOnLabeling) {
+              focusNextElement();
+            }
+          }
+          if (event.key === "ArrowRight") {
+            handlePosLabelState(focusedElement);
+            if (focusNextElementOnLabeling) {
+              focusNextElement();
+            }
           }
         }
-        if (event.key === KeyboardKeysEnum.ARROW_RIGHT) {
-          handlePosLabelState(focusedElement);
-          if (focusNextElementOnLabeling) {
-            focusNextElement();
-          }
+        if (event.key === "Enter") {
+          focusMainPanelElement({ element: focusedElement, docId: focusedElement.docId });
         }
       }
-      if (event.key === KeyboardKeysEnum.ENTER) {
-        focusMainPanelElement({ element: focusedElement, docId: focusedElement.docId });
-      }
-    }
-    if (pressedKeys.current[KeyboardKeysEnum.SHIFT] === true && pressedKeys.current[KeyboardKeysEnum.QUESTION_MARK] === true) {
-      setShortcutsModalOpen(true)
-    }
-  };
+    },
+    [
+      focusedElement,
+      curCategory,
+      focusMainPanelElement,
+      focusNextElement,
+      focusNextElementOnLabeling,
+      focusPreviousElement,
+      handleNegLabelState,
+      handlePosLabelState,
+    ]
+  );
 
   useEventListener("keydown", onKeyDown);
-  useEventListener("keyup", onKeyUp);
-  useEventListener("keydown", onKeyDownShurtcuts);
 };
