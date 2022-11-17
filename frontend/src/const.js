@@ -110,3 +110,13 @@ export const panelIds = {
 };
 
 export const focusNextOnLabelingPanels = [panelIds.LABEL_NEXT, panelIds.EVALUATION]
+
+export const KeyboardKeysEnum = {
+  ARROW_DOWN: "ArrowDown",
+  ARROW_LEFT: "ArrowLeft",
+  ARROW_RIGHT: "ArrowRight",
+  ARROW_UP: "ArrowUp",
+  ENTER: "Enter",
+  SHIFT: "Shift",
+  QUESTION_MARK: "?",
+}
