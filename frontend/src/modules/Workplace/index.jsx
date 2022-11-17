@@ -42,6 +42,7 @@ import {
   EVALUATION_TOOLTIP_MSG,
   panelIds,
 } from "../../const";
+import { ShortcutsModal } from "./main/ShortcutsModal";
 
 import Drawer from "@mui/material/Drawer";
 import { PanelManager } from "./PanelManager";
@@ -61,14 +62,14 @@ export default function Workspace() {
   const evaluationIsInProgress = useSelector((state) => state.workspace.panels[panelIds.EVALUATION].isInProgress);
   const evaluationLoading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
   const [tutorialOpen, setTutorialOpen] = useState(false);
-
+  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false)
   const workspaceVisited = useWorkspaceVisited()
 
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(!!!workspaceVisited);
 
   const workspaceRef = useRef();
 
-  useSidebarLabelingShortcuts();
+  useSidebarLabelingShortcuts({setShortcutsModalOpen});
 
   const { openBackdrop } = useBackdrop();
 
@@ -191,6 +192,7 @@ export default function Workspace() {
         </Box>
         <Tutorial tutorialOpen={tutorialOpen} setTutorialOpen={setTutorialOpen} />
         <TutorialDialog open={tutorialDialogOpen} setOpen={setTutorialDialogOpen} setTutorialOpen={setTutorialOpen} />
+        <ShortcutsModal open={shortcutsModalOpen} setOpen={setShortcutsModalOpen} />
       </Box>
       <Backdrop sx={{ color: "#fff", zIndex: 10000 }} open={openBackdrop}>
         <CircularProgress color="inherit" />
