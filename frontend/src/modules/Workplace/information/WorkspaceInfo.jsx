@@ -57,7 +57,7 @@ import { getOrdinalSuffix } from "../../../utils/utils";
 import useAuthentication from "../../Login/customHooks/useAuthentication";
 import { ModelErrorAlert } from "./ModelErrorAlert";
 import { fetchVersion } from "../redux/DataSlice";
-import { SupportIconsBar } from "./SupportIconsBar";
+import { SupportIconsBar } from "../../../components/SupportIconsBar";
 
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -529,7 +529,7 @@ const WorkspaceInfo = ({
               </Button>
             </Stack>
           </Stack>
-          <SupportIconsBar />
+          <SupportIconsBar sx={{ marginBottom: 3 }}/>
           {systemVersion && 
             <Typography variant="body2" className={classes["system-version"]}>
               Version: {systemVersion}

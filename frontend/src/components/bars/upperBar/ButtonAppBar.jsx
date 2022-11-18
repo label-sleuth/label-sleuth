@@ -13,31 +13,43 @@
     limitations under the License.
 */
 
-import * as React from 'react';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import Button from '@mui/material/Button';
-import sleuth_logo from '../../../assets/sleuth_logo_white.svg';
-import useAuthentication from '../../../modules/Login/customHooks/useAuthentication';
+import * as React from "react";
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
+import Toolbar from "@mui/material/Toolbar";
+import Button from "@mui/material/Button";
+import sleuth_logo from "../../../assets/sleuth_logo_white.svg";
+import useAuthentication from "../../../modules/Login/customHooks/useAuthentication";
+import { SupportIconsBar } from "../../SupportIconsBar";
+import { Divider, Stack, Typography } from "@mui/material";
 
-export default function ButtonAppBar({logout}) {
-  const { authenticationEnabled } = useAuthentication()
+export default function ButtonAppBar({ logout }) {
+  const { authenticationEnabled } = useAuthentication();
 
   return (
-    <Box sx={{ flexGrow: 1  }}>
-      <AppBar position="static" style={{boxShadow: 'none'}}>
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static" style={{ boxShadow: "none" }}>
         <Toolbar
           style={{
-            background: '#161616',
-            borderBottom: 'solid 1px #b5b5b5',
+            background: "#161616",
+            borderBottom: "solid 1px #b5b5b5",
             minHeight: 0,
-            paddingLeft: '20px',
-            paddingRight: '12px',
-            height: '48px'
-          }}>
-          <img src={sleuth_logo} style={{width: "160px"}}/>
-          {authenticationEnabled ? <Button color="inherit" onClick={logout}>Logout</Button> : null }
+            paddingLeft: "20px",
+            paddingRight: "12px",
+            height: "48px",
+          }}
+        >
+          <img src={sleuth_logo} style={{ width: "160px", maxWidth: "160px" }} alt="App logo" />
+          <div style={{ display: "block", flexGrow: 1 }} />
+          <SupportIconsBar sx={{ marginRight: 2 }} />
+          {authenticationEnabled ? (
+            <Divider orientation="vertical" flexItem variant="middle" sx={{ borderColor: "gray", marginRight: 1 }} />
+          ) : null}
+          {authenticationEnabled ? (
+            <Button color="inherit" onClick={logout}>
+              Logout
+            </Button>
+          ) : null}
         </Toolbar>
       </AppBar>
     </Box>
