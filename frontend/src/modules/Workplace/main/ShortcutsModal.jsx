@@ -19,12 +19,14 @@ export const ShortcutsModal = ({ open, setOpen }) => {
   const title =
     "The followings are the keyboard shortcuts you can use. These keyboard shortcuts can be applied on the element in the right sidebar which is currently highlighted.";
 
+
+
   const bullets = [
-    { key: "←", value: "Label the focused element as negative." },
-    { key: "→", value: "Label the focused element as positive." },
-    { key: "↑", value: "Focus the previous element." },
-    { key: "↓", value: "Focus the next element." },
-    { key: "Enter", value: "Discover the focused element in the main document view." },
+    { key: "←", value: "Label the focused element as negative", fontSize: "1.5rem" },
+    { key: "→", value: "Label the focused element as positive" },
+    { key: "↑", value: "Focus the previous element" },
+    { key: "↓", value: "Focus the next element" },
+    { key: "Enter", value: "Discover the focused element in the main document view" },
   ];
 
   return (
@@ -58,7 +60,7 @@ export const ShortcutsModal = ({ open, setOpen }) => {
                     {bullets.map(({ key, value }) => (
                       <TableRow key={key}>
                         <TableCell align="center" sx={{ paddingBottom: 0, paddingTop: 0 }}>
-                          <Keyboard kbd={key} style={{ fontSize: "1em" }} />
+                          <Keyboard kbd={key} style={{ fontSize: "1.5em" }} />
                         </TableCell>
                         <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }}>
                           <p
