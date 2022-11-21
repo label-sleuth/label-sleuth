@@ -492,6 +492,8 @@ def get_positive_predictions(workspace_id):
     """
     Get elements in the given workspace that received a positive prediction from the relevant classification model,
     i.e. the latest trained model for the category specified in the request.
+    As finding and returning _all_ the positively predicted elements is expensive, this endpoint only finds as many
+    elements as is required by the request.
 
     :param workspace_id:
     :request_arg category_id:
@@ -505,23 +507,20 @@ def get_positive_predictions(workspace_id):
     all_ready_iterations = curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
                                                                                   IterationStatus.READY)
     if len(all_ready_iterations) == 0:
-        return jsonify({'hit_count': 0, "positive_fraction": None, 'elements': []})
+        return jsonify({'elements': [], 'positive_fraction': None, 'total_count': None})
     else:
-        # Where labels are applied to duplicate texts (the default behavior), we do not want duplicates to appear in
-        # the positive predictions list
-        remove_duplicates = curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts
-        positive_predicted_elements = curr_app.orchestrator_api.sample_elements_by_prediction(
-            workspace_id, category_id, unlabeled_only=False, required_label=LABEL_POSITIVE,
-            remove_duplicates=remove_duplicates)
+        positive_predicted_elements = curr_app.orchestrator_api.get_elements_by_prediction(
+            workspace_id, category_id, LABEL_POSITIVE, sample_size=size, start_idx=start_idx, shuffle=False,
+            remove_duplicates=False)  # For better performance in large datasets, we do not remove duplicates
         iteration, _ = all_ready_iterations[-1]
 
-        hit_count = len(positive_predicted_elements)
-        sorted_elements = sorted(positive_predicted_elements, key=lambda te: get_natural_sort_key(te.uri))
-        sorted_elements = sorted_elements[start_idx: start_idx + size]
-        elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id)
+        elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_id)
 
-        res = {'hit_count': hit_count, "positive_fraction": iteration.iteration_statistics["positive_fraction"],
-               'elements': elements_transformed}
+        positive_fraction = iteration.iteration_statistics["positive_fraction"]
+        total_positive_count = iteration.iteration_statistics.get(
+            'total_positive_count', int(positive_fraction * curr_app.orchestrator_api.get_text_element_count(workspace_id)))
+        res = {'elements': elements_transformed,
+               'positive_fraction': positive_fraction, 'total_count': total_positive_count}
         return jsonify(res)
 
 
@@ -1057,9 +1056,9 @@ def get_elements_for_precision_evaluation(workspace_id):
     size = curr_app.config["CONFIGURATION"].precision_evaluation_size
     category_id = int(request.args['category_id'])
     random_state = len(curr_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id))
-    positive_predicted_elements = curr_app.orchestrator_api. \
-        sample_elements_by_prediction(workspace_id, category_id, size, unlabeled_only=False,
-                                      required_label=LABEL_POSITIVE, remove_duplicates=False, random_state=random_state)
+    positive_predicted_elements = curr_app.orchestrator_api.\
+        get_elements_by_prediction(workspace_id, category_id, required_prediction=LABEL_POSITIVE, sample_size=size,
+                                   remove_duplicates=False, shuffle=True, random_state=random_state)
     elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_id)
     logging.info(f"sampled {len(elements_transformed)} elements for evaluation")
     res = {'elements': elements_transformed}
@@ -1176,12 +1175,11 @@ def get_predictions_enriched_tokens(workspace_id):
         res['info_gain'] = []
         return jsonify(res)
 
-    true_elements = curr_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category_id, 1000,
-                                                                            unlabeled_only=True,
-                                                                            required_label=LABEL_POSITIVE)
-    false_elements = curr_app.orchestrator_api.sample_elements_by_prediction(workspace_id, category_id, 1000,
-                                                                             unlabeled_only=True,
-                                                                             required_label=LABEL_NEGATIVE)
+    true_elements = curr_app.orchestrator_api.get_elements_by_prediction(
+        workspace_id, category_id, LABEL_POSITIVE, sample_size=1000, shuffle=True, remove_duplicates=False)
+    false_elements = curr_app.orchestrator_api.get_elements_by_prediction(
+        workspace_id, category_id, LABEL_NEGATIVE, sample_size=1000, shuffle=True, remove_duplicates=False)
+
     elements = true_elements + false_elements
     boolean_labels = [LABEL_POSITIVE] * len(true_elements) + [LABEL_NEGATIVE] * len(false_elements)
 

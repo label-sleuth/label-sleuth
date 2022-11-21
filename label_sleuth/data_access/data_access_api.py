@@ -116,6 +116,13 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
+    def get_text_element_count(self, dataset_name: str) -> int:
+        """
+        Return the total number of TextElements in the given dataset_name.
+        :param dataset_name:
+        """
+
+    @abc.abstractmethod
     def get_all_text_elements(self, dataset_name: str) -> List[TextElement]:
         """
         Return a List of all TextElement in the given dataset_name.
@@ -231,6 +238,19 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         :param workspace_id:
         :param dataset_name:
         :param uris:
+        """
+
+    @abc.abstractmethod
+    def get_text_element_iterator(self, workspace_id, dataset_name, shuffle=False, random_state: int = 0,
+                                  remove_duplicates=False) -> Iterable[TextElement]:
+        """
+        Enables iterating over TextElement objects from the given *dataset_name*. Particularly useful where the total
+        number of elements required is not known in advance.
+        :param workspace_id:
+        :param dataset_name:
+        :param shuffle: if True, the iterator yields the text elements in random order.
+        :param random_state: provide an int seed to define a random state. Default is zero.
+        :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         """
 
     @abc.abstractmethod
