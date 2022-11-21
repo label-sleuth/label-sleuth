@@ -14,9 +14,9 @@
 #
 
 import functools
+import itertools
 import logging
 import os
-import random
 import sys
 import time
 
@@ -171,6 +171,14 @@ class OrchestratorApi:
         """
         dataset_name = self.get_dataset_name(workspace_id)
         return self.data_access.get_all_document_uris(dataset_name)
+
+    def get_text_element_count(self, workspace_id) -> int:
+        """
+        Return the number of TextElement objects in the given dataset_name.
+        :param workspace_id:
+        """
+        dataset_name = self.get_dataset_name(workspace_id)
+        return self.data_access.get_text_element_count(dataset_name)
 
     def get_all_text_elements(self, dataset_name: str) -> List[TextElement]:
         """
@@ -516,8 +524,9 @@ class OrchestratorApi:
         dataset_size = len(predictions)
 
         # calculate the fraction of examples that receive a positive prediction from the current model
-        positive_fraction = sum([pred.label is True for pred in predictions]) / dataset_size
-        post_train_statistics = {"positive_fraction": positive_fraction}
+        positive_count = sum([pred.label is True for pred in predictions])
+        positive_fraction = positive_count / dataset_size
+        post_train_statistics = {"positive_fraction": positive_fraction, "total_positive_count": positive_count}
 
         # calculate the fraction of predictions that changed between the previous model and the current model
         previous_iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_id)[:iteration_index]
@@ -740,21 +749,42 @@ class OrchestratorApi:
         self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, category_id,
                                                                              changed_elements_count)
 
-    def sample_elements_by_prediction(self, workspace_id, category_id, sample_size: int = sys.maxsize,
-                                      unlabeled_only=False, required_label=LABEL_POSITIVE,
-                                      remove_duplicates=True, random_state: int = 0):
+    def get_elements_by_prediction(self, workspace_id, category_id, required_prediction, sample_size, start_idx=0,
+                                   shuffle=False, random_state=0, remove_duplicates=True) -> List[TextElement]:
+        """
+        Get elements in the given workspace that received a positive prediction from the latest classification model
+        for the category.
+        As finding and returning _all_ the positively predicted elements is expensive, this method only collects as many
+        elements as is required by the request, namely up to *sample_size + start_idx* positively predicted elements.
+
+        :param workspace_id:
+        :param category_id:
+        :param required_prediction:
+        :param sample_size: number of elements to return
+        :param start_idx: get elements starting from this index (for pagination)
+        :param shuffle: if True, text elements are retrieved in a random order.
+        :param random_state: provide an int seed to define a random state. Default is zero.
+        :param remove_duplicates: if True, do not include elements that are duplicates of each other.
+        """
+        def batched(iterable, batch_size=100):
+            it = iter(iterable)
+            while batch := list(itertools.islice(it, batch_size)):
+                yield batch
+
         dataset_name = self.get_dataset_name(workspace_id)
-        if unlabeled_only:
-            elements = self.get_all_unlabeled_text_elements(workspace_id, dataset_name, category_id,
-                                                            remove_duplicates=remove_duplicates)
-        else:
-            elements = self.data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                          remove_duplicates=remove_duplicates)["results"]
-        predictions = self.infer(workspace_id, category_id, elements)
-        elements_with_matching_prediction = [text_element for text_element, prediction in zip(elements, predictions)
-                                             if prediction.label == required_label]
-        random.Random(random_state).shuffle(elements_with_matching_prediction)
-        return elements_with_matching_prediction[:sample_size]
+        elements_with_required_prediction = []
+        # we fetch and infer text elements in batches, and collect those elements that match the required prediction
+        element_batch_iterator = batched(
+            self.data_access.get_text_element_iterator(workspace_id, dataset_name, shuffle=shuffle,
+                                                       random_state=random_state, remove_duplicates=remove_duplicates))
+        for element_batch in element_batch_iterator:
+            batch_predictions = self.infer(workspace_id, category_id, element_batch)
+            for element, prediction in zip(element_batch, batch_predictions):
+                if prediction.label == required_prediction:
+                    elements_with_required_prediction.append(element)
+            if len(elements_with_required_prediction) >= start_idx + sample_size:
+                break  # we have collected enough elements
+        return elements_with_required_prediction[start_idx:start_idx + sample_size]
 
     def get_progress(self, workspace_id: str, dataset_name: str, category_id: int):
         category_label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, remove_duplicates=True)
