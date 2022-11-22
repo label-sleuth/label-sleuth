@@ -5,6 +5,7 @@ import { panelIds } from "../../../const";
 import { client } from "../../../api/client";
 import fileDownload from "js-file-download";
 import { curCategoryNameSelector } from "./DataSlice";
+import { getWorkspaceId } from "../../../utils/utils";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -23,7 +24,7 @@ export const checkModelUpdate = createAsyncThunk("workspace/check_model_update",
 
   const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
 
-  var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/models${queryParams}`;
+  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/models${queryParams}`;
 
   const { data } = await client.get(url);
   return data;
@@ -33,7 +34,7 @@ export const downloadModel = createAsyncThunk("workspace/downloadModel", async (
   const state = getState();
   const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
 
-  const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/export_model${queryParams}`;
+  const url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/export_model${queryParams}`;
 
   const { data } = await client.get(url, {
     headers: {

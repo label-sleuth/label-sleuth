@@ -9,16 +9,15 @@ import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from 
 import fileDownload from "js-file-download";
 import { panelIds } from "../../../const";
 import { client } from "../../../api/client";
+import { getWorkspaceId } from "../../../utils/utils";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
 export const downloadLabels = createAsyncThunk("workspace/downloadLabels", async ({ labeledOnly }, { getState }) => {
-  const state = getState();
-
   const queryParam = `?labeled_only=${labeledOnly}`;
 
   const url = `${getWorkspace_url}/${encodeURIComponent(
-    state.workspace.workspaceId
+    getWorkspaceId()
   )}/${DOWNLOAD_LABELS_API}${queryParam}`;
 
   const { data } = await client.get(url, {
@@ -32,9 +31,7 @@ export const downloadLabels = createAsyncThunk("workspace/downloadLabels", async
 });
 
 export const uploadLabels = createAsyncThunk(`workspace/uploadLabels`, async (formData, { getState }) => {
-  const state = getState();
-
-  var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/${UPLOAD_LABELS_API}`;
+  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/${UPLOAD_LABELS_API}`;
   const { data } = await client.post(url, formData, {
     stringifyBody: false,
     omitContentType: true,
@@ -47,7 +44,7 @@ export const labelInfoGain = createAsyncThunk("workspace/labeled_info_gain", asy
 
   const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
 
-  var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/labeled_info_gain${queryParams}`;
+  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/labeled_info_gain${queryParams}`;
 
   const { data } = await client.get(url);
   return data;
@@ -60,7 +57,7 @@ export const setElementLabel = createAsyncThunk("workspace/set_element_label", a
 
   const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
 
-  var url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/element/${encodeURIComponent(
+  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/element/${encodeURIComponent(
     element_id
   )}${queryParams}`;
 
@@ -119,6 +116,7 @@ export const reducers = {
 
     // Positive labels panel management
     const { elements, page, hitCount } = panels[panelIds.POSITIVE_LABELS];
+    let elementsCopy = {...elements};
 
     // have to do something if:
     // - positive labels panels is active
@@ -127,14 +125,14 @@ export const reducers = {
       if (updatedElement.userLabel === "pos") {
         panels[panelIds.POSITIVE_LABELS].hitCount += 1;
         if (elements === null) {
-          elements = {};
+          elementsCopy = {};
         }
         // - last page is not full
-        if (Object.keys(elements).length < sidebarPanelElementsPerPage) {
+        if (Object.keys(elementsCopy).length < sidebarPanelElementsPerPage) {
           // - and if it is in the last page add it to the last page
           const positiveLabelsPanelPageCount = getPageCount(sidebarPanelElementsPerPage, hitCount);
           if (positiveLabelsPanelPageCount === page) {
-            elements[element.id] = updatedElement;
+            elementsCopy[element.id] = updatedElement;
           }
         }
       }
@@ -162,7 +160,7 @@ export const reducers = {
 
     // Positive labels panel management
     const { elements, page, hitCount } = panels[panelIds.POSITIVE_LABELS];
-
+    let elementsCopy = {...elements};
     // have to do something if:
     // - positive labels panels is active
     if (panels.activePanelId === panelIds.POSITIVE_LABELS) {
@@ -170,14 +168,14 @@ export const reducers = {
       if (element.userLabel === "pos") {
         panels[panelIds.POSITIVE_LABELS].hitCount += 1;
         if (elements === null) {
-          elements = {};
+          elementsCopy = {};
         }
         // - last page is not full
-        if (Object.keys(elements).length < sidebarPanelElementsPerPage) {
+        if (Object.keys(elementsCopy).length < sidebarPanelElementsPerPage) {
           // - and if it is in the last page add it to the last page
           const positiveLabelsPanelPageCount = getPageCount(sidebarPanelElementsPerPage, hitCount);
           if (positiveLabelsPanelPageCount === page) {
-            elements[element.id] = element;
+            elementsCopy[element.id] = element;
           }
         }
       }

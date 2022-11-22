@@ -105,7 +105,6 @@ function CategoryFormControl() {
 
   React.useEffect(() => {
     if (curCategory !== null && showShortcutsNotification === true) {
-      console.log('here')
       notify(<ShortcutsMessageComponent />, "info-shortcuts", toast.TYPE.INFO)
       setShowShortcutsNotification(false)
     }

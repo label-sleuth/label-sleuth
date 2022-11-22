@@ -7,6 +7,7 @@ import {
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { panelIds } from "../../../const";
 import { client } from "../../../api/client";
+import { getWorkspaceId } from "../../../utils/utils";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -27,7 +28,7 @@ export const getEvaluationElements = createAsyncThunk(
     ]);
 
     var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
+      getWorkspaceId()
     )}/precision_evaluation_elements${queryParams}`;
 
     const response = await client.get(url);
@@ -49,7 +50,7 @@ export const getEvaluationResults = createAsyncThunk(
     ]);
 
     var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
+      getWorkspaceId()
     )}/precision_evaluation_elements${queryParams}`;
 
     const response = await client.post(url, {
@@ -72,7 +73,7 @@ export const cancelEvaluation = createAsyncThunk(
     ]);
 
     var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
+      getWorkspaceId()
     )}/cancel_precision_evaluation${queryParams}`;
 
 
