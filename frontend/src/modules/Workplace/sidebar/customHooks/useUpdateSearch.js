@@ -13,8 +13,6 @@ export const useUpdateSearch = (textInputRef) => {
   const uploadedLabels = useSelector((state) => state.workspace.uploadedLabels);
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const lastSearchString = useSelector((state) => state.workspace.panels[panelIds.SEARCH].lastSearchString);
-  const modelVersion = useSelector((state) => state.workspace.modelVersion);
-  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
 
   const dispatch = useDispatch();
 

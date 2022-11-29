@@ -1,13 +1,5 @@
 import * as React from "react";
-import {
-  IconButton,
-  Collapse,
-  AlertTitle,
-  Alert,
-  Box,
-  Typography,
-  Link,
-} from "@mui/material";
+import { IconButton, Collapse, AlertTitle, Alert, Box, Typography, Link } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import classes from "./WorkspaceInfo.module.css";
@@ -36,20 +28,14 @@ export const ModelErrorAlert = () => {
               setCollapsed((prevValue) => !prevValue);
             }}
           >
-            {collapsed ? (
-              <KeyboardArrowUpIcon fontSize="inherit" />
-            ) : (
-              <KeyboardArrowDownIcon fontSize="inherit" />
-            )}
+            {collapsed ? <KeyboardArrowUpIcon fontSize="inherit" /> : <KeyboardArrowDownIcon fontSize="inherit" />}
           </IconButton>
         }
       >
         <AlertTitle>Model creation failed</AlertTitle>
         <Collapse in={collapsed}>
           <Typography sx={{ wordBreak: "break-word", mr: -4, ml: -3 }}>
-            {
-              "Something went wrong creating the last model. Please ask the system administrator to "
-            }
+            {"Something went wrong creating the last model. Please ask the system administrator to "}
             <Link
               href="https://github.com/label-sleuth/label-sleuth/issues/new/choose"
               target="_blank"
@@ -57,9 +43,7 @@ export const ModelErrorAlert = () => {
             >
               {"submit an issue"}
             </Link>
-            {
-              ' with the logs located at "logs/label-sleuth.log" inside the Label Sleuth output directory.'
-            }
+            {' with the logs located at "logs/label-sleuth.log" inside the Label Sleuth output directory.'}
           </Typography>
         </Collapse>
       </Alert>

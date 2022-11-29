@@ -13,15 +13,23 @@
     limitations under the License.
 */
 
-import React, { useEffect, useState } from 'react';
+import React from "react";
 
-import MenuItem from '@mui/material/MenuItem/MenuItem';
-import Select from '@mui/material/Select';
-import InputLabel from '@mui/material/InputLabel';
+import MenuItem from "@mui/material/MenuItem/MenuItem";
+import Select from "@mui/material/Select";
+import InputLabel from "@mui/material/InputLabel";
 import classes from "./Dropdown.module.css";
 
-
-const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, placeholder, aria="demo-simple-select" }) => {
+const ControlledSelect = ({
+  value,
+  label,
+  options,
+  onFocus,
+  onChange,
+  onBlur,
+  placeholder,
+  aria = "demo-simple-select",
+}) => {
   const ITEM_HEIGHT = 30;
   const ITEM_PADDING_TOP = 8;
   const MenuProps = {
@@ -48,21 +56,23 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
       onBlur(e.target.value);
     }
   };
-  
+
   return (
     <>
-      <InputLabel 
+      <InputLabel
         id={`${aria}-label`}
         shrink={true}
         style={{
-            fontSize: '18px',
-            marginTop: '-8px'
+          fontSize: "18px",
+          marginTop: "-8px",
         }}
-      >{label}</InputLabel>
+      >
+        {label}
+      </InputLabel>
       <Select
         labelId={`${aria}-label`}
         id={`${aria}-helper`}
-        value={value ?? ''}
+        value={value ?? ""}
         label={label}
         displayEmpty
         renderValue={value !== "" ? undefined : () => placeholder}
@@ -70,25 +80,28 @@ const ControlledSelect = ({ value, label, options, onFocus, onChange, onBlur, pl
         onBlur={handleBlur}
         onFocus={handleFocus}
         MenuProps={MenuProps}
-        notched= "true"
+        notched="true"
         className={value !== "" ? classes.dropdown : classes.dropdown_gray}
       >
-        {options?.map(option => {
-          if(option.value !== ""){
+        {options?.map((option) => {
+          if (option.value !== "") {
             return (
-              <MenuItem 
-                  style={{
-                      minHeight: '40px'
-                  }}
-                  key={option.value} value={option.value}>
-                  {option.label ?? option.value}
+              <MenuItem
+                style={{
+                  minHeight: "40px",
+                }}
+                key={option.value}
+                value={option.value}
+              >
+                {option.label ?? option.value}
               </MenuItem>
             );
+          } else {
+            return null;
           }
         })}
       </Select>
     </>
-
   );
 };
 

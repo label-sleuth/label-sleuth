@@ -1,6 +1,6 @@
 import * as React from "react";
 import { LargeTitle, MainContent } from "../../../components/dialog";
-import { Box, Modal, IconButton, Typography } from "@mui/material";
+import { Box, Modal, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import "../information/FileTransferLabels/styles.css";
 import Table from "@mui/material/Table";
@@ -18,8 +18,6 @@ export const ShortcutsModal = ({ open, setOpen }) => {
 
   const title =
     "The followings are the keyboard shortcuts you can use. These keyboard shortcuts can be applied on the element in the right sidebar which is currently highlighted.";
-
-
 
   const bullets = [
     { key: "←", value: "Label the focused element as negative", fontSize: "1.5rem" },

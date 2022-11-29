@@ -50,7 +50,7 @@ const usePanelPagination = ({
   const dispatch = useDispatch();
   const firstRenderHappened = React.useRef(false);
 
-  const modelAvailable = React.useMemo(() => curCategory !== null && modelVersion !== null && modelVersion > 0);
+  const modelAvailable = React.useMemo(() => curCategory !== null && modelVersion !== null && modelVersion > 0, [curCategory, modelVersion]);
 
   /**
    * The elements that has to be displayed in the current page

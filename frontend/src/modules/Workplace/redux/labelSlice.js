@@ -158,7 +158,6 @@ export const reducers = {
   },
   reverseOptimisticUpdate(state, action) {
     const { element, sidebarPanelElementsPerPage } = action.payload;
-    console.log(element)
     const { panels, previousLabel } = synchronizeElement(element.id, element.userLabel, state.panels);
 
     // Positive labels panel management

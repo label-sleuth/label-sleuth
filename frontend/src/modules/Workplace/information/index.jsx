@@ -14,9 +14,9 @@
 */
 
 import * as React from "react";
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import ReactCanvasConfetti from "react-canvas-confetti";
-import { styled, useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import Typography from "@mui/material/Typography";
@@ -25,7 +25,7 @@ import info_icon from "../../../assets/workspace/help.svg";
 import logout_icon from "../../../assets/workspace/logout.svg";
 import workspace_icon from "../../../assets/workspace/change_catalog.svg";
 import { useDispatch, useSelector } from "react-redux";
-import { checkModelUpdate, setWorkspaceId } from "../redux/DataSlice";
+import { setWorkspaceId } from "../redux/DataSlice";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import Tabs from "@mui/material/Tabs";
@@ -45,7 +45,6 @@ import {
   LEFT_DRAWER_WIDTH,
 } from "../../../const";
 import LinearWithValueLabel from "./ModelProgressBar";
-import { Link } from "@mui/material";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import {
@@ -58,58 +57,32 @@ import useAuthentication from "../../Login/customHooks/useAuthentication";
 import { ModelErrorAlert } from "./ModelErrorAlert";
 import { fetchVersion } from "../redux/DataSlice";
 import { SupportIconsBar } from "../../../components/SupportIconsBar";
+import { DrawerHeader } from "./DrawerHeader";
+import { Divider } from "./Divider";
+import { StatsContainer } from "./StatsContainer";
+import { TabPanel } from "./TabPanel";
+import { useCheckModelState } from "./customHooks/useCheckModelState";
+import { useConfetti } from "./customHooks/useConfetti";
+import { useNewModelNotifications } from "./customHooks/useNewModelNotifications";
 
-const DrawerHeader = styled("div")(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  padding: theme.spacing(0, 2),
-  ...theme.mixins.toolbar,
-}));
-
-const Divider = styled("div")(() => ({
-  borderTop: "solid 1px #393939",
-}));
-
-const StatsContainer = styled("div")(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  fontSize: 14,
-  justifyContent: "space-between",
-  paddingTop: theme.spacing(1),
-}));
-
-const TabPanel = (props) => {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
-};
-
-function a11yProps(index) {
-  return {
+const a11yProps = (index) => ({
     id: `simple-tab-${index}`,
     "aria-controls": `simple-tabpanel-${index}`,
-  };
-}
+});
 
-const WorkspaceInfo = ({
-  workspaceId,
-  setTutorialOpen,
-  checkModelInterval = 5000,
-}) => {
+/**
+ * The information left sidebar of the worksplace
+ * @param {string} workspaceId - the id of the current workspace 
+ * @param {function} setTutorialOpen - whether tutorial should be opened
+ * @param {int} checkModelInterval - the interval time at which the model state is checked if an update is expected 
+ * @param {boolean} fireConfetti - whether to fire confetti when a new model is available. Only disabled in tests. 
+ */
+export const WorkspaceInfo = ({ workspaceId, setTutorialOpen, checkModelInterval = 5000, fireConfetti = true }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { logout } = useLogOut();
+
+  const dispatch = useDispatch();
 
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const labelCount = useSelector((state) => state.workspace.labelCount);
@@ -125,108 +98,42 @@ const WorkspaceInfo = ({
   const [downloadLabelsDialogOpen, setDownloadLabelsDialogOpen] = React.useState(false);
   const [downloadModelDialogOpen, setDownloadModelDialogOpen] = React.useState(false);
 
-  const refAnimationInstance = useRef(null);
-
-  // this state is used to not display the new model notififications the first time the model version is set
-  const [modelVersionHasBeenSet, setModelVersionHasBeenSet] = React.useState(false);
-
   const { authenticationEnabled } = useAuthentication();
 
-  function notifySuccess(message, toastId, autoClose = false) {
-    toast(message, {
-      autoClose: autoClose,
-      type: toast.TYPE.SUCCESS,
-      toastId: toastId,
-    });
-  }
+  const notifySuccess = useCallback(
+    () =>
+      (message, toastId, autoClose = false) => {
+        toast(message, {
+          autoClose: autoClose,
+          type: toast.TYPE.SUCCESS,
+          toastId: toastId,
+        });
+      },
+    []
+  );
 
-  React.useEffect(() => {
-    if (curCategory !== null) {
-      if (!modelVersionHasBeenSet) {
-        setModelVersionHasBeenSet(true);
-      }
-      if (modelVersion && modelVersion > -1 && modelVersionHasBeenSet) {
-        fire();
-        if (modelVersion === 1) {
-          notifySuccess("A new model is available!", "toast-new-model");
-          notifySuccess("There are new suggestions for labeling!", "toast-new-suggestions-for-labelling");
-        }
-      }
-    }
-  }, [modelVersion]);
+  useCheckModelState({ curCategory, nextModelShouldBeTraining, checkModelInterval });
 
   React.useEffect(() => {
     if (workspaceId) {
       dispatch(setWorkspaceId(workspaceId));
     }
-  }, [workspaceId]);
+  }, [workspaceId, dispatch]);
 
   React.useEffect(() => {
-    dispatch(fetchVersion())
-  }, [])
+    dispatch(fetchVersion());
+  }, [dispatch]);
 
-  const getInstance = useCallback((instance) => {
-    refAnimationInstance.current = instance;
-  }, []);
+  const { fire, getInstance } = useConfetti();
 
-  const makeShot = useCallback((particleRatio, opts) => {
-    refAnimationInstance.current &&
-      refAnimationInstance.current({
-        ...opts,
-        origin: { y: 0.7 },
-        particleCount: Math.floor(100 * particleRatio),
-        colors: ["#BE3092", "#166CFF", "#8ECCF3", "#88A8FB"],
-      });
-  }, []);
-
-  const fire = useCallback(() => {
-    makeShot(0.25, {
-      spread: 26,
-      startVelocity: 55,
-    });
-
-    makeShot(0.2, {
-      spread: 60,
-    });
-
-    makeShot(0.35, {
-      spread: 100,
-      decay: 0.91,
-      scalar: 0.8,
-    });
-
-    makeShot(0.1, {
-      spread: 120,
-      startVelocity: 25,
-      decay: 0.92,
-      scalar: 1.2,
-    });
-
-    makeShot(0.1, {
-      spread: 120,
-      startVelocity: 45,
-    });
-  }, [makeShot]);
-
-  const dispatch = useDispatch();
-
-  /**
-   * Update the model state every checkModelInterval milliseconds
-   * Do it only if nextModelShouldBeTraining is true
-   */
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      if (curCategory != null && nextModelShouldBeTraining) {
-        dispatch(checkModelUpdate());
-      }
-    }, checkModelInterval);
-
-    return () => clearInterval(interval);
-  }, [curCategory, checkModelInterval, nextModelShouldBeTraining]);
-
-  React.useEffect(() => {
-    setModelVersionHasBeenSet(false);
-  }, [curCategory]);
+  useNewModelNotifications({
+    curCategory,
+    modelVersion,
+    fire,
+    dispatch,
+    notifySuccess,
+    fireConfetti
+  });
 
   const handleChange = (event, newValue) => {
     setTabValue(newValue);
@@ -266,7 +173,7 @@ const WorkspaceInfo = ({
         : "";
       notifySuccess(`New labels have been added! ${createdCategoriesMessage}`, "toast-uploaded-labels");
     }
-  }, [uploadedLabels]);
+  }, [uploadedLabels, notifySuccess]);
 
   return (
     <>
@@ -314,7 +221,7 @@ const WorkspaceInfo = ({
             </h2>
             {authenticationEnabled ? (
               <Tooltip title={LOGOUT_TOOLTIP_MSG} placement="right">
-                <img onClick={logout} className={classes.logout} src={logout_icon} />
+                <img onClick={logout} className={classes.logout} src={logout_icon} alt="logout"/>
               </Tooltip>
             ) : null}
           </DrawerHeader>
@@ -495,7 +402,7 @@ const WorkspaceInfo = ({
               flexDirection: "column",
               alignItems: "start",
               padding: theme.spacing("24px", 2),
-              flexGrow: "1"
+              flexGrow: "1",
             }}
           >
             <Typography>Workspace labeled data:</Typography>
@@ -529,15 +436,14 @@ const WorkspaceInfo = ({
               </Button>
             </Stack>
           </Stack>
-          <SupportIconsBar sx={{ marginBottom: 3 }}/>
-          {systemVersion && 
+          <SupportIconsBar sx={{ marginBottom: 3 }} />
+          {systemVersion && (
             <Typography variant="body2" className={classes["system-version"]}>
               Version: {systemVersion}
-            </Typography>}
+            </Typography>
+          )}
         </Drawer>
       </Box>
     </>
   );
 };
-
-export default WorkspaceInfo;

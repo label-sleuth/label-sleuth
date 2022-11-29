@@ -1,5 +1,3 @@
-import { panelIds } from "../const";
-
 /**
  * Returns the suffix of a number in its ordinal form
  **/
@@ -17,6 +15,9 @@ export const getOrdinalSuffix = (x) => {
         break;
       case 3:
         prefix = "rd";
+        break;
+      default:
+        break;
     }
   }
   return prefix;
@@ -191,3 +192,14 @@ export const getElementIndex = (elementId) => parseInt(elementId.substring(eleme
  * @returns
  */
 export const getPageCount = (elementsPerPage, elementsCount) => Math.ceil(elementsCount / elementsPerPage);
+
+
+export const getAddedCategoriesNotificationString = (categories) => {
+  if (categories.length === 1) return categories[0];
+  else {
+    let res = "";
+    if (categories.length > 2) categories.slice(0, -2).forEach((c) => (res += `${c}, `));
+    res += categories.slice(-2, -1)[0] + " and " + categories.slice(-1)[0];
+    return res;
+  }
+};
