@@ -43,7 +43,6 @@ import {
   panelIds,
 } from "../../const";
 import { ShortcutsModal } from "./main/ShortcutsModal";
-
 import Drawer from "@mui/material/Drawer";
 import { PanelManager } from "./PanelManager";
 
@@ -53,28 +52,27 @@ import TutorialDialog from "./tutorial/TutorialDialog";
 import useBackdrop from "../../customHooks/useBackdrop";
 import { useSidebarLabelingShortcuts } from "./customHooks/useSidebarLabelingShorcuts";
 import { useWorkspaceVisited } from "./customHooks/useWorkspaceVisited";
+import { usePreloadDataset } from "./customHooks/usePreloadDataset";
 
-export default function Workspace() {
-  const workspaceId = JSON.parse(window.localStorage.getItem("workspaceId"));
+export const Workplace = () => {
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
   const modelVersion = useSelector((state) => state.workspace.modelVersion);
   const evaluationIsInProgress = useSelector((state) => state.workspace.panels[panelIds.EVALUATION].isInProgress);
   const evaluationLoading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
   const [tutorialOpen, setTutorialOpen] = useState(false);
-  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false)
-  const workspaceVisited = useWorkspaceVisited()
+  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
+  const workspaceVisited = useWorkspaceVisited();
 
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(!!!workspaceVisited);
 
   const workspaceRef = useRef();
-
-  useSidebarLabelingShortcuts({setShortcutsModalOpen});
-
-  const { openBackdrop } = useBackdrop();
-
   const dispatch = useDispatch();
 
+  // call custom hooks
+  const { openBackdrop } = useBackdrop();
+  useSidebarLabelingShortcuts({ setShortcutsModalOpen });
+  usePreloadDataset();
   useWorkspaceState();
 
   const noCategory = useMemo(() => curCategory === null, [curCategory]);
@@ -117,7 +115,7 @@ export default function Workspace() {
     <>
       <Box sx={{ display: "flex" }} style={tutorialOpen ? { filter: "blur(2px)" } : null} ref={workspaceRef}>
         <CssBaseline />
-        <WorkspaceInfo workspaceId={workspaceId} setTutorialOpen={setTutorialOpen} />
+        <WorkspaceInfo setTutorialOpen={setTutorialOpen} />
         <Box component="main" sx={{ padding: 0 }}>
           <UpperBar />
           <PanelManager />

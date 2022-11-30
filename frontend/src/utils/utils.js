@@ -17,7 +17,7 @@ export const getOrdinalSuffix = (x) => {
         prefix = "rd";
         break;
       default:
-        break;
+        {}
     }
   }
   return prefix;
@@ -202,3 +202,6 @@ export const getAddedCategoriesNotificationString = (categories) => {
     return res;
   }
 };
+export const getWorkspaceId = () => {
+  return JSON.parse(window.localStorage.getItem("workspaceId"))
+}

@@ -16,12 +16,7 @@
 import "@testing-library/jest-dom";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
-import {
-  modelUpdateExample,
-  workspacesExample,
-  datasetsExample,
-  categoriesExample,
-} from "./utils/test-utils";
+import { modelUpdateExample, workspacesExample, datasetsExample, categoriesExample } from "./utils/test-utils";
 
 jest.setTimeout(10000);
 
@@ -31,10 +26,10 @@ const handlers = [
     return res(ctx.delay(), ctx.json(models));
   }),
   rest.get(`/workspaces`, (req, res, ctx) => {
-    return res(ctx.delay(),ctx.json(workspacesExample));
+    return res(ctx.delay(), ctx.json(workspacesExample));
   }),
   rest.get(`/datasets`, (req, res, ctx) => {
-    return res(ctx.delay(),ctx.json(datasetsExample));
+    return res(ctx.delay(), ctx.json(datasetsExample));
   }),
   rest.get(`/workspace/:workspace_id/categories`, (req, res, ctx) => {
     return res(
@@ -71,7 +66,7 @@ const handlers = [
     );
   }),
   rest.put("/workspace/:workspace_id/category/:category_id", (req, res, ctx) => {
-    const {category_name, category_description} = req.body;
+    const { category_name, category_description } = req.body;
     return res(
       ctx.delay(),
       ctx.json({
@@ -86,8 +81,14 @@ const handlers = [
 
 const server = setupServer(...handlers);
 
-beforeAll(() => server.listen());
+beforeAll(() => {
+  window.localStorage.setItem("workspaceId", JSON.stringify("workspace_id"));
+  server.listen();
+});
 
 afterEach(() => server.resetHandlers());
 
-afterAll(() => server.close());
+afterAll(() => {
+  server.close();
+  window.localStorage.clear();
+});

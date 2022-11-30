@@ -16,21 +16,20 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { client } from "../../../api/client";
+import { getWorkspaceId } from "../../../utils/utils";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
-export const fetchDocuments = createAsyncThunk(
-  "workspace/fetchDocuments",
-  async (_, { getState }) => {
-    const state = getState();
-    var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
-    )}/documents`;
+export const fetchDocuments = createAsyncThunk("workspace/fetchDocuments", async (_, { getState }) => {
+  const url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/documents`;
+  const { data } = await client.get(url);
+  return data;
+});
 
-    const { data } = await client.get(url);
-    return data;
-  }
-);
+export const preloadDataset = createAsyncThunk("workspace/preloadDataset", async (_, { getState }) => {
+  const url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/load_dataset`;
+  await client.get(url);
+});
 
 export const reducers = {
   updateMainPanelElement(state, action) {

@@ -25,7 +25,7 @@ import info_icon from "../../../assets/workspace/help.svg";
 import logout_icon from "../../../assets/workspace/logout.svg";
 import workspace_icon from "../../../assets/workspace/change_catalog.svg";
 import { useDispatch, useSelector } from "react-redux";
-import { setWorkspaceId } from "../redux/DataSlice";
+import { useWorkspaceId } from "../../../customHooks/useWorkspaceId";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import Tabs from "@mui/material/Tabs";
@@ -77,7 +77,7 @@ const a11yProps = (index) => ({
  * @param {int} checkModelInterval - the interval time at which the model state is checked if an update is expected 
  * @param {boolean} fireConfetti - whether to fire confetti when a new model is available. Only disabled in tests. 
  */
-export const WorkspaceInfo = ({ workspaceId, setTutorialOpen, checkModelInterval = 5000, fireConfetti = true }) => {
+export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fireConfetti = true }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { logout } = useLogOut();
@@ -92,13 +92,14 @@ export const WorkspaceInfo = ({ workspaceId, setTutorialOpen, checkModelInterval
   const nextModelShouldBeTraining = useSelector((state) => state.workspace.nextModelShouldBeTraining);
   const lastModelFailed = useSelector((state) => state.workspace.lastModelFailed);
   const modelVersionSuffix = React.useMemo(() => getOrdinalSuffix(modelVersion), [modelVersion]);
-
+  
   const [tabValue, setTabValue] = React.useState(0);
   const [uploadLabelsDialogOpen, setUploadLabelsDialogOpen] = React.useState(false);
   const [downloadLabelsDialogOpen, setDownloadLabelsDialogOpen] = React.useState(false);
   const [downloadModelDialogOpen, setDownloadModelDialogOpen] = React.useState(false);
 
   const { authenticationEnabled } = useAuthentication();
+  const { workspaceId } = useWorkspaceId();
 
   const notifySuccess = useCallback(
     () =>
@@ -115,14 +116,8 @@ export const WorkspaceInfo = ({ workspaceId, setTutorialOpen, checkModelInterval
   useCheckModelState({ curCategory, nextModelShouldBeTraining, checkModelInterval });
 
   React.useEffect(() => {
-    if (workspaceId) {
-      dispatch(setWorkspaceId(workspaceId));
-    }
-  }, [workspaceId, dispatch]);
-
-  React.useEffect(() => {
-    dispatch(fetchVersion());
-  }, [dispatch]);
+    dispatch(fetchVersion())
+  }, [dispatch])
 
   const { fire, getInstance } = useConfetti();
 

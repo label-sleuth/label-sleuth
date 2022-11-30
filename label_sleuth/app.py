@@ -269,7 +269,7 @@ def get_workspace_info(workspace_id):
     return jsonify(res)
 
 
-@main_blueprint.route("/workspace/<workspace_id>/load_dataset", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/load_dataset", methods=['POST'])
 @login_if_required
 @validate_workspace_id
 def load_dataset(workspace_id):
@@ -280,8 +280,8 @@ def load_dataset(workspace_id):
 
     :param workspace_id:
     """
-
     executor.submit(curr_app.orchestrator_api.preload_dataset, workspace_id)
+    return jsonify({"success": True})
 
 
 

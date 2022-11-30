@@ -5,13 +5,13 @@ import { panelIds } from "../../../const";
 import { getPanelDOMKey } from "../../../utils/utils";
 import { client } from "../../../api/client";
 import { getElementIndex } from "../../../utils/utils";
+import { getWorkspaceId } from "../../../utils/utils";
 //import { current } from "@reduxjs/toolkit";
 
 /**
  * This file contains the Thunks, reducers, extraReducers and state to
  * manage the panels. The panels are the main panel and the sidebar panels
  */
-
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
 const getPanelElements = async (
@@ -25,7 +25,7 @@ const getPanelElements = async (
 
   const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory), ...extraQueryParams]);
 
-  const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/${endpoint}${queryParams}`;
+  const url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/${endpoint}${queryParams}`;
 
   const { data } = await client.get(url);
   return data;

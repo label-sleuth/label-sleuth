@@ -16,22 +16,19 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { panelIds } from "../../../const";
-import { initialState as panelsInitialState } from "./panelsSlice";
 import { client } from "../../../api/client";
+import { getWorkspaceId } from "../../../utils/utils";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
 export const createCategoryOnServer = createAsyncThunk(
   "workspace/createCategoryOnServer",
   async (request, { getState }) => {
-    const state = getState();
 
     const { category } = request;
-
     var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
+      getWorkspaceId()
     )}/category`;
-
     const response = await client.post(url, {
       category_name: category,
       category_description: "",
@@ -48,7 +45,7 @@ export const deleteCategory = createAsyncThunk(
     const state = getState();
 
     var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
+      getWorkspaceId()
     )}/category/${state.workspace.curCategory}`;
 
     const response = await client.delete(url)
@@ -62,7 +59,7 @@ export const editCategory = createAsyncThunk(
     const state = getState();
 
     var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
+      getWorkspaceId()
     )}/category/${state.workspace.curCategory}`;
 
     const body = {
@@ -77,11 +74,9 @@ export const editCategory = createAsyncThunk(
 
 export const fetchCategories = createAsyncThunk(
   "workspace/get_all_categories",
-  async (_, { getState }) => {
-    const state = getState();
-
+  async () => {
     var url = `${getWorkspace_url}/${encodeURIComponent(
-      state.workspace.workspaceId
+      getWorkspaceId()
     )}/categories`;
     
     const response = await client.get(url)

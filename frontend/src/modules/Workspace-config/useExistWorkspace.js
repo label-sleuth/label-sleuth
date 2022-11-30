@@ -15,16 +15,17 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux'
-import { deleteWorkspace, getWorkspaces, setActiveWorkspace } from './workspaceConfigSlice'
+import { deleteWorkspace, getWorkspaces } from './workspaceConfigSlice'
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { WORKSPACE_PATH } from '../../config';
 import { SELECT_WORKSPACE } from '../../const'
 import { isFulfilled } from '@reduxjs/toolkit';
+import { useWorkspaceId } from '../../customHooks/useWorkspaceId';
 
 const useExistWorkspace = (notify, toastId) => {
-
+    const { setWorkspaceId } = useWorkspaceId()
     const { workspaces } = useSelector((state) => state.workspaces)
 
     let navigate = useNavigate();
@@ -53,8 +54,7 @@ const useExistWorkspace = (notify, toastId) => {
                 })
             })
         }
-        dispatch(setActiveWorkspace(value))
-        window.localStorage.setItem('workspaceId', JSON.stringify(value));
+        setWorkspaceId(value)
         navigate(WORKSPACE_PATH)
     };
 

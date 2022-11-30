@@ -16,7 +16,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { client } from "../../../api/client";
-
 import { reducers as documentReducers, extraReducers as documentExtraReducers } from "./documentSlice";
 import {
   initialState as initialPanelsState,
@@ -31,9 +30,9 @@ import {
   reducers as modelReducers,
   extraReducers as modelExtraReducers,
 } from "./modelSlice";
-import { getCategoryQueryString, getQueryParamsString } from "../../../utils/utils";
+import { getCategoryQueryString, getQueryParamsString, getWorkspaceId } from "../../../utils/utils";
 
-export { fetchDocuments } from "./documentSlice";
+export { fetchDocuments, preloadDataset } from "./documentSlice";
 export {
   getPositivePredictions,
   getAllPositiveLabels,
@@ -50,7 +49,6 @@ export { checkModelUpdate, downloadModel } from "./modelSlice";
 export const initialState = {
   ...initialPanelsState,
   ...initialModelState,
-  workspaceId: "",
   curDocId: 0,
   curDocName: "",
   documents: [],
@@ -82,7 +80,7 @@ export const checkStatus = createAsyncThunk("workspace/get_labelling_status", as
 
   const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
 
-  const url = `${getWorkspace_url}/${encodeURIComponent(state.workspace.workspaceId)}/status${queryParams}`;
+  const url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/status${queryParams}`;
 
   const { data } = await client.get(url);
   return data;
@@ -108,9 +106,6 @@ const DataSlice = createSlice({
     ...categoryReducers,
     ...evaluationReducers,
     ...modelReducers,
-    setWorkspaceId(state, action) {
-      state.workspaceId = action.payload;
-    },
     cleanWorkplaceState(state, action) {
       return {
         ...initialState,

@@ -21,7 +21,7 @@ import { WorkspaceInfo } from "../information";
 
 test("workspace information is displayed correctly", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false}  fireConfetti={false} />,
+    <WorkspaceInfo setTutorialOpen={false}  fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -44,7 +44,7 @@ test("workspace information is displayed correctly", async () => {
 
 test("model version is updated if model changes", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} checkModelInterval={1000} fireConfetti={false} />,
+    <WorkspaceInfo setTutorialOpen={false} checkModelInterval={1000} fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -71,7 +71,7 @@ test("model version is updated if model changes", async () => {
 
 test("model related information is not displayed if there is no category selected", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false}  fireConfetti={false} />,
+    <WorkspaceInfo setTutorialOpen={false}  fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -91,7 +91,7 @@ test("model related information is not displayed if there is no category selecte
 
 test("model version ordinal: st", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false}  fireConfetti={false} />,
+    <WorkspaceInfo setTutorialOpen={false}  fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -108,7 +108,7 @@ test("model version ordinal: st", async () => {
 
 test("model version ordinal: nd", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false}  fireConfetti={false} />,
+    <WorkspaceInfo setTutorialOpen={false}  fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -124,7 +124,7 @@ test("model version ordinal: nd", async () => {
 
 test("model version ordinal: rd", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false}  fireConfetti={false} />,
+    <WorkspaceInfo setTutorialOpen={false}  fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -140,7 +140,7 @@ test("model version ordinal: rd", async () => {
 
 test("model version ordinal: th", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} fireConfetti={false} />,
+    <WorkspaceInfo setTutorialOpen={false} fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -156,7 +156,7 @@ test("model version ordinal: th", async () => {
 
 test("model error is shown if model creation failed", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} fireConfetti={false} />,
+    <WorkspaceInfo setTutorialOpen={false} fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
