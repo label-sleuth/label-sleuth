@@ -17,11 +17,11 @@ import React from "react";
 import { screen } from "@testing-library/react";
 import { renderWithProviderAndRouter } from "../../../utils/test-utils";
 import { initialState as initialWorkspaceState } from "../redux/DataSlice";
-import WorkspaceInfo from "../information/WorkspaceInfo";
+import { WorkspaceInfo } from "../information";
 
-test("test that workspace information is displayed correctly", async () => {
+test("workspace information is displayed correctly", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} />,
+    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false}  fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -35,16 +35,16 @@ test("test that workspace information is displayed correctly", async () => {
   );
 
   expect(screen.getByText(/workspace_id/i)).toBeInTheDocument();
-  expect(screen.queryByRole('tabpanel')).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: "Download", exact: true})).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /upload/i})).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /download model/i, exact: true})).toBeInTheDocument();
+  expect(screen.getByRole('tabpanel')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: "Download", exact: true})).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /upload/i})).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /download model/i, exact: true})).toBeInTheDocument();
   // TODO: add checking if username is present when authentication is enabled
 });
 
-test("test that model version is updated if model changes", async () => {
+test("model version is updated if model changes", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} checkModelInterval={1000} />,
+    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} checkModelInterval={1000} fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -69,9 +69,9 @@ test("test that model version is updated if model changes", async () => {
   ).toBeInTheDocument();
  });
 
-test("test that model related information is not displayed if there is no category selected", async () => {
+test("model related information is not displayed if there is no category selected", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} />,
+    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false}  fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -89,9 +89,9 @@ test("test that model related information is not displayed if there is no catego
   expect(screen.queryByRole('tabpanel')).not.toBeInTheDocument();
 });
 
-test("test model version ordinal: st", async () => {
+test("model version ordinal: st", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} />,
+    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false}  fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -106,9 +106,9 @@ test("test model version ordinal: st", async () => {
   expect(screen.getByText("st", { exact: true })).toBeInTheDocument();
 });
 
-test("test model version ordinal: nd", async () => {
+test("model version ordinal: nd", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} />,
+    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false}  fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -122,9 +122,9 @@ test("test model version ordinal: nd", async () => {
   expect(screen.getByText("nd", { exact: true })).toBeInTheDocument();
 });
 
-test("test model version ordinal: rd", async () => {
+test("model version ordinal: rd", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} />,
+    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false}  fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -138,9 +138,9 @@ test("test model version ordinal: rd", async () => {
   expect(screen.getByText("rd", { exact: true })).toBeInTheDocument();
 });
 
-test("test model version ordinal: th", async () => {
+test("model version ordinal: th", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} />,
+    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {
@@ -154,9 +154,9 @@ test("test model version ordinal: th", async () => {
   expect(screen.getByText("th", { exact: true })).toBeInTheDocument();
 });
 
-test("test model error is shown if model creation failed", async () => {
+test("model error is shown if model creation failed", async () => {
   renderWithProviderAndRouter(
-    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} />,
+    <WorkspaceInfo workspaceId={"workspace_id"} setTutorialOpen={false} fireConfetti={false} />,
     {
       preloadedState: {
         workspace: {

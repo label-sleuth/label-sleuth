@@ -54,6 +54,7 @@ const useBackdrop = () => {
     uploadingLabels,
     downloadingLabels,
     downloadingModel,
+    deletingCategory
   ]);
 
   return {

@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { Stack } from "@mui/material";
 import {
   SmallTitle,
@@ -38,30 +39,28 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
     }
   }, [tutorialOpen]);
 
-  const onPrimaryButtonClickDefault = () => {
+  const onPrimaryButtonClickDefault = useCallback(() => {
     if (stageIndex < 6) {
-      setStageIndex(prevIndex => prevIndex + 1);
+      setStageIndex((prevIndex) => prevIndex + 1);
     }
-  };
+  }, [stageIndex]);
 
-  const onSecondaryButtonClickDefault = () => {
+  const onSecondaryButtonClickDefault = useCallback(() => {
     if (stageIndex > 0) {
-      setStageIndex(prevIndex => prevIndex - 1);
+      setStageIndex((prevIndex) => prevIndex - 1);
     }
-  };
+  }, [stageIndex]);
 
   const stages = [
     {
       largeTitle: "Welcome to the Label Sleuth Tutorial",
       content: (
         <div>
-          Label Sleuth is a no-code system for quickly creating custom text
-          classifiers; no technical expertise required! Label Sleuth guides you
-          through the data annotation process, while automatically creating an
-          AI model in the background. This process is iterative, with the system
-          automatically improving the model as you annotate more examples. The
-          goal is to get a high-performance text classification model for your
-          use case after just a few hours of interacting with Label Sleuth.
+          Label Sleuth is a no-code system for quickly creating custom text classifiers; no technical expertise
+          required! Label Sleuth guides you through the data annotation process, while automatically creating an AI
+          model in the background. This process is iterative, with the system automatically improving the model as you
+          annotate more examples. The goal is to get a high-performance text classification model for your use case
+          after just a few hours of interacting with Label Sleuth.
         </div>
       ),
     },
@@ -70,14 +69,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div className="stage-content">
           <p>
-            Start by creating a category describing the aspect of the dataset
-            that you want to identify. Make sure that the category is
-            well-defined (i.e., it is clear to you whether a given text belongs
-            to the category or not). In Label Sleuth you will be working one
-            category at a time; a design decision that has been made to make the
-            data annotation and model building process more efficient. However,
-            you may create several categories within a workspace and switch
-            between them as needed.
+            Start by creating a category describing the aspect of the dataset that you want to identify. Make sure that
+            the category is well-defined (i.e., it is clear to you whether a given text belongs to the category or not).
+            In Label Sleuth you will be working one category at a time; a design decision that has been made to make the
+            data annotation and model building process more efficient. However, you may create several categories within
+            a workspace and switch between them as needed.
           </p>
         </div>
       ),
@@ -87,18 +83,20 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <p>
-            Once you have created a category, you can start annotating the data.
-            Annotation is a process that helps the AI model understand how to
-            identify your category. The annotation system is binary - positive
-            or negative - meaning that the text either matches the category
-            definition or not.</p><p>Annotate elements as positive or negative
-            examples by clicking on the corresponding icons shown below. Note
-            that annotations are not final; if you made a mistake, you can go
-            back and edit your annotations as many times as you like.</p><p> In the
-            common case, where positive examples in your data are rare (i.e.,
-            less than 20% of the text elements are positives), spend more time
-            on finding and annotating positive examples, as they are more
-            valuable for the AI model to identify your category.
+            Once you have created a category, you can start annotating the data. Annotation is a process that helps the
+            AI model understand how to identify your category. The annotation system is binary - positive or negative -
+            meaning that the text either matches the category definition or not.
+          </p>
+          <p>
+            Annotate elements as positive or negative examples by clicking on the corresponding icons shown below. Note
+            that annotations are not final; if you made a mistake, you can go back and edit your annotations as many
+            times as you like.
+          </p>
+          <p>
+            {" "}
+            In the common case, where positive examples in your data are rare (i.e., less than 20% of the text elements
+            are positives), spend more time on finding and annotating positive examples, as they are more valuable for
+            the AI model to identify your category.
           </p>
           <span className="positive-label element-example">
             <img src={check} alt="positive element example" />
@@ -116,13 +114,10 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <p>
-            You can try to find good examples to annotate by skimming through
-            your documents. However, a faster way to find positive examples is
-            to search for terms that they contain. While looking at the search
-            results, clicking on a text element will bring up the element in the
-            document view, allowing you to inspect its surrounding text. You can
-            annotate text elements either in the search results or in the
-            document view.
+            You can try to find good examples to annotate by skimming through your documents. However, a faster way to
+            find positive examples is to search for terms that they contain. While looking at the search results,
+            clicking on a text element will bring up the element in the document view, allowing you to inspect its
+            surrounding text. You can annotate text elements either in the search results or in the document view.
           </p>
         </div>
       ),
@@ -132,18 +127,15 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <p>
-            Initially, there is no AI model yet. Keep annotating until Label
-            Sleuth prepares a first version of the model for you. The progress
-            bar on the left shows how many annotations are missing until Label
-            Sleuth starts training a model. Whenever a new version of the model
-            is available, a confetti animation will notify you of the new model.
+            Initially, there is no AI model yet. Keep annotating until Label Sleuth prepares a first version of the
+            model for you. The progress bar on the left shows how many annotations are missing until Label Sleuth starts
+            training a model. Whenever a new version of the model is available, a confetti animation will notify you of
+            the new model.
           </p>
           <p>
-            The model makes predictions on your entire dataset. Examples it
-            predicts to be positive (i.e., belonging to the category of
-            interest) are shown with a dotted blue outline. Try to annotate some
-            of these positive predictions to provide feedback to the model on
-            where it is correct and where it is wrong.
+            The model makes predictions on your entire dataset. Examples it predicts to be positive (i.e., belonging to
+            the category of interest) are shown with a dotted blue outline. Try to annotate some of these positive
+            predictions to provide feedback to the model on where it is correct and where it is wrong.
           </p>
           <div style={{ marginTop: "20px" }}>
             <span className="prediction">
@@ -163,10 +155,9 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       content: (
         <div>
           <p>
-            Once a first version of the model is available, Label Sleuth will
-            start guiding you by suggesting which elements to annotate next.
-            Prioritize on annotating the suggested elements, to help improve the
-            AI model the most.
+            Once a first version of the model is available, Label Sleuth will start guiding you by suggesting which
+            elements to annotate next. Prioritize on annotating the suggested elements, to help improve the AI model the
+            most.
           </p>
         </div>
       ),
@@ -176,9 +167,8 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
       largeTitle: "That’s all!",
       content: (
         <p>
-          You are now ready to start annotating to create your own model! If you
-          need to revisit the tutorial, go to the top left of the screen and
-          click on
+          You are now ready to start annotating to create your own model! If you need to revisit the tutorial, go to the
+          top left of the screen and click on
           <img src={info_icon} className="tutorial-icon" alt="Open Tutorial" />
         </p>
       ),
@@ -189,28 +179,31 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
     },
   ];
 
-
   useEffect(() => {
-    Array(stages.length).fill().forEach((_,i) => {
-      new Image().src = `./assets/v3/stage_${i+1}`
-    })
-  }, [stages.length])
+    Array(stages.length)
+      .fill()
+      .forEach((_, i) => {
+        new Image().src = `./assets/v3/stage_${i + 1}`;
+      });
+  }, [stages.length]);
 
   const currentStage = stages[stageIndex];
 
-  const handleKeyPress =(event) => {
-    if (event.key === "ArrowRight") {
-      onPrimaryButtonClickDefault()
-    }
-    else if (event.key === "ArrowLeft") {
-      onSecondaryButtonClickDefault()
-    }
-  };
+  const handleKeyPress = useCallback(
+    (event) => {
+      if (event.key === "ArrowRight") {
+        onPrimaryButtonClickDefault();
+      } else if (event.key === "ArrowLeft") {
+        onSecondaryButtonClickDefault();
+      }
+    },
+    [onPrimaryButtonClickDefault, onSecondaryButtonClickDefault]
+  );
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyPress);
+    document.addEventListener("keydown", handleKeyPress);
     return () => {
-      document.removeEventListener('keydown', handleKeyPress);
+      document.removeEventListener("keydown", handleKeyPress);
     };
   }, [handleKeyPress]);
 
@@ -223,11 +216,7 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
             src={media[stageIndex]}
             alt={`media for stage ${currentStage.largeTitle}`}
           />
-          <InnerModal
-            open={tutorialOpen}
-            onClose={() => setTutorialOpen(false)}
-            hideBackdrop
-          >
+          <InnerModal open={tutorialOpen} onClose={() => setTutorialOpen(false)} hideBackdrop>
             <InnerModalContent>
               <div
                 style={{
@@ -254,10 +243,12 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
                   </IconButton>
                 </div>
                 <SmallTitle>{currentStage.smallTitle || "Tutorial"}</SmallTitle>
-                <div style={{
-                  display: "flex",
-                  flexDirection: "row"
-                  }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
                   <LargeTitle>{currentStage.largeTitle}</LargeTitle>
                   <StageCounter>{`(${stageIndex + 1} of ${stages.length})`}</StageCounter>
                 </div>
@@ -277,21 +268,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }) => {
                 }}
               >
                 {stageIndex !== 0 ? (
-                  <SecondaryButton
-                    onClick={
-                      currentStage.onSecondaryButtonClick ||
-                      onSecondaryButtonClickDefault
-                    }
-                  >
+                  <SecondaryButton onClick={currentStage.onSecondaryButtonClick || onSecondaryButtonClickDefault}>
                     {currentStage.secondaryButtonTitle || "Previous"}
                   </SecondaryButton>
                 ) : null}
-                <PrimaryButton
-                  onClick={
-                    currentStage.onPrimaryButtonClick ||
-                    onPrimaryButtonClickDefault
-                  }
-                >
+                <PrimaryButton onClick={currentStage.onPrimaryButtonClick || onPrimaryButtonClickDefault}>
                   {currentStage.primaryButtonTitle || "Next"}
                 </PrimaryButton>
               </Stack>

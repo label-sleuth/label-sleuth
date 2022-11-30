@@ -19,7 +19,7 @@ import { Stack } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import { useDispatch, useSelector } from "react-redux";
 import { setActivePanel } from "./redux/DataSlice";
-import WorkspaceInfo from "./information/WorkspaceInfo";
+import { WorkspaceInfo } from "./information";
 import UpperBar from "./upperbar/UpperBar";
 import Backdrop from "@mui/material/Backdrop";
 import CircularProgress from "@mui/material/CircularProgress";

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { clearError } from "./errorSlice";
@@ -8,27 +8,32 @@ import { clearError } from "./errorSlice";
  */
 export const useErrorHandler = () => {
   const toastRef = useRef(null);
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   const errorMessage = useSelector((state) => state.error.errorMessage);
 
   const toastId = "toast-error";
 
-  const toastOptions = {
-    autoClose: 5000,
-    type: toast.TYPE.ERROR,
-    toastId: toastId
-  };
+  const toastOptions = useMemo(
+    () => ({
+      autoClose: 5000,
+      type: toast.TYPE.ERROR,
+      toastId: toastId,
+    }),
+    []
+  );
 
-  const notify = (message) => {
-    toastRef.current = toast(message, toastOptions);
-  };
-
+  const notify = useCallback(
+    (message) => {
+      toastRef.current = toast(message, toastOptions);
+    },
+    [toastOptions]
+  );
 
   useEffect(() => {
     if (errorMessage) {
       notify(errorMessage);
-      dispatch(clearError())
+      dispatch(clearError());
     }
-  }, [errorMessage]);
+  }, [errorMessage, dispatch, notify]);
 };

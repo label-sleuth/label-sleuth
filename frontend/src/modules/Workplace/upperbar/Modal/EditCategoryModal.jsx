@@ -27,7 +27,6 @@ import {
   REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES,
   WRONG_INPUT_NAME_BAD_CHARACTER,
 } from "../../../../const";
-import { fetchCategories } from "../../redux/DataSlice";
 import classes from "./index.module.css";
 import { notify } from "../../../../utils/notification";
 
@@ -67,14 +66,13 @@ export default function EditCategoryModal({ open, setOpen }) {
         newCategoryName: newCategoryName.trim(),
         newCategoryDescription: "Category description",
       })
-    )
-      .then(() => {
-        setOpen(false);
-        notify("The category name has been successfully edited", {
-          type: "success",
-          autoClose: 5000,
-        }); 
+    ).then(() => {
+      setOpen(false);
+      notify("The category name has been successfully edited", {
+        type: "success",
+        autoClose: 5000,
       });
+    });
   };
 
   const handleCategoryNameChange = (e) => {
@@ -99,15 +97,10 @@ export default function EditCategoryModal({ open, setOpen }) {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
         disableRestoreFocus
-        onKeyDown={e => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <Box sx={style}>
-          <Typography
-            id="modal-modal-title"
-            variant="h6"
-            component="h2"
-            sx={{ marginBottom: 2 }}
-          >
+          <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ marginBottom: 2 }}>
             {"Edit category"}
           </Typography>
           <Box
@@ -130,13 +123,9 @@ export default function EditCategoryModal({ open, setOpen }) {
             />
             <Button
               onClick={onSubmit}
-              className={
-                categoryNameError || !newCategoryName
-                  ? classes["btn-disabled"]
-                  : classes.btn
-              }
+              className={categoryNameError || !newCategoryName ? classes["btn-disabled"] : classes.btn}
               sx={{ marginLeft: 3 }}
-              disabled={categoryNameError !== '' || newCategoryName === '' }
+              disabled={categoryNameError !== "" || newCategoryName === ""}
             >
               Edit
             </Button>

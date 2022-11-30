@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, Typography, IconButton } from "@mui/material"
+import { Card, CardContent, Typography, IconButton } from "@mui/material"
 import CloseIcon from '@mui/icons-material/Close';
 import classes from "./UpperBar.module.css";
 

@@ -30,8 +30,6 @@ import { useMemo, useCallback } from "react";
 import { useFocusMainPanelElement } from "../customHooks/useFocusMainPanelElement";
 import { setfocusedSidebarElementByIndex } from "../redux/DataSlice";
 import { Tooltip } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { Keyboard } from "../../../components/Keyboard";
 
 const text_colors = {

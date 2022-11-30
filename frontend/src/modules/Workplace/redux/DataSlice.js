@@ -32,7 +32,6 @@ import {
   extraReducers as modelExtraReducers,
 } from "./modelSlice";
 import { getCategoryQueryString, getQueryParamsString } from "../../../utils/utils";
-import { setActiveWorkspace } from "../../Workspace-config/workspaceConfigSlice";
 
 export { fetchDocuments } from "./documentSlice";
 export {
@@ -142,7 +141,6 @@ const DataSlice = createSlice({
     },
     [fetchVersion.fulfilled]: (state, action) => {
       const { version } = action.payload;
-      console.log(action.payload);
       if (version !== null) {
         state.systemVersion = version;
       }
