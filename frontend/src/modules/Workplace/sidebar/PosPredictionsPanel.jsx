@@ -14,39 +14,38 @@
 */
 
 import { Box } from "@mui/material";
-import React from "react";
+import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { curCategoryNameSelector } from "../redux/DataSlice";
 import { panelIds } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
-import { CustomPagination } from "../../../components/pagination/CustomPagination";
+import { ArrowsOnlyPagination } from "../../../components/pagination/ArrowsOnlyPagination";
 
 const PosPredictionsPanel = () => {
   const curCategoryName = useSelector(curCategoryNameSelector);
 
-  const { hitCount } = useSelector(
-    (state) => state.workspace.panels[panelIds.POSITIVE_PREDICTIONS]
-  );
+  const { hitCount } = useSelector((state) => state.workspace.panels[panelIds.POSITIVE_PREDICTIONS]);
 
-  const loading = useSelector(
-    (state) => state.workspace.panels.loading[panelIds.POSITIVE_PREDICTIONS]
-  );
+  const loading = useSelector((state) => state.workspace.panels.loading[panelIds.POSITIVE_PREDICTIONS]);
 
-  const sidebarPanelElementsPerPage = useSelector(
-    (state) => state.featureFlags.sidebarPanelElementsPerPage
-  );
+  const sidebarPanelElementsPerPage = useSelector((state) => state.featureFlags.sidebarPanelElementsPerPage);
 
-  const {
-    currentContentData,
-    currentPage,
-    onPageChange,
-    isPaginationRequired,
-  } = usePanelPagination({
-    elementsPerPage: sidebarPanelElementsPerPage,
-    panelId: panelIds.POSITIVE_PREDICTIONS,
-    modelAvailableRequired: true,
-  });
+  const { currentContentData, currentPage, isPaginationRequired, previousPage, nextPage, pageCount } =
+    usePanelPagination({
+      elementsPerPage: sidebarPanelElementsPerPage,
+      panelId: panelIds.POSITIVE_PREDICTIONS,
+      modelAvailableRequired: true,
+    });
+
+  const nonEmptyResultsMessage = useMemo(() => {
+    const startingMessage = `The following examples are predicted by the system to belong to the category '${curCategoryName}'.`;
+    const firstElementIndex = sidebarPanelElementsPerPage * (currentPage - 1);
+    const finalMessage = ` Displaying predictions ${firstElementIndex + 1} to ${
+      currentPage === pageCount ? hitCount : firstElementIndex + sidebarPanelElementsPerPage
+    } out of ${hitCount}.`;
+    return startingMessage + finalMessage;
+  }, [curCategoryName, hitCount, sidebarPanelElementsPerPage, currentPage, pageCount]);
 
   return (
     <Box>
@@ -54,18 +53,19 @@ const PosPredictionsPanel = () => {
       <ElementList
         elements={currentContentData}
         loading={loading}
-        nonEmptyResultsMessage={`The following examples are predicted by the system to be related to the category '${curCategoryName}'`}
+        nonEmptyResultsMessage={nonEmptyResultsMessage}
         emptyResultsMessage={""}
         isPaginationRequired={isPaginationRequired}
         elementsTopPadding={2}
       />
-      <CustomPagination
+      <ArrowsOnlyPagination
         currentContentData={currentContentData}
         hitCount={hitCount}
         sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
         currentPage={currentPage}
-        onPageChange={onPageChange}
         isPaginationRequired={isPaginationRequired}
+        previousPage={previousPage}
+        nextPage={nextPage}
       />
     </Box>
   );

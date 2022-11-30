@@ -317,7 +317,7 @@ export const extraReducers = {
     state.panels.loading[panelIds.POSITIVE_PREDICTIONS] = true;
   },
   [getPositivePredictions.fulfilled]: (state, action) => {
-    const { elements: unparsedElements, hit_count: hitCount } = action.payload;
+    const { elements: unparsedElements, total_count: hitCount } = action.payload;
     const { elements } = parseElements(unparsedElements, state.curCategory);
     state.panels.loading[panelIds.POSITIVE_PREDICTIONS] = false;
     state.panels[panelIds.POSITIVE_PREDICTIONS].elements = elements;
