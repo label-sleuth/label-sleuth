@@ -193,7 +193,6 @@ export const getElementIndex = (elementId) => parseInt(elementId.substring(eleme
  */
 export const getPageCount = (elementsPerPage, elementsCount) => Math.ceil(elementsCount / elementsPerPage);
 
-
 export const getAddedCategoriesNotificationString = (categories) => {
   if (categories.length === 1) return categories[0];
   else {
