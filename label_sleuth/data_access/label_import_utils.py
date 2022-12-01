@@ -45,7 +45,7 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
         -> Dict[str, Dict[str, Dict[str, Label]]]:
     logging.warning("Currently label metadata and label_type are ignored")
     # replace punctuation with underscores in category names
-    punctuation = string.punctuation.replace("'", "") + string.whitespace
+    punctuation = string.punctuation.replace("'", "")
     labels_df_to_import[DisplayFields.category_name] = labels_df_to_import[DisplayFields.category_name].apply(str)
     labels_df_to_import[DisplayFields.category_name] = labels_df_to_import[DisplayFields.category_name].apply(
         lambda x: x.translate(x.maketrans(punctuation, '_' * len(punctuation))))
