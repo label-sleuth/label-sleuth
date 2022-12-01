@@ -28,7 +28,7 @@ export const fetchDocuments = createAsyncThunk("workspace/fetchDocuments", async
 
 export const preloadDataset = createAsyncThunk("workspace/preloadDataset", async (_, { getState }) => {
   const url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/load_dataset`;
-  await client.get(url);
+  await client.post(url);
 });
 
 export const reducers = {
