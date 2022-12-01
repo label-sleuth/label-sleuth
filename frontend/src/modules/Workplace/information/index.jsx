@@ -101,17 +101,13 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
   const { authenticationEnabled } = useAuthentication();
   const { workspaceId } = useWorkspaceId();
 
-  const notifySuccess = useCallback(
-    () =>
-      (message, toastId, autoClose = false) => {
-        toast(message, {
-          autoClose: autoClose,
-          type: toast.TYPE.SUCCESS,
-          toastId: toastId,
-        });
-      },
-    []
-  );
+  const notifySuccess = useCallback((message, toastId, autoClose = false) => {
+    toast(message, {
+      autoClose: autoClose,
+      type: toast.TYPE.SUCCESS,
+      toastId: toastId,
+    });
+  }, []);
 
   useCheckModelState({ curCategory, nextModelShouldBeTraining, checkModelInterval });
 
