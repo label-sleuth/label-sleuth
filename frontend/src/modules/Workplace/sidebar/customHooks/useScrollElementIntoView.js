@@ -25,6 +25,10 @@ const useScrollMainPanelElementIntoView = () => {
 
   const { elements } = useSelector((state) => state.workspace.panels[panelIds.MAIN_PANEL]);
   const elementKeys = useMemo(() => (elements ? Object.keys(elements) : null), [elements]);
+  const firstElementId = useMemo(
+    () => (elementKeys !== null && elementKeys.length > 0 ? elementKeys[0] : null),
+    [elementKeys]
+  );
   const previousElementKeys = usePrevious(elementKeys);
   const [elementKeysState, setElementKeysState] = useState(elementKeys);
 
@@ -43,14 +47,13 @@ const useScrollMainPanelElementIntoView = () => {
     if (focusedElementDOMKey !== null) {
       element = document.getElementById(focusedElementDOMKey);
       scrollIntoElementView(element);
-    } else if (elements && Object.keys(elements).length > 0) {
+    } else if (firstElementId) {
       // if there is no focused element, scroll into the first element of the list instead
-      const firstElement = Object.values(elements)[0];
-      const firstElementDOMKey = getPanelDOMKey(firstElement.id, panelIds.MAIN_PANEL);
+      const firstElementDOMKey = getPanelDOMKey(firstElementId, panelIds.MAIN_PANEL);
       element = document.getElementById(firstElementDOMKey);
       scrollIntoElementView(element, false);
     }
-  }, [elements, focusedElementDOMKey, hackyToggle, elementKeysState, dispatch]);
+  }, [firstElementId, focusedElementDOMKey, hackyToggle, elementKeysState, dispatch]);
 };
 
 export default useScrollMainPanelElementIntoView;
