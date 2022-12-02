@@ -73,16 +73,14 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
   const { handlePosLabelState, handleNegLabelState } = useLabelState(updateCounterOnLabeling);
 
   const handlePositiveLabelAction = (e) => {
+    // the following line prevents handleElementClick from being executed
     e.stopPropagation();
-    // focus this element on the sidebar when labeled
-    dispatch(setfocusedSidebarElementByIndex(index));
     handlePosLabelState(element);
   };
 
   const handleNegativeLabelAction = (e) => {
+    // the following line prevents handleElementClick from being executed
     e.stopPropagation();
-    // focus this element on the sidebar when labeled
-    dispatch(setfocusedSidebarElementByIndex(index));
     handleNegLabelState(element);
   };
 
