@@ -86,9 +86,6 @@ export const workspacesSlice = createSlice({
   name: "workspaces",
   initialState,
   reducers: {
-    setActiveWorkspace: (state, action) => {
-      state.active_workspace = action.payload;
-    },
     clearState: (state) => {
       state.isDocumentAdded = false;
       state.isWorkspaceAdded = false;

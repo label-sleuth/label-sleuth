@@ -29,16 +29,19 @@ import useExistWorkspace from './useExistWorkspace';
 import workspace_logo from "../../assets/workspace-config/tag--edit.svg"
 import { toast } from 'react-toastify';
 import useBackdrop from '../../customHooks/useBackdrop';
+import { useWorkspaceId } from '../../customHooks/useWorkspaceId';
 
 const WorkspaceConfig = () => {
   const dispatch = useDispatch()
   const { logout } = useLogOut()
   const {openBackdrop} = useBackdrop()
+  const { setWorkspaceId } = useWorkspaceId();
 
   useEffect(() => {
     dispatch(getDatasets())
     dispatch(cleanWorkplaceState())
-  }, [dispatch])
+    setWorkspaceId(null);
+  }, [setWorkspaceId, dispatch])
 
   const toastId = "workspace-config-toast-id";
   function notify(message, func) {

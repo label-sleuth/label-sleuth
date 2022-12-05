@@ -1,7 +1,7 @@
-import { useLocalStorage } from "usehooks-ts";
+import { useSessionStorage } from "usehooks-ts";
 
 export const useWorkspaceId = () => {
-  const [workspaceId, setWorkspaceId] = useLocalStorage("workspaceId");
+  const [workspaceId, setWorkspaceId] = useSessionStorage("workspaceId");
 
   return {
     workspaceId,
