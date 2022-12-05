@@ -203,5 +203,5 @@ export const getAddedCategoriesNotificationString = (categories) => {
   }
 };
 export const getWorkspaceId = () => {
-  return JSON.parse(window.localStorage.getItem("workspaceId"))
-}
+  return JSON.parse(window.sessionStorage.getItem("workspaceId"));
+};

@@ -15,7 +15,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { clearState, createWorkspace, getDatasets, setActiveWorkspace } from "./workspaceConfigSlice";
+import { clearState, createWorkspace, getDatasets } from "./workspaceConfigSlice";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,6 +25,7 @@ import {
   WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES,
   REGEX_LETTER_NUMBERS_UNDERSCORE,
 } from "../../const";
+import { useWorkspaceId } from "../../customHooks/useWorkspaceId";
 
 const useNewWorkspace = (notify, toastId) => {
   const dispatch = useDispatch();
@@ -35,6 +36,7 @@ const useNewWorkspace = (notify, toastId) => {
   const [textValue, setTextValue] = useState("");
   const [newWorkspaceNameError, setNewWorkspaceNameError] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
+  const { setWorkspaceId } = useWorkspaceId();
 
   const updateToast = useCallback(
     (message, type) => {
@@ -70,14 +72,13 @@ const useNewWorkspace = (notify, toastId) => {
 
   useEffect(() => {
     if (isWorkspaceAdded) {
-      dispatch(setActiveWorkspace(textValue));
-      window.localStorage.setItem("workspaceId", JSON.stringify(textValue));
+      setWorkspaceId(textValue);
       navigate("/workspace");
     }
     return function cleanup() {
       dispatch(clearState());
     };
-  }, [isWorkspaceAdded, dispatch, textValue, navigate]);
+  }, [isWorkspaceAdded, textValue, setWorkspaceId, dispatch, navigate]);
 
   const handleNewWorkspace = () => {
     if (!selectedValue || !textValue) {

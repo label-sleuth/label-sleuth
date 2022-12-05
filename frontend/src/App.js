@@ -31,10 +31,12 @@ import { CircularProgress } from "@mui/material";
 import useAuthentication from "./modules/Login/customHooks/useAuthentication";
 import { fetchFeatureFlags } from "./featureFlags/featureFlagsSlice";
 import { useErrorHandler } from "./error/useErrorHandler";
+import { useWorkspaceId } from "./customHooks/useWorkspaceId";
 
 const AppRoutes = () => {
   const { authenticated, authenticationEnabled } = useAuthentication();
-  
+  const { workspaceId } = useWorkspaceId()
+
   return (
     <Routes>
       <Route
@@ -61,9 +63,13 @@ const AppRoutes = () => {
         path={WORKSPACE_PATH}
         exact
         element={
-          <PrivateRoute>
-            <Workplace />
-          </PrivateRoute>
+          workspaceId ? (
+            <PrivateRoute>
+              <Workplace />
+            </PrivateRoute>
+          ) : (
+            <Navigate to={WORKSPACE_CONFIG_PATH} />
+          )
         }
       />
       <Route

@@ -82,7 +82,7 @@ const handlers = [
 const server = setupServer(...handlers);
 
 beforeAll(() => {
-  window.localStorage.setItem("workspaceId", JSON.stringify("workspace_id"));
+  window.sessionStorage.setItem("workspaceId", JSON.stringify("workspace_id"));
   server.listen();
 });
 

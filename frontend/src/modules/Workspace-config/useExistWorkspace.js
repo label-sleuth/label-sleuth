@@ -25,8 +25,8 @@ import { isFulfilled } from '@reduxjs/toolkit';
 import { useWorkspaceId } from '../../customHooks/useWorkspaceId';
 
 const useExistWorkspace = (notify, toastId) => {
-    const { setWorkspaceId } = useWorkspaceId()
-    const { workspaces } = useSelector((state) => state.workspaces)
+    const { setWorkspaceId } = useWorkspaceId();
+    const { workspaces } = useSelector((state) => state.workspaces);
 
     let navigate = useNavigate();
     const dispatch = useDispatch()
