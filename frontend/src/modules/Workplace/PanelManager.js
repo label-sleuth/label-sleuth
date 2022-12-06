@@ -13,13 +13,12 @@
     limitations under the License.
 */
 
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Box } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
 import { RIGHT_DRAWER_INITIAL_WIDTH, ACTIONS_DRAWER_WIDTH, panelIds } from "../../const";
 import MainPanel from "./main/MainPanel";
 import { useSelector } from "react-redux";
-
 import AllPositiveLabelsPanel from "./sidebar/AllPositiveLabelsPanel";
 import SuspiciousLabelsPanel from "./sidebar/SuspiciousLabelsPanel";
 import ContradictingLabelsPanel from "./sidebar/ContradictingLabelsPanel";
@@ -27,10 +26,11 @@ import EvaluationPanel from "./sidebar/EvaluationPanel";
 import SearchPanel from "./sidebar/SearchPanel";
 import LabelNextPanel from "./sidebar/LabelNextPanel";
 import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
-import useTogglePanel from "./sidebar/customHooks/useTogglePanel";
-import useResize from "./customHooks/useResize";
-import { useUpdateSearch } from "./sidebar/customHooks/useUpdateSearch";
-import { useFocusSidebarElement } from "./customHooks/useFocusSidebarElement";
+
+import useTogglePanel from "../../customHooks/useTogglePanel";
+import useResize from "../../customHooks/useResize";
+import { useUpdateSearch } from "../../customHooks/useUpdateSearch";
+import { useFocusSidebarElement } from "../../customHooks/useFocusSidebarElement";
 
 const ResizableDiv = ({onMouseDown, rightDrawerWidth}) => {
   return (

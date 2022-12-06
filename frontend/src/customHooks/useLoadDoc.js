@@ -15,7 +15,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import "react-toastify/dist/ReactToastify.css";
-import { addDocuments } from "./workspaceConfigSlice";
+import { addDocuments } from "../modules/Workspace-config/workspaceConfigSlice";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -25,7 +25,7 @@ import {
   WRONG_INPUT_NAME_LENGTH,
   WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES,
   REGEX_LETTER_NUMBERS_UNDERSCORE,
-} from "../../const";
+} from "../const";
 
 const useLoadDoc = (notify, toastId) => {
   const workspaces = useSelector((state) => state.workspaces);

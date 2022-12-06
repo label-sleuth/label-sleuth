@@ -15,9 +15,9 @@
 
 import { useCallback, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { resetSearchResults, setSearchInput, resetLastSearchString } from "../../redux/DataSlice";
-import { panelIds } from "../../../../const";
-import { useFetchPanelElements } from "../../customHooks/useFetchPanelElements";
+import { resetSearchResults, setSearchInput, resetLastSearchString } from "../modules/Workplace/redux/DataSlice";
+import { panelIds } from "../const";
+import { useFetchPanelElements } from "./useFetchPanelElements";
 
 /**
  * Custom hook that manages the state of the search sidebal panel.
@@ -26,6 +26,7 @@ import { useFetchPanelElements } from "../../customHooks/useFetchPanelElements";
  */
 export const useUpdateSearch = (textInputRef) => {
   const uploadedLabels = useSelector((state) => state.workspace.uploadedLabels);
+  
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const lastSearchString = useSelector((state) => state.workspace.panels[panelIds.SEARCH].lastSearchString);
 

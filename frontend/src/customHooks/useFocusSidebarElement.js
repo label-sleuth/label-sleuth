@@ -15,8 +15,8 @@
 
 import { useSelector } from "react-redux";
 import { useEffect, useMemo } from "react";
-import { getPanelDOMKey, scrollIntoElementView } from "../../../utils/utils";
-import { focusedSidebarElementSelector } from "../redux/panelsSlice";
+import { getPanelDOMKey, scrollIntoElementView } from "../utils/utils";
+import { focusedSidebarElementSelector } from "../modules/Workplace/redux/panelsSlice";
 
 export const useFocusSidebarElement = () => {
   const { index: focusedSidebarElementIndex } = useSelector((state) => state.workspace.panels.focusedSidebarElement);

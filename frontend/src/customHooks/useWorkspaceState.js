@@ -21,10 +21,10 @@ import {
   cleanEvaluationState,
   cleanUploadedLabels,
   clearMainPanelFocusedElement,
-} from "../redux/DataSlice";
+} from "../modules/Workplace/redux/DataSlice";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { panelIds } from "../../../const";
+import { panelIds } from "../const";
 import { useFetchPanelElements } from "./useFetchPanelElements";
 
 /**

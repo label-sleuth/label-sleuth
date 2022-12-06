@@ -1,3 +1,4 @@
+
 /*
     Copyright (c) 2022 IBM Corp.
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +16,8 @@
 
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { panelIds } from "../../../../const";
-import { setActivePanel } from "../../redux/DataSlice";
+import { panelIds } from "../const";
+import { setActivePanel } from "../modules/Workplace/redux/DataSlice";
 
 /**
  * Opens the sidebar Drawer if any panel is selected

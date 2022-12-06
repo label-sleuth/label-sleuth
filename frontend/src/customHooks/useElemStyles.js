@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import classes from "../Element.module.css";
+import classes from "../modules/Workplace/main/Element.module.css";
 import { useSelector } from "react-redux";
 import { useMemo } from "react";
 /**

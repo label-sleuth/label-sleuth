@@ -14,10 +14,10 @@
 */
 
 import { useEffect, useMemo, useState } from "react";
-import { getPanelDOMKey, scrollIntoElementView } from "../../../../utils/utils";
+import { getPanelDOMKey, scrollIntoElementView } from "../utils/utils";
 import { useDispatch, useSelector } from "react-redux";
-import { panelIds } from "../../../../const";
-import { usePrevious } from "../../../../customHooks/usePrevious";
+import { panelIds } from "../const";
+import { usePrevious } from "./usePrevious";
 /**
  * This custom hook manage the behaviour of
  * scrolling into an element in the main panel

@@ -13,7 +13,6 @@
     limitations under the License.
 */
 
-import React from 'react';
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
 import ControlledSelect from "../../components/Dropdown"
@@ -22,7 +21,7 @@ import Box from '@mui/material/Box';
 import ButtonLight from "../../components/buttons/ButtonLight"
 import 'react-toastify/dist/ReactToastify.css';
 
-const WorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options_data, handleNewWorkspace, handleChange, handleClick, workspaces, value, options_workspace }) => {
+const WorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options, handleNewWorkspace, handleChange, handleClick, workspaces, value, options_workspace }) => {
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
