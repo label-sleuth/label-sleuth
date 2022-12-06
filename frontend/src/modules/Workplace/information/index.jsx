@@ -52,7 +52,7 @@ import {
 } from "./FileTransferLabels/TransferLabelsDialog";
 import { getOrdinalSuffix } from "../../../utils/utils";
 import { ModelErrorAlert } from "./ModelErrorAlert";
-import { fetchVersion } from "../redux/DataSlice";
+import { fetchVersion } from "../redux";
 import { SupportIconsBar } from "../../../components/SupportIconsBar";
 import { DrawerHeader } from "./DrawerHeader";
 import { Divider } from "./Divider";

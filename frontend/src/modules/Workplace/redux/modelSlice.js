@@ -14,13 +14,13 @@
 */
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getCategoryQueryString, getQueryParamsString } from "../../../utils/utils";
+import { } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { panelIds } from "../../../const";
 import { client } from "../../../api/client";
 import fileDownload from "js-file-download";
-import { curCategoryNameSelector } from "./DataSlice";
-import { getWorkspaceId } from "../../../utils/utils";
+import { curCategoryNameSelector } from ".";
+import { getWorkspaceId, getCategoryQueryString, getQueryParamsString } from "../../../utils/utils";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 

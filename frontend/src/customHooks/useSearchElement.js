@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { setSearchInput } from "../modules/Workplace/redux/DataSlice";
+import { setSearchInput } from "../modules/Workplace/redux";
 import { useDispatch, useSelector } from "react-redux";
 import { panelIds } from "../const";
 import { useFetchPanelElements } from "./useFetchPanelElements";

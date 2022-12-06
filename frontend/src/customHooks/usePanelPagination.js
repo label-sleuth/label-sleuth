@@ -16,7 +16,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "../components/pagination/pagination.css";
-import { setPage } from "../modules/Workplace/redux/DataSlice";
+import { setPage } from "../modules/Workplace/redux";
 import { useFetchPanelElements } from "./useFetchPanelElements";
 import { getPageCount } from "../utils/utils";
 import { elementsInitialState } from "../modules/Workplace/redux/panelsSlice";

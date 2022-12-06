@@ -18,7 +18,7 @@ import Box from "@mui/material/Box";
 import { Stack } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import { useDispatch, useSelector } from "react-redux";
-import { setActivePanel } from "./redux/DataSlice";
+import { setActivePanel } from "./redux";
 import { WorkspaceInfo } from "./information";
 import UpperBar from "./upperbar/UpperBar";
 import Backdrop from "@mui/material/Backdrop";

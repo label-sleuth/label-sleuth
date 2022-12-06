@@ -18,7 +18,7 @@ import { useSelector, useDispatch } from "react-redux";
 import "../components/pagination/pagination.css";
 import { panelIds } from "../const";
 import usePanelPagination from "./usePanelPagination";
-import { clearMainPanelFocusedElement } from "../modules/Workplace/redux/DataSlice";
+import { clearMainPanelFocusedElement } from "../modules/Workplace/redux";
 
 const useMainPagination = (elementsPerPage) => {
   const isDocLoaded = useSelector((state) => state.workspace.isDocLoaded);

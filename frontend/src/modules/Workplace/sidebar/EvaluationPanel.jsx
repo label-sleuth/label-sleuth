@@ -18,7 +18,7 @@ import { Box, Button, Stack, Divider } from "@mui/material";
 import classes from "./index.module.css";
 import { useSelector, useDispatch } from "react-redux";
 import Element from "./Element";
-import { checkStatus, startEvaluation, getEvaluationResults, cancelEvaluation } from "../redux/DataSlice";
+import { checkStatus, startEvaluation, getEvaluationResults, cancelEvaluation } from "../redux";
 import { ButtonGroup } from "@mui/material";
 import {
   START_EVALUATION_MSG,

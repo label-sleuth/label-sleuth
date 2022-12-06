@@ -21,7 +21,7 @@ import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
 import { useFetchPanelElements } from "../../../customHooks/useFetchPanelElements";
-import { setRefetch } from "../redux/DataSlice";
+import { setRefetch } from "../redux";
 
 const AllPositiveLabelsPanel = () => {
   const { hitCount } = useSelector(
