@@ -26,7 +26,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { panelIds } from "../../../const";
 import { getPanelDOMKey } from "../../../utils/utils";
 import { useMemo, useCallback } from "react";
-import { setfocusedSidebarElementByIndex } from "../redux/DataSlice";
+import { setfocusedSidebarElementByIndex } from "../redux";
 import { Tooltip } from "@mui/material";
 import { Keyboard } from "../../../components/Keyboard";
 import { useFocusMainPanelElement } from "../../../customHooks/useFocusMainPanelElement";

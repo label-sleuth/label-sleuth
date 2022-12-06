@@ -15,7 +15,7 @@
 
 import { useCallback, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { resetSearchResults, setSearchInput, resetLastSearchString } from "../modules/Workplace/redux/DataSlice";
+import { resetSearchResults, setSearchInput, resetLastSearchString } from "../modules/Workplace/redux";
 import { panelIds } from "../const";
 import { useFetchPanelElements } from "./useFetchPanelElements";
 

@@ -16,7 +16,7 @@
 import { Box } from "@mui/material";
 import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { curCategoryNameSelector } from "../redux/DataSlice";
+import { curCategoryNameSelector } from "../redux";
 import { panelIds } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";

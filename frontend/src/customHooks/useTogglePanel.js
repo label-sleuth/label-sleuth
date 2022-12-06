@@ -17,7 +17,7 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { panelIds } from "../const";
-import { setActivePanel } from "../modules/Workplace/redux/DataSlice";
+import { setActivePanel } from "../modules/Workplace/redux";
 
 /**
  * Opens the sidebar Drawer if any panel is selected

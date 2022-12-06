@@ -21,7 +21,7 @@ import {
   focusPreviousSidebarElement,
   focusFirstSidebarElement,
   focusLastSidebarElement,
-} from "../modules/Workplace/redux/DataSlice";
+} from "../modules/Workplace/redux";
 import { focusedSidebarElementSelector } from "../modules/Workplace/redux/panelsSlice";
 import { KeyboardKeysEnum, focusNextOnLabelingPanels, panelIds } from "../const";
 

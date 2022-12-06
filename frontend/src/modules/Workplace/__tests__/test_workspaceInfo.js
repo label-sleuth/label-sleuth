@@ -16,7 +16,7 @@
 import React from "react";
 import { screen } from "@testing-library/react";
 import { renderWithProviderAndRouter } from "../../../utils/test-utils";
-import { initialState as initialWorkspaceState } from "../redux/DataSlice";
+import { initialState as initialWorkspaceState } from "../redux";
 import { WorkspaceInfo } from "../information";
 
 test("workspace information is displayed correctly", async () => {

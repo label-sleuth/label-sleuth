@@ -16,7 +16,7 @@
 import React from "react";
 import { screen, fireEvent } from "@testing-library/react";
 import { renderWithProviderAndRouter, createCategory } from "../../../utils/test-utils";
-import { initialState as initialWorkspaceState } from "../redux/DataSlice";
+import { initialState as initialWorkspaceState } from "../redux";
 import UpperBar from '../upperbar/UpperBar'
 import { categoriesExample } from '../../../utils/test-utils'
 

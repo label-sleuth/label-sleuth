@@ -20,7 +20,7 @@ import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
 import TextField from "@mui/material/TextField";
 import { useDispatch } from "react-redux";
-import { editCategory } from "../../redux/DataSlice";
+import { editCategory } from "../../redux";
 import {
   CREATE_NEW_CATEGORY_PLACEHOLDER_MSG,
   WRONG_INPUT_NAME_LENGTH,

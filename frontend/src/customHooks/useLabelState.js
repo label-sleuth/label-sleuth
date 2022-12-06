@@ -19,7 +19,7 @@ import {
   checkStatus,
   updateElementOptimistically,
   reverseOptimisticUpdate,
-} from "../modules/Workplace/redux/DataSlice";
+} from "../modules/Workplace/redux";
 import { useSelector, useDispatch } from "react-redux";
 import { getNewLabelState, getBooleanLabel } from "../utils/utils";
 import { isRejected } from "@reduxjs/toolkit";
