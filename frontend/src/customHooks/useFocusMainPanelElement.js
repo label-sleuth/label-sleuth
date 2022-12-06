@@ -15,7 +15,7 @@
 
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { changeCurrentDocument, setFocusedMainPanelElement } from "../redux/DataSlice";
+import { changeCurrentDocument, setFocusedMainPanelElement } from "../modules/Workplace/redux/DataSlice";
 
 export const useFocusMainPanelElement = () => {
   const dispatch = useDispatch();

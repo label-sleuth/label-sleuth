@@ -14,7 +14,7 @@ limitations under the License.
 */
 
 import { useCallback } from "react";
-import { ACTIONS_DRAWER_WIDTH, RIGHT_DRAWER_MIN_WIDTH, RIGHT_DRAWER_MAX_WIDTH } from "../../../const";
+import { ACTIONS_DRAWER_WIDTH, RIGHT_DRAWER_MIN_WIDTH, RIGHT_DRAWER_MAX_WIDTH } from "../const";
 
 let isResizing = false;
 

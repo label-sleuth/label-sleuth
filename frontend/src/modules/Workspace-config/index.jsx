@@ -22,10 +22,10 @@ import NewWorkspace from "./NewWorkspaceForm"
 import LoadDocument from "./LoadDocumentForm"
 import ButtonAppBar from "../../components/bars/upperBar/ButtonAppBar"
 import { useDispatch } from 'react-redux'
-import useLoadDoc from './useLoadDoc';
-import useNewWorkspace from './useNewWorkspace';
+import useLoadDoc from '../../customHooks/useLoadDoc';
+import useNewWorkspace from '../../customHooks/useNewWorkspace';
 import useLogOut from '../../customHooks/useLogOut';
-import useExistWorkspace from './useExistWorkspace';
+import useExistWorkspace from '../../customHooks/useExistWorkspace';
 import workspace_logo from "../../assets/workspace-config/tag--edit.svg"
 import { toast } from 'react-toastify';
 import useBackdrop from '../../customHooks/useBackdrop';

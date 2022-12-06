@@ -14,7 +14,7 @@
 */
 
 import { useDispatch, useSelector } from "react-redux";
-import { changeCurrentDocument, clearMainPanelFocusedElement } from "../../redux/DataSlice";
+import { changeCurrentDocument, clearMainPanelFocusedElement } from "../modules/Workplace/redux/DataSlice";
 
 const useFetchPrevNextDoc = () => {
   const curDocId = useSelector((state) => state.workspace.curDocId);

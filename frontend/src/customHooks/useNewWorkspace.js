@@ -15,7 +15,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { clearState, createWorkspace, getDatasets } from "./workspaceConfigSlice";
+import { clearState, createWorkspace, getDatasets } from "../modules/Workspace-config/workspaceConfigSlice";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,8 +24,8 @@ import {
   WRONG_INPUT_NAME_LENGTH,
   WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES,
   REGEX_LETTER_NUMBERS_UNDERSCORE,
-} from "../../const";
-import { useWorkspaceId } from "../../customHooks/useWorkspaceId";
+} from "../const";
+import { useWorkspaceId } from "./useWorkspaceId";
 
 const useNewWorkspace = (notify, toastId) => {
   const dispatch = useDispatch();

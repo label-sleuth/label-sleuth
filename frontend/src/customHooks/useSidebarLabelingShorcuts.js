@@ -16,20 +16,19 @@
 import { useCallback, useMemo, useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEventListener } from "usehooks-ts";
-import useLabelState from "./useLabelState";
 import {
   focusNextSidebarElement,
   focusPreviousSidebarElement,
   focusFirstSidebarElement,
   focusLastSidebarElement,
-} from "../redux/DataSlice";
-import usePanelPagination from "../../../customHooks/usePanelPagination";
-import { panelIds } from "../../../const";
-import { usePrevious } from "../../../customHooks/usePrevious";
-import { useFocusMainPanelElement } from "../customHooks/useFocusMainPanelElement";
-import { focusNextOnLabelingPanels } from "../../../const";
-import { focusedSidebarElementSelector } from "../redux/panelsSlice";
-import { KeyboardKeysEnum } from "../../../const";
+} from "../modules/Workplace/redux/DataSlice";
+import { focusedSidebarElementSelector } from "../modules/Workplace/redux/panelsSlice";
+import { KeyboardKeysEnum, focusNextOnLabelingPanels, panelIds } from "../const";
+
+import { usePrevious } from "./usePrevious";
+import usePanelPagination from "./usePanelPagination";
+import useLabelState from "./useLabelState";
+import { useFocusMainPanelElement } from "./useFocusMainPanelElement";
 
 /**
  * Custom hook for adding shortcuts to the

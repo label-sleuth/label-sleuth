@@ -13,16 +13,15 @@
     limitations under the License.
 */
 
-import LoginForm from "../Login/LoginForm"
-import classes from "./login.module.css"
 
-const Login = () => {
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { preloadDataset } from "../modules/Workplace/redux/documentSlice";
 
-    return (
-        <div className={classes.container}>
-            <LoginForm />
-        </div>
-    )
+export const usePreloadDataset = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(preloadDataset());
+  }, [dispatch]);
 };
-
-export default Login;

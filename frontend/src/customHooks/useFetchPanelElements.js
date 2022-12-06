@@ -14,15 +14,15 @@
 */
 
 import { useDispatch, useSelector } from "react-redux";
-import { panelIds } from "../../../const";
-import { fetchDocumentElements } from "../redux/panelsSlice";
-import { searchKeywords } from "../redux/panelsSlice";
-import { getElementToLabel } from "../redux/panelsSlice";
-import { getPositivePredictions } from "../redux/panelsSlice";
-import { getAllPositiveLabels } from "../redux/panelsSlice";
-import { getSuspiciousLabels } from "../redux/panelsSlice";
-import { getContradictingLabels } from "../redux/panelsSlice";
-import { getEvaluationElements } from "../redux/evaluationSlice";
+import { panelIds } from "../const";
+import { fetchDocumentElements } from "../modules/Workplace/redux/panelsSlice";
+import { searchKeywords } from "../modules/Workplace/redux/panelsSlice";
+import { getElementToLabel } from "../modules/Workplace/redux/panelsSlice";
+import { getPositivePredictions } from "../modules/Workplace/redux/panelsSlice";
+import { getAllPositiveLabels } from "../modules/Workplace/redux/panelsSlice";
+import { getSuspiciousLabels } from "../modules/Workplace/redux/panelsSlice";
+import { getContradictingLabels } from "../modules/Workplace/redux/panelsSlice";
+import { getEvaluationElements } from "../modules/Workplace/redux/evaluationSlice";
 import { useCallback, useMemo } from "react";
 
 const getFetchActionByPanelId = (panelId) => {

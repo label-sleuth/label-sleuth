@@ -15,10 +15,10 @@
 
 import { useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import "../../../../components/pagination/pagination.css";
-import { panelIds } from "../../../../const";
-import usePanelPagination from "../../../../customHooks/usePanelPagination";
-import { clearMainPanelFocusedElement } from "../../redux/DataSlice";
+import "../components/pagination/pagination.css";
+import { panelIds } from "../const";
+import usePanelPagination from "./usePanelPagination";
+import { clearMainPanelFocusedElement } from "../modules/Workplace/redux/DataSlice";
 
 const useMainPagination = (elementsPerPage) => {
   const isDocLoaded = useSelector((state) => state.workspace.isDocLoaded);

@@ -45,14 +45,14 @@ import {
 import { ShortcutsModal } from "./main/ShortcutsModal";
 import Drawer from "@mui/material/Drawer";
 import { PanelManager } from "./PanelManager";
-
-import useWorkspaceState from "./customHooks/useWorkspaceState";
 import Tutorial from "./tutorial";
 import TutorialDialog from "./tutorial/TutorialDialog";
+
 import useBackdrop from "../../customHooks/useBackdrop";
-import { useSidebarLabelingShortcuts } from "./customHooks/useSidebarLabelingShorcuts";
-import { useWorkspaceVisited } from "./customHooks/useWorkspaceVisited";
-import { usePreloadDataset } from "./customHooks/usePreloadDataset";
+import useWorkspaceState from "../../customHooks/useWorkspaceState";
+import { useSidebarLabelingShortcuts } from "../../customHooks/useSidebarLabelingShorcuts";
+import { useWorkspaceVisited } from "../../customHooks/useWorkspaceVisited";
+import { usePreloadDataset } from "../../customHooks/usePreloadDataset"
 
 export const Workplace = () => {
   const curCategory = useSelector((state) => state.workspace.curCategory);

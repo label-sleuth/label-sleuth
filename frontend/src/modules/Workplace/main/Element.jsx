@@ -21,10 +21,11 @@ import check from '../Asset/check.svg';
 import crossing from '../Asset/crossing.svg';
 import cross from '../Asset/cross.svg';
 import classes from './Element.module.css';
-import useLabelState from '../customHooks/useLabelState';
-import useElemStyles from "./customHooks/useElemStyles";
 import { getPanelDOMKey } from "../../../utils/utils";
 import { panelIds } from "../../../const";
+
+import useLabelState from "../../../customHooks/useLabelState";
+import useElemStyles from "../../../customHooks/useElemStyles";
 
 export default function Element({ element }) {
     

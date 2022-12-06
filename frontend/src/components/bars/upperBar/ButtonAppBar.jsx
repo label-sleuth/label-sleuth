@@ -19,7 +19,7 @@ import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
 import sleuth_logo from "../../../assets/sleuth_logo_white.svg";
-import useAuthentication from "../../../modules/Login/customHooks/useAuthentication";
+import useAuthentication from "../../../customHooks/useAuthentication";
 import { SupportIconsBar } from "../../SupportIconsBar";
 import { Divider } from "@mui/material";
 

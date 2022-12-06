@@ -25,13 +25,11 @@ import info_icon from "../../../assets/workspace/help.svg";
 import logout_icon from "../../../assets/workspace/logout.svg";
 import workspace_icon from "../../../assets/workspace/change_catalog.svg";
 import { useDispatch, useSelector } from "react-redux";
-import { useWorkspaceId } from "../../../customHooks/useWorkspaceId";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { Tooltip } from "@mui/material";
-import useLogOut from "../../../customHooks/useLogOut";
 import { useNavigate } from "react-router-dom";
 import classes from "./WorkspaceInfo.module.css";
 import { WORKSPACE_CONFIG_PATH } from "../../../config";
@@ -53,7 +51,6 @@ import {
   DownloadModelDialog,
 } from "./FileTransferLabels/TransferLabelsDialog";
 import { getOrdinalSuffix } from "../../../utils/utils";
-import useAuthentication from "../../Login/customHooks/useAuthentication";
 import { ModelErrorAlert } from "./ModelErrorAlert";
 import { fetchVersion } from "../redux/DataSlice";
 import { SupportIconsBar } from "../../../components/SupportIconsBar";
@@ -61,9 +58,13 @@ import { DrawerHeader } from "./DrawerHeader";
 import { Divider } from "./Divider";
 import { StatsContainer } from "./StatsContainer";
 import { TabPanel } from "./TabPanel";
-import { useCheckModelState } from "./customHooks/useCheckModelState";
-import { useConfetti } from "./customHooks/useConfetti";
-import { useNewModelNotifications } from "./customHooks/useNewModelNotifications";
+
+import { useCheckModelState } from "../../../customHooks/useCheckModelState";
+import { useConfetti } from "../../../customHooks/useConfetti";
+import { useNewModelNotifications } from "../../../customHooks/useNewModelNotifications";
+import { useWorkspaceId } from "../../../customHooks/useWorkspaceId";
+import useLogOut from "../../../customHooks/useLogOut";
+import useAuthentication from "../../../customHooks/useAuthentication";
 
 const a11yProps = (index) => ({
     id: `simple-tab-${index}`,

@@ -13,17 +13,14 @@
     limitations under the License.
 */
 
-import * as React from "react";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Element from "./Element";
 import { useSelector } from "react-redux";
 import "../../../components/pagination/pagination.css";
-import useMainPagination from "./customHooks/useMainPagination";
 import classes from "./MainPanel.module.css";
 import left_icon from "../../../assets/workspace/doc_left.svg";
 import right_icon from "../../../assets/workspace/doc_right.svg";
-import useFetchPrevNextDoc from "./customHooks/useFetchPrevNextDoc";
 import Tooltip from "@mui/material/Tooltip";
 import {
   PREV_DOC_TOOLTIP_MSG,
@@ -34,8 +31,10 @@ import {
   panelIds,
 } from "../../../const";
 import { getPanelDOMKey } from "../../../utils/utils";
-import useScrollMainPanelElementIntoView from "../sidebar/customHooks/useScrollElementIntoView";
+import useScrollMainPanelElementIntoView from "../../../customHooks/useScrollElementIntoView";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
+import useFetchPrevNextDoc from "../../../customHooks/useFetchPrevNextDoc";
+import useMainPagination from "../../../customHooks/useMainPagination";
 
 const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(({ theme, open, rightDrawerWidth }) => ({
   position: "fixed",

@@ -13,10 +13,10 @@
     limitations under the License.
 */
 
-import { setSearchInput } from "../../redux/DataSlice";
+import { setSearchInput } from "../modules/Workplace/redux/DataSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { panelIds } from "../../../../const";
-import { useFetchPanelElements } from "../../customHooks/useFetchPanelElements";
+import { panelIds } from "../const";
+import { useFetchPanelElements } from "./useFetchPanelElements";
 
 const useSearchElement = ({textInputRef, resetPagination}) => {
   const searchInput = useSelector((state) => state.workspace.panels[panelIds.SEARCH].input);

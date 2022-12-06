@@ -1,5 +1,5 @@
 import React from "react";
-import { usePrevious } from "../../../../customHooks/usePrevious";
+import { usePrevious } from "./usePrevious";
 
 /**
  * Custom hook for triggering notifications when a new model is available 

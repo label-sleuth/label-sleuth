@@ -19,9 +19,9 @@ import {
   checkStatus,
   updateElementOptimistically,
   reverseOptimisticUpdate,
-} from "../redux/DataSlice";
+} from "../modules/Workplace/redux/DataSlice";
 import { useSelector, useDispatch } from "react-redux";
-import { getNewLabelState, getBooleanLabel } from "../../../utils/utils";
+import { getNewLabelState, getBooleanLabel } from "../utils/utils";
 import { isRejected } from "@reduxjs/toolkit";
 /**
  * This custom hook is responsible for managing the labels states

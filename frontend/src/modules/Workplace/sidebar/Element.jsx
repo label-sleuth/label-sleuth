@@ -24,13 +24,13 @@ import classes from "./index.module.css";
 import { Box, Typography } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { panelIds } from "../../../const";
-import useLabelState from "../customHooks/useLabelState";
 import { getPanelDOMKey } from "../../../utils/utils";
 import { useMemo, useCallback } from "react";
-import { useFocusMainPanelElement } from "../customHooks/useFocusMainPanelElement";
 import { setfocusedSidebarElementByIndex } from "../redux/DataSlice";
 import { Tooltip } from "@mui/material";
 import { Keyboard } from "../../../components/Keyboard";
+import { useFocusMainPanelElement } from "../../../customHooks/useFocusMainPanelElement";
+import useLabelState from "../../../customHooks/useLabelState";
 
 const text_colors = {
   pos: { color: "#3092ab" },

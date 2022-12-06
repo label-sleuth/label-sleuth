@@ -21,7 +21,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { forwardRef } from "react";
 import { useSelector } from "react-redux";
 import { panelIds } from "../../../const";
-import useSearchElement from "./customHooks/useSearchElement";
+import useSearchElement from "../../../customHooks/useSearchElement";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { ElementList } from "./components/commonComponents";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";

@@ -28,7 +28,7 @@ import { useDispatch, useSelector } from "react-redux";
 import theme from "./theme.jsx";
 import { Backdrop } from "@mui/material";
 import { CircularProgress } from "@mui/material";
-import useAuthentication from "./modules/Login/customHooks/useAuthentication";
+import useAuthentication from "./customHooks/useAuthentication";
 import { fetchFeatureFlags } from "./featureFlags/featureFlagsSlice";
 import { useErrorHandler } from "./error/useErrorHandler";
 import { useWorkspaceId } from "./customHooks/useWorkspaceId";
