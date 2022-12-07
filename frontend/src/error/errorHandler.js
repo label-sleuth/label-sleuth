@@ -19,16 +19,14 @@
  * @returns the error message
  */
 export const getErrorMessage = (err) => {
-  const defaultErrorMessage = "Something went wrong";
-  let errorMessage;
+  const defaultErrorMessage =
+    "Somethig went wrong. Please ask your system administrator to share the logs by creating an issue on Github or sending a message via Slack.";
   if (err.message) {
     try {
       const errorJSON = JSON.parse(err.message);
-      errorMessage =
-        "error" in errorJSON ? errorJSON.error : "title" in errorJSON ? errorJSON.title : defaultErrorMessage;
+      return "error" in errorJSON ? errorJSON.error : "title" in errorJSON ? errorJSON.title : defaultErrorMessage;
     } catch (error) {
-      errorMessage = defaultErrorMessage;
+      return defaultErrorMessage;
     }
   }
-  return errorMessage;
 };
