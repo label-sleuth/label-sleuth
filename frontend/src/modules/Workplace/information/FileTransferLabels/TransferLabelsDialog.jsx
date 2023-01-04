@@ -45,6 +45,7 @@ import { curCategoryNameSelector } from "../../redux";
 import { blue } from "@mui/material/colors";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+
 export const UploadLabelsDialog = ({ open, setOpen }) => {
   const dispatch = useDispatch();
 

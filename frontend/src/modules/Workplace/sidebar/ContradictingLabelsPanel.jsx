@@ -41,7 +41,7 @@ const ContradictingLabelsPanel = () => {
   });
 
   const { elements, pairs, hitCount } = useSelector(
-    (state) => state.workspace.panels[panelIds.CONTRADICTING_LABELS]
+    (state) => state.workspace.panels.panels[panelIds.CONTRADICTING_LABELS]
   );
   const loading = useSelector(
     (state) => state.workspace.panels.loading[panelIds.CONTRADICTING_LABELS]

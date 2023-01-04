@@ -18,7 +18,7 @@ import { Box, Button, Stack, Divider } from "@mui/material";
 import classes from "./index.module.css";
 import { useSelector, useDispatch } from "react-redux";
 import Element from "./Element";
-import { checkStatus, startEvaluation, getEvaluationResults, cancelEvaluation } from "../redux";
+import { checkStatus, getEvaluationElements, getEvaluationResults, cancelEvaluation } from "../redux";
 import { ButtonGroup } from "@mui/material";
 import {
   START_EVALUATION_MSG,
@@ -35,7 +35,7 @@ const EvaluationPanel = () => {
   const loading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
 
   const { elements, initialElements, isInProgress, lastScore, scoreModelVersion } = useSelector(
-    (state) => state.workspace.panels[panelIds.EVALUATION]
+    (state) => state.workspace.panels.panels[panelIds.EVALUATION]
   );
 
   const currentContentData = React.useMemo(() => elements && Object.values(elements), [elements]);
@@ -59,7 +59,7 @@ const EvaluationPanel = () => {
   }, [isInProgress, evaluationElementsCount, currentContentData]);
 
   const onStartEvaluation = () => {
-    dispatch(startEvaluation());
+    dispatch(getEvaluationElements());
   };
 
   const calculateChangedCountAndDispatch = (action) => {

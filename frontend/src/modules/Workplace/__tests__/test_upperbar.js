@@ -20,7 +20,7 @@ import { initialState as initialWorkspaceState } from "../redux";
 import UpperBar from '../upperbar/UpperBar'
 import { categoriesExample } from '../../../utils/test-utils'
 
-test("test that category action butttons are present", async () => {
+test("category action butttons are present", async () => {
     renderWithProviderAndRouter(
       <UpperBar />,
       {
@@ -34,12 +34,12 @@ test("test that category action butttons are present", async () => {
       }
     );
   
-    expect(screen.queryByRole('button', { name: /create/i})).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /delete/i})).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /edit/i})).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create/i})).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /delete/i})).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /edit/i})).toBeInTheDocument();
 });
 
-test("test that delete and edit category buttons are not present if no category is selected", async () => {
+test("delete and edit category buttons are not present if no category is selected", async () => {
   renderWithProviderAndRouter(
     <UpperBar />,
     {
@@ -59,7 +59,7 @@ test("test that delete and edit category buttons are not present if no category 
 
 
 
-test("test create new category validation", async () => {
+test("create new category validation", async () => {
   renderWithProviderAndRouter(
     <UpperBar />,
     {
@@ -91,7 +91,7 @@ test("test create new category validation", async () => {
   expect(button).toBeDisabled()
 });
 
-test("test create new category flow", async () => {
+test("create new category flow", async () => {
   renderWithProviderAndRouter(
     <UpperBar />,
     {
@@ -120,8 +120,8 @@ test("test create new category flow", async () => {
   expect(screen.getByLabelText("test_category")).toBeInTheDocument()
 });
 
-test("test delete category flow", async () => {
-  const r = renderWithProviderAndRouter(
+test("delete category flow", async () => {
+  renderWithProviderAndRouter(
     <UpperBar />,
     {
       preloadedState: {
@@ -144,15 +144,15 @@ test("test delete category flow", async () => {
   
   expect(await screen.findByText(/The category test_category has been deleted/)).toBeInTheDocument()
   expect(screen.queryByText(/Are you sure you want to delete the category 'ad'?/i)).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /delete/i}));
+  expect(screen.queryByRole('button', { name: /delete/i})).not.toBeInTheDocument();;
   expect(screen.queryByRole('button', { name: /edit/i})).not.toBeInTheDocument();
 
   await createCategory()
   // TODO: check that the category is not present in the dropdown and that no category is selected
 });
 
-test("test edit category flow", async () => {
-  const r = renderWithProviderAndRouter(
+test("edit category flow", async () => {
+  renderWithProviderAndRouter(
     <UpperBar />,
     {
       preloadedState: {

@@ -52,7 +52,7 @@ const ResizableDiv = ({onMouseDown, rightDrawerWidth}) => {
 /**
  * Manages the panels, that is, the sidebar panels and the main panels.
  */
-export const PanelManager = ({ handleKeyEvent }) => {
+export const PanelManager = () => {
   const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
 
   const [open, setOpen] = useState(false);
@@ -74,7 +74,7 @@ export const PanelManager = ({ handleKeyEvent }) => {
 
   return (
     <Box auto>
-      <MainPanel handleKeyEvent={handleKeyEvent} rightDrawerWidth={rightDrawerWidth} open={open} />
+      <MainPanel rightDrawerWidth={rightDrawerWidth} open={open} />
       {open && <ResizableDiv onMouseDown={handleMouseDown} rightDrawerWidth={rightDrawerWidth}/>}
       <Drawer
         sx={{

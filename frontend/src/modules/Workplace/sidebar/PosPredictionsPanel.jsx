@@ -25,7 +25,7 @@ import { ArrowsOnlyPagination } from "../../../components/pagination/ArrowsOnlyP
 const PosPredictionsPanel = () => {
   const curCategoryName = useSelector(curCategoryNameSelector);
 
-  const { hitCount } = useSelector((state) => state.workspace.panels[panelIds.POSITIVE_PREDICTIONS]);
+  const { hitCount } = useSelector((state) => state.workspace.panels.panels[panelIds.POSITIVE_PREDICTIONS]);
 
   const loading = useSelector((state) => state.workspace.panels.loading[panelIds.POSITIVE_PREDICTIONS]);
 

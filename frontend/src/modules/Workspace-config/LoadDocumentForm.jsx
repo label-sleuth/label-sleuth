@@ -27,7 +27,7 @@ import { UPLOAD_NEW_DATASET_MSG, UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG, UPLOAD_
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 
-const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, textFieldRef, comboInputTextRef, openBackdrop, datasetNameError }) => {
+const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInputChange, textFieldRef, comboInputTextRef, backdropOpen, datasetNameError }) => {
 
     return (
         <Box className={classes.wrapper} style={{ borderRight: 'none' }}>
@@ -85,7 +85,7 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
             </div>
             <Backdrop
         sx={{ color: '#fff' }}
-        open={openBackdrop}
+        open={backdropOpen}
       >
         <CircularProgress color="inherit" />
       </Backdrop>

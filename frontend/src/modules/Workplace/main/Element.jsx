@@ -25,18 +25,18 @@ import { getPanelDOMKey } from "../../../utils/utils";
 import { panelIds } from "../../../const";
 
 import useLabelState from "../../../customHooks/useLabelState";
-import useElemStyles from "../../../customHooks/useElemStyles";
+import { useElemStyles } from "../../../customHooks/useElemStyles";
 
 export default function Element({ element }) {
     
     const { id, text, userLabel, modelPrediction } = element
 
     const curCategory = useSelector(state => state.workspace.curCategory) 
-    const evaluationIsInProgress = useSelector(state => state.workspace.panels[panelIds.EVALUATION].isInProgress) 
+    const evaluationIsInProgress = useSelector(state => state.workspace.panels.panels[panelIds.EVALUATION].isInProgress) 
     const evaluationLoading = useSelector(state => state.workspace.panels.loading[panelIds.EVALUATION])
     const { handlePosLabelState, handleNegLabelState } = useLabelState()
     const elementDOMId = useMemo(() => getPanelDOMKey(id, panelIds.MAIN_PANEL), [id])
-    const elemStyleClasses = useElemStyles(elementDOMId, modelPrediction, userLabel)
+    const elemStyleClasses = useElemStyles({elementDOMId, modelPrediction, userLabel})
     
     return (
         curCategory  === null ?
