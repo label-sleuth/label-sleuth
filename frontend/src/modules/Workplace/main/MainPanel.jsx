@@ -31,10 +31,10 @@ import {
   panelIds,
 } from "../../../const";
 import { getPanelDOMKey } from "../../../utils/utils";
-import useScrollMainPanelElementIntoView from "../../../customHooks/useScrollElementIntoView";
+import { useScrollMainPanelElementIntoView } from "../../../customHooks/useScrollElementIntoView";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
-import useFetchPrevNextDoc from "../../../customHooks/useFetchPrevNextDoc";
-import useMainPagination from "../../../customHooks/useMainPagination";
+import { useFetchPrevNextDoc } from "../../../customHooks/useFetchPrevNextDoc";
+import { useMainPagination } from "../../../customHooks/useMainPagination";
 
 const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(({ theme, open, rightDrawerWidth }) => ({
   position: "fixed",
@@ -52,7 +52,7 @@ const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(({ th
 
 const MainPanel = ({ open, rightDrawerWidth }) => {
   const curDocName = useSelector((state) => state.workspace.curDocName);
-  const curDocId = useSelector((state) => state.workspace.curDocId);
+  const curDocIndex = useSelector((state) => state.workspace.curDocIndex);
   const documents = useSelector((state) => state.workspace.documents);
   const mainPanelElementsPerPage = useSelector((state) => state.featureFlags.mainPanelElementsPerPage);
 
@@ -72,18 +72,18 @@ const MainPanel = ({ open, rightDrawerWidth }) => {
       >
         <div className={classes.doc_header}>
           <Tooltip
-            title={curDocId !== 0 ? PREV_DOC_TOOLTIP_MSG : ""}
+            title={curDocIndex !== 0 ? PREV_DOC_TOOLTIP_MSG : ""}
             placement="right"
             componentsProps={{
               tooltip: {
                 sx: {
-                  bgcolor: curDocId !== 0 ? "common.black" : "transparent",
+                  bgcolor: curDocIndex !== 0 ? "common.black" : "transparent",
                 },
               },
             }}
           >
             <button
-              className={curDocId === 0 ? classes["doc_button_disabled"] : classes["doc_button"]}
+              className={curDocIndex === 0 ? classes["doc_button_disabled"] : classes["doc_button"]}
               onClick={handleFetchPrevDoc}
             >
               <img src={left_icon} alt={"previous document"} />
@@ -94,18 +94,18 @@ const MainPanel = ({ open, rightDrawerWidth }) => {
             <em>Text Entries: {hitCount ?? 0}</em>
           </div>
           <Tooltip
-            title={documents.length - 1 !== curDocId ? NEXT_DOC_TOOLTIP_MSG : ""}
+            title={documents.length - 1 !== curDocIndex ? NEXT_DOC_TOOLTIP_MSG : ""}
             placement="left"
             componentsProps={{
               tooltip: {
                 sx: {
-                  bgcolor: documents.length - 1 !== curDocId ? "common.black" : "transparent",
+                  bgcolor: documents.length - 1 !== curDocIndex ? "common.black" : "transparent",
                 },
               },
             }}
           >
             <button
-              className={documents.length - 1 === curDocId ? classes["doc_button_disabled"] : classes["doc_button"]}
+              className={documents.length - 1 === curDocIndex ? classes["doc_button_disabled"] : classes["doc_button"]}
               onClick={handleFetchNextDoc}
             >
               <img src={right_icon} alt={"next document"} />

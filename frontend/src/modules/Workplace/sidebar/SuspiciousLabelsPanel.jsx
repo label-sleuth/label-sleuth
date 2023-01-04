@@ -23,7 +23,7 @@ import { CustomPagination } from "../../../components/pagination/CustomPaginatio
 
 const SuspiciousLabelsPanel = () => {
   const { hitCount } = useSelector(
-    (state) => state.workspace.panels[panelIds.SUSPICIOUS_LABELS]
+    (state) => state.workspace.panels.panels[panelIds.SUSPICIOUS_LABELS]
   );
 
   const loading = useSelector(

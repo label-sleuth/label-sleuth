@@ -25,11 +25,11 @@ import { setRefetch } from "../redux";
 
 const AllPositiveLabelsPanel = () => {
   const { hitCount } = useSelector(
-    (state) => state.workspace.panels[panelIds.POSITIVE_LABELS]
+    (state) => state.workspace.panels.panels[panelIds.POSITIVE_LABELS]
   );
 
   const refetch = useSelector(
-    (state) => state.workspace.panels.refetch
+    (state) => state.workspace.panels.panels.refetch
   )
 
   const loading = useSelector(

@@ -96,7 +96,7 @@ const SearchInput = ({
 
 const SearchPanel = forwardRef(({ clearSearchInput }, textInputRef) => {
   const { input, hitCountWithDuplicates, hitCount } = useSelector(
-    (state) => state.workspace.panels[panelIds.SEARCH]
+    (state) => state.workspace.panels.panels[panelIds.SEARCH]
   );
 
   const sidebarPanelElementsPerPage = useSelector(

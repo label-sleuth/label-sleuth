@@ -64,7 +64,7 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
   const { id, docId, text, userLabel, modelPrediction } = element;
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
-  const searchInput = useSelector((state) => state.workspace.panels[panelIds.SEARCH].input);
+  const searchInput = useSelector((state) => state.workspace.panels.panels[panelIds.SEARCH].input);
   const { index: focusedSidebarElementIndex } = useSelector((state) => state.workspace.panels.focusedSidebarElement);
 
   const isElementFocused = useMemo(() => index === focusedSidebarElementIndex, [index, focusedSidebarElementIndex]);

@@ -13,12 +13,11 @@
     limitations under the License.
 */
 
-import React from "react";
 import { screen } from "@testing-library/react";
 import { renderWithProviderAndRouter } from "../../../utils/test-utils";
 import WorkspaceConfig from '../index';
 
-test("test that workspace configuration is displayed correctly", async () => {
+test("workspace configuration is displayed correctly", async () => {
     renderWithProviderAndRouter(
       <WorkspaceConfig/>
     )

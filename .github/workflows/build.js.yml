@@ -40,7 +40,7 @@ jobs:
         working-directory: ./frontend
 
       - name: Run js tests
-        run: npm run tests --if-present
+        run: npm run test --if-present
         working-directory: ./frontend
 
       - name: Build static web site

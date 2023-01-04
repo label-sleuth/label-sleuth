@@ -15,7 +15,7 @@
 
 import { Navigate } from 'react-router-dom';
 import { LOGIN_PATH } from '../config';
-import useAuthentication from '../customHooks/useAuthentication';
+import { useAuthentication } from '../customHooks/useAuthentication';
 
 export function PrivateRoute({ redirectPath = LOGIN_PATH, children, }) {
   const {authenticationEnabled, authenticated} = useAuthentication();

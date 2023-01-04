@@ -23,7 +23,7 @@ import { CustomPagination } from "../../../components/pagination/CustomPaginatio
 
 const LabelNextPanel = () => {
   const { hitCount } = useSelector(
-    (state) => state.workspace.panels[panelIds.LABEL_NEXT]
+    (state) => state.workspace.panels.panels[panelIds.LABEL_NEXT]
   );
 
   const loading = useSelector(
