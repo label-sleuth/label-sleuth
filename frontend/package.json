@@ -46,7 +46,7 @@
   },
   "scripts": {
     "start": "env-cmd -f .env.development react-scripts start",
-    "build": "tsc",
+    "build": "env-cmd -f .env.production react-scripts build",
     "build:production.auth": "env-cmd -f .env.production react-scripts build",
     "test": "react-scripts test --verbose --transformIgnorePatterns \"node_modules/(?!@codemirror)/\""
   },
