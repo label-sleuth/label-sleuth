@@ -484,7 +484,7 @@ class OrchestratorApi:
 
         try:
             logging.info(f"Successfully inferred all data for workspace_id '{workspace_id}'"
-                         f" category id'{category_id}' iteration {iteration_index}, "
+                         f" category id '{category_id}' iteration {iteration_index}, "
                          f"calculating statistics and updating active learning recommendations")
 
             self._calculate_iteration_statistics(workspace_id, category_id, iteration_index, predictions)
@@ -539,7 +539,7 @@ class OrchestratorApi:
             num_identical = sum(x.label == y.label for x, y in zip(predictions, previous_model_predictions))
             post_train_statistics["changed_fraction"] = (dataset_size - num_identical) / dataset_size
 
-        logging.info(f"post train measurements for iteration {iteration_index}: {post_train_statistics}")
+        logging.info(f"workspace {workspace_id} category {category_id} post train measurements for iteration {iteration_index}: {post_train_statistics}")
         self.orchestrator_state.add_iteration_statistics(workspace_id, category_id, iteration_index,
                                                          post_train_statistics)
 
