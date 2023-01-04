@@ -438,7 +438,7 @@ class OrchestratorApi:
         try:
             model_id = future.result()
         except Exception:
-            logging.error(f"Train failed. Marking workspace '{workspace_id}' category id '{category_id}' "
+            logging.exception(f"Train failed. Marking workspace '{workspace_id}' category id '{category_id}' "
                           f"iteration {iteration_index} as error")
             self.orchestrator_state.update_model_status(workspace_id=workspace_id, category_id=category_id,
                                                         iteration_index=iteration_index, new_status=ModelStatus.ERROR)
