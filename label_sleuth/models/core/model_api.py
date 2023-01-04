@@ -201,15 +201,16 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
 
             if len(indices_not_in_cache) > 0:  # i.e., some items aren't in the in-memory cache
                 logging.info(f"{len(indices_not_in_cache)} not in cache, loading model prediction store from disk "
-                             f"in {self.__class__.__name__}")
+                             f"in {self.__class__.__name__} for model {model_id}")
                 model_predictions_store = self._load_model_prediction_store_to_cache(model_id)
-                logging.info(f"Done loading model prediction store from disk in {self.__class__.__name__}")
+                logging.info(f"done loading model prediction store from disk in {self.__class__.__name__} for "
+                             f"model id {model_id}")
                 for idx in indices_not_in_cache:
                     infer_res[idx] = self.cache.get(in_memory_cache_keys[idx])
                 indices_not_in_cache = [i for i, v in enumerate(infer_res) if v is None]
 
             if len(indices_not_in_cache) > 0:  # i.e., some items aren't in the in-memory cache or the prediction store
-                logging.info(f"{len(items_to_infer) - len(indices_not_in_cache)} already in cache, running inference "
+                logging.info(f"model id {model_id}, {len(items_to_infer) - len(indices_not_in_cache)} already in cache, running inference "
                              f"for {len(indices_not_in_cache)} values (cache size {self.cache.get_current_size()}) "
                              f"in {self.__class__.__name__}")
                 missing_items_to_infer = [items_to_infer[idx] for idx in indices_not_in_cache]
