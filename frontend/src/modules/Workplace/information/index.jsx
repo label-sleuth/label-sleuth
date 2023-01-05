@@ -110,7 +110,7 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
     });
   }, []);
 
-  useCheckModelState({ curCategory, nextModelShouldBeTraining, checkModelInterval });
+  useCheckModelState({ curCategory, checkModelInterval });
 
   React.useEffect(() => {
     dispatch(fetchVersion())

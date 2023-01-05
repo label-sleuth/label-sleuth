@@ -30,6 +30,10 @@ export const initialState = {
   // tells if there is a model training. The word 'should' is used because the value is calculated
   // and it does not always come from the backend
   nextModelShouldBeTraining: false,
+  // the following field is used to test whether a model is being trained or not when 
+  // the category changes. This covers the case where the labels that have been imported
+  // for a category don't make the progress bar full but a model is being trained anyways
+  modelStatusCheckAttempts: 0, 
   downloadingModel: false,
   lastModelFailed: false,
 };
@@ -66,7 +70,14 @@ export const downloadModel = createAsyncThunk("workspace/downloadModel", async (
   fileDownload(data, fileName);
 });
 
-export const reducers = {};
+export const reducers = {
+  decreaseModelStatusCheckAttempts(state, action) {
+    state.modelStatusCheckAttempts--;
+  },
+  resetModelStatusCheckAttempts(state, action) {
+    state.modelStatusCheckAttempts = 3;
+  }
+};
 
 export const extraReducers = {
   [checkModelUpdate.fulfilled]: (state, action) => {
