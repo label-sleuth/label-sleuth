@@ -13,25 +13,30 @@
     limitations under the License.
 */
 
-
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { checkModelUpdate } from "../modules/Workplace/redux/modelSlice";
+import { decreaseModelStatusCheckAttempts } from "../modules/Workplace/redux";
 
-export const useCheckModelState = ({ curCategory, nextModelShouldBeTraining, checkModelInterval }) => {
+export const useCheckModelState = ({ curCategory, checkModelInterval }) => {
   /**
    * Update the model state every checkModelInterval milliseconds
    * Do it only if nextModelShouldBeTraining is true
    */
   const dispatch = useDispatch();
+  const nextModelShouldBeTraining = useSelector((state) => state.workspace.nextModelShouldBeTraining);
+  const modelStatusCheckAttempts = useSelector((state) => state.workspace.modelStatusCheckAttempts);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (curCategory != null && nextModelShouldBeTraining) {
+      if (curCategory !== null && (nextModelShouldBeTraining || modelStatusCheckAttempts > 0)) {
         dispatch(checkModelUpdate());
+        if (modelStatusCheckAttempts > 0) {
+          dispatch(decreaseModelStatusCheckAttempts())
+        }
       }
     }, checkModelInterval);
 
     return () => clearInterval(interval);
-  }, [curCategory, checkModelInterval, nextModelShouldBeTraining, dispatch]);
+  }, [curCategory, checkModelInterval, nextModelShouldBeTraining, modelStatusCheckAttempts, dispatch]);
 };
