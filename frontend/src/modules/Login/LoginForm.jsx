@@ -23,7 +23,7 @@ import Box from '@mui/material/Box';
 import ButtonIBM from "../../components/buttons/ButtonIBM"
 import { getAuthenticated, clearState } from './LoginSlice';
 import 'react-toastify/dist/ReactToastify.css';
-import classes from "./login.module.css";
+import classes from "./Login.module.css";
 import sleuth_logo from "../../assets/sleuth_logo_white.svg"
 import {WORKSPACE_CONFIG_PATH } from '../../config';
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css"
