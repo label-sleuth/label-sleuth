@@ -32,7 +32,8 @@ from label_sleuth.active_learning.core.active_learning_factory import ActiveLear
 from label_sleuth.analysis_utils.labeling_reports import get_suspected_labeling_contradictions_by_distance_with_diffs, \
     get_disagreements_using_cross_validation
 from label_sleuth.config import Configuration
-from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE
+from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE, \
+    LabelType
 from label_sleuth.data_access.data_access_api import DataAccessApi
 from label_sleuth.data_access.label_import_utils import process_labels_dataframe
 from label_sleuth.data_access.processors.csv_processor import CsvFileProcessor
@@ -607,7 +608,8 @@ class OrchestratorApi:
             iterations_without_errors = [iteration for iteration in iterations
                                          if iteration.status != IterationStatus.ERROR]
             label_counts = self.data_access.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                             category_id=category_id, remove_duplicates=True)
+                                                             category_id=category_id, remove_duplicates=True,
+                                                             label_types={LabelType.Standard, LabelType.Weak})
             changes_since_last_model = \
                 self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id)
             if force or (LABEL_POSITIVE in label_counts

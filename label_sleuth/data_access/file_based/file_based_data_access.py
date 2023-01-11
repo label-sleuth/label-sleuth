@@ -29,10 +29,10 @@ import pandas as pd
 
 from pathlib import Path
 from collections import Counter, defaultdict
-from typing import Sequence, Iterable, Mapping, List, Union
+from typing import Sequence, Iterable, Mapping, List, Union, Set
 
 import label_sleuth.data_access.file_based.utils as utils
-from label_sleuth.data_access.core.data_structs import Document, Label, TextElement
+from label_sleuth.data_access.core.data_structs import Document, Label, TextElement, LabelType
 from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, \
     LabeledStatus
 
@@ -301,7 +301,8 @@ class FileBasedDataAccess(DataAccessApi):
 
     def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
                                   sample_size: int = sys.maxsize, query: str = None, is_regex: bool = False,
-                                  remove_duplicates=False, random_state: int = 0) -> Mapping:
+                                  remove_duplicates=False, random_state: int = 0,
+                                  label_types: Set[LabelType] = frozenset({LabelType.Standard})) -> Mapping:
         """
         Sample *sample_size* TextElements from dataset_name, labeled for category_id in workspace_id,
         optionally limiting to those matching a query.
@@ -315,26 +316,30 @@ class FileBasedDataAccess(DataAccessApi):
         :param is_regex: if True, the query string is interpreted as a regular expression (False by default)
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
+        :param label_types: by default, only the LabelType.Standard (strong labels) retrieved.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
         value is the total number of TextElements in the dataset matched by the query.
         {'results': [TextElement], 'hit_count': int}
         """
+
         filter_func = lambda df, labels: \
-            utils.filter_by_query_and_label_status(df, labels, category_id, LabeledStatus.LABELED, query, is_regex)
+            utils.filter_by_query_and_label_status(df, labels, category_id, LabeledStatus.LABELED, query, is_regex,
+                                                   label_types=label_types)
         with self._get_lock_object_for_workspace(workspace_id):
             results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                    filter_func=filter_func, sample_size=sample_size,
                                                    remove_duplicates=remove_duplicates, random_state=random_state)
         return results_dict
 
-    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False) \
-            -> Mapping[bool, int]:
+    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False,
+                         label_types: Set[LabelType] = frozenset({LabelType.Standard})) -> Mapping[bool, int]:
         """
         Return for each label value, assigned to category_id, the total count of its appearances in dataset_name.
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which labels count should be generated
         :param category_id: the id of the category whose label information is the target
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
+        :param label_types: by default, only the LabelType.Standard (strong labels) retrieved.
         :return: a map whose keys are label values, and the values are the number of TextElements this label was
         assigned to.
         """
@@ -345,9 +350,10 @@ class FileBasedDataAccess(DataAccessApi):
             uris_to_keep = set(labeled_df.drop_duplicates(subset=['text'])['uri'])
             labels_by_uri = {uri: category_to_label for uri, category_to_label in labels_by_uri.items()
                              if uri in uris_to_keep}
+
         category_label_list = \
             [category_to_label[category_id].label for category_to_label in labels_by_uri.values()
-             if category_id in category_to_label]
+             if category_id in category_to_label and category_to_label[category_id].label_type in label_types]
         category_label_counts = Counter(category_label_list)
         return category_label_counts
 

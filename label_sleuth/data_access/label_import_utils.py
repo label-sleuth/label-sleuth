@@ -21,7 +21,7 @@ from typing import Dict, Iterable, Sequence
 
 import pandas as pd
 
-from label_sleuth.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement
+from label_sleuth.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement, LabelType
 
 
 def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name, data_access, doc_uri=None) \
@@ -43,7 +43,7 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
 
 def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_to_import: pd.DataFrame) \
         -> Dict[str, Dict[str, Dict[str, Label]]]:
-    logging.warning("Currently label metadata and label_type are ignored")
+    logging.warning("Currently label metadata is ignored")
     # replace punctuation with underscores in category names
     punctuation = string.punctuation.replace("'", "")
     labels_df_to_import[DisplayFields.category_name] = labels_df_to_import[DisplayFields.category_name].apply(str)
@@ -54,6 +54,8 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
                            str(LABEL_POSITIVE).lower(), 1, "1"}
     labels_df_to_import[DisplayFields.label] = labels_df_to_import[DisplayFields.label].apply(
         lambda x: True if x in positive_indicators else False)
+    if DisplayFields.label_type not in labels_df_to_import.columns:
+        labels_df_to_import[DisplayFields.label_type] = LabelType.Standard.name
 
     category_to_uri_to_label = {}
     for category_name, category_df in labels_df_to_import.groupby(DisplayFields.category_name):
@@ -62,20 +64,21 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
         # and assigning a label for one text at a time.
         if DisplayFields.doc_id not in category_df.columns:
             doc_id_to_label_to_texts = {None:
-                                            {label: df_for_label[DisplayFields.text].values.tolist()
-                                             for label, df_for_label in category_df.groupby(DisplayFields.label)}}
+                                            {(label, label_type): df_for_label_and_type[DisplayFields.text].values.tolist()
+                                             for (label, label_type), df_for_label_and_type in category_df.groupby([DisplayFields.label, DisplayFields.label_type])}}
         else:
             doc_id_to_label_to_texts = {doc_id:
-                                            {label: df_for_label[DisplayFields.text].values.tolist()
-                                             for label, df_for_label in df_for_doc.groupby(DisplayFields.label)}
+                                            {(label, label_type): df_for_label_and_type[DisplayFields.text].values.tolist()
+                                             for (label, label_type), df_for_label_and_type in df_for_doc.groupby([DisplayFields.label, DisplayFields.label_type])}
                                         for doc_id, df_for_doc in category_df.groupby(DisplayFields.doc_id)}
 
         uri_to_label = {}
-        for doc_id, label_to_texts in doc_id_to_label_to_texts.items():
+        for doc_id, label_and_type_to_texts in doc_id_to_label_to_texts.items():
             doc_uri = f'{dataset_name}-{doc_id}' if doc_id is not None else None
-            for label, texts in label_to_texts.items():
+            for (label, label_type), texts in label_and_type_to_texts.items():
                 elements_to_label = get_element_group_by_texts(texts, workspace_id, dataset_name, data_access,
                                                                doc_uri=doc_uri)
-                uri_to_label.update({e.uri: {category_name: Label(label=label)} for e in elements_to_label})
+                uri_to_label.update({e.uri: {category_name: Label(label=label ,label_type=LabelType[label_type])}
+                                     for e in elements_to_label})
         category_to_uri_to_label[category_name] = uri_to_label
     return category_to_uri_to_label
