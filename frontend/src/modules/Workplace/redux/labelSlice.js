@@ -222,10 +222,15 @@ export const extraReducers = {
     };
   },
   [downloadLabels.fulfilled]: (state, action) => {
+    const convertDateSectionToString = (d) => {
+      return d < 10 ? `0${d}` : `${d}`
+    }
+
     const data = action.payload;
     const current = new Date();
-    const date = `${current.getDate()}/${current.getMonth() + 1}/${current.getFullYear()}`;
-    const fileName = `labeleddata_from_Label_Sleuth<${date}>.csv`;
+    const date = `${current.getFullYear()}-${convertDateSectionToString(current.getMonth() + 1)}-${convertDateSectionToString(current.getDate())}`;
+    const time = `${convertDateSectionToString(current.getHours())}-${convertDateSectionToString(current.getMinutes())}-${convertDateSectionToString(current.getSeconds())}`
+    const fileName = `labeled_data_${date}_${time}.csv`;
     fileDownload(data, fileName);
     return {
       ...state,
