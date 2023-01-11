@@ -25,8 +25,8 @@ URI_SEP = "-"
 
 
 class LabelType(Enum):
-    Standard = ""
-    Weak = "Weak"
+    Standard = 0
+    Weak = 1
 
 
 @dataclass
@@ -39,8 +39,12 @@ class Label:
         return str(self.label) if self.label_type == LabelType.Standard else f'{self.label_type.name}_{self.label}'
 
     def to_dict(self):
-        dict_for_json = {'label': self.label, 'metadata': self.metadata}  # TODO this means label_type is not saved
+        dict_for_json = {'label': self.label, 'metadata': self.metadata, 'label_type': self.label_type.value}
         return dict_for_json
+
+    def __post_init__(self):
+        if type(self.label_type) == int:
+            self.label_type = LabelType(self.label_type)
 
 
 @dataclass

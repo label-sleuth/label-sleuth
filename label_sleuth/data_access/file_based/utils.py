@@ -14,9 +14,10 @@
 #
 
 import re
+from typing import Set
 
 import pandas as pd
-from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP
+from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, LabelType
 from label_sleuth.data_access.data_access_api import LabeledStatus
 
 
@@ -28,6 +29,7 @@ def get_dataset_name_from_uri(uri):
 def get_sort_key_by_document_name(uri):
     def natural_sort(text):
         return [int(x) if x.isdigit() else x for x in re.split(r'(\d+)', text)]
+
     doc_name = uri.split(URI_SEP)[1]
     return natural_sort(doc_name)
 
@@ -52,18 +54,27 @@ def build_text_elements_from_dataframe_and_labels(df, labels_dict):
     return text_elements
 
 
-def filter_by_labeled_status(df: pd.DataFrame, labels: pd.Series, category_id: int, labeled_status: LabeledStatus):
+def filter_by_labeled_status(df: pd.DataFrame, labels_series: pd.Series, category_id: int, labeled_status: LabeledStatus,
+                             label_types: Set[LabelType] = None):
     """
     :param df:
-    :param labels:
+    :param labels_series: series of the label dictionary corresponding to each element in the dataframe
     :param category_id:
     :param labeled_status: unlabeled, labeled or all
+    :param label_types: set of applicable label types if filtering for labeled elements (LabelStatus.LABELED)
     :return:
     """
+    if labeled_status in [LabeledStatus.UNLABELED, LabeledStatus.ALL] and label_types is not None:
+        raise Exception(f"Label type is inapplicable when fetching {labeled_status} elements")
+
+    if labeled_status == LabeledStatus.LABELED and label_types is None:
+        raise Exception(f"label_types must be provided when filtering labeled elements")
+
     if labeled_status == LabeledStatus.UNLABELED:
-        return df[labels.apply(lambda x: category_id not in x)]
+        return df[labels_series.apply(lambda x: category_id not in x)]
     elif labeled_status == LabeledStatus.LABELED:
-        return df[labels.apply(lambda x: category_id in x)]
+        return df[labels_series.apply(lambda x: category_id in x and x[category_id].label_type in label_types)]
+
     return df
 
 
@@ -76,6 +87,17 @@ def filter_by_query_and_document_uri(df: pd.DataFrame, query, is_regex: bool = F
 
 
 def filter_by_query_and_label_status(df: pd.DataFrame, labels_series: pd.Series, category_id: int,
-                                     labeled_status: LabeledStatus, query: str, is_regex: bool = False):
-    df = filter_by_labeled_status(df, labels_series, category_id, labeled_status)
+                                     labeled_status: LabeledStatus, query: str, is_regex: bool = False,
+                                     label_types: Set[LabelType] = None):
+    """
+    :param df:
+    :param labels_series: series of the label dictionary corresponding to each element in the dataframe
+    :param category_id:
+    :param labeled_status: unlabeled, labeled or all
+    :param query: query to use for filtering text elements
+    :param is_regex: whether to process the query as regular expression
+    :param label_types: set of applicable label types if filtering for labeled elements (LabelStatus.LABELED)
+    :return:
+    """
+    df = filter_by_labeled_status(df, labels_series, category_id, labeled_status, label_types=label_types)
     return filter_by_query_and_document_uri(df, query, is_regex)

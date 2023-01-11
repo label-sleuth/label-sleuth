@@ -82,7 +82,8 @@ class TestOrchestratorAPI(unittest.TestCase):
                 add_random_labels_to_document(doc, 1, categories))
         categories_with_labels = {cat for e in elements_for_import for cat in e.category_to_label.keys()}
         dicts_for_import = [{DisplayFields.uri: e.uri, DisplayFields.text: e.text, DisplayFields.category_name: cat,
-                             DisplayFields.label: e.category_to_label[cat].label}
+                             DisplayFields.label: e.category_to_label[cat].label,
+                             DisplayFields.label_type: e.category_to_label[cat].label_type.name}
                             for e in elements_for_import for cat in e.category_to_label.keys()
                             if len(e.category_to_label) > 0]
         df_for_import = pd.DataFrame(dicts_for_import)
