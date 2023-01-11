@@ -81,6 +81,7 @@ export const FILL_REQUIRED_FIELDS = "Please fill out all the required fields!";
 export const NEW_DATA_CREATED = `The new dataset has been created`;
 export const SELECT_WORKSPACE = `Please select a workspace!`;
 export const NEXT_MODEL_TRAINING_MSG = "Training a new model";
+export const NEXT_ZERO_SHOT_MODEL_TRAINING_MSG = "Training a new zero shot model";
 export const newDataCreatedMessage = (name, numDocs, numsentences) =>
   `The new dataset ${name} has been created with ${numDocs} documents and ${numsentences} text entries.`;
 export const WRONG_INPUT_NAME_LENGTH = "Name may be max 30 characters long";

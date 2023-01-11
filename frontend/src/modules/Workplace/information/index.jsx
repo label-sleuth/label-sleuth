@@ -40,6 +40,7 @@ import {
   NO_MODEL_AVAILABLE_MSG,
   LABEL_SLEUTH_SHORT_DESC,
   NEXT_MODEL_TRAINING_MSG,
+  NEXT_ZERO_SHOT_MODEL_TRAINING_MSG,
   LEFT_DRAWER_WIDTH,
 } from "../../../const";
 import LinearWithValueLabel from "./ModelProgressBar";
@@ -67,16 +68,16 @@ import useLogOut from "../../../customHooks/useLogOut";
 import useAuthentication from "../../../customHooks/useAuthentication";
 
 const a11yProps = (index) => ({
-    id: `simple-tab-${index}`,
-    "aria-controls": `simple-tabpanel-${index}`,
+  id: `simple-tab-${index}`,
+  "aria-controls": `simple-tabpanel-${index}`,
 });
 
 /**
  * The information left sidebar of the worksplace
- * @param {string} workspaceId - the id of the current workspace 
+ * @param {string} workspaceId - the id of the current workspace
  * @param {function} setTutorialOpen - whether tutorial should be opened
- * @param {int} checkModelInterval - the interval time at which the model state is checked if an update is expected 
- * @param {boolean} fireConfetti - whether to fire confetti when a new model is available. Only disabled in tests. 
+ * @param {int} checkModelInterval - the interval time at which the model state is checked if an update is expected
+ * @param {boolean} fireConfetti - whether to fire confetti when a new model is available. Only disabled in tests.
  */
 export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fireConfetti = true }) => {
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
   const nextModelShouldBeTraining = useSelector((state) => state.workspace.nextModelShouldBeTraining);
   const lastModelFailed = useSelector((state) => state.workspace.lastModelFailed);
   const modelVersionSuffix = React.useMemo(() => getOrdinalSuffix(modelVersion), [modelVersion]);
-  
+
   const [tabValue, setTabValue] = React.useState(0);
   const [uploadLabelsDialogOpen, setUploadLabelsDialogOpen] = React.useState(false);
   const [downloadLabelsDialogOpen, setDownloadLabelsDialogOpen] = React.useState(false);
@@ -113,8 +114,8 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
   useCheckModelState({ curCategory, checkModelInterval });
 
   React.useEffect(() => {
-    dispatch(fetchVersion())
-  }, [dispatch])
+    dispatch(fetchVersion());
+  }, [dispatch]);
 
   const { fire, getInstance } = useConfetti();
 
@@ -124,7 +125,7 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
     fire,
     dispatch,
     notifySuccess,
-    fireConfetti
+    fireConfetti,
   });
 
   const handleChange = (event, newValue) => {
@@ -213,7 +214,7 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
             </h2>
             {authenticationEnabled ? (
               <Tooltip title={LOGOUT_TOOLTIP_MSG} placement="right">
-                <img onClick={logout} className={classes.logout} src={logout_icon} alt="logout"/>
+                <img onClick={logout} className={classes.logout} src={logout_icon} alt="logout" />
               </Tooltip>
             ) : null}
           </DrawerHeader>
@@ -380,7 +381,11 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
                     alignItems: "flex-end",
                   }}
                 >
-                  <div className={classes.modelStatus}>{NEXT_MODEL_TRAINING_MSG}</div>
+                  {workspace_stats.pos === 0 && workspace_stats.neg === 0 ? (
+                    <div className={classes.modelStatus}>{NEXT_ZERO_SHOT_MODEL_TRAINING_MSG}</div>
+                  ) : (
+                    <div className={classes.modelStatus}>{NEXT_MODEL_TRAINING_MSG}</div>
+                  )}
                   <div className={classes["dot-pulse"]}></div>
                 </div>
               ) : null}

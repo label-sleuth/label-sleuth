@@ -85,12 +85,18 @@ export const extraReducers = {
     let updatedEvaluationState = {};
     let latestReadyModelVersion = null;
     let nextModelShouldBeTraining;
+    let modelIsTraining = false;
 
     const lastModelFailed = models.length ? models[models.length - 1]["iteration_status"] === "ERROR" : false;
 
     models.reverse().forEach((m) => {
-      if (latestReadyModelVersion === null && m["iteration_status"] === "READY") {
-        latestReadyModelVersion = m["iteration"];
+      if (latestReadyModelVersion === null) {
+        if (m["iteration_status"] === "READY") {
+          latestReadyModelVersion = m["iteration"];
+        }
+        else if (["TRAINING", "RUNNING_INFERENCE", "RUNNING_ACTIVE_LEARNING", "CALCULATING_STATISTICS"].includes(m["iteration_status"])) {
+          modelIsTraining = true
+        }
       }
       if (!("lastScore" in updatedEvaluationState) && "estimated_precision" in m) {
         updatedEvaluationState = {
@@ -111,7 +117,7 @@ export const extraReducers = {
     // logic to manage the next model status, it is first set to true in checkStatus when progress is 100
 
     // if there are non-ready models, it means that a model is training
-    if (!latestReadyModelVersion && models.length) {
+    if (modelIsTraining) {
       nextModelShouldBeTraining = true;
     }
     // if there are no models yet, next model status depends on
