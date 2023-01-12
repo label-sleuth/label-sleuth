@@ -21,6 +21,7 @@ import {
   cleanEvaluationState,
   cleanUploadedLabels,
   clearMainPanelFocusedElement,
+  resetModelStatusCheckAttempts,
 } from "../modules/Workplace/redux";
 import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -55,6 +56,7 @@ const useWorkspaceState = () => {
       dispatch(checkModelUpdate());
       dispatch(cleanEvaluationState());
       dispatch(clearMainPanelFocusedElement());
+      dispatch(resetModelStatusCheckAttempts())
     }
   }, [curCategory, dispatch]);
 
