@@ -27,5 +27,6 @@ assignees: ''
  - OS:
  - Web browser:
  - Python version:
+ - Label Sleuth version (as appear in the bottom left of the UI):
 
 **Suggested solution (if any):**
