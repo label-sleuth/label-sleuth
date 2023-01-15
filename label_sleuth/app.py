@@ -858,14 +858,19 @@ def force_train_for_category(workspace_id):
 @validate_workspace_id
 def export_predictions(workspace_id):
     """
-    Download the predictions of the model from iteration *iteration_index* of *category_name*, as a csv file.
+    Download all predictions of the model from iteration *iteration_index* of *category_id*, as a csv file.
 
     :param workspace_id:
     :request_arg category_id:
-    :request_arg iteration_index:
+    :request_arg iteration_index: optional. if not provided, the model from the latest iteration will be exported.
     """
     category_id = int(request.args['category_id'])
-    iteration_index = request.args.get('iteration_index')
+    iteration_index = request.args.get('iteration_index', None)
+    if iteration_index is None:
+        _, iteration_index = curr_app.orchestrator_api. \
+            get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
+    else:
+        iteration_index = int(iteration_index)
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
     elements = curr_app.orchestrator_api.get_all_text_elements(dataset_name)
     infer_results = curr_app.orchestrator_api.infer(workspace_id, category_id, elements,
