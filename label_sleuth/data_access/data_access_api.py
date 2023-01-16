@@ -41,8 +41,10 @@ class LabeledStatus(Enum):
 
 
 def get_document_uri(uri):
-    uri_split = uri.split(URI_SEP)
-    return URI_SEP.join(uri_split[:2])
+    """
+    get document uri from element uri
+    """
+    return uri.rsplit(URI_SEP, 1)[0]
 
 
 class DataAccessApi(object, metaclass=abc.ABCMeta):
