@@ -20,7 +20,6 @@ import shutil
 import tempfile
 import traceback
 import zipfile
-import git
 import pkg_resources
 
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -1221,7 +1220,8 @@ def get_git_describe():
     Returns:
         an object with version and source fields
     """
-    try: 
+    try:
+        import git
         repo = git.repo.Repo(os.path.abspath(os.path.join(__file__, os.pardir, os.pardir)))
         version = repo.git.describe(tags=True)
         source = 'git'
