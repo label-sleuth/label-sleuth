@@ -16,9 +16,9 @@
 import abc
 
 from enum import Enum
-from typing import Sequence
+from typing import Sequence, Set, Iterable
 
-from label_sleuth.data_access.core.data_structs import TextElement
+from label_sleuth.data_access.core.data_structs import TextElement, LabelType
 
 
 class TrainingSetSelectionStrategy(Enum):
@@ -39,8 +39,9 @@ class TrainingSetSelectionStrategy(Enum):
 
 class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
 
-    def __init__(self, data_access):
+    def __init__(self, data_access, label_types=frozenset({LabelType.Standard})):
         self.data_access = data_access
+        self.label_types = label_types
 
     @abc.abstractmethod
     def get_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int) -> Sequence[TextElement]:
@@ -53,3 +54,9 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
         :param train_dataset_name:
         :param category_id:
         """
+
+    def get_label_types(self) -> Iterable[LabelType]:
+        """
+        Return the types of labels this selector is using
+        """
+        return self.label_types

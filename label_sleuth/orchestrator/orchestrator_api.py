@@ -233,7 +233,7 @@ class OrchestratorApi:
               remove_duplicates=False) -> Mapping[str, Union[List[TextElement], int]]:
         """
         Query a dataset using the given regex, returning up to *sample_size* elements that meet the query
-    
+
         :param workspace_id:
         :param dataset_name:
         :param category_id: optional. If unlabeled_only is True category_id will be used for determining unlabeled
@@ -258,7 +258,8 @@ class OrchestratorApi:
         else:
             return self.data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                       sample_size=sample_size, sample_start_idx=sample_start_idx,
-                                                      query=query, is_regex=is_regex, remove_duplicates=remove_duplicates)
+                                                      query=query, is_regex=is_regex,
+                                                      remove_duplicates=remove_duplicates)
 
     def set_labels(self, workspace_id: str, uri_to_label: Mapping[str, Mapping[int, Label]],
                    apply_to_duplicate_texts=True, update_label_counter=True):
@@ -384,7 +385,7 @@ class OrchestratorApi:
         Since the training and inference stages of the iteration are submitted asynchronously in the background, the
         full flow is composed of this method, along with the _train_done_callback and _infer_done_callback, which are
         launched when the training and inference stages, respectively, are completed.
-    
+
         :param workspace_id:
         :param category_id:
         :param model_type:
@@ -440,7 +441,7 @@ class OrchestratorApi:
             model_id = future.result()
         except Exception:
             logging.exception(f"Train failed. Marking workspace '{workspace_id}' category id '{category_id}' "
-                          f"iteration {iteration_index} as error")
+                              f"iteration {iteration_index} as error")
             self.orchestrator_state.update_model_status(workspace_id=workspace_id, category_id=category_id,
                                                         iteration_index=iteration_index, new_status=ModelStatus.ERROR)
             self.orchestrator_state.update_iteration_status(workspace_id, category_id, iteration_index,
@@ -540,7 +541,8 @@ class OrchestratorApi:
             num_identical = sum(x.label == y.label for x, y in zip(predictions, previous_model_predictions))
             post_train_statistics["changed_fraction"] = (dataset_size - num_identical) / dataset_size
 
-        logging.info(f"workspace {workspace_id} category {category_id} post train measurements for iteration {iteration_index}: {post_train_statistics}")
+        logging.info(
+            f"workspace {workspace_id} category {category_id} post train measurements for iteration {iteration_index}: {post_train_statistics}")
         self.orchestrator_state.add_iteration_statistics(workspace_id, category_id, iteration_index,
                                                          post_train_statistics)
 
@@ -607,11 +609,18 @@ class OrchestratorApi:
         try:
             iterations_without_errors = [iteration for iteration in iterations
                                          if iteration.status != IterationStatus.ERROR]
-            label_counts = self.data_access.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                             category_id=category_id, remove_duplicates=True,
-                                                             label_types={LabelType.Standard, LabelType.Weak})
+
             changes_since_last_model = \
                 self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id)
+
+            train_set_selector = get_training_set_selector(self.data_access,
+                                                           strategy=self.config.training_set_selection_strategy)
+
+            used_label_types = train_set_selector.get_label_types()
+            label_counts = self.data_access.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
+                                                             category_id=category_id, remove_duplicates=True,
+                                                             label_types=used_label_types)
+
             if force or (LABEL_POSITIVE in label_counts
                          and label_counts[LABEL_POSITIVE] >= self.config.first_model_positive_threshold
                          and changes_since_last_model >= self.config.changed_element_threshold):
@@ -627,8 +636,7 @@ class OrchestratorApi:
                     f"(>={self.config.changed_element_threshold}). Training a new model")
                 iteration_num = len(iterations_without_errors)
                 model_type = self.config.model_policy.get_model_type(iteration_num)
-                train_set_selector = get_training_set_selector(self.data_access,
-                                                               strategy=self.config.training_set_selection_strategy)
+
                 train_data = train_set_selector.get_train_set(workspace_id=workspace_id,
                                                               train_dataset_name=dataset_name,
                                                               category_id=category_id)
@@ -768,6 +776,7 @@ class OrchestratorApi:
         :param random_state: provide an int seed to define a random state. Default is zero.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         """
+
         def batched(iterable, batch_size=100):
             it = iter(iterable)
             while batch := list(itertools.islice(it, batch_size)):
