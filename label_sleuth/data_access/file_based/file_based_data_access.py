@@ -166,7 +166,8 @@ class FileBasedDataAccess(DataAccessApi):
             # Save updated labels dict to disk
             self._save_labels_data(dataset_name, workspace_id)
 
-    def get_documents(self, workspace_id: Union[None, str], dataset_name: str, uris: Iterable[str]) \
+    def get_documents(self, workspace_id: Union[None, str], dataset_name: str, uris: Iterable[str],
+                      label_types: Union[None,Set[LabelType]] = frozenset({LabelType.Standard})) \
             -> List[Document]:
         """
         Return a List of Documents, from the given dataset_name, matching the uris provided, and add the label
@@ -176,6 +177,8 @@ class FileBasedDataAccess(DataAccessApi):
         label information
         :param dataset_name: the name of the dataset from which the documents should be retrieved.
         :param uris: an Iterable of uris of Documents, represented as string.
+        :param label_types:  If workspace_id is provided, select which label_types to retrieve
+                     by default, only the LabelType.Standard (strong labels) are retrieved.
         :return: a List of Document objects, from the given dataset_name, matching the uris provided, containing label
         information for the TextElements of these Documents, if available.
         """
@@ -194,7 +197,7 @@ class FileBasedDataAccess(DataAccessApi):
             with self._get_lock_object_for_workspace(workspace_id):
                 for d in docs:
                     self._add_labels_info_for_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                            text_elements=d.text_elements)
+                                                            text_elements=d.text_elements, label_types=label_types)
         return docs
 
     def get_all_document_uris(self, dataset_name: str) -> List[str]:
@@ -316,7 +319,7 @@ class FileBasedDataAccess(DataAccessApi):
         :param is_regex: if True, the query string is interpreted as a regular expression (False by default)
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         :param random_state: provide an int seed to define a random state. Default is zero.
-        :param label_types: by default, only the LabelType.Standard (strong labels) retrieved.
+        :param label_types: by default, only the LabelType.Standard (strong labels) are retrieved.
         :return: a dictionary with two keys: 'results' whose value is a list of TextElements, and 'hit_count' whose
         value is the total number of TextElements in the dataset matched by the query.
         {'results': [TextElement], 'hit_count': int}
@@ -339,7 +342,7 @@ class FileBasedDataAccess(DataAccessApi):
         :param dataset_name: the name of the dataset from which labels count should be generated
         :param category_id: the id of the category whose label information is the target
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
-        :param label_types: by default, only the LabelType.Standard (strong labels) retrieved.
+        :param label_types: by default, only the LabelType.Standard (strong labels) are retrieved.
         :return: a map whose keys are label values, and the values are the number of TextElements this label was
         assigned to.
         """
@@ -382,13 +385,16 @@ class FileBasedDataAccess(DataAccessApi):
         if len(labeled_elements) > 0:
             self.unset_labels(workspace_id, category_id, [e.uri for e in labeled_elements])
 
-    def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Iterable[str]) -> List[TextElement]:
+    def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Iterable[str],
+                                  label_types: Set[LabelType] = frozenset({LabelType.Standard}))\
+                                                                                    -> List[TextElement]:
         """
         Return a List of TextElement objects from the given dataset_name, matching the uris provided, and add the label
         information for the workspace to these TextElements, if available.
         :param workspace_id:
         :param dataset_name:
         :param uris:
+        :param label_types:  by default, only the LabelType.Standard (strong labels) are retrieved.
         """
         corpus_df = self._get_ds_in_memory(dataset_name)
         uris = list(uris)
@@ -398,7 +404,8 @@ class FileBasedDataAccess(DataAccessApi):
         text_elements = [text_elements_by_uri.get(uri) for uri in uris]
 
         with self._get_lock_object_for_workspace(workspace_id):
-            text_elements = self._add_labels_info_for_text_elements(workspace_id, dataset_name, text_elements)
+            text_elements = self._add_labels_info_for_text_elements(workspace_id,
+                                                                    dataset_name, text_elements, label_types)
 
         return text_elements
 
@@ -500,11 +507,16 @@ class FileBasedDataAccess(DataAccessApi):
         self.ds_in_memory[dataset_name] = self._add_text_unique_ids(self.ds_in_memory[dataset_name])
         self.ds_in_memory[dataset_name].to_csv(self._get_dataset_dump_filename(dataset_name), index=False)
 
-    def _add_labels_info_for_text_elements(self, workspace_id, dataset_name, text_elements: List[TextElement]):
+    def _add_labels_info_for_text_elements(self, workspace_id, dataset_name, text_elements: List[TextElement],
+                                           label_types):
         labels_info_for_workspace = self._get_labels(workspace_id, dataset_name)
         for elem in text_elements:
             if elem.uri in labels_info_for_workspace:
-                elem.category_to_label = labels_info_for_workspace[elem.uri].copy()
+                if label_types is None:
+                    elem.category_to_label = labels_info_for_workspace[elem.uri].copy()
+                else:
+                    elem.category_to_label = {cat:label for cat, label in labels_info_for_workspace[elem.uri].items()
+                                              if label.label_type in label_types}
         return text_elements
 
     def _get_text_elements(self, workspace_id: str, dataset_name: str, filter_func, sample_size: int,
