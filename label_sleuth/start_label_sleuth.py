@@ -23,6 +23,7 @@ import requests
 
 from label_sleuth import app
 from label_sleuth.config import load_config
+from config import Configuration
 
 PROJECT_ROOT = os.path.abspath(os.path.join(__file__, os.pardir))
 
@@ -81,13 +82,23 @@ if __name__ == '__main__':
                         help=f'Name of a sample corpus from https://github.com/label-sleuth/data-examples/, to be '
                              f'loaded at startup', default=None)
 
+    for attr_name, attr_type in vars(Configuration)["__annotations__"].items():
+        allowed_types = [int, str, bool]
+        ignore_list = ["users"]
+        if attr_type in ignore_list:
+            continue
+        if attr_type in allowed_types:
+            parser.add_argument(f"--{attr_name}", type=attr_type, required=False)
+        else:
+            parser.add_argument(f"--{attr_name}", type=str, required=False)
+
     args = parser.parse_args()
     os.makedirs(args.output_path, exist_ok=True)
 
     add_file_logger(args.output_path)  # log to file in addition to the console
     logging.info(f"Starting label-sleuth using config file {args.config_path}. Output directory is {args.output_path}")
     logging.info("(Starting the service for the first time may take a little longer)")
-    curr_app = app.create_app(config=load_config(args.config_path),
+    curr_app = app.create_app(config=load_config(args.config_path, vars(args)),
                               output_dir=args.output_path)
     if args.load_sample_corpus:
         load_sample_corpus(curr_app, args.load_sample_corpus)
