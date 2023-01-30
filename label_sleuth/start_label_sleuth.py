@@ -23,7 +23,7 @@ import requests
 
 from label_sleuth import app
 from label_sleuth.config import load_config
-from config import Configuration
+from label_sleuth.config import Configuration
 
 PROJECT_ROOT = os.path.abspath(os.path.join(__file__, os.pardir))
 
@@ -82,7 +82,7 @@ if __name__ == '__main__':
                         help=f'Name of a sample corpus from https://github.com/label-sleuth/data-examples/, to be '
                              f'loaded at startup', default=None)
 
-    for attr_name, attr_type in vars(Configuration)["__annotations__"].items():
+    for attr_name, attr_type in Configuration.__annotations__.items():
         allowed_types = [int, str, bool]
         ignore_list = ["users"]
         if attr_type in ignore_list:
