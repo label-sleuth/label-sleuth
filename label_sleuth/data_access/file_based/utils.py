@@ -46,7 +46,7 @@ def filename_to_uri(filename):
 
 def build_text_elements_from_dataframe_and_labels(df, labels_dict):
     # text element fields are extracted from the dataframe, with the exception of the labels, which are stored elsewhere
-    element_data_columns = TextElement.get_field_names() - {'category_to_label'}
+    element_data_columns = list(TextElement.get_field_names() - {'category_to_label'})
     element_dicts = map(lambda row: dict(zip(element_data_columns, row)), df[element_data_columns].values)
     text_elements = [TextElement(**d, category_to_label=labels_dict.get(d['uri'], {}).copy())
                      for d in element_dicts]
