@@ -99,6 +99,8 @@ The configurable parameters of the system are specified in a json file. The defa
 
 A custom configuration can be applied by passing the `--config_path` parameter to the "start_label_sleuth" command, e.g., `python -m label_sleuth.start_label_sleuth --config_path <path_to_my_configuration_json>`
 
+Alternatively, it is possible to override specific configuration parameters at startup by adding them to the run command, e.g., `python -m label_sleuth.start_label_sleuth --changed_element_threshold 100`
+
 **Configurable parameters:**
 
 | Parameter                         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
