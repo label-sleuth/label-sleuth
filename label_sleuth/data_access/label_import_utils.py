@@ -63,14 +63,14 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
         # query for a group of elements by their texts - using *get_element_group_by_texts* - rather than querying
         # and assigning a label for one text at a time.
         if DisplayFields.doc_id not in category_df.columns:
-            doc_id_to_label_to_texts = {None:
-                                            {(label, label_type): df_for_label_and_type[DisplayFields.text].values.tolist()
-                                             for (label, label_type), df_for_label_and_type in category_df.groupby([DisplayFields.label, DisplayFields.label_type])}}
+            doc_id_to_label_to_texts = \
+                {None: {(bool(label), label_type): df_for_label_and_type[DisplayFields.text].values.tolist()
+                        for (label, label_type), df_for_label_and_type in category_df.groupby([DisplayFields.label, DisplayFields.label_type])}}
         else:
-            doc_id_to_label_to_texts = {doc_id:
-                                            {(label, label_type): df_for_label_and_type[DisplayFields.text].values.tolist()
-                                             for (label, label_type), df_for_label_and_type in df_for_doc.groupby([DisplayFields.label, DisplayFields.label_type])}
-                                        for doc_id, df_for_doc in category_df.groupby(DisplayFields.doc_id)}
+            doc_id_to_label_to_texts = \
+                {doc_id: {(bool(label), label_type): df_for_label_and_type[DisplayFields.text].values.tolist()
+                          for (label, label_type), df_for_label_and_type in df_for_doc.groupby([DisplayFields.label, DisplayFields.label_type])}
+                 for doc_id, df_for_doc in category_df.groupby(DisplayFields.doc_id)}
 
         uri_to_label = {}
         for doc_id, label_and_type_to_texts in doc_id_to_label_to_texts.items():
