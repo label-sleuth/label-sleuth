@@ -117,10 +117,10 @@ class TestFileBasedDataAccess(unittest.TestCase):
         self.data_access.set_labels(workspace_id, dict(texts_and_labels_list))
 
         labels_count = self.data_access.get_label_counts(workspace_id, dataset_name, category_id)
-        self.assertGreater(labels_count[True], 0)
+        self.assertGreater(labels_count['true'], 0)
         self.data_access.unset_labels(workspace_id, category_id, [x[0] for x in texts_and_labels_list])
         labels_count_after_unset = self.data_access.get_label_counts(workspace_id, dataset_name, category_id)
-        self.assertEqual(0, labels_count_after_unset[True])
+        self.assertEqual(0, labels_count_after_unset['true'])
         self.data_access.delete_dataset(dataset_name)
 
     def test_get_all_document_uris(self):
@@ -355,7 +355,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
             [1 for _, label_dict in sentences_and_labels_all.items() if label_dict[category_id].label == LABEL_POSITIVE])
         false_count = len(
             [1 for _, label_dict in sentences_and_labels_all.items() if label_dict[category_id].label == LABEL_NEGATIVE])
-        results[idx] = {LABEL_POSITIVE: true_count, LABEL_NEGATIVE: false_count}
+        results[idx] = {str(LABEL_POSITIVE).lower(): true_count, str(LABEL_NEGATIVE).lower(): false_count}
 
     def test_get_label_counts(self):
         workspace_id = 'test_get_label_counts'
@@ -376,7 +376,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
         for label_val, observed_count in category_label_counts.items():
             expected_count = len(
                 [label for uri, label in uri_to_label_dict.items() if
-                 category_to_count in label and label_val == label[category_to_count].label])  # TODO verify
+                 category_to_count in label and label_val == str(label[category_to_count].label).lower()])
             self.assertEqual(expected_count, observed_count, f'count for {label_val} does not match.')
         self.data_access.delete_dataset(dataset_name)
 
@@ -427,15 +427,15 @@ class TestFileBasedDataAccess(unittest.TestCase):
         # set labels without propagating to duplicates
         self.data_access.set_labels(workspace_id, uri_to_label_dict, apply_to_duplicate_texts=False)
         labels_count = self.data_access.get_label_counts(workspace_id, dataset_name, category_id)
-        self.assertEqual(labels_count[LABEL_POSITIVE], len(all_without_dups))
+        self.assertEqual(labels_count[str(LABEL_POSITIVE).lower()], len(all_without_dups))
         # unset labels
         self.data_access.unset_labels(workspace_id, category_id, [elem.uri for elem in all_without_dups])
         labels_count = self.data_access.get_label_counts(workspace_id, dataset_name, category_id)
-        self.assertEqual(labels_count[LABEL_POSITIVE], 0)
+        self.assertEqual(labels_count[str(LABEL_POSITIVE).lower()], 0)
         # set labels with propagating to duplicates
         self.data_access.set_labels(workspace_id, uri_to_label_dict, apply_to_duplicate_texts=True)
         labels_count = self.data_access.get_label_counts(workspace_id, dataset_name, category_id)
-        self.assertEqual(labels_count[LABEL_POSITIVE], len(all_elements))
+        self.assertEqual(labels_count[str(LABEL_POSITIVE).lower()], len(all_elements))
         self.data_access.unset_labels(workspace_id, category_id, [elem.uri for elem in all_elements])
 
         # 2. test sampling of duplicate examples:
@@ -448,17 +448,18 @@ class TestFileBasedDataAccess(unittest.TestCase):
         sampled = \
             self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id, 10 ** 6,
                                                        remove_duplicates=True)['results']
-        self.assertEqual(labels_count[LABEL_POSITIVE], len(sampled), len(non_representative_duplicates))
+        self.assertEqual(labels_count[str(LABEL_POSITIVE).lower()], len(sampled), len(non_representative_duplicates))
         # set labels with propagating to duplicates
         self.data_access.set_labels(workspace_id, uri_to_label_dict, apply_to_duplicate_texts=True)
         labels_count = self.data_access.get_label_counts(workspace_id, dataset_name, category_id)
         sampled = \
             self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id, 10 ** 6,
                                                        remove_duplicates=True)['results']
-        self.assertGreater(labels_count[LABEL_POSITIVE], len(non_representative_duplicates))
+        self.assertGreater(labels_count[str(LABEL_POSITIVE).lower()], len(non_representative_duplicates))
         labels_count_no_dups = self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
                                                                  remove_duplicates=True)
-        self.assertEqual(labels_count_no_dups[LABEL_POSITIVE], len(sampled), len(non_representative_duplicates))
+        self.assertEqual(labels_count_no_dups[str(LABEL_POSITIVE).lower()], len(sampled),
+                         len(non_representative_duplicates))
         self.data_access.delete_all_labels(workspace_id, dataset_name)
         self.data_access.delete_dataset(dataset_name)
 

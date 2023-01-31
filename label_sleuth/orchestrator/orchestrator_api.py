@@ -23,7 +23,7 @@ import time
 from collections import Counter, defaultdict
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime
-from typing import Mapping, List, Sequence, Union, Tuple
+from typing import Mapping, List, Sequence, Union, Tuple, Set
 
 import jsonpickle
 import pandas as pd
@@ -293,18 +293,29 @@ class OrchestratorApi:
         self.data_access.unset_labels(
             workspace_id, category_id, uris, apply_to_duplicate_texts=apply_to_duplicate_texts)
 
-    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False) -> \
-            Mapping[bool, int]:
+    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False,
+                         counts_for_training=False) -> Mapping[Union[str, bool], int]:
         """
         Get the number of elements that were labeled for the given category.
         :param workspace_id:
         :param dataset_name:
         :param category_id:
         :param remove_duplicates: whether to count all labeled elements or only unique instances
+        :param counts_for_training: if True, determine the counts as relevant for training a model, e.g. lumping
+        both strong and weak labels together; if False, count the different types of labels separately
         :return:
         """
-        return self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
-                                                 remove_duplicates=remove_duplicates)
+        if counts_for_training:
+            train_set_selector = get_training_set_selector(self.data_access,
+                                                           strategy=self.config.training_set_selection_strategy)
+            used_label_types = train_set_selector.get_label_types()
+            return self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
+                                                     remove_duplicates=remove_duplicates,
+                                                     fine_grained_counts=False,
+                                                     label_types=used_label_types)
+        else:
+            return self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
+                                                     remove_duplicates=remove_duplicates, fine_grained_counts=True)
 
     # Iteration-related methods
 
@@ -613,13 +624,9 @@ class OrchestratorApi:
             changes_since_last_model = \
                 self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id)
 
-            train_set_selector = get_training_set_selector(self.data_access,
-                                                           strategy=self.config.training_set_selection_strategy)
-
-            used_label_types = train_set_selector.get_label_types()
-            label_counts = self.data_access.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                             category_id=category_id, remove_duplicates=True,
-                                                             label_types=used_label_types)
+            label_counts = self.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
+                                                 category_id=category_id, remove_duplicates=True,
+                                                 counts_for_training=True)
 
             if force or (LABEL_POSITIVE in label_counts
                          and label_counts[LABEL_POSITIVE] >= self.config.first_model_positive_threshold
@@ -636,7 +643,8 @@ class OrchestratorApi:
                     f"(>={self.config.changed_element_threshold}). Training a new model")
                 iteration_num = len(iterations_without_errors)
                 model_type = self.config.model_policy.get_model_type(iteration_num)
-
+                train_set_selector = get_training_set_selector(self.data_access,
+                                                               strategy=self.config.training_set_selection_strategy)
                 train_data = train_set_selector.get_train_set(workspace_id=workspace_id,
                                                               train_dataset_name=dataset_name,
                                                               category_id=category_id)
@@ -798,12 +806,15 @@ class OrchestratorApi:
         return elements_with_required_prediction[start_idx:start_idx + sample_size]
 
     def get_progress(self, workspace_id: str, dataset_name: str, category_id: int):
-        category_label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, remove_duplicates=True)
+        category_label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, remove_duplicates=True,
+                                                      counts_for_training=True)
         if category_label_counts[LABEL_POSITIVE]:
             changed_since_last_model_count = \
                 self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id)
 
             return {"all": min(
+                # for a new training to start both the number of labels changed and the number of positives must be
+                # above their respective thresholds; thus, we determine the status as the minimum of the two ratios
                 max(0, min(round(changed_since_last_model_count / self.config.changed_element_threshold * 100), 100)),
                 max(0, min(round(category_label_counts[LABEL_POSITIVE] /
                                  self.config.first_model_positive_threshold * 100), 100)))
@@ -847,7 +858,7 @@ class OrchestratorApi:
                                 apply_to_duplicate_texts=self.config.apply_labels_to_duplicate_texts,
                                 update_label_counter=True)
 
-            label_counts_dict = self.get_label_counts(workspace_id, dataset_name, category_id, False)
+            label_counts_dict = self.get_label_counts(workspace_id, dataset_name, category_id, remove_duplicates=False)
             logging.info(f"Updated total label count in workspace '{workspace_id}' for category id {category_id} "
                          f"is {sum(label_counts_dict.values())} ({label_counts_dict})")
             categories_counter[category_id] = len(uri_to_label)
@@ -875,8 +886,9 @@ class OrchestratorApi:
         list_of_dicts = []
 
         for category_id, category in categories.items():
-            label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, False)
-            total_count = sum(self.get_label_counts(workspace_id, dataset_name, category_id, False).values())
+            label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, False,
+                                                 counts_for_training=True)
+            total_count = sum(label_counts.values())
 
             if labeled_only or label_counts[LABEL_POSITIVE] == 0:  # if there are no positive elements,
                 # training set selector cannot be used, so we only use the labeled elements

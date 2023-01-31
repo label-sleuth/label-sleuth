@@ -209,15 +209,16 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False,
-                         label_types: Set[LabelType] = frozenset({LabelType.Standard})) \
-            -> Mapping[bool, int]:
+                         label_types: Set[LabelType] = frozenset(LabelType._member_map_.values()),
+                         fine_grained_counts=True) -> Mapping[Union[str, bool], int]:
         """
         Return for each label value, assigned to category_id, the total count of its appearances in dataset_name.
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which labels count should be generated
         :param category_id: the id of the category whose label information is the target
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
-        :param label_types: by default, only the LabelType.Standard (strong labels) are retrieved.
+        :param label_types: by default, labels of all types are retrieved.
+        :param fine_grained_counts: if True, count labels of each label type separately.
         :return: a map whose keys are label values, and the values are the number of TextElements this label was
         assigned to.
         """
