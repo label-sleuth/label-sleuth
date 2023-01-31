@@ -335,14 +335,16 @@ class FileBasedDataAccess(DataAccessApi):
         return results_dict
 
     def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False,
-                         label_types: Set[LabelType] = frozenset({LabelType.Standard})) -> Mapping[bool, int]:
+                         label_types: Set[LabelType] = frozenset(LabelType._member_map_.values()),
+                         fine_grained_counts=True) -> Mapping[Union[str, bool], int]:
         """
         Return for each label value, assigned to category_id, the total count of its appearances in dataset_name.
         :param workspace_id: the workspace_id of the labeling effort.
         :param dataset_name: the name of the dataset from which labels count should be generated
         :param category_id: the id of the category whose label information is the target
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
-        :param label_types: by default, only the LabelType.Standard (strong labels) are retrieved.
+        :param label_types: by default, labels of all types are retrieved.
+        :param fine_grained_counts: if True, count labels of each label type separately.
         :return: a map whose keys are label values, and the values are the number of TextElements this label was
         assigned to.
         """
@@ -355,10 +357,13 @@ class FileBasedDataAccess(DataAccessApi):
                              if uri in uris_to_keep}
 
         category_label_list = \
-            [category_to_label[category_id].label for category_to_label in labels_by_uri.values()
+            [category_to_label[category_id] for category_to_label in labels_by_uri.values()
              if category_id in category_to_label and category_to_label[category_id].label_type in label_types]
-        category_label_counts = Counter(category_label_list)
-        return category_label_counts
+
+        if fine_grained_counts:
+            return Counter(lbl_obj.get_detailed_label_name() for lbl_obj in category_label_list)
+        else:
+            return Counter(lbl_obj.label for lbl_obj in category_label_list)
 
     def delete_all_labels(self, workspace_id, dataset_name):
         """
