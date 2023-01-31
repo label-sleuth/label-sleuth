@@ -57,9 +57,9 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                         helperText={newWorkspaceNameError}
                     />
                 </FormControl>
-                <FormControl required variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px' }}>
+                <FormControl variant="standard" sx={{ minWidth: 300, ml: '25px', mr: '25px' }}>
                     <ControlledSelect
-                        label="Select Dataset"
+                        label="Select dataset"
                         value={selectedValue}
                         options={options}
                         onChange={handleDatasetChange}

@@ -45,7 +45,7 @@ const ExistingWorkspaceForm = ({
       <FormControl variant="standard">
         <FormControl variant="standard" sx={{ minWidth: 300, ml: "25px", mr: "25px" }}>
           <ControlledSelect
-            label="Continue with Existing Workspace"
+            label="Continue with existing workspace"
             value={value}
             options={options}
             onChange={handleChange}

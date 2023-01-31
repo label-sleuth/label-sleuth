@@ -149,11 +149,11 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
   };
 
   const getCategoriesString = (categories) => {
-    if (categories.length === 1) return categories[0];
+    if (categories.length === 1) return `'${categories[0]}'`;
     else {
       let res = "";
-      if (categories.length > 2) categories.slice(0, -2).forEach((c) => (res += `${c}, `));
-      res += categories.slice(-2, -1)[0] + " and " + categories.slice(-1)[0];
+      if (categories.length > 2) categories.slice(0, -2).forEach((c) => (res += `'${c}', `));
+      res += `'${categories.slice(-2, -1)[0]}' and '${categories.slice(-1)[0]}'`;
       return res;
     }
   };
@@ -162,7 +162,7 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
     if (uploadedLabels) {
       const categoriesCreated = uploadedLabels.categoriesCreated;
       const createdCategoriesMessage = categoriesCreated.length
-        ? `Added categories are ${getCategoriesString(categoriesCreated)}`
+        ? `Added categories are: ${getCategoriesString(categoriesCreated)}`
         : "";
       notifySuccess(`New labels have been added! ${createdCategoriesMessage}`, "toast-uploaded-labels");
     }

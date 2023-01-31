@@ -210,7 +210,7 @@ def create_workspace():
 
     if curr_app.orchestrator_api.workspace_exists(workspace_id):
         logging.info(f"Trying to create workspace '{workspace_id}' which already exists")
-        return jsonify({"workspace_id": workspace_id, "error": "Workspace already exist",
+        return jsonify({"workspace_id": workspace_id, "error": "Workspace already exists",
                         "error_code": 409}), 409
     curr_app.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
