@@ -63,7 +63,7 @@ export const ShortcutsModal = ({ open, setOpen }) => {
               <CloseIcon fontSize="inherit" />
             </IconButton>
           </div>
-          <LargeTitle>Shorcuts</LargeTitle>
+          <LargeTitle>Shortcuts</LargeTitle>
           <MainContent sx={{ paddingBottom: 2 }}>
             <p>{title}</p>
             <ThemeProvider theme={createTheme({ palette: { mode: "dark" } })}>
