@@ -88,7 +88,7 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
 
   const handleElementClick = useCallback(
     (e) => {
-      dispatch(setfocusedSidebarElementByIndex(index));
+      dispatch(setfocusedSidebarElementByIndex({index, scrollIntoViewOnChange: false}));
       focusMainPanelElement({ element, docId });
       // focus this element on the sidebar when clicked
     },

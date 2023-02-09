@@ -106,7 +106,7 @@ export const searchKeywords = createAsyncThunk(
     const state = getState();
     const { input, lastSearchString } = state.workspace.panels[panelIds.SEARCH];
     const searchString = useLastSearchString ? lastSearchString : input;
-    if (searchString === null || searchKeywords === '') return;
+    if (searchString === null || searchKeywords === "") return;
     const extraQueryParams = [`qry_string=${searchString}`];
 
     return {
@@ -155,6 +155,7 @@ export const initialState = {
     },
     focusedSidebarElement: {
       index: null,
+      scrollIntoViewOnChange: true,
     },
     [panelIds.MAIN_PANEL]: {
       ...elementsInitialState,
@@ -235,27 +236,31 @@ export const reducers = {
 
   // action reducers for focusing sidebar panel elements
   setfocusedSidebarElementByIndex(state, action) {
-    const index = action.payload;
+    const { index, scrollIntoViewOnChange } = action.payload;
     state.panels.focusedSidebarElement.index = index;
+    state.panels.focusedSidebarElement.scrollIntoViewOnChange = scrollIntoViewOnChange;
   },
   focusFirstSidebarElement(state, action) {
     const currentSidebarElements = getCurrentSidebarElements(state);
     if (currentSidebarElements === null || currentSidebarElements.length === 0) return;
     state.panels.focusedSidebarElement.index = 0;
+    state.panels.focusedSidebarElement.scrollIntoViewOnChange = true;
   },
   focusLastSidebarElement(state, action) {
     const currentSidebarElements = getCurrentSidebarElements(state);
     if (currentSidebarElements === null || currentSidebarElements.length === 0) return;
     state.panels.focusedSidebarElement.index = currentSidebarElements.length - 1;
+    state.panels.focusedSidebarElement.scrollIntoViewOnChange = true;
   },
   focusNextSidebarElement(state, action) {
     const currentSidebarElements = getCurrentSidebarElements(state);
     // abort if there are no elements
-    if (currentSidebarElements === null ||  currentSidebarElements.length === 0) return;
+    if (currentSidebarElements === null || currentSidebarElements.length === 0) return;
     const currentFocusedSidebarElementIndex = state.panels.focusedSidebarElement.index;
     // abort if there are is no next element in the current page
     if (currentFocusedSidebarElementIndex === currentSidebarElements.length - 1) return;
 
+    state.panels.focusedSidebarElement.scrollIntoViewOnChange = true;
     state.panels.focusedSidebarElement.index += 1;
   },
   focusPreviousSidebarElement(state, action) {
@@ -266,6 +271,7 @@ export const reducers = {
     // abort if there are is no next element in the current page
     if (currentFocusedSidebarElementIndex === 0) return;
 
+    state.panels.focusedSidebarElement.scrollIntoViewOnChange = true;
     state.panels.focusedSidebarElement.index -= 1;
   },
 
@@ -273,7 +279,7 @@ export const reducers = {
     // mainPanelElementsPerPage has to be passed in as a parameter
     // because the only part of the redux state is the workspace slice
     // mainPanelElementsPerPage is needed to calculate the main panel page
-    const {newDocId, mainPanelElementsPerPage} = action.payload;
+    const { newDocId, mainPanelElementsPerPage } = action.payload;
     const curDocIndex = state.documents.findIndex((d) => d.document_id === newDocId);
     state.curDocName = newDocId;
     state.curDocId = curDocIndex;
@@ -281,17 +287,16 @@ export const reducers = {
     // set the page of the new document based on the focused main panel element, if any
     // IMPORTANT: when changing the document, the focused element has to be set first,
     // so that both, the document and the page are set atomically. Setting those separately
-    // will cause elements to be fetched twice, once when document changes and once when 
+    // will cause elements to be fetched twice, once when document changes and once when
     // page changes
     let page;
     if (state.panels.focusedElement.id !== null) {
       const mainElementIndex = getElementIndex(state.panels.focusedElement.id);
       page = Math.floor(mainElementIndex / mainPanelElementsPerPage) + 1;
-    }
-    else {
+    } else {
       page = 1;
     }
-    state.panels[panelIds.MAIN_PANEL].page = page; 
+    state.panels[panelIds.MAIN_PANEL].page = page;
   },
   setPage(state, action) {
     const { panelId, newPage } = action.payload;
@@ -395,7 +400,7 @@ export const extraReducers = {
     const { elements } = parseElements(unparsedElements, state.curCategory);
 
     state.panels.loading[panelIds.LABEL_NEXT] = false;
-    state.panels[panelIds.LABEL_NEXT].elements = {...elements};
+    state.panels[panelIds.LABEL_NEXT].elements = { ...elements };
     state.panels[panelIds.LABEL_NEXT].hitCount = hitCount;
   },
 
@@ -454,8 +459,7 @@ export const extraReducers = {
       documentNeg,
     };
 
-  // set page to 1 if focused element is not in current page
-
+    // set page to 1 if focused element is not in current page
   },
 };
 
@@ -463,7 +467,7 @@ export const extraReducers = {
  * Selector for getting the element object that is focused on the sidebar panel
  * This information is not stored on the redux state because only the index
  * of the element is needed to identify it
- * @param {*} state 
+ * @param {*} state
  * @returns the focused element with its id, text and docId
  */
 export const focusedSidebarElementSelector = (state) => {
@@ -492,7 +496,7 @@ export const focusedSidebarElementSelector = (state) => {
 /**
  * Returns the current sidebar elements list.
  * If the active panel is the Contradicting labels panel
- * the list returned is a flatten list from the list of 
+ * the list returned is a flatten list from the list of
  * contradicting pairs
  */
 const getCurrentSidebarElements = (state) => {
@@ -500,8 +504,8 @@ const getCurrentSidebarElements = (state) => {
   if (state.panels.activePanelId === panelIds.CONTRADICTING_LABELS) {
     return state.panels[activePanelId].pairs.flat();
   } else {
-    const elementsDict = state.panels[activePanelId].elements
+    const elementsDict = state.panels[activePanelId].elements;
     if (elementsDict === null) return null;
     return Object.values(elementsDict);
   }
-}
+};

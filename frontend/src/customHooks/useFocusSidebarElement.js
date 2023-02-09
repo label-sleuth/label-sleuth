@@ -19,15 +19,17 @@ import { getPanelDOMKey, scrollIntoElementView } from "../utils/utils";
 import { focusedSidebarElementSelector } from "../modules/Workplace/redux/panelsSlice";
 
 export const useFocusSidebarElement = () => {
-  const { index: focusedSidebarElementIndex } = useSelector((state) => state.workspace.panels.focusedSidebarElement);
+  const { index: focusedSidebarElementIndex, scrollIntoViewOnChange } = useSelector(
+    (state) => state.workspace.panels.focusedSidebarElement
+  );
   const focusedElement = useSelector(focusedSidebarElementSelector);
   const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
-  const focusedElementId = useMemo(() => focusedElement === null ? null : focusedElement.id, [focusedElement])
+  const focusedElementId = useMemo(() => (focusedElement === null ? null : focusedElement.id), [focusedElement]);
 
   useEffect(() => {
-    if (focusedElementId === null) return;
+    if (focusedElementId === null || scrollIntoViewOnChange === false) return;
     const focusedSidebarElementDOMKey = getPanelDOMKey(focusedElementId, activePanelId, focusedSidebarElementIndex);
     const element = document.getElementById(focusedSidebarElementDOMKey);
     scrollIntoElementView(element);
-  }, [focusedElementId, focusedSidebarElementIndex, activePanelId]);
+  }, [focusedElementId, scrollIntoViewOnChange, focusedSidebarElementIndex, activePanelId]);
 };
