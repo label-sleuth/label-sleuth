@@ -107,9 +107,9 @@ const DataSlice = createSlice({
     ...evaluationReducers,
     ...modelReducers,
     cleanWorkplaceState(state, action) {
-      return {
-        ...initialState,
-      };
+      const initialStateAux = { ...initialState }
+      initialStateAux.systemVersion = state.systemVersion;
+      return initialStateAux;
     },
   },
   extraReducers: {

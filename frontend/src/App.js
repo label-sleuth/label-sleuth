@@ -32,6 +32,7 @@ import useAuthentication from "./customHooks/useAuthentication";
 import { fetchFeatureFlags } from "./featureFlags/featureFlagsSlice";
 import { useErrorHandler } from "./error/useErrorHandler";
 import { useWorkspaceId } from "./customHooks/useWorkspaceId";
+import { fetchVersion } from "./modules/Workplace/redux";
 
 const AppRoutes = () => {
   const { authenticated, authenticationEnabled } = useAuthentication();
@@ -97,6 +98,11 @@ const App = () => {
   useEffect(() => {
     dispatch(fetchFeatureFlags());
   }, [dispatch]);
+
+  React.useEffect(() => {
+    dispatch(fetchVersion());
+  }, [dispatch]);
+
 
   return (
     <div>

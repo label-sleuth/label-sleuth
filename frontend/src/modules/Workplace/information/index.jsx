@@ -53,7 +53,6 @@ import {
 } from "./FileTransferLabels/TransferLabelsDialog";
 import { getOrdinalSuffix } from "../../../utils/utils";
 import { ModelErrorAlert } from "./ModelErrorAlert";
-import { fetchVersion } from "../redux";
 import { SupportIconsBar } from "../../../components/SupportIconsBar";
 import { DrawerHeader } from "./DrawerHeader";
 import { Divider } from "./Divider";
@@ -66,6 +65,7 @@ import { useNewModelNotifications } from "../../../customHooks/useNewModelNotifi
 import { useWorkspaceId } from "../../../customHooks/useWorkspaceId";
 import useLogOut from "../../../customHooks/useLogOut";
 import useAuthentication from "../../../customHooks/useAuthentication";
+import { SystemVersion } from "../../../components/version/SystemVersion";
 
 const a11yProps = (index) => ({
   id: `simple-tab-${index}`,
@@ -112,10 +112,6 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
   }, []);
 
   useCheckModelState({ curCategory, checkModelInterval });
-
-  React.useEffect(() => {
-    dispatch(fetchVersion());
-  }, [dispatch]);
 
   const { fire, getInstance } = useConfetti();
 
@@ -434,11 +430,7 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
             </Stack>
           </Stack>
           <SupportIconsBar sx={{ marginBottom: 3 }} />
-          {systemVersion && (
-            <Typography variant="body2" className={classes["system-version"]}>
-              Version: {systemVersion}
-            </Typography>
-          )}
+          <SystemVersion />
         </Drawer>
       </Box>
     </>

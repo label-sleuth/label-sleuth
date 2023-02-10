@@ -30,6 +30,7 @@ import workspace_logo from "../../assets/workspace-config/tag--edit.svg"
 import { toast } from 'react-toastify';
 import useBackdrop from '../../customHooks/useBackdrop';
 import { useWorkspaceId } from '../../customHooks/useWorkspaceId';
+import { SystemVersion } from '../../components/version/SystemVersion';
 
 const WorkspaceConfig = () => {
   const dispatch = useDispatch()
@@ -80,6 +81,7 @@ const WorkspaceConfig = () => {
         <div className={classes.newdata}>
           <LoadDocument {...loadDocProps} openBackdrop={openBackdrop} />
         </div>
+        <SystemVersion style={{position: "absolute", right: 10, bottom: -20}} />
       </div>
     </>
 
