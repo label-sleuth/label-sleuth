@@ -21,7 +21,8 @@ from typing import Dict, Iterable, Sequence
 
 import pandas as pd
 
-from label_sleuth.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement, LabelType
+from label_sleuth.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement, LabelType, \
+    URI_SEP
 
 
 def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name, data_access, doc_uri=None) \
@@ -46,6 +47,10 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
     logging.warning("Currently label metadata is ignored")
     # replace punctuation with underscores in category names
     punctuation = string.punctuation.replace("'", "")
+
+    if DisplayFields.doc_id in labels_df_to_import.columns:
+        labels_df_to_import[DisplayFields.doc_id] = labels_df_to_import[DisplayFields.doc_id].apply(
+            lambda x: x.replace(URI_SEP, '_'))
     labels_df_to_import[DisplayFields.category_name] = labels_df_to_import[DisplayFields.category_name].apply(str)
     labels_df_to_import[DisplayFields.category_name] = labels_df_to_import[DisplayFields.category_name].apply(
         lambda x: x.translate(x.maketrans(punctuation, '_' * len(punctuation))))
