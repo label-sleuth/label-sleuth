@@ -113,7 +113,7 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
         <p id={id} className={classes["elem_text"]} style={text_colors[userLabel]}>
           <Highlighter
             searchWords={activePanelId === panelIds.SEARCH ? [searchInput] : []}
-            autoEscape={false}
+            autoEscape={true}
             textToHighlight={text}
           />
         </p>
