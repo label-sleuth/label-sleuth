@@ -118,7 +118,7 @@ def login():
     password = post_data["password"]
 
     if not verify_password(username, password):
-        logging.warning(f"LOGIN FAILED: {username} {password}")
+        logging.warning(f"Login failed for username {username}")
         return make_response(jsonify({
             'error': "Login failed: wrong username or password"
         }), 401)
