@@ -823,13 +823,15 @@ class OrchestratorApi:
             return {"all": 0}
 
     # Import/Export
-
+    
     def import_category_labels(self, workspace_id, labels_df_to_import: pd.DataFrame):
         logging.info(f"Importing {len(labels_df_to_import)} unique labeled elements into workspace '{workspace_id}'"
                      f"from {len(labels_df_to_import[DisplayFields.category_name].unique())} categories")
         dataset_name = self.get_dataset_name(workspace_id)
-        imported_categories_to_uris_and_labels = process_labels_dataframe(workspace_id, dataset_name, self.data_access,
-                                                                          labels_df_to_import)
+        # Only if doc_id are provided or apply_labels_to_duplicate_texts is false the doc_id is taken into account when applying labels
+        apply_labels_to_duplicate_texts = self.config.apply_labels_to_duplicate_texts is True or not DisplayFields.doc_id in labels_df_to_import.columns
+        (imported_categories_to_uris_and_labels, contracticting_labels_info) = process_labels_dataframe(workspace_id, dataset_name, self.data_access, labels_df_to_import, apply_labels_to_duplicate_texts=apply_labels_to_duplicate_texts)
+        
         # name to id mapping for *existing* categories
         category_name_to_id = {category.name: category_id
                                for category_id, category in self.get_all_categories(workspace_id).items()}
@@ -855,7 +857,7 @@ class OrchestratorApi:
             else:
                 logging.info(f'{category_name}: adding labels for {len(uri_to_label)} uris')
                 self.set_labels(workspace_id, uri_to_label,
-                                apply_to_duplicate_texts=self.config.apply_labels_to_duplicate_texts,
+                                apply_to_duplicate_texts=False,
                                 update_label_counter=True)
 
             label_counts_dict = self.get_label_counts(workspace_id, dataset_name, category_id, remove_duplicates=False)
@@ -865,11 +867,12 @@ class OrchestratorApi:
         # TODO return both positive and negative counts
         categories_counter_list = [{'category_id': key, 'counter': value} for key, value in categories_counter.items()]
         total = sum(categories_counter.values())
-
+        
         res = {'categories': categories_counter_list,
                'categoriesCreated': categories_created,
                'linesSkipped': lines_skipped,
-               'total': total}
+               'total': total,
+               'contracticting_labels_info': contracticting_labels_info}
         return res
 
     def export_workspace_labels(self, workspace_id, labeled_only) -> pd.DataFrame:
