@@ -25,11 +25,17 @@ class Language:
     """
     name: str
     stop_words: Sequence[str]
-    spacy_model_name: str
+    spacy_model_name: str = None
+    fasttext_language_id: str = None
+    right_to_left: bool = False
 
     def __repr__(self):
         return self.name
 
+    def __post_init__(self):
+        if self.spacy_model_name is None and self.fasttext_language_id is None:
+            raise Exception(f"Selected Language {self.name} should define either "
+							f"spacy_model_name or fasttext_language_id in class '{Language}'")
 
 English = \
     Language(name='English',
@@ -164,7 +170,15 @@ Romanian = \
                          "ăla", "ălea", "ăsta", "ăstea", "ăştia", "şapte", "şase", "şi", "ştiu", "ţi", "ţie"],
              spacy_model_name='ro_core_news_lg')
 
+Hebrew = Language(name='Hebrew',
+				  stop_words=["זה", "זאת", "אלה", "אלו" ,"גם" , "של", "מה", "או"],
+				  fasttext_language_id="he",
+				  right_to_left=True)
+
+
 class Languages:
     ENGLISH = English
     ITALIANO = Italiano
     ROMANIAN = Romanian
+    HEBREW = Hebrew
+

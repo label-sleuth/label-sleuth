@@ -79,7 +79,9 @@ def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
     app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.config["CONFIGURATION"].users}
     app.tokens = [user.token for user in app.users.values()]
     sentence_embedding_service = SentenceEmbeddingService(embedding_model_dir=output_dir,
-                                                          preload_spacy_model_name=config.language.spacy_model_name)
+                                                          preload_spacy_model_name=config.language.spacy_model_name,
+                                                          preload_fasttext_language_id=
+                                                          config.language.fasttext_language_id)
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),
                                            FileBasedDataAccess(output_dir),
                                            ActiveLearningFactory(),
@@ -1201,7 +1203,8 @@ def get_feature_flags():
     res =  {
         "login_required": curr_app.config['CONFIGURATION'].login_required,
         "main_panel_elements_per_page": curr_app.config['CONFIGURATION'].main_panel_elements_per_page,
-        "sidebar_panel_elements_per_page": curr_app.config['CONFIGURATION'].sidebar_panel_elements_per_page
+        "sidebar_panel_elements_per_page": curr_app.config['CONFIGURATION'].sidebar_panel_elements_per_page,
+        "right_to_left": curr_app.config['CONFIGURATION'].language.right_to_left
     }
     logging.debug(f'Feature flags are: {res}')
     return jsonify(res) 
