@@ -47,7 +47,7 @@ class SVM(ModelAPI):
         super().__init__(output_dir, models_background_jobs_manager)
         self.kernel = kernel
         self.representation_type = representation_type
-        if self.representation_type == RepresentationType.GLOVE:
+        if self.representation_type == RepresentationType.WORD_EMBEDDING:
             self.sentence_embedding_service = sentence_embedding_service
 
     def _train(self, model_id, train_data, model_params):
@@ -109,8 +109,8 @@ class SVM(ModelAPI):
                 return train_data_features, vectorizer
             else:
                 return vectorizer.transform(texts), None
-        elif self.representation_type == RepresentationType.GLOVE:
-            return self.sentence_embedding_service.get_glove_representation(texts, language=language), None
+        elif self.representation_type == RepresentationType.WORD_EMBEDDING:
+            return self.sentence_embedding_service.get_sentence_embeddings_representation(texts, language=language), None
 
     def get_model_dir_name(self): # for backward compatibility, we override the default get_model_dir_name()
         return "svm"
@@ -123,8 +123,9 @@ class SVM_BOW(SVM):
                          sentence_embedding_service=sentence_embedding_service)
 
 
-class SVM_GloVe(SVM):
+class SVM_WordEmbeddings(SVM):
     def __init__(self, output_dir, models_background_jobs_manager, sentence_embedding_service):
         super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
-                         representation_type=RepresentationType.GLOVE,
+                         representation_type=RepresentationType.WORD_EMBEDDING,
                          sentence_embedding_service=sentence_embedding_service)
+

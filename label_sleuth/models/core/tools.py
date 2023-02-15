@@ -18,10 +18,12 @@ import re
 import os
 import shutil
 import string
-import sys
+
 import tarfile
 import tempfile
 import threading
+import fasttext
+import fasttext.util
 
 from collections import defaultdict
 from enum import Enum
@@ -36,41 +38,55 @@ from label_sleuth.models.core.languages import Language, Languages
 
 
 class RepresentationType(Enum):
-    GLOVE = 1
+    WORD_EMBEDDING = 1
     BOW = 2
 
 
 class SentenceEmbeddingService:
-    def __init__(self, embedding_model_dir, preload_spacy_model_name=None):
+    def __init__(self, embedding_model_dir, preload_spacy_model_name=None, preload_fasttext_language_id=None):
         self.spacy_models_path = os.path.join(embedding_model_dir, "spacy_models")
+        self.fasttext_models_path = os.path.join(embedding_model_dir, "fasttext_models")
+        fasttext.FastText.eprint = lambda x: None
         os.makedirs(self.spacy_models_path, exist_ok=True)
+        os.makedirs(self.fasttext_models_path, exist_ok=True)
         self.spacy_models = defaultdict(lambda: None)
         self.spacy_model_lock = threading.Lock()
         if preload_spacy_model_name is not None:
             self.load_or_download_spacy_model(preload_spacy_model_name)
+        if preload_fasttext_language_id is not None:
+            self.get_fasttext_model(preload_fasttext_language_id)
 
-    def get_glove_representation(self, sentences: List[str],
-                                 language: Language = Languages.ENGLISH) -> List[np.ndarray]:
+    def get_sentence_embeddings_representation(self, sentences: List[str],
+                                               language: Language = Languages.ENGLISH) -> List[np.ndarray]:
         """
-        Given a list of texts, return a list of GloVe-based representation vectors. Each text is represented by the
+        Given a list of texts, return a list of representation vectors. Each text is represented by the
         mean of the vector representations of its consisting tokens.
         :param sentences:
         :param language:
         :return: a list of numpy vectors. Vector length depends on the representation model specified under *language*
         """
-        model_name = language.spacy_model_name
-
-        # The model used for calculating the representations
-        spacy_model = self.get_spacy_model(model_name)
 
         sentences = remove_stop_words_and_punctuation(sentences, language=language)
-        # remove out-of-vocabulary tokens
-        sentences = [' '.join(token for token in sent.split() if spacy_model.vocab.has_vector(token))
-                     for sent in sentences]
-        # the vector obtained by *make_doc(X).vector* is an average of the representations for the
-        # individual tokens in X
-        embeddings = [spacy_model.make_doc(sent).vector for sent in sentences]
-        logging.info(f"Done getting GloVe representations for {len(embeddings)} sentences")
+
+        if language.spacy_model_name is not None:
+            model_name = language.spacy_model_name
+
+            # The model used for calculating the representations
+            spacy_model = self.get_spacy_model(model_name)
+
+            # remove out-of-vocabulary tokens
+            sentences = [' '.join(token for token in sent.split() if spacy_model.vocab.has_vector(token))
+                         for sent in sentences]
+            # the vector obtained by *make_doc(X).vector* is an average of the representations for the
+            # individual tokens in X
+            embeddings = [spacy_model.make_doc(sent).vector for sent in sentences]
+            logging.info(f"Done getting GloVe representations for {len(embeddings)} sentences")
+        else:
+            # fasttext model
+            model = self.get_fasttext_model(language.fasttext_language_id)
+            embeddings = [model.get_sentence_vector(sent) for sent in sentences]
+            logging.info(f"Done getting FastText representations for {len(embeddings)} sentences")
+
         return embeddings
 
     def get_spacy_model(self, model_name) -> spacy.Language:
@@ -132,6 +148,25 @@ class SentenceEmbeddingService:
         self.download_spacy_model(model_name, model_path)
         model = spacy.load(model_path)
         return model
+
+    def get_fasttext_model(self, fasttext_language_id):
+        model_file_name = f"cc.{fasttext_language_id}.300.bin"
+        model_path = os.path.join(self.fasttext_models_path, model_file_name)
+        if os.path.exists(model_path):
+            return fasttext.load_model(model_path)
+        logging.info(f"fasttext model for language {fasttext_language_id} does not exist in "
+                     f"{model_path}, downloading...")
+        original_cwd = os.getcwd()
+
+        try:
+            os.chdir(self.fasttext_models_path)
+            fasttext.util.download_model(fasttext_language_id, if_exists='ignore')
+            os.remove(os.path.join(self.fasttext_models_path, f"{model_file_name}.gz"))
+        except Exception as e:
+            raise Exception(f"Could not download FastText model for language id {fasttext_language_id}") from e
+        finally:
+            os.chdir(original_cwd)
+        return fasttext.load_model(model_path)
 
 
 def remove_stop_words_and_punctuation(sentences: List[str], language=Languages.ENGLISH) -> List[str]:

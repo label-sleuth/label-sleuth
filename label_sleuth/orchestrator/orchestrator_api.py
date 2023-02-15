@@ -720,7 +720,7 @@ class OrchestratorApi:
         dataset_name = self.get_dataset_name(workspace_id)
         labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
         return get_suspected_labeling_contradictions_by_distance_with_diffs(
-            category_id, labeled_elements, self.sentence_embedding_service.get_glove_representation,
+            category_id, labeled_elements, self.sentence_embedding_service.get_sentence_embeddings_representation,
             language=self.config.language)
 
     def get_suspicious_elements_report(self, workspace_id, category_id,
