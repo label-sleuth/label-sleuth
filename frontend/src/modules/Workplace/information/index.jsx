@@ -111,6 +111,14 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
     });
   }, []);
 
+  const notifyWarning = useCallback((message, toastId, autoClose = false) => {
+    toast(message, {
+      autoClose: autoClose,
+      type: toast.TYPE.WARNING,
+      toastId: toastId,
+    });
+  }, []);
+
   useCheckModelState({ curCategory, checkModelInterval });
 
   const { fire, getInstance } = useConfetti();
@@ -161,8 +169,15 @@ export const WorkspaceInfo = ({ setTutorialOpen, checkModelInterval = 5000, fire
         ? `Added categories are: ${getCategoriesString(categoriesCreated)}`
         : "";
       notifySuccess(`New labels have been added! ${createdCategoriesMessage}`, "toast-uploaded-labels");
+     
+      // if the user uploaded labels that were contradicting display a warning notification
+      const contractictingLabelsElementCount = uploadedLabels.contracticting_labels_info.elements.length
+      if (contractictingLabelsElementCount > 0) {
+        const warningMessage = `You uploaded contradicting labels for ${contractictingLabelsElementCount} element${(contractictingLabelsElementCount > 1 ? "s" : "")}`
+        notifyWarning(warningMessage, 'toast-contractictingLabelsInfo')
+      }
     }
-  }, [uploadedLabels, notifySuccess]);
+  }, [uploadedLabels, notifySuccess, notifyWarning]);
 
   return (
     <>

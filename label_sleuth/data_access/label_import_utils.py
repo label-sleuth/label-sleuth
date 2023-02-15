@@ -17,15 +17,12 @@ import logging
 import re
 import string
 import sys
-from typing import Dict, Iterable, Sequence
-
+from typing import Dict, Iterable, Sequence, List, Union
 import pandas as pd
-
 from label_sleuth.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement, LabelType, \
     URI_SEP
 
-
-def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name, data_access, doc_uri=None) \
+def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name, data_access, remove_duplicates) \
         -> Iterable[TextElement]:
     """
     The user may import a large number of labeled instances, and these will not necessarily be given with a text
@@ -33,18 +30,22 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
     optionally a *doc_uri* that the texts belong to.
     The order of the returned elements DOES NOT match the order of the texts given as input.
     """
-    # TODO When we pass a doc_id, it is important not to remove duplicates. But is it really necessary to remove duplicates when we don't?
-    remove_duplicates = False if doc_uri is not None else True
     regex = '|'.join(f'^{re.escape(t)}$' for t in texts)
     elements = data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                              sample_size=sys.maxsize, query=regex, is_regex=True,
-                                             document_uri=doc_uri, remove_duplicates=remove_duplicates)
+                                             document_uri=None, remove_duplicates=remove_duplicates)
     return elements['results']
 
 
-def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_to_import: pd.DataFrame) \
+def merge_and_rename_dfs(a: pd.DataFrame, b: pd.DataFrame, on: Union[str, List[str]]):
+    df = pd.merge(left=a, right=b, on=on, suffixes=('_x', None))
+    df = df[df.columns.intersection(DisplayFields.__dict__)]
+    return df
+
+def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_to_import: pd.DataFrame, apply_labels_to_duplicate_texts=False) \
         -> Dict[str, Dict[str, Dict[str, Label]]]:
     logging.warning("Currently label metadata is ignored")
+    
     # replace punctuation with underscores in category names
     punctuation = string.punctuation.replace("'", "")
 
@@ -62,28 +63,53 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
     if DisplayFields.label_type not in labels_df_to_import.columns:
         labels_df_to_import[DisplayFields.label_type] = LabelType.Standard.name
 
-    category_to_uri_to_label = {}
-    for category_name, category_df in labels_df_to_import.groupby(DisplayFields.category_name):
-        # Here we group the texts by label, and optionally also by doc_id. The goal is to be able to efficiently
-        # query for a group of elements by their texts - using *get_element_group_by_texts* - rather than querying
-        # and assigning a label for one text at a time.
-        if DisplayFields.doc_id not in category_df.columns:
-            doc_id_to_label_to_texts = \
-                {None: {(bool(label), label_type): df_for_label_and_type[DisplayFields.text].values.tolist()
-                        for (label, label_type), df_for_label_and_type in category_df.groupby([DisplayFields.label, DisplayFields.label_type])}}
-        else:
-            doc_id_to_label_to_texts = \
-                {doc_id: {(bool(label), label_type): df_for_label_and_type[DisplayFields.text].values.tolist()
-                          for (label, label_type), df_for_label_and_type in df_for_doc.groupby([DisplayFields.label, DisplayFields.label_type])}
-                 for doc_id, df_for_doc in category_df.groupby(DisplayFields.doc_id)}
+    # calling get_element_group_by_texts is the most expensive call on this function and,
+    # removing duplicates from the texts iterable reduces significantly its runtime
+    texts = labels_df_to_import[DisplayFields.text].unique()
 
+    elements = get_element_group_by_texts(texts, workspace_id, dataset_name, data_access, remove_duplicates=False)   
+        
+
+    # convert Element list into a DataFrame in order to perform the join operation
+    query_elements_df = pd.DataFrame(
+            [[e.text, e.uri.split('-')[1], e.uri] for e in elements],
+            columns=[DisplayFields.text, DisplayFields.doc_id, DisplayFields.uri]
+        )
+
+
+    def has_contradicting_labels(df: pd.DataFrame):
+        return df[DisplayFields.label].unique().shape[0] > 1
+  
+    # check if the user uploaded contradicting labels
+    group_by_cols = [DisplayFields.category_name, DisplayFields.text]
+    if not apply_labels_to_duplicate_texts:
+        group_by_cols.append(DisplayFields.doc_id)
+    contradicting_labels_df = labels_df_to_import.groupby(group_by_cols).filter(has_contradicting_labels)
+    contradicting_labels_texts = contradicting_labels_df.reset_index()[DisplayFields.text].unique().tolist()
+    contracticting_labels_info = {
+        'elements': contradicting_labels_texts
+    }
+
+    if apply_labels_to_duplicate_texts:
+        # duplicates are dropped because if not two many duplicates will be present on the joined DataFrame
+        labels_df_to_import.drop_duplicates(subset=[DisplayFields.category_name, DisplayFields.text], inplace=True)
+        df = merge_and_rename_dfs(
+                labels_df_to_import, 
+                query_elements_df, 
+                DisplayFields.text
+            )
+    else:
+        df = merge_and_rename_dfs(
+                labels_df_to_import, 
+                query_elements_df, 
+                [DisplayFields.doc_id, DisplayFields.text]
+            )
+    category_to_uri_to_label = {}
+    for category_name, category_df in df.groupby(DisplayFields.category_name):
         uri_to_label = {}
-        for doc_id, label_and_type_to_texts in doc_id_to_label_to_texts.items():
-            doc_uri = f'{dataset_name}-{doc_id}' if doc_id is not None else None
-            for (label, label_type), texts in label_and_type_to_texts.items():
-                elements_to_label = get_element_group_by_texts(texts, workspace_id, dataset_name, data_access,
-                                                               doc_uri=doc_uri)
-                uri_to_label.update({e.uri: {category_name: Label(label=label ,label_type=LabelType[label_type])}
-                                     for e in elements_to_label})
+        for uri, uri_df in category_df.groupby(DisplayFields.uri):
+            for (label, label_type), _ in uri_df.groupby([DisplayFields.label, DisplayFields.label_type]):
+                uri_to_label[uri] = {category_name: Label(label=bool(label), label_type=LabelType[label_type])}
         category_to_uri_to_label[category_name] = uri_to_label
-    return category_to_uri_to_label
+
+    return category_to_uri_to_label, contracticting_labels_info
