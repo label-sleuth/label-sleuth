@@ -21,7 +21,7 @@ import { getPageCount } from "../utils/utils";
 import { elementsInitialState } from "../modules/Workplace/redux/panelsSlice";
 import { PanelIdsEnum } from "../const";
 import { useAppSelector, useAppDispatch } from "./useRedux";
-
+import { Element } from "../global";
 interface UsePanelPaginationProps {
   elementsPerPage: number;
   panelId: PanelIdsEnum;
@@ -75,7 +75,7 @@ const usePanelPagination = ({
    * the elements that has to be displayed in the current page.
    * If using fake pagination, return a slice of the elements.
    */
-  const currentContentData = React.useMemo(() => {
+  const currentContentData: Element[] | string[] | null = React.useMemo(() => {
     if (elements === null) return null;
     else {
       if (fakePagination) {
