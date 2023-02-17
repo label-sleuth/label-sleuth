@@ -16,7 +16,14 @@
 import React from "react"
 import classes from "./Buttons.module.css"
 
-const ButtonLight = ({ handleClick, disabled, size, text, ...rest }) => {
+interface ButtonLightProps {
+    handleClick: () => void,
+    disabled?: boolean,
+    size: number,
+    text: string,
+}
+
+const ButtonLight = ({ handleClick, disabled, size, text, ...rest } : ButtonLightProps) => {
     return (
         <button className={classes["button-light"]}  onClick={handleClick} {...rest}>
             {text}
