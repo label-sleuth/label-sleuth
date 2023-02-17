@@ -15,8 +15,8 @@
 
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
-import Element from "./Element";
-import { useSelector } from "react-redux";
+import { MainElement } from "./Element";
+import { useAppSelector } from "../../../customHooks/useRedux";
 import "../../../components/pagination/pagination.css";
 import classes from "./MainPanel.module.css";
 import left_icon from "../../../assets/workspace/doc_left.svg";
@@ -29,32 +29,41 @@ import {
   ACTIONS_DRAWER_WIDTH,
   APPBAR_HEIGHT,
   panelIds,
+  PanelIdsEnum,
 } from "../../../const";
 import { getPanelDOMKey } from "../../../utils/utils";
 import { useScrollMainPanelElementIntoView } from "../../../customHooks/useScrollElementIntoView";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
 import { useFetchPrevNextDoc } from "../../../customHooks/useFetchPrevNextDoc";
 import { useMainPagination } from "../../../customHooks/useMainPagination";
+import { Element } from "../../../global";
 
-const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(({ theme, open, rightDrawerWidth }) => ({
-  position: "fixed",
-  padding: theme.spacing(3),
-  margin: 0,
-  right: ACTIONS_DRAWER_WIDTH,
-  left: LEFT_DRAWER_WIDTH,
-  top: APPBAR_HEIGHT,
-  bottom: 0,
-  overflow: "none",
-  ...(open && {
-    marginRight: rightDrawerWidth,
-  }),
-}));
+const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(
+  ({ theme, open, rightDrawerWidth }: { theme?: any; open: boolean; rightDrawerWidth: number }) => ({
+    position: "fixed",
+    padding: theme.spacing(3),
+    margin: 0,
+    right: ACTIONS_DRAWER_WIDTH,
+    left: LEFT_DRAWER_WIDTH,
+    top: APPBAR_HEIGHT,
+    bottom: 0,
+    overflow: "none",
+    ...(open && {
+      marginRight: rightDrawerWidth,
+    }),
+  })
+);
 
-const MainPanel = ({ open, rightDrawerWidth }) => {
-  const curDocName = useSelector((state) => state.workspace.curDocName);
-  const curDocIndex = useSelector((state) => state.workspace.curDocIndex);
-  const documents = useSelector((state) => state.workspace.documents);
-  const mainPanelElementsPerPage = useSelector((state) => state.featureFlags.mainPanelElementsPerPage);
+interface MainPanelProps {
+  open: boolean;
+  rightDrawerWidth: number;
+}
+
+const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
+  const curDocName = useAppSelector((state) => state.workspace.curDocName);
+  const curDocIndex = useAppSelector((state) => state.workspace.curDocIndex);
+  const documents = useAppSelector((state) => state.workspace.documents);
+  const mainPanelElementsPerPage = useAppSelector((state) => state.featureFlags.mainPanelElementsPerPage);
 
   const { currentContentData, hitCount, currentPage, onPageChange, isPaginationRequired } =
     useMainPagination(mainPanelElementsPerPage);
@@ -116,10 +125,7 @@ const MainPanel = ({ open, rightDrawerWidth }) => {
           <Box id="main-element-view">
             {currentContentData &&
               currentContentData.map((element) => (
-                <Element
-                  element={element}
-                  key={getPanelDOMKey(element.id, panelIds.MAIN_PANEL)}
-                />
+                <MainElement element={element as Element} key={getPanelDOMKey((element as Element).id, PanelIdsEnum.MAIN_PANEL)} />
               ))}
           </Box>
         </div>

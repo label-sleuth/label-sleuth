@@ -13,11 +13,17 @@
     limitations under the License.
 */
 
+
+interface KeyboardProps {
+  kbd: string;
+  style: {[key: string]: string}
+}
+
 /**
  * A styled kbd component to display shortcuts keyboard keys
  * @param {String} kbd: The text to display, i.g. "Shift"
  */
-export const Keyboard = ({ kbd, style = {} }) => {
+export const Keyboard = ({ kbd, style = {} }: KeyboardProps) => {
   return (
     <kbd
       style={{

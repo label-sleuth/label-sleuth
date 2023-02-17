@@ -13,7 +13,6 @@
     limitations under the License.
 */
 
-import * as React from "react";
 import { LargeTitle, MainContent } from "../../../components/dialog";
 import { Box, Modal, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -26,7 +25,12 @@ import TableRow from "@mui/material/TableRow";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { Keyboard } from "../../../components/Keyboard";
 
-export const ShortcutsModal = ({ open, setOpen }) => {
+interface ShortcutsModalProps {
+  open: boolean;
+  setOpen: (v: boolean) => void
+}
+
+export const ShortcutsModal = ({ open, setOpen }: ShortcutsModalProps) => {
   const handleClose = () => {
     setOpen(false);
   };

@@ -82,7 +82,7 @@ const ContradictingLabelsPanel = () => {
     );
   };
 
-  const PairList = ({ pairs }) => {
+  const   PairList = ({ pairs }) => {
     return (
       <Box>
         {pairs &&
