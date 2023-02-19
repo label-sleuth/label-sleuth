@@ -24,6 +24,8 @@ class ModelPolicies:
     """
     STATIC_SVM_ENSEMBLE = StaticModelPolicy(ModelsCatalog.SVM_ENSEMBLE)
     STATIC_SVM_WORD_EMBEDDINGS = StaticModelPolicy(ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS)
-    STATIC_SVM_GLOVE = StaticModelPolicy(ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS) # for backward compatibility
+    STATIC_SVM_GLOVE = StaticModelPolicy(ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS)  # for backward compatibility
     STATIC_SVM_BOW = StaticModelPolicy(ModelsCatalog.SVM_OVER_BOW)
+    STATIC_NB_WORD_EMBEDDINGS = StaticModelPolicy(ModelsCatalog.NB_OVER_WORD_EMBEDDINGS)
+    STATIC_NB_BOW = StaticModelPolicy(ModelsCatalog.NB_OVER_BOW)
     STATIC_HF_BERT = StaticModelPolicy(ModelsCatalog.HF_BERT)
