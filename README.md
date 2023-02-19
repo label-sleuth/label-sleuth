@@ -194,8 +194,11 @@ Please cite:
 	title={{L}abel {S}leuth: From Unlabeled Text to a Classifier in a Few Hours},
 	author={Shnarch, Eyal and Halfon, Alon and Gera, Ariel and Danilevsky, Marina and Katsis, Yannis and Choshen, Leshem and Cooper, Martin Santillan and Epelboim, Dina and Zhang, Zheng and Wang, Dakuo and Yip, Lucy and Ein-Dor, Liat and Dankin, Lena and Shnayderman, Ilya and Aharonov, Ranit and Li, Yunyao and Liberman, Naftali and Slesarev, Philip Levin and Newton, Gwilym and Ofek-Koifman, Shila and Slonim, Noam and Katz, Yoav},
 	booktitle={Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing ({EMNLP}): System Demonstrations},
+    	month={dec},
+    	year={2022},
+    	address={Abu Dhabi, UAE},
 	publisher={Association for Computational Linguistics},
-  	url={https://arxiv.org/abs/2208.01483},
-  	year={2022}
+	url={https://aclanthology.org/2022.emnlp-demos.16},
+    	pages={159--168}
 }
 ```
