@@ -186,7 +186,7 @@ These are the steps for integrating a new active learning approach:
    </details>
 
 ## Reference
-Eyal Shnarch, Alon Halfon, Ariel Gera, Marina Danilevsky, Yannis Katsis, Leshem Choshen, Martin Santillan Cooper, Dina Epelboim, Zheng Zhang, Dakuo Wang, Lucy Yip, Liat Ein-Dor, Lena Dankin, Ilya Shnayderman, Ranit Aharonov, Yunyao Li, Naftali Liberman, Philip Levin Slesarev, Gwilym Newton, Shila Ofek-Koifman, Noam Slonim and Yoav Katz (EMNLP 2022). [Label Sleuth: From Unlabeled Text to a Classifier in a Few Hours](https://arxiv.org/abs/2208.01483).
+Eyal Shnarch, Alon Halfon, Ariel Gera, Marina Danilevsky, Yannis Katsis, Leshem Choshen, Martin Santillan Cooper, Dina Epelboim, Zheng Zhang, Dakuo Wang, Lucy Yip, Liat Ein-Dor, Lena Dankin, Ilya Shnayderman, Ranit Aharonov, Yunyao Li, Naftali Liberman, Philip Levin Slesarev, Gwilym Newton, Shila Ofek-Koifman, Noam Slonim and Yoav Katz (EMNLP 2022). [Label Sleuth: From Unlabeled Text to a Classifier in a Few Hours](https://aclanthology.org/2022.emnlp-demos.16).
 
 Please cite:
 ```
