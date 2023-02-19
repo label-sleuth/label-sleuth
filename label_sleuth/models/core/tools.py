@@ -154,7 +154,7 @@ class SentenceEmbeddingService:
         model_path = os.path.join(self.fasttext_models_path, model_file_name)
         if os.path.exists(model_path):
             return fasttext.load_model(model_path)
-        logging.info(f"fasttext model for language {fasttext_language_id} does not exist in "
+        logging.info(f"fasttext model for language code '{fasttext_language_id}' does not exist in "
                      f"{model_path}, downloading...")
         original_cwd = os.getcwd()
 
