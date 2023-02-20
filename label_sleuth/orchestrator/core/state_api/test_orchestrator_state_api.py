@@ -60,9 +60,10 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
         category1_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
         category2_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
-        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
-                                                  ModelInfo("123", ModelStatus.READY, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id)
+        self.orchestrator_state_api.add_model(workspace_id, category2_id, 0,
+                                              ModelInfo("123", ModelStatus.READY, datetime.now(),
+                                                        ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
         category3_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_3", "category 3 description")
 
         category_ids = self.orchestrator_state_api.get_all_categories(workspace_id).keys()
@@ -97,9 +98,10 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
         category1_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
         category2_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
-        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
-                                                  ModelInfo("123", ModelStatus.READY, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id)
+        self.orchestrator_state_api.add_model(workspace_id, category2_id, 0,
+                                              ModelInfo("123", ModelStatus.READY, datetime.now(),
+                                                        ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
         self.assertEqual(1, len(self.orchestrator_state_api.get_all_iterations(workspace_id, category2_id)))
 
     def test_get_and_update_iteration_status(self):
@@ -108,16 +110,18 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
         category1_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
         category2_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
-        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
-                                                  ModelInfo("123", ModelStatus.READY, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
-        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
-                                                  ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id)
+        self.orchestrator_state_api.add_model(workspace_id, category2_id, 0,
+                                              ModelInfo("123", ModelStatus.READY, datetime.now(),
+                                                        ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id)
+        self.orchestrator_state_api.add_model(workspace_id, category2_id, 1,
+                                              ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
+                                                        ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
 
-        self.assertEqual(IterationStatus.TRAINING,
+        self.assertEqual(IterationStatus.PREPARING_DATA,
                          self.orchestrator_state_api.get_iteration_status(workspace_id, category2_id, 0))
-        self.assertEqual(IterationStatus.TRAINING,
+        self.assertEqual(IterationStatus.PREPARING_DATA,
                          self.orchestrator_state_api.get_iteration_status(workspace_id, category2_id, 1))
         self.orchestrator_state_api.update_iteration_status(workspace_id, category2_id, 0, IterationStatus.READY)
         self.assertEqual(IterationStatus.READY,
@@ -132,12 +136,14 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
         self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
         category2_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
-        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
-                                                  ModelInfo("123", ModelStatus.READY, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
-        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
-                                                  ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id)
+        self.orchestrator_state_api.add_model(workspace_id, category2_id, 0,
+                                              ModelInfo("123", ModelStatus.READY, datetime.now(),
+                                                        ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id)
+        self.orchestrator_state_api.add_model(workspace_id, category2_id, 1,
+                                              ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
+                                                        ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
         self.assertEqual(ModelStatus.TRAINING, self.orchestrator_state_api.get_all_iterations(
             workspace_id, category2_id)[1].model.model_status)
         self.orchestrator_state_api.update_model_status(workspace_id, category2_id, 1, ModelStatus.READY)
@@ -150,12 +156,14 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
         self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_1", "category 1 description")
         category2_id = self.orchestrator_state_api.add_category_to_workspace(workspace_id, "category_2", "category 2 description")
-        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
-                                                  ModelInfo("123", ModelStatus.READY, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
-        self.orchestrator_state_api.add_iteration(workspace_id, category2_id,
-                                                  ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
-                                                            ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id)
+        self.orchestrator_state_api.add_model(workspace_id, category2_id, 0,
+                                              ModelInfo("123", ModelStatus.READY, datetime.now(),
+                                                        ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
+        self.orchestrator_state_api.add_iteration(workspace_id, category2_id)
+        self.orchestrator_state_api.add_model(workspace_id, category2_id, 1,
+                                              ModelInfo("456", ModelStatus.TRAINING, datetime.now(),
+                                                        ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS, {}))
         workspace = self.orchestrator_state_api.get_workspace(workspace_id)
         # clear workspace cache
         self.orchestrator_state_api.workspaces = {}

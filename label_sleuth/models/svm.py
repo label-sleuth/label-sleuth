@@ -25,11 +25,11 @@ import numpy as np
 import sklearn.svm
 from sklearn.feature_extraction.text import CountVectorizer
 
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.languages import Language, Languages
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.models.core.tools import RepresentationType, SentenceEmbeddingService
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
@@ -42,9 +42,9 @@ class SVMModelComponents:
 
 class SVM(ModelAPI):
     def __init__(self, output_dir, representation_type: RepresentationType,
-                 models_background_jobs_manager: ModelsBackgroundJobsManager,
-                 sentence_embedding_service: SentenceEmbeddingService, kernel="linear"):
-        super().__init__(output_dir, models_background_jobs_manager)
+                 background_jobs_manager: BackgroundJobsManager, sentence_embedding_service: SentenceEmbeddingService,
+                 kernel="linear"):
+        super().__init__(output_dir, background_jobs_manager)
         self.kernel = kernel
         self.representation_type = representation_type
         if self.representation_type == RepresentationType.WORD_EMBEDDING:
@@ -117,15 +117,15 @@ class SVM(ModelAPI):
 
 
 class SVM_BOW(SVM):
-    def __init__(self, output_dir, models_background_jobs_manager, sentence_embedding_service):
-        super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+    def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
+        super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
                          representation_type=RepresentationType.BOW,
                          sentence_embedding_service=sentence_embedding_service)
 
 
 class SVM_WordEmbeddings(SVM):
-    def __init__(self, output_dir, models_background_jobs_manager, sentence_embedding_service):
-        super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+    def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
+        super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
                          representation_type=RepresentationType.WORD_EMBEDDING,
                          sentence_embedding_service=sentence_embedding_service)
 

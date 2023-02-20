@@ -30,6 +30,7 @@ from label_sleuth.models.core.model_type import ModelType
 
 
 class IterationStatus(Enum):
+    PREPARING_DATA = -1  # negative numbering is due to backward compatibility issues
     TRAINING = 0
     RUNNING_INFERENCE = 1
     RUNNING_ACTIVE_LEARNING = 2
@@ -55,8 +56,8 @@ class Iteration:
     inferring the full corpus using this model, choosing candidate elements for labeling using active learning, as
     well as calculating various statistics. Each iteration is associated with a specific Category.
     """
-    model: ModelInfo
     status: IterationStatus
+    model: ModelInfo = None
     iteration_statistics: Dict = field(default_factory=dict)
     active_learning_recommendations: Sequence[str] = field(default_factory=list)
 
@@ -233,11 +234,20 @@ class OrchestratorStateApi:
 
     # Iteration-related methods
 
-    def add_iteration(self, workspace_id: str, category_id: int, model_info: ModelInfo):
+    def add_iteration(self, workspace_id: str, category_id: int):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            iteration = Iteration(model=model_info, status=IterationStatus.TRAINING)
+            iteration = Iteration(status=IterationStatus.PREPARING_DATA)
             workspace.categories[category_id].iterations.append(iteration)
+            self._save_workspace(workspace)
+
+    def add_model(self, workspace_id: str, category_id: int, iteration_index: int, model_info: ModelInfo):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            if workspace.categories[category_id].iterations[iteration_index].model is not None:
+                raise Exception(f"Workspace '{workspace_id}' category '{category_id}' iteration {iteration_index} "
+                                f"already has a model, cannot add a model")
+            workspace.categories[category_id].iterations[iteration_index].model = model_info
             self._save_workspace(workspace)
 
     def get_iteration_status(self, workspace_id: str, category_id: int, iteration_index: int) -> IterationStatus:

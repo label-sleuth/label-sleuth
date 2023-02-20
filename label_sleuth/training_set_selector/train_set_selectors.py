@@ -31,9 +31,8 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
     for training the model.
     """
 
-    def __init__(self, data_access, label_types):
-        super().__init__(data_access, label_types)
-
+    def __init__(self, data_access, background_jobs_manager, label_types):
+        super().__init__(data_access, background_jobs_manager, label_types)
 
     def get_train_set(self, workspace_id, train_dataset_name, category_id) -> Sequence[TextElement]:
         train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_id,
@@ -72,20 +71,20 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
     examples labeled by the user exceeds the maximal ratio, only a sample of the user-labeled negative examples
     will be sent to the model.
     """
-    def __init__(self, data_access, label_types, required_negative_ratio=None, max_negative_ratio=10**6):
+    def __init__(self, data_access, background_jobs_manager, label_types,
+                 required_negative_ratio=None, max_negative_ratio=10**6):
         """
         :param data_access
         :param required_negative_ratio: required number of negative samples per positive
         :param max_negative_ratio: maximal allowed number of negative samples per positive
         """
-        super().__init__(data_access, label_types)
+        super().__init__(data_access, background_jobs_manager, label_types)
         self.negative_ratio = required_negative_ratio
         self.max_negative_ratio = max_negative_ratio
         self.neg_label = LABEL_NEGATIVE
         self.pos_label = LABEL_POSITIVE
 
     def get_train_set(self, workspace_id, train_dataset_name, category_id) -> Sequence[TextElement]:
-
         train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_id,
                                                                         remove_duplicates=True)
         current_neg_count = train_counts.get(self.neg_label, 0)

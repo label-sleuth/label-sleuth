@@ -21,19 +21,19 @@ from dataclasses import dataclass
 
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.model_type import ModelType
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.tools import SentenceEmbeddingService
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 
 class ModelFactory:
     """
     Given a model type, this factory returns the relevant implementation of ModelAPI
     """
-    def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
+    def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager,
                  sentence_embedding_service: SentenceEmbeddingService):
         self.loaded_model_apis = {}
         self.model_dependencies = ModelDependencies(
-            output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+            output_dir=output_dir, background_jobs_manager=background_jobs_manager,
             sentence_embedding_service=sentence_embedding_service, model_factory=self)
         self.lock = threading.RLock()
 
@@ -59,6 +59,6 @@ class ModelDependencies:
     can use some or all of these parameters (as needed) as keyword arguments for initialization.
     """
     output_dir: str
-    models_background_jobs_manager: ModelsBackgroundJobsManager
+    background_jobs_manager: BackgroundJobsManager
     sentence_embedding_service: SentenceEmbeddingService
     model_factory: ModelFactory

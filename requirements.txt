@@ -18,6 +18,8 @@ tqdm==4.62.3
 transformers==4.16.2
 GitPython==3.1.29
 fasttext-wheel==0.9.2
+
+
 # secondary dependencies
 
 werkzeug==2.0.2 # to avoid incompatibility between flask and werkzeug (see https://stackoverflow.com/questions/71652965/importerror-cannot-import-name-safe-str-cmp-from-werkzeug-security)

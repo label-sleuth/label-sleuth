@@ -27,8 +27,8 @@ import numpy as np
 
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.model_type import ModelType
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.prediction import Prediction
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
@@ -45,7 +45,7 @@ class EnsembleComponents:
 
 class Ensemble(ModelAPI):
     def __init__(self, output_dir, model_types: Iterable[ModelType],
-                 models_background_jobs_manager: ModelsBackgroundJobsManager,
+                 background_jobs_manager: BackgroundJobsManager,
                  model_factory,
                  aggregation_func=lambda x: np.mean(x, axis=0)):
         """
@@ -54,12 +54,12 @@ class Ensemble(ModelAPI):
         :param output_dir:
         :param model_types: a list of model types
         :param model_factory:
-        :param models_background_jobs_manager:
+        :param background_jobs_manager:
         :param aggregation_func: function to aggregate the predictions of the different models. The function gets an
         array of scores (where dimension 0 is the model types and dimension 1 is the list of elements), and returns a
         vector of aggregated scores. Defaults to mean score aggregation.
         """
-        super().__init__(output_dir, models_background_jobs_manager)
+        super().__init__(output_dir, background_jobs_manager)
         self.aggregation_func = aggregation_func
         self.model_types = model_types
         self.model_apis = [model_factory.get_model_api(model_type) for model_type in model_types]
@@ -76,9 +76,9 @@ class Ensemble(ModelAPI):
         self.mark_train_as_started(ensemble_model_id)
         self.save_metadata(ensemble_model_id, language, model_params)
 
-        future = self.models_background_jobs_manager.add_training(
-            ensemble_model_id, self.wait_and_update_status,
-            train_args=(ensemble_model_id, [future for model_id, future in model_ids_and_futures]),
+        future = self.background_jobs_manager.add_background_job(
+            self.wait_and_update_status,
+            args=(ensemble_model_id, [future for model_id, future in model_ids_and_futures]),
             use_gpu=self.gpu_support, done_callback=done_callback)
         logging.info(f"training an ensemble model id {ensemble_model_id} using {len(train_data)} elements")
         return ensemble_model_id, future
@@ -173,8 +173,8 @@ class Ensemble(ModelAPI):
 
 
 class SVM_Ensemble(Ensemble):
-    def __init__(self, output_dir, models_background_jobs_manager, model_factory):
+    def __init__(self, output_dir, background_jobs_manager, model_factory):
         from label_sleuth.models.core.catalog import ModelsCatalog
-        super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+        super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
                          model_types=[ModelsCatalog.SVM_OVER_BOW, ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS],
                          model_factory=model_factory)

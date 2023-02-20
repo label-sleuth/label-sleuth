@@ -17,17 +17,17 @@ import os
 import random
 import numpy as np
 
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.model_api import ModelAPI, ModelStatus
 from label_sleuth.models.core.prediction import Prediction
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 
 class RandomModel(ModelAPI):
     """
     Mock classification model that does not train, and returns random classification predictions.
     """
-    def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager):
-        super().__init__(output_dir, models_background_jobs_manager)
+    def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager):
+        super().__init__(output_dir, background_jobs_manager)
 
         self.model_id_to_random_seed = {}
         self.random_seed = -1
