@@ -13,3 +13,8 @@
     limitations under the License.
 */
 
+const ButtonLogout = () => {
+    return null;
+}
+
+export default ButtonLogout
