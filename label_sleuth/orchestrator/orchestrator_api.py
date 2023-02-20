@@ -590,7 +590,14 @@ class OrchestratorApi:
         :param count:
         :param iteration_index: iteration to use
         """
-        active_learner = self.active_learning_factory.get_active_learner(self.config.active_learning_strategy)
+
+        if self.config.active_learning_strategy is not None:
+            active_learning_strategy = self.config.active_learning_strategy
+        else:
+            active_learning_strategy = self.config.active_learning_policy.get_active_learning_strategy(iteration_index)
+
+        active_learner = self.active_learning_factory.get_active_learner(active_learning_strategy)
+        logging.info(f"using active learning {active_learner}")
         # Where labels are applied to duplicate texts (the default behavior), we do not want duplicates to appear in
         # the Label Next list
         remove_duplicates = self.config.apply_labels_to_duplicate_texts
