@@ -19,8 +19,8 @@ import unittest
 from unittest.mock import MagicMock
 
 from label_sleuth.models.core.languages import Languages
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.random_model import RandomModel
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 PREFIX = 'Fascinating sentence'
 
@@ -29,7 +29,7 @@ class TestModelAPI(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.model_api = RandomModel(self.temp_dir.name, ModelsBackgroundJobsManager())
+        self.model_api = RandomModel(self.temp_dir.name, BackgroundJobsManager())
         self.model_id, future = self.model_api.train([], Languages.ENGLISH, {})
         future.result()
         all_nums = list(range(1, 10))

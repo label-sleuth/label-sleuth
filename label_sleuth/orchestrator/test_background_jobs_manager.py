@@ -17,9 +17,8 @@ import functools
 import unittest
 from unittest.mock import MagicMock
 
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.prediction import Prediction
-
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 DUMMY_PREDICTIONS = [Prediction(True, 0.54), Prediction(False, 0.22)]
 
@@ -40,49 +39,49 @@ def infer_failed_with_error(mid, dummy_data):
     raise Exception("Inference failed")
 
 
-class TestModelsBackgroundJobsManager(unittest.TestCase):
+class TestBackgroundJobsManager(unittest.TestCase):
     def test_simple_training_job(self):
         callback_mock = MagicMock(name='callback')
-        manager = ModelsBackgroundJobsManager()
+        manager = BackgroundJobsManager()
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
-        future = manager.add_training(mid, successful_train, (mid, dummy_train_data), False,
-                                      done_callback=functools.partial(callback_mock, dummy_callback_data))
+        future = manager.add_background_job(successful_train, (mid, dummy_train_data), False,
+                                            done_callback=functools.partial(callback_mock, dummy_callback_data))
         mid_return = future.result()
         callback_mock.assert_called_once_with(dummy_callback_data, future)
         self.assertEqual(mid, mid_return)
 
     def test_training_error(self):
         callback_mock = MagicMock(name='callback')
-        manager = ModelsBackgroundJobsManager()
+        manager = BackgroundJobsManager()
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
-        future = manager.add_training(mid, train_failed_with_error, (mid, dummy_train_data), False,
-                                      done_callback=functools.partial(callback_mock, dummy_callback_data))
+        future = manager.add_background_job(train_failed_with_error, (mid, dummy_train_data), False,
+                                            done_callback=functools.partial(callback_mock, dummy_callback_data))
         self.assertRaises(Exception, future.result)
         callback_mock.assert_called_once_with(dummy_callback_data, future)
 
     def test_simple_infer_job(self):
         callback_mock = MagicMock(name='callback')
-        manager = ModelsBackgroundJobsManager()
+        manager = BackgroundJobsManager()
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
-        future = manager.add_inference(mid, successful_infer, (mid, dummy_train_data), False,
-                                       done_callback=functools.partial(callback_mock, dummy_callback_data))
+        future = manager.add_background_job(successful_infer, (mid, dummy_train_data), False,
+                                            done_callback=functools.partial(callback_mock, dummy_callback_data))
         predictions = future.result()
         callback_mock.assert_called_once_with(dummy_callback_data, future)
         self.assertEqual(DUMMY_PREDICTIONS, predictions)
 
     def test_infer_error(self):
         callback_mock = MagicMock(name='callback')
-        manager = ModelsBackgroundJobsManager()
+        manager = BackgroundJobsManager()
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
-        future = manager.add_inference(mid, infer_failed_with_error, (mid, dummy_train_data), False,
-                                       done_callback=functools.partial(callback_mock, dummy_callback_data))
+        future = manager.add_background_job(infer_failed_with_error, (mid, dummy_train_data), False,
+                                            done_callback=functools.partial(callback_mock, dummy_callback_data))
         self.assertRaises(Exception, future.result)
         callback_mock.assert_called_once_with(dummy_callback_data, future)

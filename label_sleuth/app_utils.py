@@ -103,19 +103,30 @@ def get_element(workspace_id, category_id, element_id):
     return element_transformed
 
 
+def _extract_model_info(iteration):
+    # TODO reorganize model information
+    placeholder = 'Unknown'
+    model_info_dict = {'model_status': placeholder, 'creation_epoch': placeholder, 'model_type': placeholder,
+                       'model_metadata': placeholder}
+    if iteration.model is not None:
+        model_info_dict['model_status'] = iteration.model.model_status.name
+        model_info_dict['creation_epoch'] = iteration.model.creation_date.timestamp()
+        model_info_dict['model_type'] = iteration.model.model_type.name \
+            if iteration.model.model_type is not None else placeholder
+        # The frontend expects a dict of string to int, and train counts contains a mix of boolean and string keys.
+        model_info_dict['model_metadata'] = \
+            {**iteration.model.train_statistics,
+             TRAIN_COUNTS_STR_KEY: {str(k).lower(): v for k, v
+                                    in iteration.model.train_statistics.get(TRAIN_COUNTS_STR_KEY, {}).items()}}
+    return model_info_dict
+
+
 def extract_iteration_information_list(iterations: Sequence[Iteration]):
     return \
         [{'iteration': iteration_index,
-          'model_status': iteration.model.model_status.name,
-          'creation_epoch': iteration.model.creation_date.timestamp(),
-          'model_type': iteration.model.model_type.name if iteration.model.model_type is not None else "Unknown",
           **iteration.iteration_statistics,
-          # The frontend expects a dict of string to int, and train counts contains a mix of boolean and string keys.
-          'model_metadata': {**iteration.model.train_statistics,
-                             TRAIN_COUNTS_STR_KEY: {str(k).lower(): v for k, v
-                                                    in iteration.model.train_statistics.get(TRAIN_COUNTS_STR_KEY,
-                                                                                            {}).items()}},
-          'iteration_status': iteration.status.name}
+          'iteration_status': iteration.status.name,
+          **_extract_model_info(iteration)}
          for iteration_index, iteration in enumerate(iterations)]
 
 

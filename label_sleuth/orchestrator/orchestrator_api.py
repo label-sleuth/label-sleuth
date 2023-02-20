@@ -23,7 +23,7 @@ import time
 from collections import Counter, defaultdict
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime
-from typing import Mapping, List, Sequence, Union, Tuple, Set
+from typing import Mapping, List, Sequence, Union, Tuple
 
 import jsonpickle
 import pandas as pd
@@ -32,8 +32,7 @@ from label_sleuth.active_learning.core.active_learning_factory import ActiveLear
 from label_sleuth.analysis_utils.labeling_reports import get_suspected_labeling_contradictions_by_distance_with_diffs, \
     get_disagreements_using_cross_validation
 from label_sleuth.config import Configuration
-from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE, \
-    LabelType
+from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE
 from label_sleuth.data_access.data_access_api import DataAccessApi
 from label_sleuth.data_access.label_import_utils import process_labels_dataframe
 from label_sleuth.data_access.processors.csv_processor import CsvFileProcessor
@@ -44,6 +43,7 @@ from label_sleuth.models.core.model_type import ModelType
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.models.core.tools import SentenceEmbeddingService
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
     ModelInfo, OrchestratorStateApi
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
@@ -60,11 +60,13 @@ new_data_infer_thread_pool = ThreadPoolExecutor(1)
 class OrchestratorApi:
     def __init__(self, orchestrator_state: OrchestratorStateApi, data_access: DataAccessApi,
                  active_learning_factory: ActiveLearningFactory, model_factory: ModelFactory,
+                 background_jobs_manager: BackgroundJobsManager,
                  sentence_embedding_service: SentenceEmbeddingService, config: Configuration):
         self.orchestrator_state = orchestrator_state
         self.data_access = data_access
         self.active_learning_factory = active_learning_factory
         self.model_factory = model_factory
+        self.background_jobs_manager = background_jobs_manager
         self.sentence_embedding_service = sentence_embedding_service
         self.config = config
 
@@ -307,6 +309,7 @@ class OrchestratorApi:
         """
         if counts_for_training:
             train_set_selector = get_training_set_selector(self.data_access,
+                                                           self.background_jobs_manager,
                                                            strategy=self.config.training_set_selection_strategy)
             used_label_types = train_set_selector.get_label_types()
             return self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
@@ -385,7 +388,7 @@ class OrchestratorApi:
 
     # Iteration flow
 
-    def run_iteration(self, workspace_id: str, category_id: int, model_type: ModelType, train_data) -> str:
+    def run_iteration(self, workspace_id: str, dataset_name: str, category_id: int, model_type: ModelType):
         """
         This method initiates an Iteration, a flow that includes training a model, inferring the full corpus using
         this model, choosing candidate elements for labeling using active learning, as well as calculating various
@@ -398,13 +401,34 @@ class OrchestratorApi:
         launched when the training and inference stages, respectively, are completed.
 
         :param workspace_id:
+        :param dataset_name:
         :param category_id:
         :param model_type:
-        :param train_data:
-        :return: model_id
         """
+        new_iteration_index = len(self.orchestrator_state.get_all_iterations(workspace_id, category_id))
+        logging.info(f"starting iteration {new_iteration_index} in background for workspace '{workspace_id}' "
+                     f"category id '{category_id}'")
 
-        def _get_counts_per_label(text_elements):
+        self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_id=category_id)
+        train_set_selector = get_training_set_selector(self.data_access, self.background_jobs_manager,
+                                                       strategy=self.config.training_set_selection_strategy)
+        future = train_set_selector.collect_train_set(workspace_id=workspace_id,
+                                                      train_dataset_name=dataset_name,
+                                                      category_id=category_id)
+        future.add_done_callback(functools.partial(self._train_callback, workspace_id, category_id, model_type,
+                                                   new_iteration_index))
+
+    def _train_callback(self, workspace_id, category_id, model_type, iteration_index, future):
+        try:
+            train_data = future.result()
+        except Exception:
+            logging.exception(f"Train set selection failed. Marking workspace '{workspace_id}' "
+                              f"category id '{category_id}' iteration {iteration_index} as error")
+            self.orchestrator_state.update_iteration_status(workspace_id, category_id, iteration_index,
+                                                            IterationStatus.ERROR)
+            return
+
+        def _get_counts_per_label(text_elements, category_id):
             """
             These label counts reflect the more detailed description of training labels, e.g. how many of the elements
             have weak labels
@@ -414,27 +438,26 @@ class OrchestratorApi:
 
             return dict(Counter(label_names))
 
-        new_iteration_index = len(self.orchestrator_state.get_all_iterations(workspace_id, category_id))
-        logging.info(f"starting iteration {new_iteration_index} in background for workspace '{workspace_id}' "
-                     f"category id '{category_id}' using {len(train_data)} items")
-
-        train_counts = _get_counts_per_label(train_data)
+        train_counts = _get_counts_per_label(train_data, category_id)
         train_data = convert_text_elements_to_train_data(train_data, category_id)
         train_statistics = {TRAIN_COUNTS_STR_KEY: train_counts}
+
+        self.orchestrator_state.update_iteration_status(workspace_id=workspace_id, category_id=category_id,
+                                                        iteration_index=iteration_index,
+                                                        new_status=IterationStatus.TRAINING)
         model_api = self.model_factory.get_model_api(model_type)
 
         logging.info(f"workspace '{workspace_id}' training a model for category id '{category_id}', "
                      f"train_statistics: {train_statistics}")
-
         model_id, future = model_api.train(train_data=train_data, language=self.config.language)
         model_status = model_api.get_model_status(model_id)
         model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
                                train_statistics=train_statistics, creation_date=datetime.now())
-        self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_id=category_id,
-                                              model_info=model_info)
+        self.orchestrator_state.add_model(workspace_id=workspace_id, category_id=category_id,
+                                          iteration_index=iteration_index, model_info=model_info)
         # The train callback is added here to ensure it only runs after the iteration has been added
         future.add_done_callback(functools.partial(self._train_done_callback, workspace_id, category_id,
-                                                   new_iteration_index))
+                                                   iteration_index))
         # The model id is returned almost immediately, but the training is performed in the background. Once training is
         # complete the iteration flow continues in the *_train_done_callback* method
         return model_id
@@ -446,7 +469,7 @@ class OrchestratorApi:
         :param workspace_id:
         :param category_id:
         :param iteration_index:
-        :param future: future object for the train job, which was submitted through the ModelsBackgroundJobsManager
+        :param future: future object for the train job, which was submitted through the BackgroundJobsManager
         """
         try:
             model_id = future.result()
@@ -484,7 +507,7 @@ class OrchestratorApi:
         :param workspace_id:
         :param category_id:
         :param iteration_index:
-        :param future: future object for the inference job, which was submitted through the ModelsBackgroundJobsManager
+        :param future: future object for the inference job, which was submitted through the BackgroundJobsManager
         """
         try:
             predictions = future.result()
@@ -643,20 +666,13 @@ class OrchestratorApi:
                     f"(>={self.config.changed_element_threshold}). Training a new model")
                 iteration_num = len(iterations_without_errors)
                 model_type = self.config.model_policy.get_model_type(iteration_num)
-                train_set_selector = get_training_set_selector(self.data_access,
-                                                               strategy=self.config.training_set_selection_strategy)
-                train_data = train_set_selector.get_train_set(workspace_id=workspace_id,
-                                                              train_dataset_name=dataset_name,
-                                                              category_id=category_id)
-                model_id = self.run_iteration(workspace_id=workspace_id, category_id=category_id,
-                                              model_type=model_type, train_data=train_data)
-                return model_id
+                self.run_iteration(workspace_id=workspace_id, dataset_name=dataset_name, category_id=category_id,
+                                   model_type=model_type)
             else:
                 logging.info(f"{label_counts[LABEL_POSITIVE]} positive elements "
                              f"(should be >={self.config.first_model_positive_threshold}) "
                              f"AND {changes_since_last_model} elements changed since last model "
                              f"(should be >={self.config.changed_element_threshold}). not training a new model")
-                return None
         except Exception:
             iterations_latest = self.orchestrator_state.get_all_iterations(workspace_id, category_id)
             if len(iterations) != len(iterations_latest):
@@ -699,13 +715,13 @@ class OrchestratorApi:
             iteration = iterations[iteration_index]
             if iteration.status in [IterationStatus.TRAINING, IterationStatus.MODEL_DELETED, IterationStatus.ERROR]:
                 raise Exception(
-                    f"iteration {iteration_index} in workspace '{workspace_id}' category id'{category_id}' "
+                    f"iteration {iteration_index} in workspace '{workspace_id}' category id '{category_id}' "
                     f"is not ready for inference. "
                     f"(current status is {iteration.status}, model status is {iteration.model.model_status})")
 
         model_info = iteration.model
         if model_info.model_status != ModelStatus.READY:
-            raise Exception(f"model id {model_info.model_id} is not in READY status"
+            raise Exception(f"model id {model_info.model_id} is not in READY status "
                             f"while iteration status is {iteration.status}.  Something went wrong")
 
         model_api = self.model_factory.get_model_api(model_info.model_type)
@@ -825,7 +841,7 @@ class OrchestratorApi:
     # Import/Export
     
     def import_category_labels(self, workspace_id, labels_df_to_import: pd.DataFrame):
-        logging.info(f"Importing {len(labels_df_to_import)} unique labeled elements into workspace '{workspace_id}'"
+        logging.info(f"Importing {len(labels_df_to_import)} labeled elements into workspace '{workspace_id}'"
                      f"from {len(labels_df_to_import[DisplayFields.category_name].unique())} categories")
         dataset_name = self.get_dataset_name(workspace_id)
         # Only if doc_id are provided or apply_labels_to_duplicate_texts is false the doc_id is taken into account when applying labels
@@ -900,7 +916,7 @@ class OrchestratorApi:
                 text_elements = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
                                                                            remove_duplicates=False)['results']
             else:
-                train_set_selector = get_training_set_selector(self.data_access,
+                train_set_selector = get_training_set_selector(self.data_access, self.background_jobs_manager,
                                                                strategy=self.config.training_set_selection_strategy)
                 text_elements = train_set_selector.get_train_set(workspace_id=workspace_id,
                                                                  train_dataset_name=dataset_name,

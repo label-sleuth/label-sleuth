@@ -31,12 +31,11 @@ import jsonpickle
 
 import label_sleuth.definitions as definitions
 from label_sleuth.models.core.languages import Languages, Language
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.models.util.disk_cache import load_model_prediction_store_from_disk, \
     save_model_prediction_store_to_disk
 from label_sleuth.models.util.LRUCache import LRUCache
-
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 PREDICTIONS_STORE_DIR_NAME = "predictions"
 LANGUAGE_STR_KEY = "Language"
@@ -49,16 +48,13 @@ class ModelStatus(Enum):
     DELETED = 3
 
 
-
-
-
 class ModelAPI(object, metaclass=abc.ABCMeta):
     """
     Base class for implementing a classification model.
     This base class provides general methods for training in the background, caching model predictions etc.,
     while the _train(), load_model() and infer() methods are specific to each model implementation.
     """
-    def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager, gpu_support=False):
+    def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager, gpu_support=False):
         """
         Model implementations can require some or all of the parameters in models_factory.ModelDependencies
         in their __init__ method, as these will be passed to the model by the ModelFactory.
@@ -66,7 +62,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         """
         self.output_dir = output_dir
         os.makedirs(self.get_models_dir(), exist_ok=True)
-        self.models_background_jobs_manager = models_background_jobs_manager
+        self.background_jobs_manager = background_jobs_manager
         self.gpu_support = gpu_support
         self.primary_lock = threading.Lock()
         self.model_locks = defaultdict(lambda: threading.Lock())
@@ -137,9 +133,10 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         self.mark_train_as_started(model_id)
         self.save_metadata(model_id, language, model_params)
 
-        future = self.models_background_jobs_manager.add_training(model_id, self.train_and_update_status,
-                                                                  train_args=(model_id, train_data, model_params),
-                                                                  use_gpu=self.gpu_support, done_callback=done_callback)
+        future = self.background_jobs_manager.add_background_job(self.train_and_update_status,
+                                                                 args=(model_id, train_data, model_params),
+                                                                 use_gpu=self.gpu_support,
+                                                                 done_callback=done_callback)
         return model_id, future
 
     def train_and_update_status(self, model_id, *args) -> str:
@@ -251,8 +248,8 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         e.g. [{'text': 'text1', 'additional_field': 'value1'}, {'text': 'text2', 'additional_field': 'value2'}]
         :param done_callback: an optional function to be executed once the inference job has completed
         """
-        self.models_background_jobs_manager.add_inference(model_id, self.infer_by_id, infer_args=(model_id, items_to_infer),
-                                                          use_gpu=self.gpu_support, done_callback=done_callback)
+        self.background_jobs_manager.add_background_job(self.infer_by_id, args=(model_id, items_to_infer),
+                                                        use_gpu=self.gpu_support, done_callback=done_callback)
 
     def _infer_by_id(self, model_id, items_to_infer):
         model_components = self.load_model(model_path=self.get_model_dir_by_id(model_id))
