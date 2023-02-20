@@ -21,9 +21,9 @@ from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEG
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.core.languages import Languages
 from label_sleuth.models.core.model_api import ModelStatus
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.ensemble import Ensemble
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 PREFIX = 'Fascinating sentence'
 
@@ -36,10 +36,10 @@ class TestEnsembleModel(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.models_background_job_manager = ModelsBackgroundJobsManager()
-        model_factory = ModelFactory(self.temp_dir.name, self.models_background_job_manager, None)
+        self.background_job_manager = BackgroundJobsManager()
+        model_factory = ModelFactory(self.temp_dir.name, self.background_job_manager, None)
         self.ensemble = Ensemble(self.temp_dir.name, model_types=[ModelsCatalog.RAND, ModelsCatalog.NB_OVER_BOW],
-                                 models_background_jobs_manager=self.models_background_job_manager,
+                                 background_jobs_manager=self.background_job_manager,
                                  model_factory=model_factory)
         all_nums = list(range(1, 15))
         random.shuffle(all_nums)

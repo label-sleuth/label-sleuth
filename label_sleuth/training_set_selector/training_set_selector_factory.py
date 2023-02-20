@@ -14,35 +14,41 @@
 #
 from label_sleuth.data_access.core.data_structs import LabelType
 from label_sleuth.data_access.data_access_api import DataAccessApi
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.training_set_selector.train_set_selectors import TrainSetSelectorAllLabeled, \
     TrainSetSelectorEnforcePositiveNegativeRatio
 from label_sleuth.training_set_selector.train_set_selector_api import TrainingSetSelectionStrategy
 
 
-def get_training_set_selector(data_access: DataAccessApi, strategy=TrainingSetSelectionStrategy.ALL_LABELED):
+def get_training_set_selector(data_access: DataAccessApi, background_jobs_manager: BackgroundJobsManager,
+                              strategy=TrainingSetSelectionStrategy.ALL_LABELED):
     if strategy == TrainingSetSelectionStrategy.ALL_LABELED:
-        return TrainSetSelectorAllLabeled(data_access, label_types={LabelType.Standard})
+        return TrainSetSelectorAllLabeled(data_access, background_jobs_manager, label_types={LabelType.Standard})
     elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, label_types={LabelType.Standard},
+        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
+                                                            label_types={LabelType.Standard},
                                                             required_negative_ratio=1)
     elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, label_types={LabelType.Standard},
+        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
+                                                            label_types={LabelType.Standard},
                                                             required_negative_ratio=2)
     elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, label_types={LabelType.Standard},
+        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
+                                                            label_types={LabelType.Standard},
                                                             required_negative_ratio=10)
     elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_INCLUDE_WEAK:
-        return TrainSetSelectorAllLabeled(data_access, label_types={LabelType.Standard, LabelType.Weak})
+        return TrainSetSelectorAllLabeled(data_access, background_jobs_manager,
+                                          label_types={LabelType.Standard, LabelType.Weak})
     elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access,
+        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
                                                             label_types={LabelType.Standard, LabelType.Weak},
                                                             required_negative_ratio=1)
     elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access,
+        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
                                                             label_types={LabelType.Standard, LabelType.Weak},
                                                             required_negative_ratio=2)
     elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access,
+        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
                                                             label_types={LabelType.Standard, LabelType.Weak},
                                                             required_negative_ratio=10)
 

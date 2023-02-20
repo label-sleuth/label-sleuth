@@ -23,10 +23,10 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, Inpu
 from transformers.pipelines.pt_utils import KeyDataset
 
 from label_sleuth.models.core.languages import Language
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.definitions import GPU_AVAILABLE
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.prediction import Prediction
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 
 @dataclass
@@ -39,18 +39,18 @@ class HFTransformerModel(ModelAPI):
     """
     Basic implementation for a pytorch-based transformer model that relies on the huggingface transformers library.
     """
-    def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
+    def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager,
                  pretrained_model, batch_size=32, learning_rate=5e-5, num_train_epochs=5):
         """
         :param output_dir:
-        :param models_background_jobs_manager:
+        :param background_jobs_manager:
         :param pretrained_model: the name of a transfomer model from huggingface.co, or a path to a directory containing
         a pytorch model created using the huggingface transformers library
         :param batch_size:
         :param learning_rate:
         :param num_train_epochs:
         """
-        super().__init__(output_dir, models_background_jobs_manager, gpu_support=True)
+        super().__init__(output_dir, background_jobs_manager, gpu_support=True)
         self.pretrained_model_name = pretrained_model
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -116,8 +116,8 @@ class HFTransformerModel(ModelAPI):
 
 
 class HFBert(HFTransformerModel):
-    def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager):
-        super().__init__(output_dir, models_background_jobs_manager,
+    def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager):
+        super().__init__(output_dir, background_jobs_manager,
                          pretrained_model="bert-base-uncased",
                          batch_size=32, learning_rate=5e-5, num_train_epochs=5)
 

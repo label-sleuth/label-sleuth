@@ -15,10 +15,12 @@
 
 import abc
 
+from concurrent.futures import Future
 from enum import Enum
-from typing import Sequence, Set, Iterable
+from typing import Sequence, Iterable
 
 from label_sleuth.data_access.core.data_structs import TextElement, LabelType
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 
 class TrainingSetSelectionStrategy(Enum):
@@ -39,9 +41,19 @@ class TrainingSetSelectionStrategy(Enum):
 
 class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
 
-    def __init__(self, data_access, label_types=frozenset({LabelType.Standard})):
+    def __init__(self, data_access, background_jobs_manager: BackgroundJobsManager, gpu_support=False,
+                 label_types=frozenset({LabelType.Standard})):
         self.data_access = data_access
         self.label_types = label_types
+        self.background_jobs_manager = background_jobs_manager
+        self.gpu_support = gpu_support
+
+    def collect_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int, done_callback=None) \
+            -> Future:
+        future = self.background_jobs_manager.add_background_job(
+            self.get_train_set, args=(workspace_id, train_dataset_name, category_id),
+            use_gpu=self.gpu_support, done_callback=done_callback)
+        return future
 
     @abc.abstractmethod
     def get_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int) -> Sequence[TextElement]:

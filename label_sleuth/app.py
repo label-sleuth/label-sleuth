@@ -25,6 +25,8 @@ import pkg_resources
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
 
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
+
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
@@ -40,13 +42,12 @@ from label_sleuth.app_utils import elements_back_to_front, extract_iteration_inf
 from label_sleuth.authentication import authenticate_response, login_if_required, verify_password
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.config import Configuration
-from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label
 from label_sleuth.data_access.data_access_api import AlreadyExistsException
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.models_factory import ModelFactory
+from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus, OrchestratorStateApi
 from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi
 
@@ -82,12 +83,14 @@ def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
                                                           preload_spacy_model_name=config.language.spacy_model_name,
                                                           preload_fasttext_language_id=
                                                           config.language.fasttext_language_id)
+    background_jobs_manager = BackgroundJobsManager()
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),
                                            FileBasedDataAccess(output_dir),
                                            ActiveLearningFactory(),
                                            ModelFactory(os.path.join(output_dir, "models"),
-                                                        ModelsBackgroundJobsManager(),
+                                                        background_jobs_manager,
                                                         sentence_embedding_service),
+                                           background_jobs_manager,
                                            sentence_embedding_service,
                                            app.config["CONFIGURATION"])
     app.register_blueprint(main_blueprint)
