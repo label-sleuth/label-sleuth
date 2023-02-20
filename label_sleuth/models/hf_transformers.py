@@ -35,12 +35,12 @@ class TransformerComponents:
     language: Language
 
 
-class HFTransformers(ModelAPI):
+class HFTransformerModel(ModelAPI):
     """
     Basic implementation for a pytorch-based transformer model that relies on the huggingface transformers library.
     """
     def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager,
-                 pretrained_model="bert-base-uncased", batch_size=32, learning_rate=5e-5, num_train_epochs=5):
+                 pretrained_model, batch_size=32, learning_rate=5e-5, num_train_epochs=5):
         """
         :param output_dir:
         :param models_background_jobs_manager:
@@ -91,7 +91,7 @@ class HFTransformers(ModelAPI):
             predictions.append(Prediction(label=label, score=score))
         return predictions
 
-    def get_model_dir_name(self): # for backward compatibility, we override the default get_model_dir_name()
+    def get_model_dir_name(self):  # for backward compatibility, we override the default get_model_dir_name()
         return "transformers"
 
     def process_train_inputs(self, texts, labels) -> List[InputFeatures]:
@@ -113,3 +113,16 @@ class HFTransformers(ModelAPI):
                                           token_type_ids=inputs['token_type_ids'],
                                           label=label))
         return features
+
+
+class HFBert(HFTransformerModel):
+    def __init__(self, output_dir, models_background_jobs_manager: ModelsBackgroundJobsManager):
+        super().__init__(output_dir, models_background_jobs_manager,
+                         pretrained_model="bert-base-uncased",
+                         batch_size=32, learning_rate=5e-5, num_train_epochs=5)
+
+
+class HFTransformers(HFBert):
+    """
+    Keep old BERT class name for backward compatibility
+    """
