@@ -24,11 +24,11 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import GaussianNB, MultinomialNB, _BaseNB
 
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.languages import Language, Languages
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.models.core.tools import RepresentationType, SentenceEmbeddingService
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
@@ -42,10 +42,10 @@ class NaiveBayesModelComponents:
 
 class NaiveBayes(ModelAPI):
     def __init__(self, output_dir, representation_type: RepresentationType,
-                 models_background_jobs_manager: ModelsBackgroundJobsManager,
+                 background_jobs_manager: BackgroundJobsManager,
                  sentence_embedding_service: SentenceEmbeddingService,
                  max_datapoints=10000):
-        super().__init__(output_dir, models_background_jobs_manager)
+        super().__init__(output_dir, background_jobs_manager)
         self.max_datapoints = max_datapoints
         self.infer_batch_size = max_datapoints
         self.representation_type = representation_type
@@ -109,14 +109,14 @@ class NaiveBayes(ModelAPI):
 
 
 class NaiveBayes_BOW(NaiveBayes):
-    def __init__(self, output_dir, models_background_jobs_manager, sentence_embedding_service):
-        super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+    def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
+        super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
                          representation_type=RepresentationType.BOW,
                          sentence_embedding_service=sentence_embedding_service)
 
 
 class NaiveBayes_WordEmbeddings(NaiveBayes):
-    def __init__(self, output_dir, models_background_jobs_manager, sentence_embedding_service):
-        super().__init__(output_dir=output_dir, models_background_jobs_manager=models_background_jobs_manager,
+    def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
+        super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
                          representation_type=RepresentationType.WORD_EMBEDDING,
                          sentence_embedding_service=sentence_embedding_service)

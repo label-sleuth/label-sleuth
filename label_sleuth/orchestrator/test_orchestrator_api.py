@@ -29,8 +29,8 @@ from label_sleuth.data_access.file_based.file_based_data_access import FileBased
 from label_sleuth.data_access.test_file_based_data_access import generate_corpus
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.catalog import ModelsCatalog
-from label_sleuth.models.core.models_background_jobs_manager import ModelsBackgroundJobsManager
 from label_sleuth.models.core.models_factory import ModelFactory
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, Iteration, \
     IterationStatus, ModelInfo
 from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi, NUMBER_OF_MODELS_TO_KEEP
@@ -51,14 +51,15 @@ class TestOrchestratorAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp_dir = tempfile.TemporaryDirectory()
-
-        cls.model_factory = ModelFactory(cls.temp_dir.name, ModelsBackgroundJobsManager(), None)
+        background_jobs_manager = BackgroundJobsManager()
+        cls.model_factory = ModelFactory(cls.temp_dir.name, background_jobs_manager, None)
         cls.active_learning_factory = ActiveLearningFactory()
         cls.data_access = FileBasedDataAccess(os.path.join(cls.temp_dir.name, "output"))
         cls.orchestrator_state = OrchestratorStateApi(os.path.join(cls.temp_dir.name, "output", "workspaces"))
 
         cls.orchestrator_api = OrchestratorApi(cls.orchestrator_state, cls.data_access, cls.active_learning_factory,
-                                               cls.model_factory, None,  # no need to use sentence embedding
+                                               cls.model_factory, background_jobs_manager,
+                                               None,  # no need to use sentence embedding,
                                                load_config(os.path.abspath(os.path.join(__file__, os.pardir,
                                                                                         os.pardir,
                                                                                         "config_for_tests.json"))))
@@ -249,8 +250,8 @@ class TestOrchestratorAPI(unittest.TestCase):
         self.orchestrator_api.create_workspace(workspace_id, dataset_name)
         category_id = self.orchestrator_api.create_new_category(workspace_id, category_name, 'some_description')
         get_all_iterations.return_value = \
-            [Iteration(ModelInfo("x", ModelStatus.READY, datetime.now(), ModelsCatalog.RAND, {}),
-                       IterationStatus.READY, {}, [])] * (NUMBER_OF_MODELS_TO_KEEP+1)
+            [Iteration(IterationStatus.READY, ModelInfo("x", ModelStatus.READY, datetime.now(), ModelsCatalog.RAND, {}),
+                       {}, [])] * (NUMBER_OF_MODELS_TO_KEEP+1)
         self.orchestrator_api._delete_old_models(workspace_id, category_id, NUMBER_OF_MODELS_TO_KEEP-1)
 
         # _delete_old_models for iteration NUMBER_OF_MODELS_TO_KEEP-1 should not delete any model as there are
