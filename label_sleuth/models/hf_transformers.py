@@ -22,8 +22,8 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, Inpu
     TextClassificationPipeline, PreTrainedModel
 from transformers.pipelines.pt_utils import KeyDataset
 
-from label_sleuth.models.core.languages import Language
-from label_sleuth.definitions import GPU_AVAILABLE
+from label_sleuth.models.core.languages import Language, Languages
+from label_sleuth.definitions import GPU_AVAILABLE, MPS_GPU_AVAILABLE
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
@@ -66,7 +66,8 @@ class HFTransformerModel(ModelAPI):
                                           overwrite_output_dir=True,
                                           num_train_epochs=self.num_train_epochs,
                                           per_device_train_batch_size=self.batch_size,
-                                          learning_rate=self.learning_rate)
+                                          learning_rate=self.learning_rate,
+                                          use_mps_device=MPS_GPU_AVAILABLE)
         model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_model_name)
         trainer = Trainer(model=model, args=training_args, train_dataset=train_dataset)
         trainer.train()
@@ -78,10 +79,20 @@ class HFTransformerModel(ModelAPI):
         return TransformerComponents(model=model, language=language)
 
     def infer(self, model_components: TransformerComponents, items_to_infer):
-        device = 0 if GPU_AVAILABLE else -1
+        if GPU_AVAILABLE:
+            if MPS_GPU_AVAILABLE:
+                device = 'mps'
+            else:
+                device = 'cuda:0'
+        else:
+            device = 'cpu'
+
         pipeline = TextClassificationPipeline(model=model_components.model, tokenizer=self.tokenizer, device=device)
 
-        ds = Dataset.from_dict({'text': [item['text'] for item in items_to_infer]})
+        # we sort examples by length to optimize inference time
+        sorted_items_to_infer = sorted(enumerate(items_to_infer), key=lambda x: len(x[1]['text']))
+        orig_idx_to_new_idx = {orig_idx: new_idx for new_idx, (orig_idx, _) in enumerate(sorted_items_to_infer)}
+        ds = Dataset.from_dict({'text': [item['text'] for _, item in sorted_items_to_infer]})
         predictions = []
         for output in tqdm(pipeline(KeyDataset(ds, 'text'), batch_size=self.batch_size, truncation=True),
                            total=len(items_to_infer), desc="classification inference"):
@@ -89,6 +100,8 @@ class HFTransformerModel(ModelAPI):
             score = output['score'] if label is True else 1-output['score']
 
             predictions.append(Prediction(label=label, score=score))
+
+        predictions = [predictions[orig_idx_to_new_idx[i]] for i in range(len(predictions))]
         return predictions
 
     def get_model_dir_name(self):  # for backward compatibility, we override the default get_model_dir_name()
@@ -120,6 +133,9 @@ class HFBert(HFTransformerModel):
         super().__init__(output_dir, background_jobs_manager,
                          pretrained_model="bert-base-uncased",
                          batch_size=32, learning_rate=5e-5, num_train_epochs=5)
+
+    def get_supported_languages(self):
+        return {Languages.ENGLISH}
 
 
 class HFTransformers(HFBert):

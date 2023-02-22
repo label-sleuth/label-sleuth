@@ -17,6 +17,7 @@ import os
 import random
 import numpy as np
 
+from label_sleuth.models.core.languages import Languages
 from label_sleuth.models.core.model_api import ModelAPI, ModelStatus
 from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
@@ -58,3 +59,6 @@ class RandomModel(ModelAPI):
     def delete_model(self, model_id):
         if model_id in self.model_id_to_random_seed:
             self.model_id_to_random_seed.pop(model_id)
+
+    def get_supported_languages(self):
+        return Languages.all_languages()

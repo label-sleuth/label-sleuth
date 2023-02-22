@@ -20,12 +20,11 @@ import shutil
 import threading
 import uuid
 import tempfile
-import json
 
 from collections import defaultdict
 from concurrent.futures import Future
 from enum import Enum
-from typing import Mapping, Sequence, Tuple
+from typing import Mapping, Sequence, Tuple, Set
 
 import jsonpickle
 
@@ -104,6 +103,12 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         boolean and Prediction.score is a float in the range [0-1].
         If the model returns a non-standard type of prediction object - i.e. one that inherits from the base Prediction
         class and adds additional outputs - it must override the get_predictions_class() method.
+        """
+
+    @abc.abstractmethod
+    def get_supported_languages(self) -> Set[Language]:
+        """
+        Each model implementation must specify which language(s) it supports
         """
 
     def get_prediction_class(self):

@@ -13,9 +13,9 @@ dacite==1.6.0
 waitress==2.1.1
 datasets==2.3.2
 spacy==3.2.4
-torch==1.10.2
+torch==1.13.1
 tqdm==4.62.3
-transformers==4.16.2
+transformers==4.23.0
 GitPython==3.1.29
 fasttext-wheel==0.9.2
 
