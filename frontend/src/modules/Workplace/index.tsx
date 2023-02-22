@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import React, { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import Box from "@mui/material/Box";
 import { Stack } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -201,7 +201,7 @@ export const Workplace = () => {
         <TutorialDialog open={tutorialDialogOpen} setOpen={setTutorialDialogOpen} setTutorialOpen={setTutorialOpen} />
         <ShortcutsModal open={shortcutsModalOpen} setOpen={setShortcutsModalOpen} />
       </Box>
-      <Backdrop sx={{ color: "#fff", zIndex: 10000 }} open={backdropOpen}>
+      <Backdrop sx={{ color: "#fff", zIndex: backdropOpen ? 10000 : -1, display: backdropOpen ? 'flex' : 'none'}} open={backdropOpen} >
         <CircularProgress color="inherit" />
       </Backdrop>
     </>
