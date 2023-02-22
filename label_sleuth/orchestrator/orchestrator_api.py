@@ -694,9 +694,7 @@ class OrchestratorApi:
             else:
                 # iteration yet to be created, add and set status to error
                 iteration_index = len(iterations_latest)
-                model_info = ModelInfo(model_id="error-did_not_start", model_status=ModelStatus.ERROR,
-                                       creation_date=datetime.now(), model_type=None, train_statistics={})
-                self.orchestrator_state.add_iteration(workspace_id, category_id, model_info=model_info)
+                self.orchestrator_state.add_iteration(workspace_id, category_id)
                 self.orchestrator_state.update_iteration_status(workspace_id, category_id, iteration_index,
                                                                 IterationStatus.ERROR)
 
