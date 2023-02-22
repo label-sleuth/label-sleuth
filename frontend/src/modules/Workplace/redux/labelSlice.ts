@@ -14,10 +14,10 @@
 */
 
 import { createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { getCategoryQueryString, getPageCount, getQueryParamsString, synchronizeElement } from "../../../utils/utils";
+import { getCategoryQueryString, getQueryParamsString, synchronizeElement } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../../config";
 import fileDownload from "js-file-download";
-import { LabelTypesEnum, PanelIdsEnum } from "../../../const";
+import { LabelTypesEnum } from "../../../const";
 import { client } from "../../../api/client";
 import { getWorkspaceId } from "../../../utils/utils";
 import { RootState } from "../../../store/configureStore";
@@ -102,116 +102,25 @@ export const reducers = {
   },
   updateElementOptimistically(
     state: WorkspaceState,
-    action: PayloadAction<{ element: Element; newLabel: LabelTypesEnum; sidebarPanelElementsPerPage: number }>
+    action: PayloadAction<{ element: Element; newLabel: LabelTypesEnum }>
   ) {
-    const { element, newLabel, sidebarPanelElementsPerPage } = action.payload;
+    const { element, newLabel } = action.payload;
     const updatedElement = {
       ...element,
       userLabel: newLabel,
     };
-    const { panelsState, previousLabel } = synchronizeElement(updatedElement.id, updatedElement.userLabel, {
+    const { panelsState } = synchronizeElement(updatedElement.id, updatedElement.userLabel, {
       panels: state.panels,
     });
-    const panels = panelsState.panels.panels;
-    // Positive labels panel management
-    const { elements, page, hitCount } = panels[PanelIdsEnum.POSITIVE_LABELS];
-    let elementsCopy = { ...elements };
-
-    // have to do something if:
-    // - positive labels panels is active
-    if (panelsState.panels.activePanelId === PanelIdsEnum.POSITIVE_LABELS) {
-      // - label is pos,
-      if (updatedElement.userLabel === "pos") {
-        if (panels[PanelIdsEnum.POSITIVE_LABELS].hitCount !== null) {
-          panels[PanelIdsEnum.POSITIVE_LABELS].hitCount += 1;
-        }
-        if (elements === null) {
-          elementsCopy = {};
-        }
-        // - last page is not full
-        if (Object.keys(elementsCopy).length < sidebarPanelElementsPerPage) {
-          // - and if it is in the last page add it to the last page
-          const positiveLabelsPanelPageCount = getPageCount(sidebarPanelElementsPerPage, hitCount);
-          if (positiveLabelsPanelPageCount === page) {
-            elementsCopy[element.id] = updatedElement;
-          }
-        }
-      }
-      // if element was positive label
-      // update hitCount and remove it if it is in the current page
-      else if (previousLabel === "pos") {
-        // manually manage case where labeled element
-        // is present in the current page
-        const positiveLabelsPanelPageCount = getPageCount(sidebarPanelElementsPerPage, hitCount);
-        if (
-          elements !== null &&
-          updatedElement.id in elements &&
-          Object.keys(elements).length === 1 &&
-          page === positiveLabelsPanelPageCount
-        ) {
-          panels[PanelIdsEnum.POSITIVE_LABELS].page = page - 1;
-        }
-        // mechanism is too complex when elements are removed from another page
-        // lets refetch for the moment :)
-        state.panels.refetch = true;
-      }
-    }
-
-    panels[PanelIdsEnum.POSITIVE_LABELS].elements = elements;
-    state.panels.panels = panels;
+    state.panels.panels = panelsState.panels.panels;
   },
   reverseOptimisticUpdate(
     state: WorkspaceState,
-    action: PayloadAction<{ element: Element; sidebarPanelElementsPerPage: number }>
+    action: PayloadAction<{ element: Element }>
   ) {
-    const { element, sidebarPanelElementsPerPage } = action.payload;
-    const { panelsState, previousLabel } = synchronizeElement(element.id, element.userLabel, { panels: state.panels });
-    const panels = panelsState.panels.panels;
-    // Positive labels panel management
-    const { elements, page, hitCount } = panels[PanelIdsEnum.POSITIVE_LABELS];
-    let elementsCopy = { ...elements };
-    // have to do something if:
-    // - positive labels panels is active
-    if (panelsState.panels.activePanelId === PanelIdsEnum.POSITIVE_LABELS) {
-      // - label is pos,
-      if (element.userLabel === "pos") {
-        if (panels[PanelIdsEnum.POSITIVE_LABELS].hitCount !== null) {
-          panels[PanelIdsEnum.POSITIVE_LABELS].hitCount += 1;
-        }
-        if (elements === null) {
-          elementsCopy = {};
-        }
-        // - last page is not full
-        if (Object.keys(elementsCopy).length < sidebarPanelElementsPerPage) {
-          // - and if it is in the last page add it to the last page
-          const positiveLabelsPanelPageCount = getPageCount(sidebarPanelElementsPerPage, hitCount);
-          if (positiveLabelsPanelPageCount === page) {
-            elementsCopy[element.id] = element;
-          }
-        }
-      }
-      // if element was positive label
-      // update hitCount and remove it if it is in the current page
-      else if (previousLabel === "pos") {
-        // manually manage case where labeled element
-        // is present in the current page
-        const positiveLabelsPanelPageCount = getPageCount(sidebarPanelElementsPerPage, hitCount);
-        if (
-          elements !== null &&
-          element.id in elements &&
-          Object.keys(elements).length === 1 &&
-          page === positiveLabelsPanelPageCount
-        ) {
-          panels[PanelIdsEnum.POSITIVE_LABELS].page = page - 1;
-        }
-        // mechanism is too complex when elements are removed from another page
-        // lets refetch for the moment :)
-        panelsState.panels.refetch = true;
-      }
-    }
-
-    panels[PanelIdsEnum.POSITIVE_LABELS].elements = elements;
-    state.panels.panels = panels;
+    const { element } = action.payload;
+    const { panelsState } = synchronizeElement(element.id, element.userLabel, { panels: state.panels });
+    state.panels.panels = panelsState.panels.panels;
   },
 };
 

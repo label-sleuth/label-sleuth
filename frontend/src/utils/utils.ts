@@ -192,7 +192,6 @@ export const synchronizeElement = (
   panelsState: PanelsSliceState
 ): {
   panelsState: PanelsSliceState;
-  previousLabel: LabelActionsEnum | null;
 } => {
   const panels = panelsState.panels.panels;
   let previousLabel: LabelTypesEnum | null = null;
@@ -209,7 +208,6 @@ export const synchronizeElement = (
 
   return {
     panelsState,
-    previousLabel,
   };
 };
 
