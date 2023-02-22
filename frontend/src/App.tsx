@@ -25,7 +25,7 @@ import { WORKSPACE_CONFIG_PATH, WORKSPACE_PATH, LOGIN_PATH } from "./config";
 import { Navigate } from "react-router-dom";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
-import { useDispatch, useSelector } from "react-redux";
+import { useAppSelector, useAppDispatch } from "./customHooks/useRedux";
 import theme from "./theme.jsx";
 import { Backdrop } from "@mui/material";
 import { CircularProgress } from "@mui/material";
@@ -77,9 +77,9 @@ const AppRoutes = () => {
 };
 
 const App = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
-  const featureFlags = useSelector((state: any) => state.featureFlags);
+  const featureFlags = useAppSelector((state) => state.featureFlags);
 
   useErrorHandler();
 
@@ -90,7 +90,6 @@ const App = () => {
   useEffect(() => {
     dispatch(fetchVersion());
   }, [dispatch]);
-
 
   return (
     <div>

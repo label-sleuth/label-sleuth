@@ -1,6 +1,6 @@
 # Label sleuth frontend
 
-The frontend of Label sleuth is implemented using React. [Redux](https://react-redux.js.org/) is used to manage the state of the application and [mui](https://mui.com/) is the components library. 
+The frontend of Label sleuth is implemented using React. [Redux](https://react-redux.js.org/) is used to manage the state of the application and [mui](https://mui.com/) is the components library. A typescript migration from javascript to typescript is currently being performed.
 
 ## Requirements
 
@@ -59,7 +59,7 @@ _Note: The default `/build` folder inside `/label_sleuth` is always in sync with
   
 - Functional components are used instead of class components. Component's logic that uses hooks is modularized using custom hooks.
 - Common components are placed inside the [components folder](https://github.com/label-sleuth/label-sleuth/tree/main/frontend/src/components).
-- All the labels found in the UI such us titles and tooltip messages are stored in the [const.js](https://github.com/label-sleuth/label-sleuth/blob/main/frontend/src/const.js) file.
+- All the labels found in the UI such us titles and tooltip messages are stored in the [const.ts](https://github.com/label-sleuth/label-sleuth/blob/main/frontend/src/const.js) file.
 
 
 ## Error handling
@@ -83,11 +83,18 @@ The error pipeline is as follows:
 
 Tests can be run executing `npm run test`. Testing is done using the [react-testing-library](https://testing-library.com/docs/dom-testing-library/intro/) with [Jest](https://jestjs.io/) as the test-runner. Tests can be found under the `/__test__` folder of each module. [setupTests.js](https://github.com/label-sleuth/label-sleuth/blob/main/frontend/src/setupTests.js) prepares the API calls to the backend by using [msw](https://mswjs.io/).
 
-## Environment variables
+## Feature flags
 
-Different environment variables can be configured. They are:
+Before the user can start the system's UI, the feature flags are fetched (see [here](https://github.com/label-sleuth/label-sleuth/blob/3d2cf586204b60b5fea861eed50a9f642264cd1e/frontend/src/App.tsx#L97)). Currently,
+the feature flags that are used are: `authenticationEnabled`, `mainPanelElementsPerPage` and `sidebarPanelElementsPerPage`.
 
-- `REACT_APP_API_URL`: the URL used to make API requests to the backend.
-- `REACT_APP_AUTH_ENABLED`: feature flag that enables or disabled the login page and the need for an authorization token to be set. IMPORTANT: this is now set using the backend's `login_required` feature flag thanks to the feature flag management described in [this issue](https://github.com/label-sleuth/label-sleuth/issues/217).
 
-_Note: the environment variables defined in the `.env` files must start with `REACT_APP_`, eg. `REACT_APP_MY_ENV_VALUE`._
+## Typescript migration notes
+
+Here are some notes if you are contributing to the typescript migration effort:
+- Rename files from `js` to `ts` if they don't containg react component's, and `jsx` to `tsx` otherwise.
+- When using the Redux state from a react component, use the custom hooks `useAppSelector` and `useAppDispatch` instead of `useSelector` and `useDispatch`. This allows to access the Redux state types.
+- Types are defined in `global.d.ts`, expect for the ones in the following item.
+- When typing a React component props, create an interface above the component's definition with the name `[Component]Props`.
+- If using vscode, make sure that the linter you are using uses the same version you have installed in the `node_modules` folder (currently `4.8.*`). See [this stackoverflow question](https://stackoverflow.com/questions/39668731/what-typescript-version-is-visual-studio-code-using-how-to-update-it) for more info.
+  
