@@ -23,7 +23,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, Inpu
 from transformers.pipelines.pt_utils import KeyDataset
 
 from label_sleuth.models.core.languages import Language
-from label_sleuth.definitions import GPU_AVAILABLE
+from label_sleuth.definitions import GPU_AVAILABLE, MPS_GPU_AVAILABLE
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
@@ -66,7 +66,8 @@ class HFTransformerModel(ModelAPI):
                                           overwrite_output_dir=True,
                                           num_train_epochs=self.num_train_epochs,
                                           per_device_train_batch_size=self.batch_size,
-                                          learning_rate=self.learning_rate)
+                                          learning_rate=self.learning_rate,
+                                          use_mps_device=MPS_GPU_AVAILABLE)
         model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_model_name)
         trainer = Trainer(model=model, args=training_args, train_dataset=train_dataset)
         trainer.train()
@@ -78,7 +79,14 @@ class HFTransformerModel(ModelAPI):
         return TransformerComponents(model=model, language=language)
 
     def infer(self, model_components: TransformerComponents, items_to_infer):
-        device = 0 if GPU_AVAILABLE else -1
+        if GPU_AVAILABLE:
+            if MPS_GPU_AVAILABLE:
+                device = 'mps'
+            else:
+                device = 'cuda:0'
+        else:
+            device = 'cpu'
+
         pipeline = TextClassificationPipeline(model=model_components.model, tokenizer=self.tokenizer, device=device)
 
         ds = Dataset.from_dict({'text': [item['text'] for item in items_to_infer]})
