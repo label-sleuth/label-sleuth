@@ -89,7 +89,10 @@ class HFTransformerModel(ModelAPI):
 
         pipeline = TextClassificationPipeline(model=model_components.model, tokenizer=self.tokenizer, device=device)
 
-        ds = Dataset.from_dict({'text': [item['text'] for item in items_to_infer]})
+        # we sort examples by length to optimize inference time
+        sorted_items_to_infer = sorted(enumerate(items_to_infer), key=lambda x: len(x[1]['text']))
+        orig_idx_to_new_idx = {orig_idx: new_idx for new_idx, (orig_idx, _) in enumerate(sorted_items_to_infer)}
+        ds = Dataset.from_dict({'text': [item['text'] for _, item in sorted_items_to_infer]})
         predictions = []
         for output in tqdm(pipeline(KeyDataset(ds, 'text'), batch_size=self.batch_size, truncation=True),
                            total=len(items_to_infer), desc="classification inference"):
@@ -97,6 +100,8 @@ class HFTransformerModel(ModelAPI):
             score = output['score'] if label is True else 1-output['score']
 
             predictions.append(Prediction(label=label, score=score))
+
+        predictions = [predictions[orig_idx_to_new_idx[i]] for i in range(len(predictions))]
         return predictions
 
     def get_model_dir_name(self):  # for backward compatibility, we override the default get_model_dir_name()
