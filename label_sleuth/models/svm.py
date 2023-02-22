@@ -122,6 +122,9 @@ class SVM_BOW(SVM):
                          representation_type=RepresentationType.BOW,
                          sentence_embedding_service=sentence_embedding_service)
 
+    def get_supported_languages(self):
+        return Languages.all_languages()
+
 
 class SVM_WordEmbeddings(SVM):
     def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
@@ -129,3 +132,5 @@ class SVM_WordEmbeddings(SVM):
                          representation_type=RepresentationType.WORD_EMBEDDING,
                          sentence_embedding_service=sentence_embedding_service)
 
+    def get_supported_languages(self):
+        return Languages.all_languages()

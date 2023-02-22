@@ -14,6 +14,7 @@
 #
 
 import abc
+from typing import Set
 
 from label_sleuth.models.core.model_type import ModelType
 
@@ -31,6 +32,13 @@ class ModelPolicy(object, metaclass=abc.ABCMeta):
         Given *iteration_num*, return the type of classification model to be used
         :param iteration_num:
         :return: a member of the ModelTypes enum
+        """
+
+    @abc.abstractmethod
+    def get_all_model_types(self) -> Set[ModelType]:
+        """
+        Return the types of all possible classification models to be used by this policy. Useful for checking that
+        the policy is compatible with the overall system configuration.
         """
 
     @abc.abstractmethod

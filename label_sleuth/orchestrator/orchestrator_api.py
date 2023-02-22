@@ -69,6 +69,7 @@ class OrchestratorApi:
         self.background_jobs_manager = background_jobs_manager
         self.sentence_embedding_service = sentence_embedding_service
         self.config = config
+        self._verify_model_and_language_compatibility()
 
     def get_all_dataset_names(self):
         return sorted(self.data_access.get_all_dataset_names())
@@ -1033,3 +1034,14 @@ class OrchestratorApi:
         """
         dataset_name = self.get_dataset_name(workspace_id)
         return self.data_access.preload_dataset(dataset_name)
+
+    def _verify_model_and_language_compatibility(self):
+        """
+        Check that the model policy is compatible with the system language configuration
+        """
+        model_policy = self.config.model_policy
+        for model_type in model_policy.get_all_model_types():
+            model_supported_languages = self.model_factory.get_model_api(model_type).get_supported_languages()
+            if self.config.language not in model_supported_languages:
+                raise Exception(f"{self.config.language.name} is not supported by the model {model_type.name}, "
+                                f"which is used by the configured model policy {model_policy.get_name()}")

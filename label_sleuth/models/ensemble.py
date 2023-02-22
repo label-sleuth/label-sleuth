@@ -171,6 +171,9 @@ class Ensemble(ModelAPI):
             shutil.copytree(model_path, output_path)
         return ensemble_output_path
 
+    def get_supported_languages(self):
+        return set.intersection(*[model_api.get_supported_languages() for model_api in self.model_apis])
+
 
 class SVM_Ensemble(Ensemble):
     def __init__(self, output_dir, background_jobs_manager, model_factory):
