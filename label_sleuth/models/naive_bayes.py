@@ -114,9 +114,16 @@ class NaiveBayes_BOW(NaiveBayes):
                          representation_type=RepresentationType.BOW,
                          sentence_embedding_service=sentence_embedding_service)
 
+    def get_supported_languages(self):
+        return Languages.all_languages()
+
+
 
 class NaiveBayes_WordEmbeddings(NaiveBayes):
     def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
         super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
                          representation_type=RepresentationType.WORD_EMBEDDING,
                          sentence_embedding_service=sentence_embedding_service)
+
+    def get_supported_languages(self):
+        return Languages.all_languages()

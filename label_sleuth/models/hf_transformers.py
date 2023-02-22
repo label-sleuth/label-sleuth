@@ -22,7 +22,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, Inpu
     TextClassificationPipeline, PreTrainedModel
 from transformers.pipelines.pt_utils import KeyDataset
 
-from label_sleuth.models.core.languages import Language
+from label_sleuth.models.core.languages import Language, Languages
 from label_sleuth.definitions import GPU_AVAILABLE, MPS_GPU_AVAILABLE
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.prediction import Prediction
@@ -133,6 +133,9 @@ class HFBert(HFTransformerModel):
         super().__init__(output_dir, background_jobs_manager,
                          pretrained_model="bert-base-uncased",
                          batch_size=32, learning_rate=5e-5, num_train_epochs=5)
+
+    def get_supported_languages(self):
+        return {Languages.ENGLISH}
 
 
 class HFTransformers(HFBert):

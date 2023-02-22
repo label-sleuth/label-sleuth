@@ -50,6 +50,9 @@ class ModelChangingPolicy(ModelPolicy):
                 return model_type
         return self.model_types[-1]
 
+    def get_all_model_types(self):
+        return set(self.model_types)
+
     def get_name(self):
         name = ""
         for model_type, n_iter in zip(self.model_types, self.num_iterations_per_model):

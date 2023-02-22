@@ -32,10 +32,14 @@ class Language:
     def __repr__(self):
         return self.name
 
+    def __hash__(self):
+        return hash(self.name)
+
     def __post_init__(self):
         if self.spacy_model_name is None and self.fasttext_language_id is None:
             raise Exception(f"Selected Language {self.name} should define either "
-							f"spacy_model_name or fasttext_language_id in class '{Language}'")
+                            f"spacy_model_name or fasttext_language_id in class '{Language}'")
+
 
 English = \
     Language(name='English',
@@ -171,9 +175,9 @@ Romanian = \
              spacy_model_name='ro_core_news_lg')
 
 Hebrew = Language(name='Hebrew',
-				  stop_words=["זה", "זאת", "אלה", "אלו" ,"גם" , "של", "מה", "או"],
-				  fasttext_language_id="he",
-				  right_to_left=True)
+                  stop_words=["זה", "זאת", "אלה", "אלו" ,"גם" , "של", "מה", "או"],
+                  fasttext_language_id="he",
+                  right_to_left=True)
 
 
 class Languages:
@@ -182,3 +186,6 @@ class Languages:
     ROMANIAN = Romanian
     HEBREW = Hebrew
 
+    @classmethod
+    def all_languages(cls):
+        return {value for name, value in vars(cls).items() if name.isupper()}

@@ -34,5 +34,8 @@ class StaticModelPolicy(ModelPolicy):
             raise ValueError('No model type was provided in the initialization')
         return model_type
 
+    def get_all_model_types(self):
+        return {self.static_model}
+
     def get_name(self):
         return f'Static-{self.static_model.name}'
