@@ -42,7 +42,6 @@ const useLabelState = (updateCounter = true) => {
   const dispatch = useAppDispatch();
 
   const currentDocName = useAppSelector((state) => state.workspace.curDocName);
-  const { sidebarPanelElementsPerPage } = useAppSelector((state) => state.featureFlags);
 
   /**
    * This function is reponsible for managing sidebar elements label state and updating
@@ -54,7 +53,7 @@ const useLabelState = (updateCounter = true) => {
    */
   const handleLabelState = (element: Element, labelAction: LabelActionsEnum) => {
     const { documentLabelCountChange, newLabel } = getNewLabelState(element.userLabel, labelAction);
-    dispatch(updateElementOptimistically({ element, newLabel, sidebarPanelElementsPerPage }));
+    dispatch(updateElementOptimistically({ element, newLabel }));
     dispatch(
       setElementLabel({
         element_id: element.id,
@@ -63,7 +62,7 @@ const useLabelState = (updateCounter = true) => {
       })
     ).then((action) => {
       if (isRejected(action)) {
-        dispatch(reverseOptimisticUpdate({ element, sidebarPanelElementsPerPage }));
+        dispatch(reverseOptimisticUpdate({ element }));
       } else {
         dispatch(checkStatus());
         // Update main document view only if the sidebar element belongs to the current main document
