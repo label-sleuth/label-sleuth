@@ -28,7 +28,6 @@ import {
   LEFT_DRAWER_WIDTH,
   ACTIONS_DRAWER_WIDTH,
   APPBAR_HEIGHT,
-  panelIds,
   PanelIdsEnum,
 } from "../../../const";
 import { getPanelDOMKey } from "../../../utils/utils";
@@ -37,6 +36,7 @@ import { CustomPagination } from "../../../components/pagination/CustomPaginatio
 import { useFetchPrevNextDoc } from "../../../customHooks/useFetchPrevNextDoc";
 import { useMainPagination } from "../../../customHooks/useMainPagination";
 import { Element } from "../../../global";
+import { currentDocNameSelector } from "../redux/documentSlice";
 
 const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(
   ({ theme, open, rightDrawerWidth }: { theme?: any; open: boolean; rightDrawerWidth: number }) => ({
@@ -60,10 +60,10 @@ interface MainPanelProps {
 }
 
 const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
-  const curDocName = useAppSelector((state) => state.workspace.curDocName);
-  const curDocIndex = useAppSelector((state) => state.workspace.curDocIndex);
   const documents = useAppSelector((state) => state.workspace.documents);
   const mainPanelElementsPerPage = useAppSelector((state) => state.featureFlags.mainPanelElementsPerPage);
+  const curDocIndex = useAppSelector((state) => state.workspace.curDocIndex);
+  const curDocName = useAppSelector(currentDocNameSelector);
 
   const { currentContentData, hitCount, currentPage, onPageChange, isPaginationRequired } =
     useMainPagination(mainPanelElementsPerPage);
@@ -125,7 +125,10 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
           <Box id="main-element-view">
             {currentContentData &&
               currentContentData.map((element) => (
-                <MainElement element={element as Element} key={getPanelDOMKey((element as Element).id, PanelIdsEnum.MAIN_PANEL)} />
+                <MainElement
+                  element={element as Element}
+                  key={getPanelDOMKey((element as Element).id, PanelIdsEnum.MAIN_PANEL)}
+                />
               ))}
           </Box>
         </div>

@@ -47,7 +47,7 @@ import { RootState } from "../../../store/configureStore";
 import { Category, ReducerObj, WorkspaceState } from "../../../global";
 import { PanelIdsEnum } from "../../../const";
 
-export { fetchDocuments, preloadDataset } from "./documentSlice";
+export { fetchDocumentsMetadata, preloadDataset } from "./documentSlice";
 export {
   getPositivePredictions,
   getAllPositiveLabels,

@@ -103,9 +103,6 @@ const usePanelPagination = ({
       (fetchOnFirstRender || firstRenderHappened.current) &&
       (!modelAvailableRequired || modelAvailable)
     ) {
-      // console.log(panelId)
-      // console.log(`modelAvailableRequired: ${modelAvailableRequired}`)
-      // console.log(`modelAvailable: ${modelAvailable}`)
       fetchPanelElements();
     }
   }, [

@@ -21,12 +21,10 @@ import { clearMainPanelFocusedElement } from "../modules/Workplace/redux";
 import { useAppDispatch, useAppSelector } from "./useRedux";
 
 export const useMainPagination = (elementsPerPage: number) => {
-  const isDocLoaded = useAppSelector((state) => state.workspace.isDocLoaded);
-  const curDocIndex = useAppSelector((state) => state.workspace.curDocName);
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
+  const curDocIndex = useAppSelector((state) => state.workspace.curDocIndex);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
   const page = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.MAIN_PANEL].page);
-
   const dispatch = useAppDispatch();
 
   // (curCategory === null || modelVersion !== null) means category isn't selected or model version has been set
@@ -42,9 +40,9 @@ export const useMainPagination = (elementsPerPage: number) => {
   } = usePanelPagination({
     elementsPerPage,
     panelId: PanelIdsEnum.MAIN_PANEL,
-    shouldFetch: isDocLoaded && page !== null && (curCategory === null || modelVersion !== null),
+    shouldFetch: curDocIndex !== null && page !== null && (curCategory === null || modelVersion !== null),
     modelAvailableRequired: false,
-    otherDependencies: [curDocIndex, isDocLoaded, curCategory, modelVersion],
+    otherDependencies: [curDocIndex, curCategory, modelVersion],
   });
 
   const onMainPageChange = useCallback(

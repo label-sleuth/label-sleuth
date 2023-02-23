@@ -21,10 +21,11 @@ import {
   reverseOptimisticUpdate,
 } from "../modules/Workplace/redux";
 import { getNewLabelState, getBooleanLabel } from "../utils/utils";
-import { isRejected } from "@reduxjs/toolkit";
+import { Action, isRejected } from "@reduxjs/toolkit";
 import { useAppDispatch, useAppSelector } from "./useRedux";
 import { LabelActionsEnum } from "../const";
 import { Element } from "../global";
+import { currentDocNameSelector } from "../modules/Workplace/redux/documentSlice"
 /**
  * This custom hook is responsible for managing the labels states
  ** for the current sidebar's active panels and for updating the main labels state panel.
@@ -41,7 +42,7 @@ import { Element } from "../global";
 const useLabelState = (updateCounter = true) => {
   const dispatch = useAppDispatch();
 
-  const currentDocName = useAppSelector((state) => state.workspace.curDocName);
+  const currentDocName = useAppSelector(currentDocNameSelector);
 
   /**
    * This function is reponsible for managing sidebar elements label state and updating
@@ -60,7 +61,7 @@ const useLabelState = (updateCounter = true) => {
         label: getBooleanLabel(newLabel),
         update_counter: updateCounter,
       })
-    ).then((action) => {
+    ).then((action: Action) => {
       if (isRejected(action)) {
         dispatch(reverseOptimisticUpdate({ element }));
       } else {
