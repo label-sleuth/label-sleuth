@@ -16,7 +16,7 @@
 import {
   checkStatus,
   fetchCategories,
-  fetchDocuments,
+  fetchDocumentsMetadata,
   checkModelUpdate,
   cleanEvaluationState,
   cleanUploadedLabels,
@@ -45,7 +45,7 @@ const useWorkspaceState = () => {
 
   React.useEffect(() => {
     // fetch documents only once, they won't change
-    dispatch(fetchDocuments());
+    dispatch(fetchDocumentsMetadata());
 
     // fetch categories only once, they will be fetched again if a new category is added
     dispatch(fetchCategories());

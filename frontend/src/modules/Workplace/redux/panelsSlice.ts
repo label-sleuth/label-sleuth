@@ -40,6 +40,7 @@ import {
   WorkspaceState,
 } from "../../../global";
 import { PanelIdsEnum } from "../../../const";
+import { currentDocNameSelector } from "./documentSlice";
 //import { current } from "@reduxjs/toolkit";
 
 /**
@@ -198,7 +199,8 @@ export const fetchDocumentElements = createAsyncThunk<
   }
 >("workspace/fetchDocumentElements", async (params, { getState }) => {
   const state = getState();
-  let docId = params.docId || state.workspace.curDocName;
+  let docId = params.docId || currentDocNameSelector(state) || "";
+
   return await getPanelElements(state, `document/${encodeURIComponent(docId)}`, [], params.pagination);
 });
 
@@ -319,7 +321,6 @@ export const reducers = {
     // mainPanelElementsPerPage is needed to calculate the main panel page
     const { newDocId, mainPanelElementsPerPage } = action.payload;
     const curDocIndex = state.documents.findIndex((d) => d.documentId === newDocId);
-    state.curDocName = newDocId;
     state.curDocIndex = curDocIndex;
 
     // set the page of the new document based on the focused main panel element, if any

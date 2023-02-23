@@ -25,7 +25,7 @@ export const useFetchPrevNextDoc = () => {
   const dispatch = useAppDispatch();
 
   const handleFetchNextDoc = () => {
-    if (curDocIndex < documents.length - 1) {
+    if (curDocIndex !== null && curDocIndex < documents.length - 1) {
       dispatch(clearMainPanelFocusedElement());
       dispatch(changeCurrentDocument({ newDocId: documents[curDocIndex + 1].documentId, mainPanelElementsPerPage }));
       // this action is currently focusing the first element of the previous document
@@ -34,7 +34,7 @@ export const useFetchPrevNextDoc = () => {
   };
 
   const handleFetchPrevDoc = () => {
-    if (curDocIndex > 0) {
+    if (curDocIndex !== null && curDocIndex > 0) {
       dispatch(clearMainPanelFocusedElement());
       dispatch(changeCurrentDocument({ newDocId: documents[curDocIndex - 1].documentId, mainPanelElementsPerPage }));
     }

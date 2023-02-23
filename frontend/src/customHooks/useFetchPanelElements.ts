@@ -62,9 +62,7 @@ export const useFetchPanelElements = ({ panelId }: { panelId: PanelIdsEnum }) =>
       if (panelId !== PanelIdsEnum.NOT_SET) {
         const elementsPerPage =
           panelId === PanelIdsEnum.MAIN_PANEL ? mainPanelElementsPerPage : sidebarPanelElementsPerPage;
-
         const startIndex = (page - 1) * elementsPerPage;
-
         const pagination = {
           startIndex,
           elementsPerPage,

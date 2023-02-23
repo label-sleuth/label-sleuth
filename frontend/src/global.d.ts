@@ -174,21 +174,13 @@ interface CategorySliceState {
   deletingCategory: boolean;
 }
 
-interface DocumentSliceState {
-  documents: Array<Document>;
-  curDocIndex: number;
-  curDocName: string;
-  isDocLoaded: boolean;
-}
-
 interface Document {
   documentId: string;
 }
+
 interface DocumentSliceState {
-  curDocIndex: number;
   documents: Document[];
-  isDocLoaded: boolean;
-  curDocName: string;
+  curDocIndex: null | number;
 }
 
 interface UploadedLabels {
