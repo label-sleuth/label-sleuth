@@ -80,6 +80,113 @@ interface WorkspaceInfoProps {
   shouldFireConfetti?: boolean;
 }
 
+const LabelCountComponent = () => {
+  const [tabValue, setTabValue] = React.useState(0);
+  const labelCount = useAppSelector((state) => state.workspace.labelCount);
+  const curCategory = useAppSelector((state) => state.workspace.curCategory);
+  const theme = useTheme();
+
+  const handleChange = (event: React.SyntheticEvent<Element, Event>, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  React.useEffect(() => {
+    setTabValue(0)
+  }, [curCategory])
+
+  return (
+    <Box>
+      <Box sx={{ borderBottom: 1, borderColor: "#393939" }}>
+        <Tabs
+          className={classes.tabroot}
+          value={tabValue}
+          onChange={handleChange}
+          aria-label="workspace toggle tab"
+          variant="fullWidth"
+          sx={{padding: theme.spacing(0, 2)}}
+        >
+          <Tab label="User labels" {...a11yProps(0)} className={classes.tabs} 
+                sx={{ textTransform: "none" }}
+                />
+          {labelCount.weakPos > 0 || labelCount.weakNeg > 0 ? (
+            <Tab label="System-generated labels" {...a11yProps(1)} className={classes.tabs} 
+            sx={{ textTransform: "none" }}
+            />
+          ) : null}
+        </Tabs>
+      </Box>
+      <Box sx={{ width: "100%", padding: theme.spacing(0, 2) }}>
+        <TabPanel className={classes.entries_tab} value={tabValue} index={0}>
+          <Stack spacing={0}>
+            <StatsContainer>
+              <Typography>
+                <strong>Positive</strong>
+              </Typography>
+              <Typography
+                sx={{
+                  color: labelCount.pos > 0 ? "#8ccad9" : "#fff",
+                }}
+              >
+                <strong>{labelCount.pos}</strong>
+              </Typography>
+            </StatsContainer>
+            <StatsContainer>
+              <Typography>
+                <strong>Negative</strong>
+              </Typography>
+              <Typography
+                sx={{
+                  color: labelCount.neg > 0 ? "#ff758f" : "#fff",
+                }}
+              >
+                <strong>{labelCount.neg}</strong>
+              </Typography>
+            </StatsContainer>
+            <StatsContainer>
+              <Typography>
+                <strong>Total</strong>
+              </Typography>
+              <Typography>
+                <strong>{labelCount.pos + labelCount.neg}</strong>
+              </Typography>
+            </StatsContainer>
+          </Stack>
+        </TabPanel>
+        {labelCount.weakPos > 0 || labelCount.weakNeg > 0 ? (
+          <TabPanel className={classes.entries_tab} value={tabValue} index={1}>
+            <Stack spacing={0}>
+              <StatsContainer>
+                <Typography>
+                  <strong>Positive</strong>
+                </Typography>
+                <Typography sx={{ color: labelCount.weakPos > 0 ? "#8ccad9" : "#fff" }}>
+                  <strong>{labelCount.weakPos}</strong>
+                </Typography>
+              </StatsContainer>
+              <StatsContainer>
+                <Typography>
+                  <strong>Negative</strong>
+                </Typography>
+                <Typography sx={{ color: labelCount.weakNeg > 0 ? "#ff758f" : "#fff" }}>
+                  <strong>{labelCount.weakNeg}</strong>
+                </Typography>
+              </StatsContainer>
+              <StatsContainer>
+                <Typography>
+                  <strong>Total</strong>
+                </Typography>
+                <Typography>
+                  <strong>{labelCount.weakPos + labelCount.weakNeg}</strong>
+                </Typography>
+              </StatsContainer>
+            </Stack>
+          </TabPanel>
+        ) : null}
+      </Box>
+    </Box>
+  );
+};
+
 /**
  * The information left sidebar of the worksplace
  * @param workspaceId - the id of the current workspace
@@ -93,7 +200,6 @@ export const WorkspaceInfo = ({
   shouldFireConfetti = true,
 }: WorkspaceInfoProps) => {
   const navigate = useNavigate();
-  const theme = useTheme();
   const { logout } = useLogOut();
 
   const dispatch = useAppDispatch();
@@ -110,13 +216,14 @@ export const WorkspaceInfo = ({
     [modelVersion]
   );
 
-  const [tabValue, setTabValue] = React.useState(0);
   const [uploadLabelsDialogOpen, setUploadLabelsDialogOpen] = React.useState(false);
   const [downloadLabelsDialogOpen, setDownloadLabelsDialogOpen] = React.useState(false);
   const [downloadModelDialogOpen, setDownloadModelDialogOpen] = React.useState(false);
 
   const { authenticationEnabled } = useAuthentication();
   const { workspaceId } = useWorkspaceId();
+  
+  const theme = useTheme();
 
   const notifySuccess = useCallback((message, toastId, autoClose = false) => {
     toast(message, {
@@ -149,22 +256,6 @@ export const WorkspaceInfo = ({
     shouldFireConfetti,
     fire,
   });
-
-  const handleChange = (event: React.SyntheticEvent<Element, Event>, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  // placeholder for finding documents stats
-  let doc_stats = {
-    pos: labelCount.documentPos,
-    neg: labelCount.documentNeg,
-  };
-
-  // placeholder for finding workspace  stats
-  let workspace_stats = {
-    pos: labelCount.workspacePos,
-    neg: labelCount.workspaceNeg,
-  };
 
   const open_introSlides = function () {
     setTutorialOpen(true);
@@ -285,86 +376,7 @@ export const WorkspaceInfo = ({
           <Divider />
           {curCategory !== null ? (
             <Stack style={{ paddingTop: "12px", paddingBottom: "24px" }}>
-              <Box sx={{ width: "100%", padding: theme.spacing(0, 2) }}>
-                <Box sx={{ borderBottom: 1, borderColor: "#393939" }}>
-                  <Tabs
-                    className={classes.tabroot}
-                    value={tabValue}
-                    onChange={handleChange}
-                    aria-label="workspace toggle tab"
-                    variant="fullWidth"
-                  >
-                    <Tab label="Workspace" {...a11yProps(0)} className={classes.tabs} />
-                    <Tab label="Document" {...a11yProps(1)} className={classes.tabs} />
-                  </Tabs>
-                </Box>
-                <TabPanel className={classes.entries_tab} value={tabValue} index={0}>
-                  <Stack spacing={0}>
-                    <label style={{ fontSize: "12px", opacity: 0.5 }}>Labeled for entire workspace:</label>
-                    <StatsContainer>
-                      <Typography>
-                        <strong>Positive</strong>
-                      </Typography>
-                      <Typography
-                        sx={{
-                          color: workspace_stats.pos > 0 ? "#8ccad9" : "#fff",
-                        }}
-                      >
-                        <strong>{workspace_stats.pos}</strong>
-                      </Typography>
-                    </StatsContainer>
-                    <StatsContainer>
-                      <Typography>
-                        <strong>Negative</strong>
-                      </Typography>
-                      <Typography
-                        sx={{
-                          color: workspace_stats.neg > 0 ? "#ff758f" : "#fff",
-                        }}
-                      >
-                        <strong>{workspace_stats.neg}</strong>
-                      </Typography>
-                    </StatsContainer>
-                    <StatsContainer>
-                      <Typography>
-                        <strong>Total</strong>
-                      </Typography>
-                      <Typography>
-                        <strong>{workspace_stats.pos + workspace_stats.neg}</strong>
-                      </Typography>
-                    </StatsContainer>
-                  </Stack>
-                </TabPanel>
-                <TabPanel className={classes.entries_tab} value={tabValue} index={1}>
-                  <Stack spacing={0}>
-                    <label style={{ fontSize: "12px", opacity: 0.5 }}>Labeled for current document:</label>
-                    <StatsContainer>
-                      <Typography>
-                        <strong>Positive</strong>
-                      </Typography>
-                      <Typography sx={{ color: doc_stats.pos > 0 ? "#8ccad9" : "#fff" }}>
-                        <strong>{doc_stats.pos}</strong>
-                      </Typography>
-                    </StatsContainer>
-                    <StatsContainer>
-                      <Typography>
-                        <strong>Negative</strong>
-                      </Typography>
-                      <Typography sx={{ color: doc_stats.neg > 0 ? "#ff758f" : "#fff" }}>
-                        <strong>{doc_stats.neg}</strong>
-                      </Typography>
-                    </StatsContainer>
-                    <StatsContainer>
-                      <Typography>
-                        <strong>Total</strong>
-                      </Typography>
-                      <Typography>
-                        <strong>{doc_stats.pos + doc_stats.neg}</strong>
-                      </Typography>
-                    </StatsContainer>
-                  </Stack>
-                </TabPanel>
-              </Box>
+              <LabelCountComponent />
               <Divider />
               <Stack
                 direction="row"
@@ -412,7 +424,7 @@ export const WorkspaceInfo = ({
                     alignItems: "flex-end",
                   }}
                 >
-                  {workspace_stats.pos === 0 && workspace_stats.neg === 0 ? (
+                  {labelCount.pos === 0 && labelCount.neg === 0 ? (
                     <div className={classes.modelStatus}>{NEXT_ZERO_SHOT_MODEL_TRAINING_MSG}</div>
                   ) : (
                     <div className={classes.modelStatus}>{NEXT_MODEL_TRAINING_MSG}</div>

@@ -30,10 +30,10 @@ export const initialState: LabelSliceState = {
   uploadingLabels: false,
   downloadingLabels: false,
   labelCount: {
-    workspacePos: 0,
-    workspaceNeg: 0,
-    documentPos: 0,
-    documentNeg: 0,
+    pos: 0,
+    neg: 0,
+    weakPos: 0,
+    weakNeg: 0,
   },
 };
 
@@ -89,14 +89,6 @@ export const setElementLabel = createAsyncThunk<
 });
 
 export const reducers = {
-  updateDocumentLabelCountByDiff(state: WorkspaceState, action: PayloadAction<LabelDiff>) {
-    const diff = action.payload;
-    state.labelCount = {
-      ...state.labelCount,
-      documentPos: state.labelCount.documentPos + diff.pos,
-      documentNeg: state.labelCount.documentNeg + diff.neg,
-    };
-  },
   cleanUploadedLabels(state: WorkspaceState, action: PayloadAction<void>) {
     state.uploadedLabels = null;
   },
