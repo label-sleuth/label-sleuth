@@ -24,38 +24,38 @@ import { WORKSPACE_PATH, WORKSPACE_CONFIG_PATH } from "../config";
  */
 const useBackdrop = (): { backdropOpen: boolean } => {
   const [backdropOpen, setBackdropOpen] = useState(false);
-  const isDocLoaded = useAppSelector((state) => state.workspace.isDocLoaded);
   const activePanelId = useAppSelector((state) => state.workspace.panels.activePanelId);
   const panelsLoading = useAppSelector((state) => state.workspace.panels.loading);
   const deletingCategory = useAppSelector((state) => state.workspace.deletingCategory);
   const uploadingLabels = useAppSelector((state) => state.workspace.uploadingLabels);
   const downloadingLabels = useAppSelector((state) => state.workspace.downloadingLabels);
   const downloadingModel = useAppSelector((state) => state.workspace.downloadingModel);
-  const curDocName = useAppSelector((state) => state.workspace.curDocName);
+  const elements = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.MAIN_PANEL].elements);
   const uploadingDataset = useAppSelector((state) => state.workspaces.uploadingDataset);
 
   const location = useLocation();
 
   useEffect(() => {
-    let shouldOpenBackdrop = false;
+    let shouldOpenBackdrop: boolean;
     if (location.pathname === WORKSPACE_PATH) {
       shouldOpenBackdrop =
         uploadingLabels ||
         downloadingLabels ||
         deletingCategory ||
         downloadingModel ||
-        !curDocName ||
-        !isDocLoaded ||
-        panelsLoading[PanelIdsEnum.MAIN_PANEL];
+        panelsLoading[PanelIdsEnum.MAIN_PANEL] ||
+        elements === null
     } else if (location.pathname === WORKSPACE_CONFIG_PATH) {
       shouldOpenBackdrop = uploadingDataset;
     }
+    else {
+      shouldOpenBackdrop = false;
+    }
     setBackdropOpen(shouldOpenBackdrop);
   }, [
+    elements,
     location.pathname,
     uploadingDataset,
-    curDocName,
-    isDocLoaded,
     panelsLoading,
     activePanelId,
     uploadingLabels,
