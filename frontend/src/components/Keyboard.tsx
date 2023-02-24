@@ -16,7 +16,7 @@
 
 interface KeyboardProps {
   kbd: string;
-  style: {[key: string]: string}
+  style?: {[key: string]: string}
 }
 
 /**

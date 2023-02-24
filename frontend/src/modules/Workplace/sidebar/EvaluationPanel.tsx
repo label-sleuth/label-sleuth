@@ -13,71 +13,74 @@
     limitations under the License.
 */
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Box, Button, Stack, Divider } from "@mui/material";
 import classes from "./index.module.css";
-import { useSelector, useDispatch } from "react-redux";
-import Element from "./Element";
-import { checkStatus, getEvaluationElements, getEvaluationResults, cancelEvaluation } from "../redux";
+import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
+import { SidebarElement as Element } from "./Element";
+import { checkStatus, getEvaluationResults, cancelEvaluation } from "../redux";
 import { ButtonGroup } from "@mui/material";
 import {
   START_EVALUATION_MSG,
   EVALUATION_IN_PROGRESS_MSG,
   PRECISION_RESULT_MSG,
   WAIT_NEW_MODEL_MSG,
-  panelIds,
+  PanelIdsEnum,
+  LabelTypesEnum,
 } from "../../../const";
 import { Header, PanelTypography, Loading } from "./components/commonComponents";
+import { useFetchPanelElements } from "../../../customHooks/useFetchPanelElements";
 
 const EvaluationPanel = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
-  const loading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
-
-  const { elements, initialElements, isInProgress, lastScore, scoreModelVersion } = useSelector(
-    (state) => state.workspace.panels.panels[panelIds.EVALUATION]
+  const loading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.EVALUATION]);
+  const { elements, initialElements, isInProgress, lastScore, scoreModelVersion } = useAppSelector(
+    (state) => state.workspace.panels.panels[PanelIdsEnum.EVALUATION]
   );
+  const isLoading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.EVALUATION]);
+  const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+  const nextModelShouldBeTraining = useAppSelector((state) => state.workspace.nextModelShouldBeTraining);
 
   const currentContentData = React.useMemo(() => elements && Object.values(elements), [elements]);
 
-  const isLoading = useSelector((state) => state.workspace.panels.loading[panelIds.EVALUATION]);
-
-  const modelVersion = useSelector((state) => state.workspace.modelVersion);
-
-  const nextModelShouldBeTraining = useSelector((state) => state.workspace.nextModelShouldBeTraining);
+  const fetchEvaluationElements = useFetchPanelElements({ panelId: PanelIdsEnum.EVALUATION });
 
   const evaluationElementsCount = React.useMemo(
     () =>
       currentContentData
-        ? currentContentData.map((element) => element.userLabel !== "none").reduce((partialSum, a) => partialSum + a, 0)
+        ? currentContentData
+            .map((element) => element.userLabel !== LabelTypesEnum.NONE)
+            .reduce((partialSum: number, isLabeled: boolean) => partialSum + (isLabeled ? 1 : 0), 0)
         : 0,
     [currentContentData]
   );
 
   const submitButtonDisabled = React.useMemo(() => {
-    return !isInProgress || evaluationElementsCount !== currentContentData.length;
+    return !isInProgress || (currentContentData !== null && evaluationElementsCount !== currentContentData.length);
   }, [isInProgress, evaluationElementsCount, currentContentData]);
 
   const onStartEvaluation = () => {
-    dispatch(getEvaluationElements());
+    fetchEvaluationElements();
   };
 
-  const calculateChangedCountAndDispatch = (action) => {
-    const changedElementsCount = Object.keys(elements).filter(
-      (k) => elements[k].userLabel !== initialElements[k].userLabel
-    ).length;
-    dispatch(action(changedElementsCount)).then(() => {
-      dispatch(checkStatus());
-    });
-  };
+  const getChangedElementsCount = useCallback(
+    () =>
+      elements !== null
+        ? Object.keys(elements).filter((k) => elements[k].userLabel !== initialElements[k].userLabel).length
+        : 0,
+    [elements, initialElements]
+  );
 
-  const submitEvaluation = () => {
-    calculateChangedCountAndDispatch(getEvaluationResults);
-  };
+  const submitEvaluation = useCallback(() => {
+    const changedElementsCount = getChangedElementsCount();
+    dispatch(getEvaluationResults(changedElementsCount)).then(() => dispatch(checkStatus()));
+  }, [dispatch, getChangedElementsCount]);
 
-  const onCancelEvaluation = () => {
-    calculateChangedCountAndDispatch(cancelEvaluation);
-  };
+  const onCancelEvaluation = useCallback(() => {
+    const changedElementsCount = getChangedElementsCount();
+    dispatch(cancelEvaluation(changedElementsCount)).then(() => dispatch(checkStatus()));
+  }, [dispatch, getChangedElementsCount]);
 
   const progressLabel = React.useMemo(() => {
     return currentContentData && `(${evaluationElementsCount}/${currentContentData.length})`;
@@ -112,7 +115,7 @@ const EvaluationPanel = () => {
       <Box sx={{ mt: 2 }}>
         {isLoading ? null : isInProgress ? (
           <PanelTypography>{EVALUATION_IN_PROGRESS_MSG} </PanelTypography>
-        ) : lastScore !== null ? (
+        ) : lastScore !== null && scoreModelVersion !== null && modelVersion !== null ? (
           <PanelTypography sx={{ fontSize: "1rem" }}>
             {PRECISION_RESULT_MSG(Math.round(lastScore * 100), modelVersion, scoreModelVersion)}
           </PanelTypography>
@@ -125,7 +128,7 @@ const EvaluationPanel = () => {
       <Box sx={{ mt: isInProgress ? 16 : 12 }} className={classes["element-list"]}>
         {isLoading ? (
           <Loading />
-        ) : isInProgress ? (
+        ) : isInProgress && currentContentData !== null ? (
           <Box>
             {currentContentData.map((element, i) => (
               <Element element={element} updateCounterOnLabeling={false} key={element.id} index={i} />

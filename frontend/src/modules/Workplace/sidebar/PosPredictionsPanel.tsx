@@ -14,27 +14,28 @@
 */
 
 import { Box } from "@mui/material";
-import React, { useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useMemo } from "react";
+import { useAppSelector } from "../../../customHooks/useRedux";
 import { curCategoryNameSelector } from "../redux";
-import { panelIds } from "../../../const";
+import { PanelIdsEnum } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { ArrowsOnlyPagination } from "../../../components/pagination/ArrowsOnlyPagination";
+import { Element } from "../../../global";
 
 const PosPredictionsPanel = () => {
-  const curCategoryName = useSelector(curCategoryNameSelector);
+  const curCategoryName = useAppSelector(curCategoryNameSelector);
 
-  const { hitCount } = useSelector((state) => state.workspace.panels.panels[panelIds.POSITIVE_PREDICTIONS]);
+  const { hitCount } = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.POSITIVE_PREDICTIONS]);
 
-  const loading = useSelector((state) => state.workspace.panels.loading[panelIds.POSITIVE_PREDICTIONS]);
+  const loading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.POSITIVE_PREDICTIONS]);
 
-  const sidebarPanelElementsPerPage = useSelector((state) => state.featureFlags.sidebarPanelElementsPerPage);
+  const sidebarPanelElementsPerPage = useAppSelector((state) => state.featureFlags.sidebarPanelElementsPerPage);
 
-  const { currentContentData, currentPage, isPaginationRequired, previousPage, nextPage, pageCount } =
+  const { currentContentData, currentPage, isPaginationRequired, goToPreviousPage, goToNextPage, pageCount } =
     usePanelPagination({
       elementsPerPage: sidebarPanelElementsPerPage,
-      panelId: panelIds.POSITIVE_PREDICTIONS,
+      panelId: PanelIdsEnum.POSITIVE_PREDICTIONS,
       modelAvailableRequired: true,
     });
 
@@ -51,7 +52,7 @@ const PosPredictionsPanel = () => {
     <Box>
       <Header message={"Positive predictions"} />
       <ElementList
-        elements={currentContentData}
+        elements={currentContentData as Element[]}
         loading={loading}
         nonEmptyResultsMessage={nonEmptyResultsMessage}
         emptyResultsMessage={""}
@@ -59,13 +60,12 @@ const PosPredictionsPanel = () => {
         elementsTopPadding={2}
       />
       <ArrowsOnlyPagination
-        currentContentData={currentContentData}
         hitCount={hitCount}
         sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
         currentPage={currentPage}
         isPaginationRequired={isPaginationRequired}
-        previousPage={previousPage}
-        nextPage={nextPage}
+        goToPreviousPage={goToPreviousPage}
+        goToNextPage={goToNextPage}
       />
     </Box>
   );

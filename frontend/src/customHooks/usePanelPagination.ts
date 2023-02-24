@@ -25,7 +25,7 @@ import { Element } from "../global";
 interface UsePanelPaginationProps {
   elementsPerPage: number;
   panelId: PanelIdsEnum;
-  shouldFetch: boolean;
+  shouldFetch?: boolean;
   otherDependencies?: any[];
   fakePagination?: boolean;
   fetchOnFirstRender?: boolean;
@@ -128,12 +128,12 @@ const usePanelPagination = ({
 
   const onPageChange = (event: React.UIEvent, value: number) => setCurrentPage(value);
 
-  const nextPage = React.useCallback(() => {
+  const goToNextPage = React.useCallback(() => {
     if (currentPage === pageCount) return;
     setCurrentPage(currentPage + 1);
   }, [currentPage, pageCount, setCurrentPage]);
 
-  const previousPage = React.useCallback(() => {
+  const goToPreviousPage = React.useCallback(() => {
     if (currentPage === 1) return;
     setCurrentPage(currentPage - 1);
   }, [currentPage, setCurrentPage]);
@@ -161,8 +161,8 @@ const usePanelPagination = ({
     resetPagination,
     onPageChange,
     isPaginationRequired,
-    previousPage,
-    nextPage,
+    goToPreviousPage,
+    goToNextPage,
     pageCount,
   };
 };

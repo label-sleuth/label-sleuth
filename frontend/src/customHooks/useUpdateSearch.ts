@@ -24,7 +24,7 @@ import { useAppDispatch, useAppSelector } from "./useRedux";
  * @param {A reference to the input to clear and focus it} textInputRef
  * @returns
  */
-export const useUpdateSearch = (textInputRef: React.MutableRefObject<HTMLInputElement>) => {
+export const useUpdateSearch = (textInputRef: React.MutableRefObject<HTMLInputElement | null>) => {
   
   const dispatch = useAppDispatch();
   

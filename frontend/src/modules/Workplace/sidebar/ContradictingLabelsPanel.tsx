@@ -16,64 +16,54 @@
 import { Box, Stack, Divider } from "@mui/material";
 import React from "react";
 import classes from "./index.module.css";
-import { useSelector } from "react-redux";
-import Element from "./Element";
+import { useAppSelector } from "../../../customHooks/useRedux";
+import { SidebarElement as ElementComponent } from "./Element";
 import contradictive_elem_icon from "../Asset/contradicting.svg";
-import { panelIds } from "../../../const";
+import { panelIds, PanelIdsEnum } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
+import { Element } from "../../../global";
+
+interface PairListProps {
+  pairs: string[][];
+}
+
+interface ContradictingPairProps {
+  addSeparator: boolean;
+  children: React.ReactNode[];
+}
 
 const ContradictingLabelsPanel = () => {
-  const sidebarPanelElementsPerPage = useSelector(
-    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  const sidebarPanelElementsPerPage = useAppSelector((state) => state.featureFlags.sidebarPanelElementsPerPage);
+  const { elements, pairs, hitCount } = useAppSelector(
+    (state) => state.workspace.panels.panels[PanelIdsEnum.CONTRADICTING_LABELS]
   );
+  const loading = useAppSelector((state) => state.workspace.panels.loading[panelIds.CONTRADICTING_LABELS]);
 
-  const {
-    currentContentData,
-    currentPage,
-    onPageChange,
-    isPaginationRequired,
-  } = usePanelPagination({
+  const { currentContentData, currentPage, onPageChange, isPaginationRequired } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
-    panelId: panelIds.CONTRADICTING_LABELS,
+    panelId: PanelIdsEnum.CONTRADICTING_LABELS,
     modelAvailableRequired: false,
   });
-
-  const { elements, pairs, hitCount } = useSelector(
-    (state) => state.workspace.panels.panels[panelIds.CONTRADICTING_LABELS]
-  );
-  const loading = useSelector(
-    (state) => state.workspace.panels.loading[panelIds.CONTRADICTING_LABELS]
-  );
 
   const Separator = () => (
     <Divider variant="middle" flexItem>
       <Stack direction={"row"} sx={{ mt: "40px", mb: "40px" }}>
-        <div
-          className={classes["dot-separator"]}
-          style={{ marginRight: "6px" }}
-        />
-        <div
-          className={classes["dot-separator"]}
-          style={{ marginRight: "6px" }}
-        />
+        <div className={classes["dot-separator"]} style={{ marginRight: "6px" }} />
+        <div className={classes["dot-separator"]} style={{ marginRight: "6px" }} />
         <div className={classes["dot-separator"]} />
       </Stack>
     </Divider>
   );
 
-  const ContradictingPair = ({ addSeparator, children }) => {
+  const ContradictingPair = ({ addSeparator, children }: ContradictingPairProps) => {
     const childrenArray = React.Children.toArray(children);
     return (
-      <Stack direction={"column"} sx={{ alignItems: "center",  }}>
+      <Stack direction={"column"} sx={{ alignItems: "center" }}>
         {childrenArray[0]}
         <Box sx={{ display: "flex", flexDirection: "row" }}>
-          <img
-            src={contradictive_elem_icon}
-            alt={"contradictive element"}
-            style={{ paddingRight: "5px" }}
-          />
+          <img src={contradictive_elem_icon} alt={"contradictive element"} style={{ paddingRight: "5px" }} />
           {"?"}
         </Box>
         {childrenArray[1]}
@@ -82,15 +72,16 @@ const ContradictingLabelsPanel = () => {
     );
   };
 
-  const   PairList = ({ pairs }) => {
+  const PairList = ({ pairs }: PairListProps) => {
     return (
       <Box>
         {pairs &&
           pairs.map((pair, i) => (
             <ContradictingPair key={i} addSeparator={i !== pairs.length - 1}>
               {pair.map((elementId, j) => {
+                if (elements === null) return null;
                 const element = elements[elementId];
-                return <Element key={2 * i + j} index={2 * i + j} element={element} />;
+                return <ElementComponent key={2 * i + j} index={2 * i + j} element={element} />;
               })}
             </ContradictingPair>
           ))}
@@ -102,9 +93,8 @@ const ContradictingLabelsPanel = () => {
     <Box>
       <Header message={"Contradicting labels"} />
       <ElementList
-        elements={currentContentData}
+        elements={currentContentData as Element[]}
         loading={loading}
-        hitCount={hitCount}
         nonEmptyResultsMessage={`Review these ${pairs.length} pairs of examples, which are semantically similar but were labeled by you with contradicting labels`}
         emptyResultsMessage={"No contradicting pairs of examples were found."}
         isPaginationRequired={isPaginationRequired}
@@ -113,7 +103,6 @@ const ContradictingLabelsPanel = () => {
         <PairList pairs={pairs} />
       </ElementList>
       <CustomPagination
-        currentContentData={currentContentData}
         hitCount={hitCount}
         sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
         currentPage={currentPage}

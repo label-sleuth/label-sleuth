@@ -17,8 +17,17 @@ import { Pagination } from "@mui/material";
 import { useMemo } from "react";
 import { getPageCount } from "../../utils/utils";
 
+interface CustomPaginationProps {
+  currentPage: number,
+  hitCount: number | null,
+  sidebarPanelElementsPerPage: number,
+  onPageChange: (event: any, value: number) => void, // find a better type than any
+  isPaginationRequired: boolean,
+  sx?: { [key:string]: string },
+  size?: 'small' | 'medium' | 'large'
+}
+
 export const CustomPagination = ({
-  currentContentData,
   currentPage,
   hitCount,
   sidebarPanelElementsPerPage,
@@ -26,7 +35,7 @@ export const CustomPagination = ({
   isPaginationRequired,
   sx,
   ...others
-}) => {
+}: CustomPaginationProps) => {
   const pageCount = useMemo(() => {
     return getPageCount(sidebarPanelElementsPerPage, hitCount)
   }, [sidebarPanelElementsPerPage, hitCount])

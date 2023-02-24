@@ -20,18 +20,24 @@ import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { IconButton } from "@mui/material";
 
+interface ArrowsOnlyPaginationProps {
+  currentPage: number,
+  hitCount: number | null,
+  sidebarPanelElementsPerPage: number,
+  isPaginationRequired: boolean,
+  goToPreviousPage: () => void,
+  goToNextPage: () => void,
+  sx?: {[key: string]: string},
+}
+
 export const ArrowsOnlyPagination = ({
-  currentContentData,
   currentPage,
   hitCount,
   sidebarPanelElementsPerPage,
-  onPageChange,
   isPaginationRequired,
-  previousPage,
-  nextPage,
-  sx,
-  ...others
-}) => {
+  goToPreviousPage,
+  goToNextPage,
+}: ArrowsOnlyPaginationProps) => {
   const pageCount = useMemo(() => {
     return getPageCount(sidebarPanelElementsPerPage, hitCount);
   }, [sidebarPanelElementsPerPage, hitCount]);
@@ -57,14 +63,14 @@ export const ArrowsOnlyPagination = ({
     >
       <Tooltip title="Go to previous page">
         <span>
-          <IconButton size="small" aria-label="previous" onClick={previousPage} disabled={currentPage === 1}>
+          <IconButton size="small" aria-label="previous" onClick={goToPreviousPage} disabled={currentPage === 1}>
             <ArrowBackIosIcon fontSize="inherit" />
           </IconButton>
         </span>
       </Tooltip>
       <Tooltip title="Go to next page">
         <span>
-          <IconButton size="small" aria-label="next" onClick={nextPage} disabled={currentPage === pageCount}>
+          <IconButton size="small" aria-label="next" onClick={goToNextPage} disabled={currentPage === pageCount}>
             <ArrowForwardIosIcon fontSize="inherit" />
           </IconButton>
         </span>

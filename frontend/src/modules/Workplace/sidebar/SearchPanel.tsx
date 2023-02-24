@@ -19,21 +19,26 @@ import { InputBase, Paper } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import { forwardRef } from "react";
-import { useSelector } from "react-redux";
-import { panelIds } from "../../../const";
+import { useAppSelector } from "../../../customHooks/useRedux";
+import { PanelIdsEnum } from "../../../const";
 import useSearchElement from "../../../customHooks/useSearchElement";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { ElementList } from "./components/commonComponents";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
+import { Element } from "../../../global";
 
-const SearchInput = ({
-  textInputRef,
-  input,
-  clearSearchInput,
-  resetPagination,
-}) => {
-  const { handleSearchInputEnterKey, handleSearch, handleSearchInputChange } =
-    useSearchElement({textInputRef, resetPagination});
+interface SearchInputProps {
+  textInputRef: React.ForwardedRef<HTMLInputElement | null>;
+  input: string | null;
+  clearSearchInput: () => void;
+  resetPagination: () => void;
+}
+
+const SearchInput = ({ textInputRef, input, clearSearchInput, resetPagination }: SearchInputProps) => {
+  const { handleSearchInputEnterKey, handleSearch, handleSearchInputChange } = useSearchElement({
+    textInputRef,
+    resetPagination,
+  });
 
   return (
     <Box
@@ -66,24 +71,16 @@ const SearchInput = ({
           onChange={handleSearchInputChange}
           inputRef={textInputRef}
           defaultValue={input}
-          onKeyDown={e => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
           autoFocus={true}
         />
         {input && (
           <>
-            <IconButton
-              sx={{ p: "1px" }}
-              aria-label="search"
-              onClick={clearSearchInput}
-            >
+            <IconButton sx={{ p: "1px" }} aria-label="search" onClick={clearSearchInput}>
               <ClearIcon />
             </IconButton>
             {
-              <IconButton
-                sx={{ p: "1px" }}
-                aria-label="search"
-                onClick={handleSearch}
-              >
+              <IconButton sx={{ p: "1px" }} aria-label="search" onClick={handleSearch}>
                 <SearchIcon />
               </IconButton>
             }
@@ -94,28 +91,25 @@ const SearchInput = ({
   );
 };
 
-const SearchPanel = forwardRef(({ clearSearchInput }, textInputRef) => {
-  const { input, hitCountWithDuplicates, hitCount } = useSelector(
-    (state) => state.workspace.panels.panels[panelIds.SEARCH]
+interface SearchPanelProps {
+  clearSearchInput: () => void;
+}
+
+const SearchPanel = forwardRef<HTMLInputElement | null, SearchPanelProps>(({ clearSearchInput }, textInputRef) => {
+  const { input, hitCountWithDuplicates, hitCount } = useAppSelector(
+    (state) => state.workspace.panels.panels[PanelIdsEnum.SEARCH]
   );
 
-  const sidebarPanelElementsPerPage = useSelector(
+  const sidebarPanelElementsPerPage = useAppSelector(
+    ///
     (state) => state.featureFlags.sidebarPanelElementsPerPage
   );
 
-  const loading = useSelector(
-    (state) => state.workspace.panels.loading[panelIds.SEARCH]
-  );
+  const loading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.SEARCH]);
 
-  const {
-    currentContentData,
-    currentPage,
-    resetPagination,
-    onPageChange,
-    isPaginationRequired,
-   } = usePanelPagination({
+  const { currentContentData, currentPage, resetPagination, onPageChange, isPaginationRequired } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
-    panelId: panelIds.SEARCH,
+    panelId: PanelIdsEnum.SEARCH,
     shouldFetch: input !== null && input !== "",
     fetchOnFirstRender: false,
     modelAvailableRequired: true,
@@ -130,18 +124,17 @@ const SearchPanel = forwardRef(({ clearSearchInput }, textInputRef) => {
         resetPagination={resetPagination}
       />
       <ElementList
-        elements={currentContentData}
+        elements={currentContentData as Element[]}
         loading={loading}
-        nonEmptyResultsMessage={`Showing ${currentContentData && currentContentData.length} of ${hitCount} found elements ${
-          hitCount !== hitCountWithDuplicates
-            ? `(${hitCountWithDuplicates} including duplicates)`
-            : ""
+        nonEmptyResultsMessage={`Showing ${
+          currentContentData && currentContentData.length
+        } of ${hitCount} found elements ${
+          hitCount !== hitCountWithDuplicates ? `(${hitCountWithDuplicates} including duplicates)` : ""
         }`}
         emptyResultsMessage={"No matching results were found."}
         isPaginationRequired={isPaginationRequired}
       />
       <CustomPagination
-        currentContentData={currentContentData}
         hitCount={hitCount}
         sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
         currentPage={currentPage}

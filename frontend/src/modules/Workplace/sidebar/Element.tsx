@@ -22,19 +22,21 @@ import crossing from "../Asset/crossing.svg";
 import cross from "../Asset/cross.svg";
 import classes from "./index.module.css";
 import { Box, Typography } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import { panelIds } from "../../../const";
+import { useAppSelector, useAppDispatch } from "../../../customHooks/useRedux";
+import { PanelIdsEnum, LabelTypesEnum } from "../../../const";
 import { getPanelDOMKey } from "../../../utils/utils";
-import { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback } from "react";
 import { setfocusedSidebarElementByIndex } from "../redux";
 import { Tooltip } from "@mui/material";
 import { Keyboard } from "../../../components/Keyboard";
 import { useFocusMainPanelElement } from "../../../customHooks/useFocusMainPanelElement";
 import useLabelState from "../../../customHooks/useLabelState";
+import { Element } from "../../../global";
 
 const text_colors = {
-  pos: { color: "#3092ab" },
-  neg: { color: "#bd3951" },
+  [LabelTypesEnum.POS]: { color: "#3092ab" },
+  [LabelTypesEnum.NEG]: { color: "#bd3951" },
+  [LabelTypesEnum.NONE]: {},
 };
 
 /**
@@ -43,10 +45,15 @@ const text_colors = {
  * @returns
  */
 // this function is not returned by a custom hook as it is the case of the main panel equivalent
-const handleTextElemStyle = (modelPrediction) =>
+const handleTextElemStyle = (modelPrediction: LabelTypesEnum) =>
   modelPrediction === "pos" ? classes["text_predict"] : classes["text_normal"];
 
-const TooltipTitleWithShortcut = ({ icon, title }) => {
+interface TooltipTitleWithShortcutProps {
+  icon: React.ReactElement;
+  title: string;
+}
+
+const TooltipTitleWithShortcut = ({ icon, title }: TooltipTitleWithShortcutProps) => {
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <Typography fontSize={11}>
@@ -59,26 +66,32 @@ const TooltipTitleWithShortcut = ({ icon, title }) => {
   );
 };
 
-const Element = ({ element, updateCounterOnLabeling = true, index }) => {
-  const dispatch = useDispatch();
+interface SidebarElementProps {
+  element: Element;
+  updateCounterOnLabeling?: boolean;
+  index: number;
+}
+
+export const SidebarElement = ({ element, updateCounterOnLabeling = true, index }: SidebarElementProps) => {
+  const dispatch = useAppDispatch();
   const { id, docId, text, userLabel, modelPrediction } = element;
-  const curCategory = useSelector((state) => state.workspace.curCategory);
-  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
-  const searchInput = useSelector((state) => state.workspace.panels.panels[panelIds.SEARCH].input);
-  const { index: focusedSidebarElementIndex } = useSelector((state) => state.workspace.panels.focusedSidebarElement);
+  const curCategory = useAppSelector((state) => state.workspace.curCategory);
+  const activePanelId = useAppSelector((state) => state.workspace.panels.activePanelId);
+  const searchInput = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.SEARCH].input);
+  const { index: focusedSidebarElementIndex } = useAppSelector((state) => state.workspace.panels.focusedSidebarElement);
 
   const isElementFocused = useMemo(() => index === focusedSidebarElementIndex, [index, focusedSidebarElementIndex]);
 
   const elementDOMkey = useMemo(() => getPanelDOMKey(id, activePanelId, index), [id, activePanelId, index]);
   const { handlePosLabelState, handleNegLabelState } = useLabelState(updateCounterOnLabeling);
 
-  const handlePositiveLabelAction = (e) => {
+  const handlePositiveLabelAction = (e: React.UIEvent) => {
     // the following line prevents handleElementClick from being executed
     e.stopPropagation();
     handlePosLabelState(element);
   };
 
-  const handleNegativeLabelAction = (e) => {
+  const handleNegativeLabelAction = (e: React.UIEvent) => {
     // the following line prevents handleElementClick from being executed
     e.stopPropagation();
     handleNegLabelState(element);
@@ -88,7 +101,7 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
 
   const handleElementClick = useCallback(
     (e) => {
-      dispatch(setfocusedSidebarElementByIndex({index, scrollIntoViewOnChange: false}));
+      dispatch(setfocusedSidebarElementByIndex({ index, scrollIntoViewOnChange: false }));
       focusMainPanelElement({ element, docId });
       // focus this element on the sidebar when clicked
     },
@@ -112,7 +125,7 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
       <Box>
         <p id={id} className={classes["elem_text"]} style={text_colors[userLabel]}>
           <Highlighter
-            searchWords={activePanelId === panelIds.SEARCH ? [searchInput] : []}
+            searchWords={activePanelId === PanelIdsEnum.SEARCH ? [searchInput || ""] : []}
             autoEscape={true}
             textToHighlight={text}
           />
@@ -138,7 +151,7 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
               title={<TooltipTitleWithShortcut title={"Negative label"} icon={<Keyboard kbd={"←"} />} />}
               enterDelay={500}
             >
-              <div className={classes.resultbtn} positiveicon="false" onClick={handleNegativeLabelAction}>
+              <div className={classes.resultbtn} onClick={handleNegativeLabelAction}>
                 {userLabel === "neg" ? (
                   <img src={cross} alt="crossed" />
                 ) : (
@@ -165,5 +178,3 @@ const Element = ({ element, updateCounterOnLabeling = true, index }) => {
     </Paper>
   );
 };
-
-export default Element;
