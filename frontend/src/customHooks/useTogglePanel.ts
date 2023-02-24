@@ -37,7 +37,7 @@ const useSidebarPanelIsOpen = (setOpen: any) => {
  * be opened.
  * @param {*} textInput
  */
-const useInitialOpenedSidebarPanel = (textInput: React.MutableRefObject<HTMLElement>) => {
+const useInitialOpenedSidebarPanel = (textInput: React.MutableRefObject<HTMLElement | null>) => {
   const dispatch = useAppDispatch();
 
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
@@ -61,7 +61,7 @@ const useInitialOpenedSidebarPanel = (textInput: React.MutableRefObject<HTMLElem
  */
 const useTogglePanel = (
   setOpen: React.Dispatch<React.SetStateAction<boolean>>,
-  textInputRef: React.MutableRefObject<HTMLElement>
+  textInputRef: React.MutableRefObject<HTMLElement | null>
 ) => {
   useSidebarPanelIsOpen(setOpen);
   useInitialOpenedSidebarPanel(textInputRef);

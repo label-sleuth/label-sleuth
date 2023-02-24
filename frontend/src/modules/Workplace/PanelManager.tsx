@@ -18,7 +18,7 @@ import { Box } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
 import { RIGHT_DRAWER_INITIAL_WIDTH, ACTIONS_DRAWER_WIDTH, panelIds } from "../../const";
 import MainPanel from "./main/MainPanel";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../../customHooks/useRedux";
 import AllPositiveLabelsPanel from "./sidebar/AllPositiveLabelsPanel";
 import SuspiciousLabelsPanel from "./sidebar/SuspiciousLabelsPanel";
 import ContradictingLabelsPanel from "./sidebar/ContradictingLabelsPanel";
@@ -32,7 +32,12 @@ import useResize from "../../customHooks/useResize";
 import { useUpdateSearch } from "../../customHooks/useUpdateSearch";
 import { useFocusSidebarElement } from "../../customHooks/useFocusSidebarElement";
 
-const ResizableDiv = ({onMouseDown, rightDrawerWidth}) => {
+interface ResizableDivProps {
+  onMouseDown: (e: React.MouseEvent) => void;
+  rightDrawerWidth: number;
+}
+
+const ResizableDiv = ({ onMouseDown, rightDrawerWidth }: ResizableDivProps) => {
   return (
     <div
       style={{
@@ -46,17 +51,18 @@ const ResizableDiv = ({onMouseDown, rightDrawerWidth}) => {
       }}
       onMouseDown={onMouseDown}
     />
-  )
-}
+  );
+};
 
 /**
  * Manages the panels, that is, the sidebar panels and the main panels.
  */
 export const PanelManager = () => {
-  const activePanelId = useSelector((state) => state.workspace.panels.activePanelId);
+  const activePanelId = useAppSelector((state) => state.workspace.panels.activePanelId);
 
   const [open, setOpen] = useState(false);
-  const textInputRef = useRef(null);
+  const textInputRef = useRef<HTMLInputElement | null>(null);
+
   const [rightDrawerWidth, setRightDrawerWidth] = useState(RIGHT_DRAWER_INITIAL_WIDTH);
 
   useTogglePanel(setOpen, textInputRef);
@@ -73,9 +79,9 @@ export const PanelManager = () => {
   const { handleMouseDown } = useResize({ setWidth: setRightDrawerWidth });
 
   return (
-    <Box auto>
+    <Box>
       <MainPanel rightDrawerWidth={rightDrawerWidth} open={open} />
-      {open && <ResizableDiv onMouseDown={handleMouseDown} rightDrawerWidth={rightDrawerWidth}/>}
+      {open && <ResizableDiv onMouseDown={handleMouseDown} rightDrawerWidth={rightDrawerWidth} />}
       <Drawer
         sx={{
           width: RIGHT_DRAWER_INITIAL_WIDTH,

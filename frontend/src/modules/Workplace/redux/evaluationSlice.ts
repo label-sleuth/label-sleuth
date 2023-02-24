@@ -43,7 +43,7 @@ export const getEvaluationElements = createAsyncThunk<
 
 export const getEvaluationResults = createAsyncThunk<
   { score: number },
-  void,
+  number,
   {
     state: RootState;
   }
@@ -73,7 +73,7 @@ export const getEvaluationResults = createAsyncThunk<
 
 export const cancelEvaluation = createAsyncThunk<
   { canceled: string },
-  void,
+  number,
   {
     state: RootState;
   }

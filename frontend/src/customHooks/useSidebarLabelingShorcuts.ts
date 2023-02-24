@@ -58,7 +58,7 @@ export const useSidebarLabelingShortcuts = ({ setShortcutsModalOpen }: UseSideba
   const { handlePosLabelState, handleNegLabelState } = useLabelState(activePanelId !== panelIds.EVALUATION);
 
   // use pagination for the active panel without fetching anything
-  const { previousPage, nextPage, currentContentData, currentPage, pageCount } = usePanelPagination({
+  const { goToPreviousPage, goToNextPage, currentContentData, currentPage, pageCount } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: activePanelId,
     shouldFetch: false,
@@ -98,22 +98,22 @@ export const useSidebarLabelingShortcuts = ({ setShortcutsModalOpen }: UseSideba
   const focusNextElement = useCallback(() => {
     if (isLastElementFocused) {
       if (currentPage === pageCount) return;
-      nextPage();
+      goToNextPage();
       setFocusLastElementOnPageChange(false);
     } else {
       dispatch(focusNextSidebarElement());
     }
-  }, [isLastElementFocused, currentPage, pageCount, nextPage, setFocusLastElementOnPageChange, dispatch]);
+  }, [isLastElementFocused, currentPage, pageCount, goToNextPage, setFocusLastElementOnPageChange, dispatch]);
 
   const focusPreviousElement = useCallback(() => {
     if (isFirstElementFocused) {
       if (currentPage === 1) return;
-      previousPage();
+      goToPreviousPage();
       setFocusLastElementOnPageChange(true);
     } else {
       dispatch(focusPreviousSidebarElement());
     }
-  }, [isFirstElementFocused, currentPage, previousPage, setFocusLastElementOnPageChange, dispatch]);
+  }, [isFirstElementFocused, currentPage, goToPreviousPage, setFocusLastElementOnPageChange, dispatch]);
 
   const { focusMainPanelElement } = useFocusMainPanelElement();
 

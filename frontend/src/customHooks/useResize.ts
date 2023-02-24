@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 import { ACTIONS_DRAWER_WIDTH, RIGHT_DRAWER_MIN_WIDTH, RIGHT_DRAWER_MAX_WIDTH } from "../const";
 
 let isResizing = false;
@@ -37,7 +37,7 @@ const useResize = ({ setWidth }: UseResizeProps) => {
   );
 
   const handleMouseUp = useCallback(
-    (e) => {
+    () => {
       if (!isResizing) {
         return;
       }
@@ -49,7 +49,7 @@ const useResize = ({ setWidth }: UseResizeProps) => {
   );
 
   const handleMouseDown = useCallback(
-    (e) => {
+    (e: React.MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
       document.addEventListener("mousemove", handleMouseMove);

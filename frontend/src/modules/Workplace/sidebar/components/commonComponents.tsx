@@ -16,10 +16,15 @@
 import Box from "@mui/material/Box";
 import { Typography, CircularProgress } from "@mui/material";
 import classes from "../index.module.css";
-import Element from "../Element";
+import { SidebarElement } from "../Element";
 import { styled } from "@mui/system";
+import { Element } from "../../../../global";
 
-export const Header = ({ message }) => {
+interface HeaderProps {
+  message: string;
+}
+
+export const Header = ({ message }: HeaderProps) => {
   return (
     <Box
       sx={{
@@ -59,6 +64,16 @@ export const Loading = () => (
   </div>
 );
 
+interface ElementListProps {
+  elements: Element[];
+  loading: boolean;
+  emptyResultsMessage: string;
+  nonEmptyResultsMessage: string;
+  children?: React.ReactElement;
+  isPaginationRequired: boolean;
+  elementsTopPadding?: number;
+}
+
 export const ElementList = ({
   elements,
   loading,
@@ -66,8 +81,8 @@ export const ElementList = ({
   nonEmptyResultsMessage,
   children,
   isPaginationRequired,
-  elementsTopPadding
-}) => {
+  elementsTopPadding = 0,
+}: ElementListProps) => {
   return (
     <Box
       sx={{
@@ -77,16 +92,14 @@ export const ElementList = ({
       }}
     >
       {elements === null ? (
-        <PanelTypography text={""} />
+        <PanelTypography>{""}</PanelTypography>
       ) : elements.length === 0 ? (
         <PanelTypography>{emptyResultsMessage}</PanelTypography>
       ) : (
         <PanelTypography>{nonEmptyResultsMessage}</PanelTypography>
       )}
       <Box
-        className={`${classes["element-list"]} ${
-          isPaginationRequired ? classes.pagination_margin : ""
-        }`}
+        className={`${classes["element-list"]} ${isPaginationRequired ? classes.pagination_margin : ""}`}
         sx={elementsTopPadding ? { mt: elementsTopPadding } : {}}
       >
         {loading ? (
@@ -94,9 +107,7 @@ export const ElementList = ({
         ) : children ? (
           { ...children }
         ) : elements && elements.length > 0 ? (
-          elements.map((element, i) => (
-            <Element element={element} key={element.id} index={i} />
-          ))
+          elements.map((element, i) => <SidebarElement element={element} key={element.id} index={i} />)
         ) : null}
       </Box>
     </Box>

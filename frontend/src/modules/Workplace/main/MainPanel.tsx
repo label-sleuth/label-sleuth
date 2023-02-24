@@ -133,7 +133,6 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
           </Box>
         </div>
         <CustomPagination
-          currentContentData={currentContentData}
           hitCount={hitCount}
           sidebarPanelElementsPerPage={mainPanelElementsPerPage}
           currentPage={currentPage}

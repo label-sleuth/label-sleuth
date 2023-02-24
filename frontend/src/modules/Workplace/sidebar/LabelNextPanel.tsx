@@ -14,52 +14,43 @@
 */
 
 import { Box } from "@mui/material";
-import React from "react";
-import { useSelector } from "react-redux";
-import { panelIds } from "../../../const";
+import { useAppSelector } from "../../../customHooks/useRedux";
+import { PanelIdsEnum } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
+import { Element } from "../../../global";
 
-const SuspiciousLabelsPanel = () => {
-  const { hitCount } = useSelector(
-    (state) => state.workspace.panels.panels[panelIds.SUSPICIOUS_LABELS]
-  );
+const LabelNextPanel = () => {
+  const { hitCount } = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.LABEL_NEXT]);
 
-  const loading = useSelector(
-    (state) => state.workspace.panels.loading[panelIds.SUSPICIOUS_LABELS]
-  );
+  const loading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.LABEL_NEXT]);
 
-  const sidebarPanelElementsPerPage = useSelector(
-    (state) => state.featureFlags.sidebarPanelElementsPerPage
-  );
+  const sidebarPanelElementsPerPage = useAppSelector((state) => state.featureFlags.sidebarPanelElementsPerPage);
 
-  const {
-    currentContentData,
-    currentPage,
-    onPageChange,
-    isPaginationRequired,
-  } = usePanelPagination({
+  const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+
+  const { currentContentData, currentPage, onPageChange, isPaginationRequired } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
-    panelId: panelIds.SUSPICIOUS_LABELS,
+    panelId: PanelIdsEnum.LABEL_NEXT,
     modelAvailableRequired: true,
+    // update elements when model version changes and is not because it is null
+    otherDependencies: [modelVersion],
+    shouldFetch: modelVersion !== null,
   });
 
   return (
     <Box>
-      <Header message={"Suspicious labels"} />
+      <Header message={"Label next"} />
       <ElementList
-        elements={currentContentData}
+        elements={currentContentData as Element[]}
         loading={loading}
-        nonEmptyResultsMessage={
-          "Review the labels of these examples which the system suspects might be wrong"
-        }
-        emptyResultsMessage={"No suspicious labels were found."}
+        nonEmptyResultsMessage={"Label these elements next"}
+        emptyResultsMessage={""}
         isPaginationRequired={isPaginationRequired}
-        elementsTopPadding={2}
+        elementsTopPadding={-2}
       />
       <CustomPagination
-        currentContentData={currentContentData}
         hitCount={hitCount}
         sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
         currentPage={currentPage}
@@ -70,4 +61,4 @@ const SuspiciousLabelsPanel = () => {
   );
 };
 
-export default SuspiciousLabelsPanel;
+export default LabelNextPanel;

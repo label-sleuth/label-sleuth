@@ -20,7 +20,7 @@ import { useAppDispatch, useAppSelector } from "./useRedux";
 import React from "react";
 
 interface UseSearchElementProps {
-  textInputRef: React.MutableRefObject<HTMLElement>;
+  textInputRef: React.ForwardedRef<HTMLInputElement | null>;
   resetPagination: () => void;
 }
 
@@ -35,7 +35,9 @@ const useSearchElement = ({ textInputRef, resetPagination }: UseSearchElementPro
     if (searchInput !== "") {
       resetPagination();
       fetchSearchPanelElements();
-      textInputRef.current.blur();
+      // forwardRefs can be a function or a ref, we narrow the type because we only use passing a ref and not a function
+      if (typeof textInputRef === "function") return;
+      textInputRef !== null && textInputRef.current !== null && textInputRef.current.blur();
     }
   };
 
