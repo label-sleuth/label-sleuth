@@ -365,7 +365,8 @@ class OrchestratorApi:
         workspace = self.orchestrator_state.get_workspace(workspace_id)
         if workspace.categories[category_id] is not None:
             for idx in range(len(workspace.categories[category_id].iterations)):
-                if workspace.categories[category_id].iterations[idx].model.model_status != ModelStatus.DELETED:
+                if workspace.categories[category_id].iterations[idx].model is not None \
+                        and workspace.categories[category_id].iterations[idx].model.model_status != ModelStatus.DELETED:
                     self.delete_iteration_model(workspace_id, category_id, idx)
 
     def get_elements_to_label(self, workspace_id: str, category_id: int, count: int, start_index: int = 0) \
@@ -719,7 +720,8 @@ class OrchestratorApi:
             iteration = [it for it in iterations if it.status == IterationStatus.READY][-1]
         else:
             iteration = iterations[iteration_index]
-            if iteration.status in [IterationStatus.TRAINING, IterationStatus.MODEL_DELETED, IterationStatus.ERROR]:
+            if iteration.status in [IterationStatus.PREPARING_DATA, IterationStatus.TRAINING,
+                                    IterationStatus.MODEL_DELETED, IterationStatus.ERROR]:
                 raise Exception(
                     f"iteration {iteration_index} in workspace '{workspace_id}' category id '{category_id}' "
                     f"is not ready for inference. "
