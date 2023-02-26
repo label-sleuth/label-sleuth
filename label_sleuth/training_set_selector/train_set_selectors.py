@@ -32,7 +32,7 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
     """
 
     def __init__(self, data_access, background_jobs_manager, label_types):
-        super().__init__(data_access, background_jobs_manager, label_types)
+        super().__init__(data_access, background_jobs_manager, label_types=label_types)
 
     def get_train_set(self, workspace_id, train_dataset_name, category_id) -> Sequence[TextElement]:
         train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_id,
