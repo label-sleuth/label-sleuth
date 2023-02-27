@@ -121,14 +121,16 @@ class HFTransformerModel(ModelAPI):
             inputs = (self.tokenizer.encode_plus(text, add_special_tokens=True, max_length=self.max_seq_length,
                                                  pad_to_max_length=True))
 
-            features.append(InputFeatures(input_ids=inputs['input_ids'],
-                                          attention_mask=inputs['attention_mask'],
-                                          token_type_ids=inputs['token_type_ids'],
+            features.append(InputFeatures(**inputs,
                                           label=label))
         return features
 
 
 class HFBert(HFTransformerModel):
+    """
+    Implementation of a classifier using the BERT (Devlin et al., 2018) base model
+    https://huggingface.co/bert-base-uncased
+    """
     def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager):
         super().__init__(output_dir, background_jobs_manager,
                          pretrained_model="bert-base-uncased",
@@ -136,6 +138,24 @@ class HFBert(HFTransformerModel):
 
     def get_supported_languages(self):
         return {Languages.ENGLISH}
+
+
+class HFXLMRoberta(HFTransformerModel):
+    """
+    Implementation of a classifier using the multilingual XLM-R (Conneau et al., 2019) base model
+    https://huggingface.co/xlm-roberta-base
+    """
+    def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager):
+        super().__init__(output_dir, background_jobs_manager,
+                         pretrained_model="xlm-roberta-base",
+                         batch_size=16, learning_rate=2e-5, num_train_epochs=20)
+
+    def get_supported_languages(self):
+        """
+        While XLM-R will not support every possible language, it should be usable (to some extent) for 100 languages,
+        as specified here: https://data.statmt.org/cc-100/
+        """
+        return Languages.all_languages()
 
 
 class HFTransformers(HFBert):

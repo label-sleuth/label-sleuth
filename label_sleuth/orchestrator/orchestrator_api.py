@@ -278,8 +278,14 @@ class OrchestratorApi:
         specific situations this parameter is set to False and the updating of the counter is performed at a later time.
         """
         if update_label_counter:
+            train_set_selector = get_training_set_selector(self.data_access,
+                                                           self.background_jobs_manager,
+                                                           strategy=self.config.training_set_selection_strategy)
+            used_label_types = train_set_selector.get_label_types()
             # count the number of labels for each category
-            changes_per_cat = Counter([cat for uri, labels_dict in uri_to_label.items() for cat in labels_dict])
+            changes_per_cat = Counter([cat for uri, labels_dict in uri_to_label.items()
+                                       for cat, cat_label in labels_dict.items()
+                                       if cat_label.label_type in used_label_types])
             for cat, num_changes in changes_per_cat.items():
                 self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, cat, num_changes)
         self.data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts)
@@ -365,7 +371,8 @@ class OrchestratorApi:
         workspace = self.orchestrator_state.get_workspace(workspace_id)
         if workspace.categories[category_id] is not None:
             for idx in range(len(workspace.categories[category_id].iterations)):
-                if workspace.categories[category_id].iterations[idx].model.model_status != ModelStatus.DELETED:
+                if workspace.categories[category_id].iterations[idx].model is not None \
+                        and workspace.categories[category_id].iterations[idx].model.model_status != ModelStatus.DELETED:
                     self.delete_iteration_model(workspace_id, category_id, idx)
 
     def get_elements_to_label(self, workspace_id: str, category_id: int, count: int, start_index: int = 0) \
@@ -719,7 +726,8 @@ class OrchestratorApi:
             iteration = [it for it in iterations if it.status == IterationStatus.READY][-1]
         else:
             iteration = iterations[iteration_index]
-            if iteration.status in [IterationStatus.TRAINING, IterationStatus.MODEL_DELETED, IterationStatus.ERROR]:
+            if iteration.status in [IterationStatus.PREPARING_DATA, IterationStatus.TRAINING,
+                                    IterationStatus.MODEL_DELETED, IterationStatus.ERROR]:
                 raise Exception(
                     f"iteration {iteration_index} in workspace '{workspace_id}' category id '{category_id}' "
                     f"is not ready for inference. "
