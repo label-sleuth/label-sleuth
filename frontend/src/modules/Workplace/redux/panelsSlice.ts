@@ -527,7 +527,7 @@ export const extraReducers: Array<ReducerObj> = [
     reducer: (state: WorkspaceState, action) => {
       const { elements: unparsedElements, hit_count: hitCount } = action.payload;
 
-      const { elements, documentPos, documentNeg } = parseElements(unparsedElements, state.curCategory);
+      const { elements } = parseElements(unparsedElements, state.curCategory);
 
       state.panels.panels[PanelIdsEnum.MAIN_PANEL] = {
         ...state.panels.panels[PanelIdsEnum.MAIN_PANEL],
@@ -535,13 +535,6 @@ export const extraReducers: Array<ReducerObj> = [
         hitCount,
       };
       state.panels.loading[PanelIdsEnum.MAIN_PANEL] = false;
-      state.labelCount = {
-        ...state.labelCount,
-        documentPos,
-        documentNeg,
-      };
-
-      // set page to 1 if focused element is not in current page
     },
   },
 ];

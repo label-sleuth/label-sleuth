@@ -14,7 +14,6 @@
 */
 
 import {
-  updateDocumentLabelCountByDiff,
   setElementLabel,
   checkStatus,
   updateElementOptimistically,
@@ -53,7 +52,7 @@ const useLabelState = (updateCounter = true) => {
    * @param  {The label action: can be 'pos' or 'neg'} labelAction
    */
   const handleLabelState = (element: Element, labelAction: LabelActionsEnum) => {
-    const { documentLabelCountChange, newLabel } = getNewLabelState(element.userLabel, labelAction);
+    const { newLabel } = getNewLabelState(element.userLabel, labelAction);
     dispatch(updateElementOptimistically({ element, newLabel }));
     dispatch(
       setElementLabel({
@@ -66,10 +65,6 @@ const useLabelState = (updateCounter = true) => {
         dispatch(reverseOptimisticUpdate({ element }));
       } else {
         dispatch(checkStatus());
-        // Update main document view only if the sidebar element belongs to the current main document
-        if (currentDocName === element.docId) {
-          dispatch(updateDocumentLabelCountByDiff(documentLabelCountChange));
-        }
       }
     });
   };

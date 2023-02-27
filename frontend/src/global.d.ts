@@ -197,11 +197,18 @@ interface LabelSliceState {
   uploadingLabels: boolean;
   downloadingLabels: boolean;
   labelCount: {
-    workspacePos: number;
-    workspaceNeg: number;
-    documentPos: number;
-    documentNeg: number;
+    pos: number;
+    neg: number;
+    weakPos: number;
+    weakNeg: number;
   };
+}
+
+interface LabelingCountsUnparsed {
+  true?: number;
+  false?: number;
+  weak_true?: number;
+  weak_false?: number;
 }
 
 interface ModelSliceState {
