@@ -64,55 +64,29 @@ export const getQueryParamsString = (queryParams: string[]): string => {
 export const getNewLabelState = (
   currentLabel: LabelTypesEnum,
   labelAction: LabelActionsEnum
-): { documentLabelCountChange: { pos: number; neg: number }; newLabel: LabelTypesEnum } => {
-  let documentLabelCountChange;
+): { newLabel: LabelTypesEnum } => {
   let newLabel;
 
   if (currentLabel === LabelTypesEnum.POS) {
     if (labelAction === LabelActionsEnum.POS) {
-      documentLabelCountChange = {
-        pos: -1,
-        neg: 0,
-      };
       newLabel = LabelTypesEnum.NONE;
     } else {
-      documentLabelCountChange = {
-        pos: -1,
-        neg: 1,
-      };
       newLabel = LabelTypesEnum.NEG;
     }
   } else if (currentLabel === LabelTypesEnum.NEG) {
     if (labelAction === LabelActionsEnum.POS) {
-      documentLabelCountChange = {
-        pos: 1,
-        neg: -1,
-      };
       newLabel = LabelTypesEnum.POS;
     } else {
-      documentLabelCountChange = {
-        pos: 0,
-        neg: -1,
-      };
       newLabel = LabelTypesEnum.NONE;
     }
   } else {
     if (labelAction === LabelActionsEnum.POS) {
-      documentLabelCountChange = {
-        pos: 1,
-        neg: 0,
-      };
       newLabel = LabelTypesEnum.POS;
     } else {
-      documentLabelCountChange = {
-        pos: 0,
-        neg: 1,
-      };
       newLabel = LabelTypesEnum.NEG;
     }
   }
   return {
-    documentLabelCountChange,
     newLabel,
   };
 };
@@ -146,24 +120,16 @@ export const getStringLabel = (unparsedLabel: string): LabelTypesEnum => {
 export const parseElements = (
   unparsedElements: UnparsedElement[],
   curCategoryId: number | null
-): { elements: ElementsDict; documentNeg: number; documentPos: number } => {
+): { elements: ElementsDict } => {
   
   let elements: ElementsDict = {};
-  let documentPos = 0;
-  let documentNeg = 0;
 
   unparsedElements.forEach((element) => {
-    const userLabels = element["user_labels"];
     elements[element.id] = parseElement(element, curCategoryId);
-    if (curCategoryId !== null && curCategoryId in userLabels) {
-      documentPos += userLabels[curCategoryId] === true ? 1 : 0;
-      documentNeg += userLabels[curCategoryId] === false ? 1 : 0;
-    }
   });
+
   return {
     elements,
-    documentPos,
-    documentNeg,
   };
 };
 
@@ -173,12 +139,12 @@ export const parseElement = (
 ): Element => ({
   docId: docid,
   id: id,
-  modelPrediction: curCategoryId!==null ? getStringLabel(`${model_predictions[curCategoryId]}`) : LabelTypesEnum.NONE,
-  userLabel: curCategoryId!==null ?  getStringLabel(`${user_labels[curCategoryId]}`) : LabelTypesEnum.NONE,
+  modelPrediction: curCategoryId !== null ? getStringLabel(`${model_predictions[curCategoryId]}`) : LabelTypesEnum.NONE,
+  userLabel: curCategoryId !== null ? getStringLabel(`${user_labels[curCategoryId]}`) : LabelTypesEnum.NONE,
   text,
 });
 
-export const getPanelDOMKey = (elementId: string, panelId: PanelIdsEnum, index : number | null = null): string => {
+export const getPanelDOMKey = (elementId: string, panelId: PanelIdsEnum, index: number | null = null): string => {
   let res = `${panelId}_${elementId}`;
   if (index !== null) {
     res = `${res}_${index}`;

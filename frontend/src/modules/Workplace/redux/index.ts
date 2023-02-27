@@ -44,7 +44,7 @@ import {
 } from "./modelSlice";
 import { getCategoryQueryString, getQueryParamsString, getWorkspaceId } from "../../../utils/utils";
 import { RootState } from "../../../store/configureStore";
-import { Category, ReducerObj, WorkspaceState } from "../../../global";
+import { Category, LabelingCountsUnparsed, ReducerObj, WorkspaceState } from "../../../global";
 import { PanelIdsEnum } from "../../../const";
 
 export { fetchDocumentsMetadata, preloadDataset } from "./documentSlice";
@@ -136,14 +136,21 @@ const workspaceSlice = createSlice({
       .addCase(checkStatus.fulfilled, (state: WorkspaceState, action: PayloadAction<CheckStatusResponse>) => {
         const response = action.payload;
         const progress = response["progress"]["all"];
-        
+        const unparsedLabelCount: LabelingCountsUnparsed = response["labeling_counts"]
+        const labelCount = {
+          pos: unparsedLabelCount["true"] || 0,
+          neg: unparsedLabelCount["false"] || 0,
+          weakPos: unparsedLabelCount["weak_true"] || 0,
+          weakNeg: unparsedLabelCount["weak_false"] || 0,
+        }
+
+
         return {
           ...state,
           modelUpdateProgress: progress,
           labelCount: {
             ...state.labelCount,
-            workspacePos: response["labeling_counts"]["true"] ?? 0,
-            workspaceNeg: response["labeling_counts"]["false"] ?? 0,
+            ...labelCount
           },
           nextModelShouldBeTraining: progress === 100 ? true : state.nextModelShouldBeTraining,
         };
@@ -182,7 +189,6 @@ export const {
   setFocusedMainPanelElement,
   resetSearchResults,
   cleanWorkplaceState,
-  updateDocumentLabelCountByDiff,
   setActivePanel,
   setSearchInput,
   resetLastSearchString,

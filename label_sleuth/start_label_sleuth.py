@@ -13,13 +13,18 @@
 #  limitations under the License.
 #
 
+import logging
 import os
+import requests
 import tempfile
+
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from argparse import ArgumentParser
-import logging
-import requests
+
+# some operations are not yet supported by the pytorch MPS architecture, and for these operations a cpu fallback option
+# needs to be specified. This environment variable must be set before importing the torch library.
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
 
 from label_sleuth import app
 from label_sleuth.config import load_config
