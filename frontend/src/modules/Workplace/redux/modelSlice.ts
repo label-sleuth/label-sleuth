@@ -32,10 +32,10 @@ export const initialState: ModelSliceState = {
   // tells if there is a model training. The word 'should' is used because the value is calculated
   // and it does not always come from the backend
   nextModelShouldBeTraining: false,
-  // the following field is used to test whether a model is being trained or not when 
+  // the following field is used to test whether a model is being trained or not when
   // the category changes. This covers the case where the labels that have been imported
   // for a category don't make the progress bar full but a model is being trained anyways
-  modelStatusCheckAttempts: 0, 
+  modelStatusCheckAttempts: 0,
   downloadingModel: false,
   lastModelFailed: false,
 };
@@ -90,7 +90,7 @@ export const reducers = {
   },
   resetModelStatusCheckAttempts(state: WorkspaceState) {
     state.modelStatusCheckAttempts = 3;
-  }
+  },
 };
 
 export const extraReducers = [
@@ -109,9 +109,12 @@ export const extraReducers = [
         if (latestReadyModelVersion === null) {
           if (m["iteration_status"] === "READY") {
             latestReadyModelVersion = m["iteration"];
-          }
-          else if (["TRAINING", "RUNNING_INFERENCE", "RUNNING_ACTIVE_LEARNING", "CALCULATING_STATISTICS"].includes(m["iteration_status"])) {
-            modelIsTraining = true
+          } else if (
+            ["TRAINING", "RUNNING_INFERENCE", "RUNNING_ACTIVE_LEARNING", "CALCULATING_STATISTICS"].includes(
+              m["iteration_status"]
+            )
+          ) {
+            modelIsTraining = true;
           }
         }
         if (!("lastScore" in updatedEvaluationState) && "estimated_precision" in m) {
@@ -142,6 +145,7 @@ export const extraReducers = [
       if (modelIsTraining) {
         nextModelShouldBeTraining = state.nextModelShouldBeTraining;
       }
+
       // if there is at least one ready model found, next model status depends on
       // the last ready model is already known. If it is not the same means training has
       // finished
@@ -149,6 +153,28 @@ export const extraReducers = [
         nextModelShouldBeTraining =
           latestReadyModelVersion === state.modelVersion ? state.nextModelShouldBeTraining : false;
       }
+
+      console.log(state.modelVersion === null && latestReadyModelVersion > 0)
+      console.log(state.modelVersion !== null && state.modelVersion < latestReadyModelVersion)
+      // reset pagination if a new model has been found
+      if (
+        (state.modelVersion === null && latestReadyModelVersion > 0) ||
+        (state.modelVersion !== null && state.modelVersion < latestReadyModelVersion)
+      ) {
+        const panelsToResetPagination: PanelIdsEnum[] = [
+          PanelIdsEnum.LABEL_NEXT,
+          PanelIdsEnum.POSITIVE_PREDICTIONS,
+          PanelIdsEnum.SUSPICIOUS_LABELS,
+          PanelIdsEnum.CONTRADICTING_LABELS,
+        ];
+
+        panelsToResetPagination.forEach((pId) => {
+          if (pId !== PanelIdsEnum.NOT_SET) {
+            state.panels.panels[pId].page = 1;
+          }
+        });
+      }
+
       state.modelVersion = latestReadyModelVersion;
       state.lastModelFailed = lastModelFailed;
       state.nextModelShouldBeTraining = nextModelShouldBeTraining;
@@ -156,19 +182,6 @@ export const extraReducers = [
         ...state.panels.panels[PanelIdsEnum.EVALUATION],
         ...updatedEvaluationState,
       };
-
-      const panelsToResetPagination: PanelIdsEnum[] = [
-        PanelIdsEnum.LABEL_NEXT,
-        PanelIdsEnum.POSITIVE_PREDICTIONS,
-        PanelIdsEnum.SUSPICIOUS_LABELS,
-        PanelIdsEnum.CONTRADICTING_LABELS,
-      ];
-
-      panelsToResetPagination.forEach((pId) => {
-        if (pId !== PanelIdsEnum.NOT_SET) {
-          state.panels.panels[pId].page = 1;
-        }
-      });
     },
   },
   {
