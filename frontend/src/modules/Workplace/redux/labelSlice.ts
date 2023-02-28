@@ -21,7 +21,7 @@ import { LabelTypesEnum } from "../../../const";
 import { client } from "../../../api/client";
 import { getWorkspaceId } from "../../../utils/utils";
 import { RootState } from "../../../store/configureStore";
-import { Element, LabelDiff, LabelSliceState, ReducerObj, WorkspaceState } from "../../../global";
+import { Element, LabelSliceState, ReducerObj, UploadedLabels, WorkspaceState } from "../../../global";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -55,7 +55,13 @@ export const downloadLabels = createAsyncThunk<RootState, { labeledOnly: boolean
   }
 );
 
-export const uploadLabels = createAsyncThunk(`workspace/uploadLabels`, async (formData, { getState }) => {
+export const uploadLabels = createAsyncThunk<
+UploadedLabels,
+FormData,
+{
+  state: RootState;
+}
+>(`workspace/uploadLabels`, async (formData) => {
   var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/${UPLOAD_LABELS_API}`;
   const { data } = await client.post(url, formData, {
     stringifyBody: false,

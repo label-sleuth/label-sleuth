@@ -103,7 +103,8 @@ export const MainContent = styled("div")`
   margin-right: 25px;
 `;
 
-export const PrimaryButton = styled(Button)`
+// TODO: PrimaryButton is not acception component="label" prop, setting it to any meanwhile
+export const PrimaryButton: any = styled(Button)`
   display: flex;
   flex-direction: row;
   justify-content: center;

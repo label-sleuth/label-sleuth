@@ -14,7 +14,7 @@
 */
 
 
-import * as React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import {
   LargeTitle,
   MainContent,
@@ -46,16 +46,22 @@ import { blue } from "@mui/material/colors";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
-export const UploadLabelsDialog = ({ open, setOpen }) => {
+interface UploadLabelsDialogProps {
+  open: boolean;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+}
+
+export const UploadLabelsDialog = ({ open, setOpen }: UploadLabelsDialogProps) => {
   const dispatch = useDispatch();
 
   const handleClose = () => {
     setOpen(false);
   };
 
-  const handleFileSelection = (e) => {
-    const file = e.target.files[0];
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file: File |  null = e.target.files ? e.target.files[0] : null;
     const formData = new FormData();
+    if (file === null ) return;
     formData.append("file", file);
     dispatch(uploadLabels(formData));
     setOpen(false);
@@ -81,7 +87,7 @@ export const UploadLabelsDialog = ({ open, setOpen }) => {
         >
           <LargeTitle>Upload existing labels to the workspace</LargeTitle>
           <MainContent>
-            <p style={{ marginBotton: 0 }}>
+            <p>
               This input is a CSV file, in which each row is a labeled element,
               and its columns are: <br />
             </p>
@@ -102,7 +108,7 @@ export const UploadLabelsDialog = ({ open, setOpen }) => {
           style={{ width: "100%", order: 1, flexGrow: 0 }}
         >
           <SecondaryButton onClick={handleClose}>Cancel</SecondaryButton>
-          <PrimaryButton component="label" sx={{ textTransform: "none" }}>
+          <PrimaryButton component="label" className={"primery-button"} sx={{ textTransform: "none" }}>
             Upload
             <TextField
               onChange={handleFileSelection}
@@ -117,7 +123,15 @@ export const UploadLabelsDialog = ({ open, setOpen }) => {
   );
 };
 
-const ExpandMore = (props) => {
+interface ExpandMoreProps {
+  expand: boolean;
+  onClick: () => void;
+  "aria-expanded": boolean;
+  "aria-label": string;
+  children: React.ReactNode
+}
+
+const ExpandMore = (props: ExpandMoreProps) => {
   const { expand, ...other } = props;
   return (
     <IconButton
@@ -130,7 +144,12 @@ const ExpandMore = (props) => {
   );
 }
 
-const WeakLabelsOption = ({ checked, handleChange }) => {
+interface  WeakLabelsOptionProps {
+  checked: boolean;
+  handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+}
+
+const WeakLabelsOption = ({ checked, handleChange }: WeakLabelsOptionProps) => {
   const checkFormDescription = `
     Download the train set that Label Sleuth used to train its latest classifier. 
     As opposed to the labeled data, the train set can include labeled elements that 
@@ -181,7 +200,12 @@ const WeakLabelsOption = ({ checked, handleChange }) => {
   );
 };
 
-export const DownloadLabelsDialog = ({ open, setOpen }) => {
+interface DownloadLabelsDialogProps {
+  open: boolean;
+  setOpen: (value: boolean) => void;
+}
+
+export const DownloadLabelsDialog = ({ open, setOpen }: DownloadLabelsDialogProps) => {
   const dispatch = useDispatch();
 
   const [checked, setChecked] = React.useState(false);
@@ -199,7 +223,7 @@ export const DownloadLabelsDialog = ({ open, setOpen }) => {
     handleClose();
   };
 
-  const handleChange = (event) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked(event.target.checked);
   };
 
@@ -243,12 +267,19 @@ export const DownloadLabelsDialog = ({ open, setOpen }) => {
   );
 };
 
+interface DownloadModelDialogProps {
+  open: boolean,
+  setOpen: (value: boolean) => void,
+  modelVersion: number | null,
+  modelVersionSuffix: string | null,
+}
+
 export const DownloadModelDialog = ({
   open,
   setOpen,
   modelVersion,
   modelVersionSuffix,
-}) => {
+}: DownloadModelDialogProps) => {
   const curCategoryName = useSelector(curCategoryNameSelector);
   const dispatch = useDispatch();
   const handleClose = () => {

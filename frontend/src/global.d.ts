@@ -89,11 +89,6 @@ interface FocusedElement {
   highlight: boolean;
 }
 
-interface LabelDiff {
-  pos: number;
-  neg: number;
-}
-
 interface ErrorSliceState {
   errorMessage: string | null;
 }

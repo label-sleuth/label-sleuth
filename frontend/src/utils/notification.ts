@@ -13,16 +13,17 @@
     limitations under the License.
 */
 
-import { toast } from 'react-toastify';
+import { toast, ToastOptions } from "react-toastify";
 
 /**
  * Shows a toast notification
  * @param {The message that will be shown} message
- * @param {options passed to the toast function like type and autoClose} options 
+ * @param {options passed to the toast function like type and autoClose} options
  */
-export const notify = (message, options) => {
-    const defaultOptions = {
-        type: toast.TYPE.DEFAULT,
-    }
-    toast(message, options ?? defaultOptions);
-  }
+export const notify = (message: string, options?: ToastOptions) => {
+  const defaultOptions: ToastOptions = {
+    type: toast.TYPE.DEFAULT,
+    autoClose: false
+  };
+  toast(message, {...defaultOptions, ...options});
+};

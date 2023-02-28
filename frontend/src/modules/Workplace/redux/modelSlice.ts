@@ -154,8 +154,6 @@ export const extraReducers = [
           latestReadyModelVersion === state.modelVersion ? state.nextModelShouldBeTraining : false;
       }
 
-      console.log(state.modelVersion === null && latestReadyModelVersion > 0)
-      console.log(state.modelVersion !== null && state.modelVersion < latestReadyModelVersion)
       // reset pagination if a new model has been found
       if (
         (state.modelVersion === null && latestReadyModelVersion > 0) ||
