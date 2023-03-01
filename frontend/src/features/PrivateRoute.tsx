@@ -17,11 +17,16 @@ import { Navigate } from 'react-router-dom';
 import { LOGIN_PATH } from '../config';
 import { useAuthentication } from '../customHooks/useAuthentication';
 
-export function PrivateRoute({ redirectPath = LOGIN_PATH, children, }) {
+interface PrivateRouteProps { 
+  redirectPath?: string;
+  children: React.ReactNode;
+}
+
+export function PrivateRoute({ redirectPath = LOGIN_PATH, children }: PrivateRouteProps) {
   const {authenticationEnabled, authenticated} = useAuthentication();
   
   if (authenticationEnabled && !authenticated) {
-    return <Navigate to={redirectPath} replace />;
+    return <Navigate to={redirectPath} />;
   }
-  return children;
+  return <>{children}</>;
 };
