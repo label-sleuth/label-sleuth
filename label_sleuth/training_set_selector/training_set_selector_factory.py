@@ -12,45 +12,33 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from label_sleuth.data_access.core.data_structs import LabelType
+import threading
+import logging
+from typing import Type
+
 from label_sleuth.data_access.data_access_api import DataAccessApi
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
-from label_sleuth.training_set_selector.train_set_selectors import TrainSetSelectorAllLabeled, \
-    TrainSetSelectorEnforcePositiveNegativeRatio
-from label_sleuth.training_set_selector.train_set_selector_api import TrainingSetSelectionStrategy
+from label_sleuth.training_set_selector.train_set_selector_api import TrainSetSelectorAPI
 
 
-def get_training_set_selector(data_access: DataAccessApi, background_jobs_manager: BackgroundJobsManager,
-                              strategy=TrainingSetSelectionStrategy.ALL_LABELED):
-    if strategy == TrainingSetSelectionStrategy.ALL_LABELED:
-        return TrainSetSelectorAllLabeled(data_access, background_jobs_manager, label_types={LabelType.Standard})
-    elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
-                                                            label_types={LabelType.Standard},
-                                                            required_negative_ratio=1)
-    elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
-                                                            label_types={LabelType.Standard},
-                                                            required_negative_ratio=2)
-    elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
-                                                            label_types={LabelType.Standard},
-                                                            required_negative_ratio=10)
-    elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_INCLUDE_WEAK:
-        return TrainSetSelectorAllLabeled(data_access, background_jobs_manager,
-                                          label_types={LabelType.Standard, LabelType.Weak})
-    elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
-                                                            label_types={LabelType.Standard, LabelType.Weak},
-                                                            required_negative_ratio=1)
-    elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
-                                                            label_types={LabelType.Standard, LabelType.Weak},
-                                                            required_negative_ratio=2)
-    elif strategy == TrainingSetSelectionStrategy.ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO:
-        return TrainSetSelectorEnforcePositiveNegativeRatio(data_access, background_jobs_manager,
-                                                            label_types={LabelType.Standard, LabelType.Weak},
-                                                            required_negative_ratio=10)
+class TrainingSetSelectionFactory:
+    """
+    Given a model type, this factory returns the relevant implementation of ModelAPI
+    """
+    def __init__(self, data_access: DataAccessApi, background_jobs_manager: BackgroundJobsManager):
+        self.loaded_strategies = {}
+        self.data_access = data_access
+        self.background_jobs_manager = background_jobs_manager
+        self.lock = threading.RLock()
 
-    else:
-        raise Exception(f"{strategy} is not supported")
+    def get_training_set_selector(self, strategy_type: Type[TrainSetSelectorAPI]) -> TrainSetSelectorAPI:
+        with self.lock:
+            if strategy_type not in self.loaded_strategies:
+                try:
+                    strategy_api = strategy_type(self.data_access, self.background_jobs_manager)
+                    self.loaded_strategies[strategy_type] = strategy_api
+                except Exception:
+                    logging.exception(f"Could not get strategy type {strategy_type} from the training set selection"
+                                      f" factory")
+
+        return self.loaded_strategies[strategy_type]

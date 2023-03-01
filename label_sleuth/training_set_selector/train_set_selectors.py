@@ -31,7 +31,7 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
     for training the model.
     """
 
-    def __init__(self, data_access, background_jobs_manager, label_types):
+    def __init__(self, data_access, background_jobs_manager, label_types=frozenset({LabelType.Standard})):
         super().__init__(data_access, background_jobs_manager, label_types=label_types)
 
     def get_train_set(self, workspace_id, train_dataset_name, category_id) -> Sequence[TextElement]:

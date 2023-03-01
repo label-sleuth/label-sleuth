@@ -17,7 +17,7 @@ import json
 import logging
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Type
 
 import dacite
 
@@ -28,7 +28,9 @@ from label_sleuth.active_learning.policy.active_learning_policy import ActiveLea
 from label_sleuth.models.core.languages import Language, Languages
 from label_sleuth.models.core.model_policies import ModelPolicies
 from label_sleuth.models.policy.model_policy import ModelPolicy
-from label_sleuth.training_set_selector.train_set_selector_api import TrainingSetSelectionStrategy
+from label_sleuth.training_set_selector.train_set_selector_api import TrainSetSelectorAPI
+from label_sleuth.training_set_selector.train_set_selectors import TrainSetSelectorAllLabeled
+from label_sleuth.training_set_selector.train_set_selectors_catalog import TrainSetSelectorsCatalog
 
 
 @dataclass
@@ -36,7 +38,7 @@ class Configuration:
     first_model_positive_threshold: int
     changed_element_threshold: int
     model_policy: ModelPolicy
-    training_set_selection_strategy: TrainingSetSelectionStrategy
+    training_set_selection_strategy: Type[TrainSetSelectorAPI]
     precision_evaluation_size: int
     apply_labels_to_duplicate_texts: bool
     language: Language
@@ -50,7 +52,7 @@ class Configuration:
 
 converters = {
     ModelPolicy: lambda x: getattr(ModelPolicies, x),
-    TrainingSetSelectionStrategy: lambda x: getattr(TrainingSetSelectionStrategy, x),
+    Type[TrainSetSelectorAPI]: lambda x: getattr(TrainSetSelectorsCatalog, x),
     ActiveLearningStrategy: lambda x: getattr(ActiveLearningCatalog, x),
     ActiveLearningPolicy: lambda x: getattr(ActiveLearningPolicies, x),
     Language: lambda x: getattr(Languages, x)

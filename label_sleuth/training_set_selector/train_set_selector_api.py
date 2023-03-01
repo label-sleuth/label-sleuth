@@ -16,27 +16,11 @@
 import abc
 
 from concurrent.futures import Future
-from enum import Enum
-from typing import Sequence, Iterable
+from typing import Sequence, Set
 
 from label_sleuth.data_access.core.data_structs import TextElement, LabelType
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
-
-class TrainingSetSelectionStrategy(Enum):
-    """
-    Given the current set of elements labeled by the user, a TrainingSetSelectionStrategy determines which examples
-    will be sent in practice to the model at training time. For example, the strategy may specify that additional
-    _unlabeled_ elements will be given to the model as weak negative examples.
-    """
-    ALL_LABELED = 0
-    ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO = 1
-    ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO = 2
-    ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO = 3
-    ALL_LABELED_INCLUDE_WEAK = 4
-    ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO = 5
-    ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO = 6
-    ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO = 7
 
 
 class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
@@ -67,8 +51,8 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
         :param category_id:
         """
 
-    def get_label_types(self) -> Iterable[LabelType]:
+    def get_label_types(self) -> Set[LabelType]:
         """
         Return the types of labels this selector is using
         """
-        return self.label_types
+        return set(self.label_types)
