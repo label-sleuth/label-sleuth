@@ -21,21 +21,19 @@ import tempfile
 import traceback
 import zipfile
 import pkg_resources
-
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
-
-from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 import dacite
 import pandas as pd
-
 from flask import Flask, jsonify, request, send_file, make_response, send_from_directory, current_app, Blueprint
 from flask_cors import CORS, cross_origin
 
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
+from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 from label_sleuth.app_utils import elements_back_to_front, extract_iteration_information_list, \
     extract_enriched_ngrams_and_weights_list, get_element, get_natural_sort_key, validate_category_id, \
     validate_workspace_id
@@ -83,13 +81,17 @@ def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
                                                           preload_spacy_model_name=config.language.spacy_model_name,
                                                           preload_fasttext_language_id=
                                                           config.language.fasttext_language_id)
+    data_access = FileBasedDataAccess(output_dir)
     background_jobs_manager = BackgroundJobsManager()
+    training_set_selection_factory = TrainingSetSelectionFactory(data_access, background_jobs_manager)
+
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),
-                                           FileBasedDataAccess(output_dir),
+                                           data_access,
                                            ActiveLearningFactory(),
                                            ModelFactory(os.path.join(output_dir, "models"),
                                                         background_jobs_manager,
                                                         sentence_embedding_service),
+                                           training_set_selection_factory,
                                            background_jobs_manager,
                                            sentence_embedding_service,
                                            app.config["CONFIGURATION"])

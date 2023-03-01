@@ -34,7 +34,7 @@ from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsMana
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, Iteration, \
     IterationStatus, ModelInfo
 from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi, NUMBER_OF_MODELS_TO_KEEP
-from label_sleuth.training_set_selector.training_set_selector_factory import get_training_set_selector
+from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 
 
 def add_random_labels_to_document(doc: Document, min_num_sentences_to_label: int, categories, seed=0):
@@ -56,9 +56,9 @@ class TestOrchestratorAPI(unittest.TestCase):
         cls.active_learning_factory = ActiveLearningFactory()
         cls.data_access = FileBasedDataAccess(os.path.join(cls.temp_dir.name, "output"))
         cls.orchestrator_state = OrchestratorStateApi(os.path.join(cls.temp_dir.name, "output", "workspaces"))
-
+        cls.training_set_selection_factory = TrainingSetSelectionFactory(cls.data_access, background_jobs_manager)
         cls.orchestrator_api = OrchestratorApi(cls.orchestrator_state, cls.data_access, cls.active_learning_factory,
-                                               cls.model_factory, background_jobs_manager,
+                                               cls.model_factory, cls.training_set_selection_factory, background_jobs_manager,
                                                None,  # no need to use sentence embedding,
                                                load_config(os.path.abspath(os.path.join(__file__, os.pardir,
                                                                                         os.pardir,
@@ -203,10 +203,10 @@ class TestOrchestratorAPI(unittest.TestCase):
         progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id)
         self.assertEqual(progress['all'], 100)
 
-        train_set_selector_cls = \
-            get_training_set_selector(self.data_access,
+        train_set_selector = \
+            self.orchestrator_api.training_set_selection_factory.get_training_set_selector(
                                       self.orchestrator_api.config.training_set_selection_strategy).__class__
-        with patch.object(train_set_selector_cls, 'get_train_set'):
+        with patch.object(train_set_selector, 'get_train_set'):
             self.orchestrator_api.train_if_recommended(workspace_id, category_id)
         mock_run_iteration.assert_called()
 
