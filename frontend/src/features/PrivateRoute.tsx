@@ -26,7 +26,7 @@ export function PrivateRoute({ redirectPath = LOGIN_PATH, children }: PrivateRou
   const {authenticationEnabled, authenticated} = useAuthentication();
   
   if (authenticationEnabled && !authenticated) {
-    return <Navigate to={redirectPath} />;
+    return <Navigate to={redirectPath} replace={true} />;
   }
   return <>{children}</>;
 };
