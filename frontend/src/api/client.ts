@@ -12,23 +12,30 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
+interface ClientConfig extends RequestInit {
+  body?: any;
+  stringifyBody?: boolean;
+  parseResponseBodyAs?: "json" | "text" | "blob";
+  omitContentType?: boolean;
+}
 
 export const client = async (
-  endpoint,
-  { body, method, headers, stringifyBody=true, parseResponseBodyAs="json", omitContentType=false, ...customConfig } = {}
+  endpoint: string,
+  { body, method, headers, stringifyBody = true, parseResponseBodyAs = "json", omitContentType = false, ...customConfig }: ClientConfig = {}
 ) => {
-  let customHeaders = {...headers};
-  
+  // { ...headers } is used here in case headers is undefined, which will convert it to an empty object { }
+  const customHeaders = { ...headers } as Record<string, string>;
+
   if (!omitContentType) {
-  const defaultContentType = "application/json"
-  customHeaders["Content-Type"] = defaultContentType
+    const defaultContentType = "application/json"
+    customHeaders["Content-Type"] = defaultContentType
   }
 
   if (localStorage.token) {
     customHeaders["Authorization"] = `Bearer ${localStorage.token}`;
   }
 
-  const config = {
+  const config: RequestInit = {
     ...customConfig,
     headers: customHeaders,
     method,
@@ -49,7 +56,7 @@ export const client = async (
       }
       else if (parseResponseBodyAs === "blob") {
         data = await response.blob();
-      } 
+      }
       else {
         throw new Error("parseResponseBodyAs should be 'json' or 'text'")
       }
@@ -66,18 +73,18 @@ export const client = async (
   });
 };
 
-client.get = (endpoint, customConfig = {}) => {
+client.get = (endpoint: string, customConfig: ClientConfig = {}) => {
   return client(endpoint, { ...customConfig, method: "GET" });
 };
 
-client.post = (endpoint, body, customConfig = {}) => {
+client.post = (endpoint: string, body?: any, customConfig: ClientConfig = {}) => {
   return client(endpoint, { ...customConfig, method: "POST", body });
 };
 
-client.delete = (endpoint, body, customConfig = {}) => {
+client.delete = (endpoint: string, body?: any, customConfig: ClientConfig = {}) => {
   return client(endpoint, { ...customConfig, method: "DELETE", body });
 };
 
-client.put = (endpoint, body, customConfig = {}) => {
+client.put = (endpoint: string, body?: any, customConfig: ClientConfig = {}) => {
   return client(endpoint, { ...customConfig, method: "PUT", body });
 };
