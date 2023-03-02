@@ -40,17 +40,21 @@ export const MainElement = ({ element }: ElementProps) => {
     (state) => state.workspace.panels.panels[PanelIdsEnum.EVALUATION].isInProgress
   );
   const evaluationLoading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.EVALUATION]);
+  const rightToLeft = useAppSelector((state) => state.featureFlags.rightToLeft);
+
   const { handlePosLabelState, handleNegLabelState } = useLabelState();
   const elementDOMId = useMemo(() => getPanelDOMKey(id, PanelIdsEnum.MAIN_PANEL), [id]);
   const elemStyleClasses = useElemStyles({ elementDOMId, prediction: modelPrediction, userLabel });
 
   return curCategory === null ? (
     <Box className={`${elemStyleClasses.prediction} ${elemStyleClasses.animation}`} id={elementDOMId}>
-      <p className={classes["nodata_text"]}>{text}</p>
+      <p className={`${classes["nodata_text"]} ${rightToLeft ? classes.right_to_left : ""}`}>{text}</p>
     </Box>
   ) : (
     <Box className={`${elemStyleClasses.prediction} ${elemStyleClasses.animation}`} id={elementDOMId}>
-      <p className={`${classes.data_text} ${elemStyleClasses.userLabel}`}>{text}</p>
+      <p className={`${classes.data_text} ${elemStyleClasses.userLabel} ${rightToLeft ? classes.right_to_left : ""}`}>
+        {text}
+      </p>
       <Stack
         className={!evaluationLoading && !evaluationIsInProgress ? classes.checking_buttons : ""}
         direction="row"

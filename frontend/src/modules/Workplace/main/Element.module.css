@@ -120,3 +120,8 @@
 .neg_user_label {
     color: #bd3951;
 }
+
+.right_to_left {
+    text-align: right;
+    direction: rtl;
+}
