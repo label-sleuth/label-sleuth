@@ -21,9 +21,10 @@ interface ClientConfig extends RequestInit {
 
 export const client = async (
   endpoint: string,
- { body, method, headers, stringifyBody = true, parseResponseBodyAs = "json", omitContentType = false, ...customConfig }: ClientConfig = {}
+  { body, method, headers, stringifyBody = true, parseResponseBodyAs = "json", omitContentType = false, ...customConfig }: ClientConfig = {}
 ) => {
-  const customHeaders: { [k: string]: any  } = { ...headers };
+  // { ...headers } is used here in case headers is undefined, which will convert it to an empty object { }
+  const customHeaders = { ...headers } as Record<string, string>;
 
   if (!omitContentType) {
     const defaultContentType = "application/json"
