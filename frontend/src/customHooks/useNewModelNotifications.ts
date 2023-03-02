@@ -15,12 +15,12 @@
 
 import React from "react";
 import { usePrevious } from "./usePrevious";
+import { notify } from "../utils/notification";
 import { useAppDispatch } from "./useRedux";
 
 interface UseNewModelNotifications {
   curCategory: number | null;
   modelVersion: number | null;
-  notifySuccess: (message: string, toastId: string, autoClose?: boolean) => void;
   shouldFireConfetti: boolean;
   fire: () => void;
 }
@@ -31,7 +31,6 @@ interface UseNewModelNotifications {
 export const useNewModelNotifications = ({
   curCategory,
   modelVersion,
-  notifySuccess,
   fire,
   shouldFireConfetti,
 }: UseNewModelNotifications) => {
@@ -46,9 +45,12 @@ export const useNewModelNotifications = ({
     if (curCategory !== null && newModelVersionAvailable === true) {
       shouldFireConfetti && fire();
       if (modelVersion === 1) {
-        notifySuccess("A new model is available!", "toast-new-model");
-        notifySuccess("There are new suggestions for labeling!", "toast-new-suggestions-for-labelling");
+        notify("A new model is available!", { type: "success", toastId: "toast-new-model" });
+        notify("There are new suggestions for labeling!", {
+          type: "success",
+          toastId: "toast-new-suggestions-for-labelling",
+        });
       }
     }
-  }, [curCategory, newModelVersionAvailable, modelVersion, fire, notifySuccess, dispatch, shouldFireConfetti]);
+  }, [curCategory, newModelVersionAvailable, modelVersion, fire, dispatch, shouldFireConfetti]);
 };
