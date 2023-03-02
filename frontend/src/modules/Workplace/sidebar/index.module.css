@@ -186,3 +186,8 @@
   border-radius: 7px;
   background-color: rgba(0, 0, 0, 0.12);
 }
+
+.right_to_left {
+  text-align: right;
+  direction: rtl;
+} 

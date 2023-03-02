@@ -144,6 +144,7 @@ interface FeatureFlagsSliceState {
   fetched: boolean;
   sidebarPanelElementsPerPage: number;
   mainPanelElementsPerPage: number;
+  rightToLeft: boolean;
 }
 
 interface PaginationParam {
