@@ -16,6 +16,8 @@
 import setuptools
 import os
 
+import git  # for RELEASE_VERSION
+RELEASE_VERSION = git.repo.Repo(".").git.describe(tags=True)()['version'].rslist('-', 2)[0]
 
 def package_files(prefix, directory):
     paths = []
@@ -39,7 +41,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="label-sleuth",
-    version="RELEASE_VERSION".replace('v', ''),
+    version=f"{RELEASE_VERSION}".replace('v', ''),
     author="IBM Research",
     author_email="eyals@il.ibm.com",
     url="https://github.com/label-sleuth/label-sleuth",
