@@ -110,8 +110,8 @@ export const extraReducers = [
           if (iteration["iteration_status"] === "READY") {
             latestReadyModelVersion = iteration["iteration"];
           } else if (
-            ["TRAINING", "RUNNING_INFERENCE", "RUNNING_ACTIVE_LEARNING", "CALCULATING_STATISTICS"].includes(
-              m["iteration_status"]
+            ["PREPARING_DATA", "TRAINING", "RUNNING_INFERENCE", "RUNNING_ACTIVE_LEARNING", "CALCULATING_STATISTICS"].includes(
+              iteration["iteration_status"]
             )
           ) {
             modelIsTraining = true;
