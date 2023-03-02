@@ -16,6 +16,8 @@
 import setuptools
 import os
 
+from label_sleuth.app import get_git_describe
+
 
 def package_files(prefix, directory):
     paths = []
@@ -39,7 +41,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="label-sleuth",
-    version="RELEASE_VERSION".replace('v', ''),
+    version=get_git_describe()["version"].rsplit("-", 1)[0].replace('v', ''),
     author="IBM Research",
     author_email="eyals@il.ibm.com",
     url="https://github.com/label-sleuth/label-sleuth",
