@@ -784,12 +784,12 @@ def get_labelling_status(workspace_id):
     })
 
 
-@main_blueprint.route("/workspace/<workspace_id>/models", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/iterations", methods=['GET'])
 @login_if_required
 @validate_category_id
 @validate_workspace_id
 @cross_origin()
-def get_all_models_for_category(workspace_id):
+def get_all_iterations_for_category(workspace_id):
     """
     Return information about all the Iteration flows for this category and their current status.
 
@@ -799,7 +799,7 @@ def get_all_models_for_category(workspace_id):
     """
     category_id = int(request.args['category_id'])
     iterations = curr_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id)
-    res = {'models': extract_iteration_information_list(iterations)}
+    res = {'iterations': extract_iteration_information_list(iterations)}
     return jsonify(res)
 
 
