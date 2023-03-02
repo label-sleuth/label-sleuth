@@ -21,7 +21,7 @@ interface CheckStatusResponse {
   labeling_counts: { true: number; false: number };
 }
 
-interface UnparsedModel {
+interface UnparsedIteration {
   changed_fraction?: number;
   creation_epoch: number;
   iteration: number;
