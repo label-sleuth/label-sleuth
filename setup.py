@@ -17,7 +17,7 @@ import setuptools
 import os
 
 import git  # for RELEASE_VERSION
-RELEASE_VERSION = git.repo.Repo(".").git.describe(tags=True)()['version'].rslist('-', 2)[0]
+RELEASE_VERSION = git.repo.Repo(".").git.describe(tags=True).rslist('-', 2)[0]
 
 def package_files(prefix, directory):
     paths = []
