@@ -1,5 +1,16 @@
+<p align="center">
+   &emsp;
+   <a href="https://www.label-sleuth.org/docs/installation.html">Quick Start</a>
+   &emsp; | &emsp;
+   <a href="https://www.label-sleuth.org/docs/index.html">Documentation</a>
+   &emsp; | &emsp; 
+   <a href="https://join.slack.com/t/labelsleuth/shared_invite/zt-1j5tpz1jl-W~UaNEKmK0RtzK~lI3Wkxg">Join&nbsp;Slack</a>
+   &emsp;
+</p>
+
+<img width="1015" alt="Label Sleuth" src="https://user-images.githubusercontent.com/25353776/222474256-c834a803-0114-4e72-9d21-5c464499ec05.png">
+
 [![version](https://img.shields.io/pypi/v/label-sleuth)](https://pypi.org/project/label-sleuth/)  ![license](https://img.shields.io/github/license/label-sleuth/label-sleuth)  ![python](https://img.shields.io/badge/python-3.8%20|%203.9-blue)  ![python test](https://img.shields.io/github/actions/workflow/status/label-sleuth/label-sleuth/test_python.yml?branch=main&label=python%20tests)  ![react test](https://img.shields.io/github/actions/workflow/status/label-sleuth/label-sleuth/verify_react.yml?branch=main&label=react%20tests)  [![Slack](https://img.shields.io/badge/Slack-darkblue?logo=slack&logoColor=white)](https://join.slack.com/t/labelsleuth/shared_invite/zt-1j5tpz1jl-W~UaNEKmK0RtzK~lI3Wkxg)
-# Label Sleuth
 
 [Label Sleuth](https://ibm.biz/label-sleuth) is an open source no-code system for text annotation and building text classifers. With Label Sleuth, domain experts (e.g., physicians, lawyers, psychologists) can quickly create custom NLP models by themselves, with no dependency on NLP experts.
 
