@@ -31,7 +31,7 @@ import { Backdrop } from "@mui/material";
 import { CircularProgress } from "@mui/material";
 import { useAuthentication } from "./customHooks/useAuthentication";
 import { fetchFeatureFlags } from "./featureFlags/featureFlagsSlice";
-import { useErrorHandler } from "./error/useErrorHandler";
+import { useNotifyError } from "./error/useNotifyError";
 import { useWorkspaceId } from "./customHooks/useWorkspaceId";
 import { fetchVersion } from "./modules/Workplace/redux";
 
@@ -81,7 +81,7 @@ const App = () => {
 
   const featureFlags = useAppSelector((state) => state.featureFlags);
 
-  useErrorHandler();
+  useNotifyError();
 
   useEffect(() => {
     dispatch(fetchFeatureFlags());

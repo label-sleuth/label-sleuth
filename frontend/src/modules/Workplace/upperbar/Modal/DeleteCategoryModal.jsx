@@ -20,6 +20,8 @@ import { DialogTitle, DialogActions, DialogContent, DialogContentText } from "@m
 import { useSelector, useDispatch } from "react-redux";
 import { curCategoryNameSelector, deleteCategory } from "../../redux";
 import { notify } from "../../../../utils/notification";
+import { toast } from "react-toastify";
+import { isFulfilled } from "@reduxjs/toolkit";
 
 export default function DeleteCategoryModal({ open, setOpen }) {
   const curCategoryName = useSelector(curCategoryNameSelector);
@@ -31,12 +33,14 @@ export default function DeleteCategoryModal({ open, setOpen }) {
 
   const onSubmit = () => {
     setOpen(false);
-    dispatch(deleteCategory()).then(() =>
-      notify(`The category ${curCategoryName} has been deleted`, {
-        type: "success",
-        autoClose: 5000,
-      })
-    );
+    dispatch(deleteCategory()).then((action) => {
+      if (isFulfilled(action)) {
+        notify(`The category ${curCategoryName} has been deleted`, {
+          type: toast.TYPE.SUCCESS,
+          autoClose: 5000,
+        });
+      }
+    });
   };
 
   return (

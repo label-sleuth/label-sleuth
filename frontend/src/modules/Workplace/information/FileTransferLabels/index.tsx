@@ -41,6 +41,7 @@ import {
   downloadLabels,
   downloadModel,
 } from "../../redux";
+import { useAppDispatch } from "../../../../customHooks/useRedux";
 import { curCategoryNameSelector } from "../../redux";
 import { blue } from "@mui/material/colors";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -52,7 +53,8 @@ interface UploadLabelsDialogProps {
 }
 
 export const UploadLabelsDialog = ({ open, setOpen }: UploadLabelsDialogProps) => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const toastRef = React.useRef<React.ReactText | null>(null);
 
   const handleClose = () => {
     setOpen(false);

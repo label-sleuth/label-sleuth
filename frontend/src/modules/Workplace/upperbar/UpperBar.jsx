@@ -43,7 +43,8 @@ import DeleteCategoryModal from "./Modal/DeleteCategoryModal";
 import EditCategoryModal from "./Modal/EditCategoryModal";
 import { toast } from "react-toastify";
 import { useLocalStorage } from "usehooks-ts";
-import { Keyboard } from "../../../components/Keyboard"
+import { Keyboard } from "../../../components/Keyboard";
+import { notify } from "../../../utils/notification";
 
 function ElevationScroll(props) {
   const { children, window } = props;
@@ -61,72 +62,58 @@ function ElevationScroll(props) {
   });
 }
 
-const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(
-  ({ theme, open }) => ({
-    position: "fixed",
-    top: 0,
-    left: LEFT_DRAWER_WIDTH,
-    right: 0,
-    height: APPBAR_HEIGHT,
+const AppBar = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(({ theme, open }) => ({
+  position: "fixed",
+  top: 0,
+  left: LEFT_DRAWER_WIDTH,
+  right: 0,
+  height: APPBAR_HEIGHT,
+  transition: theme.transitions.create(["padding", "width"], {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  ...(open && {
     transition: theme.transitions.create(["padding", "width"], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
     }),
-    ...(open && {
-      transition: theme.transitions.create(["padding", "width"], {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.enteringScreen,
-      }),
-      paddingRight: RIGHT_DRAWER_INITIAL_WIDTH,
-    }),
-    // width: `calc(100vw - ${leftDrawerWidthh + 48}px)`,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  })
-);
+    paddingRight: RIGHT_DRAWER_INITIAL_WIDTH,
+  }),
+  // width: `calc(100vw - ${leftDrawerWidthh + 48}px)`,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+}));
 
 function CategoryFormControl() {
   const curCategory = useSelector((state) => state.workspace.curCategory);
   const categories = useSelector((state) => state.workspace.categories);
   const dispatch = useDispatch();
-  const [showShortcutsNotification, setShowShortcutsNotification] = useLocalStorage('showShortcutsNotification', true)
+  const [showShortcutsNotification, setShowShortcutsNotification] = useLocalStorage("showShortcutsNotification", true);
 
   const options = categories
     .map((item) => ({ value: item.category_id, label: item.category_name }))
     .sort((a, b) => a.label.localeCompare(b.label));
-  
 
   const ShortcutsMessageComponent = () => (
     <Typography>
-      Press <Keyboard kbd={"Shift"}/>{" "}+{" "}<Keyboard kbd={"?"}/> to see the available keyboard shortcuts
+      Press <Keyboard kbd={"Shift"} /> + <Keyboard kbd={"?"} /> to see the available keyboard shortcuts
     </Typography>
-  )
+  );
 
   React.useEffect(() => {
     if (curCategory !== null && showShortcutsNotification === true) {
-      notify(<ShortcutsMessageComponent />, "info-shortcuts", toast.TYPE.INFO)
-      setShowShortcutsNotification(false)
+      notify(<ShortcutsMessageComponent />, "info-shortcuts", toast.TYPE.INFO);
+      setShowShortcutsNotification(false);
     }
-  }, [curCategory, showShortcutsNotification, setShowShortcutsNotification])
-  
+  }, [curCategory, showShortcutsNotification, setShowShortcutsNotification]);
+
   const handleCategorySelect = (value) => {
     dispatch(updateCurCategory(value));
   };
 
-  const notify = (message, toastId, type, autoClose = false) => {
-    toast(message, {
-      autoClose: autoClose,
-      type: type || toast.TYPE.SUCCESS,
-      toastId: toastId,
-    });
-  }
-
   return (
-    <FormControl
-      variant="standard"
-      sx={{ minWidth: "200px", marginBottom: "16px" }}
-    >
+    <FormControl variant="standard" sx={{ minWidth: "200px", marginBottom: "16px" }}>
       <ControlledSelect
         id="label-select"
         value={curCategory}
@@ -166,10 +153,7 @@ const UpperBar = () => {
 
   return (
     <ElevationScroll>
-      <AppBar
-        className={classes.elevation_scroll}
-        open={createCategoryModalOpen}
-      >
+      <AppBar className={classes.elevation_scroll} open={createCategoryModalOpen}>
         <div className={classes.upper}>
           <p>Category: </p>
           <CategoryFormControl placholder="placeholder" />
@@ -208,18 +192,9 @@ const UpperBar = () => {
           ) : null}
           {cardOpen ? <CategoryCard setCardOpen={setCardOpen} /> : null}
         </div>
-        <CreateCategoryModal
-          open={createCategoryModalOpen}
-          setOpen={setCreateCategoryModalOpen}
-        />
-        <DeleteCategoryModal
-          open={deleteCategoryModalOpen}
-          setOpen={setDeleteCategoryModalOpen}
-        />
-        <EditCategoryModal
-          open={editCategoryModalOpen}
-          setOpen={setEditCategoryModalOpen}
-        />
+        <CreateCategoryModal open={createCategoryModalOpen} setOpen={setCreateCategoryModalOpen} />
+        <DeleteCategoryModal open={deleteCategoryModalOpen} setOpen={setDeleteCategoryModalOpen} />
+        <EditCategoryModal open={editCategoryModalOpen} setOpen={setEditCategoryModalOpen} />
       </AppBar>
     </ElevationScroll>
   );

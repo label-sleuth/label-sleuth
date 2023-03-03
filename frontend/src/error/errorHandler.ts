@@ -13,12 +13,14 @@
     limitations under the License.
 */
 
+import { ErrorResponse } from "../global";
+
 /**
  * Get the error message from the error object.
  * @param {the error returned by the redux thunk} err
  * @returns the error message
  */
-export const getErrorMessage = (err) => {
+export const getErrorMessage = (err: ErrorResponse) => {
   const defaultErrorMessage =
     "Somethig went wrong. Please ask your system administrator to share the logs by creating an issue on Github or sending a message via Slack.";
   if (err.message) {

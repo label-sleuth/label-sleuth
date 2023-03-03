@@ -14,7 +14,6 @@
 */
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import "react-toastify/dist/ReactToastify.css";
 import { addDocuments } from "../modules/Workspace-config/workspaceConfigSlice";
 import { toast } from "react-toastify";
 import {
@@ -26,13 +25,14 @@ import {
   REGEX_LETTER_NUMBERS_UNDERSCORE,
 } from "../const";
 import { useAppDispatch, useAppSelector } from "./useRedux";
+import { notify, updateToast } from "../utils/notification";
+import React from "react";
 
 interface UseLoadDocProps {
-  notify: (message: string, f: (message: string) => void) => void;
   toastId: string;
 }
 
-export const useLoadDoc = ({ notify, toastId }: UseLoadDocProps) => {
+export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
   const uploadingDataset = useAppSelector((state) => state.workspaces.uploadingDataset);
   const { datasets } = useAppSelector((state) => state.workspaces);
   const isDocumentAdded = useAppSelector((state) => state.workspaces.isDocumentAdded);
@@ -42,6 +42,8 @@ export const useLoadDoc = ({ notify, toastId }: UseLoadDocProps) => {
       : { dataset_name: "", num_docs: -1, num_sentences: -1 }
   );
 
+  const toastRef = React.useRef<React.ReactText | null>(null);
+
   const dispatch = useAppDispatch();
 
   const [datasetName, setDatasetName] = useState("");
@@ -49,18 +51,6 @@ export const useLoadDoc = ({ notify, toastId }: UseLoadDocProps) => {
   const textFieldRef = useRef();
   const comboInputTextRef = useRef();
   const [datasetNameError, setDatasetNameError] = useState("");
-
-  const updateToast = useCallback(
-    (message, type) => {
-      notify(message, (message) => {
-        toast.update(toastId, {
-          render: message,
-          type: type,
-        });
-      });
-    },
-    [toastId, notify]
-  );
 
   const clearFields = useCallback(() => {
     let elem: HTMLCollectionOf<Element> = document.getElementsByClassName("MuiAutocomplete-clearIndicator");
@@ -79,12 +69,12 @@ export const useLoadDoc = ({ notify, toastId }: UseLoadDocProps) => {
 
   useEffect(() => {
     if (uploadingDataset) {
-      updateToast(UPLOAD_DOC_WAIT_MESSAGE, toast.TYPE.INFO);
+      toastRef.current = notify(UPLOAD_DOC_WAIT_MESSAGE, { toastId, type: toast.TYPE.INFO }, true);
     } else if (isDocumentAdded) {
-      updateToast(newDataCreatedMessage(dataset_name, num_docs, num_sentences), toast.TYPE.SUCCESS);
+      updateToast(toastRef, { render: newDataCreatedMessage(dataset_name, num_docs, num_sentences), type: toast.TYPE.SUCCESS })
       clearFields();
     }
-  }, [dataset_name, num_docs, num_sentences, isDocumentAdded, uploadingDataset, clearFields, updateToast, dispatch]);
+  }, [toastId, dataset_name, num_docs, num_sentences, isDocumentAdded, uploadingDataset, clearFields, dispatch]);
 
   const handleInputChange = (e: React.FormEvent, newVal: string) => {
     const val = newVal || (e.target as HTMLInputElement).value;
@@ -108,12 +98,7 @@ export const useLoadDoc = ({ notify, toastId }: UseLoadDocProps) => {
 
   const handleLoadDoc = () => {
     if (!datasetName || !file) {
-      return notify(FILL_REQUIRED_FIELDS, function (message) {
-        toast.update(toastId, {
-          render: message,
-          type: toast.TYPE.INFO,
-        });
-      });
+      return notify(FILL_REQUIRED_FIELDS, { toastId, type: toast.TYPE.INFO });
     }
     let formData = new FormData();
     formData.append("file", file);

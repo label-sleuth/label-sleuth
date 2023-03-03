@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { ErrorSliceState } from '../global';
 
 const initialState : ErrorSliceState = {
@@ -24,10 +24,10 @@ export const errorSlice = createSlice({
     name: 'error',
     initialState,
     reducers: {
-        setError: (state, action) => {
+        setError: (state, action: PayloadAction<string>) => {
             state.errorMessage = action.payload;
         },
-        clearError(state, _) {
+        clearError(state, action: PayloadAction<void>) {
             state.errorMessage = null;
         },
     }

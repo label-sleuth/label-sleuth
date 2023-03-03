@@ -17,19 +17,18 @@ import { useEffect, useMemo, useState } from "react";
 import { deleteWorkspace, getWorkspaces } from "../modules/Workspace-config/workspaceConfigSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { WORKSPACE_PATH } from "../config";
 import { SELECT_WORKSPACE } from "../const";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { useWorkspaceId } from "./useWorkspaceId";
 import { useAppSelector, useAppDispatch } from "./useRedux";
+import { notify } from "../utils/notification";
 
 interface UseExistWorkspaceProps {
-  notify: (message: string, f: (message: string) => void) => void;
   toastId: string;
 }
 
-const useExistWorkspace = ({ notify, toastId }: UseExistWorkspaceProps) => {
+const useExistWorkspace = ({ toastId }: UseExistWorkspaceProps) => {
   const { setWorkspaceId } = useWorkspaceId();
   const { workspaces } = useAppSelector((state) => state.workspaces);
 
@@ -52,11 +51,9 @@ const useExistWorkspace = ({ notify, toastId }: UseExistWorkspaceProps) => {
 
   const handleClick = () => {
     if (!value) {
-      return notify(SELECT_WORKSPACE, function (message) {
-        toast.update(toastId, {
-          render: message,
-          type: toast.TYPE.INFO,
-        });
+      notify(SELECT_WORKSPACE, {
+        toastId,
+        type: toast.TYPE.INFO,
       });
     }
     setWorkspaceId(value);
@@ -71,11 +68,9 @@ const useExistWorkspace = ({ notify, toastId }: UseExistWorkspaceProps) => {
     setValue("");
     dispatch(deleteWorkspace({ workspaceId: value })).then((actionPromiseResult) => {
       if (isFulfilled(actionPromiseResult)) {
-        notify(`The workspace ${value} has been succesfully deleted`, function (message) {
-          toast.update(toastId, {
-            render: message,
-            type: toast.TYPE.SUCCESS,
-          });
+        notify(`The workspace ${value} has been succesfully deleted`, {
+          toastId,
+          type: toast.TYPE.SUCCESS,
         });
       } else {
         setValue(prevValue);

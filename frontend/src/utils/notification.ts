@@ -13,17 +13,53 @@
     limitations under the License.
 */
 
-import { toast, ToastOptions } from "react-toastify";
+import React, { ReactNode } from "react";
+import { toast, ToastOptions, UpdateOptions } from "react-toastify";
+
+// TODO:transform this file into a custom hook so that it handles the ref to the ReactText object
+// this way  components that use updateToast won't have to worry about the ref to the ReactText object
+// this custom hook would have to maintain a dict of toastId:ref so that a  single instance of this
+// hook can manage several toast notifications.
+
+// the following options make the toast unclossable
+const blockToastOptions = {
+  closeButton: false,
+  closeOnClick: false,
+  draggable: false,
+};
+
+// the following options make the toast clossable
+const unblockToastOptions = {
+  closeButton: true,
+  closeOnClick: true,
+  draggable: true,
+};
 
 /**
  * Shows a toast notification
  * @param {The message that will be shown} message
  * @param {options passed to the toast function like type and autoClose} options
  */
-export const notify = (message: string, options?: ToastOptions) => {
-  const defaultOptions: ToastOptions = {
+export const notify = (message: React.ReactNode, options: ToastOptions, blockToast = false) => {
+  let defaultOptions: ToastOptions = {
     type: toast.TYPE.DEFAULT,
-    autoClose: false
+    autoClose: false,
   };
-  toast(message, {...defaultOptions, ...options});
+
+  return toast(message, { ...defaultOptions, ...options, ...(blockToast ? blockToastOptions : unblockToastOptions) });
+};
+
+/**
+ * Function to update a toast notification
+ * @param toastRef: a reference to the toast returned by the notify function
+ * @param options of type UpdateOptions
+ * @returns void
+ */
+export const updateToast = (
+  toastRef: React.MutableRefObject<React.ReactText | null>,
+  options: UpdateOptions,
+  blockToast = false
+) => {
+  if (toastRef.current === null) return;
+  toast.update(toastRef.current, { ...options, ...(blockToast ? blockToastOptions : unblockToastOptions) });
 };

@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { isRejected } from '@reduxjs/toolkit'
+import { AnyAction, Dispatch, isRejected } from '@reduxjs/toolkit'
 import { getErrorMessage } from './errorHandler'
 import { setError } from './errorSlice'
 
@@ -23,7 +23,7 @@ import { setError } from './errorSlice'
  * @param {*} param0 
  * @returns 
  */
-export const errorMiddleware = ({ dispatch }) => (next) => (action) => {
+export const errorMiddleware = ({ dispatch }: {dispatch: Dispatch} ) => (next: Dispatch<AnyAction>) => (action: any) => {
   if (isRejected(action)) {
     dispatch(setError(getErrorMessage(action.error)))
   }
