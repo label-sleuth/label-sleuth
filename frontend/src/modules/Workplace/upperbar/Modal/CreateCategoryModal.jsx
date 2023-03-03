@@ -31,6 +31,7 @@ import {
   REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES,
 } from "../../../../const";
 import { notify } from "../../../../utils/notification";
+import { toast } from "react-toastify";
 
 const style = {
   position: "absolute",
@@ -79,7 +80,7 @@ export default function CreateCategoryModal({ open, setOpen }) {
         if (isFulfilled(actionResult)) {
           setOpen(false);
           notify(`The category '${newCategoryName}' has been created`, {
-            type: "success",
+            type: toast.TYPE.SUCCESS,
             autoClose: 5000,
           });
         }

@@ -232,3 +232,7 @@ interface FetchPanelElementsParams {
   docId?: string;
   useLastSearchString?: boolean;
 }
+
+interface ErrorResponse {
+  message: string;
+}

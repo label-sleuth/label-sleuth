@@ -20,7 +20,6 @@ import Box from '@mui/material/Box';
 import ButtonIBM from "../../components/buttons/ButtonIBM"
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css"
 import TextField from '@mui/material/TextField';
-import 'react-toastify/dist/ReactToastify.css';
 import ComboBoxWithInputText from "../../components/combobox/ComboBoxWithInputText";
 import data_icon from "../../assets/workspace-config/document--add.svg"
 import { UPLOAD_NEW_DATASET_MSG, UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG, UPLOAD_NEW_DATASET_FILE_HELPER_MSG } from '../../const';

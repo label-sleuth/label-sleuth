@@ -29,6 +29,8 @@ import {
 } from "../../../../const";
 import classes from "./index.module.css";
 import { notify } from "../../../../utils/notification";
+import { isFulfilled } from "@reduxjs/toolkit";
+import { toast } from "react-toastify";
 
 const style = {
   position: "absolute",
@@ -66,12 +68,14 @@ export default function EditCategoryModal({ open, setOpen }) {
         newCategoryName: newCategoryName.trim(),
         newCategoryDescription: "Category description",
       })
-    ).then(() => {
+    ).then((action) => {
       setOpen(false);
-      notify("The category name has been successfully edited", {
-        type: "success",
-        autoClose: 5000,
-      });
+      if (isFulfilled(action)) {
+        notify("The category name has been successfully edited", {
+          type: toast.TYPE.SUCCESS,
+          autoClose: 5000,
+        });
+      }
     });
   };
 

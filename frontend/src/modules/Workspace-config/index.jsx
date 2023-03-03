@@ -13,80 +13,74 @@
     limitations under the License.
 */
 
-import { useEffect } from 'react';
-import { clearState, getDatasets } from './workspaceConfigSlice'
-import { cleanWorkplaceState } from '../Workplace/redux'
-import classes from "./workspace-config.module.css"
-import ExistingWorkspace from "./ExistingWorkspaceForm"
-import NewWorkspace from "./NewWorkspaceForm"
-import LoadDocument from "./LoadDocumentForm"
-import ButtonAppBar from "../../components/bars/upperBar/ButtonAppBar"
-import { useDispatch } from 'react-redux'
-import { useLoadDoc } from '../../customHooks/useLoadDoc';
-import useNewWorkspace from '../../customHooks/useNewWorkspace';
-import { useLogOut } from '../../customHooks/useLogOut';
-import useExistWorkspace from '../../customHooks/useExistWorkspace';
-import workspace_logo from "../../assets/workspace-config/tag--edit.svg"
-import { toast } from 'react-toastify';
-import useBackdrop from '../../customHooks/useBackdrop';
-import { useWorkspaceId } from '../../customHooks/useWorkspaceId';
-import { SystemVersion } from '../../components/version/SystemVersion';
+import { useEffect } from "react";
+import { clearState, getDatasets } from "./workspaceConfigSlice";
+import { cleanWorkplaceState } from "../Workplace/redux";
+import classes from "./workspace-config.module.css";
+import ExistingWorkspace from "./ExistingWorkspaceForm";
+import NewWorkspace from "./NewWorkspaceForm";
+import LoadDocument from "./LoadDocumentForm";
+import ButtonAppBar from "../../components/bars/upperBar/ButtonAppBar";
+import { useDispatch } from "react-redux";
+import { useLoadDoc } from "../../customHooks/useLoadDoc";
+import useNewWorkspace from "../../customHooks/useNewWorkspace";
+import { useLogOut } from "../../customHooks/useLogOut";
+import useExistWorkspace from "../../customHooks/useExistWorkspace";
+import workspace_logo from "../../assets/workspace-config/tag--edit.svg";
+import { toast } from "react-toastify";
+import useBackdrop from "../../customHooks/useBackdrop";
+import { useWorkspaceId } from "../../customHooks/useWorkspaceId";
+import { SystemVersion } from "../../components/version/SystemVersion";
 
 const WorkspaceConfig = () => {
-  const dispatch = useDispatch()
-  const { logout } = useLogOut()
-  const {backdropOpen} = useBackdrop()
+  const dispatch = useDispatch();
+  const { logout } = useLogOut();
+  const { backdropOpen } = useBackdrop();
   const { setWorkspaceId } = useWorkspaceId();
 
   useEffect(() => {
-    dispatch(getDatasets())
-    dispatch(cleanWorkplaceState())
+    dispatch(getDatasets());
+    dispatch(cleanWorkplaceState());
     setWorkspaceId(null);
-  }, [setWorkspaceId, dispatch])
+  }, [setWorkspaceId, dispatch]);
 
   const toastId = "workspace-config-toast-id";
-  
-  function notify(message, func) {
 
-    toast(message, {
-      autoClose: false,
-      type: toast.TYPE.INFO,
-      toastId: toastId,
-    });
-    func(message)
-    dispatch(clearState())
-  }
-
-
-  const loadDocProps = useLoadDoc({notify, toastId})
-  const { options } = loadDocProps
-  const newWorkProps = useNewWorkspace(notify, toastId)
-  const existingWorkProps = useExistWorkspace({notify, toastId})
+  const loadDocProps = useLoadDoc({ toastId });
+  const { options } = loadDocProps;
+  const newWorkProps = useNewWorkspace(toastId);
+  const existingWorkProps = useExistWorkspace({ toastId });
 
   return (
     <>
       <ButtonAppBar logout={logout} />
       <div className={classes.container}>
         <div />
-        <div style={{maxWidth: "362px"}}>
-          <h2 style={{ display: 'flex', alignItems: 'center', marginTop: 0 }}><img alt="" src={workspace_logo} style={{ height: '28px', marginLeft: '3px', marginRight: '5px' }} />Workspace</h2>
+        <div style={{ maxWidth: "362px" }}>
+          <h2 style={{ display: "flex", alignItems: "center", marginTop: 0 }}>
+            <img alt="" src={workspace_logo} style={{ height: "28px", marginLeft: "3px", marginRight: "5px" }} />
+            Workspace
+          </h2>
           <ExistingWorkspace {...existingWorkProps} />
-          <p style={{
-            marginTop: '10px',
-            marginBottom: '10px',
-            marginLeft: '5px',
-            color: '#d5d5d5'
-          }}>--- or ---</p>
-          <NewWorkspace  {...newWorkProps} options={options} />
+          <p
+            style={{
+              marginTop: "10px",
+              marginBottom: "10px",
+              marginLeft: "5px",
+              color: "#d5d5d5",
+            }}
+          >
+            --- or ---
+          </p>
+          <NewWorkspace {...newWorkProps} options={options} />
         </div>
         <div className={classes.newdata}>
           <LoadDocument {...loadDocProps} backdropOpen={backdropOpen} />
         </div>
-        <SystemVersion style={{position: "absolute", right: 10, bottom: -20}} />
+        <SystemVersion style={{ position: "absolute", right: 10, bottom: -20 }} />
       </div>
     </>
-
-  )
+  );
 };
 
 export default WorkspaceConfig;
