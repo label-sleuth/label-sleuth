@@ -29,6 +29,7 @@ import {
 } from "../../../../const";
 import classes from "./index.module.css";
 import { notify } from "../../../../utils/notification";
+import { useNotification } from "../../../../utils/notification";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 
@@ -46,6 +47,7 @@ const style = {
 
 export default function EditCategoryModal({ open, setOpen }) {
   const dispatch = useDispatch();
+  const { notify } = useNotification()
 
   const [newCategoryName, setNewCategoryName] = React.useState("");
   const [categoryNameError, setCategoryNameError] = React.useState("");

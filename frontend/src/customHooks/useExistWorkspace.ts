@@ -22,7 +22,7 @@ import { SELECT_WORKSPACE } from "../const";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { useWorkspaceId } from "./useWorkspaceId";
 import { useAppSelector, useAppDispatch } from "./useRedux";
-import { notify } from "../utils/notification";
+import { useNotification } from "../utils/notification";
 
 interface UseExistWorkspaceProps {
   toastId: string;
@@ -31,6 +31,7 @@ interface UseExistWorkspaceProps {
 const useExistWorkspace = ({ toastId }: UseExistWorkspaceProps) => {
   const { setWorkspaceId } = useWorkspaceId();
   const { workspaces } = useAppSelector((state) => state.workspaces);
+  const { notify } = useNotification()
 
   let navigate = useNavigate();
   const dispatch = useAppDispatch();

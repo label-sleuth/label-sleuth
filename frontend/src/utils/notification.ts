@@ -13,11 +13,11 @@
     limitations under the License.
 */
 
-import React, { ReactNode } from "react";
+import React from "react";
 import { toast, ToastOptions, UpdateOptions } from "react-toastify";
 
 // TODO:transform this file into a custom hook so that it handles the ref to the ReactText object
-// this way  components that use updateToast won't have to worry about the ref to the ReactText object
+// this way  components that use updateNotification won't have to worry about the ref to the ReactText object
 // this custom hook would have to maintain a dict of toastId:ref so that a  single instance of this
 // hook can manage several toast notifications.
 
@@ -35,31 +35,43 @@ const unblockToastOptions = {
   draggable: true,
 };
 
-/**
- * Shows a toast notification
- * @param {The message that will be shown} message
- * @param {options passed to the toast function like type and autoClose} options
- */
-export const notify = (message: React.ReactNode, options: ToastOptions, blockToast = false) => {
-  let defaultOptions: ToastOptions = {
-    type: toast.TYPE.DEFAULT,
-    autoClose: false,
-  };
+export const useNotification = () => {
+  const toastRefs = React.useRef<{ [key: string]: React.ReactText }>({});
+  /**
+   * Shows a toast notification
+   * @param {The message that will be shown} message
+   * @param {options passed to the toast function like type and autoClose} options
+   */
+  const notify = React.useCallback((message: React.ReactNode, options: ToastOptions, blockToast = false) => {
+    let defaultOptions: ToastOptions = {
+      type: toast.TYPE.DEFAULT,
+      autoClose: false,
+    };
+    toastRefs.current[options.toastId || "default_toast_id"] = toast(message, {
+      ...defaultOptions,
+      ...options,
+      ...(blockToast ? blockToastOptions : unblockToastOptions),
+    });
+  }, []);
 
-  return toast(message, { ...defaultOptions, ...options, ...(blockToast ? blockToastOptions : unblockToastOptions) });
-};
 
-/**
- * Function to update a toast notification
- * @param toastRef: a reference to the toast returned by the notify function
- * @param options of type UpdateOptions
- * @returns void
- */
-export const updateToast = (
-  toastRef: React.MutableRefObject<React.ReactText | null>,
-  options: UpdateOptions,
-  blockToast = false
-) => {
-  if (toastRef.current === null) return;
-  toast.update(toastRef.current, { ...options, ...(blockToast ? blockToastOptions : unblockToastOptions) });
+  /**
+   * Function to update a toast notification
+   * @param toastRef: a reference to the toast returned by the notify function
+   * @param options of type UpdateOptions
+   * @returns void
+   */
+  const updateNotification = React.useCallback((options: UpdateOptions, blockToast = false) => {
+    if (options.toastId === null || options.toastId === undefined) return;
+    const toastEl = toastRefs.current[options.toastId];
+    toast.update(toastEl, { ...options, ...(blockToast ? blockToastOptions : unblockToastOptions) });
+  }, []);
+
+  const closeNotification = React.useCallback((toastId: string) => {
+    const toastEl = toastRefs.current[toastId];
+    if (toastEl === undefined) return;
+    toast.dismiss(toastEl);
+  }, []);
+
+  return { notify, updateNotification, closeNotification };
 };

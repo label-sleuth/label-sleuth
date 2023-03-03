@@ -15,7 +15,7 @@
 
 import React from "react";
 import { usePrevious } from "./usePrevious";
-import { notify } from "../utils/notification";
+import { useNotification } from "../utils/notification";
 import { useAppDispatch } from "./useRedux";
 import { toast } from "react-toastify";
 
@@ -41,6 +41,7 @@ export const useNewModelNotifications = ({
     () => prevModelVersion !== null && modelVersion !== null && modelVersion > -1 && prevModelVersion !== modelVersion,
     [prevModelVersion, modelVersion]
   );
+  const { notify } = useNotification();
 
   React.useEffect(() => {
     if (curCategory !== null && newModelVersionAvailable === true) {
@@ -53,5 +54,5 @@ export const useNewModelNotifications = ({
         });
       }
     }
-  }, [curCategory, newModelVersionAvailable, modelVersion, fire, dispatch, shouldFireConfetti]);
+  }, [notify, curCategory, newModelVersionAvailable, modelVersion, fire, dispatch, shouldFireConfetti]);
 };

@@ -30,7 +30,7 @@ import {
   WRONG_INPUT_NAME_BAD_CHARACTER,
   REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES,
 } from "../../../../const";
-import { notify } from "../../../../utils/notification";
+import { useNotification } from "../../../../utils/notification";
 import { toast } from "react-toastify";
 
 const style = {
@@ -49,6 +49,7 @@ export default function CreateCategoryModal({ open, setOpen }) {
   const [text, setText] = React.useState("");
   const [categoryNameError, setCategoryNameError] = React.useState("");
   const dispatch = useDispatch();
+  const { notify } = useNotification()
 
   const handleTextFieldChange = (e) => {
     e.preventDefault();

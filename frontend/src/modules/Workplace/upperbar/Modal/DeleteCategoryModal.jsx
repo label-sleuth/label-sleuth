@@ -19,13 +19,14 @@ import { Dialog } from "@mui/material";
 import { DialogTitle, DialogActions, DialogContent, DialogContentText } from "@mui/material";
 import { useSelector, useDispatch } from "react-redux";
 import { curCategoryNameSelector, deleteCategory } from "../../redux";
-import { notify } from "../../../../utils/notification";
+import { useNotification } from "../../../../utils/notification";
 import { toast } from "react-toastify";
 import { isFulfilled } from "@reduxjs/toolkit";
 
 export default function DeleteCategoryModal({ open, setOpen }) {
   const curCategoryName = useSelector(curCategoryNameSelector);
   const dispatch = useDispatch();
+  const { notify } = useNotification()
 
   const handleClose = () => {
     setOpen(false);
