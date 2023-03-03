@@ -17,7 +17,7 @@ import { useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "../customHooks/useRedux";
 import { toast } from "react-toastify";
 import { clearError } from "./errorSlice";
-import { notify } from "../utils/notification";
+import { useNotification } from "../utils/notification";
 
 /**
  * Displays a toast notification anytime an error is thrown.
@@ -26,11 +26,12 @@ export const useNotifyError = () => {
   const dispatch = useAppDispatch();
 
   const errorMessage = useAppSelector((state) => state.error.errorMessage);
+  const { notify } = useNotification();
 
   useEffect(() => {
     if (errorMessage) {
       notify(errorMessage, { autoClose: 5000, type: toast.TYPE.ERROR, toastId: "toast-error" });
       dispatch(clearError());
     }
-  }, [errorMessage, dispatch]);
+  }, [notify, errorMessage, dispatch]);
 };

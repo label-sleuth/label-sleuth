@@ -44,7 +44,7 @@ import EditCategoryModal from "./Modal/EditCategoryModal";
 import { toast } from "react-toastify";
 import { useLocalStorage } from "usehooks-ts";
 import { Keyboard } from "../../../components/Keyboard";
-import { notify } from "../../../utils/notification";
+import { useNotification } from "../../../utils/notification";
 
 function ElevationScroll(props) {
   const { children, window } = props;
@@ -90,6 +90,7 @@ function CategoryFormControl() {
   const categories = useSelector((state) => state.workspace.categories);
   const dispatch = useDispatch();
   const [showShortcutsNotification, setShowShortcutsNotification] = useLocalStorage("showShortcutsNotification", true);
+  const { notify } = useNotification()
 
   const options = categories
     .map((item) => ({ value: item.category_id, label: item.category_name }))
@@ -103,10 +104,11 @@ function CategoryFormControl() {
 
   React.useEffect(() => {
     if (curCategory !== null && showShortcutsNotification === true) {
-      notify(<ShortcutsMessageComponent />, "info-shortcuts", toast.TYPE.INFO);
+      const toastId = "info-shortcuts"
+      notify(<ShortcutsMessageComponent />, {toastId, type: toast.TYPE.INFO});
       setShowShortcutsNotification(false);
     }
-  }, [curCategory, showShortcutsNotification, setShowShortcutsNotification]);
+  }, [notify, curCategory, showShortcutsNotification, setShowShortcutsNotification]);
 
   const handleCategorySelect = (value) => {
     dispatch(updateCurCategory(value));

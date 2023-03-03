@@ -25,8 +25,7 @@ import {
 } from "../const";
 import { useWorkspaceId } from "./useWorkspaceId";
 import { useAppDispatch, useAppSelector } from "./useRedux";
-import { notify } from "../utils/notification";
-
+import { useNotification } from "../utils/notification";
 const useNewWorkspace = (toastId: string) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -36,6 +35,7 @@ const useNewWorkspace = (toastId: string) => {
   const [newWorkspaceNameError, setNewWorkspaceNameError] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
   const { setWorkspaceId } = useWorkspaceId();
+  const { notify } = useNotification();
 
   const handleChangeText = (e: React.FormEvent) => {
     let val = (e.target as HTMLInputElement).value;

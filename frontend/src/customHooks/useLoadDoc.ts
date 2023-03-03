@@ -25,8 +25,10 @@ import {
   REGEX_LETTER_NUMBERS_UNDERSCORE,
 } from "../const";
 import { useAppDispatch, useAppSelector } from "./useRedux";
-import { notify, updateToast } from "../utils/notification";
+import { useNotification } from "../utils/notification";
 import React from "react";
+import { usePrevious } from "./usePrevious";
+
 
 interface UseLoadDocProps {
   toastId: string;
@@ -41,9 +43,7 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
       ? state.workspaces.datasetAdded
       : { dataset_name: "", num_docs: -1, num_sentences: -1 }
   );
-
-  const toastRef = React.useRef<React.ReactText | null>(null);
-
+  const { notify, updateNotification, closeNotification } = useNotification();
   const dispatch = useAppDispatch();
 
   const [datasetName, setDatasetName] = useState("");
@@ -67,14 +67,36 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     setFile(null);
   }, []);
 
+  const previousUploadingDataset = usePrevious(uploadingDataset);
+
+
   useEffect(() => {
     if (uploadingDataset) {
-      toastRef.current = notify(UPLOAD_DOC_WAIT_MESSAGE, { toastId, type: toast.TYPE.INFO }, true);
+      notify(UPLOAD_DOC_WAIT_MESSAGE, { toastId, type: toast.TYPE.INFO }, true);
     } else if (isDocumentAdded) {
-      updateToast(toastRef, { render: newDataCreatedMessage(dataset_name, num_docs, num_sentences), type: toast.TYPE.SUCCESS })
+      updateNotification({
+        toastId: toastId,
+        render: newDataCreatedMessage(dataset_name, num_docs, num_sentences),
+        type: toast.TYPE.SUCCESS,
+      });
       clearFields();
+    } else if (previousUploadingDataset && !isDocumentAdded) {
+      closeNotification(toastId);
     }
-  }, [toastId, dataset_name, num_docs, num_sentences, isDocumentAdded, uploadingDataset, clearFields, dispatch]);
+  }, [
+    previousUploadingDataset,
+    notify,
+    updateNotification,
+    closeNotification,
+    toastId,
+    dataset_name,
+    num_docs,
+    num_sentences,
+    isDocumentAdded,
+    uploadingDataset,
+    clearFields,
+    dispatch,
+  ]);
 
   const handleInputChange = (e: React.FormEvent, newVal: string) => {
     const val = newVal || (e.target as HTMLInputElement).value;
