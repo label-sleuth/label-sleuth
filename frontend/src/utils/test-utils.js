@@ -59,7 +59,7 @@ export const createCategory = async () => {
 
 
 export const modelUpdateExample = {
-  models: [
+  iterations: [
     {
       iteration_status: "READY",
       iteration: 4,

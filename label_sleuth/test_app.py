@@ -164,8 +164,8 @@ class TestAppIntegration(unittest.TestCase):
 
         res = self.wait_for_new_iteration(category_id, res, workspace_name, 1)
 
-        self.assertEqual(200, res.status_code, msg="Failed to get models list")
-        self.assertEqual(1, len(res.get_json()["models"]), msg="first model was not added to the models list")
+        self.assertEqual(200, res.status_code, msg="Failed to get iterations list")
+        self.assertEqual(1, len(res.get_json()["iterations"]), msg="first model was not added to the models list")
 
         # get active learning recommendations
         res = self.client.get(f"/workspace/{workspace_name}/active_learning?category_id={category_id}",
@@ -287,7 +287,7 @@ class TestAppIntegration(unittest.TestCase):
         # wait for the second models
         res = self.wait_for_new_iteration(category_id, res, workspace_name, 2)
         self.assertEqual(200, res.status_code, msg="Failed to get models list")
-        self.assertEqual(2, len(res.get_json()["models"]), msg="second model was not added to the models list")
+        self.assertEqual(2, len(res.get_json()["iterations"]), msg="second model was not added to the models list")
 
         # update existing category
         new_category_name = f'{category_name}_new'
@@ -328,12 +328,12 @@ class TestAppIntegration(unittest.TestCase):
         while waiting_count < MAX_WAITING_FOR_TRAINING:
             # since get_status is asynchronously starting a new training, we need to wait until it added to the
             # iterations list and finishes successfully
-            res = self.client.get(f"/workspace/{workspace_name}/models?category_id={category_id}",
+            res = self.client.get(f"/workspace/{workspace_name}/iterations?category_id={category_id}",
                                   headers=HEADERS)
             response = res.get_json()
             print(response)
-            if res.status_code != 200 or (len(response["models"]) == num_models
-                                          and response['models'][0]['iteration_status'] == IterationStatus.READY.name):
+            if res.status_code != 200 or (len(response["iterations"]) == num_models
+                                          and response['iterations'][0]['iteration_status'] == IterationStatus.READY.name):
                 break
             time.sleep(0.1)
             waiting_count += 1
