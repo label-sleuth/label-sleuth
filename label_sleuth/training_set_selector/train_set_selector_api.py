@@ -32,15 +32,18 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
         self.background_jobs_manager = background_jobs_manager
         self.gpu_support = gpu_support
 
-    def collect_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int, done_callback=None) \
+    def collect_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int, category_name: str,
+                          category_description:str, done_callback=None) \
             -> Future:
         future = self.background_jobs_manager.add_background_job(
-            self.get_train_set, args=(workspace_id, train_dataset_name, category_id),
+            self.get_train_set, args=(workspace_id, train_dataset_name, category_id, category_name,
+                                      category_description),
             use_gpu=self.gpu_support, done_callback=done_callback)
         return future
 
     @abc.abstractmethod
-    def get_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int) -> Sequence[TextElement]:
+    def get_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int,
+                      category_name: str, category_description: str) -> Sequence[TextElement]:
         """
         For a given workspace, dataset and category, prepare and return a train set for training the model.
         Returns a list of TextElement objects (containing labels for the category, and possibly metadata about
@@ -49,6 +52,8 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
         :param workspace_id:
         :param train_dataset_name:
         :param category_id:
+        :param category_name:
+        :param category_description:
         """
 
     def get_label_types(self) -> Set[LabelType]:
