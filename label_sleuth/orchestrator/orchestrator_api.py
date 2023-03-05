@@ -417,17 +417,19 @@ class OrchestratorApi:
         new_iteration_index = len(self.orchestrator_state.get_all_iterations(workspace_id, category_id))
         logging.info(f"starting iteration {new_iteration_index} in background for workspace '{workspace_id}' "
                      f"category id '{category_id}'")
-
+        category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
         self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_id=category_id)
         train_set_selector = self.training_set_selection_factory.get_training_set_selector(
             self.config.training_set_selection_strategy)
         future = train_set_selector.collect_train_set(workspace_id=workspace_id,
                                                       train_dataset_name=dataset_name,
-                                                      category_id=category_id)
-        future.add_done_callback(functools.partial(self._train_callback, workspace_id, category_id, model_type,
+                                                      category_id=category_id,
+                                                      category_name=category.name,
+                                                      category_description=category.description)
+        future.add_done_callback(functools.partial(self._train, workspace_id, category_id, model_type,
                                                    new_iteration_index))
 
-    def _train_callback(self, workspace_id, category_id, model_type, iteration_index, future):
+    def _train(self, workspace_id, category_id, model_type, iteration_index, future):
         try:
             train_data = future.result()
         except Exception:
@@ -935,7 +937,9 @@ class OrchestratorApi:
                     self.config.training_set_selection_strategy)
                 text_elements = train_set_selector.get_train_set(workspace_id=workspace_id,
                                                                  train_dataset_name=dataset_name,
-                                                                 category_id=category_id)
+                                                                 category_id=category_id,
+                                                                 category_name=category.name,
+                                                                 category_description=category.description)
                 logging.info(
                     f"Labeled elements size for category {category.name} ({category_id}) in workspace "
                     f"'{workspace_id}' is {total_count}, exported elements size is {len(text_elements)}")
