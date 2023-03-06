@@ -132,3 +132,5 @@ export enum LabelActionsEnum {
   POS = "pos",
   NEG = "neg",
 }
+
+export const BOMCharacter = '\uFEFF'
