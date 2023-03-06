@@ -46,7 +46,6 @@ export const useNotifyUploadedLabels = () => {
         notify(warningMessage, { type: toast.TYPE.WARNING, toastId: "toast-contractictingLabelsInfo" });
       }
     } else if (previousUploadingLabels === true && uploadedLabels === null) {
-      console.log("closing notificaiton");
       closeNotification(toastId);
     }
   }, [

@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { LabelActionsEnum, LabelTypesEnum, PanelIdsEnum } from "../const";
+import { BOMCharacter, LabelActionsEnum, LabelTypesEnum, PanelIdsEnum } from "../const";
 import { Element, ElementsDict, PanelsSliceState, UnparsedElement } from "../global";
 
 /**
@@ -216,3 +216,10 @@ export const getWorkspaceId = (): string => {
     throw new Error("There is no workspace available in the SessionStorage");
   }
 };
+
+/**
+ * Adds the BOM character so programs interpret that the text is UTF encoded
+ */
+export const addBOMCharacter = (text: string): string => {
+  return BOMCharacter + text;
+}
