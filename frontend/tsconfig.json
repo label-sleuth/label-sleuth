@@ -19,7 +19,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "allowJs": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "types": [
+      "jest"
+    ]
   },
   "include": [
     "src"
