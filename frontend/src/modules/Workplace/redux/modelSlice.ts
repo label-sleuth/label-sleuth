@@ -129,27 +129,23 @@ export const extraReducers = [
         latestReadyModelVersion = -1;
       }
 
+
       // if there is a model available, start counting the version from 1 (not 0)
       if (latestReadyModelVersion !== null && latestReadyModelVersion >= 0) {
         latestReadyModelVersion += 1;
       }
-
+     
+     
       // logic to manage the next model status, it is first set to true in checkStatus when progress is 100
 
-      // if there are non-ready models, it means that a model is training
-      if (latestReadyModelVersion === -1 && iterations.length) {
-        nextModelShouldBeTraining = true;
-      }
-      // if there are no models yet, next model status depends on
-      // progress bar having been full or not
+      // we are sure that a model is being trained
       if (modelIsTraining) {
-        nextModelShouldBeTraining = state.nextModelShouldBeTraining;
-      }
+        nextModelShouldBeTraining = true;
+      } else {
+        // on this branch we have to deduce if there is a model being trained
+        // but the frontend is not yet aware of it
 
-      // if there is at least one ready model found, next model status depends on
-      // the last ready model is already known. If it is not the same means training has
-      // finished
-      else if (latestReadyModelVersion) {
+        // we are sure that a model is no more training when there is a new ready model version
         nextModelShouldBeTraining =
           latestReadyModelVersion === state.modelVersion ? state.nextModelShouldBeTraining : false;
       }
