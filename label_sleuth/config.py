@@ -64,11 +64,12 @@ def load_config(config_path, command_line_args=None) -> Configuration:
     with open(config_path) as f:
         raw_cfg = json.load(f)
 
-    #override config with user specified values
+    # override config with user specified values
     if command_line_args:
         for arg in command_line_args:
             if arg in raw_cfg and command_line_args[arg] is not None:
-                logging.info(f"Overriding config file argument {arg} with a command line arguments. Value changed from {raw_cfg[arg]} to {command_line_args[arg]}")
+                logging.info(f"Overriding config file argument {arg} with a command line argument. "
+                             f"Value changed from {raw_cfg[arg]} to {command_line_args[arg]}")
                 raw_cfg[arg] = command_line_args[arg]
 
     config = dacite.from_dict(
