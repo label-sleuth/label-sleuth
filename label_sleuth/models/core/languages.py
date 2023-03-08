@@ -175,8 +175,15 @@ Romanian = \
              spacy_model_name='ro_core_news_lg')
 
 Hebrew = Language(name='Hebrew',
-                  stop_words=["זה", "זאת", "אלה", "אלו" ,"גם" , "של", "מה", "או"],
+                  stop_words=["זה", "זאת", "אלה", "אלו", "גם", "של", "מה", "או"],
                   fasttext_language_id="he",
+                  right_to_left=True)
+
+
+Arabic = Language(name='Arabic',
+                  stop_words=["التى", "التي", "الذى", "الذي", "الذين", "ذلك", "هذا", "هذه", "هؤلاء", "قد", "وقد", "حيث",
+                              "ان", "إن", "انه", "وان", "فان", "فإن", "بان", "اي", "أي", "ايضا", "أيضا", "إياه"],
+                  fasttext_language_id='ar',
                   right_to_left=True)
 
 
@@ -185,6 +192,7 @@ class Languages:
     ITALIANO = Italiano
     ROMANIAN = Romanian
     HEBREW = Hebrew
+    ARABIC = Arabic
 
     @classmethod
     def all_languages(cls):
