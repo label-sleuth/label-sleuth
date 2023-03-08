@@ -24,38 +24,47 @@ import { SupportIconsBar } from "../../SupportIconsBar";
 import { Divider } from "@mui/material";
 
 interface ButtonAppBarProps {
-  logout: () => void;
+	logout: (e: React.MouseEvent) => void;
 }
 
-export const ButtonAppBar = ({ logout }: ButtonAppBarProps) => {
-  const { authenticationEnabled } = useAuthentication();
+export default function ButtonAppBar({ logout }: ButtonAppBarProps) {
+	const { authenticationEnabled } = useAuthentication();
 
-  return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" style={{ boxShadow: "none" }}>
-        <Toolbar
-          style={{
-            background: "#161616",
-            borderBottom: "solid 1px #b5b5b5",
-            minHeight: 0,
-            paddingLeft: "20px",
-            paddingRight: "12px",
-            height: "48px",
-          }}
-        >
-          <img src={sleuth_logo} style={{ width: "160px", maxWidth: "160px" }} alt="App logo" />
-          <div style={{ display: "block", flexGrow: 1 }} />
-          <SupportIconsBar sx={{ marginRight: 2 }} />
-          {authenticationEnabled ? (
-            <Divider orientation="vertical" flexItem variant="middle" sx={{ borderColor: "gray", marginRight: 1 }} />
-          ) : null}
-          {authenticationEnabled ? (
-            <Button color="inherit" onClick={logout}>
-              Logout
-            </Button>
-          ) : null}
-        </Toolbar>
-      </AppBar>
-    </Box>
-  );
+	return (
+		<Box sx={{ flexGrow: 1 }}>
+			<AppBar position="static" style={{ boxShadow: "none" }}>
+				<Toolbar
+					style={{
+						background: "#161616",
+						borderBottom: "solid 1px #b5b5b5",
+						minHeight: 0,
+						paddingLeft: "20px",
+						paddingRight: "12px",
+						height: "48px",
+					}}
+				>
+					<img
+						src={sleuth_logo}
+						style={{ width: "160px", maxWidth: "160px" }}
+						alt="App logo"
+					/>
+					<div style={{ display: "block", flexGrow: 1 }} />
+					<SupportIconsBar sx={{ marginRight: 2 }} />
+					{authenticationEnabled ? (
+						<Divider
+							orientation="vertical"
+							flexItem
+							variant="middle"
+							sx={{ borderColor: "gray", marginRight: 1 }}
+						/>
+					) : null}
+					{authenticationEnabled ? (
+						<Button color="inherit" onClick={logout}>
+							Logout
+						</Button>
+					) : null}
+				</Toolbar>
+			</AppBar>
+		</Box>
+	);
 }
