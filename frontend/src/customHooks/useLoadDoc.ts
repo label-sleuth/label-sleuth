@@ -13,8 +13,8 @@
     limitations under the License.
 */
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { addDocuments } from "../modules/Workspace-config/workspaceConfigSlice";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { addDocuments, deleteDataset } from "../modules/Workspace-config/workspaceConfigSlice";
 import { toast } from "react-toastify";
 import {
   FILL_REQUIRED_FIELDS,
@@ -28,7 +28,8 @@ import { useAppDispatch, useAppSelector } from "./useRedux";
 import { useNotification } from "../utils/notification";
 import React from "react";
 import { usePrevious } from "./usePrevious";
-
+import { isFulfilled } from "@reduxjs/toolkit";
+import { stringifyList } from "../utils/utils";
 
 interface UseLoadDocProps {
   toastId: string;
@@ -36,7 +37,7 @@ interface UseLoadDocProps {
 
 export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
   const uploadingDataset = useAppSelector((state) => state.workspaces.uploadingDataset);
-  const { datasets } = useAppSelector((state) => state.workspaces);
+  const datasets = useAppSelector((state) => state.workspaces.datasets);
   const isDocumentAdded = useAppSelector((state) => state.workspaces.isDocumentAdded);
   const { dataset_name, num_docs, num_sentences } = useAppSelector((state) =>
     state.workspaces.datasetAdded !== null
@@ -68,7 +69,6 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
   }, []);
 
   const previousUploadingDataset = usePrevious(uploadingDataset);
-
 
   useEffect(() => {
     if (uploadingDataset) {
@@ -128,7 +128,48 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     dispatch(addDocuments(formData));
   };
 
+  const deleteButtonEnabled = useMemo(() => {
+    return datasetName !== null && datasetName !== "" && datasets.map((d) => d.dataset_id).includes(datasetName);
+  }, [datasetName, datasets]);
+
+  const handleDeleteDataset = () => {
+    // Change the value optimistically to avoid warnings about
+    // the value not being in the options array. If it fails
+    // select that option again
+    const prevValue = datasetName;
+    setDatasetName("");
+    dispatch(deleteDataset({ datasetName })).then((actionPromiseResult: any) => {
+      const { deleted_dataset: deletedDatasetName, deleted_workspace_ids: deletedWorkspaceIds } =
+        actionPromiseResult.payload;
+
+      if (isFulfilled(actionPromiseResult)) {
+        notify(`The dataset '${deletedDatasetName}' has been succesfully deleted`, {
+          toastId,
+          type: toast.TYPE.SUCCESS,
+        });
+        
+        if (deletedWorkspaceIds.length > 0) {
+
+          let words = { noun: "workspace", verb: "has been"}
+
+          if (deletedWorkspaceIds.length > 1) {
+            words.noun = "workspaces"
+            words.verb = "have been"
+          }
+
+          notify(`The ${words.noun} ${stringifyList(deletedWorkspaceIds)} ${words.verb} succesfully deleted too`, {
+            toastId: `${toastId}-aditional-notification`,
+            type: toast.TYPE.SUCCESS,
+          }); 
+        }
+      } else {
+        setDatasetName(prevValue);
+      }
+    });
+  };
+
   return {
+    datasetName,
     handleLoadDoc,
     handleFileChange,
     handleInputChange,
@@ -137,5 +178,8 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     textFieldRef,
     comboInputTextRef,
     datasetNameError,
+    deleteButtonEnabled,
+    handleDeleteDataset,
+    clearFields,
   };
 };

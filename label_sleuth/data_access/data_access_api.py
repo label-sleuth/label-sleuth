@@ -272,7 +272,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def delete_dataset(self, dataset_name):
+    def delete_dataset(self, dataset_name: str):
         """
         Delete dataset by name
         :param dataset_name:

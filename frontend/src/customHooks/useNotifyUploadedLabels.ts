@@ -4,6 +4,7 @@ import { useNotification } from "../utils/notification";
 import { UPLOAD_LABELS_WAIT_MESSAGE } from "../const";
 import { toast } from "react-toastify";
 import { usePrevious } from "./usePrevious";
+import { stringifyList } from "../utils/utils";
 
 export const useNotifyUploadedLabels = () => {
   const uploadedLabels = useAppSelector((state) => state.workspace.uploadedLabels);
@@ -11,13 +12,7 @@ export const useNotifyUploadedLabels = () => {
   const { notify, updateNotification, closeNotification } = useNotification();
 
   const getCategoriesString = useCallback((categories: string[]) => {
-    if (categories.length === 1) return categories[0];
-    else {
-      let res = "";
-      if (categories.length > 2) categories.slice(0, -2).forEach((c) => (res += `'${c}', `));
-      res += `'${categories.slice(-2, -1)[0]}' and '${categories.slice(-1)[0]}'`;
-      return res;
-    }
+    
   }, []);
 
   const previousUploadingLabels = usePrevious(uploadingLabels);
@@ -29,7 +24,7 @@ export const useNotifyUploadedLabels = () => {
     } else if (uploadedLabels !== null) {
       const categoriesCreated = uploadedLabels.categoriesCreated;
       const createdCategoriesMessage = categoriesCreated.length
-        ? `Added categories are: ${getCategoriesString(categoriesCreated)}`
+        ? `Added categories are: ${stringifyList(categoriesCreated)}`
         : "";
       updateNotification({
         toastId,

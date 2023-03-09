@@ -111,6 +111,37 @@ class OrchestratorApi:
             except Exception as e:
                 logging.exception(f"error clearing saved labels for workspace '{workspace_id}'")
                 raise e
+    
+    def get_workspaces_by_dataset_name(self, dataset_name: str):
+        workspaces_ids = []
+        for workspace_id in self.list_workspaces():
+            if self.get_dataset_name(workspace_id) == dataset_name:
+                workspaces_ids.append(workspace_id)
+        return workspaces_ids
+
+
+    def delete_dataset(self, dataset_name: str):
+        """
+        Delete a given workspace
+        :param workspace_id:
+        """
+        logging.info(f"Deleting dataset '{dataset_name}'")
+        
+
+        workspaces_to_delete = self.get_workspaces_by_dataset_name(dataset_name)
+        for workspace_id in workspaces_to_delete:
+            self.delete_workspace(workspace_id)
+        
+        # delete dataset
+        self.data_access.delete_dataset(dataset_name)
+
+        res = {
+            'deleted_dataset': dataset_name,
+            'deleted_workspace_ids': workspaces_to_delete
+        }
+
+        return res
+
 
     def workspace_exists(self, workspace_id: str) -> bool:
         return self.orchestrator_state.workspace_exists(workspace_id)
