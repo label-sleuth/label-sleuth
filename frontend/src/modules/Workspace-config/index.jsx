@@ -27,7 +27,6 @@ import useNewWorkspace from "../../customHooks/useNewWorkspace";
 import { useLogOut } from "../../customHooks/useLogOut";
 import useExistWorkspace from "../../customHooks/useExistWorkspace";
 import workspace_logo from "../../assets/workspace-config/tag--edit.svg";
-import { toast } from "react-toastify";
 import useBackdrop from "../../customHooks/useBackdrop";
 import { useWorkspaceId } from "../../customHooks/useWorkspaceId";
 import { SystemVersion } from "../../components/version/SystemVersion";

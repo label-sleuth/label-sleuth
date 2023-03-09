@@ -18,7 +18,14 @@ import Button from "@mui/material/Button";
 import { Dialog } from "@mui/material";
 import { DialogTitle, DialogActions, DialogContent, DialogContentText } from "@mui/material";
 
-export default function DeleteCategoryModal({ open, setOpen, handleDeleteWorkspace, value }) {
+interface DeleteWorkspaceModalProps {
+  open: boolean, 
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>, 
+  handleDeleteWorkspace: () => void, 
+  value: string,
+}
+
+export const DeleteWorkspaceModal = ({ open, setOpen, handleDeleteWorkspace, value }: DeleteWorkspaceModalProps) => {
   const handleClose = () => {
     setOpen(false);
   };
@@ -29,7 +36,6 @@ export default function DeleteCategoryModal({ open, setOpen, handleDeleteWorkspa
   };
 
   return (
-    <div>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>{`Are you sure you want to delete the workspace '${value}'?`}</DialogTitle>
         <DialogContent>
@@ -45,6 +51,5 @@ export default function DeleteCategoryModal({ open, setOpen, handleDeleteWorkspa
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
   );
 }
