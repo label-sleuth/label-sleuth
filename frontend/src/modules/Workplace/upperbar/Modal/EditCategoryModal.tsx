@@ -14,23 +14,23 @@
 */
 
 import * as React from "react";
-import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
-import { useDispatch } from "react-redux";
-import { isFulfilled } from "@reduxjs/toolkit";
-import { createCategoryOnServer } from "../../redux";
 import TextField from "@mui/material/TextField";
-import classes from "./index.module.css";
+import { useAppDispatch } from "../../../../customHooks/useRedux";
+import { editCategory } from "../../redux";
 import {
-  CREATE_NEW_CATEGORY_MODAL_MSG,
   CREATE_NEW_CATEGORY_PLACEHOLDER_MSG,
   WRONG_INPUT_NAME_LENGTH,
-  WRONG_INPUT_NAME_BAD_CHARACTER,
   REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES,
+  WRONG_INPUT_NAME_BAD_CHARACTER,
+  KeyboardKeysEnum,
 } from "../../../../const";
+import classes from "./index.module.css";
 import { useNotification } from "../../../../utils/notification";
+import { isFulfilled } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 
 const style = {
@@ -45,14 +45,47 @@ const style = {
   p: 4,
 };
 
-export default function CreateCategoryModal({ open, setOpen }) {
-  const [text, setText] = React.useState("");
-  const [categoryNameError, setCategoryNameError] = React.useState("");
-  const dispatch = useDispatch();
+interface EditCategoryModalProps {
+  open: boolean, setOpen: (newValue: boolean) => void
+}
+
+export const EditCategoryModal = ({ open, setOpen }: EditCategoryModalProps) => {
+  const dispatch =  useAppDispatch();
   const { notify } = useNotification()
 
-  const handleTextFieldChange = (e) => {
-    e.preventDefault();
+  const [newCategoryName, setNewCategoryName] = React.useState("");
+  const [categoryNameError, setCategoryNameError] = React.useState("");
+
+  const onModalClose = () => {
+    setOpen(false);
+    setCategoryNameError("");
+  };
+
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    event.preventDefault();
+    if (event.key === KeyboardKeysEnum.ENTER) {
+      onSubmit();
+    }
+  };
+
+  const onSubmit = () => {
+    dispatch(
+      editCategory({
+        newCategoryName: newCategoryName.trim(),
+        newCategoryDescription: "Category description",
+      })
+    ).then((action) => {
+      setOpen(false);
+      if (isFulfilled(action)) {
+        notify("The category name has been successfully edited", {
+          type: toast.TYPE.SUCCESS,
+          autoClose: 5000,
+        });
+      }
+    });
+  };
+
+  const handleCategoryNameChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let text = e.target.value;
     if (text) {
       if (text.length > 30) {
@@ -63,34 +96,7 @@ export default function CreateCategoryModal({ open, setOpen }) {
     } else {
       setCategoryNameError("");
     }
-    setText(text);
-  };
-
-  const onKeyDown = (event) => {
-    event.preventDefault();
-    if (event.key === "Enter") {
-      onSubmit();
-    }
-  };
-
-  const onSubmit = async () => {
-    const newCategoryName = text.trim();
-
-    dispatch(createCategoryOnServer({ category: newCategoryName }))
-      .then((actionResult) => {
-        if (isFulfilled(actionResult)) {
-          setOpen(false);
-          notify(`The category '${newCategoryName}' has been created`, {
-            type: toast.TYPE.SUCCESS,
-            autoClose: 5000,
-          });
-        }
-      });
-  };
-
-  const onModalClose = () => {
-    setOpen(false);
-    setCategoryNameError("");
+    setNewCategoryName(text);
   };
 
   return (
@@ -101,16 +107,11 @@ export default function CreateCategoryModal({ open, setOpen }) {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
         disableRestoreFocus
-        onKeyDown={e => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <Box sx={style}>
-          <Typography
-            id="modal-modal-title"
-            variant="h6"
-            component="h2"
-            sx={{ marginBottom: 2 }}
-          >
-            {CREATE_NEW_CATEGORY_MODAL_MSG}
+          <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ marginBottom: 2 }}>
+            {"Edit category"}
           </Typography>
           <Box
             sx={{
@@ -125,22 +126,18 @@ export default function CreateCategoryModal({ open, setOpen }) {
               id="outlined-basic"
               className={classes.new_modal_name}
               label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG}
-              onChange={handleTextFieldChange}
+              onChange={handleCategoryNameChange}
               onKeyUp={onKeyDown}
               error={categoryNameError ? true : false}
               autoFocus
             />
             <Button
               onClick={onSubmit}
-              className={
-                categoryNameError || !text
-                  ? classes["btn-disabled"]
-                  : classes.btn
-              }
+              className={categoryNameError || !newCategoryName ? classes["btn-disabled"] : classes.btn}
               sx={{ marginLeft: 3 }}
-              disabled={categoryNameError !== "" || text === ""}
+              disabled={categoryNameError !== "" || newCategoryName === ""}
             >
-              Create
+              Edit
             </Button>
             <p className={classes["error"]}>{categoryNameError}</p>
           </Box>

@@ -17,7 +17,11 @@ import { Card, CardContent, Typography, IconButton } from "@mui/material"
 import CloseIcon from '@mui/icons-material/Close';
 import classes from "./UpperBar.module.css";
 
-export const CategoryCard = ({ setCardOpen }) => (
+interface CategoryCardProps {
+  setCardOpen: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+export const CategoryCard = ({ setCardOpen }: CategoryCardProps) => (
   <>
    <div className={classes["arrow-left"]}></div>
     <Card className={classes["category-card"]}>
