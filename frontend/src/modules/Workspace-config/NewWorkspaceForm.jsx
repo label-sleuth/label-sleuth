@@ -63,6 +63,7 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                         options={options}
                         onChange={handleDatasetChange}
                         placeholder="Choose from List"
+                        noOptionsPlaceholder="No datasets available"
                     />
                 </FormControl>
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px' }}>
