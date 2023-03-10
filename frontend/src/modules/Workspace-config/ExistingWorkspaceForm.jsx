@@ -49,6 +49,7 @@ const ExistingWorkspaceForm = ({
             options={options}
             onChange={handleChange}
             placeholder="Choose from List"
+            noOptionsPlaceholder="No workspaces available"
           />
         </FormControl>
         <div style={{ width: "100%", display: "flex", justifyContent: "right", marginTop: "20px" }}>

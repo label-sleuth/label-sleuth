@@ -21,13 +21,14 @@ import InputLabel from "@mui/material/InputLabel";
 import classes from "./Dropdown.module.css";
 
 interface ControlledSelectProps {
-  value: string,
-  label: string,
-  options: {[value: string]: string}[],
-  placeholder?: string,
+  value: string;
+  label: string;
+  options: { [value: string]: string }[];
+  placeholder?: string;
+  noOptionsPlaceholder?: string;
   aria?: string;
-  onFocus?: () => void,
-  onChange?: (event: any) => void,
+  onFocus?: () => void;
+  onChange?: (event: any) => void;
 }
 
 const ControlledSelect = ({
@@ -37,6 +38,7 @@ const ControlledSelect = ({
   onFocus,
   onChange,
   placeholder,
+  noOptionsPlaceholder,
   aria = "demo-simple-select",
 }: ControlledSelectProps) => {
   const ITEM_HEIGHT = 30;
@@ -56,8 +58,8 @@ const ControlledSelect = ({
   };
   const handleChange = (e: SelectChangeEvent<string>, child: ReactNode) => {
     const value = e.target.value;
-    
-     if (onChange) {
+
+    if (onChange) {
       onChange(value);
     }
   };
@@ -80,11 +82,12 @@ const ControlledSelect = ({
         value={value ?? ""}
         label={label}
         displayEmpty
-        renderValue={value !== "" ? undefined : () => placeholder}
+        renderValue={value !== "" ? undefined : () => options.length > 0 ? placeholder : noOptionsPlaceholder}
         onChange={handleChange}
         onFocus={handleFocus}
         MenuProps={MenuProps}
         className={value !== "" ? classes.dropdown : classes.dropdown_gray}
+        disabled={options.length === 0}
       >
         {options?.map((option) => {
           if (option.value !== "") {

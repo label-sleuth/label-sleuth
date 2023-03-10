@@ -73,6 +73,7 @@ const LoadDocumentForm = ({ handleLoadDoc, handleFileChange, datasets, handleInp
                             label="As new dataset / Add to existing dataset"
                             handleInputChange={handleInputChange}
                             placeholder={UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG}
+                            noOptionsPlaceholder="No datasets available"
                             error={datasetNameError} 
                             helperText={datasetNameError}
                         />
