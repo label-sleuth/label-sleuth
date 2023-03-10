@@ -17,15 +17,19 @@ import * as React from "react";
 import Button from "@mui/material/Button";
 import { Dialog } from "@mui/material";
 import { DialogTitle, DialogActions, DialogContent, DialogContentText } from "@mui/material";
-import { useSelector, useDispatch } from "react-redux";
+import { useAppSelector, useAppDispatch } from "../../../../customHooks/useRedux";
 import { curCategoryNameSelector, deleteCategory } from "../../redux";
 import { useNotification } from "../../../../utils/notification";
 import { toast } from "react-toastify";
 import { isFulfilled } from "@reduxjs/toolkit";
 
-export default function DeleteCategoryModal({ open, setOpen }) {
-  const curCategoryName = useSelector(curCategoryNameSelector);
-  const dispatch = useDispatch();
+interface DeleteCategoryModalProps {
+  open: boolean, setOpen: (newValue: boolean) => void
+}
+
+export const DeleteCategoryModal = ({ open, setOpen }: DeleteCategoryModalProps) => {
+  const curCategoryName = useAppSelector(curCategoryNameSelector);
+  const dispatch = useAppDispatch();
   const { notify } = useNotification()
 
   const handleClose = () => {
@@ -46,7 +50,7 @@ export default function DeleteCategoryModal({ open, setOpen }) {
 
   return (
     <div>
-      <Dialog open={open} onClose={handleClose} onKeyDown={(e) => e.stopPropagation()} autoFocus>
+      <Dialog open={open} onClose={handleClose} onKeyDown={(e) => e.stopPropagation()}>
         <DialogTitle>{`Are you sure you want to delete the category '${curCategoryName}'?`}</DialogTitle>
         <DialogContent>
           <DialogContentText>

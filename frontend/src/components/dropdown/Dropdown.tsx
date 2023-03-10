@@ -13,12 +13,22 @@
     limitations under the License.
 */
 
-import React from "react";
+import { ReactNode } from "react";
 
 import MenuItem from "@mui/material/MenuItem/MenuItem";
-import Select from "@mui/material/Select";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import classes from "./Dropdown.module.css";
+
+interface ControlledSelectProps {
+  value: string,
+  label: string,
+  options: {[value: string]: string}[],
+  placeholder?: string,
+  aria?: string;
+  onFocus?: () => void,
+  onChange?: (event: any) => void,
+}
 
 const ControlledSelect = ({
   value,
@@ -26,10 +36,9 @@ const ControlledSelect = ({
   options,
   onFocus,
   onChange,
-  onBlur,
   placeholder,
   aria = "demo-simple-select",
-}) => {
+}: ControlledSelectProps) => {
   const ITEM_HEIGHT = 30;
   const ITEM_PADDING_TOP = 8;
   const MenuProps = {
@@ -45,15 +54,11 @@ const ControlledSelect = ({
       onFocus();
     }
   };
-  const handleChange = (e) => {
+  const handleChange = (e: SelectChangeEvent<string>, child: ReactNode) => {
     const value = e.target.value;
-    if (onChange) {
+    
+     if (onChange) {
       onChange(value);
-    }
-  };
-  const handleBlur = (e) => {
-    if (onBlur) {
-      onBlur(e.target.value);
     }
   };
 
@@ -77,10 +82,8 @@ const ControlledSelect = ({
         displayEmpty
         renderValue={value !== "" ? undefined : () => placeholder}
         onChange={handleChange}
-        onBlur={handleBlur}
         onFocus={handleFocus}
         MenuProps={MenuProps}
-        notched="true"
         className={value !== "" ? classes.dropdown : classes.dropdown_gray}
       >
         {options?.map((option) => {

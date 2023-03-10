@@ -13,19 +13,18 @@
     limitations under the License.
 */
 
-.elevation_scroll {
-    background: #f4f4f4;
-    border-bottom: solid 1px #d6d6d6;
-    padding: 0 25px;
-    z-index: 999;
-}
-
-.upper {
+.app-bar-container {
     display: flex;
     align-items: center;
 }
 
-.upper p {
+.app-bar {
+    background: #f4f4f4;
+    border-bottom: solid 1px #d6d6d6;
+    padding: 0 25px;
+}
+
+.dropdown-label {
     font-weight: 600;
     font-size: 16px;
     margin-right: 10px;
@@ -41,26 +40,7 @@
     color: white !important
 }
 
-.nextbtn {
-    padding: 0 9px 0 16px;
-    border: none;
-    height: 43px;
-    border-radius: 0 !important;
-    background: #393939;
-    display: flex;
-    color: #fff;
-    font-size: 16px;
-    align-items: center;
-}
-
-.upper button img,
-.nextbtn img {
-    width: 32px;
-    height: 32px;
-}
-
-.upper button:hover,
-.nextbtn:hover {
+.category-action-button:hover {
     filter: brightness(1.5);
     cursor: pointer;
 }
