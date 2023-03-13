@@ -19,8 +19,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSlack, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { faBook } from "@fortawesome/free-solid-svg-icons";
 import { Tooltip } from "@mui/material";
+import { SizeProp } from "@fortawesome/fontawesome-svg-core";
 
-export const SupportIconsBar = ({ sx, iconsSize = "xl" }) => {
+interface SupportIconsBarProps {
+  sx: { [key: string]: string | number};
+  iconsSize?: SizeProp;
+}
+
+export const SupportIconsBar = ({ sx, iconsSize = "xl" }: SupportIconsBarProps) => {
   return (
     <Stack direction="row" alignItems="center" justifyContent="center" spacing={2} sx={{ ...sx }}>
       <Tooltip title={"Join Slack"} placement="top">

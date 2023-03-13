@@ -20,7 +20,7 @@ import classes from "./workspace-config.module.css";
 import ExistingWorkspace from "./ExistingWorkspaceForm";
 import NewWorkspace from "./NewWorkspaceForm";
 import LoadDocument from "./LoadDocumentForm";
-import ButtonAppBar from "../../components/bars/upperBar/ButtonAppBar";
+import { ButtonAppBar } from "../../components/bars/upperBar/ButtonAppBar";
 import { useDispatch } from "react-redux";
 import { useLoadDoc } from "../../customHooks/useLoadDoc";
 import useNewWorkspace from "../../customHooks/useNewWorkspace";
