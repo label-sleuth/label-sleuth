@@ -174,7 +174,7 @@ def add_documents(dataset_name):
     temp_dir = None
     try:
         csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
-        df = pd.read_csv(csv_data)
+        df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
         temp_dir = os.path.join(curr_app.config["output_dir"], "temp", "csv_upload")
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
         os.makedirs(temp_dir, exist_ok=True)
@@ -722,7 +722,7 @@ def import_labels(workspace_id):
     :param workspace_id:
     """
     csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
-    df = pd.read_csv(csv_data)
+    df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
 
     return jsonify(curr_app.orchestrator_api.import_category_labels(workspace_id, df))
 
