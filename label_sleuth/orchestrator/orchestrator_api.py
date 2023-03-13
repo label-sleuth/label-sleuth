@@ -457,18 +457,10 @@ class OrchestratorApi:
                                                         iteration_index=iteration_index,
                                                         new_status=IterationStatus.TRAINING)
         model_api = self.model_factory.get_model_api(model_type)
-        category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
+
         logging.info(f"workspace '{workspace_id}' training a model for category id '{category_id}', "
                      f"train_statistics: {train_statistics}")
-        model_params = {
-            "category_id_to_info": {
-                category_id: {
-                    "category_name": category.name,
-                    "category_description": category.description,
-                }
-            }
-        }
-        model_id, future = model_api.train(train_data=train_data, language=self.config.language,model_params=model_params)
+        model_id, future = model_api.train(train_data=train_data, language=self.config.language)
         model_status = model_api.get_model_status(model_id)
         model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
                                train_statistics=train_statistics, creation_date=datetime.now())
