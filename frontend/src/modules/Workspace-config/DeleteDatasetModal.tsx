@@ -15,7 +15,7 @@
 
 import * as React from "react";
 import Button from "@mui/material/Button";
-import { Box, Checkbox, Dialog, List, ListItem, Stack, Typography } from "@mui/material";
+import { Box, Checkbox, Dialog, List, ListItem, Stack } from "@mui/material";
 import { DialogTitle, DialogActions, DialogContent, DialogContentText } from "@mui/material";
 import { useAppDispatch } from "../../customHooks/useRedux";
 import { getWorkspacesByDatasetName } from "./workspaceConfigSlice";

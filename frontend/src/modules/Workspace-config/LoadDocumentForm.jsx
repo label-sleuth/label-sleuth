@@ -21,7 +21,7 @@ import Box from "@mui/material/Box";
 import ButtonIBM from "../../components/buttons/ButtonIBM";
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css";
 import TextField from "@mui/material/TextField";
-import ComboBoxWithInputText from "../../components/combobox/ComboBoxWithInputText";
+import { ComboBoxWithInputText } from "../../components/combobox/ComboBoxWithInputText";
 import data_icon from "../../assets/workspace-config/document--add.svg";
 import {
   UPLOAD_NEW_DATASET_MSG,

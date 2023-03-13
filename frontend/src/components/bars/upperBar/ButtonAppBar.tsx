@@ -23,7 +23,11 @@ import { useAuthentication } from "../../../customHooks/useAuthentication";
 import { SupportIconsBar } from "../../SupportIconsBar";
 import { Divider } from "@mui/material";
 
-export default function ButtonAppBar({ logout }) {
+interface ButtonAppBarProps {
+  logout: () => void;
+}
+
+export const ButtonAppBar = ({ logout }: ButtonAppBarProps) => {
   const { authenticationEnabled } = useAuthentication();
 
   return (
