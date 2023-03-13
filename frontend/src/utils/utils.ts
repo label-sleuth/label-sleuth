@@ -121,7 +121,6 @@ export const parseElements = (
   unparsedElements: UnparsedElement[],
   curCategoryId: number | null
 ): { elements: ElementsDict } => {
-  
   let elements: ElementsDict = {};
 
   unparsedElements.forEach((element) => {
@@ -222,4 +221,17 @@ export const getWorkspaceId = (): string => {
  */
 export const addBOMCharacter = (text: string): string => {
   return BOMCharacter + text;
-}
+};
+
+/**
+ * Given a list, return a string with the list elements separated by commas and an 'and' character before the last one
+ */
+export const stringifyList = (list: string[]): string => {
+  if (list.length === 1) return list[0];
+  else {
+    let res = "";
+    if (list.length > 2) list.slice(0, -2).forEach((c) => (res += `'${c}', `));
+    res += `'${list.slice(-2, -1)[0]}' and '${list.slice(-1)[0]}'`;
+    return res;
+  }
+};

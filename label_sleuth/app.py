@@ -197,6 +197,26 @@ def add_documents(dataset_name):
             os.remove(os.path.join(temp_dir, temp_file_name))
 
 
+@main_blueprint.route("/datasets/<dataset_name>/used_by", methods=['GET'])
+@login_if_required
+def get_workspaces_by_dataset_name(dataset_name):
+    res = {'used_by': curr_app.orchestrator_api.get_workspaces_by_dataset_name(dataset_name)}
+    return jsonify(res)
+
+
+@main_blueprint.route("/datasets/<dataset_name>", methods=['DELETE'])
+@login_if_required
+def delete_dataset(dataset_name):
+    """
+    This call permanently deletes the given dataset. If the dataset is used by one or more workspaces, those will be deleted too, along with all the categories, user
+    labels and models.
+
+    :param dataset_name:
+    """
+    res = curr_app.orchestrator_api.delete_dataset(dataset_name)
+    return jsonify(res)
+
+
 """
 Workspace endpoints. Each workspace is associated with a particular dataset at creation time.
 """
@@ -288,7 +308,6 @@ def load_dataset(workspace_id):
     """
     executor.submit(curr_app.orchestrator_api.preload_dataset, workspace_id)
     return jsonify({"success": True})
-
 
 
 """
