@@ -13,21 +13,35 @@
     limitations under the License.
 */
 
-import classes from './Buttons.module.css'
+import classes from "./Buttons.module.css";
 
 interface ButtonIBMProps {
-    handleClick: () => void,
-    disabled?: boolean,
-    text: string,
-    className: string,
+	handleClick: () => void;
+	disabled?: boolean;
+	text: string;
+	className: string;
+	[x: string]: any; // allowing rest props
 }
 
-const ButtonIBM = ({ handleClick, disabled, text, className, ...rest } : ButtonIBMProps) => {
-    return (
-        <button className={`${className} ${disabled ? classes['button-ibm-disabled'] : ''}`} disabled={disabled} onClick={handleClick} {...rest}>
-            {text}
-        </button>
-    )
-}
+const ButtonIBM = ({
+	handleClick,
+	disabled,
+	text,
+	className,
+	...rest
+}: ButtonIBMProps) => {
+	return (
+		<button
+			className={`${className} ${
+				disabled ? classes["button-ibm-disabled"] : ""
+			}`}
+			disabled={disabled}
+			onClick={handleClick}
+			{...rest}
+		>
+			{text}
+		</button>
+	);
+};
 
-export default ButtonIBM
+export default ButtonIBM;
