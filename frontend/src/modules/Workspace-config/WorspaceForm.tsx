@@ -15,12 +15,36 @@
 
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
-import ControlledSelect from "../../components/Dropdown"
+import ControlledSelect from "../../components/dropdown/Dropdown"
 import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
 import ButtonLight from "../../components/buttons/ButtonLight"
 
-const WorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options, handleNewWorkspace, handleChange, handleClick, workspaces, value, options_workspace }) => {
+interface WorkspaceFormProps {
+    handleDatasetChange: (event: React.ChangeEvent<{ value: unknown }>) => void;
+    selectedValue: string;
+    handleChangeText: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    options: { value: string; label: string; }[];
+    handleNewWorkspace: () => void;
+    handleChange: (event: React.ChangeEvent<{ value: unknown }>) => void;
+    handleClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+    workspaces: { value: string; label: string; }[];
+    value: string;
+    options_workspace: { value: string; label: string; }[];
+}
+
+const WorkspaceForm = ({ 
+    handleDatasetChange, 
+    selectedValue, 
+    handleChangeText, 
+    options, 
+    handleNewWorkspace, 
+    handleChange, 
+    handleClick, 
+    workspaces, 
+    value, 
+    options_workspace 
+}: WorkspaceFormProps) => {
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -38,7 +62,7 @@ const WorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, o
                     />
                 </FormControl>
                 <FormControl variant="standard" sx={{ mt: 3, alignItems: 'center', justifyContent: 'center', height: '100px', marginTop: '100px' }}>
-                    <ButtonLight onClick={handleNewWorkspace} text="Create" />
+                    <ButtonLight handleClick={handleNewWorkspace} text="Create" disabled={false} />
                 </FormControl>
             </FormControl>
         </Box>
