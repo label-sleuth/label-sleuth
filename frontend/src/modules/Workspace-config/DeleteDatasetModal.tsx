@@ -48,19 +48,15 @@ export const DeleteDatasetModal = ({
 
   const handleClose = () => {
     setOpen(false);
+    setCheckboxChecked(false);
   };
 
   const onSubmit = () => {
     setOpen(false);
     handleDeleteDataset();
     clearFields();
+
   };
-
-
-  React.useEffect(() => {
-    if (!open) {
-    }
-  }, [open])
 
   React.useEffect(() => {
     if (open) {
