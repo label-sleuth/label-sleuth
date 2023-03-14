@@ -30,7 +30,6 @@ interface ExistingWorkspaceFormProps {
 	options: { value: string; label: string }[];
 	deleteButtonEnabled: (event: React.MouseEvent<HTMLButtonElement>) => void;
 	style: string;
-	onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 const ExistingWorkspaceForm = ({
