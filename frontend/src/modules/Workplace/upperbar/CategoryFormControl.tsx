@@ -43,8 +43,8 @@ export const CategoryFormControl = () => {
         value={curCategory !== null ? `${curCategory}` : ""}
         onChange={handleCategorySelect}
         options={options}
-        placeholder={"choose a category" }
-        noOptionsPlaceholder={"no categories available"}
+        placeholder={"Choose a category" }
+        noOptionsPlaceholder={"No categories available"}
         aria="category-select"
         label=""
       />
