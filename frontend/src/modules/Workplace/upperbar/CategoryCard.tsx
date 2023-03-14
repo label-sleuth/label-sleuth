@@ -13,27 +13,33 @@
     limitations under the License.
 */
 
-import { Card, CardContent, Typography, IconButton } from "@mui/material"
-import CloseIcon from '@mui/icons-material/Close';
+import { Card, CardContent, Typography, IconButton } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import { useAppSelector } from "../../../customHooks/useRedux";
 import classes from "./UpperBar.module.css";
 
 interface CategoryCardProps {
-  setCardOpen: React.Dispatch<React.SetStateAction<boolean>>
+  setCardOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export const CategoryCard = ({ setCardOpen }: CategoryCardProps) => (
-  <>
-   <div className={classes["arrow-left"]}></div>
-    <Card className={classes["category-card"]}>
-      <CardContent sx={{padding: '0px 10px 10px 10px'}}>
-        <Typography sx={{lineHeight: '1.1'}} variant="caption" color="text.secondary">
-            Please select a category or create a new one
-        </Typography>
-        <IconButton aria-label="close" style={{fontSize: "1rem"}} onClick={() => setCardOpen(false)}>
+export const CategoryCard = ({ setCardOpen }: CategoryCardProps) => {
+  const categories = useAppSelector((state) => state.workspace.categories);
+
+  return (
+    <>
+      <div className={classes["arrow-left"]}></div>
+      <Card className={classes["category-card"]}>
+        <CardContent sx={{ padding: "0px 10px 10px 10px" }}>
+          <Typography sx={{ lineHeight: "1.1" }} variant="caption" color="text.secondary">
+            {categories.length === 0
+              ? "Please create your first category"
+              : "Please select a category or create a new one"}
+          </Typography>
+          <IconButton aria-label="close" style={{ fontSize: "1rem" }} onClick={() => setCardOpen(false)}>
             <CloseIcon fontSize="inherit" />
           </IconButton>
-      </CardContent>
-    </Card>  
-  </>
-
-)
+        </CardContent>
+      </Card>
+    </>
+  );
+};
