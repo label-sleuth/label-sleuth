@@ -21,9 +21,9 @@ import { modelUpdateExample, workspacesExample, datasetsExample, categoriesExamp
 jest.setTimeout(10000);
 
 const handlers = [
-  rest.get("/workspace/:workspace_id/models", (req, res, ctx) => {
-    const models = modelUpdateExample;
-    return res(ctx.delay(), ctx.json(models));
+  rest.get("/workspace/:workspace_id/iterations", (req, res, ctx) => {
+    const iterations = modelUpdateExample;
+    return res(ctx.delay(), ctx.json(iterations));
   }),
   rest.get(`/workspaces`, (req, res, ctx) => {
     return res(ctx.delay(), ctx.json(workspacesExample));

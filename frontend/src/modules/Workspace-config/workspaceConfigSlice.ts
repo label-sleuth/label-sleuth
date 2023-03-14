@@ -55,6 +55,15 @@ export const deleteWorkspace = createAsyncThunk<string, { workspaceId: string }>
   }
 );
 
+export const deleteDataset = createAsyncThunk<{deleted_dataset: string, deleted_workspace_ids: string[]}, { datasetName: string }>(
+  `workspaces/deleteDataset`,
+  async ({ datasetName }) => {
+    const url = `${getDatasets_url}/${encodeURIComponent(datasetName)}`;
+    const { data } = await client.delete(url);
+    return data;
+  }
+);
+
 export const addDocuments = createAsyncThunk<AddedDataset, FormData>(
   `workspaces/getDatasets/dataset_name/addDocuments`,
   async (formData) => {
@@ -67,6 +76,11 @@ export const addDocuments = createAsyncThunk<AddedDataset, FormData>(
 
 export const getDatasets = createAsyncThunk("workspaces/getDatasets", async () => {
   const { data } = await client.get(getDatasets_url);
+  return data;
+});
+
+export const getWorkspacesByDatasetName = createAsyncThunk<{ workspaceIds: string[] }, string>("workspaces/getWorkspacesByDatasetName", async (datasetName) => {
+  const { data } = await client.get(`${getDatasets_url}/${encodeURIComponent(datasetName)}/used_by`);
   return data;
 });
 
@@ -121,6 +135,18 @@ export const workspacesSlice = createSlice({
         const deletedWorkspaceId = action.payload;
         state.loading = false;
         state.workspaces = state.workspaces.filter((w) => w !== deletedWorkspaceId);
+      })
+      .addCase(deleteDataset.rejected, (state) => {
+        state.loading = false;
+      })
+      .addCase(deleteDataset.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteDataset.fulfilled, (state, action: PayloadAction<{deleted_dataset: string, deleted_workspace_ids: string[]}>) => {
+        const {deleted_dataset: deletedDatasetName, deleted_workspace_ids: deletedWorkspaceIds} = action.payload;
+        state.loading = false;
+        state.datasets = state.datasets.filter((d) => d.dataset_id !== deletedDatasetName);
+        state.workspaces = state.workspaces.filter((w) => !deletedWorkspaceIds.includes(w));
       })
       .addCase(addDocuments.rejected, (state) => {
         state.uploadingDataset = false;

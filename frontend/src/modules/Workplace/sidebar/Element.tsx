@@ -79,6 +79,7 @@ export const SidebarElement = ({ element, updateCounterOnLabeling = true, index 
   const activePanelId = useAppSelector((state) => state.workspace.panels.activePanelId);
   const searchInput = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.SEARCH].input);
   const { index: focusedSidebarElementIndex } = useAppSelector((state) => state.workspace.panels.focusedSidebarElement);
+  const rightToLeft = useAppSelector((state) => state.featureFlags.rightToLeft);
 
   const isElementFocused = useMemo(() => index === focusedSidebarElementIndex, [index, focusedSidebarElementIndex]);
 
@@ -118,12 +119,12 @@ export const SidebarElement = ({ element, updateCounterOnLabeling = true, index 
     >
       <label
         style={{ cursor: "pointer" }}
-        className={modelPrediction === "pos" ? classes["pred_rec_doc_id"] : classes["rec_doc_id"]}
+        className={`${modelPrediction === "pos" ? classes["pred_rec_doc_id"] : classes["rec_doc_id"]} ${rightToLeft ? classes.right_to_left : ""}`}
       >
         {docId}
       </label>
       <Box>
-        <p id={id} className={classes["elem_text"]} style={text_colors[userLabel]}>
+        <p id={id} className={`${classes["elem_text"]} ${rightToLeft ? classes.right_to_left : ""}`} style={text_colors[userLabel]}>
           <Highlighter
             searchWords={activePanelId === PanelIdsEnum.SEARCH ? [searchInput || ""] : []}
             autoEscape={true}

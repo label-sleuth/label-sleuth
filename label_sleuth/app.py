@@ -21,21 +21,19 @@ import tempfile
 import traceback
 import zipfile
 import pkg_resources
-
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
-
-from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 import dacite
 import pandas as pd
-
 from flask import Flask, jsonify, request, send_file, make_response, send_from_directory, current_app, Blueprint
 from flask_cors import CORS, cross_origin
 
+from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
+from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 from label_sleuth.app_utils import elements_back_to_front, extract_iteration_information_list, \
     extract_enriched_ngrams_and_weights_list, get_element, get_natural_sort_key, validate_category_id, \
     validate_workspace_id
@@ -83,13 +81,17 @@ def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
                                                           preload_spacy_model_name=config.language.spacy_model_name,
                                                           preload_fasttext_language_id=
                                                           config.language.fasttext_language_id)
+    data_access = FileBasedDataAccess(output_dir)
     background_jobs_manager = BackgroundJobsManager()
+    training_set_selection_factory = TrainingSetSelectionFactory(data_access, background_jobs_manager)
+
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),
-                                           FileBasedDataAccess(output_dir),
+                                           data_access,
                                            ActiveLearningFactory(),
                                            ModelFactory(os.path.join(output_dir, "models"),
                                                         background_jobs_manager,
                                                         sentence_embedding_service),
+                                           training_set_selection_factory,
                                            background_jobs_manager,
                                            sentence_embedding_service,
                                            app.config["CONFIGURATION"])
@@ -172,7 +174,7 @@ def add_documents(dataset_name):
     temp_dir = None
     try:
         csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
-        df = pd.read_csv(csv_data)
+        df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
         temp_dir = os.path.join(curr_app.config["output_dir"], "temp", "csv_upload")
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
         os.makedirs(temp_dir, exist_ok=True)
@@ -193,6 +195,26 @@ def add_documents(dataset_name):
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
             os.remove(os.path.join(temp_dir, temp_file_name))
+
+
+@main_blueprint.route("/datasets/<dataset_name>/used_by", methods=['GET'])
+@login_if_required
+def get_workspaces_by_dataset_name(dataset_name):
+    res = {'used_by': curr_app.orchestrator_api.get_workspaces_by_dataset_name(dataset_name)}
+    return jsonify(res)
+
+
+@main_blueprint.route("/datasets/<dataset_name>", methods=['DELETE'])
+@login_if_required
+def delete_dataset(dataset_name):
+    """
+    This call permanently deletes the given dataset. If the dataset is used by one or more workspaces, those will be deleted too, along with all the categories, user
+    labels and models.
+
+    :param dataset_name:
+    """
+    res = curr_app.orchestrator_api.delete_dataset(dataset_name)
+    return jsonify(res)
 
 
 """
@@ -286,7 +308,6 @@ def load_dataset(workspace_id):
     """
     executor.submit(curr_app.orchestrator_api.preload_dataset, workspace_id)
     return jsonify({"success": True})
-
 
 
 """
@@ -720,7 +741,7 @@ def import_labels(workspace_id):
     :param workspace_id:
     """
     csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
-    df = pd.read_csv(csv_data)
+    df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
 
     return jsonify(curr_app.orchestrator_api.import_category_labels(workspace_id, df))
 
@@ -782,12 +803,12 @@ def get_labelling_status(workspace_id):
     })
 
 
-@main_blueprint.route("/workspace/<workspace_id>/models", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/iterations", methods=['GET'])
 @login_if_required
 @validate_category_id
 @validate_workspace_id
 @cross_origin()
-def get_all_models_for_category(workspace_id):
+def get_all_iterations_for_category(workspace_id):
     """
     Return information about all the Iteration flows for this category and their current status.
 
@@ -797,7 +818,7 @@ def get_all_models_for_category(workspace_id):
     """
     category_id = int(request.args['category_id'])
     iterations = curr_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id)
-    res = {'models': extract_iteration_information_list(iterations)}
+    res = {'iterations': extract_iteration_information_list(iterations)}
     return jsonify(res)
 
 

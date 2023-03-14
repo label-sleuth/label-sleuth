@@ -47,7 +47,7 @@ from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsMana
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
     ModelInfo, OrchestratorStateApi
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
-from label_sleuth.training_set_selector.training_set_selector_factory import get_training_set_selector
+from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 
 # constants
 NUMBER_OF_MODELS_TO_KEEP = 2
@@ -60,6 +60,7 @@ new_data_infer_thread_pool = ThreadPoolExecutor(1)
 class OrchestratorApi:
     def __init__(self, orchestrator_state: OrchestratorStateApi, data_access: DataAccessApi,
                  active_learning_factory: ActiveLearningFactory, model_factory: ModelFactory,
+                 training_set_selection_factory: TrainingSetSelectionFactory,
                  background_jobs_manager: BackgroundJobsManager,
                  sentence_embedding_service: SentenceEmbeddingService, config: Configuration):
         self.orchestrator_state = orchestrator_state
@@ -68,6 +69,7 @@ class OrchestratorApi:
         self.model_factory = model_factory
         self.background_jobs_manager = background_jobs_manager
         self.sentence_embedding_service = sentence_embedding_service
+        self.training_set_selection_factory = training_set_selection_factory
         self.config = config
         self._verify_model_and_language_compatibility()
 
@@ -109,6 +111,37 @@ class OrchestratorApi:
             except Exception as e:
                 logging.exception(f"error clearing saved labels for workspace '{workspace_id}'")
                 raise e
+    
+    def get_workspaces_by_dataset_name(self, dataset_name: str):
+        workspaces_ids = []
+        for workspace_id in self.list_workspaces():
+            if self.get_dataset_name(workspace_id) == dataset_name:
+                workspaces_ids.append(workspace_id)
+        return workspaces_ids
+
+
+    def delete_dataset(self, dataset_name: str):
+        """
+        Delete a given workspace
+        :param workspace_id:
+        """
+        logging.info(f"Deleting dataset '{dataset_name}'")
+        
+
+        workspaces_to_delete = self.get_workspaces_by_dataset_name(dataset_name)
+        for workspace_id in workspaces_to_delete:
+            self.delete_workspace(workspace_id)
+        
+        # delete dataset
+        self.data_access.delete_dataset(dataset_name)
+
+        res = {
+            'deleted_dataset': dataset_name,
+            'deleted_workspace_ids': workspaces_to_delete
+        }
+
+        return res
+
 
     def workspace_exists(self, workspace_id: str) -> bool:
         return self.orchestrator_state.workspace_exists(workspace_id)
@@ -278,9 +311,9 @@ class OrchestratorApi:
         specific situations this parameter is set to False and the updating of the counter is performed at a later time.
         """
         if update_label_counter:
-            train_set_selector = get_training_set_selector(self.data_access,
-                                                           self.background_jobs_manager,
-                                                           strategy=self.config.training_set_selection_strategy)
+            train_set_selector = self.training_set_selection_factory.\
+                get_training_set_selector(self.config.training_set_selection_strategy)
+
             used_label_types = train_set_selector.get_label_types()
             # count the number of labels for each category
             changes_per_cat = Counter([cat for uri, labels_dict in uri_to_label.items()
@@ -315,9 +348,8 @@ class OrchestratorApi:
         :return:
         """
         if counts_for_training:
-            train_set_selector = get_training_set_selector(self.data_access,
-                                                           self.background_jobs_manager,
-                                                           strategy=self.config.training_set_selection_strategy)
+            train_set_selector = self.training_set_selection_factory.get_training_set_selector(
+                                                           self.config.training_set_selection_strategy)
             used_label_types = train_set_selector.get_label_types()
             return self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
                                                      remove_duplicates=remove_duplicates,
@@ -416,17 +448,19 @@ class OrchestratorApi:
         new_iteration_index = len(self.orchestrator_state.get_all_iterations(workspace_id, category_id))
         logging.info(f"starting iteration {new_iteration_index} in background for workspace '{workspace_id}' "
                      f"category id '{category_id}'")
-
+        category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
         self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_id=category_id)
-        train_set_selector = get_training_set_selector(self.data_access, self.background_jobs_manager,
-                                                       strategy=self.config.training_set_selection_strategy)
+        train_set_selector = self.training_set_selection_factory.get_training_set_selector(
+            self.config.training_set_selection_strategy)
         future = train_set_selector.collect_train_set(workspace_id=workspace_id,
                                                       train_dataset_name=dataset_name,
-                                                      category_id=category_id)
-        future.add_done_callback(functools.partial(self._train_callback, workspace_id, category_id, model_type,
+                                                      category_id=category_id,
+                                                      category_name=category.name,
+                                                      category_description=category.description)
+        future.add_done_callback(functools.partial(self._train, workspace_id, category_id, model_type,
                                                    new_iteration_index))
 
-    def _train_callback(self, workspace_id, category_id, model_type, iteration_index, future):
+    def _train(self, workspace_id, category_id, model_type, iteration_index, future):
         try:
             train_data = future.result()
         except Exception:
@@ -454,10 +488,19 @@ class OrchestratorApi:
                                                         iteration_index=iteration_index,
                                                         new_status=IterationStatus.TRAINING)
         model_api = self.model_factory.get_model_api(model_type)
-
+        category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
         logging.info(f"workspace '{workspace_id}' training a model for category id '{category_id}', "
                      f"train_statistics: {train_statistics}")
-        model_id, future = model_api.train(train_data=train_data, language=self.config.language)
+        model_params = {
+            "category_id_to_info": {
+                category_id: {
+                    "category_name": category.name,
+                    "category_description": category.description,
+                }
+            }
+        }
+        model_id, future = model_api.train(train_data=train_data, language=self.config.language,
+                                           model_params=model_params)
         model_status = model_api.get_model_status(model_id)
         model_info = ModelInfo(model_id=model_id, model_status=model_status, model_type=model_type,
                                train_statistics=train_statistics, creation_date=datetime.now())
@@ -930,11 +973,13 @@ class OrchestratorApi:
                 text_elements = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
                                                                            remove_duplicates=False)['results']
             else:
-                train_set_selector = get_training_set_selector(self.data_access, self.background_jobs_manager,
-                                                               strategy=self.config.training_set_selection_strategy)
+                train_set_selector = self.training_set_selection_factory.get_training_set_selector(
+                    self.config.training_set_selection_strategy)
                 text_elements = train_set_selector.get_train_set(workspace_id=workspace_id,
                                                                  train_dataset_name=dataset_name,
-                                                                 category_id=category_id)
+                                                                 category_id=category_id,
+                                                                 category_name=category.name,
+                                                                 category_description=category.description)
                 logging.info(
                     f"Labeled elements size for category {category.name} ({category_id}) in workspace "
                     f"'{workspace_id}' is {total_count}, exported elements size is {len(text_elements)}")

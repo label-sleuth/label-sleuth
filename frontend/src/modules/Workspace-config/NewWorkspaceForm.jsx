@@ -20,7 +20,6 @@ import ControlledSelect from "../../components/dropdown/Dropdown"
 import Box from '@mui/material/Box';
 import ButtonIBM from "../../components/buttons/ButtonIBM";
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css"
-import 'react-toastify/dist/ReactToastify.css';
 import classes from "./workspace-config.module.css";
 import { NEW_WORKSPACE_NAME_PLACEHOLER_MSG, NEW_WORKSPACE_NAME_MSG } from '../../const';
 const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText, options, handleNewWorkspace, textValue, newWorkspaceNameError }) => {
@@ -64,6 +63,7 @@ const NewWorkspaceForm = ({ handleDatasetChange, selectedValue, handleChangeText
                         options={options}
                         onChange={handleDatasetChange}
                         placeholder="Choose from List"
+                        noOptionsPlaceholder="No datasets available"
                     />
                 </FormControl>
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'right', marginTop: '20px' }}>

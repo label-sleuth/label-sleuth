@@ -19,9 +19,8 @@ import ControlledSelect from "../../components/dropdown/Dropdown";
 import Box from "@mui/material/Box";
 import ButtonIBM from "../../components/buttons/ButtonIBM";
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css";
-import "react-toastify/dist/ReactToastify.css";
 import classes from "./workspace-config.module.css";
-import DeleteCategoryModal from "./DeleteWorkspaceModal";
+import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
 
 const ExistingWorkspaceForm = ({
   handleChange,
@@ -35,7 +34,7 @@ const ExistingWorkspaceForm = ({
 
   return (
     <Box className={classes.wrapper} style={{ borderBottom: "solid 1px #8d8d8d" }}>
-      <DeleteCategoryModal
+      <DeleteWorkspaceModal
         open={deleteWorkspaceModalOpen}
         setOpen={setDeleteWorkspaceModalOpen}
         handleDeleteWorkspace={handleDeleteWorkspace}
@@ -50,6 +49,7 @@ const ExistingWorkspaceForm = ({
             options={options}
             onChange={handleChange}
             placeholder="Choose from List"
+            noOptionsPlaceholder="No workspaces available"
           />
         </FormControl>
         <div style={{ width: "100%", display: "flex", justifyContent: "right", marginTop: "20px" }}>

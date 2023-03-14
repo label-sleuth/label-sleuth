@@ -23,7 +23,7 @@ import { ToastContainer } from "react-toastify";
 
 render(
   <Provider store={setupStore()}>
-    <ToastContainer position="top-center" hideProgressBar={true} autoClose={7000} theme="dark" />
+    <ToastContainer position="top-center" hideProgressBar={true} autoClose={7000} theme="dark" style={{zIndex: 10001}}/>
     <App />
   </Provider>,
   document.getElementById("root")

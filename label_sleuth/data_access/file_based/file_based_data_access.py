@@ -441,12 +441,12 @@ class FileBasedDataAccess(DataAccessApi):
 
     def get_all_dataset_names(self) -> List[str]:
         """
-        :return: a list of all available datset names
+        :return: a list of all available dataset names
         """
         path = self._get_datasets_base_dir()
         return [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
 
-    def delete_dataset(self, dataset_name):
+    def delete_dataset(self, dataset_name: str):
         """
         Delete dataset by name
         :param dataset_name:

@@ -19,7 +19,7 @@ import { Stack } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import { setActivePanel } from "./redux";
 import { WorkspaceInfo } from "./information";
-import UpperBar from "./upperbar/UpperBar";
+import { UpperBar } from "./upperbar";
 import Backdrop from "@mui/material/Backdrop";
 import CircularProgress from "@mui/material/CircularProgress";
 import { IconButton, Tooltip } from "@mui/material";

@@ -14,14 +14,19 @@
 */
 
 import { createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { getCategoryQueryString, getQueryParamsString, synchronizeElement } from "../../../utils/utils";
+import {
+  addBOMCharacter,
+  getCategoryQueryString,
+  getQueryParamsString,
+  synchronizeElement,
+} from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../../config";
 import fileDownload from "js-file-download";
 import { LabelTypesEnum } from "../../../const";
 import { client } from "../../../api/client";
 import { getWorkspaceId } from "../../../utils/utils";
 import { RootState } from "../../../store/configureStore";
-import { Element, LabelDiff, LabelSliceState, ReducerObj, WorkspaceState } from "../../../global";
+import { Element, LabelSliceState, ReducerObj, UploadedLabels, WorkspaceState } from "../../../global";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -37,25 +42,34 @@ export const initialState: LabelSliceState = {
   },
 };
 
-export const downloadLabels = createAsyncThunk<RootState, { labeledOnly: boolean }>(
-  "workspace/downloadLabels",
-  async ({ labeledOnly }, { getState }) => {
-    const queryParam = `?labeled_only=${labeledOnly}`;
-
-    const url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/${DOWNLOAD_LABELS_API}${queryParam}`;
-
-    const { data } = await client.get(url, {
-      headers: {
-        "Content-Type": "text/csv;charset=UTF-8",
-      },
-      parseResponseBodyAs: "text",
-    });
-
-    return data;
+export const downloadLabels = createAsyncThunk<
+  { data: string },
+  { labeledOnly: boolean },
+  {
+    state: RootState;
   }
-);
+>("workspace/downloadLabels", async ({ labeledOnly }) => {
+  const queryParam = `?labeled_only=${labeledOnly}`;
 
-export const uploadLabels = createAsyncThunk(`workspace/uploadLabels`, async (formData, { getState }) => {
+  const url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/${DOWNLOAD_LABELS_API}${queryParam}`;
+
+  const { data } = await client.get(url, {
+    headers: {
+      "Content-Type": "text/csv;charset=UTF-8",
+    },
+    parseResponseBodyAs: "text",
+  });
+
+  return data;
+});
+
+export const uploadLabels = createAsyncThunk<
+  UploadedLabels,
+  FormData,
+  {
+    state: RootState;
+  }
+>(`workspace/uploadLabels`, async (formData) => {
   var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/${UPLOAD_LABELS_API}`;
   const { data } = await client.post(url, formData, {
     stringifyBody: false,
@@ -106,10 +120,7 @@ export const reducers = {
     });
     state.panels.panels = panelsState.panels.panels;
   },
-  reverseOptimisticUpdate(
-    state: WorkspaceState,
-    action: PayloadAction<{ element: Element }>
-  ) {
+  reverseOptimisticUpdate(state: WorkspaceState, action: PayloadAction<{ element: Element }>) {
     const { element } = action.payload;
     const { panelsState } = synchronizeElement(element.id, element.userLabel, { panels: state.panels });
     state.panels.panels = panelsState.panels.panels;
@@ -128,16 +139,19 @@ export const extraReducers: ReducerObj[] = [
   },
   {
     action: downloadLabels.fulfilled,
-    reducer: (state, action) => {
-
+    reducer: (state, action: PayloadAction<string>) => {
       const convertDateSectionToString = (d: number) => {
-        return d < 10 ? `0${d}` : `${d}`
-      }
+        return d < 10 ? `0${d}` : `${d}`;
+      };
 
-      const data = action.payload;
+      const data = addBOMCharacter(action.payload);
       const current = new Date();
-      const date = `${current.getFullYear()}-${convertDateSectionToString(current.getMonth() + 1)}-${convertDateSectionToString(current.getDate())}`;
-      const time = `${convertDateSectionToString(current.getHours())}-${convertDateSectionToString(current.getMinutes())}-${convertDateSectionToString(current.getSeconds())}`
+      const date = `${current.getFullYear()}-${convertDateSectionToString(
+        current.getMonth() + 1
+      )}-${convertDateSectionToString(current.getDate())}`;
+      const time = `${convertDateSectionToString(current.getHours())}-${convertDateSectionToString(
+        current.getMinutes()
+      )}-${convertDateSectionToString(current.getSeconds())}`;
       const fileName = `labeled_data_${date}_${time}.csv`;
       fileDownload(data, fileName);
       return {

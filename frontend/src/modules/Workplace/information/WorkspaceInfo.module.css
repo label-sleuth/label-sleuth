@@ -14,9 +14,9 @@
 */
 
 .sleuth_title {
-    display: flex;
-    align-items: center;
-    font-size: 24px;
+  display: flex;
+  align-items: center;
+  font-size: 24px;
 }
 
 .sleuthlogo {
@@ -31,199 +31,200 @@
 .moreinfo,
 .logout,
 .workspace_nav {
-    width: 18px;
-    height: 18px;
-    margin-left: 5px;
+  width: 18px;
+  height: 18px;
+  margin-left: 5px;
 }
 
 .moreinfo:hover,
 .logout:hover,
 .workspace_nav:hover {
-    filter: opacity(0.5);
-    cursor: pointer;
+  filter: opacity(0.5);
+  cursor: pointer;
 }
 
 .sleuth_desc {
-    margin-top: -10px;
-    margin-bottom: 20px;
-    padding: 0 16px;
-    font-size: 14px;
-    line-height: 18px;
+  margin-top: -10px;
+  margin-bottom: 20px;
+  padding: 0 16px;
+  font-size: 14px;
+  line-height: 18px;
 }
 
 .userid {
-    margin: 0;
-    padding: 0 16px;
-    font-size: 14px;
-    line-height: 18px;
+  margin: 0;
+  padding: 0 16px;
+  font-size: 14px;
+  line-height: 18px;
 }
 
 .confetti_canvas {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    width: 279px;
-    z-index: 1000;
-    background: #161616;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 279px;
+  z-index: 1000;
+  background: #161616;
 }
 
 .account_info label {
-    display: block;
-    font-size: 12px;
-    line-height: 14px;
-    color: gray;
-    margin-top: 8px;
+  display: block;
+  font-size: 12px;
+  line-height: 14px;
+  color: gray;
+  margin-top: 8px;
 }
 
 .account_info p {
-    font-size: 16px;
-    line-height: 20px;
-    margin-top: 0;
-    margin-bottom: 8px;
+  font-size: 16px;
+  line-height: 20px;
+  margin-top: 0;
+  margin-bottom: 8px;
 }
 
-.tabroot button{
-    color: #393939;
+.tabroot button {
+  color: #393939;
 }
 
 .tabs {
-    font-size: 16px !important;
+  font-size: 16px !important;
 }
 
 .entries_tab {
-    padding: 16px !important;
-    background: #393939;
-    border-radius: 0 0 2px 2px;
-    margin-bottom: 20px;
+  padding: 16px !important;
+  background: #393939;
+  border-radius: 0 0 2px 2px;
+  margin-bottom: 20px;
 }
 
-.entries_tab > div{
-    padding: 0 !important;
+.entries_tab > div {
+  padding: 0 !important;
 }
 
 .label_hsbar_label {
-    display: block;
-    margin: 0 16px 0 16px;
-    font-size: 12px;
-    color: gray;
-    margin-top: 20px;
+  display: block;
+  margin: 0 16px 0 16px;
+  font-size: 12px;
+  color: gray;
+  margin-top: 20px;
 }
 
 .p_hsbar_label {
-    display: block;
-    margin: 0 16px 0 16px;
-    font-size: 14px;
-    line-height: 18px;
-    margin-top: 8px;
+  display: block;
+  margin: 0 16px 0 16px;
+  font-size: 14px;
+  line-height: 18px;
+  margin-top: 8px;
 }
 
 .modelStatus {
-    padding: 0 16px;
-    font-style: italic;
-    color: #0080ff;
-    margin-right: 8px;
-    margin-top: 20px;
+  padding: 0 16px;
+  font-style: italic;
+  color: #0080ff;
+  margin-right: 8px;
+  margin-top: 20px;
 }
 
-  /**
+/**
  * ==============================================
  * Dot Pulse
  * ==============================================
  */
 .dot-pulse {
-    position: relative;
-    left: -9999px;
-    width: 3px;
-    height: 3px;
-    border-radius: 3px;
-    background-color: #0080ff;
-    color: #0080ff;
+  position: relative;
+  left: -9999px;
+  width: 3px;
+  height: 3px;
+  border-radius: 3px;
+  background-color: #0080ff;
+  color: #0080ff;
+  box-shadow: 9999px 0 0 -3px #0080ff;
+  animation: dotPulse 1.75s infinite;
+  animation-delay: 0.25s;
+  margin-bottom: 7px;
+}
+
+.dot-pulse::before,
+.dot-pulse::after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 3px;
+  background-color: #0080ff;
+  color: #0080ff;
+}
+
+.dot-pulse::before {
+  animation: dotPulseBefore 1.75s infinite;
+  animation-delay: 0s;
+}
+
+.dot-pulse::after {
+  animation: dotPulseAfter 1.75s infinite;
+  animation-delay: 0.5s;
+}
+
+@keyframes dotPulseBefore {
+  0% {
+    box-shadow: 9985px 0 0 -3px #0080ff;
+  }
+  30% {
+    box-shadow: 9985px 0 0 1.5px #0080ff;
+  }
+  70%,
+  100% {
+    box-shadow: 9985px 0 0 -3px #0080ff;
+  }
+}
+
+@keyframes dotPulse {
+  0% {
     box-shadow: 9999px 0 0 -3px #0080ff;
-    animation: dotPulse 1.75s infinite;
-    animation-delay: .25s;
-    margin-bottom: 7px;
   }
-  
-  .dot-pulse::before, .dot-pulse::after {
-    content: '';
-    display: inline-block;
-    position: absolute;
-    top: 0;
-    width: 3px;
-    height: 3px;
-    border-radius: 3px;
-    background-color: #0080ff;
-    color: #0080ff;
+  30% {
+    box-shadow: 9999px 0 0 1.5px #0080ff;
   }
-  
-  .dot-pulse::before {
-    animation: dotPulseBefore 1.75s infinite ;
-    animation-delay: 0s;
+  70%,
+  100% {
+    box-shadow: 9999px 0 0 -3px #0080ff;
   }
-  
-  .dot-pulse::after {
-    animation: dotPulseAfter 1.75s infinite ;
-    animation-delay: .5s;
-  }
-  
-  @keyframes dotPulseBefore {
-    0% {
-      box-shadow: 9985px 0 0 -3px #0080ff;
-    }
-    30% {
-      box-shadow: 9985px 0 0 1.5px #0080ff;
-    }
-    70%,
-    100% {
-      box-shadow: 9985px 0 0 -3px #0080ff;
-    }
-  }
-  
-  @keyframes dotPulse {
-    0% {
-      box-shadow: 9999px 0 0 -3px #0080ff;
-    }
-    30% {
-      box-shadow: 9999px 0 0 1.5px #0080ff;
-    }
-    70%,
-    100% {
-      box-shadow: 9999px 0 0 -3px #0080ff;
-    }
-  }
-  
-  @keyframes dotPulseAfter {
-    0% {
-      box-shadow: 10011px 0 0 -3px #0080ff;
-    }
-    30% {
-      box-shadow: 10011px 0 0 1.5px #0080ff;
-    }
-    70%,
-    100% {
-      box-shadow: 10011px 0 0 -3px #0080ff;
-    }
-  }
-  
-  .link-to-website {
-    font-family: "IBM Plex Sans";
-    font-style: normal;
-    font-weight: 450;
-    font-size: 18px;
-    margin: auto 0 25px !important;
-    align-self: center;
-  }
+}
 
-  .import-export-buttons {
-    text-transform: none;
+@keyframes dotPulseAfter {
+  0% {
+    box-shadow: 10011px 0 0 -3px #0080ff;
   }
+  30% {
+    box-shadow: 10011px 0 0 1.5px #0080ff;
+  }
+  70%,
+  100% {
+    box-shadow: 10011px 0 0 -3px #0080ff;
+  }
+}
 
-  .alert :global .MuiAlert-icon {
-    margin-right: 5px;
-  }
+.link-to-website {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 450;
+  font-size: 18px;
+  margin: auto 0 25px !important;
+  align-self: center;
+}
 
-  .alert :global .MuiAlert-action {
-    padding: 0;
-    margin: 0;
-  }
+.import-export-buttons {
+  text-transform: none;
+}
+
+.alert :global .MuiAlert-icon {
+  margin-right: 5px;
+}
+
+.alert :global .MuiAlert-action {
+  padding: 0;
+  margin: 0;
+}

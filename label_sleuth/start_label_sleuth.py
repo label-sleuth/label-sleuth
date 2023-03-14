@@ -13,6 +13,7 @@
 #  limitations under the License.
 #
 
+import ast
 import logging
 import os
 import requests
@@ -87,15 +88,18 @@ if __name__ == '__main__':
                         help=f'Name of a sample corpus from https://github.com/label-sleuth/data-examples/, to be '
                              f'loaded at startup', default=None)
 
+    config_args_group = parser.add_argument_group('Specific configuration parameters '
+                                                  '(These override the config file specified in --config_path)')
+    allowed_types = [int, str, bool]
+    ignore_list = ["users"]
     for attr_name, attr_type in Configuration.__annotations__.items():
-        allowed_types = [int, str, bool]
-        ignore_list = ["users"]
-        if attr_type in ignore_list:
+        if attr_name in ignore_list:
             continue
         if attr_type in allowed_types:
-            parser.add_argument(f"--{attr_name}", type=attr_type, required=False)
+            config_args_group.add_argument(f"--{attr_name}", type=ast.literal_eval if attr_type == bool else attr_type,
+                                           required=False)
         else:
-            parser.add_argument(f"--{attr_name}", type=str, required=False)
+            config_args_group.add_argument(f"--{attr_name}", type=str, required=False)
 
     args = parser.parse_args()
     os.makedirs(args.output_path, exist_ok=True)

@@ -24,6 +24,7 @@ const initialState: FeatureFlagsSliceState = {
   fetched: false,
   sidebarPanelElementsPerPage: -1,
   mainPanelElementsPerPage: -1,
+  rightToLeft: false,
 };
 
 export const fetchFeatureFlags = createAsyncThunk("workspaces/fetchFeatureFlags", async () => {
@@ -50,6 +51,7 @@ export const featureFlagsSlice = createSlice({
           authenticationEnabled: featureFlags["login_required"],
           mainPanelElementsPerPage: featureFlags["main_panel_elements_per_page"],
           sidebarPanelElementsPerPage: featureFlags["sidebar_panel_elements_per_page"],
+          rightToLeft: featureFlags["right_to_left"],
         };
       })
       .addCase(fetchFeatureFlags.rejected, (state, { error }) => {

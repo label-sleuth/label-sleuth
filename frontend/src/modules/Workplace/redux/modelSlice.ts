@@ -21,7 +21,7 @@ import { client } from "../../../api/client";
 import fileDownload from "js-file-download";
 import { curCategoryNameSelector } from ".";
 import { getWorkspaceId, getCategoryQueryString, getQueryParamsString } from "../../../utils/utils";
-import { ModelSliceState, UnparsedModel, WorkspaceState } from "../../../global";
+import { ModelSliceState, UnparsedIteration, WorkspaceState } from "../../../global";
 import { RootState } from "../../../store/configureStore";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
@@ -41,17 +41,17 @@ export const initialState: ModelSliceState = {
 };
 
 export const checkModelUpdate = createAsyncThunk<
-  { models: UnparsedModel[] },
+  { iterations: UnparsedIteration[] },
   void,
   {
     state: RootState;
   }
->("workspace/check_model_update", async (_, { getState }) => {
+>("workspace/fetch_iterations", async (_, { getState }) => {
   const state = getState();
 
   const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
 
-  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/models${queryParams}`;
+  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/iterations${queryParams}`;
 
   const { data } = await client.get(url);
   return data;
@@ -96,31 +96,31 @@ export const reducers = {
 export const extraReducers = [
   {
     action: checkModelUpdate.fulfilled,
-    reducer: (state: WorkspaceState, action: PayloadAction<{ models: UnparsedModel[] }>) => {
-      const { models } = action.payload;
+    reducer: (state: WorkspaceState, action: PayloadAction<{ iterations: UnparsedIteration[] }>) => {
+      const { iterations } = action.payload;
       let updatedEvaluationState = {};
       let latestReadyModelVersion: number | null = null;
       let nextModelShouldBeTraining: boolean = false;
       let modelIsTraining = false;
 
-      const lastModelFailed = models.length ? models[models.length - 1]["iteration_status"] === "ERROR" : false;
+      const lastModelFailed = iterations.length ? iterations[iterations.length - 1]["iteration_status"] === "ERROR" : false;
 
-      models.reverse().forEach((m) => {
+      iterations.reverse().forEach((iteration) => {
         if (latestReadyModelVersion === null) {
-          if (m["iteration_status"] === "READY") {
-            latestReadyModelVersion = m["iteration"];
+          if (iteration["iteration_status"] === "READY") {
+            latestReadyModelVersion = iteration["iteration"];
           } else if (
-            ["TRAINING", "RUNNING_INFERENCE", "RUNNING_ACTIVE_LEARNING", "CALCULATING_STATISTICS"].includes(
-              m["iteration_status"]
+            ["PREPARING_DATA", "TRAINING", "RUNNING_INFERENCE", "RUNNING_ACTIVE_LEARNING", "CALCULATING_STATISTICS"].includes(
+              iteration["iteration_status"]
             )
           ) {
             modelIsTraining = true;
           }
         }
-        if (!("lastScore" in updatedEvaluationState) && "estimated_precision" in m) {
+        if (!("lastScore" in updatedEvaluationState) && "estimated_precision" in iteration) {
           updatedEvaluationState = {
-            lastScore: m["estimated_precision"],
-            scoreModelVersion: m["iteration"] + 1,
+            lastScore: iteration["estimated_precision"],
+            scoreModelVersion: iteration["iteration"] + 1,
           };
         }
       });
@@ -129,33 +129,27 @@ export const extraReducers = [
         latestReadyModelVersion = -1;
       }
 
+
       // if there is a model available, start counting the version from 1 (not 0)
       if (latestReadyModelVersion !== null && latestReadyModelVersion >= 0) {
         latestReadyModelVersion += 1;
       }
-
+     
+     
       // logic to manage the next model status, it is first set to true in checkStatus when progress is 100
 
-      // if there are non-ready models, it means that a model is training
-      if (latestReadyModelVersion === -1 && models.length) {
-        nextModelShouldBeTraining = true;
-      }
-      // if there are no models yet, next model status depends on
-      // progress bar having been full or not
+      // we are sure that a model is being trained
       if (modelIsTraining) {
-        nextModelShouldBeTraining = state.nextModelShouldBeTraining;
-      }
+        nextModelShouldBeTraining = true;
+      } else {
+        // on this branch we have to deduce if there is a model being trained
+        // but the frontend is not yet aware of it
 
-      // if there is at least one ready model found, next model status depends on
-      // the last ready model is already known. If it is not the same means training has
-      // finished
-      else if (latestReadyModelVersion) {
+        // we are sure that a model is no more training when there is a new ready model version
         nextModelShouldBeTraining =
           latestReadyModelVersion === state.modelVersion ? state.nextModelShouldBeTraining : false;
       }
 
-      console.log(state.modelVersion === null && latestReadyModelVersion > 0)
-      console.log(state.modelVersion !== null && state.modelVersion < latestReadyModelVersion)
       // reset pagination if a new model has been found
       if (
         (state.modelVersion === null && latestReadyModelVersion > 0) ||

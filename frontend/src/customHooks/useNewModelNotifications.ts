@@ -15,12 +15,13 @@
 
 import React from "react";
 import { usePrevious } from "./usePrevious";
+import { useNotification } from "../utils/notification";
 import { useAppDispatch } from "./useRedux";
+import { toast } from "react-toastify";
 
 interface UseNewModelNotifications {
   curCategory: number | null;
   modelVersion: number | null;
-  notifySuccess: (message: string, toastId: string, autoClose?: boolean) => void;
   shouldFireConfetti: boolean;
   fire: () => void;
 }
@@ -31,7 +32,6 @@ interface UseNewModelNotifications {
 export const useNewModelNotifications = ({
   curCategory,
   modelVersion,
-  notifySuccess,
   fire,
   shouldFireConfetti,
 }: UseNewModelNotifications) => {
@@ -41,14 +41,18 @@ export const useNewModelNotifications = ({
     () => prevModelVersion !== null && modelVersion !== null && modelVersion > -1 && prevModelVersion !== modelVersion,
     [prevModelVersion, modelVersion]
   );
+  const { notify } = useNotification();
 
   React.useEffect(() => {
     if (curCategory !== null && newModelVersionAvailable === true) {
       shouldFireConfetti && fire();
       if (modelVersion === 1) {
-        notifySuccess("A new model is available!", "toast-new-model");
-        notifySuccess("There are new suggestions for labeling!", "toast-new-suggestions-for-labelling");
+        notify("A new model is available!", { type: toast.TYPE.SUCCESS, toastId: "toast-new-model" });
+        notify("There are new suggestions for labeling!", {
+          type: toast.TYPE.SUCCESS,
+          toastId: "toast-new-suggestions-for-labelling",
+        });
       }
     }
-  }, [curCategory, newModelVersionAvailable, modelVersion, fire, notifySuccess, dispatch, shouldFireConfetti]);
+  }, [notify, curCategory, newModelVersionAvailable, modelVersion, fire, dispatch, shouldFireConfetti]);
 };

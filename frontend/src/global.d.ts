@@ -21,7 +21,7 @@ interface CheckStatusResponse {
   labeling_counts: { true: number; false: number };
 }
 
-interface UnparsedModel {
+interface UnparsedIteration {
   changed_fraction?: number;
   creation_epoch: number;
   iteration: number;
@@ -89,11 +89,6 @@ interface FocusedElement {
   highlight: boolean;
 }
 
-interface LabelDiff {
-  pos: number;
-  neg: number;
-}
-
 interface ErrorSliceState {
   errorMessage: string | null;
 }
@@ -149,6 +144,7 @@ interface FeatureFlagsSliceState {
   fetched: boolean;
   sidebarPanelElementsPerPage: number;
   mainPanelElementsPerPage: number;
+  rightToLeft: boolean;
 }
 
 interface PaginationParam {
@@ -235,4 +231,8 @@ interface FetchPanelElementsParams {
   pagination?: PaginationParam;
   docId?: string;
   useLastSearchString?: boolean;
+}
+
+interface ErrorResponse {
+  message: string;
 }

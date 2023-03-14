@@ -13,10 +13,9 @@
     limitations under the License.
 */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { clearState, createWorkspace, getDatasets } from "../modules/Workspace-config/workspaceConfigSlice";
-import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 import {
   FILL_REQUIRED_FIELDS,
@@ -26,29 +25,17 @@ import {
 } from "../const";
 import { useWorkspaceId } from "./useWorkspaceId";
 import { useAppDispatch, useAppSelector } from "./useRedux";
-
-const useNewWorkspace = (notify: any, toastId: string) => {
+import { useNotification } from "../utils/notification";
+const useNewWorkspace = (toastId: string) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const isDocumentAdded = useAppSelector((state) => state.workspaces.isDocumentAdded);
   const isWorkspaceAdded = useAppSelector((state) => state.workspaces.isWorkspaceAdded);
-  const errorMessage = useAppSelector((state) => state.error.errorMessage);
   const [textValue, setTextValue] = useState("");
   const [newWorkspaceNameError, setNewWorkspaceNameError] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
   const { setWorkspaceId } = useWorkspaceId();
-
-  const updateToast = useCallback(
-    (message, type) => {
-      notify(message, (message: string) => {
-        toast.update(toastId, {
-          render: message,
-          type: type,
-        });
-      });
-    },
-    [toastId, notify]
-  );
+  const { notify } = useNotification();
 
   const handleChangeText = (e: React.FormEvent) => {
     let val = (e.target as HTMLInputElement).value;
@@ -63,14 +50,6 @@ const useNewWorkspace = (notify: any, toastId: string) => {
   };
 
   useEffect(() => {
-    if (errorMessage) {
-      setTextValue("");
-      setSelectedValue("");
-      return updateToast(errorMessage, toast.TYPE.ERROR);
-    }
-  }, [errorMessage, updateToast]);
-
-  useEffect(() => {
     if (isWorkspaceAdded) {
       setWorkspaceId(textValue);
       navigate("/workspace");
@@ -82,12 +61,7 @@ const useNewWorkspace = (notify: any, toastId: string) => {
 
   const handleNewWorkspace = () => {
     if (!selectedValue || !textValue) {
-      return notify(FILL_REQUIRED_FIELDS, (message: string) => {
-        toast.update(toastId, {
-          render: message,
-          type: toast.TYPE.INFO,
-        });
-      });
+      notify(FILL_REQUIRED_FIELDS, { toastId, type: toast.TYPE.INFO });
     }
     dispatch(createWorkspace({ workspace_id: textValue, dataset_id: selectedValue }));
   };
