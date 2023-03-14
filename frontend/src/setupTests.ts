@@ -35,7 +35,7 @@ const handlers = [
     return res(
       ctx.delay(),
       ctx.json([
-        ...categoriesExample,
+        ...categoriesExample.categories,
         {
           category_description: "",
           category_id: 26,

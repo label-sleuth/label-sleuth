@@ -21,7 +21,7 @@ import { errorReducer } from "../error/errorSlice";
 import { errorMiddleware } from "../error/errorMiddleware";
 import workspaceReducer  from "../modules/Workplace/redux";
 
-export const setupStore = (preloadedState?: any) =>
+export const setupStore = (preloadedState?: any) : any =>
   configureStore({
     reducer: {
       authenticate: authenticateReducer,
