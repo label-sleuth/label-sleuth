@@ -3,9 +3,7 @@
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +16,18 @@ import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import { forwardRef } from 'react';
 
-const ComboBoxWithInputText = forwardRef(({ options, handleInputChange, label, placeholder, error, helperText }, ref) => {
+interface ComboBoxWithInputTextProps {
+  options: {
+    dataset_id: string;
+  }[];
+  handleInputChange: (e: React.FormEvent, newVal?: string) => void;
+  label: React.ReactNode;
+  placeholder: string;
+  error: boolean;
+  helperText: React.ReactNode;
+}
+
+const ComboBoxWithInputText = forwardRef(({ options, handleInputChange, label, placeholder, error, helperText }: ComboBoxWithInputTextProps, ref) => {
   return (
     <Stack spacing={3} sx={{ width: '100%' }} >
       <Autocomplete
@@ -43,18 +52,19 @@ const ComboBoxWithInputText = forwardRef(({ options, handleInputChange, label, p
             }}
             InputProps={{
               ...params.InputProps,
-              style: {
+              sx: {
                 background: '#fff',
                 padding: '6px 10px',
                 "&::placeholder": {
-                  color: "#b5b5b5"
+                  color: "#b5b5b5",
                 }
               }
             }}
             placeholder={placeholder}
-            error={error  ? true : false}
+            error={error ? true : false}
             helperText={helperText}
-          />}
+          />
+        }
       />
     </Stack>
   );

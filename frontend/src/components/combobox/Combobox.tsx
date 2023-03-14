@@ -13,10 +13,18 @@
     limitations under the License.
 */
 
-import React from "react"
 import {} from "./Combobox.module.css"
 
-const Combobox = ({ name, options,handleChange, ...rest }) => {
+interface ComboboxProps {
+    name: string;
+    options: {
+        value: string;
+        title: string;
+    }[];
+    handleChange: () => string;
+}
+
+const Combobox = ({ name, options, handleChange, ...rest } : ComboboxProps) => {
     return (
         <select id={name} onChange={handleChange} name={name} {...rest}>
             {options.map((option) => (
