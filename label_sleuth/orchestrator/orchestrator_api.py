@@ -626,8 +626,8 @@ class OrchestratorApi:
             num_identical = sum(x.label == y.label for x, y in zip(predictions, previous_model_predictions))
             post_train_statistics["changed_fraction"] = (dataset_size - num_identical) / dataset_size
 
-        logging.info(
-            f"workspace {workspace_id} category {category_id} post train measurements for iteration {iteration_index}: {post_train_statistics}")
+        logging.info(f"workspace {workspace_id} category {category_id} post train measurements for "
+                     f"iteration {iteration_index}: {post_train_statistics}")
         self.orchestrator_state.add_iteration_statistics(workspace_id, category_id, iteration_index,
                                                          post_train_statistics)
 
@@ -901,9 +901,13 @@ class OrchestratorApi:
         logging.info(f"Importing {len(labels_df_to_import)} labeled elements into workspace '{workspace_id}'"
                      f"from {len(labels_df_to_import[DisplayFields.category_name].unique())} categories")
         dataset_name = self.get_dataset_name(workspace_id)
-        # Only if doc_id are provided or apply_labels_to_duplicate_texts is false the doc_id is taken into account when applying labels
-        apply_labels_to_duplicate_texts = self.config.apply_labels_to_duplicate_texts is True or not DisplayFields.doc_id in labels_df_to_import.columns
-        (imported_categories_to_uris_and_labels, contracticting_labels_info) = process_labels_dataframe(workspace_id, dataset_name, self.data_access, labels_df_to_import, apply_labels_to_duplicate_texts=apply_labels_to_duplicate_texts)
+        # Only if doc_id are provided or apply_labels_to_duplicate_texts is false the doc_id is
+        # taken into account when applying labels
+        apply_labels_to_duplicate_texts = self.config.apply_labels_to_duplicate_texts is True \
+                                          or DisplayFields.doc_id not in labels_df_to_import.columns
+        imported_categories_to_uris_and_labels, contracticting_labels_info = \
+            process_labels_dataframe(workspace_id, dataset_name, self.data_access, labels_df_to_import,
+                                     apply_labels_to_duplicate_texts=apply_labels_to_duplicate_texts)
         
         # name to id mapping for *existing* categories
         category_name_to_id = {category.name: category_id
@@ -992,7 +996,8 @@ class OrchestratorApi:
                   DisplayFields.dataset: dataset_name,
                   DisplayFields.text: element.text,
                   DisplayFields.uri: element.uri,
-                  DisplayFields.element_metadata: element.metadata,
+                  # column for each metadata field, using the same format as in document upload
+                  **{DisplayFields.csv_metadata_column_prefix + k: v for k, v in element.metadata.items()},
                   DisplayFields.label: element.category_to_label[category_id].label,
                   # TODO uncomment when adding metadata
                   # DisplayFields.label_metadata: le.category_to_label[category_id].metadata,
