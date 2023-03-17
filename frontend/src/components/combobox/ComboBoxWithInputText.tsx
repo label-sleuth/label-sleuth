@@ -19,13 +19,14 @@ import Stack from "@mui/material/Stack";
 import { forwardRef } from "react";
 
 interface ComboBoxWithInputTextProps {
-  name: string;
-  options: { value: string; title: string; dataset_id: string }[]; // TODO: abstract this component from the dataset_id
-  handleInputChange: () => void;
-  label: string;
+  options: {
+    dataset_id: string;
+  }[];
+  handleInputChange: (e: React.FormEvent, newVal?: string) => void;
+  label: React.ReactNode;
   placeholder: string;
-  error: string;
-  helperText: string;
+  error: boolean;
+  helperText: React.ReactNode;
 }
 
 export const ComboBoxWithInputText = forwardRef(
@@ -54,12 +55,12 @@ export const ComboBoxWithInputText = forwardRef(
               }}
               InputProps={{
                 ...params.InputProps,
-                style: {
+                sx: {
                   background: "#fff",
                   padding: "6px 10px",
-                  // "&::placeholder": {
-                  //   color: "#b5b5b5"
-                  // }
+                  "&::placeholder": {
+                    color: "#b5b5b5"
+                  }
                 },
               }}
               placeholder={placeholder}
