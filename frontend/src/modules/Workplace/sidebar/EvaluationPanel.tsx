@@ -17,7 +17,7 @@ import React, { useCallback } from "react";
 import { Box, Button, Stack, Divider } from "@mui/material";
 import classes from "./index.module.css";
 import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
-import { SidebarElement as Element } from "./Element";
+import { SidebarElement as Element } from "../../../components/element/SidebarElement";
 import { checkStatus, getEvaluationResults, cancelEvaluation } from "../redux";
 import { ButtonGroup } from "@mui/material";
 import {

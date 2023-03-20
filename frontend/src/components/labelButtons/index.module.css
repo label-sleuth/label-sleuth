@@ -1,0 +1,31 @@
+.label_button {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 5px !important;
+  background: none !important;
+  border-radius: 2px !important;
+}
+
+.label_button img:hover {
+  background: #d5d5d5 !important;
+}
+
+.label_button svg:hover {
+  background: #d5d5d5 !important;
+}
+
+.label_img {
+  width: 25px !important;
+  height: 25px !important;
+}
+
+.resultbtn {
+  margin-left: 5px;
+  display: inline-block;
+}
+
+
+.text_element:not(:hover) .visibility {
+  display: none !important;
+}
+

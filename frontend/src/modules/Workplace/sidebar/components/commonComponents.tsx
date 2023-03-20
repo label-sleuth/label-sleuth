@@ -16,7 +16,7 @@
 import Box from "@mui/material/Box";
 import { Typography, CircularProgress } from "@mui/material";
 import classes from "../index.module.css";
-import { SidebarElement } from "../Element";
+import { SidebarElement } from "../../../../components/element/SidebarElement";
 import { styled } from "@mui/system";
 import { Element } from "../../../../global";
 

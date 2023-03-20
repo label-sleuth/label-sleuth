@@ -1,0 +1,198 @@
+/*
+    Copyright (c) 2022 IBM Corp.
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
+.text_predict,
+.text_normal {
+  border: dotted 2px #d6d6d6 !important;
+  color: #161616 !important;
+  border: solid 2px transparent;
+  outline: none;
+  padding: 20px 10px 10px 10px;
+  margin: 10px;
+  position: relative;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.text_predict {
+  border: dotted 2px #a3d8e5 !important;
+}
+
+.text_predict:hover,
+.text_normal:hover {
+  background: #f4f4f4;
+}
+
+.focused_element {
+  background: #fcfacf !important;
+}
+
+.text_predict:hover .hovbtn,
+.text_normal:hover .hovbtn {
+  display: inline-block;
+}
+
+.focused_element .hovbtn {
+    display: inline-block;
+}
+
+.text_predict button,
+.text_normal button {
+  border-radius: 0 !important;
+}
+
+.text_predict p,
+.text_normal p {
+  margin: 15px 0;
+  font-size: 14px !important;
+  line-height: 18px !important;
+}
+
+.rec_doc_id {
+  display: flex;
+  left: 0;
+  top: 0;
+  padding: 3px 6px;
+  background: #e2e2e2;
+}
+
+.pred_rec_doc_id {
+  display: flex;
+  left: 0;
+  top: 0;
+  padding: 3px 6px;
+  background: rgb(163, 216, 229);
+}
+
+.elem_text {
+  padding: 1px 10px 1px 10px;
+}
+
+.hovbtn {
+  margin: 0;
+  display: none;
+}
+
+.resultbtn {
+  margin-left: 5px;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+.recommend_buttons {
+  justify-content: flex-end;
+}
+
+.recommend_buttons img {
+  width: 25px;
+  height: 25px;
+}
+
+.recommend_buttons button {
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.recommend_buttons button:hover img {
+  background: #d5d5d5 !important;
+}
+
+.element-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 130px;
+  bottom: 20px;
+  overflow-y: auto;
+}
+
+.pagination_margin {
+  bottom: 60px;
+}
+
+.top_nav_icons {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 5px !important;
+  background: none !important;
+  border-radius: 2px !important;
+}
+
+.blue-filter {
+  filter: invert(12%) sepia(100%) saturate(5444%) hue-rotate(253deg) brightness(68%) contrast(133%); /* #1900bd */
+}
+
+.gray-filter {
+  filter: invert(55%);
+}
+
+.top_nav_icons img {
+  width: 100%;
+  height: 100%;
+}
+
+.top_nav_icons:hover {
+  background: #d6d6d6 !important;
+}
+
+.pos_pred_icon {
+  width: 32px;
+  height: 32px;
+  padding: 5px !important;
+  background: none !important;
+  border-radius: 2px !important;
+}
+
+.pos_pred_icon img {
+  width: 100%;
+  height: 100%;
+}
+
+.pos_pred_icon:hover {
+  background: #d6d6d6 !important;
+}
+
+.btndisabled {
+  width: 32px;
+  height: 32px;
+  padding: 5px !important;
+  background: none !important;
+  border-radius: 2px !important;
+  opacity: 0.1;
+}
+
+.btndisabled img {
+  width: 100%;
+  height: 100%;
+}
+
+.dot-separator {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 7px;
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+.right_to_left {
+  text-align: right;
+  direction: rtl;
+} 
+
+.hover_element_on_menu_open {
+  background: #f4f4f4 !important;
+  color: #000 !important;
+}

@@ -82,7 +82,7 @@ export const CreateCategoryModal = ({ open, setOpen }: CreateCategoryModalProps)
   const onSubmit = async () => {
     const newCategoryName = text.trim();
 
-    dispatch(createCategoryOnServer({ category: newCategoryName }))
+    dispatch(createCategoryOnServer({ categoryName: newCategoryName }))
       .then((actionResult) => {
         if (isFulfilled(actionResult)) {
           setOpen(false);

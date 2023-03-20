@@ -24,13 +24,13 @@ import Backdrop from "@mui/material/Backdrop";
 import CircularProgress from "@mui/material/CircularProgress";
 import { IconButton, Tooltip } from "@mui/material";
 import classes from "./sidebar/index.module.css";
-import search_icon from "./Asset/search.svg";
-import recommend_icon from "./Asset/label_next.svg";
-import pos_pred_icon from "./Asset/positive_predictions.svg";
-import pos_elem_icon from "./Asset/positive_labels.svg";
-import suspicious_elem_icon from "./Asset/suspicious.svg";
-import evaluation_icon from "./Asset/evaluation.svg";
-import contradictive_elem_icon from "./Asset/contradicting.svg";
+import search_icon from "../../assets/search.svg";
+import recommend_icon from "../../assets/label_next.svg";
+import pos_pred_icon from "../../assets/positive_predictions.svg";
+import pos_elem_icon from "../../assets/positive_labels.svg";
+import suspicious_elem_icon from "../../assets/suspicious.svg";
+import evaluation_icon from "../../assets/evaluation.svg";
+import contradictive_elem_icon from "../../assets/contradicting.svg";
 import {
   SEARCH_ALL_DOCS_TOOLTIP_MSG,
   NEXT_TO_LABEL_TOOLTIP_MSG,
