@@ -137,9 +137,12 @@ export const extraReducers = [
      
      
       // logic to manage the next model status, it is first set to true in checkStatus when progress is 100
-
-      // we are sure that a model is being trained
-      if (modelIsTraining) {
+      
+      // make sure model training indicator isn't shown if there was an error
+      if (lastModelFailed) {
+        nextModelShouldBeTraining = false;
+      } else if (modelIsTraining) {
+        // we are sure that a model is being trained
         nextModelShouldBeTraining = true;
       } else {
         // on this branch we have to deduce if there is a model being trained
