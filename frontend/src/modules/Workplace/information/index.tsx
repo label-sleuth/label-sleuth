@@ -70,6 +70,7 @@ export const WorkspaceInfo = ({
     shouldFireConfetti,
     fire,
   });
+  
   useNotifyUploadedLabels();
 
   const [uploadLabelsDialogOpen, setUploadLabelsDialogOpen] = useState(false);
