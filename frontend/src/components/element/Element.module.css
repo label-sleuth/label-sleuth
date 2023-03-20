@@ -13,20 +13,12 @@
     limitations under the License.
 */
 
-.label_button {
-  width: 32px !important;
-  height: 32px !important;
-  padding: 5px !important;
-  background: none !important;
-  border-radius: 2px !important;
-}
-
 .data_text {
   flex: none;
   width: calc(100% - 140px);
   margin: 0 !important;
   font-size: 15px;
-  min-height: 25px;
+  min-height: 35px;
   line-height: 20px;
 }
 
@@ -36,17 +28,6 @@
   margin: 0 !important;
   font-size: 15px;
   line-height: 20px;
-  min-height: 25px;
-}
-
-.hovbtn {
-  margin: 0;
-  display: none;
-}
-
-.resultbtn {
-  margin-left: 5px;
-  display: inline-block;
 }
 
 .text_predict,
@@ -69,6 +50,11 @@
 
 .text_normal:hover,
 .text_predict:hover {
+  background: #f4f4f4;
+  color: #000 !important;
+}
+
+.hover_element_on_menu_open {
   background: #f4f4f4;
   color: #000 !important;
 }
@@ -122,14 +108,8 @@
   border-radius: 0 !important;
 }
 
-.checking_buttons button:hover img {
+.checking_buttons :global .MuiBox-root .MuiIconButton-root:hover {
   background: #d5d5d5 !important;
-}
-
-.text_normal:hover .hovbtn,
-.text_predict:hover .hovbtn {
-  margin-left: 5px;
-  display: inline-block;
 }
 
 .pos_user_label {
@@ -155,3 +135,8 @@
   font-size: 1rem;
   color: rgba(0, 0, 0, 0.54);
 }
+
+.button-disabled-pointer {
+  cursor: default !important;
+}
+

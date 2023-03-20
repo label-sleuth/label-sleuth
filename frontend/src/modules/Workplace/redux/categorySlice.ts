@@ -31,11 +31,10 @@ export const initialCategorySliceState: CategorySliceState = {
 
 export const createCategoryOnServer = createAsyncThunk(
   "workspace/createCategoryOnServer",
-  async (request: { category: string }) => {
-    const { category } = request;
+  async ({ categoryName }: { categoryName: string }) => {
     var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/category`;
     const response = await client.post(url, {
-      category_name: category,
+      category_name: categoryName,
       category_description: "",
       update_counter: true,
     });
@@ -110,11 +109,13 @@ export const extraReducers: Array<ReducerObj> = [
   },
   {
     action: createCategoryOnServer.fulfilled,
-    reducer: (state: WorkspaceState, action: PayloadAction<{category_id: string}>) => {
+    reducer: (state: WorkspaceState, action: PayloadAction<{category_id: number}>) => {
+      const newCategory = action.payload
+      newCategory.category_id = Number(newCategory.category_id)
       return {
         ...state,
-        curCategory: action.payload.category_id.toString(),
-        categories: [...state.categories, action.payload],
+        curCategory: newCategory.category_id,
+        categories: [...state.categories, newCategory],
         nextModelShouldBeTraining: false,
       };
     },

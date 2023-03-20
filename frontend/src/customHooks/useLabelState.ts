@@ -24,7 +24,7 @@ import { Action, isRejected } from "@reduxjs/toolkit";
 import { useAppDispatch, useAppSelector } from "./useRedux";
 import { LabelActionsEnum } from "../const";
 import { Element } from "../global";
-import { currentDocNameSelector } from "../modules/Workplace/redux/documentSlice"
+
 /**
  * This custom hook is responsible for managing the labels states
  ** for the current sidebar's active panels and for updating the main labels state panel.
@@ -41,7 +41,7 @@ import { currentDocNameSelector } from "../modules/Workplace/redux/documentSlice
 const useLabelState = (updateCounter = true) => {
   const dispatch = useAppDispatch();
 
-  const currentDocName = useAppSelector(currentDocNameSelector);
+  const curCategory = useAppSelector((state) => state.workspace.curCategory);
 
   /**
    * This function is reponsible for managing sidebar elements label state and updating
@@ -50,36 +50,46 @@ const useLabelState = (updateCounter = true) => {
    * @param  {Document id, i.e (dataset1-Giant otter-102)} id
    * @param  {The element that was clicked on the sidebar panel and needs to be found on the main panel} searchedIndex
    * @param  {The label action: can be 'pos' or 'neg'} labelAction
+   * @param  {the category to which the label will be applied} categoryId
    */
-  const handleLabelState = (element: Element, labelAction: LabelActionsEnum) => {
-    const { newLabel } = getNewLabelState(element.userLabel, labelAction);
-    dispatch(updateElementOptimistically({ element, newLabel }));
+  const handleLabelState = (element: Element, labelAction: LabelActionsEnum, categoryId?: number) => {
+    // if the categoryId is undefined, it defaults to the current category
+    let categoryToLabel = categoryId !== undefined ? categoryId : curCategory
+    if (categoryToLabel === null) return;
+
+    const { newLabel } = getNewLabelState(
+      categoryToLabel === curCategory ? element.userLabel : element.otherUserLabels[categoryToLabel],
+      labelAction
+    );
+    dispatch(updateElementOptimistically({ element, newLabel, categoryId }));
     dispatch(
       setElementLabel({
         element_id: element.id,
         label: getBooleanLabel(newLabel),
         update_counter: updateCounter,
+        categoryId: categoryToLabel,
       })
     ).then((action: Action) => {
       if (isRejected(action)) {
         dispatch(reverseOptimisticUpdate({ element }));
-      } else {
+        
+      } else if (categoryToLabel === curCategory) { // only make updates if current cat is being labeled
         dispatch(checkStatus());
       }
     });
   };
 
-  const handlePosLabelState = (element: Element) => {
-    handleLabelState(element, LabelActionsEnum.POS);
+  const handlePosLabelAction = (element: Element, categoryId?: number) => {
+    handleLabelState(element, LabelActionsEnum.POS, categoryId);
   };
 
-  const handleNegLabelState = (element: Element) => {
-    handleLabelState(element, LabelActionsEnum.NEG);
+  const handleNegLabelAction = (element: Element, categoryId?: number) => {
+    handleLabelState(element, LabelActionsEnum.NEG, categoryId);
   };
 
   return {
-    handlePosLabelState,
-    handleNegLabelState,
+    handlePosLabelAction,
+    handleNegLabelAction,
   };
 };
 

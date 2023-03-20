@@ -14,7 +14,7 @@
 */
 
 import { BOMCharacter, LabelActionsEnum, LabelTypesEnum, PanelIdsEnum } from "../const";
-import { Element, ElementsDict, PanelsSliceState, UnparsedElement } from "../global";
+import { Category, Element, ElementsDict, PanelsSliceState, UnparsedElement } from "../global";
 
 /**
  * Returns the suffix of a number in its ordinal form
@@ -141,6 +141,15 @@ export const parseElement = (
   modelPrediction: curCategoryId !== null ? getStringLabel(`${model_predictions[curCategoryId]}`) : LabelTypesEnum.NONE,
   userLabel: curCategoryId !== null ? getStringLabel(`${user_labels[curCategoryId]}`) : LabelTypesEnum.NONE,
   text,
+  otherUserLabels:
+    curCategoryId !== null
+      ? Object.assign(
+          {},
+          ...Object.keys(user_labels).map((categoryId) =>
+            +categoryId !== curCategoryId ? { [categoryId]: getStringLabel(`${user_labels[+categoryId]}`) } : {}
+          )
+        )
+      : {},
 });
 
 export const getPanelDOMKey = (elementId: string, panelId: PanelIdsEnum, index: number | null = null): string => {
@@ -154,7 +163,8 @@ export const getPanelDOMKey = (elementId: string, panelId: PanelIdsEnum, index: 
 export const synchronizeElement = (
   elementId: string,
   userLabel: LabelTypesEnum,
-  panelsState: PanelsSliceState
+  panelsState: PanelsSliceState,
+  categoryId: number | null,
 ): {
   panelsState: PanelsSliceState;
 } => {
@@ -167,7 +177,16 @@ export const synchronizeElement = (
       if (previousLabel === null) {
         previousLabel = elements[elementId].userLabel;
       }
-      elements[elementId].userLabel = userLabel;
+      let element = elements[elementId];
+      if (categoryId === null) {
+        element.userLabel = userLabel;
+      } else if (categoryId !== null) {
+        element.otherUserLabels = {
+          ...element.otherUserLabels,
+          [categoryId]: userLabel,
+        };
+      }
+      elements[elementId] = element;
     }
   });
 
@@ -234,4 +253,11 @@ export const stringifyList = (list: string[]): string => {
     res += `'${list.slice(-2, -1)[0]}' and '${list.slice(-1)[0]}'`;
     return res;
   }
+}
+
+/**
+ * Gets the category name from the id
+*/
+export const getCategoryNameFromId = (categoryId: number, categories: Category[]): string => {
+  return categories.find((cat) => cat.category_id === categoryId)?.category_name || "";
 };

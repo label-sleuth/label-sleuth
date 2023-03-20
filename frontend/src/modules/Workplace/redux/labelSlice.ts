@@ -80,6 +80,28 @@ export const uploadLabels = createAsyncThunk<
 
 export const setElementLabel = createAsyncThunk<
   void,
+  { element_id: string; label: string; categoryId: number | null; update_counter: boolean },
+  {
+    state: RootState;
+  }
+>("workspace/set_element_label", async (request, { getState }) => {
+  const { element_id, label, categoryId, update_counter } = request;
+
+  const queryParams = getQueryParamsString([getCategoryQueryString(categoryId)]);
+
+  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/element/${encodeURIComponent(
+    element_id
+  )}${queryParams}`;
+
+  await client.put(url, {
+    category_id: categoryId,
+    value: label,
+    update_counter: update_counter,
+  });
+});
+
+export const setElementLabelForCurrentCategory = createAsyncThunk<
+  void,
   { element_id: string; label: string; update_counter: boolean },
   {
     state: RootState;
@@ -108,21 +130,27 @@ export const reducers = {
   },
   updateElementOptimistically(
     state: WorkspaceState,
-    action: PayloadAction<{ element: Element; newLabel: LabelTypesEnum }>
+    action: PayloadAction<{ element: Element; newLabel: LabelTypesEnum; categoryId?: number }>
   ) {
-    const { element, newLabel } = action.payload;
+    const { element, newLabel, categoryId } = action.payload;
     const updatedElement = {
       ...element,
       userLabel: newLabel,
     };
-    const { panelsState } = synchronizeElement(updatedElement.id, updatedElement.userLabel, {
-      panels: state.panels,
-    });
+    const { panelsState } = synchronizeElement(
+      updatedElement.id,
+      updatedElement.userLabel,
+      {
+        panels: state.panels,
+      },
+      categoryId !== undefined ? categoryId : null,
+    );
+
     state.panels.panels = panelsState.panels.panels;
   },
   reverseOptimisticUpdate(state: WorkspaceState, action: PayloadAction<{ element: Element }>) {
     const { element } = action.payload;
-    const { panelsState } = synchronizeElement(element.id, element.userLabel, { panels: state.panels });
+    const { panelsState } = synchronizeElement(element.id, element.userLabel, { panels: state.panels }, 1); // TODO: fiishe
     state.panels.panels = panelsState.panels.panels;
   },
 };

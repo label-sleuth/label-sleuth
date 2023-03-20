@@ -15,7 +15,7 @@
 
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
-import { MainElement } from "./Element";
+import { MainElement } from "../../../components/element/MainElement";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import "../../../components/pagination/pagination.css";
 import classes from "./MainPanel.module.css";

@@ -55,7 +55,7 @@ export const useSidebarLabelingShortcuts = ({ setShortcutsModalOpen }: UseSideba
 
   // useLabelState needs to know whether to update the counter on labeling,
   // which is false only in the evalaution panel
-  const { handlePosLabelState, handleNegLabelState } = useLabelState(activePanelId !== panelIds.EVALUATION);
+  const { handlePosLabelAction, handleNegLabelAction } = useLabelState(activePanelId !== panelIds.EVALUATION);
 
   // use pagination for the active panel without fetching anything
   const { goToPreviousPage, goToNextPage, currentContentData, currentPage, pageCount } = usePanelPagination({
@@ -142,14 +142,14 @@ export const useSidebarLabelingShortcuts = ({ setShortcutsModalOpen }: UseSideba
 
     if (focusedElement) {
       if (curCategory !== null) {
-        if (event.key === KeyboardKeysEnum.ARROW_LEFT) {
-          handleNegLabelState(focusedElement);
+        if (event.key === KeyboardKeysEnum.ARROW_RIGHT) {
+          handlePosLabelAction(focusedElement);
           if (focusNextElementOnLabeling) {
             focusNextElement();
           }
         }
-        if (event.key === KeyboardKeysEnum.ARROW_RIGHT) {
-          handlePosLabelState(focusedElement);
+        if (event.key === KeyboardKeysEnum.ARROW_LEFT) {
+          handleNegLabelAction(focusedElement);
           if (focusNextElementOnLabeling) {
             focusNextElement();
           }

@@ -37,7 +37,7 @@ interface UnparsedIteration {
 }
 
 interface UnparsedElement {
-  user_labels: { [key: string]: boolean };
+  user_labels: { [key: number]: boolean };
   model_predictions: { [key: string]: boolean };
   docid: string;
   id: string;
@@ -50,6 +50,7 @@ interface Element {
   userLabel: LabelTypesEnum;
   modelPrediction: LabelTypesEnum;
   text: string;
+  otherUserLabels: { [categoryId: number]: LabelTypesEnum };
 }
 
 interface ElementsDict {

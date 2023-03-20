@@ -74,6 +74,10 @@
     opacity: 0.1;
 }
 
+.add_button_hidden {
+    display: "none" !important;
+}
+
 .doc_stats {
     text-align: center;
 }
