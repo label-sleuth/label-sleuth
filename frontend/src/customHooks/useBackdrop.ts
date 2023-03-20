@@ -32,6 +32,7 @@ const useBackdrop = (): { backdropOpen: boolean } => {
   const downloadingModel = useAppSelector((state) => state.workspace.downloadingModel);
   const elements = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.MAIN_PANEL].elements);
   const uploadingDataset = useAppSelector((state) => state.workspaces.uploadingDataset);
+  const workspaceConfigLoading = useAppSelector((state) => state.workspaces.loading);
 
   const location = useLocation();
 
@@ -46,7 +47,7 @@ const useBackdrop = (): { backdropOpen: boolean } => {
         panelsLoading[PanelIdsEnum.MAIN_PANEL] ||
         elements === null
     } else if (location.pathname === WORKSPACE_CONFIG_PATH) {
-      shouldOpenBackdrop = uploadingDataset;
+      shouldOpenBackdrop = uploadingDataset || workspaceConfigLoading;
     }
     else {
       shouldOpenBackdrop = false;
@@ -62,6 +63,7 @@ const useBackdrop = (): { backdropOpen: boolean } => {
     downloadingLabels,
     downloadingModel,
     deletingCategory,
+    workspaceConfigLoading
   ]);
 
   return {
