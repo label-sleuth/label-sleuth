@@ -261,3 +261,14 @@ export const stringifyList = (list: string[]): string => {
 export const getCategoryNameFromId = (categoryId: number, categories: Category[]): string => {
   return categories.find((cat) => cat.category_id === categoryId)?.category_name || "";
 };
+
+
+export const getDocumentNameFromDocumentId = (documentId: string | null) => {
+  if (documentId === null) return null; 
+  return documentId.split('-')[1];
+}
+
+export const getDatasetNameFromDocumentId = (documentId: string | null) => {
+  if (documentId === null) return null; 
+  return documentId.split('-')[0];
+}

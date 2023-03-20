@@ -30,7 +30,7 @@ import {
   APPBAR_HEIGHT,
   PanelIdsEnum,
 } from "../../../const";
-import { getPanelDOMKey } from "../../../utils/utils";
+import { getPanelDOMKey, getDocumentNameFromDocumentId } from "../../../utils/utils";
 import { useScrollMainPanelElementIntoView } from "../../../customHooks/useScrollElementIntoView";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
 import { useFetchPrevNextDoc } from "../../../customHooks/useFetchPrevNextDoc";
@@ -99,7 +99,7 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
             </button>
           </Tooltip>
           <div className={classes.doc_stats}>
-            <h6>{curDocName}</h6>
+            <h6>{getDocumentNameFromDocumentId(curDocName)}</h6>
             <em>Text Entries: {hitCount ?? 0}</em>
           </div>
           <Tooltip
