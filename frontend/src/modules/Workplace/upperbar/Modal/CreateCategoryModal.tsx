@@ -72,7 +72,7 @@ export const CreateCategoryModal = ({ open, setOpen }: CreateCategoryModalProps)
 
     dispatch(createCategoryOnServer({ categoryName: newCategoryName })).then((actionResult) => {
       if (isFulfilled(actionResult)) {
-        setOpen(false);
+        onModalClose();
         notify(`The category '${newCategoryName}' has been created`, {
           type: toast.TYPE.SUCCESS,
           autoClose: 5000,
