@@ -114,17 +114,17 @@ class Ensemble(ModelAPI):
         else:
             # for external use, where the ensemble has been exported into a single folder containing all the models
             model_path = model_path.rstrip("/")
-            model_prefixes = [model_api.__class__.__name__ for model_api in self.model_apis]
-            ensemble_id_regex = ','.join([f'{model_prefix}_[a-z0-9-]+' for model_prefix in model_prefixes])
-            if not re.fullmatch(ensemble_id_regex, os.path.basename(model_path)):
-                raise Exception(
-                    f"model {os.path.basename(model_path)} does not match the expected ensemble directory name "
-                    f"of <class_name1>_<guid1>,<class_name2>_<guid2> (for example "
-                    f"SVM_BOW_5e805580-1ee3-11ed-878b-0a94ef3e9940,SVM_GloVe_5e80af4e-1ee3-11ed-878b-0a94ef3e9940). "
-                    f"Exported model name should not be changed")
 
-            ensemble_model_id = os.path.basename(model_path)
-            model_paths = [os.path.join(model_path, model_id) for model_id in ensemble_model_id.split(",")]
+            def replace_model_prefix(prefix):  # for backward compatibility of old model api class names
+                return prefix.replace('_GloVe', '_WordEmbeddings')
+
+            model_dir_names = [d for d in os.listdir(model_path) if os.path.isdir(os.path.join(model_path, d))]
+            api_name_to_path = {}
+            for model_dir_name in model_dir_names:
+                dir_prefix = model_dir_name.rsplit('_', 1)[0]
+                dir_prefix = replace_model_prefix(dir_prefix)
+                api_name_to_path[dir_prefix] = os.path.join(model_path, model_dir_name)
+            model_paths = [api_name_to_path[model_api.__class__.__name__] for model_api in self.model_apis]
 
         models = [model_api.load_model(model_path) for model_api, model_path in zip(self.model_apis, model_paths)]
         return EnsembleComponents(models=models)
