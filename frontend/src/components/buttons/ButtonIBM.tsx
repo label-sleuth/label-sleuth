@@ -16,10 +16,10 @@
 import classes from './Buttons.module.css'
 
 interface ButtonIBMProps {
-    handleClick: () => void,
-    disabled?: boolean,
-    text: string,
-    className: string,
+    handleClick: () => void;
+    disabled?: boolean;
+    text: string;
+    className: string;
     [x: string]: any;
 }
 
