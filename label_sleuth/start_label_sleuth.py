@@ -90,13 +90,17 @@ if __name__ == '__main__':
 
     config_args_group = parser.add_argument_group('Specific configuration parameters '
                                                   '(These override the config file specified in --config_path)')
+
+    def process_bool_arg(bool_arg):
+        return ast.literal_eval(bool_arg.title()) if type(bool_arg) == str else bool_arg
+
     allowed_types = [int, str, bool]
     ignore_list = ["users"]
     for attr_name, attr_type in Configuration.__annotations__.items():
         if attr_name in ignore_list:
             continue
         if attr_type in allowed_types:
-            config_args_group.add_argument(f"--{attr_name}", type=ast.literal_eval if attr_type == bool else attr_type,
+            config_args_group.add_argument(f"--{attr_name}", type=process_bool_arg if attr_type == bool else attr_type,
                                            required=False)
         else:
             config_args_group.add_argument(f"--{attr_name}", type=str, required=False)
