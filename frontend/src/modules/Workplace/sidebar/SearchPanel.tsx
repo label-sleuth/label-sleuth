@@ -112,7 +112,7 @@ const SearchPanel = forwardRef<HTMLInputElement | null, SearchPanelProps>(({ cle
     panelId: PanelIdsEnum.SEARCH,
     shouldFetch: input !== null && input !== "",
     fetchOnFirstRender: false,
-    modelAvailableRequired: true,
+    modelAvailableRequired: false,
   });
 
   return (
