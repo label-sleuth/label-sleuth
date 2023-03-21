@@ -110,6 +110,7 @@ test("create new category flow", async () => {
   // commenting following line out because I don't know how to differenciate to toast when getting them by role
   // accesible name or description is not the toast message
   // expect(await screen.findByRole("alert", {description: /has been created/i})).toBeInTheDocument()
+  
   expect(await screen.findByText(/The category 'test_category' has been created/)).toBeInTheDocument()
   
   // check that modal is no longer present
