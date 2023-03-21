@@ -54,6 +54,7 @@ export const PRECISION_RESULT_MSG = (precision: number, currentModelVersion: num
 export const NO_MODEL_AVAILABLE_MSG = "not available yet";
 export const CREATE_NEW_CATEGORY_MODAL_MSG = "Create a new category";
 export const CREATE_NEW_CATEGORY_PLACEHOLDER_MSG = "New category name";
+export const CREATE_NEW_CATEGORY_HELPER_MSG = "Please select a meaningful name for your category.";
 export const UPLOAD_NEW_DATASET_MSG = "Upload new data";
 export const UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG = "Choose or set name";
 export const UPLOAD_NEW_DATASET_FILE_HELPER_MSG = `The csv file must have a header line (of "text" and optional "document_id")`;

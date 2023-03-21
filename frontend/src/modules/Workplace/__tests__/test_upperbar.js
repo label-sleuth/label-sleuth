@@ -14,7 +14,7 @@
 */
 
 import { screen, fireEvent } from "@testing-library/react";
-import { renderWithProviderAndRouter, createCategory } from "../../../utils/test-utils";
+import { renderWithProviderAndRouter, createCategoryAndTest } from "../../../utils/test-utils";
 import { initialState as initialWorkspaceState } from "../redux";
 import { UpperBar } from "../upperbar";
 import { categoriesExample } from '../../../utils/test-utils'
@@ -105,15 +105,14 @@ test("create new category flow", async () => {
     }
   );
 
-  await createCategory()
+  await createCategoryAndTest()
 
   // commenting following line out because I don't know how to differenciate to toast when getting them by role
   // accesible name or description is not the toast message
   // expect(await screen.findByRole("alert", {description: /has been created/i})).toBeInTheDocument()
-  expect(await screen.findByText(/The category 'test_category' has been created/)).toBeInTheDocument()
   
   // check that modal is no longer present
-  expect(screen.queryByText(/Create a new category/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Create a new category/i)).not.toBeVisible();
 
   // check that the created category is selected in the dropdown
   expect(screen.getByLabelText("test_category")).toBeInTheDocument()
@@ -134,19 +133,22 @@ test("delete category flow", async () => {
     }
   );
   
-  await createCategory()
+  await createCategoryAndTest()
 
-  fireEvent.click(screen.queryByRole('button', { name: /delete/i}))
+  //const buttonDelete = screen.getByRole('button', {name: /delete/i})
+  const buttonDelete = screen.getByLabelText(/delete/i)
+  const buttonEdit = screen.queryByRole('button', { name: "Edit"})
+
+  fireEvent.click(buttonDelete)
   expect(screen.getByText(/Are you sure you want to delete the category?/i)).toBeInTheDocument();
-  const button = screen.getByRole('button', {name: "Yes"})
-  fireEvent.click(button)
+  const buttonYes = screen.getByRole('button', {name: "Yes"})
+  fireEvent.click(buttonYes)
   
   expect(await screen.findByText(/The category test_category has been deleted/)).toBeInTheDocument()
   expect(screen.queryByText(/Are you sure you want to delete the category 'ad'?/i)).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /delete/i})).not.toBeInTheDocument();;
-  expect(screen.queryByRole('button', { name: /edit/i})).not.toBeInTheDocument();
+  expect(buttonDelete).not.toBeInTheDocument();;
+  expect(buttonEdit).not.toBeInTheDocument();
 
-  await createCategory()
   // TODO: check that the category is not present in the dropdown and that no category is selected
 });
 
@@ -165,7 +167,7 @@ test("edit category flow", async () => {
     }
   );
   
-  await createCategory()
+  await createCategoryAndTest()
 
   fireEvent.click(await screen.findByRole('button', { name: /edit/i}))
   expect(screen.getByRole("heading", /Edit category/i)).toBeInTheDocument();

@@ -16,8 +16,6 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import Modal from "@mui/material/Modal";
 import { useAppDispatch } from "../../../../customHooks/useRedux";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { createCategoryOnServer } from "../../redux";
@@ -30,32 +28,23 @@ import {
   WRONG_INPUT_NAME_BAD_CHARACTER,
   REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES,
   KeyboardKeysEnum,
+  CREATE_NEW_CATEGORY_HELPER_MSG,
 } from "../../../../const";
+import { DialogContentText, Dialog, DialogTitle, DialogContent } from "@mui/material";
 import { useNotification } from "../../../../utils/notification";
 import { toast } from "react-toastify";
 import { ChangeEvent } from "react";
 
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 350,
-  bgcolor: "background.paper",
-  border: "none",
-  boxShadow: 24,
-  p: 4,
-};
-
 interface CreateCategoryModalProps {
-  open: boolean, setOpen: (newValue: boolean) => void
+  open: boolean;
+  setOpen: (newValue: boolean) => void;
 }
 
 export const CreateCategoryModal = ({ open, setOpen }: CreateCategoryModalProps) => {
   const [text, setText] = React.useState("");
   const [categoryNameError, setCategoryNameError] = React.useState("");
   const dispatch = useAppDispatch();
-  const { notify } = useNotification()
+  const { notify } = useNotification();
 
   const handleTextFieldChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     e.preventDefault();
@@ -69,89 +58,79 @@ export const CreateCategoryModal = ({ open, setOpen }: CreateCategoryModalProps)
     } else {
       setCategoryNameError("");
     }
-    setText(text);
+    setText(text.trim());
   };
 
   const onKeyDown = (event: React.KeyboardEvent) => {
-    event.preventDefault();
     if (event.key === KeyboardKeysEnum.ENTER) {
       onSubmit();
     }
   };
 
   const onSubmit = async () => {
-    const newCategoryName = text.trim();
+    const newCategoryName = text;
 
-    dispatch(createCategoryOnServer({ categoryName: newCategoryName }))
-      .then((actionResult) => {
-        if (isFulfilled(actionResult)) {
-          setOpen(false);
-          notify(`The category '${newCategoryName}' has been created`, {
-            type: toast.TYPE.SUCCESS,
-            autoClose: 5000,
-          });
-        }
-      });
+    dispatch(createCategoryOnServer({ categoryName: newCategoryName })).then((actionResult) => {
+      if (isFulfilled(actionResult)) {
+        onModalClose();
+        notify(`The category '${newCategoryName}' has been created`, {
+          type: toast.TYPE.SUCCESS,
+          autoClose: 5000,
+        });
+      }
+    });
   };
 
   const onModalClose = () => {
     setOpen(false);
     setCategoryNameError("");
+    setText("");
   };
 
   return (
-    <div>
-      <Modal
-        open={open}
-        onClose={onModalClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-        disableRestoreFocus
-        onKeyDown={e => e.stopPropagation()}
-      >
-        <Box sx={style}>
-          <Typography
-            id="modal-modal-title"
-            variant="h6"
-            component="h2"
-            sx={{ marginBottom: 2 }}
+    <Dialog
+      open={open}
+      onClose={onModalClose}
+      aria-labelledby="modal-modal-title"
+      aria-describedby="modal-modal-description"
+      disableRestoreFocus
+      onKeyDown={(e) => e.stopPropagation()}
+    >
+      <DialogTitle id="modal-modal-title">{CREATE_NEW_CATEGORY_MODAL_MSG}</DialogTitle>
+      <DialogContent>
+        <DialogContentText sx={{ width: "300px" }}>{CREATE_NEW_CATEGORY_HELPER_MSG}</DialogContentText>
+        <Box
+          sx={{
+            display: "grid",
+            gap: 1,
+            gridTemplateColumns: "60% 40%",
+            alignItems: "center",
+            width: "300px",
+            marginTop: "20px",
+          }}
+        >
+          <TextField
+            id="outlined-basic"
+            className={classes.new_modal_name}
+            label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG}
+            onChange={handleTextFieldChange}
+            onKeyUp={onKeyDown}
+            error={categoryNameError ? true : false}
+            autoFocus
+          />
+          <Button
+            onClick={onSubmit}
+            className={categoryNameError || !text ? classes["btn-disabled"] : classes.btn}
+            sx={{ marginLeft: 3 }}
+            disabled={categoryNameError !== "" || text === ""}
           >
-            {CREATE_NEW_CATEGORY_MODAL_MSG}
-          </Typography>
-          <Box
-            sx={{
-              display: "grid",
-              gap: 1,
-              gridTemplateColumns: "60% 40%",
-              alignItems: "center",
-              width: "300px",
-            }}
-          >
-            <TextField
-              id="outlined-basic"
-              className={classes.new_modal_name}
-              label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG}
-              onChange={handleTextFieldChange}
-              onKeyUp={onKeyDown}
-              error={categoryNameError ? true : false}
-              autoFocus
-            />
-            <Button
-              onClick={onSubmit}
-              className={
-                categoryNameError || !text
-                  ? classes["btn-disabled"]
-                  : classes.btn
-              }
-              sx={{ marginLeft: 3 }}
-              disabled={categoryNameError !== "" || text === ""}
-            >
-              Create
-            </Button>
-            <p className={classes["error"]}>{categoryNameError}</p>
-          </Box>
+            Create
+          </Button>
+          <p className={classes["error"]}>{categoryNameError}</p>
         </Box>
-      </Modal>
-    </div>
+      </DialogContent>
+
+      {/* </Box> */}
+    </Dialog>
   );
-}
+};
