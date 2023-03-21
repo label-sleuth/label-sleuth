@@ -50,6 +50,7 @@
     pointer-events: none;
 }
 
+/* TODO: use MUI to replace this custom css (its intended to mimic the error helper text) */
 .error {
     display: block;
     margin-block-start: 1em;
