@@ -20,7 +20,7 @@ import labelButtonClasses from "../labelButtons/index.module.css";
 import { Box } from "@mui/material";
 import { useAppSelector, useAppDispatch } from "../../customHooks/useRedux";
 import { PanelIdsEnum, LabelTypesEnum } from "../../const";
-import { getPanelDOMKey } from "../../utils/utils";
+import { getDocumentNameFromDocumentId, getPanelDOMKey } from "../../utils/utils";
 import React, { useMemo, useCallback } from "react";
 import { setfocusedSidebarElementByIndex } from "../../modules/Workplace/redux";
 import { useFocusMainPanelElement } from "../../customHooks/useFocusMainPanelElement";
@@ -100,7 +100,7 @@ export const SidebarElement = ({ element, updateCounterOnLabeling = true, index 
             rightToLeft ? classes.right_to_left : ""
           }`}
         >
-          {docId}
+          {getDocumentNameFromDocumentId(docId)}
         </label>
         <Box>
           <p
