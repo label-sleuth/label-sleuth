@@ -13,17 +13,16 @@
     limitations under the License.
 */
 
-import { Link } from "@mui/material";
-import { Stack } from "@mui/material";
+import { Link, Stack, Tooltip} from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSlack, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { faBook } from "@fortawesome/free-solid-svg-icons";
-import { Tooltip } from "@mui/material";
+import { SxProps } from "@mui/system";
 import { SizeProp } from "@fortawesome/fontawesome-svg-core";
 
 interface SupportIconsBarProps {
-  sx: { [key: string]: string | number};
-  iconsSize?: SizeProp;
+  sx?: SxProps;
+	iconsSize?: SizeProp;
 }
 
 export const SupportIconsBar = ({ sx, iconsSize = "xl" }: SupportIconsBarProps) => {

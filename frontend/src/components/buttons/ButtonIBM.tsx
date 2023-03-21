@@ -20,6 +20,7 @@ interface ButtonIBMProps {
     disabled?: boolean,
     text: string,
     className: string,
+    [x: string]: any;
 }
 
 const ButtonIBM = ({ handleClick, disabled, text, className, ...rest } : ButtonIBMProps) => {
