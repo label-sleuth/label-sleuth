@@ -22,7 +22,7 @@ import { ErrorResponse } from "../global";
  */
 export const getErrorMessage = (err: ErrorResponse) => {
   const defaultErrorMessage =
-    "Somethig went wrong. Please ask your system administrator to share the logs by creating an issue on Github or sending a message via Slack.";
+    "Something went wrong. Please ask your system administrator to share the logs by creating an issue on Github or sending a message via Slack.";
   if (err.message) {
     try {
       const errorJSON = JSON.parse(err.message);
