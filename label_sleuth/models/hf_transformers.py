@@ -40,19 +40,21 @@ class HFTransformerModel(ModelAPI):
     Basic implementation for a pytorch-based transformer model that relies on the huggingface transformers library.
     """
     def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager,
-                 pretrained_model, batch_size=32, learning_rate=5e-5, num_train_epochs=5):
+                 pretrained_model, train_batch_size=32, learning_rate=5e-5, num_train_epochs=5, infer_batch_size=32):
         """
         :param output_dir:
         :param background_jobs_manager:
         :param pretrained_model: the name of a transfomer model from huggingface.co, or a path to a directory containing
         a pytorch model created using the huggingface transformers library
-        :param batch_size:
+        :param train_batch_size:
         :param learning_rate:
         :param num_train_epochs:
+        :param infer_batch_size:
         """
         super().__init__(output_dir, background_jobs_manager, gpu_support=True)
         self.pretrained_model_name = pretrained_model
-        self.batch_size = batch_size
+        self.train_batch_size = train_batch_size
+        self.infer_batch_size = infer_batch_size
         self.learning_rate = learning_rate
         self.num_train_epochs = num_train_epochs
         self.max_seq_length = 128
@@ -65,7 +67,7 @@ class HFTransformerModel(ModelAPI):
         training_args = TrainingArguments(output_dir=self.get_models_dir(),
                                           overwrite_output_dir=True,
                                           num_train_epochs=self.num_train_epochs,
-                                          per_device_train_batch_size=self.batch_size,
+                                          per_device_train_batch_size=self.train_batch_size,
                                           learning_rate=self.learning_rate,
                                           use_mps_device=MPS_GPU_AVAILABLE)
         model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_model_name)
@@ -94,7 +96,7 @@ class HFTransformerModel(ModelAPI):
         orig_idx_to_new_idx = {orig_idx: new_idx for new_idx, (orig_idx, _) in enumerate(sorted_items_to_infer)}
         ds = Dataset.from_dict({'text': [item['text'] for _, item in sorted_items_to_infer]})
         predictions = []
-        for output in tqdm(pipeline(KeyDataset(ds, 'text'), batch_size=self.batch_size, truncation=True),
+        for output in tqdm(pipeline(KeyDataset(ds, 'text'), batch_size=self.infer_batch_size, truncation=True),
                            total=len(items_to_infer), desc="classification inference"):
             label = output['label'] == 'LABEL_1'
             score = output['score'] if label is True else 1-output['score']
@@ -134,7 +136,7 @@ class HFBert(HFTransformerModel):
     def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager):
         super().__init__(output_dir, background_jobs_manager,
                          pretrained_model="bert-base-uncased",
-                         batch_size=32, learning_rate=5e-5, num_train_epochs=5)
+                         train_batch_size=32, learning_rate=5e-5, num_train_epochs=5, infer_batch_size=32)
 
     def get_supported_languages(self):
         return {Languages.ENGLISH}
@@ -148,7 +150,7 @@ class HFXLMRoberta(HFTransformerModel):
     def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager):
         super().__init__(output_dir, background_jobs_manager,
                          pretrained_model="xlm-roberta-base",
-                         batch_size=16, learning_rate=2e-5, num_train_epochs=20)
+                         train_batch_size=16, learning_rate=2e-5, num_train_epochs=20, infer_batch_size=16)
 
     def get_supported_languages(self):
         """
