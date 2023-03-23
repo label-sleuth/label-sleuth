@@ -26,7 +26,7 @@ export const getErrorMessage = (err: ErrorResponse) => {
   if (err.message) {
     try {
       const errorJSON = JSON.parse(err.message);
-      return "error" in errorJSON ? errorJSON.error : "title" in errorJSON ? errorJSON.title : defaultErrorMessage;
+      return (errorJSON && errorJSON.title) || defaultErrorMessage;
     } catch (error) {
       return defaultErrorMessage;
     }
