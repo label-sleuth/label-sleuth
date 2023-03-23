@@ -15,6 +15,7 @@
 
 import random
 import unittest
+from label_sleuth.active_learning.strategies.combined_hm_retro import CombinedHMRetro
 
 from label_sleuth.active_learning.strategies.hard_example_mining import HardMiningLearner
 from label_sleuth.active_learning.strategies.hybrid_learner import HybridLearner
@@ -94,3 +95,20 @@ class TestActiveLearningStrategies(unittest.TestCase):
                                                                           predictions, sample_size=2)
         self.assertEqual(doc.text_elements[2], sorted_items_for_labeling[0])
         self.assertEqual(doc.text_elements[3], sorted_items_for_labeling[1])
+        self.assertEqual(doc.text_elements[4], sorted_items_for_labeling[2])
+        self.assertEqual(doc.text_elements[1], sorted_items_for_labeling[3])
+        self.assertEqual(doc.text_elements[0], sorted_items_for_labeling[4])
+    
+    def test_combined_hm_retro(self):
+        al = CombinedHMRetro()
+        category_id = 0
+        doc = generate_simple_doc("dummy_dataset", category_id, num_sentences=5)
+        predictions = [Prediction(True, 0), Prediction(True, 0.2),
+                       Prediction(True, 0.5), Prediction(True, 0.75), Prediction(True, 1)]
+        
+        sorted_items_for_labeling = al.get_recommended_items_for_labeling("dummy_workspace", "dummy_dataset",
+                                                                          category_id, doc.text_elements,
+                                                                          predictions, sample_size=5)
+        self.assertEqual(doc.text_elements[2], sorted_items_for_labeling[0])
+        self.assertEqual(doc.text_elements[4], sorted_items_for_labeling[1])
+       # self.assertEqual(doc.text_elements[4], sorted_items_for_labeling[1])
