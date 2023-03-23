@@ -95,9 +95,7 @@ class TestActiveLearningStrategies(unittest.TestCase):
                                                                           predictions, sample_size=2)
         self.assertEqual(doc.text_elements[2], sorted_items_for_labeling[0])
         self.assertEqual(doc.text_elements[3], sorted_items_for_labeling[1])
-        self.assertEqual(doc.text_elements[4], sorted_items_for_labeling[2])
-        self.assertEqual(doc.text_elements[1], sorted_items_for_labeling[3])
-        self.assertEqual(doc.text_elements[0], sorted_items_for_labeling[4])
+
     
     def test_combined_hm_retro(self):
         al = CombinedHMRetro()
@@ -111,4 +109,7 @@ class TestActiveLearningStrategies(unittest.TestCase):
                                                                           predictions, sample_size=5)
         self.assertEqual(doc.text_elements[2], sorted_items_for_labeling[0])
         self.assertEqual(doc.text_elements[4], sorted_items_for_labeling[1])
+        self.assertEqual(doc.text_elements[3], sorted_items_for_labeling[2])
+        self.assertEqual(doc.text_elements[1], sorted_items_for_labeling[3])
+        self.assertEqual(doc.text_elements[0], sorted_items_for_labeling[4])
        # self.assertEqual(doc.text_elements[4], sorted_items_for_labeling[1])
