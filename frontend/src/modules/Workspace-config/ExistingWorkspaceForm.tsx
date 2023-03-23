@@ -14,14 +14,22 @@
 */
 
 import React from "react";
-import FormControl from "@mui/material/FormControl";
+import { Box, FormControl } from "@mui/material";
 import ControlledSelect from "../../components/dropdown/Dropdown";
-import Box from "@mui/material/Box";
 import ButtonIBM from "../../components/buttons/ButtonIBM";
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css";
 import classes from "./workspace-config.module.css";
 import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
 
+interface ExistingWorkspaceFormProps {
+	handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+	handleClick: () => void;
+	handleDeleteWorkspace: () => void;
+	value: string;
+	options: { value: string; label: string }[];
+	deleteButtonEnabled: (event: React.MouseEvent<HTMLButtonElement>) => void;
+	style: string;
+}
 const ExistingWorkspaceForm = ({
   handleChange,
   handleClick,
@@ -29,7 +37,7 @@ const ExistingWorkspaceForm = ({
   value,
   options,
   deleteButtonEnabled,
-}) => {
+}: ExistingWorkspaceFormProps ) => {
   const [deleteWorkspaceModalOpen, setDeleteWorkspaceModalOpen] = React.useState(false);
 
   return (
@@ -56,11 +64,11 @@ const ExistingWorkspaceForm = ({
           <ButtonIBM
             disabled={!deleteButtonEnabled}
             style={{ marginRight: "1px" }}
-            onClick={() => setDeleteWorkspaceModalOpen(true)}
+            handleClick={() => setDeleteWorkspaceModalOpen(true)}
             className={buttonIBMClasses["button-ibm"]}
             text="Delete"
           />
-          <ButtonIBM onClick={handleClick} className={buttonIBMClasses["button-ibm"]} text="Go" />
+          <ButtonIBM handleClick={handleClick} className={buttonIBMClasses["button-ibm"]} text="Go" />
         </div>
       </FormControl>
     </Box>

@@ -14,17 +14,13 @@
 */
 
 import * as React from "react";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import Button from "@mui/material/Button";
 import sleuth_logo from "../../../assets/sleuth_logo_white.svg";
 import { useAuthentication } from "../../../customHooks/useAuthentication";
 import { SupportIconsBar } from "../../SupportIconsBar";
-import { Divider } from "@mui/material";
+import { AppBar, Box, Button, Divider, Toolbar } from "@mui/material";
 
 interface ButtonAppBarProps {
-  logout: () => void;
+  logout: (e: React.MouseEvent) => void;
 }
 
 export const ButtonAppBar = ({ logout }: ButtonAppBarProps) => {
