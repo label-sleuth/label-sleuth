@@ -19,7 +19,7 @@ class CombinedHMRetro(ActiveLearner):
         r_indices, r_sorted = zip(*sorted(enumerate(retro_scores), key=itemgetter(1), reverse=True))
         n_elements = len(hm_scores)
 
-        scored_elements = []
+        scored_elements = set()
         combined_scores = [0] * n_elements
         highest_score = n_elements
         hm_ind = 0
@@ -28,14 +28,14 @@ class CombinedHMRetro(ActiveLearner):
             while hm_indices[hm_ind] in scored_elements:
                 hm_ind += 1
             combined_scores[hm_indices[hm_ind]] = highest_score
-            scored_elements.append(hm_indices[hm_ind])
+            scored_elements.add(hm_indices[hm_ind])
             highest_score -= 1
             hm_ind += 1
             if len(scored_elements) < n_elements:
                 while r_indices[r_ind] in scored_elements:
                     r_ind += 1
                 combined_scores[r_indices[r_ind]] = highest_score
-                scored_elements.append(r_indices[r_ind])
+                scored_elements.add(r_indices[r_ind])
                 highest_score -= 1
                 r_ind += 1
         return [x/n_elements for x in combined_scores]
