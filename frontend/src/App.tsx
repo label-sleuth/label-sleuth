@@ -34,6 +34,7 @@ import { fetchFeatureFlags } from "./featureFlags/featureFlagsSlice";
 import { useNotifyError } from "./error/useNotifyError";
 import { useWorkspaceId } from "./customHooks/useWorkspaceId";
 import { fetchVersion } from "./modules/Workplace/redux";
+import { useCheckSystemHealth } from "./customHooks/useCheckSystemHealth";
 
 const AppRoutes = () => {
   const { authenticated, authenticationEnabled } = useAuthentication();
@@ -83,6 +84,8 @@ const App = () => {
 
   useNotifyError();
 
+  const { systemOk } = useCheckSystemHealth();
+
   useEffect(() => {
     dispatch(fetchFeatureFlags());
   }, [dispatch]);
@@ -104,6 +107,7 @@ const App = () => {
           <CircularProgress color="inherit" />
         </Backdrop>
       )}
+      <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={!systemOk}></Backdrop>
     </div>
   );
 };

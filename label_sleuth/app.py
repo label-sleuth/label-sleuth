@@ -143,6 +143,9 @@ Dataset endpoints. Datasets can be shared between workspaces, so these calls are
 workspace.
 """
 
+@main_blueprint.route("/health-check", methods=['GET'])
+def health_check():
+    return jsonify({'ok': True})
 
 @main_blueprint.route("/datasets", methods=['GET'])
 @login_if_required
