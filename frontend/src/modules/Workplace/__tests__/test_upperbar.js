@@ -18,6 +18,7 @@ import { renderWithProviderAndRouter, createCategoryAndTest } from "../../../uti
 import { initialState as initialWorkspaceState } from "../redux";
 import { UpperBar } from "../upperbar";
 import { categoriesExample } from '../../../utils/test-utils'
+import {CATEGORY_NAME_MAX_CHARS} from "../../../const";
 
 test("category action butttons are present", async () => {
     renderWithProviderAndRouter(
@@ -83,7 +84,7 @@ test("create new category validation", async () => {
   
 
   fireEvent.change(input, {target: {value: "This text is longer than 100 characters which is the maximum len allowed and this text is very long and have more than 100 characters so we should get this error"}})
-  expect(screen.getByText(/Name may be max 100 characters long/i)).toBeInTheDocument()
+  expect(screen.getByText(`Name may be max ${CATEGORY_NAME_MAX_CHARS} characters long`)).toBeInTheDocument()
   expect(button).toBeDisabled()
 });
 
