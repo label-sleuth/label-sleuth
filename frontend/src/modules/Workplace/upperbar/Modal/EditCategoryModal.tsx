@@ -27,6 +27,7 @@ import {
   REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES,
   WRONG_INPUT_NAME_BAD_CHARACTER,
   KeyboardKeysEnum,
+  CATEGORY_NAME_MAX_CHARS,
 } from "../../../../const";
 import classes from "./index.module.css";
 import { useNotification } from "../../../../utils/notification";
@@ -88,11 +89,10 @@ export const EditCategoryModal = ({ open, setOpen }: EditCategoryModalProps) => 
   const handleCategoryNameChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let text = e.target.value;
     if (text) {
-      if (text.length > 30) {
+      if (text.length > CATEGORY_NAME_MAX_CHARS) {
         setCategoryNameError(WRONG_INPUT_NAME_LENGTH);
-      } else if (!text.match(REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES)) {
-        setCategoryNameError(WRONG_INPUT_NAME_BAD_CHARACTER);
-      } else setCategoryNameError("");
+      } else
+        setCategoryNameError("");
     } else {
       setCategoryNameError("");
     }

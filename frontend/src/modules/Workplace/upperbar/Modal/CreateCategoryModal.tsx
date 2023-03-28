@@ -29,6 +29,7 @@ import {
   REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES,
   KeyboardKeysEnum,
   CREATE_NEW_CATEGORY_HELPER_MSG,
+  CATEGORY_NAME_MAX_CHARS,
 } from "../../../../const";
 import { DialogContentText, Dialog, DialogTitle, DialogContent } from "@mui/material";
 import { useNotification } from "../../../../utils/notification";
@@ -50,11 +51,10 @@ export const CreateCategoryModal = ({ open, setOpen }: CreateCategoryModalProps)
     e.preventDefault();
     let text = e.target.value;
     if (text) {
-      if (text.length > 30) {
+      if (text.length > CATEGORY_NAME_MAX_CHARS) {
         setCategoryNameError(WRONG_INPUT_NAME_LENGTH);
-      } else if (!text.match(REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES)) {
-        setCategoryNameError(WRONG_INPUT_NAME_BAD_CHARACTER);
-      } else setCategoryNameError("");
+      }  else
+        setCategoryNameError("");
     } else {
       setCategoryNameError("");
     }
