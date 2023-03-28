@@ -46,15 +46,12 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
         -> Dict[str, Dict[str, Dict[str, Label]]]:
     logging.warning("Currently label metadata is ignored")
     
-    # replace punctuation with underscores in category names
-    punctuation = string.punctuation.replace("'", "")
 
     if DisplayFields.doc_id in labels_df_to_import.columns:
         labels_df_to_import[DisplayFields.doc_id] = labels_df_to_import[DisplayFields.doc_id].apply(
             lambda x: x.replace(URI_SEP, '_'))
     labels_df_to_import[DisplayFields.category_name] = labels_df_to_import[DisplayFields.category_name].apply(str)
-    labels_df_to_import[DisplayFields.category_name] = labels_df_to_import[DisplayFields.category_name].apply(
-        lambda x: x.translate(x.maketrans(punctuation, '_' * len(punctuation))))
+
     # convert binary labels in dataframe to boolean
     positive_indicators = {LABEL_POSITIVE, str(LABEL_POSITIVE), str(LABEL_POSITIVE).upper(),
                            str(LABEL_POSITIVE).lower(), 1, "1"}
