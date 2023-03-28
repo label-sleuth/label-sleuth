@@ -23,7 +23,7 @@ import { Workplace } from "./modules/Workplace";
 import { PrivateRoute } from "./features/PrivateRoute";
 import { WORKSPACE_CONFIG_PATH, WORKSPACE_PATH, LOGIN_PATH } from "./config";
 import { Navigate } from "react-router-dom";
-import { BrowserRouter } from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import { useAppSelector, useAppDispatch } from "./customHooks/useRedux";
 import theme from "./theme.jsx";
@@ -98,9 +98,9 @@ const App = () => {
     <div>
       {featureFlags.fetched ? (
         <ThemeProvider theme={theme}>
-          <BrowserRouter>
+          <HashRouter>
             <AppRoutes />
-          </BrowserRouter>
+          </HashRouter>
         </ThemeProvider>
       ) : (
         <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={true}>

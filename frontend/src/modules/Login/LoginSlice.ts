@@ -14,7 +14,7 @@
 */
 
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { AUTHENTICATE_API } from "../../config";
+import { AUTHENTICATE_API, BASE_URL } from "../../config";
 import { client } from "../../api/client";
 
 interface LoginSliceState {
@@ -32,8 +32,6 @@ const initialState: LoginSliceState = {
   loading: false,
   authenticated: !!localStorage.token,
 };
-
-const BASE_URL = process.env.REACT_APP_API_URL;
 
 const auth_url = `${BASE_URL}/${AUTHENTICATE_API}`;
 

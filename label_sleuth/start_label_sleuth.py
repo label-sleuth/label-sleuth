@@ -66,6 +66,23 @@ def load_sample_corpus(app, corpus_name):
         app.orchestrator_api.add_documents_from_file(corpus_name, temp_file_path)
 
 
+class PrefixMiddleware(object):
+
+    def __init__(self, app, prefix=''):
+        self.app = app
+        self.prefix = prefix
+
+    def __call__(self, environ, start_response):
+
+        if environ['PATH_INFO'].startswith(self.prefix):
+            environ['PATH_INFO'] = environ['PATH_INFO'][len(self.prefix):]
+            environ['SCRIPT_NAME'] = self.prefix
+            return self.app(environ, start_response)
+        else:
+            start_response('404', [('Content-Type', 'text/plain')])
+            return ["This url does not belong to the app.".encode()]
+
+
 if __name__ == '__main__':
     parser = ArgumentParser()
 
@@ -91,6 +108,9 @@ if __name__ == '__main__':
     config_args_group = parser.add_argument_group('Specific configuration parameters '
                                                   '(These override the config file specified in --config_path)')
 
+    parser.add_argument('--url_prefix', type=str,
+                        help=f'URL prefix for the service. (Default is None which means no prefix)', default=None)
+
     def process_bool_arg(bool_arg):
         return ast.literal_eval(bool_arg.title()) if type(bool_arg) == str else bool_arg
 
@@ -115,5 +135,8 @@ if __name__ == '__main__':
                               output_dir=args.output_path)
     if args.load_sample_corpus:
         load_sample_corpus(curr_app, args.load_sample_corpus)
+    logging.info(f"args.url_prefix {args.url_prefix}")
+    if args.url_prefix is not None:
+        curr_app.wsgi_app = PrefixMiddleware(curr_app.wsgi_app, prefix=args.url_prefix)
 
     app.start_server(curr_app, args.host, args.port, args.num_serving_threads)
