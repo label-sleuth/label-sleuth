@@ -71,5 +71,6 @@
   },
   "devDependencies": {
     "msw": "^0.47.4"
-  }
+  },
+  "homepage": "."
 }
