@@ -74,7 +74,7 @@ export const NEXT_MODEL_TRAINING_MSG = "Training a new model";
 export const NEXT_ZERO_SHOT_MODEL_TRAINING_MSG = "Training a new zero shot model";
 export const newDataCreatedMessage = (name: string, numDocs: number, numsentences: number) =>
   `The new dataset ${name} has been created with ${numDocs} documents and ${numsentences} text entries.`;
-export const WRONG_INPUT_NAME_LENGTH = "Name may be max 30 characters long";
+export const WRONG_INPUT_NAME_LENGTH = "Name may be max 100 characters long";
 export const WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES = `Name may only contain English characters, digits and underscores`;
 export const WRONG_INPUT_NAME_BAD_CHARACTER = `Name may only contain English characters, digits, underscores and spaces`;
 export const REGEX_LETTER_NUMBERS_UNDERSCORE = /^[a-zA-Z0-9_]*$/;
