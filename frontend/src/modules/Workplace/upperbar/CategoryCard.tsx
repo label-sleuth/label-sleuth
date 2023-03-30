@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { Card, CardContent, Typography, IconButton } from "@mui/material";
+import { Card, CardContent, Typography, IconButton, Stack } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import classes from "./UpperBar.module.css";
@@ -26,7 +26,7 @@ export const CategoryCard = ({ setCardOpen }: CategoryCardProps) => {
   const categories = useAppSelector((state) => state.workspace.categories);
 
   return (
-    <>
+    <Stack direction={"row"} alignItems={"center"}>
       <div className={classes["arrow-left"]}></div>
       <Card className={classes["category-card"]}>
         <CardContent sx={{ padding: "0px 10px 10px 10px" }}>
@@ -40,6 +40,6 @@ export const CategoryCard = ({ setCardOpen }: CategoryCardProps) => {
           </IconButton>
         </CardContent>
       </Card>
-    </>
+    </Stack>
   );
 };
