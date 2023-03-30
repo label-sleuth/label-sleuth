@@ -78,6 +78,7 @@
 
 .elem_text {
   padding: 1px 10px 1px 10px;
+  white-space: pre-line;
 }
 
 .hovbtn {

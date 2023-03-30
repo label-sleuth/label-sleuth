@@ -20,6 +20,7 @@
   font-size: 15px;
   min-height: 35px;
   line-height: 20px;
+  white-space: pre-line;
 }
 
 .nodata_text {
@@ -28,6 +29,7 @@
   margin: 0 !important;
   font-size: 15px;
   line-height: 20px;
+  white-space: pre-line;
 }
 
 .text_predict,
