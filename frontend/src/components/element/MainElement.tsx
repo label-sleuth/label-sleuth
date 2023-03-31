@@ -49,7 +49,7 @@ export const MainElement = ({ element }: ElementProps) => {
   );
 
   return curCategory === null ? (
-    <Box className={`${elemStyleClasses.prediction}`} id={elementDOMId}>
+    <Box className={`${elemStyleClasses.prediction} ${elemStyleClasses.animation}`} id={elementDOMId}>
       <p className={`${classes["nodata_text"]} ${rightToLeft ? classes.right_to_left : ""}`}>{text}</p>
     </Box>
   ) : (
