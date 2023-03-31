@@ -83,7 +83,7 @@ export const REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES = /^[a-zA-Z0-9_ ]*$/;
 
 export const RIGHT_DRAWER_INITIAL_WIDTH = 350;
 export const RIGHT_DRAWER_MIN_WIDTH = 300;
-export const RIGHT_DRAWER_MAX_WIDTH = 800;
+export const RIGHT_DRAWER_MAX_WIDTH = 1200;
 export const LEFT_DRAWER_WIDTH = 300;
 export const ACTIONS_DRAWER_WIDTH = 50;
 export const APPBAR_HEIGHT = 80;

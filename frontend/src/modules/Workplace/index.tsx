@@ -40,6 +40,7 @@ import {
   POSITIVE_PRED_TOOLTIP_MSG,
   EVALUATION_TOOLTIP_MSG,
   PanelIdsEnum,
+  RIGHT_DRAWER_INITIAL_WIDTH,
 } from "../../const";
 import { ShortcutsModal } from "./main/ShortcutsModal";
 import Drawer from "@mui/material/Drawer";
@@ -67,6 +68,8 @@ export const Workplace = () => {
   const workspaceVisited = useWorkspaceVisited();
 
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(!!!workspaceVisited);
+  const [rightDrawerWidth, setRightDrawerWidth] = useState(RIGHT_DRAWER_INITIAL_WIDTH);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
 
   const workspaceRef = useRef();
   const dispatch = useAppDispatch();
@@ -127,8 +130,13 @@ export const Workplace = () => {
         <CssBaseline />
         <WorkspaceInfo setTutorialOpen={setTutorialOpen} />
         <Box component="main" sx={{ padding: 0 }}>
-          <UpperBar />
-          <PanelManager />
+          <UpperBar rightDrawerWidth={rightDrawerWidth} rightPanelOpen={rightPanelOpen} />
+          <PanelManager
+            rightDrawerWidth={rightDrawerWidth}
+            setRightDrawerWidth={setRightDrawerWidth}
+            rightPanelOpen={rightPanelOpen}
+            setRightPanelOpen={setRightPanelOpen}
+          />
           {/* Panel tabs  */}
           <Drawer variant="permanent" anchor="right" PaperProps={{ sx: { minWidth: 50 } }}>
             <Stack
@@ -201,7 +209,10 @@ export const Workplace = () => {
         <TutorialDialog open={tutorialDialogOpen} setOpen={setTutorialDialogOpen} setTutorialOpen={setTutorialOpen} />
         <ShortcutsModal open={shortcutsModalOpen} setOpen={setShortcutsModalOpen} />
       </Box>
-      <Backdrop sx={{ color: "#fff", zIndex: backdropOpen ? 10000 : -1, display: backdropOpen ? 'flex' : 'none'}} open={backdropOpen} >
+      <Backdrop
+        sx={{ color: "#fff", zIndex: backdropOpen ? 10000 : -1, display: backdropOpen ? "flex" : "none" }}
+        open={backdropOpen}
+      >
         <CircularProgress color="inherit" />
       </Backdrop>
     </>

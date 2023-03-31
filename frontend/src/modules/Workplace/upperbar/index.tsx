@@ -28,6 +28,7 @@ import {
   EDIT_CATEGORY_TOOLTIP_MSG,
   APPBAR_HEIGHT,
   LEFT_DRAWER_WIDTH,
+  ACTIONS_DRAWER_WIDTH,
 } from "../../../const";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import { CategoryCard } from "./CategoryCard";
@@ -39,11 +40,11 @@ import { EditCategoryModal } from "./Modal/EditCategoryModal";
 import { CategoryFormControl } from "./CategoryFormControl";
 
 // the AppBar component from mui isn't used because it's width doens't get updated when resizing the right sidebar
-const AppBarLS = styled(Box)(() => ({
+const AppBarLS = styled(Box)(({ rightDrawerWidth, rightPanelOpen }: UpperBarProps) => ({
   position: "fixed",
   top: 0,
   left: LEFT_DRAWER_WIDTH,
-  right: 0,
+  right: ACTIONS_DRAWER_WIDTH,
   height: APPBAR_HEIGHT,
   display: "flex",
   alignItems: "center",
@@ -51,9 +52,17 @@ const AppBarLS = styled(Box)(() => ({
   background: "#f4f4f4",
   borderBottom: "solid 1px #d6d6d6",
   padding: "0 25px",
+  ...(rightPanelOpen && {
+    marginRight: rightDrawerWidth,
+  }),
 }));
 
-export const UpperBar = () => {
+interface UpperBarProps {
+  rightDrawerWidth: number;
+  rightPanelOpen: boolean;
+}
+
+export const UpperBar = ({ rightDrawerWidth, rightPanelOpen }: UpperBarProps) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false);
   const [deleteCategoryModalOpen, setDeleteCategoryModalOpen] = useState(false);
@@ -79,39 +88,36 @@ export const UpperBar = () => {
   }, [curCategory, cardOpen]);
 
   return (
-    <AppBarLS sx={{}}>
+    <AppBarLS rightDrawerWidth={rightDrawerWidth} rightPanelOpen={rightPanelOpen}>
       <Box className={classes["app-bar-container"]}>
-        <p className={classes["dropdown-label"]}>Category: </p>
-        <CategoryFormControl />
-        <Tooltip title={CREATE_NEW_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-          <IconButton
-            onClick={handleAddCategory}
-            id="upperbar-add-category"
-            className={classes["category-action-button"]}
-          >
-            <AddOutlinedIcon />
-          </IconButton>
-        </Tooltip>
-        {curCategory !== null ? (
-          <>
-            <Tooltip title={DELETE_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-              <IconButton
-                className={classes["category-action-button"]}
-                onClick={handleDeleteCategory}
-              >
-                <DeleteOutlineOutlinedIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={EDIT_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-              <IconButton
-                className={classes["category-action-button"]}
-                onClick={handleEditCategory}
-              >
-                <ModeEditOutlineOutlinedIcon />
-              </IconButton>
-            </Tooltip>
-          </>
-        ) : null}
+        <Box className={classes["app-bar-container"]}>
+          <p className={classes["dropdown-label"]}>Category: </p>
+          <CategoryFormControl />
+          <Tooltip title={CREATE_NEW_CATEGORY_TOOLTIP_MSG} disableFocusListener>
+            <IconButton
+              onClick={handleAddCategory}
+              id="upperbar-add-category"
+              className={classes["category-action-button"]}
+            >
+              <AddOutlinedIcon />
+            </IconButton>
+          </Tooltip>
+          {curCategory !== null ? (
+            <>
+              <Tooltip title={DELETE_CATEGORY_TOOLTIP_MSG} disableFocusListener>
+                <IconButton className={classes["category-action-button"]} onClick={handleDeleteCategory}>
+                  <DeleteOutlineOutlinedIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={EDIT_CATEGORY_TOOLTIP_MSG} disableFocusListener>
+                <IconButton className={classes["category-action-button"]} onClick={handleEditCategory}>
+                  <ModeEditOutlineOutlinedIcon />
+                </IconButton>
+              </Tooltip>
+            </>
+          ) : null}
+        </Box>
+
         {cardOpen ? <CategoryCard setCardOpen={setCardOpen} /> : null}
       </Box>
       <CreateCategoryModal open={createCategoryModalOpen} setOpen={setCreateCategoryModalOpen} />

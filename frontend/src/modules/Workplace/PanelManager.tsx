@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Box } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
 import { RIGHT_DRAWER_INITIAL_WIDTH, ACTIONS_DRAWER_WIDTH, panelIds } from "../../const";
@@ -54,18 +54,22 @@ const ResizableDiv = ({ onMouseDown, rightDrawerWidth }: ResizableDivProps) => {
   );
 };
 
+interface PanelManagerProps {
+  rightDrawerWidth: number;
+  setRightDrawerWidth: React.Dispatch<React.SetStateAction<number>>;
+  rightPanelOpen: boolean;
+  setRightPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
 /**
  * Manages the panels, that is, the sidebar panels and the main panels.
  */
-export const PanelManager = () => {
+export const PanelManager = ({rightDrawerWidth, setRightDrawerWidth, rightPanelOpen, setRightPanelOpen}: PanelManagerProps) => {
   const activePanelId = useAppSelector((state) => state.workspace.panels.activePanelId);
 
-  const [open, setOpen] = useState(false);
   const textInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [rightDrawerWidth, setRightDrawerWidth] = useState(RIGHT_DRAWER_INITIAL_WIDTH);
-
-  useTogglePanel(setOpen, textInputRef);
+  useTogglePanel(setRightPanelOpen, textInputRef);
 
   useFocusSidebarElement();
 
@@ -80,8 +84,8 @@ export const PanelManager = () => {
 
   return (
     <Box>
-      <MainPanel rightDrawerWidth={rightDrawerWidth} open={open} />
-      {open && <ResizableDiv onMouseDown={handleMouseDown} rightDrawerWidth={rightDrawerWidth} />}
+      <MainPanel rightDrawerWidth={rightDrawerWidth} open={rightPanelOpen} />
+      {rightPanelOpen && <ResizableDiv onMouseDown={handleMouseDown} rightDrawerWidth={rightDrawerWidth} />}
       <Drawer
         sx={{
           width: RIGHT_DRAWER_INITIAL_WIDTH,
@@ -96,7 +100,7 @@ export const PanelManager = () => {
         }}
         variant="persistent"
         anchor="right"
-        open={open}
+        open={rightPanelOpen}
       >
         {activePanelId === panelIds.SEARCH && <SearchPanel clearSearchInput={clearSearchInput} ref={textInputRef} />}
         {activePanelId === panelIds.LABEL_NEXT && <LabelNextPanel />}
