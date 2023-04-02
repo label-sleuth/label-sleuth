@@ -96,7 +96,9 @@ def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
                                            sentence_embedding_service,
                                            app.config["CONFIGURATION"])
     app.register_blueprint(main_blueprint)
+    app.orchestrator_api.recover_unfinished_iterations()
     return app
+
 
 
 def start_server(app, host, port, num_serving_threads):
