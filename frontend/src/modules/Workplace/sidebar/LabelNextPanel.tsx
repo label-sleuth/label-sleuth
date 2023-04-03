@@ -45,10 +45,10 @@ const LabelNextPanel = () => {
       <ElementList
         elements={currentContentData as Element[]}
         loading={loading}
-        nonEmptyResultsMessage={"Label these elements next"}
+        nonEmptyResultsMessage={"Labeling these elements next will be most effective at improving the model"}
         emptyResultsMessage={""}
         isPaginationRequired={isPaginationRequired}
-        elementsTopPadding={-2}
+        elementsTopPadding={-1}
       />
       <CustomPagination
         hitCount={hitCount}
