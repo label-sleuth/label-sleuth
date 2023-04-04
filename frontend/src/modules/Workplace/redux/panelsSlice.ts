@@ -84,7 +84,6 @@ export const initialState: PanelsSliceState = {
       index: null,
       scrollIntoViewOnChange: true,
     },
-    refetch: false,
     panels: {
       [PanelIdsEnum.MAIN_PANEL]: {
         ...elementsInitialState,
@@ -100,7 +99,6 @@ export const initialState: PanelsSliceState = {
       },
       [PanelIdsEnum.POSITIVE_PREDICTIONS]: {
         ...elementsInitialState,
-        refetch: false,
       },
       [PanelIdsEnum.POSITIVE_LABELS]: {
         ...elementsInitialState,
@@ -342,9 +340,6 @@ export const reducers = {
     if (panelId !== PanelIdsEnum.NOT_SET) {
       state.panels.panels[panelId].page = newPage;
     }
-  },
-  setRefetch(state: WorkspaceState, action: PayloadAction<boolean>) {
-    state.panels.refetch = action.payload;
   },
 };
 

@@ -196,7 +196,6 @@ export const {
   cleanUploadedLabels,
   changeCurrentDocument,
   setPage,
-  setRefetch,
   focusFirstElement,
   clearMainPanelFocusedElement,
   setfocusedSidebarElementByIndex,
