@@ -40,11 +40,13 @@ const ContradictingLabelsPanel = () => {
     (state) => state.workspace.panels.panels[PanelIdsEnum.CONTRADICTING_LABELS]
   );
   const loading = useAppSelector((state) => state.workspace.panels.loading[panelIds.CONTRADICTING_LABELS]);
+  const curCategory = useAppSelector((state) => state.workspace.curCategory);
 
   const { currentContentData, currentPage, onPageChange, isPaginationRequired } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: PanelIdsEnum.CONTRADICTING_LABELS,
     modelAvailableRequired: false,
+    otherDependencies: [curCategory],
   });
 
   const Separator = () => (

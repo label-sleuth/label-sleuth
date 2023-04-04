@@ -68,7 +68,6 @@ interface ContractingLabelsPanelState extends PanelState {
 }
 
 interface PositivePredictionsPanelState extends PanelState {
-  refetch: boolean;
 }
 
 interface EvaluationPanelState extends PanelState {
@@ -125,7 +124,6 @@ interface PanelsSliceState {
       index: number | null;
       scrollIntoViewOnChange: boolean;
     };
-    refetch: boolean;
     panels: {
       [PanelIdsEnum.MAIN_PANEL]: PanelState;
       [PanelIdsEnum.SEARCH]: SearchPanelState;

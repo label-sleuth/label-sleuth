@@ -14,41 +14,27 @@
 */
 
 import { Box } from "@mui/material";
-import React from "react";
-import { useAppSelector, useAppDispatch } from "../../../customHooks/useRedux";
+import { useAppSelector } from "../../../customHooks/useRedux";
 import { PanelIdsEnum } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
-import { useFetchPanelElements } from "../../../customHooks/useFetchPanelElements";
-import { setRefetch } from "../redux";
 import { Element } from "../../../global";
 
 const AllPositiveLabelsPanel = () => {
   const { hitCount } = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.POSITIVE_LABELS]);
-
-  const refetch = useAppSelector((state) => state.workspace.panels.refetch);
+  const curCategory = useAppSelector((state) => state.workspace.curCategory);
 
   const loading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.POSITIVE_LABELS]);
 
   const sidebarPanelElementsPerPage = useAppSelector((state) => state.featureFlags.sidebarPanelElementsPerPage);
 
-  const dispatch = useAppDispatch();
-
   const { currentContentData, currentPage, onPageChange, isPaginationRequired } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: PanelIdsEnum.POSITIVE_LABELS,
     modelAvailableRequired: false,
+    otherDependencies: [curCategory],
   });
-
-  const fetchPositiveLabelsElements = useFetchPanelElements({ panelId: PanelIdsEnum.POSITIVE_LABELS });
-
-  React.useEffect(() => {
-    if (refetch) {
-      fetchPositiveLabelsElements();
-      dispatch(setRefetch(false));
-    }
-  }, [fetchPositiveLabelsElements, refetch, dispatch]);
 
   return (
     <Box>
