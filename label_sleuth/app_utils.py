@@ -54,13 +54,16 @@ def validate_category_id(function):
     return wrapper
 
 
-def elements_back_to_front(workspace_id: str, elements: List[TextElement], category_id: int) -> List[Mapping]:
+def elements_back_to_front(workspace_id: str, elements: List[TextElement], category_id: int, need_snippet: bool = True,
+                           query_string: str = None) -> List[Mapping]:
     """
     Converts TextElement objects from the backend into dictionaries in the form expected by the frontend, and adds
     the model prediction for the elements if available.
     :param workspace_id:
     :param elements: a list of TextElements
     :param category_id:
+    :param need_snippet: whether to create a text snippet
+    :param query_string: query to include in snippet
     :return: a list of dictionaries with element information
     """
 
@@ -71,6 +74,7 @@ def elements_back_to_front(workspace_id: str, elements: List[TextElement], categ
               'begin': text_element.span[0][0],
               'end': text_element.span[0][1],
               'text': text_element.text,
+              'snippet': get_text_snippet(text_element.text, query_string) if need_snippet else "",
               'user_labels': {k: str(v.label).lower()
                               # TODO current UI is using true and false as strings. change to boolean in the new UI
                               for k, v in text_element.category_to_label.items()},
@@ -141,6 +145,48 @@ def extract_enriched_ngrams_and_weights_list(elements, boolean_labels):
 
     ngrams_and_weights_list = [{'text': ngram, 'weight': weight} for ngram, weight in enriched_ngrams_and_weights]
     return ngrams_and_weights_list[:30]
+
+
+def get_text_snippet(text, query_string):
+    """
+    Get snippet from full text.
+    1. If length of text in tokens is less than snippet maximum length, the full text is returned.
+    2. If there is no query, or query is not matched, the snippet is built from the start and the end of the text.
+    3. if query is matched to the text, the snippet is built from up to 3 excerpts containing the query.
+    Query must be contained by an exact match to the text (case in-sensitive).
+    :param text:
+    :param query_string:
+    :return: a string containing snippet
+    """
+
+    text_tokens = text.split(" ")
+    max_token_length = current_app.config['CONFIGURATION'].snippet_max_token_length
+    if len(text_tokens) <= max_token_length:
+        return text
+    starting_text = " ".join(text_tokens[:int(max_token_length / 2)])
+    end_text = " ".join(text_tokens[-int(max_token_length / 2):])
+    if not query_string:
+        return starting_text + " ... " + end_text
+    matches = [m for m in re.finditer(r"\b[0-9a-zA-Z_`'.-]*"+query_string+r"[0-9a-zA-Z_`'.-]*\b", text, flags=re.IGNORECASE)][:3]
+    if len(matches) == 0:
+        return starting_text + " ... " + end_text
+    snippet = ""
+    num_tokens_before_after_match = max_token_length - len(matches) * len(query_string.split(" "))
+    num_tokens_before_after_match = int(num_tokens_before_after_match/(2*len(matches)))
+    for i, m in enumerate(matches):
+        start_ind = m.regs[0][0]
+        end_ind = m.regs[0][1]
+        match = text[start_ind:end_ind ]
+        text_before_match = text[:start_ind].split()
+        text_after_match = text[end_ind:].split()
+        if i == 0 and start_ind - len(" ".join(text_before_match[-num_tokens_before_after_match:])) > 1:
+            snippet += " ... "
+        snippet += " ".join(text_before_match[-num_tokens_before_after_match:])
+        snippet += " " + match + " "
+        snippet += " ".join(text_after_match[:num_tokens_before_after_match])
+        if end_ind + len(" ".join(text_after_match[:num_tokens_before_after_match])) < len(text):
+            snippet += " ... "
+    return snippet
 
 
 def get_natural_sort_key(text):
