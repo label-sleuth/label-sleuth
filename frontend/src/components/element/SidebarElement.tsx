@@ -54,7 +54,7 @@ interface SidebarElementProps {
 
 export const SidebarElement = ({ element, updateCounterOnLabeling = true, index }: SidebarElementProps) => {
   const dispatch = useAppDispatch();
-  const { id, docId, text, userLabel, modelPrediction } = element;
+  const { id, docId, text, userLabel, modelPrediction, snippet } = element;
   const activePanelId = useAppSelector((state) => state.workspace.panels.activePanelId);
   const searchInput = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.SEARCH].input);
   const { index: focusedSidebarElementIndex } = useAppSelector((state) => state.workspace.panels.focusedSidebarElement);
@@ -111,7 +111,7 @@ export const SidebarElement = ({ element, updateCounterOnLabeling = true, index 
             <Highlighter
               searchWords={activePanelId === PanelIdsEnum.SEARCH ? [searchInput || ""] : []}
               autoEscape={true}
-              textToHighlight={text}
+              textToHighlight={snippet || text}
             />
           </p>
         </Box>

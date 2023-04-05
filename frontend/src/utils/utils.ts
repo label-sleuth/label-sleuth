@@ -133,7 +133,7 @@ export const parseElements = (
 };
 
 export const parseElement = (
-  { docid, id, model_predictions, user_labels, text }: UnparsedElement,
+  { docid, id, model_predictions, user_labels, text, snippet }: UnparsedElement,
   curCategoryId: number | null
 ): Element => ({
   docId: docid,
@@ -141,6 +141,7 @@ export const parseElement = (
   modelPrediction: curCategoryId !== null ? getStringLabel(`${model_predictions[curCategoryId]}`) : LabelTypesEnum.NONE,
   userLabel: curCategoryId !== null ? getStringLabel(`${user_labels[curCategoryId]}`) : LabelTypesEnum.NONE,
   text,
+  snippet: snippet !== undefined ? snippet : null,
   otherUserLabels:
     curCategoryId !== null
       ? Object.assign(
