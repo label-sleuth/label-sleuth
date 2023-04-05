@@ -468,7 +468,7 @@ def get_document_elements(workspace_id, document_uri):
         category_id = int(category_id)
     hit_count = len(elements)
     elements = elements[start_idx: start_idx + size]
-    elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
+    elements_transformed = elements_back_to_front(workspace_id, elements, category_id, need_snippet=False)
 
     res = {'elements': elements_transformed, 'hit_count': hit_count}
     return jsonify(res)
@@ -595,7 +595,7 @@ def query(workspace_id):
                                            unlabeled_only=False, sample_size=sample_size,
                                            sample_start_idx=sample_start_idx, remove_duplicates=True)
     sorted_elements = sorted(resp["results"], key=lambda te: get_natural_sort_key(te.uri))
-    elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id)
+    elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id, query_string=query_string)
     res = {'elements': elements_transformed,
            'hit_count': resp["hit_count"],
            'hit_count_unique': resp["hit_count_unique"]}

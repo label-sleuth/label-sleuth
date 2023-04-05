@@ -47,6 +47,7 @@ class Configuration:
     active_learning_policy: ActiveLearningPolicy = None
     main_panel_elements_per_page: int = 500
     sidebar_panel_elements_per_page: int = 50
+    snippet_max_token_length: int = 100
     users: List[dict] = field(default_factory=list)
 
 
