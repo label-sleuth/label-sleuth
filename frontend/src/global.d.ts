@@ -42,6 +42,7 @@ interface UnparsedElement {
   docid: string;
   id: string;
   text: string;
+  snippet: string | undefined;
 }
 
 interface Element {
@@ -51,6 +52,7 @@ interface Element {
   modelPrediction: LabelTypesEnum;
   text: string;
   otherUserLabels: { [categoryId: number]: LabelTypesEnum };
+  snippet: string | null;
 }
 
 interface ElementsDict {
@@ -67,8 +69,7 @@ interface ContractingLabelsPanelState extends PanelState {
   pairs: [string, string][];
 }
 
-interface PositivePredictionsPanelState extends PanelState {
-}
+interface PositivePredictionsPanelState extends PanelState {}
 
 interface EvaluationPanelState extends PanelState {
   isInProgress: boolean;
