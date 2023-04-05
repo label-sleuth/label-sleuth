@@ -74,13 +74,18 @@ def elements_back_to_front(workspace_id: str, elements: List[TextElement], categ
               'begin': text_element.span[0][0],
               'end': text_element.span[0][1],
               'text': text_element.text,
-              'snippet': get_text_snippet(text_element.text, query_string) if need_snippet else "",
               'user_labels': {k: str(v.label).lower()
                               # TODO current UI is using true and false as strings. change to boolean in the new UI
                               for k, v in text_element.category_to_label.items()},
               'model_predictions': {}
               }
          for text_element in elements}
+
+    if need_snippet:
+        for text_element in elements:
+            snippet = get_text_snippet(text_element.text, query_string)
+            if snippet != element_uri_to_info[text_element.uri]['text']:
+                element_uri_to_info[text_element.uri]['snippet'] = snippet
 
     if category_id is not None and len(elements) > 0 \
             and len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
