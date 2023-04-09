@@ -1102,25 +1102,22 @@ class OrchestratorApi:
                 raise Exception(f"{self.config.language.name} is not supported by the model {model_type.name}, "
                                 f"which is used by the configured model policy {model_policy.get_name()}")
 
-
     def restart_last_iteration(self, workspace_id, category_id):
         """
         Delete the last iteration for a given workspace and category and start again
         """
         all_iterations = self.get_all_iterations_for_category(workspace_id, category_id)
         index_to_recover = len(all_iterations) - 1
-        if all_iterations[index_to_recover].model is not None and \
-                all_iterations[index_to_recover].model.model_id is not None:
-            model_info = all_iterations[index_to_recover].model
+        model_info = all_iterations[index_to_recover].model
+        if model_info is not None and model_info.model_id is not None:
             model_api = self.model_factory.get_model_api(model_info.model_type)
             logging.info(f"deleting model {model_info.model_id} of type {model_info.model_type} in workspace "
                          f"'{workspace_id}', category id {category_id}.")
             model_api.delete_model(model_info.model_id)
-        logging.info(f"restarting iteration {index_to_recover} in workspace "
-                         f"'{workspace_id}', category id {category_id}.")
+        logging.info(f"restarting iteration {index_to_recover} in workspace '{workspace_id}', "
+                     f"category id {category_id}.")
         self.orchestrator_state.delete_last_iteration(workspace_id, category_id)
         self.train_if_recommended(workspace_id, category_id, True)
-
 
     def recover_unfinished_iterations(self):
         """
@@ -1131,10 +1128,11 @@ class OrchestratorApi:
         num_iterations_to_recover = 0
         for workspace_id in self.list_workspaces():
             for category_id, category in self.get_all_categories(workspace_id).items():
-                if len(category.iterations) > 0 and category.iterations[-1].status not in [IterationStatus.ERROR,
-                                                                                    IterationStatus.READY]:
+                if len(category.iterations) > 0 \
+                        and category.iterations[-1].status not in [IterationStatus.ERROR, IterationStatus.READY]:
                     logging.info(f"workspace '{workspace_id}', category id {category_id} ('{category.name}') has "
                                  f"iteration in status {category.iterations[-1]}. Restarting iteration")
                     self.restart_last_iteration(workspace_id, category_id)
-                    num_iterations_to_recover+= 1
-        logging.info(f"recovery process was started for {num_iterations_to_recover} categories")
+                    num_iterations_to_recover += 1
+        if num_iterations_to_recover > 0:
+            logging.info(f"recovery process was started for {num_iterations_to_recover} categories")
