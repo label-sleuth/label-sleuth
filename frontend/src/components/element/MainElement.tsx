@@ -30,7 +30,7 @@ interface ElementProps {
 }
 
 export const MainElement = ({ element }: ElementProps) => {
-  const { id, text, userLabel, modelPrediction } = element;
+  const { id, text, userLabel, modelPrediction, snippet } = element;
 
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const rightToLeft = useAppSelector((state) => state.featureFlags.rightToLeft);
@@ -61,7 +61,7 @@ export const MainElement = ({ element }: ElementProps) => {
         id={elementDOMId}
       >
         <p className={`${classes.data_text} ${elemStyleClasses.userLabel} ${rightToLeft ? classes.right_to_left : ""}`}>
-          {text}
+          {snippet || text}
         </p>
         <LabelingButtons
           labelMenuOpen={labelMenuOpen}
