@@ -119,14 +119,12 @@ class OrchestratorApi:
                 workspaces_ids.append(workspace_id)
         return workspaces_ids
 
-
     def delete_dataset(self, dataset_name: str):
         """
         Delete a given workspace
-        :param workspace_id:
+        :param dataset_name:
         """
         logging.info(f"Deleting dataset '{dataset_name}'")
-        
 
         workspaces_to_delete = self.get_workspaces_by_dataset_name(dataset_name)
         for workspace_id in workspaces_to_delete:
@@ -141,7 +139,6 @@ class OrchestratorApi:
         }
 
         return res
-
 
     def workspace_exists(self, workspace_id: str) -> bool:
         return self.orchestrator_state.workspace_exists(workspace_id)
@@ -732,6 +729,8 @@ class OrchestratorApi:
                              f"AND {changes_since_last_model} elements changed since last model "
                              f"(should be >={self.config.changed_element_threshold}). not training a new model")
         except Exception:
+            logging.exception(f"train_if_recommended failed for workspace '{workspace_id}' category id {category_id}. "
+                              f"trying to set the iteration to error status")
             iterations_latest = self.orchestrator_state.get_all_iterations(workspace_id, category_id)
             if len(iterations) != len(iterations_latest):
                 # iteration was already created, set the status to error
@@ -791,7 +790,9 @@ class OrchestratorApi:
 
     def get_contradiction_report(self, workspace_id, category_id) -> Mapping[str, List]:
         dataset_name = self.get_dataset_name(workspace_id)
-        labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_id)
+        labeled_elements = \
+            self.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
+                                               remove_duplicates=self.config.apply_labels_to_duplicate_texts)
         return get_suspected_labeling_contradictions_by_distance_with_diffs(
             category_id, labeled_elements, self.sentence_embedding_service.get_sentence_embeddings_representation,
             language=self.config.language)
@@ -799,8 +800,9 @@ class OrchestratorApi:
     def get_suspicious_elements_report(self, workspace_id, category_id,
                                        model_type: ModelType = ModelsCatalog.SVM_ENSEMBLE) -> List[TextElement]:
         dataset_name = self.get_dataset_name(workspace_id)
-        labeled_elements = self.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
-                                                              remove_duplicates=self.config.apply_labels_to_duplicate_texts)
+        labeled_elements = \
+            self.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
+                                               remove_duplicates=self.config.apply_labels_to_duplicate_texts)
         predictions = self.infer(workspace_id, category_id, labeled_elements)
         disagreements = [text_element for text_element, prediction in zip(labeled_elements, predictions)
                          if text_element.category_to_label[category_id].label != prediction.label]
@@ -1121,7 +1123,7 @@ class OrchestratorApi:
 
     def recover_unfinished_iterations(self):
         """
-        Iterating all categories in all workspaces and restarting unfinished iterations (iterations with status not which
+        Iterating all categories in all workspaces and restarting unfinished iterations (iterations with status which
         is not ERROR or READY). Usually invoked when starting the service to recover iterations that were stopped in
         the middle
         """
