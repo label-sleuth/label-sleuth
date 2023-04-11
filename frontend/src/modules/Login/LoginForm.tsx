@@ -28,6 +28,7 @@ import * as React from "react";
 import classes from "./login.module.css";
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css";
 import sleuth_logo from "../../assets/sleuth_logo_white.svg";
+import { KeyboardKeysEnum } from "../../const";
 
 const LoginForm: React.FC = () => {
   let navigate = useNavigate();
@@ -55,6 +56,12 @@ const LoginForm: React.FC = () => {
     dispatch(getAuthenticated({ username, password }));
   };
 
+  const onKeyDown = (event: React.KeyboardEvent) : void => {
+    if (event.key === KeyboardKeysEnum.ENTER) {
+      handleLogin();
+    }
+  }
+
   return (
     <Box>
       <div className={classes.sleuth_header}>
@@ -75,6 +82,7 @@ const LoginForm: React.FC = () => {
           borderRight: "solid 1px #b8b8b8",
           borderBottom: "solid 1px #b8b8b8",
         }}
+        onKeyDown={onKeyDown}
       >
         <FormControl variant="standard" sx={{ m: 1, minWidth: 350, padding: 0, margin: 0 }}>
           <FormLabel sx={{ color: "#393939", fontWeight: "600", fontSize: "1.5rem", padding: "25px" }}>Login</FormLabel>
@@ -102,6 +110,7 @@ const LoginForm: React.FC = () => {
               }}
               InputLabelProps={{ shrink: true }}
               placeholder="sleuth@ibm.com"
+              autoFocus
             />
           </FormControl>
           <FormControl
