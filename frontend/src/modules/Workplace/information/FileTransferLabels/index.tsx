@@ -13,8 +13,7 @@
     limitations under the License.
 */
 
-
-import React, { Dispatch, SetStateAction } from "react";
+import React, { Dispatch, SetStateAction, useEffect } from "react";
 import {
   LargeTitle,
   MainContent,
@@ -36,23 +35,27 @@ import {
 } from "@mui/material";
 import "./styles.css";
 import { useDispatch, useSelector } from "react-redux";
+import { uploadLabels, downloadLabels, downloadModel } from "../../redux";
 import {
-  uploadLabels,
-  downloadLabels,
-  downloadModel,
-} from "../../redux";
-import { useAppDispatch } from "../../../../customHooks/useRedux";
+  useAppDispatch,
+  useAppSelector,
+} from "../../../../customHooks/useRedux";
 import { curCategoryNameSelector } from "../../redux";
 import { blue } from "@mui/material/colors";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import { useNotification } from "../../../../utils/notification";
+import { toast } from "react-toastify";
 
 interface UploadLabelsDialogProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-export const UploadLabelsDialog = ({ open, setOpen }: UploadLabelsDialogProps) => {
+export const UploadLabelsDialog = ({
+  open,
+  setOpen,
+}: UploadLabelsDialogProps) => {
   const dispatch = useAppDispatch();
   const toastRef = React.useRef<React.ReactText | null>(null);
 
@@ -61,9 +64,9 @@ export const UploadLabelsDialog = ({ open, setOpen }: UploadLabelsDialogProps) =
   };
 
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file: File |  null = e.target.files ? e.target.files[0] : null;
+    const file: File | null = e.target.files ? e.target.files[0] : null;
     const formData = new FormData();
-    if (file === null ) return;
+    if (file === null) return;
     formData.append("file", file);
     dispatch(uploadLabels(formData));
     setOpen(false);
@@ -110,7 +113,11 @@ export const UploadLabelsDialog = ({ open, setOpen }: UploadLabelsDialogProps) =
           style={{ width: "100%", order: 1, flexGrow: 0 }}
         >
           <SecondaryButton onClick={handleClose}>Cancel</SecondaryButton>
-          <PrimaryButton component="label" className={"primery-button"} sx={{ textTransform: "none" }}>
+          <PrimaryButton
+            component="label"
+            className={"primery-button"}
+            sx={{ textTransform: "none" }}
+          >
             Upload
             <TextField
               onChange={handleFileSelection}
@@ -130,7 +137,7 @@ interface ExpandMoreProps {
   onClick: () => void;
   "aria-expanded": boolean;
   "aria-label": string;
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 const ExpandMore = (props: ExpandMoreProps) => {
@@ -139,16 +146,16 @@ const ExpandMore = (props: ExpandMoreProps) => {
     <IconButton
       sx={{
         color: "white",
-        pl: 0
+        pl: 0,
       }}
       {...other}
     />
   );
-}
+};
 
-interface  WeakLabelsOptionProps {
+interface WeakLabelsOptionProps {
   checked: boolean;
-  handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const WeakLabelsOption = ({ checked, handleChange }: WeakLabelsOptionProps) => {
@@ -156,7 +163,7 @@ const WeakLabelsOption = ({ checked, handleChange }: WeakLabelsOptionProps) => {
     Download the train set that Label Sleuth used to train its latest classifier. 
     As opposed to the labeled data, the train set can include labeled elements that 
     were not directly labeled by the user, but were added using some automatic methods 
-    to improve the model quality.`
+    to improve the model quality.`;
   const [expanded, setExpanded] = React.useState(false);
   return (
     <Box>
@@ -174,7 +181,14 @@ const WeakLabelsOption = ({ checked, handleChange }: WeakLabelsOptionProps) => {
         >
           {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         </ExpandMore>
-        <Typography component={Button} onClick={() => setExpanded((prev) => !prev)} sx={{textTransform: "none", color: "white", pl:0}}> (advanced) Download label-sleuth train set </Typography>
+        <Typography
+          component={Button}
+          onClick={() => setExpanded((prev) => !prev)}
+          sx={{ textTransform: "none", color: "white", pl: 0 }}
+        >
+          {" "}
+          (advanced) Download label-sleuth train set{" "}
+        </Typography>
       </Stack>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <FormGroup sx={{ pl: 4 }}>
@@ -207,14 +221,17 @@ interface DownloadLabelsDialogProps {
   setOpen: (value: boolean) => void;
 }
 
-export const DownloadLabelsDialog = ({ open, setOpen }: DownloadLabelsDialogProps) => {
+export const DownloadLabelsDialog = ({
+  open,
+  setOpen,
+}: DownloadLabelsDialogProps) => {
   const dispatch = useDispatch();
 
   const [checked, setChecked] = React.useState(false);
 
   const handleClose = () => {
     setOpen(false);
-    // the checked state is not being reset when this modal is reopened 
+    // the checked state is not being reset when this modal is reopened
     // somehow it is not being unmounted, thats why I am setting check
     // to false when closing it
     setChecked(false);
@@ -270,10 +287,10 @@ export const DownloadLabelsDialog = ({ open, setOpen }: DownloadLabelsDialogProp
 };
 
 interface DownloadModelDialogProps {
-  open: boolean,
-  setOpen: (value: boolean) => void,
-  modelVersion: number | null,
-  modelVersionSuffix: string | null,
+  open: boolean;
+  setOpen: (value: boolean) => void;
+  modelVersion: number | null;
+  modelVersionSuffix: string | null;
 }
 
 export const DownloadModelDialog = ({
@@ -282,8 +299,15 @@ export const DownloadModelDialog = ({
   modelVersion,
   modelVersionSuffix,
 }: DownloadModelDialogProps) => {
-  const curCategoryName = useSelector(curCategoryNameSelector);
+  const curCategoryName = useAppSelector(curCategoryNameSelector);
+  const downloadingModel = useAppSelector(
+    (state) => state.workspace.downloadingModel
+  );
+
   const dispatch = useDispatch();
+
+  const { notify, closeNotification } = useNotification();
+
   const handleClose = () => {
     setOpen(false);
   };
@@ -293,10 +317,22 @@ export const DownloadModelDialog = ({
     setOpen(false);
   };
 
-  const bullets =  [
+  const bullets = [
     "the model itself",
     "a code snippet demonstrating how it can be used within a Python application",
   ];
+
+  useEffect(() => {
+    const toastId = "downloading-model-notification";
+    if (downloadingModel) {
+      notify("Preparing the model (this can take up to 5 minutes).", {
+        toastId,
+        type: toast.TYPE.INFO,
+      });
+    } else {
+      closeNotification(toastId);
+    }
+  }, [downloadingModel]);
 
   return (
     <Modal open={open} onClose={handleClose} disableRestoreFocus>
@@ -312,11 +348,9 @@ export const DownloadModelDialog = ({
             <p>
               Download latest ({modelVersion}
               <sup>{modelVersionSuffix}</sup>) model version for category '
-              {curCategoryName}'. 
+              {curCategoryName}'.
             </p>
-            <p>
-              In the downloaded zip file you will find:
-            </p>
+            <p>In the downloaded zip file you will find:</p>
             <ul>
               {Object.values(bullets).map((item) => (
                 <li key={item} style={{ paddingBottom: "10px" }}>
