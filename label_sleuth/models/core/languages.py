@@ -64,8 +64,8 @@ English = \
                          "we'd", "we'll", "we're", "we've", "what's", "when's", "where's", "who's", "why's", "would"],
              spacy_model_name='en_core_web_lg')
 
-Italiano = \
-    Language(name='Italiano',
+Italian = \
+    Language(name='Italian',
              stop_words=["scola", "varie", "saro", "stanno", "dagli", "certa", "le", "nemmeno", "molto", "avuti",
                          "posteriore", "facesse", "il", "nostra", "durante", "faceste", "dalla", "può", "della", "ora",
                          "faccia", "alla", "dice", "scorso", "probabilmente", "volta", "sareste", "tre", "fu", "dell",
@@ -129,7 +129,7 @@ Italiano = \
                          "assai", "starai", "abbiamo", "era", "oppure", "quali", "accidenti", "abbiano", "suoi", "egli",
                          "neppure", "averlo", "qualche", "sull", "avessi", "quattro", "facciate", "dire", "mancanza",
                          "affinche", "erano", "conciliarsi", "sembra", "aveva"],
-             spacy_model_name='it_core_news_lg')
+             fasttext_language_id='it')
 
 Romanian = \
     Language(name='Romanian',
@@ -189,7 +189,7 @@ Arabic = Language(name='Arabic',
 
 class Languages:
     ENGLISH = English
-    ITALIANO = Italiano
+    ITALIAN = Italian
     ROMANIAN = Romanian
     HEBREW = Hebrew
     ARABIC = Arabic
