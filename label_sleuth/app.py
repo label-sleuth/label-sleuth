@@ -938,8 +938,9 @@ def export_model(workspace_id):
             get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
     else:
         iteration_index = int(iteration_index)
-
-    temp_model_dir = curr_app.orchestrator_api.copy_model_dir_for_export(workspace_id, category_id, iteration_index)
+    logging.info(f"copying model for export in {workspace_id} category id {category_id}")
+    temp_model_dir = curr_app.orchestrator_api.prepare_model_dir_for_export(workspace_id, category_id, iteration_index)
+    logging.info(f"compressing model for export in {workspace_id} category id {category_id}")
     try:
         memory_file = BytesIO()
 
@@ -961,6 +962,7 @@ def export_model(workspace_id):
     finally:
         if os.path.exists(temp_model_dir):
             shutil.rmtree(temp_model_dir, ignore_errors=True)
+    logging.info(f"model is ready for export in {workspace_id} category id {category_id}")
     return send_file(memory_file, attachment_filename=f'model.zip', as_attachment=True)
 
 

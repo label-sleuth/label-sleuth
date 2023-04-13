@@ -1012,7 +1012,7 @@ class OrchestratorApi:
 
         return pd.DataFrame(list_of_dicts)
 
-    def copy_model_dir_for_export(self, workspace_id, category_id, iteration_index):
+    def prepare_model_dir_for_export(self, workspace_id, category_id, iteration_index):
         iteration = self.orchestrator_state.get_all_iterations(workspace_id, category_id)[iteration_index]
 
         model_api = self.model_factory.get_model_api(iteration.model.model_type)
