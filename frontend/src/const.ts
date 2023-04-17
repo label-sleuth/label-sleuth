@@ -19,7 +19,8 @@ import { getOrdinalSuffix } from "./utils/utils";
 // Sidebar tooltip messages
 export const SEARCH_ALL_DOCS_TOOLTIP_MSG = "Search all documents";
 export const NEXT_TO_LABEL_TOOLTIP_MSG = "Label next";
-export const LABEL_NEXT_HELPER_MSG = "The system suggests to label these elements next to best assist it to improve";
+export const LABEL_NEXT_HELPER_MSG =
+  "The system suggests to label these elements next to best assist it to improve";
 export const POSITIVE_PRED_TOOLTIP_MSG = "Positive predictions";
 export const DISAGREEMENTS_TOOLTIP_MSG = "label-prediction disagreements";
 export const SUSPICIOUS_LABELS_TOOLTIP_MSG = "Suspicious labels";
@@ -29,20 +30,29 @@ export const EVALUATION_TOOLTIP_MSG = "Evaluate model";
 export const PREV_DOC_TOOLTIP_MSG = "Go to previous document";
 export const NEXT_DOC_TOOLTIP_MSG = "Go to next document";
 export const LOGOUT_TOOLTIP_MSG = "Logout";
-export const GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG = "Go to workspace configuration";
+export const GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG =
+  "Go to workspace configuration";
 export const CREATE_NEW_CATEGORY_TOOLTIP_MSG = "Create new category";
 export const EDIT_CATEGORY_TOOLTIP_MSG = "Edit category";
 export const DELETE_CATEGORY_TOOLTIP_MSG = "Delete category";
 // *******************
 
 // Evaluation panel messages
-export const START_EVALUATION_MSG = "Click on Start to start the precision evaluation process";
+export const START_EVALUATION_MSG =
+  "Click on Start to start the precision evaluation process";
 export const EVALUATION_IN_PROGRESS_MSG =
   "Label all the elements. Once its done, click on Submit to get the precision score.";
-export const WAIT_NEW_MODEL_MSG = "Please wait till the next model is available to start the evaluation";
-export const PRECISION_RESULT_MSG = (precision: number, currentModelVersion: number, scoreModelVersion: number) =>
+export const WAIT_NEW_MODEL_MSG =
+  "Please wait till the next model is available to start the evaluation";
+export const PRECISION_RESULT_MSG = (
+  precision: number,
+  currentModelVersion: number,
+  scoreModelVersion: number
+) =>
   `
-    The precision of the ${scoreModelVersion}${getOrdinalSuffix(scoreModelVersion)} model is ${precision}%.` +
+    The precision of the ${scoreModelVersion}${getOrdinalSuffix(
+    scoreModelVersion
+  )} model is ${precision}%.` +
   `${
     scoreModelVersion !== currentModelVersion
       ? ` Current model is ${currentModelVersion}${getOrdinalSuffix(
@@ -54,7 +64,8 @@ export const PRECISION_RESULT_MSG = (precision: number, currentModelVersion: num
 export const NO_MODEL_AVAILABLE_MSG = "not available yet";
 export const CREATE_NEW_CATEGORY_MODAL_MSG = "Create a new category";
 export const CREATE_NEW_CATEGORY_PLACEHOLDER_MSG = "New category name";
-export const CREATE_NEW_CATEGORY_HELPER_MSG = "Please select a meaningful name for your category.";
+export const CREATE_NEW_CATEGORY_HELPER_MSG =
+  "Please select a meaningful name for your category.";
 export const UPLOAD_NEW_DATASET_MSG = "Upload new data";
 export const UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG = "Choose or set name";
 export const UPLOAD_NEW_DATASET_FILE_HELPER_MSG = `The csv file must have a header line (of "text" and optional "document_id")`;
@@ -65,16 +76,25 @@ export const NEW_WORKSPACE_NAME_PLACEHOLER_MSG = "e.g., my_new_workspace";
 export const LABEL_SLEUTH_SHORT_DESC = "Quickly create a text classifier";
 export const ALL_POSITIVE_LABELS_TOOLTIP_MSG = "All positive labels";
 export const DOC_ALREADY_EXISTS = "Document already exists";
-export const SERVER_ERROR_500 = "An error occurred and your request could not be completed. Please try again.";
+export const SERVER_ERROR_500 =
+  "An error occurred and your request could not be completed. Please try again.";
 export const FAILED_LOAD_DOCS_TO_DATASET = `An error occurred while uploading the dataset. Make sure your CSV file is well-formatted and contains the column "text" and optionally a column "document_id".`;
-export const FILL_REQUIRED_FIELDS = "Please fill out all the required fields!";
+export const FILL_REQUIRED_FIELDS = (nonProvidedFields?: string) =>
+  `Please fill out all the required fields. ${
+    nonProvidedFields ? nonProvidedFields : ""
+  }`;
 export const NEW_DATA_CREATED = `The new dataset has been created`;
-export const SELECT_WORKSPACE = `Please select a workspace!`;
+export const SELECT_WORKSPACE = `Please select a workspace`;
 export const NEXT_MODEL_TRAINING_MSG = "Training a new model";
-export const NEXT_ZERO_SHOT_MODEL_TRAINING_MSG = "Training a new zero shot model";
-export const newDataCreatedMessage = (name: string, numDocs: number, numsentences: number) =>
+export const NEXT_ZERO_SHOT_MODEL_TRAINING_MSG =
+  "Training a new zero shot model";
+export const newDataCreatedMessage = (
+  name: string,
+  numDocs: number,
+  numsentences: number
+) =>
   `The new dataset ${name} has been created with ${numDocs} documents and ${numsentences} text entries.`;
-export const CATEGORY_NAME_MAX_CHARS = 100
+export const CATEGORY_NAME_MAX_CHARS = 100;
 export const WRONG_INPUT_NAME_LENGTH = `Name may be max ${CATEGORY_NAME_MAX_CHARS} characters long`;
 export const WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES = `Name may only contain English characters, digits and underscores`;
 export const WRONG_INPUT_NAME_BAD_CHARACTER = `Name may only contain English characters, digits, underscores and spaces`;
@@ -135,4 +155,4 @@ export enum LabelActionsEnum {
   NEG = "neg",
 }
 
-export const BOMCharacter = '\uFEFF'
+export const BOMCharacter = "\uFEFF";
