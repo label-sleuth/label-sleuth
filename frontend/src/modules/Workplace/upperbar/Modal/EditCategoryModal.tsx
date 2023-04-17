@@ -24,8 +24,6 @@ import { editCategory } from "../../redux";
 import {
   CREATE_NEW_CATEGORY_PLACEHOLDER_MSG,
   WRONG_INPUT_NAME_LENGTH,
-  REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES,
-  WRONG_INPUT_NAME_BAD_CHARACTER,
   KeyboardKeysEnum,
   CATEGORY_NAME_MAX_CHARS,
 } from "../../../../const";
