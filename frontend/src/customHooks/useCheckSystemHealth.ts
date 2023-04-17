@@ -31,7 +31,7 @@ export const useCheckSystemHealth = () => {
     fetchSystemHealth()
     const interval = setInterval(() => {
       fetchSystemHealth();
-    }, 5000);
+    }, 15000);
 
     return () => clearInterval(interval);
   }, [notify, closeNotification]);
