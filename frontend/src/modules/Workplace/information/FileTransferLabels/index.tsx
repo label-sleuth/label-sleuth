@@ -34,7 +34,7 @@ import {
   Button,
 } from "@mui/material";
 import "./styles.css";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { uploadLabels, downloadLabels, downloadModel } from "../../redux";
 import {
   useAppDispatch,
@@ -57,7 +57,6 @@ export const UploadLabelsDialog = ({
   setOpen,
 }: UploadLabelsDialogProps) => {
   const dispatch = useAppDispatch();
-  const toastRef = React.useRef<React.ReactText | null>(null);
 
   const handleClose = () => {
     setOpen(false);
@@ -332,7 +331,7 @@ export const DownloadModelDialog = ({
     } else {
       closeNotification(toastId);
     }
-  }, [downloadingModel]);
+  }, [downloadingModel, closeNotification, notify]);
 
   return (
     <Modal open={open} onClose={handleClose} disableRestoreFocus>

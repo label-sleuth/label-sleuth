@@ -1,14 +1,12 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Menu,
   MenuItem,
   Stack,
-  ListItemText,
   MenuList,
   Divider,
   Tooltip,
   IconButton,
-  Box,
   Typography,
 } from "@mui/material";
 import { LabelTypesEnum } from "../../const";
