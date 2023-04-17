@@ -119,9 +119,21 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
   };
 
   const handleLoadDoc = () => {
-    if (!datasetName || !file) {
-      return notify(FILL_REQUIRED_FIELDS, { toastId, type: toast.TYPE.INFO });
+    const datasetNameProvided = !!datasetName
+    const datasetFileProvided = !!file
+
+    if (!datasetNameProvided || !datasetFileProvided) {
+      let nonProvidedFields: string;
+      if (!datasetNameProvided && !datasetFileProvided) {
+        nonProvidedFields = 'Dataset name and csv file were not provided.'
+      } else if (!datasetFileProvided) {
+        nonProvidedFields = 'Csv file was not provided.'
+      } else {
+        nonProvidedFields = 'Dataset name was not provided.'
+      }
+      return notify(FILL_REQUIRED_FIELDS(nonProvidedFields), { toastId, type: toast.TYPE.INFO });
     }
+
     let formData = new FormData();
     formData.append("file", file);
     formData.append("dataset_name", datasetName);

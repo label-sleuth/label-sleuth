@@ -14,7 +14,10 @@
 */
 
 import { useEffect, useMemo, useState } from "react";
-import { deleteWorkspace, getWorkspaces } from "../modules/Workspace-config/workspaceConfigSlice";
+import {
+  deleteWorkspace,
+  getWorkspaces,
+} from "../modules/Workspace-config/workspaceConfigSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { WORKSPACE_PATH } from "../config";
@@ -31,7 +34,7 @@ interface UseExistWorkspaceProps {
 const useExistWorkspace = ({ toastId }: UseExistWorkspaceProps) => {
   const { setWorkspaceId } = useWorkspaceId();
   const { workspaces } = useAppSelector((state) => state.workspaces);
-  const { notify } = useNotification()
+  const { notify } = useNotification();
 
   let navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -56,9 +59,10 @@ const useExistWorkspace = ({ toastId }: UseExistWorkspaceProps) => {
         toastId,
         type: toast.TYPE.INFO,
       });
+    } else {
+      setWorkspaceId(value);
+      navigate(WORKSPACE_PATH);
     }
-    setWorkspaceId(value);
-    navigate(WORKSPACE_PATH);
   };
 
   const handleDeleteWorkspace = () => {
@@ -67,19 +71,24 @@ const useExistWorkspace = ({ toastId }: UseExistWorkspaceProps) => {
     // select that option again
     const prevValue = value;
     setValue("");
-    dispatch(deleteWorkspace({ workspaceId: value })).then((actionPromiseResult) => {
-      if (isFulfilled(actionPromiseResult)) {
-        notify(`The workspace ${value} has been succesfully deleted`, {
-          toastId,
-          type: toast.TYPE.SUCCESS,
-        });
-      } else {
-        setValue(prevValue);
+    dispatch(deleteWorkspace({ workspaceId: value })).then(
+      (actionPromiseResult) => {
+        if (isFulfilled(actionPromiseResult)) {
+          notify(`The workspace ${value} has been succesfully deleted`, {
+            toastId,
+            type: toast.TYPE.SUCCESS,
+          });
+        } else {
+          setValue(prevValue);
+        }
       }
-    });
+    );
   };
 
-  const options = useMemo(() => workspaces.map((item) => ({ value: item, title: item })), [workspaces]);
+  const options = useMemo(
+    () => workspaces.map((item) => ({ value: item, title: item })),
+    [workspaces]
+  );
 
   return {
     handleClick,

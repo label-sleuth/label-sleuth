@@ -15,7 +15,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { clearState, createWorkspace, getDatasets } from "../modules/Workspace-config/workspaceConfigSlice";
+import {
+  clearState,
+  createWorkspace,
+  getDatasets,
+} from "../modules/Workspace-config/workspaceConfigSlice";
 import { toast } from "react-toastify";
 import {
   FILL_REQUIRED_FIELDS,
@@ -29,8 +33,12 @@ import { useNotification } from "../utils/notification";
 const useNewWorkspace = (toastId: string) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const isDocumentAdded = useAppSelector((state) => state.workspaces.isDocumentAdded);
-  const isWorkspaceAdded = useAppSelector((state) => state.workspaces.isWorkspaceAdded);
+  const isDocumentAdded = useAppSelector(
+    (state) => state.workspaces.isDocumentAdded
+  );
+  const isWorkspaceAdded = useAppSelector(
+    (state) => state.workspaces.isWorkspaceAdded
+  );
   const [textValue, setTextValue] = useState("");
   const [newWorkspaceNameError, setNewWorkspaceNameError] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
@@ -60,10 +68,24 @@ const useNewWorkspace = (toastId: string) => {
   }, [isWorkspaceAdded, textValue, setWorkspaceId, dispatch, navigate]);
 
   const handleNewWorkspace = () => {
-    if (!selectedValue || !textValue) {
-      notify(FILL_REQUIRED_FIELDS, { toastId, type: toast.TYPE.INFO });
+    const workspaceNameProvided = !!textValue
+    const datasetOptionProvided = !!selectedValue
+
+    if (!datasetOptionProvided || !workspaceNameProvided) {
+      let nonProvidedFields: string;
+      if (!datasetOptionProvided && !workspaceNameProvided) {
+        nonProvidedFields = 'Workspace name and dataset were not provided.'
+      } else if (!datasetOptionProvided) {
+        nonProvidedFields = 'Dataset was not selected.'
+      } else {
+        nonProvidedFields = 'Workspace name was not provided.'
+      }
+      notify(FILL_REQUIRED_FIELDS(nonProvidedFields), { toastId, type: toast.TYPE.INFO });
+    } else {
+      dispatch(
+        createWorkspace({ workspace_id: textValue, dataset_id: selectedValue })
+      );
     }
-    dispatch(createWorkspace({ workspace_id: textValue, dataset_id: selectedValue }));
   };
 
   useEffect(() => {
