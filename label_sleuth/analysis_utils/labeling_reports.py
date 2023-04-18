@@ -66,6 +66,8 @@ def get_disagreements_using_cross_validation(workspace_id, category_id: int, lab
     train_splits = np.array_split(np.array(all_train_data), num_folds)
     if any({x["label"] for x in train_splits[idx]} != BINARY_LABELS for idx in range(num_folds)):
         # if there are no positive labels or no negative labels in one of the folds, return an empty list
+        logging.info(f"workspace '{workspace_id}' category id {category_id} cross validation disagreements skipping "
+                     f"due to insufficient labeled examples ({len(all_train_data)})")
         return []
     for i in range(num_folds):
         # train split i is used for inference and left out of the train data
