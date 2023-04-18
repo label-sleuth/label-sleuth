@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Menu,
   MenuItem,
@@ -8,6 +8,9 @@ import {
   Tooltip,
   IconButton,
   Typography,
+  Badge,
+  styled,
+  BadgeProps,
 } from "@mui/material";
 import { LabelTypesEnum } from "../../const";
 import { useAppSelector } from "../../customHooks/useRedux";
@@ -129,9 +132,7 @@ export const LabelCategoriesMenu = ({
       onClick={(e) => e.stopPropagation()}
     >
       <MenuList>
-        <p className={classes["menu-title"]} >
-          Assign text to another category:
-        </p>
+        <p className={classes["menu-title"]}>Assign text to another category:</p>
         <Divider sx={{ marginBottom: "10px" }} />
         {categoriesSorted.map((category, i) =>
           category.category_id !== curCategory ? (
@@ -148,16 +149,33 @@ export const LabelCategoriesMenu = ({
   );
 };
 
+const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
+  "& .MuiBadge-badge": {
+    //border: `2px solid ${theme.palette.background.paper}`,
+    backgroundColor: "gray",
+    color: "white",
+    fontSize: ".6rem",
+    height: "15px",
+    minWidth: "15px",
+    borderRadius: "15px",
+    padding: "0 3px",
+    top: 1,
+    left: 1,
+  },
+}));
+
 interface LabelCategoriesMenuButtonProps {
   labelMenuOpen: boolean;
   setAnchorEl: any;
   tooltipProps?: TooltipProps;
+  element: Element;
 }
 
 export const LabelCategoriesMenuButton = ({
   setAnchorEl,
   labelMenuOpen,
   tooltipProps,
+  element,
 }: LabelCategoriesMenuButtonProps) => {
   const categories = useAppSelector((state) => state.workspace.categories);
 
@@ -174,9 +192,22 @@ export const LabelCategoriesMenuButton = ({
     event.stopPropagation();
   };
 
+  const numberOfOtherCategoriesLabeled = useMemo(
+    () => Object.values(element.otherUserLabels).filter((value) => value !== LabelTypesEnum.NONE).length,
+    [element]
+  );
+
+  const tooltipTitle = useMemo(
+    () =>
+      `Label to another category ${
+        numberOfOtherCategoriesLabeled > 0 ? `(${numberOfOtherCategoriesLabeled} already labeled)` : ""
+      }`,
+    [numberOfOtherCategoriesLabeled]
+  );
+
   return (
     <Tooltip
-      {...{ title: "Label to another category", ...tooltipProps }}
+      {...{ title: tooltipTitle, ...tooltipProps }}
       className={`${categories.length === 1 ? classes["button-disabled-pointer"] : ""} ${
         !labelMenuOpen ? labelButtonClasses.visibility : ""
       }`}
@@ -190,7 +221,12 @@ export const LabelCategoriesMenuButton = ({
           className={labelButtonClasses.label_button}
           disabled={categories.length === 1}
         >
-          <AddIcon />
+          <StyledBadge
+            badgeContent={numberOfOtherCategoriesLabeled}
+            anchorOrigin={{ vertical: "top", horizontal: "left" }}
+          >
+            <AddIcon />
+          </StyledBadge>
         </IconButton>
       </span>
     </Tooltip>
