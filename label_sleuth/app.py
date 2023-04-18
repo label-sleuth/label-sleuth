@@ -41,7 +41,7 @@ from label_sleuth.authentication import authenticate_response, login_if_required
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.config import Configuration
 from label_sleuth.configurations.users import User
-from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label
+from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, DisplayFields, Label
 from label_sleuth.data_access.data_access_api import AlreadyExistsException
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_factory import ModelFactory
@@ -742,7 +742,7 @@ def import_labels(workspace_id):
 
     :param workspace_id:
     """
-    required_columns = ['text', 'category_name', 'label']
+    required_columns = [DisplayFields.text, DisplayFields.category_name, DisplayFields.label]
     csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
     df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
 
