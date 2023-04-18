@@ -239,5 +239,5 @@ interface ErrorResponse {
 
 interface Error {
   title: string;
-  type: string;
+  type?: string;
 }
