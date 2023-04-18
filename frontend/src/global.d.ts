@@ -236,3 +236,8 @@ interface FetchPanelElementsParams {
 interface ErrorResponse {
   message: string;
 }
+
+interface Error {
+  title: string;
+  type: string;
+}
