@@ -44,6 +44,7 @@ export const LabelingButtons = ({
         setAnchorEl={setLabelMenuOpenAnchorEl}
         tooltipProps={otherCatsTooltipProps}
         labelMenuOpen={labelMenuOpen}
+        element={element}
       />
       <NegButton
         onClick={(e) => {
