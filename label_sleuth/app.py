@@ -675,6 +675,8 @@ def get_all_positively_labeled_elements_for_category(workspace_id):
     size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
     category_id = int(request.args['category_id'])
+    logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {size} positively labeled elements "
+                 f"(start index: {start_idx})")
     elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_POSITIVE, size=size,
                                                    start_idx=start_idx)
 
@@ -1097,7 +1099,8 @@ def get_elements_for_precision_evaluation(workspace_id):
         get_elements_by_prediction(workspace_id, category_id, required_prediction=LABEL_POSITIVE, sample_size=size,
                                    remove_duplicates=False, shuffle=True, random_state=random_state)
     elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_id)
-    logging.info(f"sampled {len(elements_transformed)} elements for evaluation")
+    logging.info(f"workspace '{workspace_id}' category id {category_id} sampled {len(elements_transformed)} elements "
+                 f"for precision evaluation")
     res = {'elements': elements_transformed}
     return jsonify(res)
 

@@ -122,7 +122,7 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
 
         self.verify_all_labels_are_in_train(train_counts)
 
-        logging.info(f"using {len(train_data)} for train using dataset {train_dataset_name}")
+        logging.info(f"workspace '{workspace_id}' category id '{category_id}' using {len(train_data)} for train using dataset {train_dataset_name}")
         return train_data
 
     def get_weak_negative_candidates(self, workspace_id, dataset_name, category_id) -> List[TextElement]:

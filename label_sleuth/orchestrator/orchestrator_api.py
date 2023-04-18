@@ -96,7 +96,7 @@ class OrchestratorApi:
         Delete a given workspace
         :param workspace_id:
         """
-        logging.info(f"Deleting workspace '{workspace_id}'")
+        logging.info(f"deleting workspace '{workspace_id}'")
         if self.workspace_exists(workspace_id):
             workspace = self.orchestrator_state.get_workspace(workspace_id)
             try:
@@ -124,7 +124,7 @@ class OrchestratorApi:
         Delete a given workspace
         :param dataset_name:
         """
-        logging.info(f"Deleting dataset '{dataset_name}'")
+        logging.info(f"deleting dataset '{dataset_name}'")
 
         workspaces_to_delete = self.get_workspaces_by_dataset_name(dataset_name)
         for workspace_id in workspaces_to_delete:
@@ -164,8 +164,14 @@ class OrchestratorApi:
         return self.orchestrator_state.add_category_to_workspace(workspace_id, category_name, category_description)
 
     def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str):
-        logging.info(f"Updating category id {category_id} name to {new_category_name}, and category description to "
-                     f"{new_category_description}")
+        old_category_name = self.orchestrator_state.get_workspace(workspace_id).categories[category_id].name
+        old_category_description = \
+            self.orchestrator_state.get_workspace(workspace_id).categories[category_id].description
+        logging.info(f"Updating category id {category_id} name from '{old_category_name}' to '{new_category_name}'")
+        if old_category_description != new_category_description:
+            logging.info(
+                f"Updating category id {category_id} description from '{old_category_description}' to "
+                f"'{new_category_description}'")
         return self.orchestrator_state.edit_category(workspace_id, category_id, new_category_name,
                                                      new_category_description)
 
@@ -176,7 +182,7 @@ class OrchestratorApi:
         :param workspace_id:
         :param category_id:
         """
-        logging.info(f"Deleting category id {category_id} from workspace '{workspace_id}'")
+        logging.info(f"deleting category id {category_id} from workspace '{workspace_id}'")
         dataset_name = self.get_dataset_name(workspace_id)
         self.data_access.delete_labels_for_category(workspace_id, dataset_name, category_id)
         self._delete_category_models(workspace_id, category_id)
@@ -645,7 +651,7 @@ class OrchestratorApi:
             active_learning_strategy = self.config.active_learning_policy.get_active_learning_strategy(iteration_index)
 
         active_learner = self.active_learning_factory.get_active_learner(active_learning_strategy)
-        logging.info(f"using active learning {active_learner}")
+        logging.info(f"using active learning {active_learner.__class__.__name__}")
         # Where labels are applied to duplicate texts (the default behavior), we do not want duplicates to appear in
         # the Label Next list
         remove_duplicates = self.config.apply_labels_to_duplicate_texts
@@ -659,8 +665,8 @@ class OrchestratorApi:
                                                                 iteration_index=iteration_index,
                                                                 recommended_items=[x.uri for x in new_recommendations])
 
-        logging.info(f"active learning recommendations for iteration index {iteration_index} "
-                     f"of category id '{category_id}' are ready")
+        logging.info(f"workspace '{workspace_id}' category id {category_id}: {len(new_recommendations)} active "
+                     f"learning recommendations for iteration index {iteration_index} are ready")
 
     def _delete_old_models(self, workspace_id, category_id, iteration_index):
         """
@@ -715,7 +721,7 @@ class OrchestratorApi:
                     return None
                 self.orchestrator_state.set_label_change_count_since_last_train(workspace_id, category_id, 0)
                 logging.info(
-                    f"Workspace '{workspace_id}' category id '{category_id}' "
+                    f"workspace '{workspace_id}' category id '{category_id}' "
                     f"{label_counts[LABEL_POSITIVE]} positive elements (>={self.config.first_model_positive_threshold})"
                     f" {changes_since_last_model} elements changed since last model "
                     f"(>={self.config.changed_element_threshold}). Training a new model")
@@ -724,10 +730,10 @@ class OrchestratorApi:
                 self.run_iteration(workspace_id=workspace_id, dataset_name=dataset_name, category_id=category_id,
                                    model_type=model_type)
             else:
-                logging.info(f"{label_counts[LABEL_POSITIVE]} positive elements "
-                             f"(should be >={self.config.first_model_positive_threshold}) "
+                logging.info(f"workspace '{workspace_id}' category id {category_id}: {label_counts[LABEL_POSITIVE]} positive elements "
+                             f"(threshold >={self.config.first_model_positive_threshold}) "
                              f"AND {changes_since_last_model} elements changed since last model "
-                             f"(should be >={self.config.changed_element_threshold}). not training a new model")
+                             f"(threshold >={self.config.changed_element_threshold}). not training a new model")
         except Exception:
             logging.exception(f"train_if_recommended failed for workspace '{workspace_id}' category id {category_id}. "
                               f"trying to set the iteration to error status")
@@ -789,22 +795,27 @@ class OrchestratorApi:
     # Labeling/Evaluation reports
 
     def get_contradiction_report(self, workspace_id, category_id) -> Mapping[str, List]:
+        logging.info(f"workspace '{workspace_id}' category id {category_id} generating contradicting elements report")
         dataset_name = self.get_dataset_name(workspace_id)
         labeled_elements = \
             self.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
                                                remove_duplicates=self.config.apply_labels_to_duplicate_texts)
-        return get_suspected_labeling_contradictions_by_distance_with_diffs(
+        contradictions = get_suspected_labeling_contradictions_by_distance_with_diffs(
             category_id, labeled_elements, self.sentence_embedding_service.get_sentence_embeddings_representation,
             language=self.config.language)
-
+        logging.info(f"workspace '{workspace_id}' category id {category_id} done generating contradicting elements "
+                     f"report")
+        return contradictions
     def get_suspicious_elements_report(self, workspace_id, category_id,
                                        model_type: ModelType = ModelsCatalog.SVM_ENSEMBLE) -> List[TextElement]:
+        logging.info(f"workspace '{workspace_id}' category id {category_id} generating suspicious elements report "
+                     f"using model type {model_type.name}")
         dataset_name = self.get_dataset_name(workspace_id)
         labeled_elements = \
             self.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
                                                remove_duplicates=self.config.apply_labels_to_duplicate_texts)
         predictions = self.infer(workspace_id, category_id, labeled_elements)
-        disagreements = [text_element for text_element, prediction in zip(labeled_elements, predictions)
+        suspicious_elements = [text_element for text_element, prediction in zip(labeled_elements, predictions)
                          if text_element.category_to_label[category_id].label != prediction.label]
 
         cross_validation_disagreements = get_disagreements_using_cross_validation(workspace_id, category_id,
@@ -812,25 +823,32 @@ class OrchestratorApi:
                                                                                   self.model_factory,
                                                                                   self.config.language,
                                                                                   model_type)
-        disagreement_uris = {text_element.uri for text_element in disagreements}
-        disagreements.extend([text_element for text_element in cross_validation_disagreements if
+        disagreement_uris = {text_element.uri for text_element in suspicious_elements}
+        suspicious_elements.extend([text_element for text_element in cross_validation_disagreements if
                               text_element.uri not in disagreement_uris])
-        return disagreements
+        logging.info(f"workspace '{workspace_id}' category id {category_id} done generating suspicious elements report"
+                     f" using model type {model_type.name}")
+        return suspicious_elements
 
-    def estimate_precision(self, workspace_id, category_id, ids, changed_elements_count, iteration_index):
+    def estimate_precision(self, workspace_id, category_id, uris, changed_elements_count, iteration_index):
+        logging.info(f"workspace '{workspace_id}' category id {category_id} estimating model precision for iteration "
+                     f"{iteration_index} using {len(uris)} elements")
         dataset_name = self.get_dataset_name(workspace_id)
-        text_elements = self.get_text_elements_by_uris(workspace_id, dataset_name, ids)
+        text_elements = self.get_text_elements_by_uris(workspace_id, dataset_name, uris)
         positive_elements = [te for te in text_elements if te.category_to_label[category_id].label == LABEL_POSITIVE]
 
         estimated_precision = len(positive_elements) / len(text_elements)
         self.orchestrator_state.add_iteration_statistics(workspace_id, category_id, iteration_index,
                                                          {"estimated_precision": estimated_precision,
-                                                          "estimated_precision_num_elements": len(ids)})
+                                                          "estimated_precision_num_elements": len(uris)})
 
+        logging.info(f"workspace '{workspace_id}' category id {category_id} estimated model precision for iteration "
+                     f"{iteration_index} is {estimated_precision}%. Updating label change count")
         # since we don't want a new model to train while labeling in precision evaluation mode, we only update the
         # labeling counts after evaluation is finished
         self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, category_id,
                                                                              changed_elements_count)
+
         return estimated_precision
 
     def increase_label_change_count_since_last_train(self, workspace_id, category_id, changed_elements_count):
@@ -859,7 +877,8 @@ class OrchestratorApi:
         :param random_state: provide an int seed to define a random state. Default is zero.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         """
-
+        logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {sample_size} {required_prediction}"
+                     f" predictions (start index: {start_idx})")
         def batched(iterable, batch_size=100):
             it = iter(iterable)
             while batch := list(itertools.islice(it, batch_size)):
@@ -878,6 +897,9 @@ class OrchestratorApi:
                     elements_with_required_prediction.append(element)
             if len(elements_with_required_prediction) >= start_idx + sample_size:
                 break  # we have collected enough elements
+        logging.info(
+            f"workspace '{workspace_id}' category id {category_id} done fetching {sample_size} {required_prediction}"
+            f" predictions (start index: {start_idx})")
         return elements_with_required_prediction[start_idx:start_idx + sample_size]
 
     def get_progress(self, workspace_id: str, dataset_name: str, category_id: int):
@@ -900,7 +922,7 @@ class OrchestratorApi:
     # Import/Export
     
     def import_category_labels(self, workspace_id, labels_df_to_import: pd.DataFrame):
-        logging.info(f"Importing {len(labels_df_to_import)} labeled elements into workspace '{workspace_id}'"
+        logging.info(f"importing {len(labels_df_to_import)} labeled elements into workspace '{workspace_id}' "
                      f"from {len(labels_df_to_import[DisplayFields.category_name].unique())} categories")
         dataset_name = self.get_dataset_name(workspace_id)
         # Only if doc_id are provided or apply_labels_to_duplicate_texts is false the doc_id is
@@ -920,7 +942,7 @@ class OrchestratorApi:
         # if dataframe contained new categories, create them and update name to id mapping
         for category_name in imported_categories_to_uris_and_labels.keys():
             if category_name not in category_name_to_id.keys():
-                logging.info(f"** category '{category_name}' is missing, creating it ** ")
+                logging.info(f"import category '{category_name}' is missing in workspace '{workspace_id}', creating it")
                 category_id = self.create_new_category(
                     workspace_id, category_name, f'{category_name} (created during upload)')
                 category_name_to_id[category_name] = category_id
@@ -934,13 +956,14 @@ class OrchestratorApi:
             if len(uri_to_label) == 0:
                 logging.info(f"found 0 elements for category {category_name}")
             else:
-                logging.info(f'{category_name}: adding labels for {len(uri_to_label)} uris')
+                logging.info(f"workspace '{workspace_id}' category '{category_name}' adding labels for "
+                             f"{len(uri_to_label)} uris")
                 self.set_labels(workspace_id, uri_to_label,
                                 apply_to_duplicate_texts=False,
                                 update_label_counter=True)
 
             label_counts_dict = self.get_label_counts(workspace_id, dataset_name, category_id, remove_duplicates=False)
-            logging.info(f"Updated total label count in workspace '{workspace_id}' for category id {category_id} "
+            logging.info(f"updated total label count in workspace '{workspace_id}' for category id {category_id} "
                          f"is {sum(label_counts_dict.values())} ({label_counts_dict})")
             categories_counter[category_id] = len(uri_to_label)
         # TODO return both positive and negative counts
@@ -966,16 +989,16 @@ class OrchestratorApi:
         dataset_name = self.get_dataset_name(workspace_id)
         categories = self.get_all_categories(workspace_id)
         list_of_dicts = []
-
+        logging.info(
+            f"Preparing for export elements from workspace '{workspace_id}' (labeled_only mode is {labeled_only})")
         for category_id, category in categories.items():
             label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, False,
                                                  counts_for_training=True)
             total_count = sum(label_counts.values())
-
+            logging.info(f"labeled elements size for category {category.name} ({category_id}) in workspace "
+                         f"'{workspace_id}' is {total_count}")
             if labeled_only or label_counts[LABEL_POSITIVE] == 0:  # if there are no positive elements,
                 # training set selector cannot be used, so we only use the labeled elements
-                logging.info(f"Labeled elements for category {category.name} ({category_id}) in workspace "
-                             f"'{workspace_id}' is {total_count}")
                 text_elements = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
                                                                            remove_duplicates=False)['results']
             else:
@@ -986,9 +1009,6 @@ class OrchestratorApi:
                                                                  category_id=category_id,
                                                                  category_name=category.name,
                                                                  category_description=category.description)
-                logging.info(
-                    f"Labeled elements size for category {category.name} ({category_id}) in workspace "
-                    f"'{workspace_id}' is {total_count}, exported elements size is {len(text_elements)}")
 
             list_of_dicts.extend(
                 [{DisplayFields.workspace_id: workspace_id,
@@ -1008,7 +1028,7 @@ class OrchestratorApi:
                  for element in text_elements])
 
         logging.info(
-            f"Exporting a total of {len(list_of_dicts)} elements from workspace '{workspace_id}'")
+            f"done exporting a total of {len(list_of_dicts)} elements from workspace '{workspace_id}'")
 
         return pd.DataFrame(list_of_dicts)
 
