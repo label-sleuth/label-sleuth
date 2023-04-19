@@ -142,6 +142,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                                                                  args=(model_id, train_data, model_params),
                                                                  use_gpu=self.gpu_support,
                                                                  done_callback=done_callback)
+
         return model_id, future
 
     def train_and_update_status(self, model_id, *args) -> str:
@@ -149,8 +150,10 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         Run the model _train() function, and return *model_id* if it has finished successfully.
         """
         try:
+            logging.info(f"starting training for model {model_id} of type {self.__class__.__name__}")
             self._train(model_id, *args)
             self.mark_train_as_completed(model_id)
+            logging.info(f"done training model {model_id} of type {self.__class__.__name__}")
         except Exception:
             logging.exception(f'model {model_id} failed with exception')
             self.mark_train_as_error(model_id)
@@ -223,7 +226,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
 
                 # Run inference using the model for the missing elements
                 new_predictions = self._infer_by_id(model_id, uniques_to_infer)
-                logging.info(f"finished running infer for {len(indices_not_in_cache)} values")
+                logging.info(f"model id {model_id} finished running infer for {len(indices_not_in_cache)} values")
 
                 item_to_prediction = {frozenset(unique_item.items()): item_predictions
                                       for unique_item, item_predictions in zip(uniques_to_infer, new_predictions)}

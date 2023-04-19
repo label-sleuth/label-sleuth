@@ -161,6 +161,18 @@ export const getPanelDOMKey = (elementId: string, panelId: PanelIdsEnum, index: 
   return res;
 };
 
+/**
+ * Synchronize the current elements after a labeling action has happened. 
+ * This function looks for all the occurrence of the elementId through all the
+ * panels, as an element can be present in several panels.
+ * @param elementId 
+ * @param userLabel the new user label
+ * @param panelsState the current state of the panels
+ * @param categoryId the category id to which apply the label. If the provided category id
+ * is null, the current category is the one to which the label is applied. This parameter was 
+ * introduced because now the user can apply a label to other category than the current one.
+ * @returns 
+ */
 export const synchronizeElement = (
   elementId: string,
   userLabel: LabelTypesEnum,
@@ -170,14 +182,9 @@ export const synchronizeElement = (
   panelsState: PanelsSliceState;
 } => {
   const panels = panelsState.panels.panels;
-  let previousLabel: LabelTypesEnum | null = null;
   Object.values(panels).forEach((panel) => {
     const elements = panel.elements;
     if (elements !== null && elementId in elements) {
-      // save previous label value
-      if (previousLabel === null) {
-        previousLabel = elements[elementId].userLabel;
-      }
       let element = elements[elementId];
       if (categoryId === null) {
         element.userLabel = userLabel;

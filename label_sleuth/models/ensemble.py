@@ -80,7 +80,7 @@ class Ensemble(ModelAPI):
             self.wait_and_update_status,
             args=(ensemble_model_id, [future for model_id, future in model_ids_and_futures]),
             use_gpu=self.gpu_support, done_callback=done_callback)
-        logging.info(f"training an ensemble model id {ensemble_model_id} using {len(train_data)} elements")
+
         return ensemble_model_id, future
 
     def wait_and_update_status(self, model_id: str, train_futures: Iterable[Future]) -> str:

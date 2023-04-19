@@ -135,8 +135,9 @@ if __name__ == '__main__':
                               output_dir=args.output_path)
     if args.load_sample_corpus:
         load_sample_corpus(curr_app, args.load_sample_corpus)
-    logging.info(f"args.url_prefix {args.url_prefix}")
+
     if args.url_prefix is not None:
+        logging.info(f"args.url_prefix {args.url_prefix}")
         curr_app.wsgi_app = PrefixMiddleware(curr_app.wsgi_app, prefix=args.url_prefix)
 
     app.start_server(curr_app, args.host, args.port, args.num_serving_threads)
