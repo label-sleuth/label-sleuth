@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { ErrorResponse } from "../global";
+import { ErrorResponse, Error } from "../global";
 
 /**
  * Get the error message from the error object.
@@ -25,10 +25,12 @@ export const getErrorMessage = (err: ErrorResponse) => {
     "Something went wrong. Please ask your system administrator to share the logs by creating an issue on Github or sending a message via Slack.";
   if (err.message) {
     try {
-      const errorJSON = JSON.parse(err.message);
-      return "error" in errorJSON ? errorJSON.error : "title" in errorJSON ? errorJSON.title : defaultErrorMessage;
+      const errorJSON: Error = JSON.parse(err.message);
+      return (errorJSON && errorJSON.title) || defaultErrorMessage;
     } catch (error) {
       return defaultErrorMessage;
     }
+  } else {
+    return defaultErrorMessage;
   }
 };

@@ -41,7 +41,7 @@ from label_sleuth.authentication import authenticate_response, login_if_required
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.config import Configuration
 from label_sleuth.configurations.users import User
-from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, Label
+from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, DisplayFields, Label
 from label_sleuth.data_access.data_access_api import AlreadyExistsException
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_factory import ModelFactory
@@ -129,7 +129,7 @@ def login():
     if not verify_password(username, password):
         logging.warning(f"Login failed for username {username}")
         return make_response(jsonify({
-            'error': "Login failed: wrong username or password"
+            'title': "Login failed: wrong username or password"
         }), 401)
     else:
         user = curr_app.users.get(username)
@@ -192,11 +192,10 @@ def add_documents(dataset_name):
                         "num_sentences": document_statistics.text_elements_loaded,
                         "workspaces_to_update": workspaces_to_update})
     except AlreadyExistsException as e:
-        return jsonify({"dataset_name": dataset_name, "error": "documents already exist", "documents": e.documents,
-                        "error_code": 409}), 409
+        return jsonify({"type": "duplicate_documents", "title": f"The following documents already exist: {e.documents}" }), 409
     except Exception:
         logging.exception(f"failed to load or add documents to dataset '{dataset_name}'")
-        return jsonify({"dataset_name": dataset_name, "error": traceback.format_exc(), "error_code": 400}), 400
+        return jsonify({ "type":"document_upload_fail", "title": traceback.format_exc() }), 400
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
             os.remove(os.path.join(temp_dir, temp_file_name))
@@ -242,8 +241,7 @@ def create_workspace():
 
     if curr_app.orchestrator_api.workspace_exists(workspace_id):
         logging.info(f"Trying to create workspace '{workspace_id}' which already exists")
-        return jsonify({"workspace_id": workspace_id, "error": "Workspace already exists",
-                        "error_code": 409}), 409
+        return jsonify({ "type": "workspace_id_conflict", "title": f"Workspace: {workspace_id} already exists" }), 409
     curr_app.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
     all_document_ids = curr_app.orchestrator_api.get_all_document_uris(workspace_id)
@@ -338,8 +336,8 @@ def create_category(workspace_id):
     existing_category_names = [category.name for category
                                in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
     if category_name in existing_category_names:
-        return jsonify({"workspace_id": workspace_id, "error": "A category with this name already exists",
-                        "category_name": category_name, "error_code": 409}), 409
+        return jsonify({"type": "category_name_conflict", 
+                        "title": f"A category with this name already exists: {category_name}" }), 409
 
     category_id = curr_app.orchestrator_api.create_new_category(workspace_id, category_name, category_description)
 
@@ -392,8 +390,7 @@ def update_category(workspace_id, category_id):
     existing_category_names = [category.name for category
                                in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
     if new_category_name in existing_category_names:
-        return jsonify({"workspace_id": workspace_id, "error": "A category with this name already exists",
-                        "category_name": new_category_name, "error_code": 409}), 409
+        return jsonify({"type": "category_name_conflict", "title": f"A category with this name already exists: {new_category_name}" }), 409
 
     curr_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description)
     return jsonify({"workspace_id": workspace_id, "category_id": str(category_id), "category_name": new_category_name,
@@ -747,11 +744,27 @@ def import_labels(workspace_id):
 
     :param workspace_id:
     """
+    required_columns = [DisplayFields.text, DisplayFields.category_name, DisplayFields.label]
     csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
     df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
 
-    return jsonify(curr_app.orchestrator_api.import_category_labels(workspace_id, df))
+    # check for required columns and send specific error messaging
+    missing_columns = []
+    for col in required_columns:
+        try: 
+            df[col]
+        except KeyError as e:
+            missing_columns.append(e.__str__())
 
+    if len(missing_columns) > 0:
+        return jsonify({ 'type': 'missing_required_columns', 
+                        'title': f"Missing the following required columns: {','.join(missing_columns)}" }), 400
+
+    # try/except around api functionality to catch all other errors
+    try:
+        return jsonify(curr_app.orchestrator_api.import_category_labels(workspace_id, df))
+    except:
+        return jsonify({ 'type': 'invalid_upload', 'title': "Invalid csv file"}), 400
 
 @main_blueprint.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
 @login_if_required
