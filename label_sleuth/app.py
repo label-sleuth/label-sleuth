@@ -946,7 +946,7 @@ def export_model(workspace_id):
     try:
         memory_file = BytesIO()
 
-        with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+        with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
             for dirpath, dirnames, filenames in os.walk(temp_model_dir):
                 for filename in filenames:
                     file_path = os.path.join(dirpath, filename)
