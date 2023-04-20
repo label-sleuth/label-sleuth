@@ -978,7 +978,7 @@ def export_model(workspace_id):
         if os.path.exists(temp_model_dir):
             shutil.rmtree(temp_model_dir, ignore_errors=True)
     logging.info(f"model is ready for export in {workspace_id} category id {category_id}")
-    return send_file(memory_file, attachment_filename=f'model.zip', as_attachment=True)
+    return send_file(memory_file, attachment_filename=f'model.zip', as_attachment=True, mimetype='application/zip')
 
 
 """
