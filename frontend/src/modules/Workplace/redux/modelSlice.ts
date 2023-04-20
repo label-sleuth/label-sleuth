@@ -73,15 +73,44 @@ export const downloadModel = createAsyncThunk<
     headers: {
       "Content-Type": "application/zip",
     },
-    parseResponseBodyAs: "blob",
+    parseResponseBodyAs: "none",
   });
+  console.log(data.body);
+  const reader = data.body.getReader();
+  const stream = new ReadableStream({
+    start(controller) {
+      const push = () => {
+        reader
+          .read()
+          .then(({ done, value }: { done: boolean; value: number }) => {
+            if (done) {
+              controller.close();
+              return;
+            }
+            controller.enqueue(value);
+            push();
+          });
+      };
+      push();
+    },
+  });
+  const urlObject = URL.createObjectURL(
+    new Blob([stream as any], { type: "application/octet-stream" })
+  );
 
   const current = new Date();
-  const date = `${current.getDate()}/${current.getMonth() + 1}/${current.getFullYear()}`;
+  const date = `${current.getDate()}/${
+    current.getMonth() + 1
+  }/${current.getFullYear()}`;
   const fileName = `model-category_${curCategoryNameSelector(state)}-version_${
     state.workspace.modelVersion
   }-${date}.zip`;
-  fileDownload(data, fileName);
+
+  const link = document.createElement("a");
+  link.href = urlObject;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
 });
 
 export const reducers = {
