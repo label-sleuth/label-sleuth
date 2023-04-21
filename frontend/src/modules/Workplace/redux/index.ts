@@ -206,5 +206,6 @@ export const {
   updateElementOptimistically,
   reverseOptimisticUpdate,
   decreaseModelStatusCheckAttempts,
-  resetModelStatusCheckAttempts
+  resetModelStatusCheckAttempts,
+  setModelIsLoading,
 } = workspaceSlice.actions;

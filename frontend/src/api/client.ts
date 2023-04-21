@@ -15,13 +15,13 @@
 interface ClientConfig extends RequestInit {
   body?: any;
   stringifyBody?: boolean;
-  parseResponseBodyAs?: "json" | "text" | "blob";
+  parseResponseBodyAs?: "json" | "text" | "blob" | "none";
   omitContentType?: boolean;
 }
 
 export const client = async (
   endpoint: string,
-  { body, method, headers, stringifyBody = true, parseResponseBodyAs = "json", omitContentType = false, ...customConfig }: ClientConfig = {}
+  { body, method, headers, stringifyBody = true, parseResponseBodyAs = "json", omitContentType = false, ...customConfig}: ClientConfig = {}
 ) => {
   // { ...headers } is used here in case headers is undefined, which will convert it to an empty object { }
   const customHeaders = { ...headers } as Record<string, string>;
@@ -56,6 +56,9 @@ export const client = async (
       }
       else if (parseResponseBodyAs === "blob") {
         data = await response.blob();
+      }
+      else if (parseResponseBodyAs === "none") {
+        data = response;
       }
       else {
         throw new Error("parseResponseBodyAs should be 'json' or 'text'")

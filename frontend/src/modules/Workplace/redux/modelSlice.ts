@@ -32,6 +32,7 @@ import {
 } from "../../../global";
 import { RootState } from "../../../store/configureStore";
 import { useWindowSize } from "usehooks-ts";
+import { setModelIsLoading } from ".";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -76,7 +77,7 @@ export const downloadModel = createAsyncThunk<
   {
     state: RootState;
   }
->("workspace/downloadModel", async (_, { getState }) => {
+>("workspace/downloadModel", async (_, { getState, dispatch }) => {
   const state = getState();
   const queryParams = getQueryParamsString([
     getCategoryQueryString(state.workspace.curCategory),
@@ -85,20 +86,30 @@ export const downloadModel = createAsyncThunk<
   const url = `${getWorkspace_url}/${encodeURIComponent(
     getWorkspaceId()
   )}/export_model${queryParams}`;
-
-  const { data } = await client.get(url, {
+  console.log(`[model download]: about to perform the request at ${new Date().toJSON()}`)
+  const { data: response } = await client.get(url, {
     headers: {
       "Content-Type": "application/zip",
     },
-    parseResponseBodyAs: "blob",
+    parseResponseBodyAs: "none",
   });
+  console.log(`[model download]: response received at ${new Date().toJSON()}`)
+  dispatch(setModelIsLoading(false))
+
+  const data = await response.blob()
+  console.log(`[model download]: finish parsing response body at ${new Date().toJSON()}`)
 
   const current = new Date();
-  const date = `${current.getDate()}/${current.getMonth() + 1}/${current.getFullYear()}`;
+  const date = `${current.getDate()}_${
+    current.getMonth() + 1
+  }_${current.getFullYear()}`;
+
   const fileName = `model-category_${curCategoryNameSelector(state)}-version_${
     state.workspace.modelVersion
   }-${date}.zip`;
+
   fileDownload(data, fileName);
+
 });
 
 export const reducers = {
@@ -108,6 +119,9 @@ export const reducers = {
   resetModelStatusCheckAttempts(state: WorkspaceState) {
     state.modelStatusCheckAttempts = 3;
   },
+  setModelIsLoading(state: WorkspaceState, action: PayloadAction<boolean>) {
+    state.downloadingModel = action.payload;
+  }
 };
 
 export const extraReducers = [
@@ -217,10 +231,10 @@ export const extraReducers = [
       state.downloadingModel = true;
     },
   },
-  {
-    action: downloadModel.fulfilled,
-    reducer: (state: WorkspaceState, action: PayloadAction<void>) => {
-      state.downloadingModel = false;
-    },
-  },
+  // {
+  //   action: downloadModel.fulfilled,
+  //   reducer: (state: WorkspaceState, action: PayloadAction<void>) => {
+  //     state.downloadingModel = false;
+  //   },
+  // },
 ];
