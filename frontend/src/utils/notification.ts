@@ -15,6 +15,7 @@
 
 import React from "react";
 import { toast, ToastOptions, UpdateOptions } from "react-toastify";
+import notificationClasses from "./Notification.module.css";
 
 // TODO:transform this file into a custom hook so that it handles the ref to the ReactText object
 // this way  components that use updateNotification won't have to worry about the ref to the ReactText object
@@ -42,18 +43,24 @@ export const useNotification = () => {
    * @param {The message that will be shown} message
    * @param {options passed to the toast function like type and autoClose} options
    */
-  const notify = React.useCallback((message: React.ReactNode, options: ToastOptions, blockToast = false) => {
-    let defaultOptions: ToastOptions = {
-      type: toast.TYPE.DEFAULT,
-      autoClose: false,
-    };
-    toastRefs.current[options.toastId || "default_toast_id"] = toast(message, {
-      ...defaultOptions,
-      ...options,
-      ...(blockToast ? blockToastOptions : unblockToastOptions),
-    });
-  }, []);
-
+  const notify = React.useCallback(
+    (message: React.ReactNode, options: ToastOptions, blockToast = false) => {
+      let defaultOptions: ToastOptions = {
+        type: toast.TYPE.DEFAULT,
+        autoClose: false,
+        bodyClassName: notificationClasses['body-toast']
+      };
+      toastRefs.current[options.toastId || "default_toast_id"] = toast(
+        message,
+        {
+          ...defaultOptions,
+          ...options,
+          ...(blockToast ? blockToastOptions : unblockToastOptions),
+        }
+      );
+    },
+    []
+  );
 
   /**
    * Function to update a toast notification
@@ -61,11 +68,17 @@ export const useNotification = () => {
    * @param options of type UpdateOptions
    * @returns void
    */
-  const updateNotification = React.useCallback((options: UpdateOptions, blockToast = false) => {
-    if (options.toastId === null || options.toastId === undefined) return;
-    const toastEl = toastRefs.current[options.toastId];
-    toast.update(toastEl, { ...options, ...(blockToast ? blockToastOptions : unblockToastOptions) });
-  }, []);
+  const updateNotification = React.useCallback(
+    (options: UpdateOptions, blockToast = false) => {
+      if (options.toastId === null || options.toastId === undefined) return;
+      const toastEl = toastRefs.current[options.toastId];
+      toast.update(toastEl, {
+        ...options,
+        ...(blockToast ? blockToastOptions : unblockToastOptions),
+      });
+    },
+    []
+  );
 
   const closeNotification = React.useCallback((toastId: string) => {
     const toastEl = toastRefs.current[toastId];
