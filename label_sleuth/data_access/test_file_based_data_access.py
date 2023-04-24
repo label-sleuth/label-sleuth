@@ -75,7 +75,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.data_temp_dir = tempfile.TemporaryDirectory()
-        cls.data_access = FileBasedDataAccess(cls.data_temp_dir.name)
+        cls.data_access = FileBasedDataAccess(cls.data_temp_dir.name, 60)
 
     @classmethod
     def tearDownClass(cls):

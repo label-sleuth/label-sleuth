@@ -45,6 +45,7 @@ class Configuration:
     login_required: bool
     active_learning_strategy: ActiveLearningStrategy = None
     active_learning_policy: ActiveLearningPolicy = None
+    max_document_name_length: int = 60
     main_panel_elements_per_page: int = 500
     sidebar_panel_elements_per_page: int = 50
     snippet_max_token_length: int = 100

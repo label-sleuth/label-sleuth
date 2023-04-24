@@ -28,6 +28,19 @@ class AlreadyExistsException(Exception):
         self.documents = documents
 
 
+class BadDocumentNamesException(Exception):
+    def __init__(self, message, documents, not_permitted_characters):
+        self.message = message
+        self.documents = documents
+        self.unpermitted_characters = not_permitted_characters
+
+
+class DocumentNameTooLongException(Exception):
+    def __init__(self, message, documents, document_name_max_length):
+        self.message = message
+        self.documents = documents
+        self.max_length = document_name_max_length
+
 @dataclass
 class DocumentStatistics:
     documents_loaded: int
@@ -40,16 +53,30 @@ class LabeledStatus(Enum):
     ALL = 2
 
 
-def get_document_uri(uri):
+def get_document_uri(element_uri):
     """
     get document uri from element uri
     """
-    return uri.rsplit(URI_SEP, 1)[0]
+    return element_uri.rsplit(URI_SEP, 1)[0]
+
+
+def get_document_id(document_uri):
+    """
+    get document id from document uri
+    """
+    return document_uri.split(URI_SEP, 1)[1]
+
+
+def get_document_id_from_element_uri(element_uri):
+    """
+        get document id from element uri
+        """
+    return get_document_uri(get_document_id(element_uri))
 
 
 class DataAccessApi(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def add_documents(self, dataset_name: str, documents: Iterable[Document]) -> DocumentStatistics:
+    def add_documents(self, dataset_name: str, documents: Sequence[Document]) -> DocumentStatistics:
         """
         Add new documents to a given dataset; If dataset does not exist, create it.
 

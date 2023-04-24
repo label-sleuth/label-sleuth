@@ -42,7 +42,8 @@ from label_sleuth.active_learning.core.active_learning_factory import ActiveLear
 from label_sleuth.config import Configuration
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, DisplayFields, Label
-from label_sleuth.data_access.data_access_api import AlreadyExistsException
+from label_sleuth.data_access.data_access_api import AlreadyExistsException, BadDocumentNamesException, \
+    DocumentNameTooLongException
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.core.tools import SentenceEmbeddingService
@@ -81,7 +82,8 @@ def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
                                                           preload_spacy_model_name=config.language.spacy_model_name,
                                                           preload_fasttext_language_id=
                                                           config.language.fasttext_language_id)
-    data_access = FileBasedDataAccess(output_dir)
+
+    data_access = FileBasedDataAccess(output_dir, config.max_document_name_length)
     background_jobs_manager = BackgroundJobsManager()
     training_set_selection_factory = TrainingSetSelectionFactory(data_access, background_jobs_manager)
 
@@ -192,7 +194,19 @@ def add_documents(dataset_name):
                         "num_sentences": document_statistics.text_elements_loaded,
                         "workspaces_to_update": workspaces_to_update})
     except AlreadyExistsException as e:
-        return jsonify({"type": "duplicate_documents", "title": f"The following documents already exist: {e.documents}" }), 409
+        return jsonify({"type": "duplicate_documents", "title": f"The following documents already exist: {e.documents}"}), 409
+    except BadDocumentNamesException as e:
+        unpermitted_characters = ", ".join(e.unpermitted_characters)
+        document_names = ", ".join(e.documents)
+        return jsonify(
+            {"type": "bad_characters", "title": f'Illegal characters (({unpermitted_characters}) found '
+                                                f'in the following documents:\n'
+                                                f'{document_names}'}), 400
+    except DocumentNameTooLongException as e:
+        document_names = ", ".join(e.documents)
+        return jsonify(
+            {"type": "name_too_long", "title": f'The following documents names exceeds the max document name of {e.max_length} characters:\n'
+                                                f'{document_names}'}), 400
     except Exception:
         logging.exception(f"failed to load or add documents to dataset '{dataset_name}'")
         return jsonify({ "type":"document_upload_fail", "title": traceback.format_exc() }), 400

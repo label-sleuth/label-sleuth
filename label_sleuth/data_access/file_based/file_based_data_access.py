@@ -21,7 +21,7 @@ import random
 import shutil
 import sys
 import threading
-import time
+import re
 
 import jsonpickle
 import ujson as json
@@ -34,7 +34,36 @@ from typing import Sequence, Iterable, Mapping, List, Union, Set
 import label_sleuth.data_access.file_based.utils as utils
 from label_sleuth.data_access.core.data_structs import Document, Label, TextElement, LabelType
 from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, \
-    LabeledStatus
+    LabeledStatus, BadDocumentNamesException, DocumentNameTooLongException, get_document_id
+from label_sleuth.data_access.file_based.utils import get_dataset_name_from_uri
+
+
+def _validate_document_names(documents: Sequence[Document], max_document_name_length):
+    # validate max length
+    name_exceeds_max_length = [get_document_id(document.uri) for document in documents
+                               if len(get_document_id(document.uri)) > max_document_name_length]
+    if len(name_exceeds_max_length):
+        dataset_name = get_dataset_name_from_uri(documents[0].uri)
+        logging.warning(f"failed to load documents due to exceeding max document name "
+                        f" length of {max_document_name_length} in dataset {dataset_name}")
+        raise DocumentNameTooLongException("Some document names are too long", name_exceeds_max_length,
+                                           max_document_name_length)
+
+    # validate allowed characters
+    bad_characters = r'[":/\\|?*\x00-\x1f<>]'
+    matches_per_document = [re.findall(bad_characters, get_document_id(document.uri)) for document in documents]
+
+    bad_names = [get_document_id(document.uri) for i, document in enumerate(documents)
+                 if len(matches_per_document[i]) > 0]
+    unpermitted_characters_found = [char for matches_per_document in matches_per_document
+                                    for char in matches_per_document]
+
+    if len(bad_names) > 0:
+        dataset_name = get_dataset_name_from_uri(documents[0].uri)
+        logging.warning(f"failed to load documents due to unpermitted characters {unpermitted_characters_found} "
+                        f"in document names in dataset {dataset_name}")
+        raise BadDocumentNamesException(f"There are documents whose names contain characters that are not permitted",
+                                        bad_names, unpermitted_characters_found)
 
 
 class FileBasedDataAccess(DataAccessApi):
@@ -60,10 +89,11 @@ class FileBasedDataAccess(DataAccessApi):
     labels_in_memory = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(Label))))
     dataset_in_memory_lock = threading.RLock()
 
-    def __init__(self, output_dir):
+    def __init__(self, output_dir, max_document_name_length=60):
         self.output_dir = output_dir
+        self.max_document_name_length = max_document_name_length
 
-    def add_documents(self, dataset_name: str, documents: Iterable[Document]):
+    def add_documents(self, dataset_name: str, documents: Sequence[Document]):
         """
         Add new documents to a given dataset; If dataset does not exist, create it.
 
@@ -74,6 +104,8 @@ class FileBasedDataAccess(DataAccessApi):
         :param dataset_name: the name of the dataset to which the documents should be added.
         :param documents: an Iterable over Document type.
         """
+
+        _validate_document_names(documents, self.max_document_name_length)
         doc_dump_dir = self._get_documents_dump_dir(dataset_name)
         sentences = []
         if not os.path.exists(doc_dump_dir):
