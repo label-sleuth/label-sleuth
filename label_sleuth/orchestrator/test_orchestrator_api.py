@@ -54,7 +54,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         background_jobs_manager = BackgroundJobsManager()
         cls.model_factory = ModelFactory(cls.temp_dir.name, background_jobs_manager, None)
         cls.active_learning_factory = ActiveLearningFactory()
-        cls.data_access = FileBasedDataAccess(os.path.join(cls.temp_dir.name, "output"))
+        cls.data_access = FileBasedDataAccess(os.path.join(cls.temp_dir.name, "output"), 60)
         cls.orchestrator_state = OrchestratorStateApi(os.path.join(cls.temp_dir.name, "output", "workspaces"))
         cls.training_set_selection_factory = TrainingSetSelectionFactory(cls.data_access, background_jobs_manager)
         cls.orchestrator_api = OrchestratorApi(cls.orchestrator_state, cls.data_access, cls.active_learning_factory,
