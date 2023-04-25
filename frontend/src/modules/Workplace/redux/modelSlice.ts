@@ -14,11 +14,10 @@
 */
 
 import { createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import {} from "../../../utils/utils";
+import { downloadFile } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { PanelIdsEnum } from "../../../const";
 import { client } from "../../../api/client";
-import fileDownload from "js-file-download";
 import { curCategoryNameSelector } from ".";
 import {
   getWorkspaceId,
@@ -31,7 +30,6 @@ import {
   WorkspaceState,
 } from "../../../global";
 import { RootState } from "../../../store/configureStore";
-import { useWindowSize } from "usehooks-ts";
 import { setModelIsLoading } from ".";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
@@ -93,7 +91,7 @@ export const downloadModel = createAsyncThunk<
 
   await client.get(prepareUrl);
 
-  dispatch(setModelIsLoading(false))
+  dispatch(setModelIsLoading(false));
 
   const current = new Date();
   const date = `${current.getDate()}_${
@@ -103,7 +101,7 @@ export const downloadModel = createAsyncThunk<
     state.workspace.modelVersion
   }-${date}.zip`;
 
-  fileDownload(exportUrl, fileName);
+  downloadFile(exportUrl, fileName)
 });
 
 export const reducers = {
@@ -115,7 +113,7 @@ export const reducers = {
   },
   setModelIsLoading(state: WorkspaceState, action: PayloadAction<boolean>) {
     state.downloadingModel = action.payload;
-  }
+  },
 };
 
 export const extraReducers = [

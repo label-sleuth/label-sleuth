@@ -13,8 +13,19 @@
     limitations under the License.
 */
 
-import { BOMCharacter, LabelActionsEnum, LabelTypesEnum, PanelIdsEnum } from "../const";
-import { Category, Element, ElementsDict, PanelsSliceState, UnparsedElement } from "../global";
+import {
+  BOMCharacter,
+  LabelActionsEnum,
+  LabelTypesEnum,
+  PanelIdsEnum,
+} from "../const";
+import {
+  Category,
+  Element,
+  ElementsDict,
+  PanelsSliceState,
+  UnparsedElement,
+} from "../global";
 
 /**
  * Returns the suffix of a number in its ordinal form
@@ -40,16 +51,21 @@ export const getOrdinalSuffix = (x: number): string => {
   }
   return prefix;
 };
-export const getCategoryQueryString = (curCategoryId: number | null): string => {
+export const getCategoryQueryString = (
+  curCategoryId: number | null
+): string => {
   return curCategoryId !== null ? `category_id=${curCategoryId}` : "";
 };
 export const getQueryParamsString = (queryParams: string[]): string => {
   let queryParamsString = "";
   queryParams.forEach((param) => {
-    queryParamsString = param ? `${queryParamsString}${param}&` : queryParamsString;
+    queryParamsString = param
+      ? `${queryParamsString}${param}&`
+      : queryParamsString;
   });
   // add leading '?' removes last '&'
-  queryParamsString = "?" + queryParamsString.substring(0, queryParamsString.length - 1);
+  queryParamsString =
+    "?" + queryParamsString.substring(0, queryParamsString.length - 1);
   // return an empty string if there are no query params
   return queryParamsString === "?" ? "" : queryParamsString;
 };
@@ -99,7 +115,11 @@ export const getNewLabelState = (
  * @returns
  */
 export const getBooleanLabel = (label: LabelTypesEnum): string => {
-  return label === LabelTypesEnum.POS ? "true" : label === LabelTypesEnum.NEG ? "false" : LabelTypesEnum.NONE;
+  return label === LabelTypesEnum.POS
+    ? "true"
+    : label === LabelTypesEnum.NEG
+    ? "false"
+    : LabelTypesEnum.NONE;
 };
 
 export const getStringLabel = (unparsedLabel: string): LabelTypesEnum => {
@@ -138,8 +158,14 @@ export const parseElement = (
 ): Element => ({
   docId: docid,
   id: id,
-  modelPrediction: curCategoryId !== null ? getStringLabel(`${model_predictions[curCategoryId]}`) : LabelTypesEnum.NONE,
-  userLabel: curCategoryId !== null ? getStringLabel(`${user_labels[curCategoryId]}`) : LabelTypesEnum.NONE,
+  modelPrediction:
+    curCategoryId !== null
+      ? getStringLabel(`${model_predictions[curCategoryId]}`)
+      : LabelTypesEnum.NONE,
+  userLabel:
+    curCategoryId !== null
+      ? getStringLabel(`${user_labels[curCategoryId]}`)
+      : LabelTypesEnum.NONE,
   text,
   snippet: snippet !== undefined ? snippet : null,
   otherUserLabels:
@@ -147,13 +173,19 @@ export const parseElement = (
       ? Object.assign(
           {},
           ...Object.keys(user_labels).map((categoryId) =>
-            +categoryId !== curCategoryId ? { [categoryId]: getStringLabel(`${user_labels[+categoryId]}`) } : {}
+            +categoryId !== curCategoryId
+              ? { [categoryId]: getStringLabel(`${user_labels[+categoryId]}`) }
+              : {}
           )
         )
       : {},
 });
 
-export const getPanelDOMKey = (elementId: string, panelId: PanelIdsEnum, index: number | null = null): string => {
+export const getPanelDOMKey = (
+  elementId: string,
+  panelId: PanelIdsEnum,
+  index: number | null = null
+): string => {
   let res = `${panelId}_${elementId}`;
   if (index !== null) {
     res = `${res}_${index}`;
@@ -162,22 +194,22 @@ export const getPanelDOMKey = (elementId: string, panelId: PanelIdsEnum, index: 
 };
 
 /**
- * Synchronize the current elements after a labeling action has happened. 
+ * Synchronize the current elements after a labeling action has happened.
  * This function looks for all the occurrence of the elementId through all the
  * panels, as an element can be present in several panels.
- * @param elementId 
+ * @param elementId
  * @param userLabel the new user label
  * @param panelsState the current state of the panels
  * @param categoryId the category id to which apply the label. If the provided category id
- * is null, the current category is the one to which the label is applied. This parameter was 
+ * is null, the current category is the one to which the label is applied. This parameter was
  * introduced because now the user can apply a label to other category than the current one.
- * @returns 
+ * @returns
  */
 export const synchronizeElement = (
   elementId: string,
   userLabel: LabelTypesEnum,
   panelsState: PanelsSliceState,
-  categoryId: number | null,
+  categoryId: number | null
 ): {
   panelsState: PanelsSliceState;
 } => {
@@ -203,7 +235,10 @@ export const synchronizeElement = (
   };
 };
 
-export const scrollIntoElementView = (element: HTMLElement | null, smoothly = true): void => {
+export const scrollIntoElementView = (
+  element: HTMLElement | null,
+  smoothly = true
+): void => {
   element &&
     element.scrollIntoView({
       behavior: smoothly ? "smooth" : "auto",
@@ -222,14 +257,20 @@ export const getElementIndex = (elementId: string): number =>
  * @param {*} elementsCount
  * @returns
  */
-export const getPageCount = (elementsPerPage: number, elementsCount: number | null): number =>
+export const getPageCount = (
+  elementsPerPage: number,
+  elementsCount: number | null
+): number =>
   elementsCount !== null ? Math.ceil(elementsCount / elementsPerPage) : 0;
 
-export const getAddedCategoriesNotificationString = (categories: string[]): string => {
+export const getAddedCategoriesNotificationString = (
+  categories: string[]
+): string => {
   if (categories.length === 1) return categories[0];
   else {
     let res = "";
-    if (categories.length > 2) categories.slice(0, -2).forEach((c) => (res += `${c}, `));
+    if (categories.length > 2)
+      categories.slice(0, -2).forEach((c) => (res += `${c}, `));
     res += categories.slice(-2, -1)[0] + " and " + categories.slice(-1)[0];
     return res;
   }
@@ -261,22 +302,39 @@ export const stringifyList = (list: string[]): string => {
     res += `'${list.slice(-2, -1)[0]}' and '${list.slice(-1)[0]}'`;
     return res;
   }
-}
+};
 
 /**
  * Gets the category name from the id
-*/
-export const getCategoryNameFromId = (categoryId: number, categories: Category[]): string => {
-  return categories.find((cat) => cat.category_id === categoryId)?.category_name || "";
+ */
+export const getCategoryNameFromId = (
+  categoryId: number,
+  categories: Category[]
+): string => {
+  return (
+    categories.find((cat) => cat.category_id === categoryId)?.category_name ||
+    ""
+  );
 };
 
-
 export const getDocumentNameFromDocumentId = (documentId: string | null) => {
-  if (documentId === null) return null; 
-  return documentId.split('-')[1];
-}
+  if (documentId === null) return null;
+  return documentId.split("-")[1];
+};
 
 export const getDatasetNameFromDocumentId = (documentId: string | null) => {
-  if (documentId === null) return null; 
-  return documentId.split('-')[0];
-}
+  if (documentId === null) return null;
+  return documentId.split("-")[0];
+};
+
+export const downloadFile = (url: string, fileName: string) => {
+  const tempLink = document.createElement("a");
+  tempLink.style.display = "none";
+  tempLink.href = url;
+  tempLink.setAttribute("download", fileName);
+  document.body.appendChild(tempLink);
+  tempLink.click();
+  setTimeout(function () {
+    document.body.removeChild(tempLink);
+  }, 200);
+};
