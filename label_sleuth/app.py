@@ -777,7 +777,8 @@ def import_labels(workspace_id):
     # try/except around api functionality to catch all other errors
     try:
         return jsonify(curr_app.orchestrator_api.import_category_labels(workspace_id, df))
-    except:
+    except Exception as e:
+        logging.exception(f"workspace '{workspace_id}' failed to import existing labels from the provided CSV file")
         return jsonify({ 'type': 'invalid_upload', 'title': "Invalid csv file"}), 400
 
 @main_blueprint.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
