@@ -1013,9 +1013,9 @@ def export_model(workspace_id):
     :request_arg category_id:
     :request_arg iteration_index: optional. if not provided, the model from the latest iteration will be exported.
     """
-    logging.info(f"model is being exported in {workspace_id} category id {category_id}")
     category_id = int(request.args['category_id'])
     iteration_index = request.args.get('iteration_index', None)
+    logging.info(f"model is being exported in {workspace_id} category id {category_id}")
     output_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index), 'model.zip')
     return send_file(output_path, attachment_filename=f'model.zip', as_attachment=True, mimetype='application/zip')
 
