@@ -27,10 +27,9 @@ export const useNotifyError = () => {
 
   const errorMessage = useAppSelector((state) => state.error.errorMessage);
   const { notify } = useNotification();
-
   useEffect(() => {
     if (errorMessage) {
-      notify(errorMessage, { autoClose: 5000, type: toast.TYPE.ERROR, toastId: "toast-error" });
+      notify(errorMessage, { autoClose: false, type: toast.TYPE.ERROR, toastId: "toast-error"});
       dispatch(clearError());
     }
   }, [notify, errorMessage, dispatch]);
