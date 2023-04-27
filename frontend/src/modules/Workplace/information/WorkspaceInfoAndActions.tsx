@@ -1,5 +1,9 @@
 import { Stack, Typography, Tooltip, Button } from "@mui/material";
-import { NO_MODEL_AVAILABLE_MSG, NEXT_MODEL_TRAINING_MSG, NEXT_ZERO_SHOT_MODEL_TRAINING_MSG } from "../../../const";
+import {
+  NO_MODEL_AVAILABLE_MSG,
+  NEXT_MODEL_TRAINING_MSG,
+  NEXT_ZERO_SHOT_MODEL_TRAINING_MSG,
+} from "../../../const";
 import { useTheme } from "@mui/material/styles";
 import { LinearWithValueLabel } from "./ModelProgressBar";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
@@ -9,6 +13,8 @@ import { Divider } from "./Divider";
 import { LabelCountPanel } from "./LabelCountPanel";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import classes from "./WorkspaceInfo.module.css";
+import { useNotification } from "../../../utils/notificationHook";
+import { toast } from "react-toastify";
 
 interface WorkspaceInfoAndActionsProps {
   modelVersionSuffix: string | null;
@@ -26,8 +32,17 @@ export const WorkspaceInfoAndActions = ({
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
   const labelCount = useAppSelector((state) => state.workspace.labelCount);
-  const nextModelShouldBeTraining = useAppSelector((state) => state.workspace.nextModelShouldBeTraining);
-  const lastModelFailed = useAppSelector((state) => state.workspace.lastModelFailed);
+  const nextModelShouldBeTraining = useAppSelector(
+    (state) => state.workspace.nextModelShouldBeTraining
+  );
+  const lastModelFailed = useAppSelector(
+    (state) => state.workspace.lastModelFailed
+  );
+  const downloadingModel = useAppSelector(
+    (state) => state.workspace.downloadingModel
+  );
+
+  const { notify } = useNotification();
 
   const theme = useTheme();
 
@@ -64,7 +79,15 @@ export const WorkspaceInfoAndActions = ({
             {modelVersion && modelVersion > -1 ? (
               <Tooltip title={"Download model"} placement="top">
                 <Button
-                  onClick={() => setDownloadModelDialogOpen(true)}
+                  onClick={() =>
+                    downloadingModel
+                      ? notify("Please wait until the current model download finishes.", {
+                          toastId: "model-already-downloading-toast",
+                          type: toast.TYPE.ERROR,
+                          autoClose: 5000,
+                        })
+                      : setDownloadModelDialogOpen(true)
+                  }
                   startIcon={<FileDownloadOutlinedIcon />}
                   sx={{
                     textTransform: "none",
@@ -84,9 +107,13 @@ export const WorkspaceInfoAndActions = ({
               }}
             >
               {labelCount.pos === 0 && labelCount.neg === 0 ? (
-                <div className={classes.modelStatus}>{NEXT_ZERO_SHOT_MODEL_TRAINING_MSG}</div>
+                <div className={classes.modelStatus}>
+                  {NEXT_ZERO_SHOT_MODEL_TRAINING_MSG}
+                </div>
               ) : (
-                <div className={classes.modelStatus}>{NEXT_MODEL_TRAINING_MSG}</div>
+                <div className={classes.modelStatus}>
+                  {NEXT_MODEL_TRAINING_MSG}
+                </div>
               )}
               <div className={classes["dot-pulse"]}></div>
             </div>

@@ -36,55 +36,48 @@ const unblockToastOptions = {
   draggable: true,
 };
 
-export const useNotification = () => {
-  const toastRefs = React.useRef<{ [key: string]: React.ReactText }>({});
-  /**
-   * Shows a toast notification
-   * @param {The message that will be shown} message
-   * @param {options passed to the toast function like type and autoClose} options
-   */
-  const notify = React.useCallback(
-    (message: React.ReactNode, options: ToastOptions, blockToast = false) => {
-      let defaultOptions: ToastOptions = {
-        type: toast.TYPE.DEFAULT,
-        autoClose: false,
-        bodyClassName: notificationClasses['body-toast']
-      };
-      toastRefs.current[options.toastId || "default_toast_id"] = toast(
-        message,
-        {
-          ...defaultOptions,
-          ...options,
-          ...(blockToast ? blockToastOptions : unblockToastOptions),
-        }
-      );
-    },
-    []
-  );
+const toastRefs = React.useRef<{ [key: string]: React.ReactText }>({});
+/**
+ * Shows a toast notification
+ * @param {The message that will be shown} message
+ * @param {options passed to the toast function like type and autoClose} options
+ */
+const notify = React.useCallback(
+  (message: React.ReactNode, options: ToastOptions, blockToast = false) => {
+    let defaultOptions: ToastOptions = {
+      type: toast.TYPE.DEFAULT,
+      autoClose: false,
+      bodyClassName: notificationClasses["body-toast"],
+    };
+    toastRefs.current[options.toastId || "default_toast_id"] = toast(message, {
+      ...defaultOptions,
+      ...options,
+      ...(blockToast ? blockToastOptions : unblockToastOptions),
+    });
+  },
+  []
+);
 
-  /**
-   * Function to update a toast notification
-   * @param toastRef: a reference to the toast returned by the notify function
-   * @param options of type UpdateOptions
-   * @returns void
-   */
-  const updateNotification = React.useCallback(
-    (options: UpdateOptions, blockToast = false) => {
-      if (options.toastId === null || options.toastId === undefined) return;
-      const toastEl = toastRefs.current[options.toastId];
-      toast.update(toastEl, {
-        ...options,
-        ...(blockToast ? blockToastOptions : unblockToastOptions),
-      });
-    },
-    []
-  );
+/**
+ * Function to update a toast notification
+ * @param toastRef: a reference to the toast returned by the notify function
+ * @param options of type UpdateOptions
+ * @returns void
+ */
+const updateNotification = React.useCallback(
+  (options: UpdateOptions, blockToast = false) => {
+    if (options.toastId === null || options.toastId === undefined) return;
+    const toastEl = toastRefs.current[options.toastId];
+    toast.update(toastEl, {
+      ...options,
+      ...(blockToast ? blockToastOptions : unblockToastOptions),
+    });
+  },
+  []
+);
 
-  const closeNotification = React.useCallback((toastId: string) => {
-    const toastEl = toastRefs.current[toastId];
-    if (toastEl === undefined) return;
-    toast.dismiss(toastEl);
-  }, []);
-
-  return { notify, updateNotification, closeNotification };
-};
+const closeNotification = React.useCallback((toastId: string) => {
+  const toastEl = toastRefs.current[toastId];
+  if (toastEl === undefined) return;
+  toast.dismiss(toastEl);
+}, []);

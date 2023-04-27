@@ -29,7 +29,7 @@ import {
 } from "../const";
 import { useWorkspaceId } from "./useWorkspaceId";
 import { useAppDispatch, useAppSelector } from "./useRedux";
-import { useNotification } from "../utils/notification";
+import { useNotification } from "../utils/notificationHook";
 const useNewWorkspace = (toastId: string) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useAppSelector } from "./useRedux";
-import { useNotification } from "../utils/notification";
+import { useNotification } from "../utils/notificationHook";
 import { UPLOAD_LABELS_WAIT_MESSAGE } from "../const";
 import { toast } from "react-toastify";
 import { usePrevious } from "./usePrevious";

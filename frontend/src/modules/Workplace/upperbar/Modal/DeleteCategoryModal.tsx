@@ -19,7 +19,7 @@ import { Dialog } from "@mui/material";
 import { DialogTitle, DialogActions, DialogContent, DialogContentText } from "@mui/material";
 import { useAppSelector, useAppDispatch } from "../../../../customHooks/useRedux";
 import { curCategoryNameSelector, deleteCategory } from "../../redux";
-import { useNotification } from "../../../../utils/notification";
+import { useNotification } from "../../../../utils/notificationHook";
 import { toast } from "react-toastify";
 import { isFulfilled } from "@reduxjs/toolkit";
 

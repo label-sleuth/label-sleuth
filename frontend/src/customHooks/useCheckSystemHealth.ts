@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { client } from "../api/client";
 import { BASE_URL } from "../config";
-import { useNotification } from "../utils/notification";
+import { useNotification } from "../utils/notificationHook";
 
 export const useCheckSystemHealth = () => {
   const [systemOk, setSystemOk] = useState(true);

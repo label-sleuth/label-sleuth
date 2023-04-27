@@ -28,7 +28,7 @@ import {
   CATEGORY_NAME_MAX_CHARS,
 } from "../../../../const";
 import classes from "./index.module.css";
-import { useNotification } from "../../../../utils/notification";
+import { useNotification } from "../../../../utils/notificationHook";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 

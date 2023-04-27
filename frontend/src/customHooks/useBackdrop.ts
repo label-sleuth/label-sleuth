@@ -29,7 +29,6 @@ const useBackdrop = (): { backdropOpen: boolean } => {
   const deletingCategory = useAppSelector((state) => state.workspace.deletingCategory);
   const uploadingLabels = useAppSelector((state) => state.workspace.uploadingLabels);
   const downloadingLabels = useAppSelector((state) => state.workspace.downloadingLabels);
-  const downloadingModel = useAppSelector((state) => state.workspace.downloadingModel);
   const elements = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.MAIN_PANEL].elements);
   const uploadingDataset = useAppSelector((state) => state.workspaces.uploadingDataset);
   const workspaceConfigLoading = useAppSelector((state) => state.workspaces.loading);
@@ -43,7 +42,6 @@ const useBackdrop = (): { backdropOpen: boolean } => {
         uploadingLabels ||
         downloadingLabels ||
         deletingCategory ||
-        downloadingModel ||
         panelsLoading[PanelIdsEnum.MAIN_PANEL] ||
         elements === null
     } else if (location.pathname === WORKSPACE_CONFIG_PATH) {
@@ -61,7 +59,6 @@ const useBackdrop = (): { backdropOpen: boolean } => {
     activePanelId,
     uploadingLabels,
     downloadingLabels,
-    downloadingModel,
     deletingCategory,
     workspaceConfigLoading
   ]);

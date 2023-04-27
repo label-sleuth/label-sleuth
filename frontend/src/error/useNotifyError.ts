@@ -17,7 +17,7 @@ import { useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "../customHooks/useRedux";
 import { toast } from "react-toastify";
 import { clearError } from "./errorSlice";
-import { useNotification } from "../utils/notification";
+import { useNotification } from "../utils/notificationHook";
 
 /**
  * Displays a toast notification anytime an error is thrown.

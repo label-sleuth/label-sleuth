@@ -30,7 +30,7 @@ import {
   CATEGORY_NAME_MAX_CHARS,
 } from "../../../../const";
 import { DialogContentText, Dialog, DialogTitle, DialogContent } from "@mui/material";
-import { useNotification } from "../../../../utils/notification";
+import { useNotification } from "../../../../utils/notificationHook";
 import { toast } from "react-toastify";
 import { ChangeEvent } from "react";
 

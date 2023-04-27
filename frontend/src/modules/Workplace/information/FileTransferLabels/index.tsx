@@ -13,7 +13,13 @@
     limitations under the License.
 */
 
-import React, { Dispatch, SetStateAction, useEffect } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   LargeTitle,
   MainContent,
@@ -32,10 +38,16 @@ import {
   Stack,
   Typography,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import "./styles.css";
 import { useDispatch } from "react-redux";
-import { uploadLabels, downloadLabels, downloadModel } from "../../redux";
+import {
+  uploadLabels,
+  downloadLabels,
+  downloadModel,
+  setModelIsLoading,
+} from "../../redux";
 import {
   useAppDispatch,
   useAppSelector,
@@ -44,8 +56,16 @@ import { curCategoryNameSelector } from "../../redux";
 import { blue } from "@mui/material/colors";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import { useNotification } from "../../../../utils/notification";
+import { useNotification } from "../../../../utils/notificationHook";
 import { toast } from "react-toastify";
+import { client } from "../../../../api/client";
+import {
+  getCategoryQueryString,
+  getQueryParamsString,
+  getWorkspaceId,
+} from "../../../../utils/utils";
+import { BASE_URL, WORKSPACE_API } from "../../../../config";
+import fileDownload from "js-file-download";
 
 interface UploadLabelsDialogProps {
   open: boolean;
@@ -285,6 +305,63 @@ export const DownloadLabelsDialog = ({
   );
 };
 
+const ModelStatusIndicator = ({
+  message,
+  percentage,
+}: {
+  message: string;
+  percentage?: number;
+}) => {
+  return !!!percentage ? (
+    <Stack
+      direction={"row"}
+      justifyContent={"space-around"}
+      alignItems={"center"}
+    >
+      <Typography>{message}</Typography>
+      <Box sx={{ display: "flex" }}>
+        <CircularProgress size={"1.75rem"} />
+      </Box>
+    </Stack>
+  ) : (
+    <Stack
+      direction={"row"}
+      justifyContent={"space-around"}
+      alignItems={"center"}
+    >
+      <Typography>{message}</Typography>
+      <Box sx={{ position: "relative", display: "inline-flex" }}>
+        <CircularProgress
+          variant="determinate"
+          size={"2.4rem"}
+          value={percentage}
+        />
+        <Box
+          sx={{
+            top: 0,
+            left: 0,
+            bottom: 0,
+            right: 0,
+            position: "absolute",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Typography
+            variant="caption"
+            component="div"
+            color="white"
+            fontSize={"0.75rem"}
+          >
+            {`${percentage}%`}
+          </Typography>
+        </Box>
+      </Box>
+    </Stack>
+  );
+};
+
 interface DownloadModelDialogProps {
   open: boolean;
   setOpen: (value: boolean) => void;
@@ -298,21 +375,94 @@ export const DownloadModelDialog = ({
   modelVersion,
   modelVersionSuffix,
 }: DownloadModelDialogProps) => {
+  const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const curCategoryName = useAppSelector(curCategoryNameSelector);
-  const downloadingModel = useAppSelector(
-    (state) => state.workspace.downloadingModel
-  );
-
+  // const downloadingModel = useAppSelector(
+  //   (state) => state.workspace.downloadingModel
+  // );
   const dispatch = useDispatch();
 
-  const { notify, closeNotification } = useNotification();
+  const { notify, updateNotification, closeNotification } = useNotification();
 
   const handleClose = () => {
     setOpen(false);
   };
 
+  const downloadModel = async () => {
+    const queryParams = getQueryParamsString([
+      getCategoryQueryString(curCategory),
+    ]);
+
+    const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
+    const modelDownloadToastId = "modelDownloadToastId";
+    dispatch(setModelIsLoading(true));
+    notify(
+      <ModelStatusIndicator message={"Preparing model for download..."} />,
+      {
+        toastId: modelDownloadToastId,
+        type: toast.TYPE.INFO,
+        position: "bottom-center",
+      },
+      true
+    );
+
+    const url = `${getWorkspace_url}/${encodeURIComponent(
+      getWorkspaceId()
+    )}/export_model${queryParams}`;
+    const { data: response }: { data: Response } = await client.get(url, {
+      headers: {
+        "Content-Type": "application/zip",
+      },
+      parseResponseBodyAs: "none",
+    });
+
+    const current = new Date();
+    const date = `${current.getDate()}_${
+      current.getMonth() + 1
+    }_${current.getFullYear()}`;
+
+    const fileName = `model-category_${curCategoryName}-version_${modelVersion}-${date}.zip`;
+
+    if (response !== null && response.body !== null) {
+      const contentLength = response.headers.get("Content-Length");
+      const contentLengthParsed = contentLength !== null ? +contentLength : 0;
+      let receivedLength = 0;
+
+      const reader = response.body.getReader();
+
+      let chunks = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        chunks.push(value);
+        receivedLength += value.length;
+        updateNotification(
+          {
+            toastId: modelDownloadToastId,
+            type: toast.TYPE.INFO,
+            render: (
+              <ModelStatusIndicator
+                message={"Downloading model..."}
+                percentage={Math.round(
+                  (receivedLength / contentLengthParsed) * 100
+                )}
+              />
+            ),
+          },
+          true
+        );
+      }
+      let data = new Blob(chunks);
+      closeNotification(modelDownloadToastId);
+      fileDownload(data, fileName);
+      dispatch(setModelIsLoading(false));
+    }
+  };
+
   const onClick = () => {
-    dispatch(downloadModel());
+    downloadModel();
     setOpen(false);
   };
 
@@ -320,19 +470,7 @@ export const DownloadModelDialog = ({
     "the model itself",
     "a code snippet demonstrating how it can be used within a Python application",
   ];
-
-  useEffect(() => {
-    const toastId = "downloading-model-notification";
-    if (downloadingModel) {
-      notify("Preparing the model (this can take up to 5 minutes).", {
-        toastId,
-        type: toast.TYPE.INFO,
-      });
-    } else {
-      closeNotification(toastId);
-    }
-  }, [downloadingModel, closeNotification, notify]);
-
+  
   return (
     <Modal open={open} onClose={handleClose} disableRestoreFocus>
       <Box className="dialog-content">

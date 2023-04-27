@@ -86,18 +86,16 @@ export const downloadModel = createAsyncThunk<
   const url = `${getWorkspace_url}/${encodeURIComponent(
     getWorkspaceId()
   )}/export_model${queryParams}`;
-  console.log(`[model download]: about to perform the request at ${new Date().toJSON()}`)
-  const { data: response } = await client.get(url, {
+  console.log(
+    `[model download]: about to perform the request at ${new Date().toJSON()}`
+  );
+  const { data: response }: { data: Response } = await client.get(url, {
     headers: {
       "Content-Type": "application/zip",
     },
     parseResponseBodyAs: "none",
   });
-  console.log(`[model download]: response received at ${new Date().toJSON()}`)
-  dispatch(setModelIsLoading(false))
-
-  const data = await response.blob()
-  console.log(`[model download]: finish parsing response body at ${new Date().toJSON()}`)
+  console.log(`[model download]: received response ${new Date().toJSON()}`);
 
   const current = new Date();
   const date = `${current.getDate()}_${
@@ -108,8 +106,88 @@ export const downloadModel = createAsyncThunk<
     state.workspace.modelVersion
   }-${date}.zip`;
 
-  fileDownload(data, fileName);
+  if (response !== null && response.body !== null) {
+    const contentLength = response.headers.get("Content-Length");
+    const contentLengthParsed = contentLength !== null ? +contentLength : 0;
+    let receivedLength = 0; // received that many bytes at the moment
 
+    const reader = response.body.getReader();
+
+    const rs = new ReadableStream({
+      async start(controller) {
+        while (true) {
+          const { done, value } = await reader.read();
+
+          receivedLength += value ? value.length : 0;
+          console.log(
+            `Percentage: ${Math.round(
+              (receivedLength / contentLengthParsed) * 100
+            )}%`
+          );
+
+          // When no more data needs to be consumed, break the reading
+          if (done) {
+            break;
+          }
+
+          // Enqueue the next data chunk into our target stream
+          controller.enqueue(value);
+        }
+
+        // Close the stream
+        controller.close();
+        reader.releaseLock();
+      },
+    });
+    const newResponse = new Response(rs);
+    console.log(
+      `[model download]: parding the new recreated response ${new Date().toJSON()}`
+    );
+    const data = await newResponse.blob();
+
+    console.log(
+      `[model download]:  finished parsing the new recreated response ${new Date().toJSON()}`
+    );
+
+    fileDownload(data, fileName);
+
+  // if (response !== null && response.body !== null) {
+  //   const reader = response.body.getReader();
+
+  //   // Step 2: get total length
+  //   const contentLength = response.headers.get("Content-Length");
+  //   const contentLengthParsed = contentLength !== null ? +contentLength : 0;
+
+  //   // Step 3: read the data
+  //   let receivedLength = 0; // received that many bytes at the moment
+  //   let chunks = []; // array of received binary chunks (comprises the body)
+  //   while (true) {
+  //     const { done, value } = await reader.read();
+
+  //     if (value !== undefined) chunks.push(value);
+  //     receivedLength += value ? value.length : 0;
+
+  //     console.log(
+  //       `Percentage: ${Math.round(
+  //         (receivedLength / contentLengthParsed) * 100
+  //       )}%`
+  //     );
+
+  //     if (done) {
+  //       break;
+  //     }
+  //   }
+
+    // // Step 4: concatenate chunks into single Uint8Array
+    // let chunksAll = new Uint8Array(receivedLength); // (4.1)
+    // let position = 0;
+    // for (let chunk of chunks) {
+    //   chunksAll.set(chunk, position); // (4.2)
+    //   position += chunk.length;
+    // }
+
+    // let blob = new Blob(chunks);
+  }
 });
 
 export const reducers = {
@@ -121,7 +199,7 @@ export const reducers = {
   },
   setModelIsLoading(state: WorkspaceState, action: PayloadAction<boolean>) {
     state.downloadingModel = action.payload;
-  }
+  },
 };
 
 export const extraReducers = [
@@ -225,16 +303,4 @@ export const extraReducers = [
       };
     },
   },
-  {
-    action: downloadModel.pending,
-    reducer: (state: WorkspaceState, action: PayloadAction<void>) => {
-      state.downloadingModel = true;
-    },
-  },
-  // {
-  //   action: downloadModel.fulfilled,
-  //   reducer: (state: WorkspaceState, action: PayloadAction<void>) => {
-  //     state.downloadingModel = false;
-  //   },
-  // },
 ];

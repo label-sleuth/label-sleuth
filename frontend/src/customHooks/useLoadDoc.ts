@@ -25,7 +25,7 @@ import {
   REGEX_LETTER_NUMBERS_UNDERSCORE,
 } from "../const";
 import { useAppDispatch, useAppSelector } from "./useRedux";
-import { useNotification } from "../utils/notification";
+import { useNotification } from "../utils/notificationHook";
 import React from "react";
 import { usePrevious } from "./usePrevious";
 import { isFulfilled } from "@reduxjs/toolkit";

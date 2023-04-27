@@ -21,6 +21,7 @@ import { ErrorResponse, Error } from "../global";
  * @returns the error message
  */
 export const getErrorMessage = (err: ErrorResponse) => {
+  console.log(err)
   const defaultErrorMessage =
     "Something went wrong. Please ask your system administrator to share the logs by creating an issue on Github or sending a message via Slack.";
   if (err.message) {

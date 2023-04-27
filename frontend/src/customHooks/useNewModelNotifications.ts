@@ -15,7 +15,7 @@
 
 import React from "react";
 import { usePrevious } from "./usePrevious";
-import { useNotification } from "../utils/notification";
+import { useNotification } from "../utils/notificationHook";
 import { useAppDispatch } from "./useRedux";
 import { toast } from "react-toastify";
 

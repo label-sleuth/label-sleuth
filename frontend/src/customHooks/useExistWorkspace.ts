@@ -25,7 +25,7 @@ import { SELECT_WORKSPACE } from "../const";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { useWorkspaceId } from "./useWorkspaceId";
 import { useAppSelector, useAppDispatch } from "./useRedux";
-import { useNotification } from "../utils/notification";
+import { useNotification } from "../utils/notificationHook";
 
 interface UseExistWorkspaceProps {
   toastId: string;

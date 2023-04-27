@@ -1,7 +1,7 @@
 import React from "react";
 import { useAppSelector, useAppDispatch } from "../../../customHooks/useRedux";
 import { useLocalStorage } from "usehooks-ts";
-import { useNotification } from "../../../utils/notification";
+import { useNotification } from "../../../utils/notificationHook";
 import { FormControl, Typography } from "@mui/material";
 import { Keyboard } from "../../../components/Keyboard";
 import ControlledSelect from "../../../components/dropdown/Dropdown";
