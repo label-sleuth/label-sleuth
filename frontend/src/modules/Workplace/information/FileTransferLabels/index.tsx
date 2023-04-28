@@ -13,13 +13,7 @@
     limitations under the License.
 */
 
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { Dispatch, SetStateAction, useCallback, useRef } from "react";
 import {
   LargeTitle,
   MainContent,
@@ -34,20 +28,16 @@ import {
   FormGroup,
   Checkbox,
   Collapse,
-  IconButton,
   Stack,
   Typography,
   Button,
   CircularProgress,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import "./styles.css";
 import { useDispatch } from "react-redux";
-import {
-  uploadLabels,
-  downloadLabels,
-  downloadModel,
-  setModelIsLoading,
-} from "../../redux";
+import { uploadLabels, downloadLabels, setModelIsLoading } from "../../redux";
 import {
   useAppDispatch,
   useAppSelector,
@@ -66,6 +56,7 @@ import {
 } from "../../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../../config";
 import fileDownload from "js-file-download";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 interface UploadLabelsDialogProps {
   open: boolean;
@@ -308,20 +299,51 @@ export const DownloadLabelsDialog = ({
 const ModelStatusIndicator = ({
   message,
   percentage,
+  cancelDownload,
+  abortFetchModel,
+  closeModelDownloadNotification,
+  notifyModelDownloadCancel,
 }: {
   message: string;
   percentage?: number;
+  cancelDownload: React.MutableRefObject<boolean>;
+  abortFetchModel?: () => void;
+  closeModelDownloadNotification?: () => void;
+  notifyModelDownloadCancel?: () => void;
 }) => {
+  const dispatch = useDispatch();
+
+  const onCancelFetchClick = () => {
+    abortFetchModel && abortFetchModel();
+  };
+
+  const onCancelDownlaodClick = () => {
+    cancelDownload.current = true;
+    closeModelDownloadNotification && closeModelDownloadNotification();
+    notifyModelDownloadCancel && notifyModelDownloadCancel();
+    dispatch(setModelIsLoading(false));
+  };
+
   return !!!percentage ? (
     <Stack
       direction={"row"}
       justifyContent={"space-around"}
       alignItems={"center"}
     >
-      <Typography>{message}</Typography>
-      <Box sx={{ display: "flex" }}>
+      <Typography maxWidth={"120px"}>{message}</Typography>
+      <Box sx={{ position: "relative", display: "inline-flex" }}>
         <CircularProgress size={"1.75rem"} />
       </Box>
+      <Tooltip title="Cancel download" placement="top">
+        <span>
+          <IconButton size="small" onClick={onCancelFetchClick}>
+            <CancelIcon
+              fontSize="inherit"
+              sx={(theme) => ({ color: theme.palette.error.main })}
+            />
+          </IconButton>
+        </span>
+      </Tooltip>
     </Stack>
   ) : (
     <Stack
@@ -358,6 +380,16 @@ const ModelStatusIndicator = ({
           </Typography>
         </Box>
       </Box>
+      <Tooltip title="Cancel download" placement="top">
+        <span>
+          <IconButton size="small" onClick={onCancelDownlaodClick}>
+            <CancelIcon
+              fontSize="inherit"
+              sx={(theme) => ({ color: theme.palette.error.main })}
+            />
+          </IconButton>
+        </span>
+      </Tooltip>
     </Stack>
   );
 };
@@ -377,9 +409,9 @@ export const DownloadModelDialog = ({
 }: DownloadModelDialogProps) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const curCategoryName = useAppSelector(curCategoryNameSelector);
-  // const downloadingModel = useAppSelector(
-  //   (state) => state.workspace.downloadingModel
-  // );
+
+  const cancelDownload = useRef<boolean>(false);
+
   const dispatch = useDispatch();
 
   const { notify, updateNotification, closeNotification } = useNotification();
@@ -388,6 +420,14 @@ export const DownloadModelDialog = ({
     setOpen(false);
   };
 
+  const notifyModelDownloadCancel = useCallback(() => {
+    const cancelDownloadToastId = "cancelDownloadToast";
+    notify("The model downlaod has been canceled", {
+      toastId: cancelDownloadToastId,
+      type: toast.TYPE.INFO,
+    });
+  }, [notify]);
+
   const downloadModel = async () => {
     const queryParams = getQueryParamsString([
       getCategoryQueryString(curCategory),
@@ -395,9 +435,26 @@ export const DownloadModelDialog = ({
 
     const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
     const modelDownloadToastId = "modelDownloadToastId";
+
+    const url = `${getWorkspace_url}/${encodeURIComponent(
+      getWorkspaceId()
+    )}/export_model${queryParams}`;
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const abortFetchModel = () => controller.abort();
+
     dispatch(setModelIsLoading(true));
     notify(
-      <ModelStatusIndicator message={"Preparing model for download..."} />,
+      <ModelStatusIndicator
+        message={"Preparing model for download..."}
+        cancelDownload={cancelDownload}
+        abortFetchModel={abortFetchModel}
+        closeModelDownloadNotification={() =>
+          closeNotification(modelDownloadToastId)
+        }
+      />,
       {
         toastId: modelDownloadToastId,
         type: toast.TYPE.INFO,
@@ -406,59 +463,77 @@ export const DownloadModelDialog = ({
       true
     );
 
-    const url = `${getWorkspace_url}/${encodeURIComponent(
-      getWorkspaceId()
-    )}/export_model${queryParams}`;
-    const { data: response }: { data: Response } = await client.get(url, {
-      headers: {
-        "Content-Type": "application/zip",
-      },
-      parseResponseBodyAs: "none",
-    });
+    client
+      .get(url, {
+        headers: {
+          "Content-Type": "application/zip",
+        },
+        parseResponseBodyAs: "none",
+        signal,
+      })
+      .then(async ({ data: response }: { data: Response }) => {
+        const current = new Date();
+        const date = `${current.getDate()}_${
+          current.getMonth() + 1
+        }_${current.getFullYear()}`;
 
-    const current = new Date();
-    const date = `${current.getDate()}_${
-      current.getMonth() + 1
-    }_${current.getFullYear()}`;
+        const fileName = `model-category_${curCategoryName}-version_${modelVersion}-${date}.zip`;
 
-    const fileName = `model-category_${curCategoryName}-version_${modelVersion}-${date}.zip`;
+        if (response !== null && response.body !== null) {
+          const contentLength = response.headers.get("Content-Length");
+          const contentLengthParsed =
+            contentLength !== null ? +contentLength : 0;
+          let receivedLength = 0;
 
-    if (response !== null && response.body !== null) {
-      const contentLength = response.headers.get("Content-Length");
-      const contentLengthParsed = contentLength !== null ? +contentLength : 0;
-      let receivedLength = 0;
+          const reader = response.body.getReader();
 
-      const reader = response.body.getReader();
+          let chunks = [];
 
-      let chunks = [];
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
+          while (true && !cancelDownload.current) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              break;
+            }
+            chunks.push(value);
+            receivedLength += value.length;
+            updateNotification(
+              {
+                toastId: modelDownloadToastId,
+                type: toast.TYPE.INFO,
+                render: (
+                  <ModelStatusIndicator
+                    message={"Downloading model..."}
+                    percentage={Math.round(
+                      (receivedLength / contentLengthParsed) * 100
+                    )}
+                    closeModelDownloadNotification={() =>
+                      closeNotification(modelDownloadToastId)
+                    }
+                    notifyModelDownloadCancel={notifyModelDownloadCancel}
+                    cancelDownload={cancelDownload}
+                  />
+                ),
+              },
+              true
+            );
+          }
+          if (cancelDownload.current === false) {
+            let data = new Blob(chunks);
+            fileDownload(data, fileName);
+            closeNotification(modelDownloadToastId);
+            dispatch(setModelIsLoading(false));
+          } else {
+            cancelDownload.current = false;
+          }
         }
-        chunks.push(value);
-        receivedLength += value.length;
-        updateNotification(
-          {
-            toastId: modelDownloadToastId,
-            type: toast.TYPE.INFO,
-            render: (
-              <ModelStatusIndicator
-                message={"Downloading model..."}
-                percentage={Math.round(
-                  (receivedLength / contentLengthParsed) * 100
-                )}
-              />
-            ),
-          },
-          true
-        );
-      }
-      let data = new Blob(chunks);
-      closeNotification(modelDownloadToastId);
-      fileDownload(data, fileName);
-      dispatch(setModelIsLoading(false));
-    }
+      })
+      .catch(() => {
+        cancelDownload.current = false;
+        notifyModelDownloadCancel();
+        closeNotification(modelDownloadToastId);
+        dispatch(setModelIsLoading(false));
+      });
   };
 
   const onClick = () => {
@@ -470,7 +545,7 @@ export const DownloadModelDialog = ({
     "the model itself",
     "a code snippet demonstrating how it can be used within a Python application",
   ];
-  
+
   return (
     <Modal open={open} onClose={handleClose} disableRestoreFocus>
       <Box className="dialog-content">
