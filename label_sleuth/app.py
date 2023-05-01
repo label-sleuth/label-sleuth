@@ -939,11 +939,11 @@ def export_predictions(workspace_id):
                          in zip(elements, infer_results)]).to_csv(index=False)
 
 
-@main_blueprint.route('/workspace/<workspace_id>/export_model', methods=['GET'])
+@main_blueprint.route('/workspace/<workspace_id>/prepare_model', methods=['GET'])
 @login_if_required
 @validate_category_id
 @validate_workspace_id
-def export_model(workspace_id):
+def prepare_model(workspace_id):
     """
     Download the trained model files for the given category and (optionally) iteration index.
 
@@ -993,7 +993,39 @@ def export_model(workspace_id):
         if os.path.exists(temp_model_dir):
             shutil.rmtree(temp_model_dir, ignore_errors=True)
     logging.info(f"model is ready for export in {workspace_id} category id {category_id}")
-    return send_file(memory_file, attachment_filename=f'model.zip', as_attachment=True, mimetype='application/zip')
+    
+    output_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index), 'model.zip')
+    with open(output_path, 'wb') as out:
+        out.write(memory_file.read())
+ 
+    return jsonify({'message': 'Model finished being prepared'}), 200
+
+
+@main_blueprint.route('/workspace/<workspace_id>/export_model', methods=['GET'])
+@login_if_required
+@validate_category_id
+@validate_workspace_id
+def export_model(workspace_id):
+    """
+    Download the trained model files for the given category and (optionally) iteration index.
+
+    :param workspace_id:
+    :request_arg category_id:
+    :request_arg iteration_index: optional. if not provided, the model from the latest iteration will be exported.
+    """
+    category_id = int(request.args['category_id'])
+    iteration_index = request.args.get('iteration_index', None)
+    if iteration_index is None:
+        _, iteration_index = curr_app.orchestrator_api. \
+            get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
+    else:
+        iteration_index = int(iteration_index)
+    logging.info(f"model is being exported in {workspace_id} category id {category_id} and iteration {iteration_index}")
+    output_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index), 'model.zip')
+    #today = date.today()
+    #d = today.strftime("%Y_%m_%d")
+    #filename = f"model-category_{c}-version_{iteration_index+1}"
+    return send_file(output_path, attachment_filename="downloaded_model.zip", as_attachment=True, mimetype='application/zip')
 
 
 """

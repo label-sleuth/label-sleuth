@@ -14,11 +14,10 @@
 */
 
 import { createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import {} from "../../../utils/utils";
+import { downloadFile } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { PanelIdsEnum } from "../../../const";
 import { client } from "../../../api/client";
-import fileDownload from "js-file-download";
 import { curCategoryNameSelector } from ".";
 import {
   getWorkspaceId,
@@ -31,7 +30,6 @@ import {
   WorkspaceState,
 } from "../../../global";
 import { RootState } from "../../../store/configureStore";
-import { useWindowSize } from "usehooks-ts";
 import { setModelIsLoading } from ".";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
@@ -83,33 +81,27 @@ export const downloadModel = createAsyncThunk<
     getCategoryQueryString(state.workspace.curCategory),
   ]);
 
-  const url = `${getWorkspace_url}/${encodeURIComponent(
+  const prepareUrl = `${getWorkspace_url}/${encodeURIComponent(
+    getWorkspaceId()
+  )}/prepare_model${queryParams}`;
+
+  const exportUrl = `${getWorkspace_url}/${encodeURIComponent(
     getWorkspaceId()
   )}/export_model${queryParams}`;
-  console.log(`[model download]: about to perform the request at ${new Date().toJSON()}`)
-  const { data: response } = await client.get(url, {
-    headers: {
-      "Content-Type": "application/zip",
-    },
-    parseResponseBodyAs: "none",
-  });
-  console.log(`[model download]: response received at ${new Date().toJSON()}`)
-  dispatch(setModelIsLoading(false))
 
-  const data = await response.blob()
-  console.log(`[model download]: finish parsing response body at ${new Date().toJSON()}`)
+  await client.get(prepareUrl);
+
+  dispatch(setModelIsLoading(false));
 
   const current = new Date();
   const date = `${current.getDate()}_${
     current.getMonth() + 1
   }_${current.getFullYear()}`;
-
   const fileName = `model-category_${curCategoryNameSelector(state)}-version_${
     state.workspace.modelVersion
   }-${date}.zip`;
 
-  fileDownload(data, fileName);
-
+  downloadFile(exportUrl, fileName)
 });
 
 export const reducers = {
@@ -121,7 +113,7 @@ export const reducers = {
   },
   setModelIsLoading(state: WorkspaceState, action: PayloadAction<boolean>) {
     state.downloadingModel = action.payload;
-  }
+  },
 };
 
 export const extraReducers = [
