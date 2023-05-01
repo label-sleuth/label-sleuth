@@ -968,35 +968,43 @@ def prepare_model(workspace_id):
             get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
     else:
         iteration_index = int(iteration_index)
-    logging.info(f"copying model for export in {workspace_id} category id {category_id}")
-    temp_model_dir = curr_app.orchestrator_api.prepare_model_dir_for_export(workspace_id, category_id, iteration_index)
-    logging.info(f"compressing model for export in {workspace_id} category id {category_id}")
-    try:
-        memory_file = BytesIO()
 
-        with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
-            for dirpath, dirnames, filenames in os.walk(temp_model_dir):
-                for filename in filenames:
-                    file_path = os.path.join(dirpath, filename)
-                    archive_file_path = os.path.relpath(file_path, temp_model_dir)
-                    zf.write(file_path, archive_file_path)
+    zipped_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index),
+                 'model.zip')
 
-            # write usage example python file
-            model_usage_example_file_path = os.path.join(temp_model_dir, "model_usage_example.py")
-            with open(model_usage_example_file_path,'w') as text_file:
-                text_file.write(usage_example)
-            archive_file_path = os.path.relpath(model_usage_example_file_path, temp_model_dir)
-            zf.write(model_usage_example_file_path, archive_file_path)
+    if not os.path.exists(zipped_path):
+        logging.info(f"copying model for export in {workspace_id} category id {category_id}")
+        temp_model_dir = curr_app.orchestrator_api.prepare_model_dir_for_export(workspace_id, category_id, iteration_index)
+        logging.info(f"compressing model for export in {workspace_id} category id {category_id}")
+        try:
+            memory_file = BytesIO()
+            with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
+                for dirpath, dirnames, filenames in os.walk(temp_model_dir):
+                    for filename in filenames:
+                        if filename == "model.zip": # skip previously created compressed file
+                            continue
+                        file_path = os.path.join(dirpath, filename)
+                        archive_file_path = os.path.relpath(file_path, temp_model_dir)
+                        zf.write(file_path, archive_file_path)
 
-        memory_file.seek(0)
-    finally:
-        if os.path.exists(temp_model_dir):
-            shutil.rmtree(temp_model_dir, ignore_errors=True)
-    logging.info(f"model is ready for export in {workspace_id} category id {category_id}")
-    
-    output_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index), 'model.zip')
-    with open(output_path, 'wb') as out:
-        out.write(memory_file.read())
+                # write usage example python file
+                model_usage_example_file_path = os.path.join(temp_model_dir, "model_usage_example.py")
+                with open(model_usage_example_file_path,'w') as text_file:
+                    text_file.write(usage_example)
+                archive_file_path = os.path.relpath(model_usage_example_file_path, temp_model_dir)
+                zf.write(model_usage_example_file_path, archive_file_path)
+
+            memory_file.seek(0)
+        finally:
+            if os.path.exists(temp_model_dir):
+                shutil.rmtree(temp_model_dir, ignore_errors=True)
+        logging.info(f"model is ready for export in {workspace_id} category id {category_id}")
+
+        output_path = zipped_path
+        with open(output_path, 'wb') as out:
+            out.write(memory_file.read())
+    else:
+        logging.info(f"model is already ready for export in {workspace_id} category id {category_id}")
  
     return jsonify({'message': 'Model finished being prepared'}), 200
 
@@ -1021,12 +1029,20 @@ def export_model(workspace_id):
     else:
         iteration_index = int(iteration_index)
     logging.info(f"model is being exported in {workspace_id} category id {category_id} and iteration {iteration_index}")
-    output_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index), 'model.zip')
-    #today = date.today()
-    #d = today.strftime("%Y_%m_%d")
-    #filename = f"model-category_{c}-version_{iteration_index+1}"
-    return send_file(output_path, attachment_filename="downloaded_model.zip", as_attachment=True, mimetype='application/zip')
-
+    output_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index),
+                               'model.zip')
+    if os.path.exists(output_path):
+        #today = date.today()
+        #d = today.strftime("%Y_%m_%d")
+        #filename = f"model-category_{c}-version_{iteration_index+1}"
+        return send_file(output_path, attachment_filename="downloaded_model.zip", as_attachment=True,
+                         mimetype='application/zip')
+    else:
+        logging.error(f"workspace {workspace_id} category id {category_id} export_model without "
+                      f"preparing the model first")
+        return jsonify({"type": "model_not_ready", "title":
+            f"/export_model invoked without invoking /prepare_model first in workspace"
+            f" {workspace_id} category_id {category_id}"}), 500
 
 """
 Labeling reports. These calls return labeled elements which the system suggests for review by the user, aiming to 
