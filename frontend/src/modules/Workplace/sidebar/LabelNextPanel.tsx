@@ -48,7 +48,7 @@ const LabelNextPanel = () => {
         nonEmptyResultsMessage={"Labeling these elements next will be most effective at improving the model"}
         emptyResultsMessage={""}
         isPaginationRequired={isPaginationRequired}
-        elementsTopPadding={-1}
+        elementsTopPadding={0}
       />
       <CustomPagination
         hitCount={hitCount}
