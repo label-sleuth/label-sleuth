@@ -929,7 +929,7 @@ class OrchestratorApi:
         # taken into account when applying labels
         apply_labels_to_duplicate_texts = self.config.apply_labels_to_duplicate_texts is True \
                                           or DisplayFields.doc_id not in labels_df_to_import.columns
-        imported_categories_to_uris_and_labels, contracticting_labels_info = \
+        imported_categories_to_uris_and_labels, contradicting_labels_info = \
             process_labels_dataframe(workspace_id, dataset_name, self.data_access, labels_df_to_import,
                                      apply_labels_to_duplicate_texts=apply_labels_to_duplicate_texts)
         
@@ -974,7 +974,7 @@ class OrchestratorApi:
                'categoriesCreated': categories_created,
                'linesSkipped': lines_skipped,
                'total': total,
-               'contracticting_labels_info': contracticting_labels_info}
+               'contracticting_labels_info': contradicting_labels_info}
         return res
 
     def export_workspace_labels(self, workspace_id, labeled_only) -> pd.DataFrame:

@@ -15,12 +15,12 @@
 
 import logging
 import re
-import string
 import sys
-from typing import Dict, Iterable, Sequence, List, Union
+from typing import Dict, Iterable, Sequence, List, Union, Tuple
 import pandas as pd
 from label_sleuth.data_access.core.data_structs import DisplayFields, LABEL_POSITIVE, Label, TextElement, LabelType, \
     URI_SEP
+
 
 def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name, data_access, remove_duplicates) \
         -> Iterable[TextElement]:
@@ -42,14 +42,15 @@ def merge_and_rename_dfs(a: pd.DataFrame, b: pd.DataFrame, on: Union[str, List[s
     df = df[df.columns.intersection(DisplayFields.__dict__)]
     return df
 
-def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_to_import: pd.DataFrame, apply_labels_to_duplicate_texts=False) \
-        -> Dict[str, Dict[str, Dict[str, Label]]]:
+
+def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_to_import: pd.DataFrame,
+                             apply_labels_to_duplicate_texts=False) -> Tuple[Dict[str, Dict[str, Dict[str, Label]]],
+                                                                             Dict[str, List[str]]]:
     logging.warning("Currently label metadata is ignored")
-    
 
     if DisplayFields.doc_id in labels_df_to_import.columns:
         labels_df_to_import[DisplayFields.doc_id] = labels_df_to_import[DisplayFields.doc_id].apply(
-            lambda x: x.replace(URI_SEP, '_'))
+            lambda x: str(x).replace(URI_SEP, '_'))
     labels_df_to_import[DisplayFields.category_name] = labels_df_to_import[DisplayFields.category_name].apply(str)
 
     # convert binary labels in dataframe to boolean
@@ -61,18 +62,16 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
         labels_df_to_import[DisplayFields.label_type] = LabelType.Standard.name
 
     # calling get_element_group_by_texts is the most expensive call on this function and,
-    # removing duplicates from the texts iterable reduces significantly its runtime
+    # removing duplicates from the texts iterable significantly reduces its runtime
     texts = labels_df_to_import[DisplayFields.text].unique()
 
     elements = get_element_group_by_texts(texts, workspace_id, dataset_name, data_access, remove_duplicates=False)   
-        
 
     # convert Element list into a DataFrame in order to perform the join operation
     query_elements_df = pd.DataFrame(
             [[e.text, e.uri.split('-')[1], e.uri] for e in elements],
             columns=[DisplayFields.text, DisplayFields.doc_id, DisplayFields.uri]
         )
-
 
     def has_contradicting_labels(df: pd.DataFrame):
         return df[DisplayFields.label].unique().shape[0] > 1
@@ -83,12 +82,12 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
         group_by_cols.append(DisplayFields.doc_id)
     contradicting_labels_df = labels_df_to_import.groupby(group_by_cols).filter(has_contradicting_labels)
     contradicting_labels_texts = contradicting_labels_df.reset_index()[DisplayFields.text].unique().tolist()
-    contracticting_labels_info = {
+    contradicting_labels_info = {
         'elements': contradicting_labels_texts
     }
 
     if apply_labels_to_duplicate_texts:
-        # duplicates are dropped because if not two many duplicates will be present on the joined DataFrame
+        # duplicates are dropped because if not too many duplicates will be present on the joined DataFrame
         labels_df_to_import.drop_duplicates(subset=[DisplayFields.category_name, DisplayFields.text], inplace=True)
         df = merge_and_rename_dfs(
                 labels_df_to_import, 
@@ -109,4 +108,4 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
                 uri_to_label[uri] = {category_name: Label(label=bool(label), label_type=LabelType[label_type])}
         category_to_uri_to_label[category_name] = uri_to_label
 
-    return category_to_uri_to_label, contracticting_labels_info
+    return category_to_uri_to_label, contradicting_labels_info
