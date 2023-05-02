@@ -324,7 +324,7 @@ export const DownloadModelDialog = ({
   useEffect(() => {
     const toastId = "downloading-model-notification";
     if (downloadingModel) {
-      notify("Preparing the model (this can take up to 5 minutes).", {
+      notify("Preparing the model (this can take up to a minute).", {
         toastId,
         type: toast.TYPE.INFO,
       });
