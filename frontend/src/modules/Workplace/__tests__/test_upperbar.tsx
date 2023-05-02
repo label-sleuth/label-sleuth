@@ -92,10 +92,10 @@ test("create new category validation", async () => {
   );
 
   fireEvent.click(screen.getByRole("button", { name: /create/i }));
-  expect(screen.getByText(/Create a new category/i)).toBeInTheDocument();
+  expect(screen.getByText(/Create new category/i)).toBeInTheDocument();
 
   const button = screen.getByRole("button", { name: "Create" });
-  const input = screen.getByRole("textbox", { name: "New category name" });
+  const input = screen.getByRole("textbox", { name: "Category name" });
 
   expect(button).toBeDisabled();
 
@@ -138,7 +138,7 @@ test("create new category flow", async () => {
   // expect(await screen.findByRole("alert", {description: /has been created/i})).toBeInTheDocument()
 
   // check that modal is no longer present
-  expect(screen.queryByText(/Create a new category/i)).not.toBeVisible();
+  expect(screen.queryByText(/Create new category/i)).not.toBeVisible();
 
   // check that the created category is selected in the dropdown
   expect(screen.getByLabelText("test_category")).toBeInTheDocument();
@@ -213,14 +213,14 @@ test("edit category flow", async () => {
   ).toBeInTheDocument();
 
   const button = screen.getByRole("button", { name: "Edit" });
-  const input : HTMLInputElement = screen.getByRole("textbox", { name: "New category name" });
+  const input : HTMLInputElement = screen.getByRole("textbox", { name: "Category name" });
   fireEvent.change(input, { target: { value: " edited_test_category " } });
   expect(input.value).toBe(" edited_test_category ");
   expect(button).not.toBeDisabled();
 
   fireEvent.click(button);
   expect(
-    await screen.findByText(/The category name has been successfully edited/i)
+    await screen.findByText(/The category 'edited_test_category' has been successfully edited/i)
   ).toBeInTheDocument();
 
   expect(

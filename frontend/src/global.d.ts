@@ -163,6 +163,7 @@ interface EditCategoryResponse {
 interface Category {
   category_id: number; // Rename to categoryId
   category_name: string; // Rename to categoryId
+  category_description: string;
 }
 
 interface CategorySliceState {

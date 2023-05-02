@@ -4,7 +4,9 @@ import { useLocalStorage } from "usehooks-ts";
 import { useNotification } from "../../../utils/notification";
 import { FormControl, Typography } from "@mui/material";
 import { Keyboard } from "../../../components/Keyboard";
-import ControlledSelect, { DropdownOption } from "../../../components/dropdown/Dropdown";
+import ControlledSelect, {
+  DropdownOption,
+} from "../../../components/dropdown/Dropdown";
 import { toast } from "react-toastify";
 import { updateCurCategory } from "../redux";
 
@@ -12,16 +14,22 @@ export const CategoryFormControl = () => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const categories = useAppSelector((state) => state.workspace.categories);
   const dispatch = useAppDispatch();
-  const [showShortcutsNotification, setShowShortcutsNotification] = useLocalStorage("showShortcutsNotification", true);
+  const [showShortcutsNotification, setShowShortcutsNotification] =
+    useLocalStorage("showShortcutsNotification", true);
   const { notify } = useNotification();
 
   const options: DropdownOption[] = categories
-    .map((item) => ({ value: `${item.category_id}`, title: item.category_name }))
-    //.sort((a, b) => a.title.localeCompare(b.title));
+    .map((item) => ({
+      value: `${item.category_id}`,
+      title: item.category_name,
+      caption: item.category_description,
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title));
 
   const ShortcutsMessageComponent = () => (
     <Typography>
-      Press <Keyboard kbd={"Shift"} /> + <Keyboard kbd={"?"} /> to see the available keyboard shortcuts
+      Press <Keyboard kbd={"Shift"} /> + <Keyboard kbd={"?"} /> to see the
+      available keyboard shortcuts
     </Typography>
   );
 
@@ -31,23 +39,33 @@ export const CategoryFormControl = () => {
       notify(<ShortcutsMessageComponent />, { toastId, type: toast.TYPE.INFO });
       setShowShortcutsNotification(false);
     }
-  }, [notify, curCategory, showShortcutsNotification, setShowShortcutsNotification]);
+  }, [
+    notify,
+    curCategory,
+    showShortcutsNotification,
+    setShowShortcutsNotification,
+  ]);
 
   const handleCategorySelect = (value: string) => {
     dispatch(updateCurCategory(Number(value)));
   };
 
   return (
-    <FormControl variant="standard" sx={{ minWidth: "200px", marginBottom: "16px" }}>
+    <FormControl
+      variant="standard"
+      sx={{ minWidth: "200px", marginBottom: "16px" }}
+    >
       <ControlledSelect
         value={curCategory !== null ? `${curCategory}` : ""}
         onChange={handleCategorySelect}
         options={options}
-        placeholder={"Choose a category" }
+        placeholder={"Choose a category"}
         noOptionsPlaceholder={"No categories created"}
         aria="category-select"
         label=""
         itemHeightCount={null}
+        itemMinWidth="500px"
+        itemTextSx={{fontWeight: 450}}
       />
     </FormControl>
   );

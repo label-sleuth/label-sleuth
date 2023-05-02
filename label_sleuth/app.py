@@ -445,15 +445,14 @@ def update_category(workspace_id, category_id):
     post_data = request.get_json(force=True)
     new_category_name = post_data["category_name"]
     new_category_description = post_data["category_description"]
-    existing_category_names = [category.name for category
-                               in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
-    if new_category_name in existing_category_names:
-        return jsonify({"type": "category_name_conflict",
-                        "title": f"A category with this name already exists: {new_category_name}"}), 409
-
     curr_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description)
-    return jsonify({"workspace_id": workspace_id, "category_id": str(category_id), "category_name": new_category_name,
-                    "category_description": new_category_description})
+
+    return jsonify({
+        "workspace_id": workspace_id, 
+        "category_id": str(category_id), 
+        "category_name": new_category_name,
+        "category_description": new_category_description
+    })
 
 
 @main_blueprint.route("/workspace/<workspace_id>/category/<category_id>", methods=['DELETE'])

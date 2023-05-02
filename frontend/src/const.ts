@@ -62,8 +62,8 @@ export const PRECISION_RESULT_MSG = (
   }`;
 
 export const NO_MODEL_AVAILABLE_MSG = "not available yet";
-export const CREATE_NEW_CATEGORY_MODAL_MSG = "Create a new category";
-export const CREATE_NEW_CATEGORY_PLACEHOLDER_MSG = "New category name";
+export const CREATE_NEW_CATEGORY_MODAL_MSG = "Create new category";
+export const CREATE_NEW_CATEGORY_PLACEHOLDER_MSG = "Category name";
 export const CREATE_NEW_CATEGORY_HELPER_MSG =
   "Please select a meaningful name for your category.";
 export const UPLOAD_NEW_DATASET_MSG = "Upload new data";

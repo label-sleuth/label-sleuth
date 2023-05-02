@@ -17,10 +17,13 @@ import MenuItem from "@mui/material/MenuItem/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import classes from "./Dropdown.module.css";
+import { Box, Stack, SxProps, Theme, Typography } from "@mui/material";
+import { ReactNode, useMemo } from "react";
 
 export interface DropdownOption {
   value: string;
   title: string;
+  caption?: string;
 }
 
 interface ControlledSelectProps {
@@ -33,6 +36,9 @@ interface ControlledSelectProps {
   onFocus?: () => void;
   onChange?: (value: string) => void;
   itemHeightCount?: number | null; // number of limits before adding scroll
+  sx?: SxProps<Theme>;
+  itemMinWidth?: string;
+  itemTextSx?: SxProps<Theme>; 
 }
 
 const ControlledSelect = ({
@@ -45,16 +51,29 @@ const ControlledSelect = ({
   noOptionsPlaceholder,
   aria = "demo-simple-select",
   itemHeightCount = 5,
+  sx,
+  itemMinWidth,
+  itemTextSx,
 }: ControlledSelectProps) => {
   const ITEM_HEIGHT = 30;
+
+  // category name with max size (100 characters) spans 800 px -> 8px per character
+  const maxOptionTitleLength = useMemo(() => {
+    return Math.max(...options.map((o) => o.title.length));
+  }, [options]);
+
+  const maxOptionTitlePx = useMemo(() => {
+    return Math.min(800, maxOptionTitleLength * 9);
+  }, [maxOptionTitleLength]);
+
   const MenuProps = {
     PaperProps: {
-      style:
-        itemHeightCount !== null
-          ? {
-              maxHeight: itemHeightCount * ITEM_HEIGHT,
-            }
-          : {},
+      style: {
+        maxWidth: `${maxOptionTitlePx}px`,
+        minWidth: itemMinWidth || "300px",
+        maxHeight:
+          itemHeightCount !== null ? itemHeightCount * ITEM_HEIGHT : "none",
+      },
     },
   };
   const handleFocus = () => {
@@ -68,6 +87,20 @@ const ControlledSelect = ({
 
     if (onChange) {
       onChange(value);
+    }
+  };
+
+  const getRenderValue = (value: string): ReactNode => {
+    if (value !== "") {
+      return (
+        <Typography>
+          {options.find((o) => o.value === value)?.title || ""}
+        </Typography>
+      );
+    } else if (options.length > 0) {
+      return placeholder;
+    } else {
+      return noOptionsPlaceholder;
     }
   };
 
@@ -89,16 +122,13 @@ const ControlledSelect = ({
         value={value ?? ""}
         label={label}
         displayEmpty
-        renderValue={
-          value !== ""
-            ? undefined
-            : () => (options.length > 0 ? placeholder : noOptionsPlaceholder)
-        }
+        renderValue={getRenderValue}
         onChange={handleChange}
         onFocus={handleFocus}
         MenuProps={MenuProps}
         className={value !== "" ? classes.dropdown : classes.dropdown_gray}
         disabled={options.length === 0}
+        sx={sx}
       >
         {options?.map((option) => {
           if (option.value !== "") {
@@ -110,7 +140,27 @@ const ControlledSelect = ({
                 key={option.value}
                 value={option.value}
               >
-                {option.title ?? option.value}
+                <Stack direction={"column"}>
+                  <Typography sx={itemTextSx}>
+                    {option.title ?? option.value}
+                  </Typography>
+                  {option.caption !== undefined && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        whiteSpace: "break-spaces",
+                        pt: 0,
+                        mb: 0,
+                        textAlign: "justify",
+                      }}
+                      paragraph={true}
+                    >
+                      {option.caption && option.caption.trim() !== ""
+                        ? option.caption
+                        : "No description"}
+                    </Typography>
+                  )}
+                </Stack>
               </MenuItem>
             );
           } else {

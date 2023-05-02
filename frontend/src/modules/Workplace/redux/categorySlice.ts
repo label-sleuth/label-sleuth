@@ -31,11 +31,11 @@ export const initialCategorySliceState: CategorySliceState = {
 
 export const createCategoryOnServer = createAsyncThunk(
   "workspace/createCategoryOnServer",
-  async ({ categoryName }: { categoryName: string }) => {
+  async ({ categoryName, categoryDescription }: { categoryName: string, categoryDescription: string }) => {
     var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/category`;
     const response = await client.post(url, {
       category_name: categoryName,
-      category_description: "",
+      category_description: categoryDescription,
       update_counter: true,
     });
 
