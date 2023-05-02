@@ -78,10 +78,10 @@ def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
     app.config["output_dir"] = output_dir
     app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.config["CONFIGURATION"].users}
     app.tokens = [user.token for user in app.users.values()]
-    sentence_embedding_service = SentenceEmbeddingService(embedding_model_dir=output_dir,
-                                                          preload_spacy_model_name=config.language.spacy_model_name,
-                                                          preload_fasttext_language_id=
-                                                          config.language.fasttext_language_id)
+    sentence_embedding_service = \
+        SentenceEmbeddingService(embedding_model_dir=output_dir,
+                                 preload_spacy_model_name=config.language.spacy_model_name,
+                                 preload_fasttext_language_id=config.language.fasttext_language_id)
 
     data_access = FileBasedDataAccess(output_dir, config.max_document_name_length)
     background_jobs_manager = BackgroundJobsManager()
@@ -100,7 +100,6 @@ def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
     app.register_blueprint(main_blueprint)
     app.orchestrator_api.recover_unfinished_iterations()
     return app
-
 
 
 def start_server(app, host, port, num_serving_threads):
@@ -147,9 +146,11 @@ Dataset endpoints. Datasets can be shared between workspaces, so these calls are
 workspace.
 """
 
+
 @main_blueprint.route("/health-check", methods=['GET'])
 def health_check():
     return jsonify({'ok': True})
+
 
 @main_blueprint.route("/datasets", methods=['GET'])
 @login_if_required
@@ -209,7 +210,7 @@ def add_documents(dataset_name):
                                                 f'{document_names}'}), 400
     except Exception:
         logging.exception(f"failed to load or add documents to dataset '{dataset_name}'")
-        return jsonify({ "type":"document_upload_fail", "title": traceback.format_exc() }), 400
+        return jsonify({"type": "document_upload_fail", "title": traceback.format_exc()}), 400
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
             os.remove(os.path.join(temp_dir, temp_file_name))
@@ -255,7 +256,7 @@ def create_workspace():
 
     if curr_app.orchestrator_api.workspace_exists(workspace_id):
         logging.info(f"Trying to create workspace '{workspace_id}' which already exists")
-        return jsonify({ "type": "workspace_id_conflict", "title": f"Workspace: {workspace_id} already exists" }), 409
+        return jsonify({"type": "workspace_id_conflict", "title": f"Workspace: {workspace_id} already exists"}), 409
     curr_app.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
     all_document_ids = curr_app.orchestrator_api.get_all_document_uris(workspace_id)
@@ -351,7 +352,7 @@ def create_category(workspace_id):
                                in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
     if category_name in existing_category_names:
         return jsonify({"type": "category_name_conflict", 
-                        "title": f"A category with this name already exists: {category_name}" }), 409
+                        "title": f"A category with this name already exists: {category_name}"}), 409
 
     category_id = curr_app.orchestrator_api.create_new_category(workspace_id, category_name, category_description)
 
@@ -404,7 +405,8 @@ def update_category(workspace_id, category_id):
     existing_category_names = [category.name for category
                                in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
     if new_category_name in existing_category_names:
-        return jsonify({"type": "category_name_conflict", "title": f"A category with this name already exists: {new_category_name}" }), 409
+        return jsonify({"type": "category_name_conflict",
+                        "title": f"A category with this name already exists: {new_category_name}"}), 409
 
     curr_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description)
     return jsonify({"workspace_id": workspace_id, "category_id": str(category_id), "category_name": new_category_name,
@@ -771,15 +773,16 @@ def import_labels(workspace_id):
             missing_columns.append(e.__str__())
 
     if len(missing_columns) > 0:
-        return jsonify({ 'type': 'missing_required_columns', 
-                        'title': f"Missing the following required columns: {','.join(missing_columns)}" }), 400
+        return jsonify({'type': 'missing_required_columns',
+                        'title': f"Missing the following required columns: {','.join(missing_columns)}"}), 400
 
     # try/except around api functionality to catch all other errors
     try:
         return jsonify(curr_app.orchestrator_api.import_category_labels(workspace_id, df))
     except Exception as e:
         logging.exception(f"workspace '{workspace_id}' failed to import existing labels from the provided CSV file")
-        return jsonify({ 'type': 'invalid_upload', 'title': "Invalid csv file"}), 400
+        return jsonify({'type': 'invalid_upload', 'title': "Invalid csv file"}), 400
+
 
 @main_blueprint.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
 @login_if_required
@@ -989,7 +992,7 @@ def prepare_model(workspace_id):
 
                 # write usage example python file
                 model_usage_example_file_path = os.path.join(temp_model_dir, "model_usage_example.py")
-                with open(model_usage_example_file_path,'w') as text_file:
+                with open(model_usage_example_file_path, 'w') as text_file:
                     text_file.write(usage_example)
                 archive_file_path = os.path.relpath(model_usage_example_file_path, temp_model_dir)
                 zf.write(model_usage_example_file_path, archive_file_path)
@@ -1005,7 +1008,7 @@ def prepare_model(workspace_id):
             out.write(memory_file.read())
     else:
         logging.info(f"model is already ready for export in {workspace_id} category id {category_id}")
- 
+
     return jsonify({'message': 'Model finished being prepared'}), 200
 
 
@@ -1237,7 +1240,6 @@ def cancel_precision_evaluation(workspace_id):
     return jsonify(res)
 
 
-
 """
 Information on enriched tokens in a specific subset of elements, used for visualization.
 """
@@ -1310,7 +1312,7 @@ def get_feature_flags():
     Feature flags are a subset of config["CONFIGURATION"].
     """
 
-    res =  {
+    res = {
         "login_required": curr_app.config['CONFIGURATION'].login_required,
         "main_panel_elements_per_page": curr_app.config['CONFIGURATION'].main_panel_elements_per_page,
         "sidebar_panel_elements_per_page": curr_app.config['CONFIGURATION'].sidebar_panel_elements_per_page,
