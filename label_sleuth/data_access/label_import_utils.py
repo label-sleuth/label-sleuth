@@ -49,7 +49,7 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
 
     if DisplayFields.doc_id in labels_df_to_import.columns:
         labels_df_to_import[DisplayFields.doc_id] = labels_df_to_import[DisplayFields.doc_id].apply(
-            lambda x: x.replace(URI_SEP, '_'))
+            lambda x: str(x).replace(URI_SEP, '_'))
     labels_df_to_import[DisplayFields.category_name] = labels_df_to_import[DisplayFields.category_name].apply(str)
 
     # convert binary labels in dataframe to boolean
