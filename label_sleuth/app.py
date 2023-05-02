@@ -1035,9 +1035,6 @@ def export_model(workspace_id):
     output_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index),
                                'model.zip')
     if os.path.exists(output_path):
-        #today = date.today()
-        #d = today.strftime("%Y_%m_%d")
-        #filename = f"model-category_{c}-version_{iteration_index+1}"
         return send_file(output_path, attachment_filename="downloaded_model.zip", as_attachment=True,
                          mimetype='application/zip')
     else:
