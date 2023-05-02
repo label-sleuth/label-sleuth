@@ -31,6 +31,7 @@ import {
 } from "../../../global";
 import { RootState } from "../../../store/configureStore";
 import { setModelIsLoading } from ".";
+import fileDownload from "js-file-download";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -77,6 +78,9 @@ export const downloadModel = createAsyncThunk<
   }
 >("workspace/downloadModel", async (_, { getState, dispatch }) => {
   const state = getState();
+
+  const authenticationEnabled = state.featureFlags.authenticationEnabled;
+
   const queryParams = getQueryParamsString([
     getCategoryQueryString(state.workspace.curCategory),
   ]);
@@ -88,20 +92,38 @@ export const downloadModel = createAsyncThunk<
   const exportUrl = `${getWorkspace_url}/${encodeURIComponent(
     getWorkspaceId()
   )}/export_model${queryParams}`;
+  if (authenticationEnabled) {
+    await client.get(prepareUrl);
 
-  await client.get(prepareUrl);
+    const current = new Date();
+    const date = `${current.getDate()}_${
+      current.getMonth() + 1
+    }_${current.getFullYear()}`;
+    const fileName = `model-category_${curCategoryNameSelector(
+      state
+    )}-version_${state.workspace.modelVersion}-${date}.zip`;
 
-  dispatch(setModelIsLoading(false));
+    const { data } = await client.get(exportUrl, {
+      parseResponseBodyAs: "blob",
+    });
 
-  const current = new Date();
-  const date = `${current.getDate()}_${
-    current.getMonth() + 1
-  }_${current.getFullYear()}`;
-  const fileName = `model-category_${curCategoryNameSelector(state)}-version_${
-    state.workspace.modelVersion
-  }-${date}.zip`;
+    fileDownload(data, fileName);
+    dispatch(setModelIsLoading(false));
+  } else {
+    await client.get(prepareUrl);
 
-  downloadFile(exportUrl, fileName)
+    dispatch(setModelIsLoading(false));
+
+    const current = new Date();
+    const date = `${current.getDate()}_${
+      current.getMonth() + 1
+    }_${current.getFullYear()}`;
+    const fileName = `model-category_${curCategoryNameSelector(
+      state
+    )}-version_${state.workspace.modelVersion}-${date}.zip`;
+
+    downloadFile(exportUrl, fileName);
+  }
 });
 
 export const reducers = {
