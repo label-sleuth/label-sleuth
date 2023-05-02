@@ -53,16 +53,16 @@ export const renderWithProviderAndRouter = (
 export const createCategoryAndTest = async () => {
   const createCategoryButton = await screen.findByRole('button', { name: /create/i})
   fireEvent.click(createCategoryButton)
-  expect(await screen.findByText(/Create a new category/i)).toBeInTheDocument();
-  const button = screen.getByRole<HTMLButtonElement>('button', {name: "Create"})
-  const input = screen.getByRole<HTMLTextAreaElement>('textbox', {name: "New category name"})
+  expect(await screen.findByText(/Create new category/i)).toBeInTheDocument();
+  const button = screen.getByRole('button', {name: "Create"})
+  const input: HTMLInputElement = screen.getByRole('textbox', {name: "Category name"})
   fireEvent.change(input, {target: {value: "test_category"}})
   expect(input.value).toBe('test_category')
   expect(button).not.toBeDisabled()
   fireEvent.click(button)
 
   expect(await screen.findByText(/The category 'test_category' has been created/)).toBeInTheDocument()
-  expect(screen.queryByText(/Create a new category/i)).not.toBeVisible();
+  expect(screen.queryByText(/Create new category/i)).not.toBeVisible();
 
 }
 

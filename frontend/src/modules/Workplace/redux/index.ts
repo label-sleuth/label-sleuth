@@ -175,6 +175,17 @@ export const curCategoryNameSelector = (state: RootState) => {
     ?.category_name;
 };
 
+// selector for getting the current category name (curCategory is a category id)
+export const curCategoryDescriptionSelector = (state: RootState) => {
+  /**
+   * The == is used instead of === because there
+   * is not clear which is the type of the
+   * categoryId.
+   */
+  return state.workspace.categories.find((cat: Category) => cat.category_id === state.workspace.curCategory)
+    ?.category_description;
+};
+
 export const activePanelSelector = (state: RootState) => {
   return state.workspace.panels.activePanelId !== PanelIdsEnum.NOT_SET
     ? state.workspace.panels.panels[state.workspace.panels.activePanelId]
