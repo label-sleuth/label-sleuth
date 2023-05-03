@@ -47,6 +47,7 @@ export const CategoryFormControl = () => {
         noOptionsPlaceholder={"No categories created"}
         aria="category-select"
         label=""
+        itemHeightCount={null}
       />
     </FormControl>
   );
