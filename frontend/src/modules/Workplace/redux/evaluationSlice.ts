@@ -14,13 +14,23 @@
 */
 
 import { createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { getCategoryQueryString, getQueryParamsString, parseElements } from "../../../utils/utils";
+import {
+  getCategoryQueryString,
+  getQueryParamsString,
+  parseElements,
+} from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { PanelIdsEnum } from "../../../const";
 import { client } from "../../../api/client";
 import { getWorkspaceId } from "../../../utils/utils";
 import { RootState } from "../../../store/configureStore";
-import { Element, ElementsDict, FetchPanelElementsParams, UnparsedElement, WorkspaceState } from "../../../global";
+import {
+  Element,
+  ElementsDict,
+  FetchPanelElementsParams,
+  UnparsedElement,
+  WorkspaceState,
+} from "../../../global";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -33,9 +43,13 @@ export const getEvaluationElements = createAsyncThunk<
 >("workspace/getEvaluationElements", async (request, { getState }) => {
   const state = getState();
 
-  const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
+  const queryParams = getQueryParamsString([
+    getCategoryQueryString(state.workspace.curCategory),
+  ]);
 
-  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/precision_evaluation_elements${queryParams}`;
+  var url = `${getWorkspace_url}/${encodeURIComponent(
+    getWorkspaceId()
+  )}/precision_evaluation_elements${queryParams}`;
 
   const response = await client.get(url);
   return response.data;
@@ -47,55 +61,72 @@ export const getEvaluationResults = createAsyncThunk<
   {
     state: RootState;
   }
->("workspace/getEvaluationResults", async (changed_elements_count, { getState }) => {
-  const state = getState();
+>(
+  "workspace/getEvaluationResults",
+  async (changed_elements_count, { getState }) => {
+    const state = getState();
 
-  const ids: string[] = Object.values(state.workspace.panels.panels[PanelIdsEnum.EVALUATION].elements as ElementsDict).map(
-    (e: Element) => e.id
-  );
+    const ids: string[] = Object.values(
+      state.workspace.panels.panels[PanelIdsEnum.EVALUATION]
+        .elements as ElementsDict
+    ).map((e: Element) => e.id);
 
-  // we know that modelVersion wont be null but typescript ask to check
-  if (state.workspace.modelVersion === null) return;
+    // we know that modelVersion wont be null but typescript ask to check
+    if (state.workspace.modelVersion === null) return;
 
-  const iteration = state.workspace.modelVersion - 1;
-  const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
+    const iteration = state.workspace.modelVersion - 1;
+    const queryParams = getQueryParamsString([
+      getCategoryQueryString(state.workspace.curCategory),
+    ]);
 
-  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/precision_evaluation_elements${queryParams}`;
+    var url = `${getWorkspace_url}/${encodeURIComponent(
+      getWorkspaceId()
+    )}/precision_evaluation_elements${queryParams}`;
 
-  const response = await client.post(url, {
-    ids,
-    iteration,
-    changed_elements_count,
-  });
+    const response = await client.post(url, {
+      ids,
+      iteration,
+      changed_elements_count,
+    });
 
-  return response.data;
-});
+    return response.data;
+  }
+);
 
 export const cancelEvaluation = createAsyncThunk<
   { canceled: string },
-  number,
+  { changedElementsCount: number; cancelByAPI?: boolean },
   {
     state: RootState;
   }
->("workspace/cancelEvaluation", async (changed_elements_count, { getState }) => {
-  const state = getState();
+>(
+  "workspace/cancelEvaluation",
+  async ({ changedElementsCount, cancelByAPI = true }, { getState }) => {
+    const state = getState();
+    if (cancelByAPI) {
+      const queryParams = getQueryParamsString([
+        getCategoryQueryString(state.workspace.curCategory),
+      ]);
 
-  const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
+      var url = `${getWorkspace_url}/${encodeURIComponent(
+        getWorkspaceId()
+      )}/cancel_precision_evaluation${queryParams}`;
 
-  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/cancel_precision_evaluation${queryParams}`;
-
-  const response = await client.post(url, {
-    changed_elements_count,
-  });
-  return response.data;
-});
+      const response = await client.post(url, {
+        changed_elements_count: changedElementsCount,
+      });
+      return response.data;
+    }
+    return { canceled: "Evaluation canceled" };
+  }
+);
 
 export const reducers = {
   cleanEvaluationState(state: WorkspaceState, action: PayloadAction<void>) {
     state.panels.panels[PanelIdsEnum.EVALUATION] = {
       ...state.panels.panels[PanelIdsEnum.EVALUATION],
       isInProgress: false,
-      elements: {},
+      elements: null,
       initialElements: {},
       lastScore: null,
       scoreModelVersion: null,
@@ -106,9 +137,12 @@ export const reducers = {
 export const extraReducers = [
   {
     action: getEvaluationElements.fulfilled,
-    reducer: (state: WorkspaceState, action: PayloadAction<{ elements: UnparsedElement[] }>) => {
+    reducer: (
+      state: WorkspaceState,
+      action: PayloadAction<{ elements: UnparsedElement[] }>
+    ) => {
       if (state.curCategory === null) return;
-      
+
       const { elements: unparsedElements } = action.payload;
 
       const { elements: initialElements } = parseElements(
@@ -118,7 +152,8 @@ export const extraReducers = [
 
       state.panels.panels[PanelIdsEnum.EVALUATION].isInProgress = true;
       state.panels.loading[PanelIdsEnum.EVALUATION] = false;
-      state.panels.panels[PanelIdsEnum.EVALUATION].initialElements = initialElements;
+      state.panels.panels[PanelIdsEnum.EVALUATION].initialElements =
+        initialElements;
       state.panels.panels[PanelIdsEnum.EVALUATION] = {
         ...state.panels.panels[PanelIdsEnum.EVALUATION],
         initialElements,
@@ -141,7 +176,10 @@ export const extraReducers = [
   },
   {
     action: getEvaluationResults.fulfilled,
-    reducer: (state: WorkspaceState, action: PayloadAction<{ score: number }>) => {
+    reducer: (
+      state: WorkspaceState,
+      action: PayloadAction<{ score: number }>
+    ) => {
       const { score } = action.payload;
       state.panels.loading[PanelIdsEnum.EVALUATION] = false;
       state.panels.panels[PanelIdsEnum.EVALUATION] = {
@@ -178,7 +216,7 @@ export const extraReducers = [
         ...state.panels.panels[PanelIdsEnum.EVALUATION],
         initialElements: {},
         isInProgress: false,
-        elements: {},
+        elements: null,
         hitCount: null,
       };
     },
