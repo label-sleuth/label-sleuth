@@ -29,6 +29,7 @@ interface ControlledSelectProps {
   aria?: string;
   onFocus?: () => void;
   onChange?: (event: any) => void;
+  itemHeightCount?: number | null; // number of limits before adding scroll
 }
 
 const ControlledSelect = ({
@@ -40,15 +41,17 @@ const ControlledSelect = ({
   placeholder,
   noOptionsPlaceholder,
   aria = "demo-simple-select",
+  itemHeightCount = 5,
 }: ControlledSelectProps) => {
   const ITEM_HEIGHT = 30;
-  const ITEM_PADDING_TOP = 8;
   const MenuProps = {
     PaperProps: {
-      style: {
-        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-        // width: 250,
-      },
+      style:
+        itemHeightCount !== null
+          ? {
+              maxHeight: itemHeightCount * ITEM_HEIGHT,
+            }
+          : {},
     },
   };
   const handleFocus = () => {
@@ -82,7 +85,11 @@ const ControlledSelect = ({
         value={value ?? ""}
         label={label}
         displayEmpty
-        renderValue={value !== "" ? undefined : () => options.length > 0 ? placeholder : noOptionsPlaceholder}
+        renderValue={
+          value !== ""
+            ? undefined
+            : () => (options.length > 0 ? placeholder : noOptionsPlaceholder)
+        }
         onChange={handleChange}
         onFocus={handleFocus}
         MenuProps={MenuProps}
@@ -94,7 +101,7 @@ const ControlledSelect = ({
             return (
               <MenuItem
                 style={{
-                  minHeight: "40px",
+                  minHeight: ITEM_HEIGHT,
                 }}
                 key={option.value}
                 value={option.value}
