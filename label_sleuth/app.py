@@ -181,8 +181,16 @@ def add_documents(dataset_name):
     """
     temp_dir = None
     try:
+        text_column = DisplayFields.text
+
         csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
         df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
+
+        if not text_column in df.columns:
+            logging.error("Document upload failed: the 'text' column is missing")
+            return jsonify({'type': 'missing_text_column',
+                'title': "Uploaded file is missing a text column."}), 400
+
         temp_dir = os.path.join(curr_app.config["output_dir"], "temp", "csv_upload")
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
         os.makedirs(temp_dir, exist_ok=True)
@@ -214,7 +222,7 @@ def add_documents(dataset_name):
                                                 f'{document_names}'}), 400
     except Exception:
         logging.exception(f"failed to load or add documents to dataset '{dataset_name}'")
-        return jsonify({"type": "document_upload_fail", "title": traceback.format_exc()}), 400
+        return jsonify({"type": "document_upload_fail", "title": "Failed to load or add documents to dataset '{dataset_name}'"}), 400
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
             os.remove(os.path.join(temp_dir, temp_file_name))
