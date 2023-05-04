@@ -34,11 +34,16 @@ from typing import Sequence, Iterable, Mapping, List, Union, Set
 import label_sleuth.data_access.file_based.utils as utils
 from label_sleuth.data_access.core.data_structs import Document, Label, TextElement, LabelType
 from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, \
-    LabeledStatus, BadDocumentNamesException, DocumentNameTooLongException, get_document_id
+    LabeledStatus, BadDocumentNamesException, DocumentNameTooLongException, get_document_id, DocumentNameEmptyException
 from label_sleuth.data_access.file_based.utils import get_dataset_name_from_uri
 
 
 def _validate_document_names(documents: Sequence[Document], max_document_name_length):
+    # validate non empty
+    has_empty_document_ids = any(len(get_document_id(document.uri)) == 0 for document in documents)
+    if has_empty_document_ids:
+        logging.warning("failed to load documents due rows with empty string in document id")
+        raise DocumentNameEmptyException("Some rows have empty string in document id")
     # validate max length
     name_exceeds_max_length = [get_document_id(document.uri) for document in documents
                                if len(get_document_id(document.uri)) > max_document_name_length]
