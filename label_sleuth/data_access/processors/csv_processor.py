@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from collections import defaultdict
@@ -6,6 +7,7 @@ import pandas as pd
 
 from typing import List
 from label_sleuth.data_access.core.data_structs import Document, TextElement, DisplayFields, URI_SEP
+from label_sleuth.data_access.data_access_api import ColumnMissingException
 from label_sleuth.data_access.processors.data_processor_api import DataProcessorAPI
 
 
@@ -62,6 +64,9 @@ class CsvFileProcessor(DataProcessorAPI):
             raise Exception(f'file for dataset {self.dataset_name} not found')
 
         df = pd.read_csv(self.get_raw_data_path(), encoding=self.encoding, na_filter=False)
+        if self.text_col not in df.columns:
+            logging.error(f"failed to import documents due to a missing {self.text_col} column")
+            raise ColumnMissingException(f"Column '{self.text_col}' is missing", self.text_col)
         df = df[df[self.text_col].apply(lambda x: len(x) > 0)]
         if self.doc_id_col not in df.columns:
             self.doc_id_col = None
