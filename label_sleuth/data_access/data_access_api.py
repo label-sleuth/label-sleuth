@@ -41,6 +41,11 @@ class DocumentNameTooLongException(Exception):
         self.documents = documents
         self.max_length = document_name_max_length
 
+
+class DocumentNameEmptyException(Exception):
+    def __init__(self, message):
+        self.message = message
+
 @dataclass
 class DocumentStatistics:
     documents_loaded: int

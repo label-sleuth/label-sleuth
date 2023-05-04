@@ -43,7 +43,7 @@ from label_sleuth.config import Configuration
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, DisplayFields, Label
 from label_sleuth.data_access.data_access_api import AlreadyExistsException, BadDocumentNamesException, \
-    DocumentNameTooLongException
+    DocumentNameTooLongException, DocumentNameEmptyException
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.core.tools import SentenceEmbeddingService
@@ -203,6 +203,10 @@ def add_documents(dataset_name):
             {"type": "bad_characters", "title": f'Illegal characters (({unpermitted_characters}) found '
                                                 f'in the following documents:\n'
                                                 f'{document_names}'}), 400
+    except DocumentNameEmptyException:
+        return jsonify(
+            {"type": "bad_characters", "title": f'Some rows have an empty string in document_id column. '
+                                                f'Please correct your CSV file and try again.'}), 400
     except DocumentNameTooLongException as e:
         document_names = ", ".join(e.documents)
         return jsonify(
