@@ -31,7 +31,7 @@ import useBackdrop from "../../customHooks/useBackdrop";
 import { useWorkspaceId } from "../../customHooks/useWorkspaceId";
 import { SystemVersion } from "../../components/version/SystemVersion";
 
-const WorkspaceConfig = () => {
+export const WorkspaceConfig = () => {
   const dispatch = useDispatch();
   const { logout } = useLogOut();
   const { backdropOpen } = useBackdrop();
@@ -81,5 +81,3 @@ const WorkspaceConfig = () => {
     </>
   );
 };
-
-export default WorkspaceConfig;

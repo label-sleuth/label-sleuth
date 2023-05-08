@@ -13,13 +13,13 @@
     limitations under the License.
 */
 
-import Workplace from "./Workplace";
-import Workspaces from "./Workspace-config";
-import Login from "./Login/index";
+import { Workplace } from "./Workplace";
+import { WorkspaceConfig } from "./Workspace-config";
+import { Login } from "./Login/index";
 
 const reducers = [
     Login,
-    Workspaces,
+    WorkspaceConfig,
     Workplace,
 ]
 export default reducers;

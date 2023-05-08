@@ -18,10 +18,8 @@ import { Box } from "@mui/material";
 
 import classes from './login.module.css';
 
-const Login = () => (
+export const Login = () => (
   <Box className={classes.container}>
     <LoginForm />
   </Box>
 );
-
-export default Login;
