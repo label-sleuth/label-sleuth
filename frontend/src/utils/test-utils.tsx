@@ -18,20 +18,28 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { setupStore } from "../store/configureStore";
 import { ToastContainer } from 'react-toastify';
+import { ReactElement, ReactNode } from "react";
+
+
 
 export const renderWithProviderAndRouter = (
-  ui,
+  ui: JSX.Element,
   {
     preloadedState = {},
     store = setupStore(preloadedState),
     ...renderOptions
   } = {}
 ) => {
-  function Wrapper({ children }) {
+  function Wrapper({ children }: { children: ReactNode }) {
     return (
       <Provider store={store}>
         <BrowserRouter>
-          <ToastContainer position="top-center" hideProgressBar={true} autoClose={7000} theme='dark' />
+          <ToastContainer
+            position="top-center"
+            hideProgressBar={true}
+            autoClose={7000}
+            theme="dark"
+          />
           {children}
         </BrowserRouter>
       </Provider>
@@ -39,15 +47,15 @@ export const renderWithProviderAndRouter = (
   }
 
   return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) };
-};
+}
 
 
 export const createCategoryAndTest = async () => {
   const createCategoryButton = await screen.findByRole('button', { name: /create/i})
   fireEvent.click(createCategoryButton)
   expect(await screen.findByText(/Create a new category/i)).toBeInTheDocument();
-  const button = screen.getByRole('button', {name: "Create"})
-  const input = screen.getByRole('textbox', {name: "New category name"})
+  const button = screen.getByRole<HTMLButtonElement>('button', {name: "Create"})
+  const input = screen.getByRole<HTMLTextAreaElement>('textbox', {name: "New category name"})
   fireEvent.change(input, {target: {value: "test_category"}})
   expect(input.value).toBe('test_category')
   expect(button).not.toBeDisabled()

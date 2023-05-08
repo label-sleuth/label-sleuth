@@ -21,7 +21,7 @@ import { currentDocNameSelector } from "../redux/documentSlice";
 import { getDatasetNameFromDocumentId } from "../../../utils/utils";
 
 interface HeaderProps {
-  setTutorialOpen: (value: boolean) => void;
+  setTutorialOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const Header = ({ setTutorialOpen }: HeaderProps) => {
@@ -31,7 +31,7 @@ export const Header = ({ setTutorialOpen }: HeaderProps) => {
   const { authenticationEnabled } = useAuthentication();
   const { workspaceId } = useWorkspaceId();
 
-  const openTutorial = useCallback(() => setTutorialOpen(true), [setTutorialOpen]);
+  const openTutorial = useCallback(() => setTutorialOpen && setTutorialOpen(true), [setTutorialOpen]);
 
   return (
     <>

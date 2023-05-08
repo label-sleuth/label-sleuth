@@ -40,7 +40,7 @@ import { Header } from "./Header";
 import { WorkspaceInfoAndActions } from "./WorkspaceInfoAndActions";
 
 interface WorkspaceInfoProps {
-  setTutorialOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setTutorialOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   checkModelInterval?: number;
   shouldFireConfetti?: boolean;
 }
