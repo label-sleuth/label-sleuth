@@ -11,7 +11,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from "@mui/icons-material/Close";
 import React, { useState } from "react";
 import { useAppSelector } from "../customHooks/useRedux";
 import { CopyToClipboard } from "react-copy-to-clipboard";
@@ -22,7 +22,6 @@ interface ErrorDetailsDialogProps {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
-
 
 export interface DialogTitleProps {
   children?: React.ReactNode;
@@ -40,7 +39,7 @@ const DialogTitleWithcloseIcon = (props: DialogTitleProps) => {
           aria-label="close"
           onClick={onClose}
           sx={{
-            position: 'absolute',
+            position: "absolute",
             right: 8,
             top: 8,
             color: (theme) => theme.palette.grey[500],
@@ -51,7 +50,7 @@ const DialogTitleWithcloseIcon = (props: DialogTitleProps) => {
       ) : null}
     </DialogTitle>
   );
-}
+};
 
 export const ErrorDetailsDialog = ({
   open,
@@ -69,8 +68,24 @@ export const ErrorDetailsDialog = ({
     error && (
       <>
         <Dialog maxWidth="md" open={open} onClose={handleClose}>
-          <DialogTitleWithcloseIcon onClose={handleClose}>{error.details?.title || error.title}</DialogTitleWithcloseIcon>
+          <DialogTitleWithcloseIcon onClose={handleClose}>
+            {error.details?.title || error.title}
+          </DialogTitleWithcloseIcon>
           <DialogContent sx={{ pb: 0 }}>
+            <ul>
+              {error.details?.items ? (
+                error.details.items.map((item, i) => (
+                  <li
+                    style={{ overflowWrap: "break-word", marginBottom: "5px" }}
+                    key={i}
+                  >
+                    {item}
+                  </li>
+                ))
+              ) : error.details?.text ? (
+                <Typography>{error.details.text}`</Typography>
+              ) : null}
+            </ul>
             <Stack direction={"row"} alignItems="center">
               <DialogContentText
                 sx={{ mr: 1 }}
@@ -88,20 +103,6 @@ export const ErrorDetailsDialog = ({
                 </Tooltip>
               </CopyToClipboard>
             </Stack>
-            <ul>
-              {error.details?.items ? (
-                error.details.items.map((item, i) => (
-                  <li
-                    style={{ overflowWrap: "break-word", marginBottom: "5px" }}
-                    key={i}
-                  >
-                    {item}
-                  </li>
-                ))
-              ) : error.details?.text ? (
-                <Typography>{error.details.text}`</Typography>
-              ) : null}
-            </ul>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Close</Button>
