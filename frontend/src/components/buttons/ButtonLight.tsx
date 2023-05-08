@@ -13,13 +13,12 @@
     limitations under the License.
 */
 
-import React from "react"
 import classes from "./Buttons.module.css"
 
 interface ButtonLightProps {
     handleClick: () => void,
     disabled?: boolean,
-    size: number,
+    size?: number,
     text: string,
 }
 
