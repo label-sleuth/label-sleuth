@@ -35,7 +35,7 @@ const handlers = [
     return res(
       ctx.delay(),
       ctx.json([
-        ...categoriesExample,
+        ...categoriesExample.categories,
         {
           category_description: "",
           category_id: 26,
@@ -45,13 +45,13 @@ const handlers = [
     );
   }),
   rest.post("/workspace/:workspace_id/category", (req, res, ctx) => {
-    const category = req.body;
+    const category = req.body as Record<string, any>;
     return res(
       ctx.delay(),
       ctx.json({
         category_description: "",
         category_id: "26",
-        category_name: category.category_name,
+        category_name: category?.category_name,
         update_counter: true,
       })
     );
@@ -66,7 +66,7 @@ const handlers = [
     );
   }),
   rest.put("/workspace/:workspace_id/category/:category_id", (req, res, ctx) => {
-    const { category_name, category_description } = req.body;
+    const { category_name, category_description } = req.body as Record<string, any>;
     return res(
       ctx.delay(),
       ctx.json({

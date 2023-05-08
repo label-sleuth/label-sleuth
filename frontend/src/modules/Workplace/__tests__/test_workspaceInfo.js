@@ -13,9 +13,8 @@
     limitations under the License.
 */
 
-import React from "react";
 import { screen } from "@testing-library/react";
-import { renderWithProviderAndRouter } from "../../../utils/test-utils";
+import { renderWithProviderAndRouter} from "../../../utils/test-utils";
 import { initialState as initialWorkspaceState } from "../redux";
 import { WorkspaceInfo } from "../information";
 

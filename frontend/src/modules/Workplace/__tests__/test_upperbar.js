@@ -14,7 +14,7 @@
 */
 
 import { screen, fireEvent } from "@testing-library/react";
-import { renderWithProviderAndRouter, createCategoryAndTest } from "../../../utils/test-utils";
+import { createCategoryAndTest, renderWithProviderAndRouter } from "../../../utils/test-utils";
 import { initialState as initialWorkspaceState } from "../redux";
 import { UpperBar } from "../upperbar";
 import { categoriesExample } from '../../../utils/test-utils'

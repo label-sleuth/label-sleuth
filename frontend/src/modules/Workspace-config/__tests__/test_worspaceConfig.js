@@ -14,7 +14,7 @@
 */
 
 import { screen } from "@testing-library/react";
-import { renderWithProviderAndRouter } from "../../../utils/test-utils";
+import { renderWithProviderAndRouter} from "../../../utils/test-utils";
 import WorkspaceConfig from '../index';
 
 test("workspace configuration is displayed correctly", async () => {
