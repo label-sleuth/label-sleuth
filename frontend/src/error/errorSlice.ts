@@ -14,21 +14,24 @@
 */
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { ErrorSliceState } from '../global';
+import { ErrorSliceState, Error } from '../global';
 
 const initialState : ErrorSliceState = {
-    errorMessage: null,
+    error: null,
+    hackyToggle: false
+    
 }
 
 export const errorSlice = createSlice({
     name: 'error',
     initialState,
     reducers: {
-        setError: (state, action: PayloadAction<string>) => {
-            state.errorMessage = action.payload;
+        setError: (state, action: PayloadAction<Error>) => {
+            state.error = action.payload;
+            state.hackyToggle = !!!state.hackyToggle;
         },
         clearError(state, action: PayloadAction<void>) {
-            state.errorMessage = null;
+            state.error = null;
         },
     }
 })

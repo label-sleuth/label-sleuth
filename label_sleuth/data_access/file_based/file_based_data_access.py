@@ -37,20 +37,19 @@ from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExist
     LabeledStatus, BadDocumentNamesException, DocumentNameTooLongException, get_document_id, DocumentNameEmptyException
 from label_sleuth.data_access.file_based.utils import get_dataset_name_from_uri
 
+logger = logging.getLogger(__name__)
 
 def _validate_document_names(documents: Sequence[Document], max_document_name_length):
     # validate non empty
     has_empty_document_ids = any(len(get_document_id(document.uri)) == 0 for document in documents)
     if has_empty_document_ids:
-        logging.warning("failed to load documents due rows with empty string in document id")
+        logger.warning("failed to load documents due rows with empty string in document id")
         raise DocumentNameEmptyException("Some rows have empty string in document id")
     # validate max length
     name_exceeds_max_length = [get_document_id(document.uri) for document in documents
                                if len(get_document_id(document.uri)) > max_document_name_length]
     if len(name_exceeds_max_length):
         dataset_name = get_dataset_name_from_uri(documents[0].uri)
-        logging.warning(f"failed to load documents due to exceeding max document name "
-                        f" length of {max_document_name_length} in dataset {dataset_name}")
         raise DocumentNameTooLongException("Some document names are too long", name_exceeds_max_length,
                                            max_document_name_length)
 
@@ -65,7 +64,7 @@ def _validate_document_names(documents: Sequence[Document], max_document_name_le
 
     if len(bad_names) > 0:
         dataset_name = get_dataset_name_from_uri(documents[0].uri)
-        logging.warning(f"failed to load documents due to unpermitted characters {unpermitted_characters_found} "
+        logger.warning(f"failed to load documents due to unpermitted characters {unpermitted_characters_found} "
                         f"in document names in dataset {dataset_name}")
         raise BadDocumentNamesException(f"There are documents whose names contain characters that are not permitted",
                                         bad_names, unpermitted_characters_found)
@@ -135,7 +134,7 @@ class FileBasedDataAccess(DataAccessApi):
         self._add_sentences_to_dataset_in_memory(dataset_name=dataset_name, text_elements=sentences)
 
         num_of_text_elements = sum([len(doc.text_elements) for doc in documents])
-        logging.info(f'{dataset_name}:\t\tloaded {len(documents)} documents '
+        logger.info(f'{dataset_name}:\t\tloaded {len(documents)} documents '
                      f'({num_of_text_elements} text elements) under {doc_dump_dir}')
         return DocumentStatistics(len(documents), num_of_text_elements)
 
@@ -488,7 +487,7 @@ class FileBasedDataAccess(DataAccessApi):
         Delete dataset by name
         :param dataset_name:
         """
-        logging.info(f"Deleting dataset '{dataset_name}'")
+        logger.info(f"Deleting dataset '{dataset_name}'")
         dataset_dir = self._get_dataset_base_dir(dataset_name)
         if os.path.isdir(dataset_dir):
             shutil.rmtree(dataset_dir)
@@ -503,14 +502,14 @@ class FileBasedDataAccess(DataAccessApi):
         with self.dataset_in_memory_lock:
             if dataset_name not in self.ds_in_memory:
                 if self._dataset_exists(dataset_name):
-                    logging.info(f"reading dataset '{dataset_name}' csv file")
+                    logger.info(f"reading dataset '{dataset_name}' csv file")
                     dataset_file_path = self._get_dataset_dump_filename(dataset_name)
 
                     df = pd.read_csv(dataset_file_path, converters=
                             {"span": lambda span: [tuple(int(x) for x in span[2:-2].split(','))],
                              "metadata": lambda metadata: ast.literal_eval(metadata) if metadata != '{}' else {}})
 
-                    logging.info(f"csv file for dataset '{dataset_name}' read and processed successfully")
+                    logger.info(f"csv file for dataset '{dataset_name}' read and processed successfully")
                 else:
                     raise Exception(f'Dataset "{dataset_name}" does not exist.')
                 self.ds_in_memory[dataset_name] = df

@@ -16,21 +16,35 @@
 import { useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "../customHooks/useRedux";
 import { toast } from "react-toastify";
-import { clearError } from "./errorSlice";
 import { useNotification } from "../utils/notification";
+import React from "react";
+import { ToastContentWithShowMore } from "./ToastContentWithShowMore";
+
+interface useNotifyErrorProps {
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
 /**
  * Displays a toast notification anytime an error is thrown.
  */
-export const useNotifyError = () => {
+export const useNotifyError = ({ open, setOpen }: useNotifyErrorProps) => {
   const dispatch = useAppDispatch();
-
-  const errorMessage = useAppSelector((state) => state.error.errorMessage);
+  const { error, hackyToggle } = useAppSelector((state) => state.error);
   const { notify } = useNotification();
+
   useEffect(() => {
-    if (errorMessage) {
-      notify(errorMessage, { autoClose: false, type: toast.TYPE.ERROR, toastId: "toast-error"});
-      dispatch(clearError());
+    if (error !== null) {
+      const toNotify = (
+        <ToastContentWithShowMore error={error} setOpen={setOpen} />
+      );
+
+      notify(toNotify, {
+        autoClose: false,
+        type: toast.TYPE.ERROR,
+        toastId: error.type,
+        draggable: false,
+      });
     }
-  }, [notify, errorMessage, dispatch]);
+  }, [hackyToggle, error, notify, setOpen, dispatch]);
 };

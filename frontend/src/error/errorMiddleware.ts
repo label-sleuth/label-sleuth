@@ -14,7 +14,7 @@
 */
 
 import { AnyAction, Dispatch, isRejected } from '@reduxjs/toolkit'
-import { getErrorMessage } from './errorHandler'
+import { parseError } from './errorParser'
 import { setError } from './errorSlice'
 
 /**
@@ -25,7 +25,7 @@ import { setError } from './errorSlice'
  */
 export const errorMiddleware = ({ dispatch }: {dispatch: Dispatch} ) => (next: Dispatch<AnyAction>) => (action: any) => {
   if (isRejected(action)) {
-    dispatch(setError(getErrorMessage(action.error)))
+    dispatch(setError(parseError(action.error)))
   }
   return next(action)
 }
