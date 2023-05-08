@@ -17,8 +17,8 @@ import "./App.css";
 
 import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
-import Login from "./modules/Login/index";
-import WorkspaceConfig from "./modules/Workspace-config/index";
+import { Login } from "./modules/Login/index";
+import { WorkspaceConfig } from "./modules/Workspace-config";
 import { Workplace } from "./modules/Workplace";
 import { PrivateRoute } from "./features/PrivateRoute";
 import { WORKSPACE_CONFIG_PATH, WORKSPACE_PATH, LOGIN_PATH } from "./config";
