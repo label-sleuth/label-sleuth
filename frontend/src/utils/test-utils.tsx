@@ -23,7 +23,7 @@ import { ReactElement, ReactNode } from "react";
 
 
 export const renderWithProviderAndRouter = (
-  ui: ReactElement,
+  ui: JSX.Element,
   {
     preloadedState = {},
     store = setupStore(preloadedState),
