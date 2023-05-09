@@ -24,7 +24,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
 import uuid
 import json 
-from .utils import configure_app_logger
+from .utils import configure_app_logger, make_error
 
 import dacite
 import pandas as pd
@@ -76,26 +76,6 @@ configure_app_logger()
 
 logger = logging.getLogger(__name__)
 
-@main_blueprint.before_request
-def add_uuid_to_g():
-    '''
-    Adds a uuid to the g object. This function is called before each request.
-    '''
-    g.request_id = uuid.uuid4().hex
-
-@main_blueprint.after_request
-def add_request_id_to_response(response: Response):
-    '''
-    Adds the request_id to the response object if the status code is 4**.
-    '''
-    if (response.status.startswith("4")):
-        response_body = response.get_json()
-        if (type(response_body) is dict):
-            response_body["request_id"] = g.request_id
-            response.data = json.dumps(response_body)
-        else: # TODO: verify if the else branch is required
-            response.data = json.dumps({"request_id": g.request_id})
-    return response
 
 def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
     os.makedirs(output_dir, exist_ok=True)
@@ -214,9 +194,10 @@ def add_documents(dataset_name):
         df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
 
         if not text_column in df.columns:
-            logger.error("Document upload failed: the 'text' column is missing")
-            return jsonify({'type': 'missing_text_column',
-                'title': "Uploaded file is missing a text column."}), 400
+            make_error({
+                'type': 'missing_text_column',
+                'title': "Uploaded file is missing a text column."
+            })
 
         temp_dir = os.path.join(curr_app.config["output_dir"], "temp", "csv_upload")
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
@@ -230,45 +211,40 @@ def add_documents(dataset_name):
                         "num_sentences": document_statistics.text_elements_loaded,
                         "workspaces_to_update": workspaces_to_update})
     except AlreadyExistsException as e:
-        error = {
+        return make_error({
             "type": "duplicate_documents",
             "title": f"Some of the uploaded documents already exist.", 
             "details": {
                 "title": "Document names that already exist",
                 "items": e.documents
             }
-        }
-        logger.error(f"{error['type']}: {error['title']}")
-        return jsonify(error), 409
+        }, 409)
     except BadDocumentNamesException as e:
         unpermitted_characters = ", ".join(e.unpermitted_characters)
         document_names = ", ".join(e.documents)
-        error = {
-                "type": "bad_characters", 
-                "title": f'Illegal characters (({unpermitted_characters}) found in some document names.',
-                "details": {
-                    "title": "Document names with illegal characters",
-                    "items": document_names
-                }
+        return make_error({
+            "type": "bad_characters", 
+            "title": f'Illegal characters (({unpermitted_characters}) found in some document names.',
+            "details": {
+                "title": "Document names with illegal characters",
+                "items": document_names
             }
-        logger.exception(f"{error['type']}: {error['title']}")
-        return jsonify(error), 400
+        })
     except DocumentNameEmptyException:
         return jsonify(
             {"type": "bad_characters", "title": f'Some rows have an empty string in the "document_id" column. '
                                                 f'Please correct your CSV file and try again.'}), 400
     except DocumentNameTooLongException as e:
         document_names = ", ".join(e.documents)
-        error = {
+        return make_error({
             "type": "name_too_long", 
             "title": f'Some of the document names exceed the max document name of {e.max_length} characters.',
             "details": {
-                "title": "Too large documents names",
+                "title": "Too long documents names",
                 "items": e.documents
             }
-        }
-        logger.exception(f"{error['type']}: {error['title']}")
-        return jsonify(error), 400
+        })
+
     except Exception:
         logger.exception(f"failed to load or add documents to dataset '{dataset_name}'")
         return jsonify({"type": "document_upload_fail", "title": "Failed to load or add documents to dataset '{dataset_name}'"}), 400
@@ -350,8 +326,14 @@ def delete_workspace(workspace_id):
 
     :param workspace_id:
     """
-    curr_app.orchestrator_api.delete_workspace(workspace_id)
-    return jsonify({'workspace_id': workspace_id})
+    try :
+        curr_app.orchestrator_api.delete_workspace(workspace_id)
+        return jsonify({'workspace_id': workspace_id})
+    except Exception as e:
+        return make_error({
+            "type": "delete_workspace_failed",
+            "title": f"Error deleting workspace '{workspace_id}'"
+        })
 
 
 @main_blueprint.route("/workspace/<workspace_id>", methods=['GET'])
@@ -453,12 +435,16 @@ def update_category(workspace_id, category_id):
     try:
         category_id = int(category_id)
     except:
-        return jsonify({"type": "category_id_error",
-                        "title": f"category_id should be an integer (got {category_id}) "}), 400
+        return make_error({
+            "type": "category_id_error",
+            "title": f"category_id should be an integer (got {category_id})"
+        })
 
     if category_id not in curr_app.orchestrator_api.get_all_categories(workspace_id):
-        return jsonify({"type": "category_id_does_not_exist",
-                        "title": f"category_id {category_id} does not exist in workspace {workspace_id}"}), 404
+        return make_error({
+            "type": "category_id_does_not_exist",
+            "title": f"category_id {category_id} does not exist in workspace {workspace_id}"
+        }, 404)
 
     post_data = request.get_json(force=True)
     new_category_name = post_data["category_name"]
@@ -487,8 +473,10 @@ def delete_category(workspace_id, category_id):
     try:
         category_id = int(category_id)
     except:
-        return jsonify({"type": "category_id_error",
-                        "title": f"category_id should be an integer (got {category_id}) "}), 400
+        return make_error({
+            "type": "category_id_error",
+            "title": f"category_id should be an integer (got {category_id}) "
+        })
 
     if category_id not in curr_app.orchestrator_api.get_all_categories(workspace_id):
         return jsonify({"type": "category_id_does_not_exist",
@@ -834,15 +822,19 @@ def import_labels(workspace_id):
             missing_columns.append(e.__str__())
 
     if len(missing_columns) > 0:
-        return jsonify({'type': 'missing_required_columns',
-                        'title': f"Missing the following required columns: {','.join(missing_columns)}"}), 400
+        return make_error({
+            'type': 'missing_required_columns',
+            'title': f"Missing the following required columns: {','.join(missing_columns)}"
+        })
 
     # try/except around api functionality to catch all other errors
     try:
         return jsonify(curr_app.orchestrator_api.import_category_labels(workspace_id, df))
     except Exception as e:
-        logger.exception(f"workspace '{workspace_id}' failed to import existing labels from the provided CSV file")
-        return jsonify({'type': 'invalid_upload', 'title': "Invalid csv file"}), 400
+        return make_error({
+            'type': 'invalid_upload', 
+            'title': "Invalid csv file"
+        })
 
 
 @main_blueprint.route('/workspace/<workspace_id>/export_labels', methods=['GET'])
@@ -1101,9 +1093,12 @@ def export_model(workspace_id):
     else:
         logger.error(f"workspace {workspace_id} category id {category_id} export_model without "
                       f"preparing the model first")
-        return jsonify({"type": "model_not_ready", "title":
-            f"/export_model invoked without invoking /prepare_model first in workspace"
-            f" {workspace_id} category_id {category_id}"}), 500
+        return make_error({
+            "type": "model_not_ready", 
+            "title":
+                f"/export_model invoked without invoking /prepare_model first in workspace"
+                f" {workspace_id} category_id {category_id}"
+        }, 500)
 
 """
 Labeling reports. These calls return labeled elements which the system suggests for review by the user, aiming to 
@@ -1205,10 +1200,11 @@ def get_contradicting_elements(workspace_id):
         res = {'pairs': element_pairs_transformed, 'diffs': diffs, 'hit_count': hit_count}
         return jsonify(res)
     except Exception:
-        logger.exception(f"Failed to generate contradiction report for workspace "
-                          f"{workspace_id} category_id {category_id}")
-        return jsonify({"type": "contradiction_report_generation_error", "title":
-            f"Failed to generate contradiction report for workspace {workspace_id} category_id {category_id}"}), 500
+        return make_error({
+            "type": "contradiction_report_generation_error", 
+            "title": 
+                f"Failed to generate contradiction report for workspace {workspace_id} category_id {category_id}"
+        }, 500)
 
 
 """

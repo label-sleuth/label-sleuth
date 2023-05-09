@@ -339,5 +339,5 @@ export const downloadFile = (url: string, fileName: string) => {
   }, 200);
 };
 
-export const parseErrorId = (errorId: string | undefined) =>
-  errorId && errorId.slice(0, 8);
+export const parseErrorId = (errorId: string | undefined) : string =>
+  errorId ? errorId.slice(0, 8) : ""

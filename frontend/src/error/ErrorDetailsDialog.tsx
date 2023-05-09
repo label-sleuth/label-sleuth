@@ -32,7 +32,7 @@ const DialogTitleWithcloseIcon = (props: DialogTitleProps) => {
   const { children, onClose, ...other } = props;
 
   return (
-    <DialogTitle sx={{ m: 0, p: 2 }} {...other}>
+    <DialogTitle sx={{ m: 0, p: 2, pb: 0 }} {...other}>
       {children}
       {onClose ? (
         <IconButton
@@ -90,18 +90,20 @@ export const ErrorDetailsDialog = ({
               <DialogContentText
                 sx={{ mr: 1 }}
               >{`Share the error id with your system administrator: ${parseErrorId(
-                error.request_id
+                error.error_id || "no error code available"
               )}`}</DialogContentText>
-              <CopyToClipboard
-                text={parseErrorId(error.request_id) || ""}
-                onCopy={() => setCopied(true)}
-              >
-                <Tooltip title={"Copy to clipboard"} placement="top">
-                  <IconButton aria-label="copy" size="small">
-                    <ContentCopyIcon fontSize="inherit" />
-                  </IconButton>
-                </Tooltip>
-              </CopyToClipboard>
+              {error.error_id !== undefined ? (
+                <CopyToClipboard
+                  text={parseErrorId(error.error_id)}
+                  onCopy={() => setCopied(true)}
+                >
+                  <Tooltip title={"Copy to clipboard"} placement="top">
+                    <IconButton aria-label="copy" size="small">
+                      <ContentCopyIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </CopyToClipboard>
+              ) : null}
             </Stack>
           </DialogContent>
           <DialogActions>

@@ -246,5 +246,5 @@ interface Error {
     items?: string[];
     text?: string;
   };
-  request_id?: string;
+  error_id?: string;
 }
