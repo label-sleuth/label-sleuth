@@ -15,16 +15,16 @@
 
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
-import ControlledSelect from "../../components/dropdown/Dropdown"
+import ControlledSelect, { DropdownOption } from "../../components/dropdown/Dropdown"
 import FormLabel from '@mui/material/FormLabel';
 import Box from '@mui/material/Box';
 import ButtonLight from "../../components/buttons/ButtonLight"
 
 interface WorkspaceFormProps {
-    handleDatasetChange: (event: React.ChangeEvent<{ value: unknown }>) => void;
+    handleDatasetChange: (value: string) => void;
     selectedValue: string;
     handleChangeText: (event: React.ChangeEvent<HTMLInputElement>) => void;
-    options: { value: string; label: string; }[];
+    options: DropdownOption[];
     handleNewWorkspace: () => void;
     handleChange: (event: React.ChangeEvent<{ value: unknown }>) => void;
     handleClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;

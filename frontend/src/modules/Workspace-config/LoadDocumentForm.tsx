@@ -31,6 +31,22 @@ import {
 import Backdrop from "@mui/material/Backdrop";
 import CircularProgress from "@mui/material/CircularProgress";
 import { DeleteDatasetModal } from "./DeleteDatasetModal";
+import { Dataset } from "../../global";
+
+interface LoadDocumentForm {
+  handleLoadDoc: () => void;
+  handleFileChange: (e: React.FormEvent) => void;
+  datasets: Dataset[];
+  handleInputChange: (e: React.FormEvent, newVal?: string) => void;
+  textFieldRef: React.MutableRefObject<HTMLInputElement | undefined>;
+  comboInputTextRef: React.MutableRefObject<HTMLInputElement | undefined>;
+  backdropOpen: boolean;
+  datasetNameError: string;
+  deleteButtonEnabled: boolean;
+  datasetName: string;
+  handleDeleteDataset: () => void;
+  clearFields: () => void;
+}
 
 const LoadDocumentForm = ({
   handleLoadDoc,
@@ -45,8 +61,9 @@ const LoadDocumentForm = ({
   datasetName,
   handleDeleteDataset,
   clearFields,
-}) => {
-  const [deleteDatasetModalOpen, setDeleteDatasetModalOpen] = React.useState(false);
+}: LoadDocumentForm) => {
+  const [deleteDatasetModalOpen, setDeleteDatasetModalOpen] =
+    React.useState(false);
 
   return (
     <Box className={classes.wrapper} style={{ borderRight: "none" }}>
@@ -58,8 +75,21 @@ const LoadDocumentForm = ({
         clearFields={clearFields}
       />
       <div className={classes.sleuth_header}>
-        <img alt="dataset" src={data_icon} style={{ width: "16px", height: "16px", marginRight: "6px" }} />
-        <h4 style={{ fontSize: "16px", fontWeight: "400", margin: 0, paddingTop: "2px" }}>New Documents</h4>
+        <img
+          alt="dataset"
+          src={data_icon}
+          style={{ width: "16px", height: "16px", marginRight: "6px" }}
+        />
+        <h4
+          style={{
+            fontSize: "16px",
+            fontWeight: "400",
+            margin: 0,
+            paddingTop: "2px",
+          }}
+        >
+          New Documents
+        </h4>
       </div>
       <div style={{ borderRight: "solid 1px #8d8d8d" }}>
         <h2 style={{ padding: "25px", margin: 0 }}>Upload</h2>
@@ -74,7 +104,11 @@ const LoadDocumentForm = ({
           >
             {UPLOAD_NEW_DATASET_MSG}
           </FormLabel>
-          <FormControl encType="multipart/form-data" required variant="standard" style={{ padding: "0 25px" }}>
+          <FormControl
+            required
+            variant="standard"
+            style={{ padding: "0 25px" }}
+          >
             <TextField
               inputRef={textFieldRef}
               variant="standard"
@@ -92,33 +126,51 @@ const LoadDocumentForm = ({
               }}
             />
           </FormControl>
-          <FormLabel sx={{ margin: "5px 25px", fontStyle: "italic", fontSize: 12 }} className={classes["text-upload"]}>
+          <FormLabel
+            sx={{ margin: "5px 25px", fontStyle: "italic", fontSize: 12 }}
+            className={classes["text-upload"]}
+          >
             {UPLOAD_NEW_DATASET_FILE_HELPER_MSG}
           </FormLabel>
-          <FormControl required variant="standard" style={{ margin: "35px 25px 10px 25px" }}>
+          <FormControl
+            required
+            variant="standard"
+            style={{ margin: "35px 25px 10px 25px" }}
+          >
             <ComboBoxWithInputText
               ref={comboInputTextRef}
               options={datasets}
               label="As new dataset / Add to existing dataset"
               handleInputChange={handleInputChange}
               placeholder={UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG}
-              noOptionsPlaceholder="No datasets available"
-              error={datasetNameError}
+              //noOptionsPlaceholder="No datasets available"
+              error={datasetNameError !== ""}
               helperText={datasetNameError}
             />
           </FormControl>
-          <div style={{ width: "100%", display: "flex", justifyContent: "right", marginTop: "20px" }}>
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "right",
+              marginTop: "20px",
+            }}
+          >
             <ButtonIBM
               disabled={!deleteButtonEnabled}
               style={{ marginRight: "1px" }}
-              onClick={() => setDeleteDatasetModalOpen(true)}
               className={buttonIBMClasses["button-ibm"]}
               text="Delete"
+              handleClick={() => setDeleteDatasetModalOpen(true)}
             />
             <ButtonIBM
-              onClick={handleLoadDoc}
               text="Upload"
-              className={buttonIBMClasses[`button-ibm${datasetNameError ? "-disabled" : ""}`]}
+              className={
+                buttonIBMClasses[
+                  `button-ibm${datasetNameError ? "-disabled" : ""}`
+                ]
+              }
+              handleClick={handleLoadDoc}
             />
           </div>
         </FormControl>

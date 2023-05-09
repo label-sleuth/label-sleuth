@@ -26,6 +26,7 @@ import { isFulfilled } from "@reduxjs/toolkit";
 import { useWorkspaceId } from "./useWorkspaceId";
 import { useAppSelector, useAppDispatch } from "./useRedux";
 import { useNotification } from "../utils/notification";
+import { DropdownOption } from "../components/dropdown/Dropdown";
 
 interface UseExistWorkspaceProps {
   toastId: string;
@@ -85,7 +86,7 @@ const useExistWorkspace = ({ toastId }: UseExistWorkspaceProps) => {
     );
   };
 
-  const options = useMemo(
+  const options: DropdownOption[] = useMemo(
     () => workspaces.map((item) => ({ value: item, title: item })),
     [workspaces]
   );

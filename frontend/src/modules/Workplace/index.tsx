@@ -46,7 +46,7 @@ import { ShortcutsModal } from "./main/ShortcutsModal";
 import Drawer from "@mui/material/Drawer";
 import { PanelManager } from "./PanelManager";
 import Tutorial from "./tutorial";
-import TutorialDialog from "./tutorial/TutorialDialog";
+import { TutorialDialog } from "./tutorial/TutorialDialog";
 
 import useBackdrop from "../../customHooks/useBackdrop";
 import useWorkspaceState from "../../customHooks/useWorkspaceState";

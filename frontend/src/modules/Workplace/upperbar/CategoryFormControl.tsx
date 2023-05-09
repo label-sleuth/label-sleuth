@@ -4,7 +4,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { useNotification } from "../../../utils/notification";
 import { FormControl, Typography } from "@mui/material";
 import { Keyboard } from "../../../components/Keyboard";
-import ControlledSelect from "../../../components/dropdown/Dropdown";
+import ControlledSelect, { DropdownOption } from "../../../components/dropdown/Dropdown";
 import { toast } from "react-toastify";
 import { updateCurCategory } from "../redux";
 
@@ -15,9 +15,9 @@ export const CategoryFormControl = () => {
   const [showShortcutsNotification, setShowShortcutsNotification] = useLocalStorage("showShortcutsNotification", true);
   const { notify } = useNotification();
 
-  const options = categories
-    .map((item) => ({ value: `${item.category_id}`, label: item.category_name }))
-    .sort((a, b) => a.label.localeCompare(b.label));
+  const options: DropdownOption[] = categories
+    .map((item) => ({ value: `${item.category_id}`, title: item.category_name }))
+    //.sort((a, b) => a.title.localeCompare(b.title));
 
   const ShortcutsMessageComponent = () => (
     <Typography>

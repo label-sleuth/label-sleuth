@@ -14,7 +14,10 @@
 */
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { addDocuments, deleteDataset } from "../modules/Workspace-config/workspaceConfigSlice";
+import {
+  addDocuments,
+  deleteDataset,
+} from "../modules/Workspace-config/workspaceConfigSlice";
 import { toast } from "react-toastify";
 import {
   FILL_REQUIRED_FIELDS,
@@ -30,15 +33,20 @@ import React from "react";
 import { usePrevious } from "./usePrevious";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { stringifyList } from "../utils/utils";
+import { DropdownOption } from "../components/dropdown/Dropdown";
 
 interface UseLoadDocProps {
   toastId: string;
 }
 
 export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
-  const uploadingDataset = useAppSelector((state) => state.workspaces.uploadingDataset);
+  const uploadingDataset = useAppSelector(
+    (state) => state.workspaces.uploadingDataset
+  );
   const datasets = useAppSelector((state) => state.workspaces.datasets);
-  const isDocumentAdded = useAppSelector((state) => state.workspaces.isDocumentAdded);
+  const isDocumentAdded = useAppSelector(
+    (state) => state.workspaces.isDocumentAdded
+  );
   const { dataset_name, num_docs, num_sentences } = useAppSelector((state) =>
     state.workspaces.datasetAdded !== null
       ? state.workspaces.datasetAdded
@@ -49,12 +57,14 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
 
   const [datasetName, setDatasetName] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const textFieldRef = useRef();
-  const comboInputTextRef = useRef();
+  const textFieldRef = useRef<HTMLInputElement>();
+  const comboInputTextRef = useRef<HTMLInputElement>();
   const [datasetNameError, setDatasetNameError] = useState("");
 
   const clearFields = useCallback(() => {
-    let elem: HTMLCollectionOf<Element> = document.getElementsByClassName("MuiAutocomplete-clearIndicator");
+    let elem: HTMLCollectionOf<Element> = document.getElementsByClassName(
+      "MuiAutocomplete-clearIndicator"
+    );
     if (elem[0]) {
       (elem[0] as HTMLElement).click();
     }
@@ -98,7 +108,7 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     dispatch,
   ]);
 
-  const handleInputChange = (e: React.FormEvent, newVal: string) => {
+  const handleInputChange = (e: React.FormEvent, newVal?: string) => {
     const val = newVal || (e.target as HTMLInputElement).value;
 
     let error = "";
@@ -111,7 +121,12 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     setDatasetName(val);
   };
 
-  let options = datasets && datasets.map((item) => ({ value: item.dataset_id, title: item.dataset_id }));
+  let options : DropdownOption[] =
+    datasets &&
+    datasets.map((item) => ({
+      value: item.dataset_id,
+      title: item.dataset_id,
+    }));
 
   const handleFileChange = (e: React.FormEvent) => {
     const files = (e.target as HTMLInputElement).files;
@@ -119,19 +134,22 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
   };
 
   const handleLoadDoc = () => {
-    const datasetNameProvided = !!datasetName
-    const datasetFileProvided = !!file
+    const datasetNameProvided = !!datasetName;
+    const datasetFileProvided = !!file;
 
     if (!datasetNameProvided || !datasetFileProvided) {
       let nonProvidedFields: string;
       if (!datasetNameProvided && !datasetFileProvided) {
-        nonProvidedFields = 'Dataset name and csv file were not provided.'
+        nonProvidedFields = "Dataset name and csv file were not provided.";
       } else if (!datasetFileProvided) {
-        nonProvidedFields = 'Csv file was not provided.'
+        nonProvidedFields = "Csv file was not provided.";
       } else {
-        nonProvidedFields = 'Dataset name was not provided.'
+        nonProvidedFields = "Dataset name was not provided.";
       }
-      return notify(FILL_REQUIRED_FIELDS(nonProvidedFields), { toastId, type: toast.TYPE.INFO });
+      return notify(FILL_REQUIRED_FIELDS(nonProvidedFields), {
+        toastId,
+        type: toast.TYPE.INFO,
+      });
     }
 
     let formData = new FormData();
@@ -141,7 +159,11 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
   };
 
   const deleteButtonEnabled = useMemo(() => {
-    return datasetName !== null && datasetName !== "" && datasets.map((d) => d.dataset_id).includes(datasetName);
+    return (
+      datasetName !== null &&
+      datasetName !== "" &&
+      datasets.map((d) => d.dataset_id).includes(datasetName)
+    );
   }, [datasetName, datasets]);
 
   const handleDeleteDataset = () => {
@@ -150,34 +172,45 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     // select that option again
     const prevValue = datasetName;
     setDatasetName("");
-    dispatch(deleteDataset({ datasetName })).then((actionPromiseResult: any) => {
-      const { deleted_dataset: deletedDatasetName, deleted_workspace_ids: deletedWorkspaceIds } =
-        actionPromiseResult.payload;
+    dispatch(deleteDataset({ datasetName })).then(
+      (actionPromiseResult: any) => {
+        const {
+          deleted_dataset: deletedDatasetName,
+          deleted_workspace_ids: deletedWorkspaceIds,
+        } = actionPromiseResult.payload;
 
-      if (isFulfilled(actionPromiseResult)) {
-        notify(`The dataset '${deletedDatasetName}' has been succesfully deleted`, {
-          toastId,
-          type: toast.TYPE.SUCCESS,
-        });
-        
-        if (deletedWorkspaceIds.length > 0) {
+        if (isFulfilled(actionPromiseResult)) {
+          notify(
+            `The dataset '${deletedDatasetName}' has been succesfully deleted`,
+            {
+              toastId,
+              type: toast.TYPE.SUCCESS,
+            }
+          );
 
-          let words = { noun: "workspace", verb: "has been"}
+          if (deletedWorkspaceIds.length > 0) {
+            let words = { noun: "workspace", verb: "has been" };
 
-          if (deletedWorkspaceIds.length > 1) {
-            words.noun = "workspaces"
-            words.verb = "have been"
+            if (deletedWorkspaceIds.length > 1) {
+              words.noun = "workspaces";
+              words.verb = "have been";
+            }
+
+            notify(
+              `The ${words.noun} ${stringifyList(deletedWorkspaceIds)} ${
+                words.verb
+              } succesfully deleted too`,
+              {
+                toastId: `${toastId}-aditional-notification`,
+                type: toast.TYPE.SUCCESS,
+              }
+            );
           }
-
-          notify(`The ${words.noun} ${stringifyList(deletedWorkspaceIds)} ${words.verb} succesfully deleted too`, {
-            toastId: `${toastId}-aditional-notification`,
-            type: toast.TYPE.SUCCESS,
-          }); 
+        } else {
+          setDatasetName(prevValue);
         }
-      } else {
-        setDatasetName(prevValue);
       }
-    });
+    );
   };
 
   return {
