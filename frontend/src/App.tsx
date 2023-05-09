@@ -15,7 +15,7 @@
 
 import "./App.css";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Login } from "./modules/Login/index";
 import { WorkspaceConfig } from "./modules/Workspace-config";
@@ -35,6 +35,7 @@ import { useNotifyError } from "./error/useNotifyError";
 import { useWorkspaceId } from "./customHooks/useWorkspaceId";
 import { fetchVersion } from "./modules/Workplace/redux";
 import { useCheckSystemHealth } from "./customHooks/useCheckSystemHealth";
+import { ErrorDetailsDialog } from "./error/ErrorDetailsDialog";
 
 const AppRoutes = () => {
   const { authenticated, authenticationEnabled } = useAuthentication();
@@ -89,9 +90,14 @@ const AppRoutes = () => {
 const App = () => {
   const dispatch = useAppDispatch();
 
+  const [errorDetailsDialogOpen, setErrorDetailsDialogOpen] = useState(false);
+
   const featureFlags = useAppSelector((state) => state.featureFlags);
 
-  useNotifyError();
+  useNotifyError({
+    open: errorDetailsDialogOpen,
+    setOpen: setErrorDetailsDialogOpen,
+  });
 
   const { systemOk } = useCheckSystemHealth();
 
@@ -110,6 +116,10 @@ const App = () => {
           <HashRouter>
             <AppRoutes />
           </HashRouter>
+          <ErrorDetailsDialog
+            open={errorDetailsDialogOpen}
+            setOpen={setErrorDetailsDialogOpen}
+          />
         </ThemeProvider>
       ) : (
         <Backdrop

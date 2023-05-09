@@ -20,17 +20,17 @@ import { ErrorResponse, Error } from "../global";
  * @param {the error returned by the redux thunk} err
  * @returns the error message
  */
-export const getErrorMessage = (err: ErrorResponse) => {
+export const parseError = (err: ErrorResponse): Error => {
   const defaultErrorMessage =
     "Something went wrong. Please ask your system administrator to share the logs by creating an issue on Github or sending a message via Slack.";
   if (err.message) {
     try {
-      const errorJSON: Error = JSON.parse(err.message);
-      return (errorJSON && errorJSON.title) || defaultErrorMessage;
-    } catch (error) {
-      return defaultErrorMessage;
+      const error: Error = JSON.parse(err.message);
+      return error;
+    } catch {
+      return { title: defaultErrorMessage };
     }
   } else {
-    return defaultErrorMessage;
+    return { title: defaultErrorMessage };
   }
 };

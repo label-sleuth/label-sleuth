@@ -38,6 +38,7 @@ const unblockToastOptions = {
 
 export const useNotification = () => {
   const toastRefs = React.useRef<{ [key: string]: React.ReactText }>({});
+
   /**
    * Shows a toast notification
    * @param {The message that will be shown} message
@@ -48,14 +49,14 @@ export const useNotification = () => {
       let defaultOptions: ToastOptions = {
         type: toast.TYPE.DEFAULT,
         autoClose: false,
-        bodyClassName: notificationClasses['body-toast']
+        bodyClassName: notificationClasses["body-toast"],
       };
       toastRefs.current[options.toastId || "default_toast_id"] = toast(
         message,
         {
           ...defaultOptions,
-          ...options,
           ...(blockToast ? blockToastOptions : unblockToastOptions),
+          ...options,
         }
       );
     },
@@ -73,8 +74,8 @@ export const useNotification = () => {
       if (options.toastId === null || options.toastId === undefined) return;
       const toastEl = toastRefs.current[options.toastId];
       toast.update(toastEl, {
-        ...options,
         ...(blockToast ? blockToastOptions : unblockToastOptions),
+        ...options,
       });
     },
     []

@@ -338,3 +338,6 @@ export const downloadFile = (url: string, fileName: string) => {
     document.body.removeChild(tempLink);
   }, 200);
 };
+
+export const parseErrorId = (errorId: string | undefined) : string =>
+  errorId ? errorId.slice(0, 8) : ""

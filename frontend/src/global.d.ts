@@ -91,7 +91,8 @@ interface FocusedElement {
 }
 
 interface ErrorSliceState {
-  errorMessage: string | null;
+  error: Error | null;
+  hackyToggle: boolean;
 }
 
 interface AddedDataset {
@@ -240,4 +241,10 @@ interface ErrorResponse {
 interface Error {
   title: string;
   type?: string;
+  details?: {
+    title: {};
+    items?: string[];
+    text?: string;
+  };
+  error_id?: string;
 }
