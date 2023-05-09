@@ -15,20 +15,19 @@
 
 import React from "react";
 import { Box, FormControl } from "@mui/material";
-import ControlledSelect from "../../components/dropdown/Dropdown";
+import ControlledSelect, { DropdownOption } from "../../components/dropdown/Dropdown";
 import ButtonIBM from "../../components/buttons/ButtonIBM";
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css";
 import classes from "./workspace-config.module.css";
 import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
 
 interface ExistingWorkspaceFormProps {
-	handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+	handleChange: (value: string) => void;
 	handleClick: () => void;
 	handleDeleteWorkspace: () => void;
 	value: string;
-	options: { value: string; label: string }[];
-	deleteButtonEnabled: (event: React.MouseEvent<HTMLButtonElement>) => void;
-	style: string;
+	options: DropdownOption[];
+	deleteButtonEnabled: boolean;
 }
 const ExistingWorkspaceForm = ({
   handleChange,

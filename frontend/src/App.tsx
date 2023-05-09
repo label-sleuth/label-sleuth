@@ -26,7 +26,7 @@ import { Navigate } from "react-router-dom";
 import { HashRouter } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import { useAppSelector, useAppDispatch } from "./customHooks/useRedux";
-import theme from "./theme.jsx";
+import { theme } from "./theme";
 import { Backdrop } from "@mui/material";
 import { CircularProgress } from "@mui/material";
 import { useAuthentication } from "./customHooks/useAuthentication";
@@ -42,7 +42,16 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path={LOGIN_PATH} element={authenticationEnabled ? <Login /> : <Navigate to={WORKSPACE_CONFIG_PATH} />} />
+      <Route
+        path={LOGIN_PATH}
+        element={
+          authenticationEnabled ? (
+            <Login />
+          ) : (
+            <Navigate to={WORKSPACE_CONFIG_PATH} />
+          )
+        }
+      />
       <Route
         path={WORKSPACE_CONFIG_PATH}
         element={
@@ -103,11 +112,17 @@ const App = () => {
           </HashRouter>
         </ThemeProvider>
       ) : (
-        <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={true}>
+        <Backdrop
+          sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+          open={true}
+        >
           <CircularProgress color="inherit" />
         </Backdrop>
       )}
-      <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={!systemOk}></Backdrop>
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={!systemOk}
+      ></Backdrop>
     </div>
   );
 };

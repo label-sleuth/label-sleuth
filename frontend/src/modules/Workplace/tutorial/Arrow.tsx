@@ -16,7 +16,23 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-const configs = [
+interface Coordinate {
+  x: number;
+  y: number;
+}
+
+interface ArrowConfig {
+  hide?: boolean;
+  direction?: "top" | "right" | "left" | "bottom";
+  adjust?: Coordinate;
+  componentId?: string;
+  backupComponentId?: string;
+  xEnd?: boolean;
+  yEnd?: boolean;
+  firstChild?: boolean;
+}
+
+const configs: ArrowConfig[] = [
   {
     hide: true,
   },
@@ -58,14 +74,22 @@ const configs = [
   },
 ];
 
-const Arrow = ({ tutorialStageIndex }) => {
-  const [arrowPos, setArrowPos] = React.useState(null);
+interface ArrowProps {
+  tutorialStageIndex: number;
+}
+
+const Arrow = ({ tutorialStageIndex }: ArrowProps) => {
+  const [arrowPos, setArrowPos] = React.useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const rotation = {
-    top: 0,
+    top: "none",
     right: "rotate(90deg)",
     left: "rotate(-90deg)",
     bottom: "rotate(180deg)",
+    none: "none",
   };
 
   const {
@@ -79,9 +103,15 @@ const Arrow = ({ tutorialStageIndex }) => {
   } = configs[tutorialStageIndex];
 
   React.useEffect(() => {
-    let e = document.getElementById(componentId);
-    if (!e) e = document.getElementById(backupComponentId);
-    e = firstChild ? e.firstChild : e;
+    let e = componentId ? document.getElementById(componentId) : null;
+    if (!e)
+      e = backupComponentId ? document.getElementById(backupComponentId) : null;
+    if (!e) return;
+
+    if (firstChild) {
+      e = e.firstChild as HTMLElement;
+    }
+
     if (e) {
       const boundingClientRect = e.getBoundingClientRect();
       let pos = {
@@ -122,13 +152,13 @@ const Arrow = ({ tutorialStageIndex }) => {
             borderRight: "30px solid transparent",
             borderBottom: "60px solid blue",
             position: "fixed",
-            transform: rotation[direction],
+            transform: direction !== undefined ? rotation[direction] : rotation.top,
             zIndex: 10100,
             top: arrowPos ? arrowPos.y : 400,
             left: arrowPos ? arrowPos.x : 400,
           }}
         />,
-        document.getElementById("root")
+        document.getElementById("root") as HTMLElement // we are sure it exists
       )
     : null;
 };

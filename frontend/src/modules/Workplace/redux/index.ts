@@ -116,7 +116,7 @@ const workspaceSlice = createSlice({
     ...categoryReducers,
     ...evaluationReducers,
     ...modelReducers,
-    cleanWorkplaceState(state, action) {
+    cleanWorkplaceState(state, action: PayloadAction<void>) {
       const initialStateAux = { ...initialState }
       initialStateAux.systemVersion = state.systemVersion;
       return initialStateAux;

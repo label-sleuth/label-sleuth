@@ -20,15 +20,20 @@ import Select, { SelectChangeEvent } from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import classes from "./Dropdown.module.css";
 
+export interface DropdownOption {
+  value: string;
+  title: string;
+}
+
 interface ControlledSelectProps {
   value: string;
   label: string;
-  options: { [value: string]: string }[];
+  options: DropdownOption[];
   placeholder?: string;
   noOptionsPlaceholder?: string;
   aria?: string;
   onFocus?: () => void;
-  onChange?: (event: any) => void;
+  onChange?: (value: string) => void;
   itemHeightCount?: number | null; // number of limits before adding scroll
 }
 
@@ -59,7 +64,8 @@ const ControlledSelect = ({
       onFocus();
     }
   };
-  const handleChange = (e: SelectChangeEvent<string>, child: ReactNode) => {
+
+  const handleChange = (e: SelectChangeEvent<string>) => {
     const value = e.target.value;
 
     if (onChange) {
@@ -106,7 +112,7 @@ const ControlledSelect = ({
                 key={option.value}
                 value={option.value}
               >
-                {option.label ?? option.value}
+                {option.title ?? option.value}
               </MenuItem>
             );
           } else {
