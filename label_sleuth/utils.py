@@ -42,38 +42,12 @@ class ErrorLogsFilter():
         return record.levelno < logging.ERROR
 
 
-def configure_app_logger():
-    '''
-        Configures the Label Sleuth modules logging (i.e. modules under label_sleuth).
-        Modules should log using `logger = logging.getLogger(__name__)` initialized 
-        at the beginning of the module. Using logging.log() uses the root logger instead
-    '''
-
-    nonErrorHandler = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
-    nonErrorHandler.setFormatter(formatter)
-    nonErrorHandler.addFilter(ErrorLogsFilter())
-    logger.addHandler(nonErrorHandler)
-    
-
-    errorHandler = logging.StreamHandler()
-    formatter = logging.Formatter('[error_id: %(error_id)s] %(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
-    errorHandler.setFormatter(formatter)
-    errorHandler.addFilter(AddRequestIdFilter())
-    logger.addHandler(errorHandler)
-
-    logger.setLevel(logging.INFO)
-
-    # Don't propagate logs to the root logger (if true, would duplicate)
-    logger.propagate = False
-    
-
 def make_error(error, code: int = 400):
     '''
     Adds the error_id to the response and logs it
     '''
     error_id = uuid.uuid4().hex
     error['error_id'] = error_id
-    logger.error(f"{error['type']}: {error['title']}", extra={'error_id': error_id})
+    logger.error(f"[error_id: {error_id[:8]}] {error['type']}: {error['title']}", extra={'error_id': error_id})
     return jsonify(error), code
 
