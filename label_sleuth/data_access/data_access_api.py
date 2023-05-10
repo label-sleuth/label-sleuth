@@ -46,6 +46,10 @@ class DocumentNameEmptyException(Exception):
     def __init__(self, message):
         self.message = message
 
+class NoTextColumnException(Exception):
+    def __init__(self, message):
+        self.message = message
+
 @dataclass
 class DocumentStatistics:
     documents_loaded: int

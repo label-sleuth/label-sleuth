@@ -22,9 +22,7 @@ import zipfile
 import pkg_resources
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
-import uuid
-import json 
-from .utils import configure_app_logger, make_error
+from .utils import make_error
 
 import dacite
 import pandas as pd
@@ -42,7 +40,7 @@ from label_sleuth.config import Configuration
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, DisplayFields, Label
 from label_sleuth.data_access.data_access_api import AlreadyExistsException, BadDocumentNamesException, \
-    DocumentNameTooLongException, DocumentNameEmptyException
+    DocumentNameTooLongException, DocumentNameEmptyException, NoTextColumnException
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.core.tools import SentenceEmbeddingService
@@ -70,11 +68,6 @@ curr_app: LabelSleuthApp = current_app
 # configures the root logger
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
-
-# configures the label_sleuth logger
-configure_app_logger()
-
-logger = logging.getLogger(__name__)
 
 
 def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
@@ -136,13 +129,13 @@ def login():
     password = post_data["password"]
 
     if not verify_password(username, password):
-        logger.warning(f"Login failed for username {username}")
+        logging.warning(f"Login failed for username {username}")
         return make_response(jsonify({
             'title': "Login failed: wrong username or password"
         }), 401)
     else:
         user = curr_app.users.get(username)
-        logger.info(f"LOGIN: {user.username}")
+        logging.info(f"LOGIN: {user.username}")
         return authenticate_response({
             'username': user.username,
             'token': user.token
@@ -194,10 +187,8 @@ def add_documents(dataset_name):
         df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
 
         if not text_column in df.columns:
-            make_error({
-                'type': 'missing_text_column',
-                'title': "Uploaded file is missing a text column."
-            })
+            logging.info("I am here brooo")
+            raise NoTextColumnException("The csv file doesn't have a text column")
 
         temp_dir = os.path.join(curr_app.config["output_dir"], "temp", "csv_upload")
         temp_file_name = f"{next(tempfile._get_candidate_names())}.csv"
@@ -221,13 +212,12 @@ def add_documents(dataset_name):
         }, 409)
     except BadDocumentNamesException as e:
         unpermitted_characters = ", ".join(e.unpermitted_characters)
-        document_names = ", ".join(e.documents)
         return make_error({
             "type": "bad_characters", 
-            "title": f'Illegal characters (({unpermitted_characters}) found in some document names.',
+            "title": f'Illegal characters ({unpermitted_characters}) found in some document names.',
             "details": {
                 "title": "Document names with illegal characters",
-                "items": document_names
+                "items": e.documents
             }
         })
     except DocumentNameEmptyException:
@@ -235,7 +225,6 @@ def add_documents(dataset_name):
             {"type": "bad_characters", "title": f'Some rows have an empty string in the "document_id" column. '
                                                 f'Please correct your CSV file and try again.'}), 400
     except DocumentNameTooLongException as e:
-        document_names = ", ".join(e.documents)
         return make_error({
             "type": "name_too_long", 
             "title": f'Some of the document names exceed the max document name of {e.max_length} characters.',
@@ -244,10 +233,17 @@ def add_documents(dataset_name):
                 "items": e.documents
             }
         })
-
+    except NoTextColumnException as e:
+        return make_error({
+            'type': 'missing_text_column',
+            'title': "Uploaded file is missing a text column."
+        })
     except Exception:
-        logger.exception(f"failed to load or add documents to dataset '{dataset_name}'")
-        return jsonify({"type": "document_upload_fail", "title": "Failed to load or add documents to dataset '{dataset_name}'"}), 400
+        return make_error({
+            "type": "document_upload_fail", 
+            "title": f"Failed to load or add documents to dataset '{dataset_name}'"
+        })
+
     finally:
         if temp_dir is not None and os.path.exists(os.path.join(temp_dir, temp_file_name)):
             os.remove(os.path.join(temp_dir, temp_file_name))
@@ -292,7 +288,7 @@ def create_workspace():
     dataset_name = post_data["dataset_id"]
 
     if curr_app.orchestrator_api.workspace_exists(workspace_id):
-        logger.info(f"Trying to create workspace '{workspace_id}' which already exists")
+        logging.info(f"Trying to create workspace '{workspace_id}' which already exists")
         return jsonify({"type": "workspace_id_conflict", "title": f"Workspace: {workspace_id} already exists"}), 409
     curr_app.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name)
 
@@ -737,7 +733,7 @@ def get_all_positively_labeled_elements_for_category(workspace_id):
     size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
     category_id = int(request.args['category_id'])
-    logger.info(f"workspace '{workspace_id}' category id {category_id} fetching {size} positively labeled elements "
+    logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {size} positively labeled elements "
                  f"(start index: {start_idx})")
     elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_POSITIVE, size=size,
                                                    start_idx=start_idx)
@@ -959,7 +955,7 @@ def force_train_for_category(workspace_id):
     model_id = curr_app.orchestrator_api.train_if_recommended(workspace_id, category_id, force=True)
 
     labeling_counts = curr_app.orchestrator_api.get_label_counts(workspace_id, dataset_name, category_id)
-    logger.info(f"force training a new model in workspace '{workspace_id}' for category '{category_id}', "
+    logging.info(f"force training a new model in workspace '{workspace_id}' for category '{category_id}', "
                  f"model id: {model_id}")
 
     return jsonify({
@@ -1018,7 +1014,7 @@ def prepare_model(workspace_id):
                     "     print(f'sentence: \"{sentence_dict[\"text\"]}\" -> prediction: {pred}')\n"
     category_id = int(request.args['category_id'])
     iteration_index = request.args.get('iteration_index', None)
-    logger.info(f"Exporting a model from workspace {workspace_id} category id {category_id}")
+    logging.info(f"Exporting a model from workspace {workspace_id} category id {category_id}")
     if iteration_index is None:
         _, iteration_index = curr_app.orchestrator_api. \
             get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
@@ -1029,9 +1025,9 @@ def prepare_model(workspace_id):
                  'model.zip')
 
     if not os.path.exists(zipped_path):
-        logger.info(f"copying model for export in {workspace_id} category id {category_id}")
+        logging.info(f"copying model for export in {workspace_id} category id {category_id}")
         temp_model_dir = curr_app.orchestrator_api.prepare_model_dir_for_export(workspace_id, category_id, iteration_index)
-        logger.info(f"compressing model for export in {workspace_id} category id {category_id}")
+        logging.info(f"compressing model for export in {workspace_id} category id {category_id}")
         try:
             memory_file = BytesIO()
             with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
@@ -1054,13 +1050,13 @@ def prepare_model(workspace_id):
         finally:
             if os.path.exists(temp_model_dir):
                 shutil.rmtree(temp_model_dir, ignore_errors=True)
-        logger.info(f"model is ready for export in {workspace_id} category id {category_id}")
+        logging.info(f"model is ready for export in {workspace_id} category id {category_id}")
 
         output_path = zipped_path
         with open(output_path, 'wb') as out:
             out.write(memory_file.read())
     else:
-        logger.info(f"model is already ready for export in {workspace_id} category id {category_id}")
+        logging.info(f"model is already ready for export in {workspace_id} category id {category_id}")
 
     return jsonify({'message': 'Model finished being prepared'}), 200
 
@@ -1084,14 +1080,14 @@ def export_model(workspace_id):
             get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
     else:
         iteration_index = int(iteration_index)
-    logger.info(f"model is being exported in {workspace_id} category id {category_id} and iteration {iteration_index}")
+    logging.info(f"model is being exported in {workspace_id} category id {category_id} and iteration {iteration_index}")
     output_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index),
                                'model.zip')
     if os.path.exists(output_path):
         return send_file(output_path, attachment_filename="downloaded_model.zip", as_attachment=True,
                          mimetype='application/zip')
     else:
-        logger.error(f"workspace {workspace_id} category id {category_id} export_model without "
+        logging.error(f"workspace {workspace_id} category id {category_id} export_model without "
                       f"preparing the model first")
         return make_error({
             "type": "model_not_ready", 
@@ -1161,7 +1157,7 @@ def get_suspicious_elements(workspace_id):
         res = {'elements': elements_transformed, 'hit_count': hit_count}
         return jsonify(res)
     except Exception:
-        logger.exception("Failed to generate suspicious elements report")
+        logging.exception("Failed to generate suspicious elements report")
         res = {'elements': [], 'hit_count': 0}
         return jsonify(res)
 
@@ -1232,7 +1228,7 @@ def get_elements_for_precision_evaluation(workspace_id):
         get_elements_by_prediction(workspace_id, category_id, required_prediction=LABEL_POSITIVE, sample_size=size,
                                    remove_duplicates=False, shuffle=True, random_state=random_state)
     elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_id)
-    logger.info(f"workspace '{workspace_id}' category id {category_id} sampled {len(elements_transformed)} elements "
+    logging.info(f"workspace '{workspace_id}' category id {category_id} sampled {len(elements_transformed)} elements "
                  f"for precision evaluation")
     res = {'elements': elements_transformed}
     return jsonify(res)
@@ -1372,7 +1368,7 @@ def get_feature_flags():
         "sidebar_panel_elements_per_page": curr_app.config['CONFIGURATION'].sidebar_panel_elements_per_page,
         "right_to_left": curr_app.config['CONFIGURATION'].language.right_to_left
     }
-    logger.debug(f'Feature flags are: {res}')
+    logging.debug(f'Feature flags are: {res}')
     return jsonify(res) 
     
 
@@ -1401,6 +1397,6 @@ def get_git_describe():
         except:
             version = 'Not available'
             source = None
-            logger.warning(f'Could not get Label Sleuth version information')
+            logging.warning(f'Could not get Label Sleuth version information')
 
     return {'version': version, 'source': source}
