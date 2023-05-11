@@ -221,9 +221,9 @@ def add_documents(dataset_name):
             }
         })
     except DocumentNameEmptyException:
-        return jsonify(
-            {"type": "bad_characters", "title": f'Some rows have an empty string in the "document_id" column. '
-                                                f'Please correct your CSV file and try again.'}), 400
+        return make_error({"type": "bad_characters", "title":
+                                                f'Some rows have an empty string in the "document_id" column. '
+                                                f'Please correct your CSV file and try again.'}, 400)
     except DocumentNameTooLongException as e:
         return make_error({
             "type": "name_too_long", 
