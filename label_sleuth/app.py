@@ -1084,7 +1084,7 @@ def export_model(workspace_id):
     output_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index),
                                'model.zip')
     if os.path.exists(output_path):
-        return send_file(output_path, attachment_filename="downloaded_model.zip", as_attachment=True,
+        return send_file(output_path, download_name="downloaded_model.zip", as_attachment=True,
                          mimetype='application/zip')
     else:
         logging.error(f"workspace {workspace_id} category id {category_id} export_model without "
