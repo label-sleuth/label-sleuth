@@ -6,7 +6,7 @@ jsonpickle==1.4.1
 filelock==3.0.12
 ujson==5.4.0
 requests==2.26.0
-Flask==2.1.1
+Flask==2.3.2
 Flask-Cors==3.0.9
 Flask-HTTPAuth==4.1.0
 dacite==1.6.0
