@@ -1047,7 +1047,7 @@ class OrchestratorApi:
         model_info_encoded = jsonpickle.encode(exported_model_info)
         with open(os.path.join(exported_model_dir, 'model_info.json'), 'w') as f:
             f.write(model_info_encoded)
-        return os.path.join(exported_model_dir, os.pardir)
+        return os.path.abspath(os.path.join(exported_model_dir, os.pardir))
 
     def add_documents_from_file(self, dataset_name, temp_file_path):
         global new_data_infer_thread_pool

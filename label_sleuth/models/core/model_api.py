@@ -352,7 +352,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
     def copy_model_dir_for_export(self, model_id):
         model_path = self.get_model_dir_by_id(model_id)
         temp_path = str(tempfile.mkdtemp())
-        output_path = os.path.join(temp_path, os.path.basename(model_path))
+        output_path = os.path.join(temp_path, "model")
         shutil.copytree(model_path, output_path)
 
         return output_path
