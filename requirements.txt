@@ -16,7 +16,7 @@ spacy==3.2.4
 torch==1.13.1
 tqdm==4.62.3
 transformers==4.23.0
-GitPython==3.1.29
+GitPython==3.1.31
 fasttext-wheel==0.9.2
 
 
