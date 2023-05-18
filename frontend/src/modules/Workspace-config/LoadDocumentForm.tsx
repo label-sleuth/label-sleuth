@@ -33,7 +33,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { DeleteDatasetModal } from "./DeleteDatasetModal";
 import { Dataset } from "../../global";
 
-interface LoadDocumentForm {
+interface LoadDocumentFormProps {
   handleLoadDoc: () => void;
   handleFileChange: (e: React.FormEvent) => void;
   datasets: Dataset[];
@@ -61,7 +61,7 @@ const LoadDocumentForm = ({
   datasetName,
   handleDeleteDataset,
   clearFields,
-}: LoadDocumentForm) => {
+}: LoadDocumentFormProps) => {
   const [deleteDatasetModalOpen, setDeleteDatasetModalOpen] =
     React.useState(false);
 

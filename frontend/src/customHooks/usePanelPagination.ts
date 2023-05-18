@@ -47,10 +47,14 @@ const usePanelPagination = ({
     elements,
     hitCount,
     page: currentPage,
-  } = useAppSelector((state) => (panelId ? state.workspace.panels.panels[panelId] : elementsInitialState));
+  } = useAppSelector((state) =>
+    panelId ? state.workspace.panels.panels[panelId] : elementsInitialState
+  );
 
   const pairs = useAppSelector((state) =>
-    panelId === PanelIdsEnum.CONTRADICTING_LABELS ? state.workspace.panels.panels[panelId].pairs : []
+    panelId === PanelIdsEnum.CONTRADICTING_LABELS
+      ? state.workspace.panels.panels[panelId].pairs
+      : []
   );
 
   const dispatch = useAppDispatch();
@@ -80,7 +84,10 @@ const usePanelPagination = ({
     else {
       if (fakePagination) {
         const startIndex = (currentPage - 1) * elementsPerPage;
-        return Object.values(elements).slice(startIndex, startIndex + elementsPerPage);
+        return Object.values(elements).slice(
+          startIndex,
+          startIndex + elementsPerPage
+        );
       } else {
         if (panelId === PanelIdsEnum.CONTRADICTING_LABELS) {
           return pairs.flat();
@@ -92,30 +99,39 @@ const usePanelPagination = ({
   }, [elements, currentPage, elementsPerPage, fakePagination, pairs, panelId]);
 
   const isPaginationRequired = React.useMemo(
-    () => currentContentData !== null && hitCount !== null && hitCount > elementsPerPage,
+    () =>
+      currentContentData !== null &&
+      hitCount !== null &&
+      hitCount > elementsPerPage,
     [currentContentData, elementsPerPage, hitCount]
   );
 
-  React.useEffect(() => {
-    if (
-      !fakePagination &&
-      shouldFetch &&
-      (fetchOnFirstRender || firstRenderHappened.current) &&
-      (!modelAvailableRequired || modelAvailable)
-    ) {
-      fetchPanelElements();
-    }
-  }, [
-    currentPage,
-    fakePagination,
-    dispatch,
-    fetchOnFirstRender,
-    firstRenderHappened,
-    fetchPanelElements,
-    modelAvailableRequired,
-    modelAvailable,
-    ...otherDependencies,
-  ]);
+  React.useEffect(
+    () => {
+      if (
+        !fakePagination &&
+        shouldFetch &&
+        (fetchOnFirstRender || firstRenderHappened.current) &&
+        (!modelAvailableRequired || modelAvailable)
+      ) {
+        fetchPanelElements();
+      }
+    },
+    // disable eslint on some lines
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      currentPage,
+      fakePagination,
+      dispatch,
+      fetchOnFirstRender,
+      firstRenderHappened,
+      fetchPanelElements,
+      modelAvailableRequired,
+      modelAvailable,
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      ...otherDependencies,
+    ]
+  );
 
   const resetPagination = () => {
     dispatch(setPage({ panelId, newPage: 1 }));
@@ -126,7 +142,8 @@ const usePanelPagination = ({
     [panelId, dispatch]
   );
 
-  const onPageChange = (event: React.UIEvent, value: number) => setCurrentPage(value);
+  const onPageChange = (event: React.UIEvent, value: number) =>
+    setCurrentPage(value);
 
   const goToNextPage = React.useCallback(() => {
     if (currentPage === pageCount) return;
