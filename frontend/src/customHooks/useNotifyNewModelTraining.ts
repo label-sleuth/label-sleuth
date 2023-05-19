@@ -23,7 +23,7 @@ export const useNotifyNewModelTraining = () => {
   useEffect(() => {
     if (nextModelShouldBeTraining) {
       notify(
-        "Training a new model in the background, meanwhile you can continue to labeling",
+        "Training a new model in the background, meanwhile you can continue labeling.",
         { toastId: toastId, type: toast.TYPE.INFO }
       );
     } else {
