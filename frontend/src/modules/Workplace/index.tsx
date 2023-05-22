@@ -54,6 +54,7 @@ import { useSidebarLabelingShortcuts } from "../../customHooks/useSidebarLabelin
 import { useWorkspaceVisited } from "../../customHooks/useWorkspaceVisited";
 import { usePreloadDataset } from "../../customHooks/usePreloadDataset";
 import { useAppDispatch, useAppSelector } from "../../customHooks/useRedux";
+import { useNotifyNewModelTraining } from "../../customHooks/useNotifyNewModelTraining";
 
 export const Workplace = () => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
@@ -79,7 +80,8 @@ export const Workplace = () => {
   useSidebarLabelingShortcuts({ setShortcutsModalOpen });
   usePreloadDataset();
   useWorkspaceState();
-
+  useNotifyNewModelTraining();
+  
   const noCategory = useMemo(() => curCategory === null, [curCategory]);
   const noCategoryAndNoModel = useMemo(
     () => noCategory || modelVersion === null || modelVersion === -1,

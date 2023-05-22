@@ -13,8 +13,6 @@
     limitations under the License.
 */
 
-import { ReactNode } from "react";
-
 import MenuItem from "@mui/material/MenuItem/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
