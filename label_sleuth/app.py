@@ -70,7 +70,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 
-def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
+def create_app(config: Configuration, output_dir, register_main_blueprint=True) -> LabelSleuthApp:
     os.makedirs(output_dir, exist_ok=True)
     app = Flask(__name__, static_folder='./build')
     CORS(app)
@@ -98,7 +98,8 @@ def create_app(config: Configuration, output_dir) -> LabelSleuthApp:
                                            background_jobs_manager,
                                            sentence_embedding_service,
                                            app.config["CONFIGURATION"])
-    app.register_blueprint(main_blueprint)
+    if register_main_blueprint:
+        app.register_blueprint(main_blueprint)
     app.orchestrator_api.recover_unfinished_iterations()
     return app
 
