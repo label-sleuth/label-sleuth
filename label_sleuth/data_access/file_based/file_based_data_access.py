@@ -57,8 +57,8 @@ def _validate_document_names(documents: Sequence[Document], max_document_name_le
 
     bad_names = [get_document_id(document.uri) for i, document in enumerate(documents)
                  if len(matches_per_document[i]) > 0]
-    unpermitted_characters_found = [char for matches_per_document in matches_per_document
-                                    for char in matches_per_document]
+    unpermitted_characters_found = set([char for matches_per_document in matches_per_document
+                                    for char in matches_per_document])
 
     if len(bad_names) > 0:
         dataset_name = get_dataset_name_from_uri(documents[0].uri)
