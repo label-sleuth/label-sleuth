@@ -74,6 +74,7 @@ export const CreateCategoryModal = ({ open, setOpen }: CreateCategoryModalProps)
         notify(`The category '${newCategoryName}' has been created`, {
           type: toast.TYPE.SUCCESS,
           autoClose: 5000,
+          toastId: 'category_created_toast'
         });
       }
     });

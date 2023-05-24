@@ -3,7 +3,7 @@ import { useNotification } from "../utils/notification";
 import { useAppSelector } from "./useRedux";
 import { toast } from "react-toastify";
 
-const toastId = "model_is_training";
+const toastId = "model_is_training_toast";
 
 /**
  * This custom hooks notifies the user when a model is being trained.
@@ -24,7 +24,7 @@ export const useNotifyNewModelTraining = () => {
     if (nextModelShouldBeTraining) {
       notify(
         "Training a new model in the background, meanwhile you can continue labeling.",
-        { toastId: toastId, type: toast.TYPE.INFO }
+        { toastId: toastId, type: toast.TYPE.INFO, autoClose: 5000 }
       );
     } else {
       closeNotification(toastId);

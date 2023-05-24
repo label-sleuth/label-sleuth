@@ -155,9 +155,7 @@ export const workspacesSlice = createSlice({
         state.uploadingDataset = true;
       })
       .addCase(addDocuments.fulfilled, (state, action: PayloadAction<AddedDataset>) => {
-        state.datasetAdded = action.payload;
         state.uploadingDataset = false;
-        state.isDocumentAdded = true;
       });
   },
 });

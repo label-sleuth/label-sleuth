@@ -42,7 +42,7 @@ export const useNotifyError = ({ open, setOpen }: useNotifyErrorProps) => {
       notify(toNotify, {
         autoClose: false,
         type: toast.TYPE.ERROR,
-        toastId: error.type,
+        toastId: `${error.type}_error_toast`,
         draggable: false,
       });
     }

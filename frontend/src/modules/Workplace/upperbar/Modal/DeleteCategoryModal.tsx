@@ -43,6 +43,7 @@ export const DeleteCategoryModal = ({ open, setOpen }: DeleteCategoryModalProps)
         notify(`The category ${curCategoryName} has been deleted`, {
           type: toast.TYPE.SUCCESS,
           autoClose: 5000,
+          toastId: "category_deleted_toast"
         });
       }
     });
