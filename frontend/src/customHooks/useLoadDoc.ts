@@ -138,6 +138,9 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
         });
         clearFields();
       }
+      else {
+        closeNotification(uploadDatasetToastId) // error toast notification will be displayed
+      }
     })
   };
 

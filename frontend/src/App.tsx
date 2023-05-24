@@ -16,7 +16,7 @@
 import "./App.css";
 
 import { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { Login } from "./modules/Login/index";
 import { WorkspaceConfig } from "./modules/Workspace-config";
 import { Workplace } from "./modules/Workplace";
@@ -36,10 +36,21 @@ import { useWorkspaceId } from "./customHooks/useWorkspaceId";
 import { fetchVersion } from "./modules/Workplace/redux";
 import { useCheckSystemHealth } from "./customHooks/useCheckSystemHealth";
 import { ErrorDetailsDialog } from "./error/ErrorDetailsDialog";
+import { useNotification } from "./utils/notification";
 
 const AppRoutes = () => {
   const { authenticated, authenticationEnabled } = useAuthentication();
   const { workspaceId } = useWorkspaceId();
+  let location = useLocation();
+  const { closeAllNotifications } = useNotification();
+
+  useEffect(() => {
+    closeAllNotifications();
+  }, [location.pathname, closeAllNotifications]);
+
+  useEffect(() => {
+    closeAllNotifications();
+  }, [location.pathname, closeAllNotifications]);
 
   return (
     <Routes>

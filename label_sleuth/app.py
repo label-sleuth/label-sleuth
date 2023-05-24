@@ -188,7 +188,6 @@ def add_documents(dataset_name):
         df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
 
         if not text_column in df.columns:
-            logging.info("I am here brooo")
             raise NoTextColumnException("The csv file doesn't have a text column")
 
         temp_dir = os.path.join(curr_app.config["output_dir"], "temp", "csv_upload")

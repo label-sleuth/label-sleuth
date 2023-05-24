@@ -38,7 +38,11 @@ export const useNewModelNotifications = ({
   const dispatch = useAppDispatch();
   const prevModelVersion = usePrevious(modelVersion);
   const newModelVersionAvailable = React.useMemo(
-    () => prevModelVersion !== null && modelVersion !== null && modelVersion > -1 && prevModelVersion !== modelVersion,
+    () =>
+      prevModelVersion !== null &&
+      modelVersion !== null &&
+      modelVersion > -1 &&
+      prevModelVersion !== modelVersion,
     [prevModelVersion, modelVersion]
   );
   const { notify } = useNotification();
@@ -47,12 +51,24 @@ export const useNewModelNotifications = ({
     if (curCategory !== null && newModelVersionAvailable === true) {
       shouldFireConfetti && fire();
       if (modelVersion === 1) {
-        notify("A new model is available!", { type: toast.TYPE.SUCCESS, toastId: "toast-new-model" });
+        notify("A new model is available!", {
+          type: toast.TYPE.SUCCESS,
+          toastId: "toast-new-model",
+        });
         notify("There are new suggestions for labeling!", {
           type: toast.TYPE.SUCCESS,
           toastId: "toast-new-suggestions-for-labelling",
+          autoClose: 5000,
         });
       }
     }
-  }, [notify, curCategory, newModelVersionAvailable, modelVersion, fire, dispatch, shouldFireConfetti]);
+  }, [
+    notify,
+    curCategory,
+    newModelVersionAvailable,
+    modelVersion,
+    fire,
+    dispatch,
+    shouldFireConfetti,
+  ]);
 };
