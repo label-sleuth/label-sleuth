@@ -79,6 +79,7 @@ export const EditCategoryModal = ({ open, setOpen }: EditCategoryModalProps) => 
         notify("The category name has been successfully edited", {
           type: toast.TYPE.SUCCESS,
           autoClose: 5000,
+        toastId: "category_edited_toast"
         });
       }
     });

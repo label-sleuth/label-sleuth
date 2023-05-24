@@ -16,7 +16,12 @@
 import "@testing-library/jest-dom";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
-import { modelUpdateExample, workspacesExample, datasetsExample, categoriesExample } from "./utils/test-utils";
+import {
+  modelUpdateExample,
+  workspacesExample,
+  datasetsExample,
+  categoriesExample,
+} from "./utils/test-utils";
 
 jest.setTimeout(10000);
 
@@ -56,39 +61,54 @@ const handlers = [
       })
     );
   }),
-  rest.delete("/workspace/:workspace_id/category/:category_id", (req, res, ctx) => {
-    return res(
-      ctx.delay(),
-      ctx.json({
-        category_id: "26",
-        workspace_id: "workspace_id",
-      })
-    );
-  }),
-  rest.put("/workspace/:workspace_id/category/:category_id", (req, res, ctx) => {
-    const { category_name, category_description } = req.body as Record<string, any>;
-    return res(
-      ctx.delay(),
-      ctx.json({
-        category_id: "26",
-        category_description,
-        category_name,
-        workspace_id: "workspace_id",
-      })
-    );
+  rest.delete(
+    "/workspace/:workspace_id/category/:category_id",
+    (req, res, ctx) => {
+      return res(
+        ctx.delay(),
+        ctx.json({
+          category_id: "26",
+          workspace_id: "workspace_id",
+        })
+      );
+    }
+  ),
+  rest.put(
+    "/workspace/:workspace_id/category/:category_id",
+    (req, res, ctx) => {
+      const { category_name, category_description } = req.body as Record<
+        string,
+        any
+      >;
+      return res(
+        ctx.delay(),
+        ctx.json({
+          category_id: "26",
+          category_description,
+          category_name,
+          workspace_id: "workspace_id",
+        })
+      );
+    }
+  ),
+  rest.get("/version", (_, res, ctx) => {
+    return res(ctx.delay(), ctx.json({ source: "git", version: "v0.11.7" }));
   }),
 ];
 
 const server = setupServer(...handlers);
 
 beforeAll(() => {
-  window.sessionStorage.setItem("workspaceId", JSON.stringify("workspace_id"));
   server.listen();
 });
+
+beforeEach(() => {
+  window.localStorage.clear();
+  window.sessionStorage.setItem("workspaceId", JSON.stringify("workspace_id"));
+})
 
 afterEach(() => server.resetHandlers());
 
 afterAll(() => {
   server.close();
-  window.localStorage.clear();
 });

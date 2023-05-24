@@ -17,11 +17,6 @@ import React from "react";
 import { toast, ToastOptions, UpdateOptions } from "react-toastify";
 import notificationClasses from "./Notification.module.css";
 
-// TODO:transform this file into a custom hook so that it handles the ref to the ReactText object
-// this way  components that use updateNotification won't have to worry about the ref to the ReactText object
-// this custom hook would have to maintain a dict of toastId:ref so that a  single instance of this
-// hook can manage several toast notifications.
-
 // the following options make the toast unclossable
 const blockToastOptions = {
   closeButton: false,
@@ -37,7 +32,39 @@ const unblockToastOptions = {
 };
 
 export const useNotification = () => {
-  const toastRefs = React.useRef<{ [key: string]: React.ReactText }>({});
+  /**
+   * Function to update a toast notification
+   * @param toastRef: a reference to the toast returned by the notify function
+   * @param options of type UpdateOptions
+   * @returns void
+   */
+  const updateNotification = React.useCallback(
+    (options: UpdateOptions, blockToast = false) => {
+      if (options.toastId === null || options.toastId === undefined) return;
+      toast.update(options.toastId, {
+        ...(blockToast ? blockToastOptions : unblockToastOptions),
+        ...options,
+      });
+    },
+    []
+  );
+
+  const closeNotification = React.useCallback((toastId: string | number) => {
+    toast.dismiss(toastId);
+    const toasts = parseJSON(window.sessionStorage.getItem("toasts"));
+    window.sessionStorage.setItem(
+      "toasts",
+      JSON.stringify(toasts.filter((id) => toastId !== id))
+    );
+  }, []);
+
+  const closeAllNotifications = React.useCallback(() => {
+    const toasts = parseJSON(window.sessionStorage.getItem("toasts"));
+    toasts.forEach((toastId) => {
+      toast.dismiss(toastId);
+    });
+    window.sessionStorage.setItem("toasts", JSON.stringify([]));
+  }, []);
 
   /**
    * Shows a toast notification
@@ -51,41 +78,38 @@ export const useNotification = () => {
         autoClose: false,
         bodyClassName: notificationClasses["body-toast"],
       };
-      toastRefs.current[options.toastId || "default_toast_id"] = toast(
-        message,
-        {
+
+      const toasts = parseJSON(window.sessionStorage.getItem("toasts"));
+      
+      if (toasts.includes(options.toastId || "default_toast_id")) {
+        updateNotification({ ...options, render: message });
+      } else {
+        window.sessionStorage.setItem(
+          "toasts",
+          JSON.stringify([...toasts, options.toastId || "default_toast_id"])
+        );
+        toast(message, {
           ...defaultOptions,
           ...(blockToast ? blockToastOptions : unblockToastOptions),
           ...options,
-        }
-      );
+          onClose: () => {
+            closeNotification(options.toastId || "default_toast_id");
+          },
+        });
+      }
     },
-    []
+    [updateNotification, closeNotification]
   );
 
-  /**
-   * Function to update a toast notification
-   * @param toastRef: a reference to the toast returned by the notify function
-   * @param options of type UpdateOptions
-   * @returns void
-   */
-  const updateNotification = React.useCallback(
-    (options: UpdateOptions, blockToast = false) => {
-      if (options.toastId === null || options.toastId === undefined) return;
-      const toastEl = toastRefs.current[options.toastId];
-      toast.update(toastEl, {
-        ...(blockToast ? blockToastOptions : unblockToastOptions),
-        ...options,
-      });
-    },
-    []
-  );
-
-  const closeNotification = React.useCallback((toastId: string) => {
-    const toastEl = toastRefs.current[toastId];
-    if (toastEl === undefined) return;
-    toast.dismiss(toastEl);
-  }, []);
-
-  return { notify, updateNotification, closeNotification };
+  return {
+    notify,
+    updateNotification,
+    closeNotification,
+    closeAllNotifications,
+  };
 };
+
+// A wrapper for "JSON.parse()"" to support "undefined" value
+function parseJSON(value: string | null): (string | number)[] {
+  return value === null ? [] : JSON.parse(value);
+}

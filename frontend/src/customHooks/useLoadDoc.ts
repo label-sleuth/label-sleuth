@@ -47,11 +47,7 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
   const isDocumentAdded = useAppSelector(
     (state) => state.workspaces.isDocumentAdded
   );
-  const { dataset_name, num_docs, num_sentences } = useAppSelector((state) =>
-    state.workspaces.datasetAdded !== null
-      ? state.workspaces.datasetAdded
-      : { dataset_name: "", num_docs: -1, num_sentences: -1 }
-  );
+
   const { notify, updateNotification, closeNotification } = useNotification();
   const dispatch = useAppDispatch();
 
@@ -80,33 +76,6 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
 
   const previousUploadingDataset = usePrevious(uploadingDataset);
 
-  useEffect(() => {
-    if (uploadingDataset) {
-      notify(UPLOAD_DOC_WAIT_MESSAGE, { toastId, type: toast.TYPE.INFO }, true);
-    } else if (isDocumentAdded) {
-      updateNotification({
-        toastId: toastId,
-        render: newDataCreatedMessage(dataset_name, num_docs, num_sentences),
-        type: toast.TYPE.SUCCESS,
-      });
-      clearFields();
-    } else if (previousUploadingDataset && !isDocumentAdded) {
-      closeNotification(toastId);
-    }
-  }, [
-    previousUploadingDataset,
-    notify,
-    updateNotification,
-    closeNotification,
-    toastId,
-    dataset_name,
-    num_docs,
-    num_sentences,
-    isDocumentAdded,
-    uploadingDataset,
-    clearFields,
-    dispatch,
-  ]);
 
   const handleInputChange = (e: React.FormEvent, newVal?: string) => {
     const val = newVal || (e.target as HTMLInputElement).value;
@@ -155,7 +124,21 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     let formData = new FormData();
     formData.append("file", file);
     formData.append("dataset_name", datasetName);
-    dispatch(addDocuments(formData));
+
+    const uploadDatasetToastId = "upload_dataset_toast"
+    notify(UPLOAD_DOC_WAIT_MESSAGE, { toastId: uploadDatasetToastId, type: toast.TYPE.INFO }, true);
+
+    dispatch(addDocuments(formData)).then(action => {
+      if (isFulfilled(action)) {
+        const { dataset_name, num_docs, num_sentences } = action.payload;
+        updateNotification({
+          toastId: uploadDatasetToastId,
+          render: newDataCreatedMessage(dataset_name, num_docs, num_sentences),
+          type: toast.TYPE.SUCCESS,
+        });
+        clearFields();
+      }
+    })
   };
 
   const deleteButtonEnabled = useMemo(() => {

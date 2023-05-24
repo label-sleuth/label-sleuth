@@ -322,7 +322,7 @@ export const DownloadModelDialog = ({
   ];
 
   useEffect(() => {
-    const toastId = "downloading-model-notification";
+    const toastId = "downloading_model_toast";
     if (downloadingModel) {
       notify("Preparing the model (this can take up to a minute).", {
         toastId,
