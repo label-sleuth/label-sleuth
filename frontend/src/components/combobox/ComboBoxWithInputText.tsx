@@ -15,61 +15,66 @@
 
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
-import Stack from "@mui/material/Stack";
-import { forwardRef } from "react";
 
 interface ComboBoxWithInputTextProps {
   options: {
     dataset_id: string;
   }[];
-  handleInputChange: (e: React.FormEvent, newVal?: string) => void;
+  handleInputChange: (e: React.FormEvent, newVal: string | null) => void;
   label: React.ReactNode;
   placeholder: string;
   error: boolean;
   helperText: React.ReactNode;
+  value: string;
 }
 
-export const ComboBoxWithInputText = forwardRef(
-  ({ options, handleInputChange, label, placeholder, error, helperText }: ComboBoxWithInputTextProps, ref) => {
-    return (
-      <Stack spacing={3} sx={{ width: "100%" }}>
-        <Autocomplete
-          onInputChange={handleInputChange}
-          id="free-solo-demo"
-          freeSolo
-          options={options && options.map((option) => option.dataset_id)}
-          renderInput={(params) => (
-            <TextField
-              inputRef={ref}
-              onChange={handleInputChange}
-              {...params}
-              label={label}
-              variant="standard"
-              InputLabelProps={{
-                ...params.InputLabelProps,
-                shrink: true,
-                style: {
-                  fontSize: "18px",
-                  marginTop: "-8px",
-                },
-              }}
-              InputProps={{
-                ...params.InputProps,
-                sx: {
-                  background: "#fff",
-                  padding: "6px 10px",
-                  "&::placeholder": {
-                    color: "#b5b5b5"
-                  }
-                },
-              }}
-              placeholder={placeholder}
-              error={error ? true : false}
-              helperText={helperText}
-            />
-          )}
+export const ComboBoxWithInputText = ({
+  options,
+  handleInputChange,
+  label,
+  placeholder,
+  error,
+  helperText,
+  value,
+}: ComboBoxWithInputTextProps) => {
+  console.log(`value: ${value}`)
+
+  return (
+    <Autocomplete
+      freeSolo
+      options={options && options.map((option) => option.dataset_id)}
+      onChange={handleInputChange}
+      onInputChange={handleInputChange}
+      value={value || null}
+      inputValue={value}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label={label}
+          variant="standard"
+          InputLabelProps={{
+            ...params.InputLabelProps,
+            shrink: true,
+            style: {
+              fontSize: "18px",
+              marginTop: "-8px",
+            },
+          }}
+          InputProps={{
+            ...params.InputProps,
+            sx: {
+              background: "#fff",
+              padding: "6px 10px",
+              "&::placeholder": {
+                color: "#b5b5b5",
+              },
+            },
+          }}
+          placeholder={placeholder}
+          error={error ? true : false}
+          helperText={helperText}
         />
-      </Stack>
-    );
-  }
-);
+      )}
+    />
+  );
+};
