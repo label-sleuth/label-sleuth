@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useRef, useState, useCallback, useMemo } from "react";
 import {
   addDocuments,
   deleteDataset,
@@ -26,11 +26,11 @@ import {
   WRONG_INPUT_NAME_LENGTH,
   WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES,
   REGEX_LETTER_NUMBERS_UNDERSCORE,
+  DATASET_NAME_MAX_CHARS,
 } from "../const";
 import { useAppDispatch, useAppSelector } from "./useRedux";
 import { useNotification } from "../utils/notification";
 import React from "react";
-import { usePrevious } from "./usePrevious";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { stringifyList } from "../utils/utils";
 import { DropdownOption } from "../components/dropdown/Dropdown";
@@ -40,49 +40,32 @@ interface UseLoadDocProps {
 }
 
 export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
-  const uploadingDataset = useAppSelector(
-    (state) => state.workspaces.uploadingDataset
-  );
   const datasets = useAppSelector((state) => state.workspaces.datasets);
-  const isDocumentAdded = useAppSelector(
-    (state) => state.workspaces.isDocumentAdded
-  );
 
   const { notify, updateNotification, closeNotification } = useNotification();
   const dispatch = useAppDispatch();
 
   const [datasetName, setDatasetName] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const textFieldRef = useRef<HTMLInputElement>();
-  const comboInputTextRef = useRef<HTMLInputElement>();
+  const fileInputRef = useRef<HTMLInputElement>();
   const [datasetNameError, setDatasetNameError] = useState("");
-
+  console.log(`datasetName: ${datasetName}`)
   const clearFields = useCallback(() => {
-    let elem: HTMLCollectionOf<Element> = document.getElementsByClassName(
-      "MuiAutocomplete-clearIndicator"
-    );
-    if (elem[0]) {
-      (elem[0] as HTMLElement).click();
-    }
-    if (textFieldRef.current) {
-      (textFieldRef.current as HTMLInputElement).value = "";
+    if (fileInputRef.current) {
+      (fileInputRef.current as HTMLInputElement).value = "";
     }
     setDatasetName("");
-    if (comboInputTextRef.current) {
-      (comboInputTextRef.current as HTMLInputElement).value = "";
-    }
     setFile(null);
   }, []);
 
-  const previousUploadingDataset = usePrevious(uploadingDataset);
-
-
-  const handleInputChange = (e: React.FormEvent, newVal?: string) => {
-    const val = newVal || (e.target as HTMLInputElement).value;
-
+  const handleInputChange = (e: React.FormEvent, newVal: string | null) => {
+    console.log(`e.value: ${(e.target as HTMLInputElement)?.value}`);
+    console.log(`newVal: ${newVal}`);
+    const val = (e.target as HTMLInputElement)?.value || newVal || "";
+    console.log(`val: ${val}`);
     let error = "";
     if (val && val.length > 30) {
-      error = WRONG_INPUT_NAME_LENGTH;
+      error = WRONG_INPUT_NAME_LENGTH(DATASET_NAME_MAX_CHARS);
     } else if (val && !val.match(REGEX_LETTER_NUMBERS_UNDERSCORE)) {
       error = WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES;
     }
@@ -90,7 +73,7 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     setDatasetName(val);
   };
 
-  let options : DropdownOption[] =
+  let options: DropdownOption[] =
     datasets &&
     datasets.map((item) => ({
       value: item.dataset_id,
@@ -115,20 +98,25 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
       } else {
         nonProvidedFields = "Dataset name was not provided.";
       }
-      return notify(FILL_REQUIRED_FIELDS(nonProvidedFields), {
+      notify(FILL_REQUIRED_FIELDS(nonProvidedFields), {
         toastId,
         type: toast.TYPE.INFO,
       });
+      return;
     }
 
     let formData = new FormData();
     formData.append("file", file);
     formData.append("dataset_name", datasetName);
 
-    const uploadDatasetToastId = "upload_dataset_toast"
-    notify(UPLOAD_DOC_WAIT_MESSAGE, { toastId: uploadDatasetToastId, type: toast.TYPE.INFO }, true);
+    const uploadDatasetToastId = "upload_dataset_toast";
+    notify(
+      UPLOAD_DOC_WAIT_MESSAGE,
+      { toastId: uploadDatasetToastId, type: toast.TYPE.INFO },
+      true
+    );
 
-    dispatch(addDocuments(formData)).then(action => {
+    dispatch(addDocuments(formData)).then((action) => {
       if (isFulfilled(action)) {
         const { dataset_name, num_docs, num_sentences } = action.payload;
         updateNotification({
@@ -136,12 +124,11 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
           render: newDataCreatedMessage(dataset_name, num_docs, num_sentences),
           type: toast.TYPE.SUCCESS,
         });
-        clearFields();
+      } else {
+        closeNotification(uploadDatasetToastId); // error toast notification will be displayed
       }
-      else {
-        closeNotification(uploadDatasetToastId) // error toast notification will be displayed
-      }
-    })
+      clearFields();
+    });
   };
 
   const deleteButtonEnabled = useMemo(() => {
@@ -166,6 +153,7 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
         } = actionPromiseResult.payload;
 
         if (isFulfilled(actionPromiseResult)) {
+          clearFields();
           notify(
             `The dataset '${deletedDatasetName}' has been succesfully deleted`,
             {
@@ -183,7 +171,7 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
             }
 
             notify(
-              `The ${words.noun} ${stringifyList(deletedWorkspaceIds)} ${
+              `The ${words.noun} '${stringifyList(deletedWorkspaceIds)}' ${
                 words.verb
               } succesfully deleted too`,
               {
@@ -206,11 +194,11 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     handleInputChange,
     options,
     datasets,
-    textFieldRef,
-    comboInputTextRef,
+    fileInputRef,
     datasetNameError,
     deleteButtonEnabled,
     handleDeleteDataset,
     clearFields,
+    file,
   };
 };

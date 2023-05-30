@@ -89,7 +89,7 @@ export const EditCategoryModal = ({ open, setOpen }: EditCategoryModalProps) => 
     let text = e.target.value;
     if (text) {
       if (text.length > CATEGORY_NAME_MAX_CHARS) {
-        setCategoryNameError(WRONG_INPUT_NAME_LENGTH);
+        setCategoryNameError(WRONG_INPUT_NAME_LENGTH(CATEGORY_NAME_MAX_CHARS));
       } else
         setCategoryNameError("");
     } else {

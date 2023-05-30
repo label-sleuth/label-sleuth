@@ -94,8 +94,12 @@ export const newDataCreatedMessage = (
   numsentences: number
 ) =>
   `The new dataset '${name}' has been created with ${numDocs} documents and ${numsentences} text entries.`;
+
+
 export const CATEGORY_NAME_MAX_CHARS = 100;
-export const WRONG_INPUT_NAME_LENGTH = `Name may be max ${CATEGORY_NAME_MAX_CHARS} characters long`;
+export const DATASET_NAME_MAX_CHARS = 30;
+
+export const WRONG_INPUT_NAME_LENGTH = (maxLength: number) => `Name may be max ${maxLength} characters long`;
 export const WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES = `Name may only contain English characters, digits and underscores`;
 export const WRONG_INPUT_NAME_BAD_CHARACTER = `Name may only contain English characters, digits, underscores and spaces`;
 export const REGEX_LETTER_NUMBERS_UNDERSCORE = /^[a-zA-Z0-9_]*$/;

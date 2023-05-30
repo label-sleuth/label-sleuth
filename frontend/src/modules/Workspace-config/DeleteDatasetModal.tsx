@@ -102,7 +102,7 @@ export const DeleteDatasetModal = ({
             >
               {workspacesUsingDataset !== null &&
                 workspacesUsingDataset.map((workspace, i) => (
-                  <ListItem sx={{ pb: 0, pt: 0 }}>
+                  <ListItem sx={{ pb: 0, pt: 0 }} key={i}>
                     <DialogContentText>{workspace}</DialogContentText>
                   </ListItem>
                 ))}

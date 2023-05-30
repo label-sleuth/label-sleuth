@@ -37,15 +37,15 @@ interface LoadDocumentFormProps {
   handleLoadDoc: () => void;
   handleFileChange: (e: React.FormEvent) => void;
   datasets: Dataset[];
-  handleInputChange: (e: React.FormEvent, newVal?: string) => void;
-  textFieldRef: React.MutableRefObject<HTMLInputElement | undefined>;
-  comboInputTextRef: React.MutableRefObject<HTMLInputElement | undefined>;
+  handleInputChange: (e: React.FormEvent, newVal: string | null) => void;
+  fileInputRef: React.MutableRefObject<HTMLInputElement | undefined>;
   backdropOpen: boolean;
   datasetNameError: string;
   deleteButtonEnabled: boolean;
   datasetName: string;
   handleDeleteDataset: () => void;
   clearFields: () => void;
+  file: File | null;
 }
 
 const LoadDocumentForm = ({
@@ -53,14 +53,13 @@ const LoadDocumentForm = ({
   handleFileChange,
   datasets,
   handleInputChange,
-  textFieldRef,
-  comboInputTextRef,
   backdropOpen,
   datasetNameError,
   deleteButtonEnabled,
   datasetName,
   handleDeleteDataset,
   clearFields,
+  fileInputRef,
 }: LoadDocumentFormProps) => {
   const [deleteDatasetModalOpen, setDeleteDatasetModalOpen] =
     React.useState(false);
@@ -110,7 +109,7 @@ const LoadDocumentForm = ({
             style={{ padding: "0 25px" }}
           >
             <TextField
-              inputRef={textFieldRef}
+              inputRef={fileInputRef}
               variant="standard"
               name="file-upload"
               type="file"
@@ -138,12 +137,11 @@ const LoadDocumentForm = ({
             style={{ margin: "35px 25px 10px 25px" }}
           >
             <ComboBoxWithInputText
-              ref={comboInputTextRef}
+              value={datasetName}
               options={datasets}
               label="As new dataset / Add to existing dataset"
               handleInputChange={handleInputChange}
               placeholder={UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG}
-              //noOptionsPlaceholder="No datasets available"
               error={datasetNameError !== ""}
               helperText={datasetNameError}
             />

@@ -26,6 +26,7 @@ import {
   WRONG_INPUT_NAME_LENGTH,
   WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES,
   REGEX_LETTER_NUMBERS_UNDERSCORE,
+  CATEGORY_NAME_MAX_CHARS,
 } from "../const";
 import { useWorkspaceId } from "./useWorkspaceId";
 import { useAppDispatch, useAppSelector } from "./useRedux";
@@ -49,7 +50,7 @@ const useNewWorkspace = (toastId: string) => {
     let val = (e.target as HTMLInputElement).value;
     let error = "";
     if (val.length > 30) {
-      error = WRONG_INPUT_NAME_LENGTH;
+      error = WRONG_INPUT_NAME_LENGTH(CATEGORY_NAME_MAX_CHARS);
     } else if (!val.match(REGEX_LETTER_NUMBERS_UNDERSCORE)) {
       error = WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES;
     }
