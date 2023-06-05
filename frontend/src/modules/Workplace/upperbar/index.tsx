@@ -13,14 +13,13 @@
     limitations under the License.
 */
 
-import React, { useMemo } from "react";
+import React from "react";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import classes from "./UpperBar.module.css";
 import Tooltip from "@mui/material/Tooltip";
 import {
@@ -33,14 +32,12 @@ import {
 } from "../../../const";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import { CategoryCard } from "./CategoryCard";
-import { IconButton, Typography } from "@mui/material";
+import { IconButton } from "@mui/material";
 import { useState } from "react";
 import { CreateCategoryModal } from "./Modal/CreateCategoryModal";
 import { DeleteCategoryModal } from "./Modal/DeleteCategoryModal";
 import { EditCategoryModal } from "./Modal/EditCategoryModal";
 import { CategoryFormControl } from "./CategoryFormControl";
-import info_icon from "../../../assets/workspace/help.svg";
-import { curCategoryDescriptionSelector } from "../redux";
 
 // the AppBar component from mui isn't used because it's width doens't get updated when resizing the right sidebar
 const AppBarLS = styled(Box)(
@@ -72,7 +69,6 @@ export const UpperBar = ({
   rightPanelOpen,
 }: UpperBarProps) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
-  const curCategoryDescription = useAppSelector(curCategoryDescriptionSelector)
   const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false);
   const [deleteCategoryModalOpen, setDeleteCategoryModalOpen] = useState(false);
   const [editCategoryModalOpen, setEditCategoryModalOpen] = useState(false);

@@ -943,8 +943,7 @@ class OrchestratorApi:
         for category_name in imported_categories_to_uris_and_labels.keys():
             if category_name not in category_name_to_id.keys():
                 logging.info(f"import category '{category_name}' is missing in workspace '{workspace_id}', creating it")
-                category_id = self.create_new_category(
-                    workspace_id, category_name, f'{category_name} (created during upload)')
+                category_id = self.create_new_category(workspace_id, category_name, '')
                 category_name_to_id[category_name] = category_id
                 categories_created.append(category_name)
 

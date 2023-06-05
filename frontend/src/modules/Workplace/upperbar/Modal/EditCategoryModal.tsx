@@ -23,7 +23,7 @@ import {
   curCategoryNameSelector,
   editCategory,
 } from "../../redux";
-import { CATEGORY_NAME_MAX_CHARS, CREATE_NEW_CATEGORY_HELPER_MSG, WRONG_INPUT_NAME_LENGTH } from "../../../../const";
+import { CREATE_NEW_CATEGORY_HELPER_MSG } from "../../../../const";
 import { useNotification } from "../../../../utils/notification";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
@@ -68,7 +68,7 @@ export const EditCategoryModal = ({
     dispatch(
       editCategory({
         newCategoryName: newCategoryName.trim(),
-        newCategoryDescription: categoryDescription,
+        newCategoryDescription: categoryDescription.trim(),
       })
     ).then((action) => {
       setOpen(false);

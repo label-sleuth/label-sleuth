@@ -21,7 +21,6 @@ import classes from "./index.module.css";
 import {
   CREATE_NEW_CATEGORY_PLACEHOLDER_MSG,
   WRONG_INPUT_NAME_LENGTH,
-  KeyboardKeysEnum,
   CATEGORY_NAME_MAX_CHARS,
 } from "../../../../const";
 import {
@@ -82,7 +81,7 @@ export const EditOrCreateCategoryModal = ({
   ) => {
     e.preventDefault();
     let text = e.target.value;
-    setCategoryDescription(text.trim());
+    setCategoryDescription(text);
   };
 
   return (

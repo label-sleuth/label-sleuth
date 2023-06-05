@@ -49,7 +49,6 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>();
   const [datasetNameError, setDatasetNameError] = useState("");
-  console.log(`datasetName: ${datasetName}`)
   const clearFields = useCallback(() => {
     if (fileInputRef.current) {
       (fileInputRef.current as HTMLInputElement).value = "";
@@ -59,8 +58,6 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
   }, []);
 
   const handleInputChange = (e: React.FormEvent, newVal: string | null) => {
-    console.log(`e.value: ${(e.target as HTMLInputElement)?.value}`);
-    console.log(`newVal: ${newVal}`);
     const val = (e.target as HTMLInputElement)?.value || newVal || "";
     console.log(`val: ${val}`);
     let error = "";
