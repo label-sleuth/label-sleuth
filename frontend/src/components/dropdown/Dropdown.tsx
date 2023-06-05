@@ -17,7 +17,7 @@ import MenuItem from "@mui/material/MenuItem/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import classes from "./Dropdown.module.css";
-import { Box, Stack, SxProps, Theme, Typography } from "@mui/material";
+import { Stack, SxProps, Theme, Typography } from "@mui/material";
 import { ReactNode, useMemo } from "react";
 
 export interface DropdownOption {

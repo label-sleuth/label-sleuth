@@ -37,7 +37,6 @@ export const ComboBoxWithInputText = ({
   helperText,
   value,
 }: ComboBoxWithInputTextProps) => {
-  console.log(`value: ${value}`)
 
   return (
     <Autocomplete

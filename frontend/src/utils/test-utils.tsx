@@ -17,10 +17,8 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { setupStore } from "../store/configureStore";
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer } from "react-toastify";
 import { ReactElement, ReactNode } from "react";
-
-
 
 export const renderWithProviderAndRouter = (
   ui: JSX.Element,
@@ -47,25 +45,29 @@ export const renderWithProviderAndRouter = (
   }
 
   return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) };
-}
-
+};
 
 export const createCategoryAndTest = async () => {
-  const createCategoryButton = await screen.findByRole('button', { name: /create/i})
-  fireEvent.click(createCategoryButton)
+  const createCategoryButton = await screen.findByRole("button", {
+    name: /create/i,
+  });
+  fireEvent.click(createCategoryButton);
   expect(await screen.findByText(/Create new category/i)).toBeInTheDocument();
-  const button = screen.getByRole('button', {name: "Create"})
-  const input: HTMLInputElement = screen.getByRole('textbox', {name: "Category name"})
-  fireEvent.change(input, {target: {value: "test_category"}})
-  expect(input.value).toBe('test_category')
-  expect(button).not.toBeDisabled()
-  fireEvent.click(button)
+  const button = screen.getByRole("button", { name: "Create" });
+  const input: HTMLInputElement = screen.getByRole("textbox", {
+    name: "Category name",
+  });
+  const newCategoryName = " test_category";
+  fireEvent.change(input, { target: { value: newCategoryName } });
+  expect(input.value).toBe(newCategoryName);
+  expect(button).not.toBeDisabled();
+  fireEvent.click(button);
 
-  expect(await screen.findByText(/The category 'test_category' has been created/)).toBeInTheDocument()
+  expect(
+    await screen.findByText(/The category 'test_category' has been created/)
+  ).toBeInTheDocument();
   expect(screen.queryByText(/Create new category/i)).not.toBeVisible();
-
-}
-
+};
 
 export const modelUpdateExample = {
   iterations: [

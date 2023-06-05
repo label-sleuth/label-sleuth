@@ -18,11 +18,8 @@ import { useAppDispatch } from "../../../../customHooks/useRedux";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { createCategoryOnServer } from "../../redux";
 import {
-  CATEGORY_NAME_MAX_CHARS,
   CREATE_NEW_CATEGORY_HELPER_MSG,
   CREATE_NEW_CATEGORY_MODAL_MSG,
-  KeyboardKeysEnum,
-  WRONG_INPUT_NAME_LENGTH,
 } from "../../../../const";
 import { useNotification } from "../../../../utils/notification";
 import { toast } from "react-toastify";
@@ -43,20 +40,6 @@ export const CreateCategoryModal = ({
   const dispatch = useAppDispatch();
   const { notify } = useNotification();
 
-  const handleTextFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    e.preventDefault();
-    let text = e.target.value;
-    if (text) {
-      if (text.length > CATEGORY_NAME_MAX_CHARS) {
-        setCategoryNameError(WRONG_INPUT_NAME_LENGTH(CATEGORY_NAME_MAX_CHARS));
-      }  else
-        setCategoryNameError("");
-    } else {
-      setCategoryNameError("");
-    }
-    setCategoryName(text.trim());
-  };
-
   const onModalClose = () => {
     setOpen(false);
     setCategoryNameError("");
@@ -66,14 +49,17 @@ export const CreateCategoryModal = ({
 
   const onSubmit = async () => {
     dispatch(
-      createCategoryOnServer({ categoryName, categoryDescription })
+      createCategoryOnServer({
+        categoryName: categoryName.trim(),
+        categoryDescription: categoryDescription.trim(),
+      })
     ).then((actionResult) => {
       if (isFulfilled(actionResult)) {
         onModalClose();
-        notify(`The category '${categoryName}' has been created`, {
+        notify(`The category '${categoryName.trim()}' has been created`, {
           type: toast.TYPE.SUCCESS,
           autoClose: 5000,
-          toastId: 'category_created_toast'
+          toastId: "category_created_toast",
         });
       }
     });
@@ -92,7 +78,7 @@ export const CreateCategoryModal = ({
       helperText={CREATE_NEW_CATEGORY_HELPER_MSG}
       onSubmit={onSubmit}
       onModalClose={onModalClose}
-      submitButtonLabel={'Create'}
+      submitButtonLabel={"Create"}
     />
   );
 };
