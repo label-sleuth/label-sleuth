@@ -2,13 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { client } from "../api/client";
 import { BASE_URL } from "../config";
+import { CustomizableUITextEnum } from "../const";
 import { useNotification } from "../utils/notification";
+import { useAppSelector } from "./useRedux";
 
 export const useCheckSystemHealth = () => {
   const [systemOk, setSystemOk] = useState(true);
   const { notify, closeNotification } = useNotification();
   let requestIsLoading = useRef(false);
-
+  const systemUnavailable = useAppSelector(state => state.customizableUIText.texts[CustomizableUITextEnum.SYSTEM_UNAVAILABLE])
+  
   useEffect(() => {
     const systemDownNotification = "system-down-notification";
 
@@ -25,7 +28,7 @@ export const useCheckSystemHealth = () => {
         requestIsLoading.current = false;
         systemIsOk = false;
         notify(
-          "The system is down. Please try to re-run or log in again (if applicable)",
+          systemUnavailable,
           {
             toastId: systemDownNotification,
             type: toast.TYPE.INFO,
@@ -43,7 +46,7 @@ export const useCheckSystemHealth = () => {
     }, 15000);
 
     return () => clearInterval(interval);
-  }, [notify, closeNotification]);
+  }, [notify, closeNotification, systemUnavailable]);
 
   return { systemOk };
 };

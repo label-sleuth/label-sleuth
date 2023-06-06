@@ -19,6 +19,8 @@ import { faSlack, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { faBook } from "@fortawesome/free-solid-svg-icons";
 import { SxProps } from "@mui/system";
 import { SizeProp } from "@fortawesome/fontawesome-svg-core";
+import { useAppSelector } from "../customHooks/useRedux";
+import { CustomizableUITextEnum } from "../const";
 
 interface SupportIconsBarProps {
   sx?: SxProps;
@@ -26,11 +28,14 @@ interface SupportIconsBarProps {
 }
 
 export const SupportIconsBar = ({ sx, iconsSize = "xl" }: SupportIconsBarProps) => {
+
+  const customizableTexts = useAppSelector(state => state.customizableUIText.texts)
+
   return (
     <Stack direction="row" alignItems="center" justifyContent="center" spacing={2} sx={{ ...sx }}>
-      <Tooltip title={"Join Slack"} placement="top">
+      <Tooltip title={customizableTexts[CustomizableUITextEnum.SLACK_LINK_TITLE]} placement="top">
         <Link
-          href="https://join.slack.com/t/labelsleuth/shared_invite/zt-1j5tpz1jl-W~UaNEKmK0RtzK~lI3Wkxg"
+          href={customizableTexts[CustomizableUITextEnum.SLACK_LINK_URL]}
           target="_blank"
           rel="noopener noreferrer"
           color="inherit"
@@ -38,9 +43,9 @@ export const SupportIconsBar = ({ sx, iconsSize = "xl" }: SupportIconsBarProps) 
           <FontAwesomeIcon size={iconsSize} icon={faSlack} />
         </Link>
       </Tooltip>
-      <Tooltip title={"Github"} placement="top">
+      <Tooltip title={customizableTexts[CustomizableUITextEnum.GITHUB_LINK_TITLE]} placement="top">
         <Link
-          href="https://github.com/label-sleuth/label-sleuth"
+          href={customizableTexts[CustomizableUITextEnum.GITHUB_LINK_URL]}
           target="_blank"
           rel="noopener noreferrer"
           color="inherit"
@@ -48,9 +53,9 @@ export const SupportIconsBar = ({ sx, iconsSize = "xl" }: SupportIconsBarProps) 
           <FontAwesomeIcon size={iconsSize} icon={faGithub} />
         </Link>
       </Tooltip>
-      <Tooltip title={"Documentation"} placement="top">
+      <Tooltip title={customizableTexts[CustomizableUITextEnum.WEBPAGE_LINK_TITLE]} placement="top">
         <Link
-          href="https://www.label-sleuth.org/docs/index.html"
+          href={customizableTexts[CustomizableUITextEnum.WEBPAGE_LINK_URL]}
           target="_blank"
           rel="noopener noreferrer"
           color="inherit"

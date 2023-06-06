@@ -22,6 +22,7 @@ import {
   CREATE_NEW_CATEGORY_PLACEHOLDER_MSG,
   WRONG_INPUT_NAME_LENGTH,
   CATEGORY_NAME_MAX_CHARS,
+  CustomizableUITextEnum,
 } from "../../../../const";
 import {
   DialogContentText,
@@ -30,6 +31,7 @@ import {
   DialogContent,
 } from "@mui/material";
 import { ChangeEvent } from "react";
+import { useAppSelector } from "../../../../customHooks/useRedux";
 
 interface EditOrCreateCategoryModalProps {
   categoryName: string;
@@ -41,7 +43,6 @@ interface EditOrCreateCategoryModalProps {
   onSubmit: () => void;
   open: boolean;
   dialogTitle: string;
-  helperText: string;
   onModalClose: () => void;
   submitButtonLabel: string;
 }
@@ -55,12 +56,24 @@ export const EditOrCreateCategoryModal = ({
   setCategoryNameError,
   open,
   dialogTitle,
-  helperText,
   onModalClose,
   onSubmit,
   submitButtonLabel,
 }: EditOrCreateCategoryModalProps) => {
-  
+  const categoryDescriptionPlaceholder = useAppSelector(
+    (state) =>
+      state.customizableUIText.texts[
+        CustomizableUITextEnum.CATEGORY_DESCRIPTION_PLACEHOLDER
+      ]
+  );
+
+  const categoryModalHelperText = useAppSelector(
+    (state) =>
+      state.customizableUIText.texts[
+        CustomizableUITextEnum.CATEGORY_MODAL_HELPER_TEXT
+      ]
+  );
+
   const handleCategoryNameFieldChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -96,7 +109,7 @@ export const EditOrCreateCategoryModal = ({
       <DialogTitle>{dialogTitle}</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ width: "300px" }}>
-          {helperText}
+          {categoryModalHelperText}
         </DialogContentText>
         <Box
           component="form"
@@ -124,7 +137,7 @@ export const EditOrCreateCategoryModal = ({
           <p className={classes["error"]}>{categoryNameError}</p>
           <TextField
             label="Category description"
-            //placeholder=""
+            placeholder={categoryDescriptionPlaceholder}
             sx={{
               marginLeft: "0 !important",
               "& .MuiFormHelperText-root": {

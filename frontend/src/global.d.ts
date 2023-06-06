@@ -1,5 +1,5 @@
 import { TypedActionCreator } from "@reduxjs/toolkit/dist/mapBuilders";
-import { LabelTypesEnum, PanelIdsEnum } from "./const";
+import { CustomizableUITextEnum, LabelTypesEnum, PanelIdsEnum } from "./const";
 interface ReducerObj {
   action: TypedActionCreator;
   reducer: (state: any, action: any) => void;
@@ -147,6 +147,12 @@ interface FeatureFlagsSliceState {
   mainPanelElementsPerPage: number;
   rightToLeft: boolean;
   maxDatasetLength: number;
+}
+
+interface CustomizableUITextSliceState {
+  loading: boolean;
+  fetched: boolean;
+  texts: {[key in CustomizableUITextEnum]: string };
 }
 
 interface PaginationParam {

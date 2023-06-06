@@ -14,16 +14,15 @@
 #
 
 import io
-import logging
 import os
 import time
 import tempfile
 import unittest
-from label_sleuth import app, config
+from label_sleuth import app, config, app_utils
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus
+from unittest import mock
 
 HEADERS = {'Content-Type': 'application/json'}
-
 
 class TestAppIntegration(unittest.TestCase):
 
@@ -34,8 +33,10 @@ class TestAppIntegration(unittest.TestCase):
         loaded_config = config.load_config(path_to_test_config)
         # avoid downloading spacy model for test
         loaded_config.language.spacy_model_name = None
-        app_for_test = app.create_app(config=loaded_config,
-                                      output_dir=os.path.join(cls.temp_dir.name, 'output'))
+        
+        with mock.patch('builtins.open', mock.mock_open(read_data='{"app_logo_path":"app_logo/sleuth_logo_white.svg"}')):
+            app_for_test = app.create_app(config=loaded_config,
+                                        output_dir=os.path.join(cls.temp_dir.name, 'output'))
         app_for_test.test_request_context("/")
         app_for_test.config['TESTING'] = True
         app_for_test.config['LOGIN_DISABLED'] = True
@@ -48,6 +49,25 @@ class TestAppIntegration(unittest.TestCase):
         cls.temp_dir.cleanup()
 
     def test_full_flow(self):
+
+        def raise_exception(a, b):
+            # to make getting the customizable text json to fail
+            raise FileNotFoundError()
+        
+        with mock.patch('builtins.open', raise_exception):
+            res = self.client.get("/customizable_ui_text", headers=HEADERS)
+        self.assertEqual(404, res.status_code)
+
+        with mock.patch('builtins.open', mock.mock_open(read_data='{"app_logo_path": "app_logo/sleuth_logo_white.svg","texts_custom": "text custom"}')):
+            res = self.client.get("/customizable_ui_text", headers=HEADERS)
+        self.assertEqual(res.get_json(), {
+            "app_logo_path": "app_logo/sleuth_logo_white.svg",
+            "texts_custom": "text custom"
+        })
+
+        res = self.client.get("/app_logo/sleuth_logo_white.svg")
+        self.assertEqual("image/svg+xml; charset=utf-8", res.content_type, msg="Failed to get app logo, request is returning index.html")
+
         self.maxDiff = None
         dataset_name = "my_test_dataset"
         workspace_name = "my_test_workspace"

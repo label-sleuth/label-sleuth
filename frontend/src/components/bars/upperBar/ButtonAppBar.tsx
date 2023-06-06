@@ -14,10 +14,10 @@
 */
 
 import * as React from "react";
-import sleuth_logo from "../../../assets/sleuth_logo_white.svg";
 import { useAuthentication } from "../../../customHooks/useAuthentication";
 import { SupportIconsBar } from "../../SupportIconsBar";
 import { AppBar, Box, Button, Divider, Toolbar } from "@mui/material";
+import { useAppLogoURL } from "../../../customHooks/useAppLogoURL";
 
 interface ButtonAppBarProps {
   logout: (e: React.MouseEvent) => void;
@@ -25,6 +25,8 @@ interface ButtonAppBarProps {
 
 export const ButtonAppBar = ({ logout }: ButtonAppBarProps) => {
   const { authenticationEnabled } = useAuthentication();
+
+  const appLogoURL = useAppLogoURL();
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -39,11 +41,20 @@ export const ButtonAppBar = ({ logout }: ButtonAppBarProps) => {
             height: "48px",
           }}
         >
-          <img src={sleuth_logo} style={{ width: "160px", maxWidth: "160px" }} alt="App logo" />
+          <img
+            src={appLogoURL}
+            style={{ width: "160px", maxWidth: "160px" }}
+            alt="App logo"
+          />
           <div style={{ display: "block", flexGrow: 1 }} />
           <SupportIconsBar sx={{ marginRight: 2 }} />
           {authenticationEnabled ? (
-            <Divider orientation="vertical" flexItem variant="middle" sx={{ borderColor: "gray", marginRight: 1 }} />
+            <Divider
+              orientation="vertical"
+              flexItem
+              variant="middle"
+              sx={{ borderColor: "gray", marginRight: 1 }}
+            />
           ) : null}
           {authenticationEnabled ? (
             <Button color="inherit" onClick={logout}>
@@ -54,4 +65,4 @@ export const ButtonAppBar = ({ logout }: ButtonAppBarProps) => {
       </AppBar>
     </Box>
   );
-}
+};

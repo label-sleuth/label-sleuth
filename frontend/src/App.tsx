@@ -37,6 +37,7 @@ import { fetchVersion } from "./modules/Workplace/redux";
 import { useCheckSystemHealth } from "./customHooks/useCheckSystemHealth";
 import { ErrorDetailsDialog } from "./error/ErrorDetailsDialog";
 import { useNotification } from "./utils/notification";
+import { fetchCustomizableUIText } from "./customizableUIText/customizableUITextSlice";
 
 const AppRoutes = () => {
   const { authenticated, authenticationEnabled } = useAuthentication();
@@ -104,6 +105,7 @@ const App = () => {
   const [errorDetailsDialogOpen, setErrorDetailsDialogOpen] = useState(false);
 
   const featureFlags = useAppSelector((state) => state.featureFlags);
+  const customizableUIText = useAppSelector((state) => state.customizableUIText);
 
   useNotifyError({
     open: errorDetailsDialogOpen,
@@ -114,6 +116,7 @@ const App = () => {
 
   useEffect(() => {
     dispatch(fetchFeatureFlags());
+    dispatch(fetchCustomizableUIText());
   }, [dispatch]);
 
   useEffect(() => {
@@ -122,7 +125,7 @@ const App = () => {
 
   return (
     <div>
-      {featureFlags.fetched ? (
+      {featureFlags.fetched && customizableUIText.fetched ? (
         <ThemeProvider theme={theme}>
           <HashRouter>
             <AppRoutes />

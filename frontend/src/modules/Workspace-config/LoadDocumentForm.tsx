@@ -24,14 +24,15 @@ import TextField from "@mui/material/TextField";
 import { ComboBoxWithInputText } from "../../components/combobox/ComboBoxWithInputText";
 import data_icon from "../../assets/workspace-config/document--add.svg";
 import {
+  CustomizableUITextEnum,
   UPLOAD_NEW_DATASET_MSG,
   UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG,
-  UPLOAD_NEW_DATASET_FILE_HELPER_MSG,
 } from "../../const";
 import Backdrop from "@mui/material/Backdrop";
 import CircularProgress from "@mui/material/CircularProgress";
 import { DeleteDatasetModal } from "./DeleteDatasetModal";
 import { Dataset } from "../../global";
+import { useAppSelector } from "../../customHooks/useRedux";
 
 interface LoadDocumentFormProps {
   handleLoadDoc: () => void;
@@ -64,6 +65,8 @@ const LoadDocumentForm = ({
   const [deleteDatasetModalOpen, setDeleteDatasetModalOpen] =
     React.useState(false);
 
+  const documentUploadHelperText = useAppSelector(state => state.customizableUIText.texts[CustomizableUITextEnum.DOCUMENT_UPLOAD_HELPER_TEXT])
+  
   return (
     <Box className={classes.wrapper} style={{ borderRight: "none" }}>
       <DeleteDatasetModal
@@ -129,7 +132,7 @@ const LoadDocumentForm = ({
             sx={{ margin: "5px 25px", fontStyle: "italic", fontSize: 12 }}
             className={classes["text-upload"]}
           >
-            {UPLOAD_NEW_DATASET_FILE_HELPER_MSG}
+            {documentUploadHelperText}
           </FormLabel>
           <FormControl
             required

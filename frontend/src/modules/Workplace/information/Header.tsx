@@ -7,7 +7,6 @@ import { useLogOut } from "../../../customHooks/useLogOut";
 import { useWorkspaceId } from "../../../customHooks/useWorkspaceId";
 import { DrawerHeader } from "./DrawerHeader";
 
-import sleuth_logo from "../../../assets/sleuth_logo_white.svg";
 import info_icon from "../../../assets/workspace/help.svg";
 import logout_icon from "../../../assets/workspace/logout.svg";
 import workspace_icon from "../../../assets/workspace/change_catalog.svg";
@@ -15,10 +14,15 @@ import workspace_icon from "../../../assets/workspace/change_catalog.svg";
 import classes from "./WorkspaceInfo.module.css";
 
 import { WORKSPACE_CONFIG_PATH } from "../../../config";
-import { LOGOUT_TOOLTIP_MSG, GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG, LABEL_SLEUTH_SHORT_DESC } from "../../../const";
+import {
+  LOGOUT_TOOLTIP_MSG,
+  GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG,
+  CustomizableUITextEnum,
+} from "../../../const";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import { currentDocNameSelector } from "../redux/documentSlice";
 import { getDatasetNameFromDocumentId } from "../../../utils/utils";
+import { useAppLogoURL } from "../../../customHooks/useAppLogoURL";
 
 interface HeaderProps {
   setTutorialOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -31,13 +35,29 @@ export const Header = ({ setTutorialOpen }: HeaderProps) => {
   const { authenticationEnabled } = useAuthentication();
   const { workspaceId } = useWorkspaceId();
 
-  const openTutorial = useCallback(() => setTutorialOpen && setTutorialOpen(true), [setTutorialOpen]);
+  const lsBriefDescription = useAppSelector(
+    (state) =>
+      state.customizableUIText.texts[
+        CustomizableUITextEnum.LS_BRIEF_DESCRIPTION
+      ]
+  );
+
+  const openTutorial = useCallback(
+    () => setTutorialOpen && setTutorialOpen(true),
+    [setTutorialOpen]
+  );
+
+  const appLogoURL = useAppLogoURL();
 
   return (
     <>
       <DrawerHeader>
         <h2 className={classes.sleuth_title}>
-          <img src={sleuth_logo} className={classes.sleuthlogo} alt="Sleuth Logo" />
+          <img
+            src={appLogoURL}
+            className={classes.sleuthlogo}
+            alt="Sleuth Logo"
+          />
           <img
             id="workspace-tutorial-image"
             onClick={openTutorial}
@@ -48,17 +68,22 @@ export const Header = ({ setTutorialOpen }: HeaderProps) => {
         </h2>
         {authenticationEnabled ? (
           <Tooltip title={LOGOUT_TOOLTIP_MSG} placement="right">
-            <img onClick={logout} className={classes.logout} src={logout_icon} alt="logout" />
+            <img
+              onClick={logout}
+              className={classes.logout}
+              src={logout_icon}
+              alt="logout"
+            />
           </Tooltip>
         ) : null}
       </DrawerHeader>
 
-      <p className={classes.sleuth_desc}>{LABEL_SLEUTH_SHORT_DESC}</p>
+      <p className={classes.sleuth_desc}>{lsBriefDescription}</p>
 
       <Divider />
 
       <DrawerHeader style={{ padding: "12px 16px" }}>
-        <Stack direction="column" className={classes.account_info} flexGrow={1} >
+        <Stack direction="column" className={classes.account_info} flexGrow={1}>
           {authenticationEnabled ? (
             <div>
               <label>User ID</label>
@@ -74,7 +99,10 @@ export const Header = ({ setTutorialOpen }: HeaderProps) => {
                 <b>{workspaceId}</b>
               </p>
             </div>
-            <Tooltip title={GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG} placement="right">
+            <Tooltip
+              title={GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG}
+              placement="right"
+            >
               <img
                 onClick={() => {
                   navigate(WORKSPACE_CONFIG_PATH);

@@ -17,6 +17,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { workspacesReducer } from "../modules/Workspace-config/workspaceConfigSlice";
 import { authenticateReducer } from "../modules/Login/LoginSlice";
 import { featureFlagsReducer } from "../featureFlags/featureFlagsSlice";
+import {customizableUITextReducer} from "../customizableUIText/customizableUITextSlice"
 import { errorReducer } from "../error/errorSlice";
 import { errorMiddleware } from "../error/errorMiddleware";
 import workspaceReducer  from "../modules/Workplace/redux";
@@ -28,6 +29,7 @@ export const setupStore = (preloadedState?: any) =>
       workspaces: workspacesReducer,
       workspace: workspaceReducer,
       featureFlags: featureFlagsReducer,
+      customizableUIText: customizableUITextReducer,
       error: errorReducer,
     },
     preloadedState,

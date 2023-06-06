@@ -13,10 +13,11 @@
 #  limitations under the License.
 #
 import functools
+import json
 import logging
 import re
 from typing import List, Mapping, Sequence
-
+import os
 from flask import current_app, request, jsonify
 
 from label_sleuth.analysis_utils.analyze_tokens import ngrams_by_info_gain
@@ -25,6 +26,7 @@ from label_sleuth.data_access.data_access_api import get_document_uri
 from label_sleuth.models.core.languages import Languages
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Iteration, IterationStatus
 from label_sleuth.orchestrator.orchestrator_api import TRAIN_COUNTS_STR_KEY
+from label_sleuth.utils import make_error
 
 
 def validate_workspace_id(function):
@@ -196,3 +198,39 @@ def get_text_snippet(text, query_string):
 
 def get_natural_sort_key(text):
     return [int(x) if x.isdigit() else x for x in re.split(r'(\d+)', text)]
+
+def get_default_customizable_UI_text():
+    '''
+    Returns a dict with the values of the UI customizable components located in ./ui_defaults.json
+    '''
+    with open(os.path.join(os.path.dirname(__file__), "ui_defaults.json"), "rb") as f:
+        return json.load(f)
+    
+
+def get_customizable_UI_text(path: str = None):
+    '''
+    Returns a dict with the values of the UI customizable components, such as texts, urls and app logo.
+    If path is None, the defaults are returned. If path is not None, the values in the file are 
+    returned. If some values are not present in the provided files, the default values are used.
+    '''
+    try:
+        default_customizable_UI_text = get_default_customizable_UI_text()
+        if path is not None:
+            with open(path, "rb") as f:
+                customizable_UI_text = json.load(f)
+                wrong_keys = [k for k in customizable_UI_text.keys() if k not in default_customizable_UI_text.keys()]
+                if len(wrong_keys) > 0:
+                    make_error({
+                        "type": "wrong_customizable_keys",
+                        "title": f"The following keys in the provided customizable UI elements are not supported: {wrong_keys}"
+                    }, 404)
+                merged = { dk: dv if dk not in customizable_UI_text else customizable_UI_text[dk] 
+                            for (dk,dv) in default_customizable_UI_text.items()}
+                return merged
+        else:
+            return default_customizable_UI_text
+    except FileNotFoundError as e:
+        return make_error({
+            "type": "customizable_ui_text_file_not_found",
+            "title": "The json file with the UI customizable text was not found.", 
+        }, 404)

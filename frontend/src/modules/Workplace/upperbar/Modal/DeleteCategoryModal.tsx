@@ -56,7 +56,7 @@ export const DeleteCategoryModal = ({ open, setOpen }: DeleteCategoryModalProps)
         <DialogContent>
           <DialogContentText>
             This action will permanently delete the category along with all the labels and models associated with it.
-            The deletion cannot be reversed
+            The deletion cannot be reversed.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
