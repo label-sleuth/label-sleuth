@@ -72,7 +72,7 @@ const ControlledSelect = ({
         maxWidth: `${maxOptionTitlePx}px`,
         minWidth: itemMinWidth || "300px",
         maxHeight:
-          itemHeightCount !== null ? itemHeightCount * ITEM_HEIGHT : "none",
+          itemHeightCount !== null ? itemHeightCount * ITEM_HEIGHT : "90vh",
       },
     },
   };
