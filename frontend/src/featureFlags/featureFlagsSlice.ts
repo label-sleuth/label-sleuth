@@ -25,6 +25,7 @@ const initialState: FeatureFlagsSliceState = {
   sidebarPanelElementsPerPage: -1,
   mainPanelElementsPerPage: -1,
   rightToLeft: false,
+  maxDatasetLength: -1,
 };
 
 export const fetchFeatureFlags = createAsyncThunk("workspaces/fetchFeatureFlags", async () => {
@@ -52,6 +53,7 @@ export const featureFlagsSlice = createSlice({
           mainPanelElementsPerPage: featureFlags["main_panel_elements_per_page"],
           sidebarPanelElementsPerPage: featureFlags["sidebar_panel_elements_per_page"],
           rightToLeft: featureFlags["right_to_left"],
+          maxDatasetLength: featureFlags["max_dataset_length"]
         };
       })
       .addCase(fetchFeatureFlags.rejected, (state, { error }) => {

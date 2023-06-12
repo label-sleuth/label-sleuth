@@ -49,6 +49,7 @@ class Configuration:
     main_panel_elements_per_page: int = 500
     sidebar_panel_elements_per_page: int = 50
     snippet_max_token_length: int = 100
+    max_dataset_length: int = 3000000
     users: List[dict] = field(default_factory=list)
 
 

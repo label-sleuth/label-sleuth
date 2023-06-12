@@ -54,6 +54,7 @@ class TestAppIntegration(unittest.TestCase):
         category_name = "my_category"
         category_description = "my_category_description"
         data = {}
+
         data['file'] = (io.BytesIO(
             b'document_id,text\n'
             b'document1,this is the first text element of document one\n'
@@ -65,11 +66,21 @@ class TestAppIntegration(unittest.TestCase):
                         'my_file.csv')
         res = self.client.post(f"/datasets/{dataset_name}/add_documents", data=data, headers=HEADERS,
                                content_type='multipart/form-data')
-
         self.assertEqual(200, res.status_code, msg="Failed to upload a new dataset")
         self.assertEqual(
             {'dataset_name': 'my_test_dataset', 'num_docs': 3, 'num_sentences': 6, 'workspaces_to_update': []},
             res.get_json(), msg="diff in upload dataset response")
+        
+        data['file'] = (io.BytesIO(
+            b'document_id,text\n'
+            b'document3,"adding this text element makes the request to fail because of the row count limit of 7"\n'),
+                        'my_file.csv')
+        res = self.client.post(f"/datasets/{dataset_name}/add_documents", data=data, headers=HEADERS,
+                               content_type='multipart/form-data')
+        
+        self.assertEqual(409, res.status_code, msg="Failed to upload a new dataset")
+
+
         res = self.client.post("/workspace",
                                data='{{"workspace_id":"{}","dataset_id":"{}"}}'.format(workspace_name, dataset_name),
                                headers=HEADERS)

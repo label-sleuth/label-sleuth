@@ -34,6 +34,8 @@ import React from "react";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { stringifyList } from "../utils/utils";
 import { DropdownOption } from "../components/dropdown/Dropdown";
+import { setError } from "../error/errorSlice";
+import { Error } from "../global";
 
 interface UseLoadDocProps {
   toastId: string;
@@ -41,6 +43,9 @@ interface UseLoadDocProps {
 
 export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
   const datasets = useAppSelector((state) => state.workspaces.datasets);
+  const maxDatasetLength = useAppSelector(
+    (state) => state.featureFlags.maxDatasetLength
+  );
 
   const { notify, updateNotification, closeNotification } = useNotification();
   const dispatch = useAppDispatch();
@@ -59,7 +64,6 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
 
   const handleInputChange = (e: React.FormEvent, newVal: string | null) => {
     const val = (e.target as HTMLInputElement)?.value || newVal || "";
-    console.log(`val: ${val}`);
     let error = "";
     if (val && val.length > 30) {
       error = WRONG_INPUT_NAME_LENGTH(DATASET_NAME_MAX_CHARS);
@@ -82,7 +86,7 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     setFile(files !== null ? files[0] : null);
   };
 
-  const handleLoadDoc = () => {
+  const handleLoadDoc = async () => {
     const datasetNameProvided = !!datasetName;
     const datasetFileProvided = !!file;
 
@@ -100,6 +104,24 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
         type: toast.TYPE.INFO,
       });
       return;
+    }
+
+    const csvContent = await file.text();
+    const matches = csvContent.match(
+      /(?:"(?:[^"]|"")*"|[^,\n]*)(?:,(?:"(?:[^"]|"")*"|[^,\n]*))*\n/g
+    );
+    
+    if (matches !== null) {
+      const rowsn = matches.length;
+      if (rowsn > maxDatasetLength) {
+        const error: Error = {
+          type: "max_dataset_row_number",
+          title: `The uploaded csv file exceeds the row count limit of ${maxDatasetLength} by ${rowsn - maxDatasetLength} rows.`
+
+        };
+        dispatch(setError(error));
+        return;
+      }
     }
 
     let formData = new FormData();

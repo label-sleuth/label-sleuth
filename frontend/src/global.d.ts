@@ -146,6 +146,7 @@ interface FeatureFlagsSliceState {
   sidebarPanelElementsPerPage: number;
   mainPanelElementsPerPage: number;
   rightToLeft: boolean;
+  maxDatasetLength: number;
 }
 
 interface PaginationParam {

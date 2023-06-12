@@ -11,5 +11,6 @@
     "login_required": false,
     "main_panel_elements_per_page": 500,
     "sidebar_panel_elements_per_page": 50,
-    "snippet_max_token_length": 100
+    "snippet_max_token_length": 100,
+    "max_dataset_length": 6
 }
