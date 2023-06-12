@@ -39,7 +39,7 @@ from label_sleuth.active_learning.core.active_learning_factory import ActiveLear
 from label_sleuth.config import Configuration
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, DisplayFields, Label
-from label_sleuth.data_access.data_access_api import AlreadyExistsException, BadDocumentNamesException, \
+from label_sleuth.data_access.data_access_api import AlreadyExistsException, BadDocumentNamesException, DatasetRowCountLimitExceededException, \
     DocumentNameTooLongException, DocumentNameEmptyException, NoTextColumnException
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_factory import ModelFactory
@@ -238,6 +238,11 @@ def add_documents(dataset_name):
             'type': 'missing_text_column',
             'title': "Uploaded file is missing a text column."
         })
+    except DatasetRowCountLimitExceededException as e:
+        return make_error({
+                "type": "max_dataset_row_number",
+                "title": f"The uploaded csv file exceeds the row count limit of {curr_app.config['CONFIGURATION'].max_dataset_length} by {e.exceeded_by} rows."
+            }, 409)
     except Exception:
         return make_error({
             "type": "document_upload_fail", 
@@ -1365,7 +1370,8 @@ def get_feature_flags():
         "login_required": curr_app.config['CONFIGURATION'].login_required,
         "main_panel_elements_per_page": curr_app.config['CONFIGURATION'].main_panel_elements_per_page,
         "sidebar_panel_elements_per_page": curr_app.config['CONFIGURATION'].sidebar_panel_elements_per_page,
-        "right_to_left": curr_app.config['CONFIGURATION'].language.right_to_left
+        "right_to_left": curr_app.config['CONFIGURATION'].language.right_to_left,
+        "max_dataset_length": curr_app.config['CONFIGURATION'].max_dataset_length
     }
     logging.debug(f'Feature flags are: {res}')
     return jsonify(res) 

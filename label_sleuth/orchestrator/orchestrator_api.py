@@ -33,7 +33,7 @@ from label_sleuth.analysis_utils.labeling_reports import get_suspected_labeling_
     get_disagreements_using_cross_validation
 from label_sleuth.config import Configuration
 from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE
-from label_sleuth.data_access.data_access_api import DataAccessApi
+from label_sleuth.data_access.data_access_api import DataAccessApi, DatasetRowCountLimitExceededException
 from label_sleuth.data_access.label_import_utils import process_labels_dataframe
 from label_sleuth.data_access.processors.csv_processor import CsvFileProcessor
 from label_sleuth.definitions import ACTIVE_LEARNING_SUGGESTION_COUNT
@@ -48,6 +48,7 @@ from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Cate
     ModelInfo, OrchestratorStateApi
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
+from label_sleuth.utils import make_error
 
 # constants
 NUMBER_OF_MODELS_TO_KEEP = 2
@@ -1052,6 +1053,14 @@ class OrchestratorApi:
         global new_data_infer_thread_pool
         logging.info(f"adding documents to dataset '{dataset_name}'")
         documents = CsvFileProcessor(dataset_name, temp_file_path).build_documents()
+
+        max_dataset_length = self.config.max_dataset_length
+        to_upload_text_elements_count = sum([len(doc.text_elements) for doc in documents])
+        dataset_elements_count = self.data_access.get_dataset_elements_count(dataset_name)
+
+        if (to_upload_text_elements_count + dataset_elements_count > max_dataset_length):
+            raise DatasetRowCountLimitExceededException(exceeded_by=(to_upload_text_elements_count + dataset_elements_count) - max_dataset_length)
+
         document_statistics = self.data_access.add_documents(dataset_name, documents)
         workspaces_to_update = []
         total_infer_jobs = 0

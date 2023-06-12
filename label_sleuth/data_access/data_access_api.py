@@ -50,6 +50,12 @@ class NoTextColumnException(Exception):
     def __init__(self, message):
         self.message = message
 
+
+class DatasetRowCountLimitExceededException(Exception):
+    def __init__(self, exceeded_by):
+        self.exceeded_by = exceeded_by
+
+
 @dataclass
 class DocumentStatistics:
     documents_loaded: int
@@ -318,5 +324,12 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
     def preload_dataset(self, dataset_name):
         """
         Preload dataset to memory
+        :param dataset_name:
+        """
+
+    @abc.abstractmethod
+    def get_dataset_elements_count(self, dataset_name: str):
+        """
+        Get the number of text elements of a dataset
         :param dataset_name:
         """

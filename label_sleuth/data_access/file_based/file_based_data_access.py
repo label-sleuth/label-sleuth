@@ -492,6 +492,14 @@ class FileBasedDataAccess(DataAccessApi):
         if dataset_name in self.ds_in_memory:
             del self.ds_in_memory[dataset_name]
 
+    def get_dataset_elements_count(self, dataset_name: str):
+        if self._dataset_exists(dataset_name):
+            self.ds_in_memory[dataset_name] = self._get_ds_in_memory(dataset_name)
+        if dataset_name in self.ds_in_memory:
+            return self.ds_in_memory[dataset_name].shape[0]
+        else:
+            return 0
+
     def _get_lock_object_for_workspace(self, workspace_id: str):
         lock_object = self.workspace_to_labels_lock_objects[workspace_id]
         return lock_object
