@@ -23,17 +23,18 @@ import ButtonIBM from "../../components/buttons/ButtonIBM";
 import { getAuthenticated, clearState } from "./LoginSlice";
 import { WORKSPACE_CONFIG_PATH } from "../../config";
 import { useAppDispatch, useAppSelector } from "../../customHooks/useRedux";
-import * as React from "react";
 
 import classes from "./login.module.css";
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css";
-import sleuth_logo from "../../assets/sleuth_logo_white.svg";
 import { KeyboardKeysEnum } from "../../const";
+import { useAppLogoURL } from "../../customHooks/useAppLogoURL";
 
 const LoginForm: React.FC = () => {
   let navigate = useNavigate();
   const dispatch = useAppDispatch();
   const token = useAppSelector((state) => state.authenticate.token);
+
+  const appLogoURL = useAppLogoURL();
 
   useEffect(() => {
     if (token) {
@@ -56,16 +57,20 @@ const LoginForm: React.FC = () => {
     dispatch(getAuthenticated({ username, password }));
   };
 
-  const onKeyDown = (event: React.KeyboardEvent) : void => {
+  const onKeyDown = (event: React.KeyboardEvent): void => {
     if (event.key === KeyboardKeysEnum.ENTER) {
       handleLogin();
     }
-  }
+  };
 
   return (
     <Box>
       <div className={classes.sleuth_header}>
-        <img alt="existing workspace" src={sleuth_logo} className={classes.sleuthlogo} />
+        <img
+          alt="existing workspace"
+          src={appLogoURL}
+          className={classes.sleuthlogo}
+        />
       </div>
       <Box
         sx={{
@@ -84,8 +89,20 @@ const LoginForm: React.FC = () => {
         }}
         onKeyDown={onKeyDown}
       >
-        <FormControl variant="standard" sx={{ m: 1, minWidth: 350, padding: 0, margin: 0 }}>
-          <FormLabel sx={{ color: "#393939", fontWeight: "600", fontSize: "1.5rem", padding: "25px" }}>Login</FormLabel>
+        <FormControl
+          variant="standard"
+          sx={{ m: 1, minWidth: 350, padding: 0, margin: 0 }}
+        >
+          <FormLabel
+            sx={{
+              color: "#393939",
+              fontWeight: "600",
+              fontSize: "1.5rem",
+              padding: "25px",
+            }}
+          >
+            Login
+          </FormLabel>
           <FormControl
             sx={{
               paddingLeft: "25px",
@@ -142,8 +159,19 @@ const LoginForm: React.FC = () => {
               placeholder="***"
             />
           </FormControl>
-          <div style={{ width: "100%", display: "flex", justifyContent: "right", marginTop: "20px" }}>
-            <ButtonIBM handleClick={handleLogin} text="Log In" className={buttonIBMClasses["button-ibm"]} />
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "right",
+              marginTop: "20px",
+            }}
+          >
+            <ButtonIBM
+              handleClick={handleLogin}
+              text="Log In"
+              className={buttonIBMClasses["button-ibm"]}
+            />
           </div>
         </FormControl>
       </Box>

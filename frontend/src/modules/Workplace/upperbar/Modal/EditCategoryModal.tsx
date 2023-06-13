@@ -23,7 +23,6 @@ import {
   curCategoryNameSelector,
   editCategory,
 } from "../../redux";
-import { CREATE_NEW_CATEGORY_HELPER_MSG } from "../../../../const";
 import { useNotification } from "../../../../utils/notification";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
@@ -92,7 +91,6 @@ export const EditCategoryModal = ({
       setCategoryNameError={setCategoryNameError}
       open={open}
       dialogTitle={"Edit category"}
-      helperText={CREATE_NEW_CATEGORY_HELPER_MSG}
       onSubmit={onSubmit}
       onModalClose={onModalClose}
       submitButtonLabel={"Edit"}

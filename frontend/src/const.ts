@@ -64,16 +64,14 @@ export const PRECISION_RESULT_MSG = (
 export const NO_MODEL_AVAILABLE_MSG = "not available yet";
 export const CREATE_NEW_CATEGORY_MODAL_MSG = "Create new category";
 export const CREATE_NEW_CATEGORY_PLACEHOLDER_MSG = "Category name";
-export const CREATE_NEW_CATEGORY_HELPER_MSG =
+export const CATEGORY_MODAL_HELPER_MSG =
   "Please select a meaningful name for your category.";
 export const UPLOAD_NEW_DATASET_MSG = "Upload new data";
 export const UPLOAD_NEW_DATASET_NAME_PLACEHOLER_MSG = "Choose or set name";
-export const UPLOAD_NEW_DATASET_FILE_HELPER_MSG = `The csv file must have a header line (of "text" and optional "document_id")`;
 export const UPLOAD_DOC_WAIT_MESSAGE = `Please wait while your documents are uploaded...`;
 export const UPLOAD_LABELS_WAIT_MESSAGE = `Please wait while your labels are uploaded...`;
 export const NEW_WORKSPACE_NAME_MSG = "Name your new workspace";
 export const NEW_WORKSPACE_NAME_PLACEHOLER_MSG = "e.g., my_new_workspace";
-export const LABEL_SLEUTH_SHORT_DESC = "Quickly create a text classifier";
 export const ALL_POSITIVE_LABELS_TOOLTIP_MSG = "All positive labels";
 export const DOC_ALREADY_EXISTS = "Document already exists";
 export const SERVER_ERROR_500 =
@@ -160,3 +158,18 @@ export enum LabelActionsEnum {
 }
 
 export const BOMCharacter = "\uFEFF";
+
+export enum CustomizableUITextEnum {
+  CATEGORY_DESCRIPTION_PLACEHOLDER = "category_description_placeholder",
+  CATEGORY_MODAL_HELPER_TEXT = "category_modal_helper_text",
+  SLACK_LINK_URL = "slack_link_url",
+  SLACK_LINK_TITLE = "slack_link_title",
+  GITHUB_LINK_URL = "github_link_url",
+  GITHUB_LINK_TITLE = "github_link_title",
+  WEBPAGE_LINK_URL = "webpage_link_url",
+  WEBPAGE_LINK_TITLE = "webpage_link_title",
+  LS_BRIEF_DESCRIPTION = "ls_brief_description",
+  APP_LOGO_PATH = "app_logo_path",
+  DOCUMENT_UPLOAD_HELPER_TEXT = "document_upload_helper_text",
+  SYSTEM_UNAVAILABLE = "system_unavailable"
+}

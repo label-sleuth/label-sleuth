@@ -97,6 +97,9 @@ if __name__ == '__main__':
     config_path = os.path.join(PROJECT_ROOT, "config.json")
     parser.add_argument('--config_path', type=str, help=f'Config file path. Default is {config_path}',
                         default=config_path)
+    
+    parser.add_argument('--customizable_ui_text_path', type=str, help=f'Customizable UI text path.',
+                        default=None)
 
     parser.add_argument('--num_serving_threads', type=int, help=f'Number of threads to use in waitress',
                         default=10)
@@ -132,7 +135,7 @@ if __name__ == '__main__':
     logging.info(f"Starting label-sleuth using config file {args.config_path}. Output directory is {args.output_path}")
     logging.info("(Starting the service for the first time may take a little longer)")
     curr_app = app.create_app(config=load_config(args.config_path, vars(args)),
-                              output_dir=args.output_path)
+                              output_dir=args.output_path, customizable_ui_text_path=args.customizable_ui_text_path)
     if args.load_sample_corpus:
         load_sample_corpus(curr_app, args.load_sample_corpus)
 

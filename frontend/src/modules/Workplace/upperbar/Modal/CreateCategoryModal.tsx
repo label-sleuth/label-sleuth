@@ -18,7 +18,6 @@ import { useAppDispatch } from "../../../../customHooks/useRedux";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { createCategoryOnServer } from "../../redux";
 import {
-  CREATE_NEW_CATEGORY_HELPER_MSG,
   CREATE_NEW_CATEGORY_MODAL_MSG,
 } from "../../../../const";
 import { useNotification } from "../../../../utils/notification";
@@ -75,7 +74,6 @@ export const CreateCategoryModal = ({
       setCategoryNameError={setCategoryNameError}
       open={open}
       dialogTitle={CREATE_NEW_CATEGORY_MODAL_MSG}
-      helperText={CREATE_NEW_CATEGORY_HELPER_MSG}
       onSubmit={onSubmit}
       onModalClose={onModalClose}
       submitButtonLabel={"Create"}

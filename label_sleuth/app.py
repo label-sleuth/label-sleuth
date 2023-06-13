@@ -23,6 +23,7 @@ import pkg_resources
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
 from .utils import make_error
+import json
 
 import dacite
 import pandas as pd
@@ -32,7 +33,7 @@ from flask_cors import CORS, cross_origin
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 from label_sleuth.app_utils import elements_back_to_front, extract_iteration_information_list, \
-    extract_enriched_ngrams_and_weights_list, get_element, get_natural_sort_key, validate_category_id, \
+    extract_enriched_ngrams_and_weights_list, get_customizable_UI_text, get_element, get_natural_sort_key, validate_category_id, \
     validate_workspace_id
 from label_sleuth.authentication import authenticate_response, login_if_required, verify_password
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
@@ -70,13 +71,24 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
 
-def create_app(config: Configuration, output_dir, register_main_blueprint=True) -> LabelSleuthApp:
+def create_app(
+            config: Configuration, 
+            output_dir, 
+            register_main_blueprint=True, 
+            customizable_ui_text_path : str = None,
+            app_root_path : str = None
+        ) -> LabelSleuthApp:
+
     os.makedirs(output_dir, exist_ok=True)
     app = Flask(__name__, static_folder='./build')
     CORS(app)
     app.config['CORS_HEADERS'] = 'Content-Type'
     app.config["CONFIGURATION"] = config
     app.config["output_dir"] = output_dir
+    app.config['customizable_ui_text_path'] = customizable_ui_text_path
+    app.config['app_logo_path'] = get_customizable_UI_text(customizable_ui_text_path)['app_logo_path']
+    app.config['app_root_path'] = app_root_path
+
     app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.config["CONFIGURATION"].users}
     app.tokens = [user.token for user in app.users.values()]
     sentence_embedding_service = \
@@ -119,6 +131,12 @@ def start_server(app, host, port, num_serving_threads):
 def serve(path):
     if path != "" and os.path.exists(curr_app.static_folder + '/' + path):
         return send_from_directory(curr_app.static_folder, path)
+    
+    app_logo_path = curr_app.config['app_logo_path']
+    if path == app_logo_path:
+        if curr_app.config['app_root_path']:
+            app_logo_path = os.path.join(curr_app.config['app_root_path'],app_logo_path)
+        return send_file(app_logo_path)
 
     return send_from_directory(curr_app.static_folder, 'index.html')
 
@@ -1375,7 +1393,15 @@ def get_feature_flags():
     }
     logging.debug(f'Feature flags are: {res}')
     return jsonify(res) 
-    
+
+
+@main_blueprint.route("/customizable_ui_text", methods=['GET'])
+def get_custom_ui_text():
+    """Returns the value of the feature flags
+
+    """
+    return get_customizable_UI_text(curr_app.config['customizable_ui_text_path'])
+        
 
 @main_blueprint.route("/version", methods=['GET'])
 def get_git_describe():
