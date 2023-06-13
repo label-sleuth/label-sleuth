@@ -201,10 +201,22 @@ def get_natural_sort_key(text):
 
 def get_default_customizable_UI_text():
     '''
-    Returns a dict with the values of the UI customizable components located in ./ui_defaults.json
+    Returns a dict with the values of the UI customizable elements
     '''
-    with open(os.path.join(os.path.dirname(__file__), "ui_defaults.json"), "rb") as f:
-        return json.load(f)
+    return {
+        "category_description_placeholder": "",
+        "category_modal_helper_text": "Please select a meaningful name for your category.",
+        "slack_link_url": "https://join.slack.com/t/labelsleuth/shared_invite/zt-1j5tpz1jl-W~UaNEKmK0RtzK~lI3Wkxg",
+        "slack_link_title": "Join Slack",
+        "github_link_url": "https://github.com/label-sleuth/label-sleuth",
+        "github_link_title": "Github",
+        "webpage_link_url": "https://www.label-sleuth.org/docs/index.html",
+        "webpage_link_title": "Documentation",
+        "ls_brief_description": "Quickly create a text classifier",
+        "app_logo_path": "app_logo/sleuth_logo_white.svg",
+        "document_upload_helper_text": "The csv file must have a header line (of \"text\" and optional \"document_id\")",
+        "system_unavailable": "The system is down. Please try to re-run or log in again (if applicable)."
+    }
     
 
 def get_customizable_UI_text(path: str = None):
@@ -213,24 +225,26 @@ def get_customizable_UI_text(path: str = None):
     If path is None, the defaults are returned. If path is not None, the values in the file are 
     returned. If some values are not present in the provided files, the default values are used.
     '''
-    try:
-        default_customizable_UI_text = get_default_customizable_UI_text()
-        if path is not None:
+    default_customizable_UI_text = get_default_customizable_UI_text()
+    if path is not None:
+        try:
             with open(path, "rb") as f:
                 customizable_UI_text = json.load(f)
-                wrong_keys = [k for k in customizable_UI_text.keys() if k not in default_customizable_UI_text.keys()]
-                if len(wrong_keys) > 0:
-                    make_error({
-                        "type": "wrong_customizable_keys",
-                        "title": f"The following keys in the provided customizable UI elements are not supported: {wrong_keys}"
-                    }, 404)
-                merged = { dk: dv if dk not in customizable_UI_text else customizable_UI_text[dk] 
-                            for (dk,dv) in default_customizable_UI_text.items()}
-                return merged
-        else:
-            return default_customizable_UI_text
-    except FileNotFoundError as e:
-        return make_error({
-            "type": "customizable_ui_text_file_not_found",
-            "title": "The json file with the UI customizable text was not found.", 
-        }, 404)
+        except FileNotFoundError as e:
+            logging.error(f"The custom UI file was not found at {path}")
+            return make_error({
+                "type": "customizable_ui_text_file_not_found",
+                "title": "The json file with the UI customizable elements was not found.", 
+            }, 404)
+        wrong_keys = [k for k in customizable_UI_text.keys() if k not in default_customizable_UI_text.keys()]
+        if len(wrong_keys) > 0:
+            return make_error({
+                "type": "wrong_customizable_keys",
+                "title": f"The following keys in the provided customizable UI elements are not supported: {', '.join(wrong_keys)}."
+            }, 404)
+        merged = { dk: dv if dk not in customizable_UI_text else customizable_UI_text[dk] 
+                    for (dk,dv) in default_customizable_UI_text.items()}
+        return merged
+    else:
+        return default_customizable_UI_text
+    
