@@ -1,3 +1,4 @@
 include requirements.txt
 include label_sleuth/config.json
 recursive-include label_sleuth/build/ *
+recursive-include label_sleuth/assets/ *
