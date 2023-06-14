@@ -1,0 +1,14 @@
+{
+    "category_description_placeholder": "",
+    "category_modal_helper_text": "Please select a meaningful name for your category.",
+    "slack_link_url": "https://join.slack.com/t/labelsleuth/shared_invite/zt-1j5tpz1jl-W~UaNEKmK0RtzK~lI3Wkxg",
+    "slack_link_title": "Join Slack",
+    "github_link_url": "https://github.com/label-sleuth/label-sleuth",
+    "github_link_title": "Github",
+    "webpage_link_url": "https://www.label-sleuth.org/docs/index.html",
+    "webpage_link_title": "Documentation",
+    "ls_brief_description": "Quickly create a text classifier",
+    "app_logo_path": "assets/sleuth_logo_white.svg",
+    "document_upload_helper_text": "The csv file must have a header line (of \"text\" and optional \"document_id\")",
+    "system_unavailable": "The system is down. Please try to re-run or log in again (if applicable)."
+}

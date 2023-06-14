@@ -59,6 +59,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ],
-    package_data={"": ["LICENSE", "config.json", "requirements.txt"] + build_files+assets},
+    package_data={"": ["LICENSE", "config.json", "requirements.txt", "ui_defaults.json"] + build_files + assets},
     include_package_data=True
 )
