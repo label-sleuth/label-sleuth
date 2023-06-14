@@ -18,6 +18,7 @@ import os
 import time
 import tempfile
 import unittest
+import json
 from label_sleuth import app, config, app_utils
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus
 from unittest import mock
@@ -52,23 +53,26 @@ class TestAppIntegration(unittest.TestCase):
 
     def test_full_flow(self):
 
+        ui_defaults = app_utils.get_default_customizable_UI_text()
         def raise_exception(a, b):
-            # to make getting the customizable text json to fail
+            # to make getting the customizable text json to fail and the defaults to work
             raise FileNotFoundError()
-        with mock.patch('builtins.open', raise_exception):
-            res = self.client.get("/customizable_ui_text", headers=HEADERS)
+        
+        # patching get_default_customizable_UI_text because it uses open() too
+        with mock.patch('label_sleuth.app_utils.get_default_customizable_UI_text', side_effect=lambda: ui_defaults):
+            with mock.patch('builtins.open', raise_exception):
+                res = self.client.get("/customizable_ui_text", headers=HEADERS) 
         self.assertEqual(404, res.status_code)
         self.assertEqual(res.get_json()["title"], "The json file with the UI customizable elements was not found.")
 
         # use an incorrect key
-        with mock.patch('builtins.open', mock.mock_open(read_data='{"this_key_doesnt_exist": "hello tests", "this_key_doesnt_exist_either": "hello tests"}')):
-            res = self.client.get("/customizable_ui_text", headers=HEADERS)
+        with mock.patch('label_sleuth.app_utils.get_default_customizable_UI_text', side_effect=lambda: ui_defaults):
+            with mock.patch('builtins.open', mock.mock_open(read_data='{"this_key_doesnt_exist": "hello tests", "this_key_doesnt_exist_either": "hello tests"}')):
+                res = self.client.get("/customizable_ui_text", headers=HEADERS)
         self.assertEqual(404, res.status_code)
-        print(res.get_data())
         self.assertEqual(res.get_json()["title"], "The following keys in the provided customizable UI elements are not supported: this_key_doesnt_exist, this_key_doesnt_exist_either.")
 
         res = self.client.get("/customizable_ui_text", headers=HEADERS)
-        print(res.get_json())
         correct_body = {
             "category_description_placeholder": "",
             "category_modal_helper_text": "Please select a meaningful name for your category.",
@@ -79,13 +83,13 @@ class TestAppIntegration(unittest.TestCase):
             "webpage_link_url": "https://www.label-sleuth.org/docs/index.html",
             "webpage_link_title": "Documentation",
             "ls_brief_description": "Quickly create a text classifier",
-            "app_logo_path": "app_logo/sleuth_logo_white.svg",
+            "app_logo_path": "assets/sleuth_logo_white.svg",
             "document_upload_helper_text": "The csv file must have a header line (of \"text\" and optional \"document_id\")",
             "system_unavailable": "This is customized"
         }
         self.assertEqual(res.get_json(), correct_body)
 
-        res = self.client.get("/app_logo/sleuth_logo_white.svg")
+        res = self.client.get("/assets/sleuth_logo_white.svg")
         self.assertEqual("image/svg+xml; charset=utf-8", res.content_type, msg="Failed to get app logo, request is returning index.html")
 
         self.maxDiff = None
