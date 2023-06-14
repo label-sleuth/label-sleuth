@@ -28,6 +28,7 @@ def package_files(prefix, directory):
 
 
 build_files = package_files("label_sleuth", "build")
+assets = package_files("label_sleuth", "assets")
 
 requirements_file = 'requirements.txt'
 
@@ -58,6 +59,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ],
-    package_data={"": ["LICENSE", "config.json", "requirements.txt"] + build_files},
+    package_data={"": ["LICENSE", "config.json", "requirements.txt"] + build_files+assets},
     include_package_data=True
 )
