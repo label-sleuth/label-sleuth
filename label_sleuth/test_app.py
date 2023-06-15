@@ -386,9 +386,9 @@ class TestAppIntegration(unittest.TestCase):
             res = self.client.get(f"/workspace/{workspace_name}/iterations?category_id={category_id}",
                                   headers=HEADERS)
             response = res.get_json()
-            print(response)
+
             if res.status_code != 200 or (len(response["iterations"]) == num_models
-                                          and response['iterations'][0]['iteration_status'] == IterationStatus.READY.name):
+                                          and response['iterations'][num_models-1]['iteration_status'] == IterationStatus.READY.name):
                 break
             time.sleep(0.1)
             waiting_count += 1
