@@ -26,8 +26,8 @@ import { useAppDispatch, useAppSelector } from "../../customHooks/useRedux";
 
 import classes from "./login.module.css";
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css";
-import { KeyboardKeysEnum } from "../../const";
 import { useAppLogoURL } from "../../customHooks/useAppLogoURL";
+import { onEnter } from "../../utils/utils";
 
 const LoginForm: React.FC = () => {
   let navigate = useNavigate();
@@ -57,12 +57,6 @@ const LoginForm: React.FC = () => {
     dispatch(getAuthenticated({ username, password }));
   };
 
-  const onKeyDown = (event: React.KeyboardEvent): void => {
-    if (event.key === KeyboardKeysEnum.ENTER) {
-      handleLogin();
-    }
-  };
-
   return (
     <Box>
       <div className={classes.sleuth_header}>
@@ -87,7 +81,7 @@ const LoginForm: React.FC = () => {
           borderRight: "solid 1px #b8b8b8",
           borderBottom: "solid 1px #b8b8b8",
         }}
-        onKeyDown={onKeyDown}
+        onKeyDown={e => onEnter(e, handleLogin)}
       >
         <FormControl
           variant="standard"
@@ -126,7 +120,6 @@ const LoginForm: React.FC = () => {
                 },
               }}
               InputLabelProps={{ shrink: true }}
-              placeholder="sleuth@ibm.com"
               autoFocus
             />
           </FormControl>
@@ -156,7 +149,6 @@ const LoginForm: React.FC = () => {
                 },
               }}
               InputLabelProps={{ shrink: true }}
-              placeholder="***"
             />
           </FormControl>
           <div

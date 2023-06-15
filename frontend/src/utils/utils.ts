@@ -15,6 +15,7 @@
 
 import {
   BOMCharacter,
+  KeyboardKeysEnum,
   LabelActionsEnum,
   LabelTypesEnum,
   PanelIdsEnum,
@@ -341,3 +342,12 @@ export const downloadFile = (url: string, fileName: string) => {
 
 export const parseErrorId = (errorId: string | undefined) : string =>
   errorId ? errorId.slice(0, 8) : ""
+
+
+ export const onEnter = (event: React.KeyboardEvent, f: (event: React.KeyboardEvent) => void): void => {
+  if (event.key === KeyboardKeysEnum.ENTER) {
+    event.preventDefault()
+    event.stopPropagation();
+    f(event);
+  }
+};

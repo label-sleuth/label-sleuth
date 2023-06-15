@@ -32,6 +32,7 @@ import {
 } from "@mui/material";
 import { ChangeEvent } from "react";
 import { useAppSelector } from "../../../../customHooks/useRedux";
+import { onEnter } from "../../../../utils/utils";
 
 interface EditOrCreateCategoryModalProps {
   categoryName: string;
@@ -132,6 +133,9 @@ export const EditOrCreateCategoryModal = ({
             autoFocus
             required
             value={categoryName}
+            onKeyDown={e => {
+              onEnter(e, onSubmit);
+            }}
           />
 
           <p className={classes["error"]}>{categoryNameError}</p>
@@ -159,7 +163,6 @@ export const EditOrCreateCategoryModal = ({
                 : classes.btn
             }
             disabled={categoryNameError !== "" || categoryName === ""}
-            type="submit"
             sx={{ mt: 1 }}
             role="button"
           >
