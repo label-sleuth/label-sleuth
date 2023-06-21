@@ -2,7 +2,7 @@ import { Stack, Typography, Tooltip, Button } from "@mui/material";
 import {
   NO_MODEL_AVAILABLE_MSG,
   NEXT_MODEL_TRAINING_MSG,
-  NEXT_ZERO_SHOT_MODEL_TRAINING_MSG,
+  CustomizableUITextEnum,
 } from "../../../const";
 import { useTheme } from "@mui/material/styles";
 import { LinearWithValueLabel } from "./ModelProgressBar";
@@ -30,8 +30,8 @@ export const WorkspaceInfoAndActions = ({
 }: WorkspaceInfoAndActionsProps) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
-  const modelUpdateProgress = useAppSelector(
-    (state) => state.workspace.modelUpdateProgress
+  const nextZeroShotModelTrainingMsg = useAppSelector(
+    (state) => state.customizableUIText.texts[CustomizableUITextEnum.NEXT_ZERO_SHOT_MODEL_TRAINING_MSG]
   );
   const nextModelShouldBeTraining = useAppSelector(
     (state) => state.workspace.nextModelShouldBeTraining
@@ -46,12 +46,12 @@ export const WorkspaceInfoAndActions = ({
   const theme = useTheme();
 
   const toDisplayMessage = useMemo<string>(() => {
-    if (zeroShotModelIsTraining) {
-      return NEXT_ZERO_SHOT_MODEL_TRAINING_MSG;
+    if (zeroShotModelIsTraining && nextZeroShotModelTrainingMsg !== '') {
+      return nextZeroShotModelTrainingMsg;
     } else {
       return NEXT_MODEL_TRAINING_MSG;
     }
-  }, [zeroShotModelIsTraining]);
+  }, [zeroShotModelIsTraining, nextZeroShotModelTrainingMsg]);
 
   return (
     <>

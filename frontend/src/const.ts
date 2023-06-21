@@ -84,8 +84,6 @@ export const FILL_REQUIRED_FIELDS = (nonProvidedFields?: string) =>
 export const NEW_DATA_CREATED = `The new dataset has been created`;
 export const SELECT_WORKSPACE = `Please select a workspace`;
 export const NEXT_MODEL_TRAINING_MSG = "Training a new model";
-export const NEXT_ZERO_SHOT_MODEL_TRAINING_MSG =
-  "Training a new zero shot model";
 export const newDataCreatedMessage = (
   name: string,
   numDocs: number,
@@ -171,5 +169,6 @@ export enum CustomizableUITextEnum {
   LS_BRIEF_DESCRIPTION = "ls_brief_description",
   APP_LOGO_PATH = "app_logo_path",
   DOCUMENT_UPLOAD_HELPER_TEXT = "document_upload_helper_text",
-  SYSTEM_UNAVAILABLE = "system_unavailable"
+  SYSTEM_UNAVAILABLE = "system_unavailable",
+  NEXT_ZERO_SHOT_MODEL_TRAINING_MSG = "next_zero_shot_model_training_msg",
 }
