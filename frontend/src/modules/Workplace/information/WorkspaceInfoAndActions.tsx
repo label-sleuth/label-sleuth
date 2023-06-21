@@ -1,5 +1,9 @@
 import { Stack, Typography, Tooltip, Button } from "@mui/material";
-import { NO_MODEL_AVAILABLE_MSG, NEXT_MODEL_TRAINING_MSG, NEXT_ZERO_SHOT_MODEL_TRAINING_MSG } from "../../../const";
+import {
+  NO_MODEL_AVAILABLE_MSG,
+  NEXT_MODEL_TRAINING_MSG,
+  NEXT_ZERO_SHOT_MODEL_TRAINING_MSG,
+} from "../../../const";
 import { useTheme } from "@mui/material/styles";
 import { LinearWithValueLabel } from "./ModelProgressBar";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
@@ -9,6 +13,7 @@ import { Divider } from "./Divider";
 import { LabelCountPanel } from "./LabelCountPanel";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import classes from "./WorkspaceInfo.module.css";
+import { useMemo } from "react";
 
 interface WorkspaceInfoAndActionsProps {
   modelVersionSuffix: string | null;
@@ -25,11 +30,28 @@ export const WorkspaceInfoAndActions = ({
 }: WorkspaceInfoAndActionsProps) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
-  const labelCount = useAppSelector((state) => state.workspace.labelCount);
-  const nextModelShouldBeTraining = useAppSelector((state) => state.workspace.nextModelShouldBeTraining);
-  const lastModelFailed = useAppSelector((state) => state.workspace.lastModelFailed);
+  const modelUpdateProgress = useAppSelector(
+    (state) => state.workspace.modelUpdateProgress
+  );
+  const nextModelShouldBeTraining = useAppSelector(
+    (state) => state.workspace.nextModelShouldBeTraining
+  );
+  const lastModelFailed = useAppSelector(
+    (state) => state.workspace.lastModelFailed
+  );
+  const zeroShotModelIsTraining = useAppSelector(
+    (state) => state.workspace.zeroShotModelIsTraining
+  );
 
   const theme = useTheme();
+
+  const toDisplayMessage = useMemo<string>(() => {
+    if (zeroShotModelIsTraining) {
+      return NEXT_ZERO_SHOT_MODEL_TRAINING_MSG;
+    } else {
+      return NEXT_MODEL_TRAINING_MSG;
+    }
+  }, [zeroShotModelIsTraining]);
 
   return (
     <>
@@ -83,11 +105,7 @@ export const WorkspaceInfoAndActions = ({
                 alignItems: "flex-end",
               }}
             >
-              {labelCount.pos === 0 && labelCount.neg === 0 ? (
-                <div className={classes.modelStatus}>{NEXT_ZERO_SHOT_MODEL_TRAINING_MSG}</div>
-              ) : (
-                <div className={classes.modelStatus}>{NEXT_MODEL_TRAINING_MSG}</div>
-              )}
+              <div className={classes.modelStatus}>{toDisplayMessage}</div>
               <div className={classes["dot-pulse"]}></div>
             </div>
           ) : null}

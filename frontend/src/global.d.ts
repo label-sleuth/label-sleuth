@@ -220,6 +220,7 @@ interface ModelSliceState {
   modelUpdateProgress: number;
   downloadingModel: boolean;
   lastModelFailed: boolean;
+  zeroShotModelIsTraining: boolean,
   nextModelShouldBeTraining: boolean;
   modelVersion: number | null;
   modelStatusCheckAttempts: number;
