@@ -38,6 +38,7 @@ const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 export const initialState: ModelSliceState = {
   modelVersion: null,
   modelUpdateProgress: 0,
+  zeroShotModelIsTraining: false,
   // tells if there is a model training. The word 'should' is used because the value is calculated
   // and it does not always come from the backend
   nextModelShouldBeTraining: false,
@@ -191,11 +192,23 @@ export const extraReducers = [
         latestReadyModelVersion += 1;
       }
 
+      // zero-shot model logic
+      if (
+        modelIsTraining &&
+        latestReadyModelVersion === -1 &&
+        state.modelUpdateProgress < 100
+      ) {
+        state.zeroShotModelIsTraining = true;
+      }
+
       // logic to manage the next model status, it is first set to true in checkStatus when progress is 100
 
       // make sure model training indicator isn't shown if there was an error
       if (lastModelFailed) {
         nextModelShouldBeTraining = false;
+        if (state.zeroShotModelIsTraining) {
+          state.zeroShotModelIsTraining = false;
+        }
       } else if (modelIsTraining) {
         // we are sure that a model is being trained
         nextModelShouldBeTraining = true;
@@ -204,10 +217,14 @@ export const extraReducers = [
         // but the frontend is not yet aware of it
 
         // we are sure that a model is no more training when there is a new ready model version
-        nextModelShouldBeTraining =
-          latestReadyModelVersion === state.modelVersion
-            ? state.nextModelShouldBeTraining
-            : false;
+        if (latestReadyModelVersion !== state.modelVersion) {
+          nextModelShouldBeTraining = false;
+          if (state.zeroShotModelIsTraining) {
+            state.zeroShotModelIsTraining = false;
+          }
+        } else {
+          nextModelShouldBeTraining = state.nextModelShouldBeTraining;
+        }
       }
 
       // reset pagination if a new model has been found
