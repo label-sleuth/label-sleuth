@@ -85,7 +85,8 @@ class TestAppIntegration(unittest.TestCase):
             "ls_brief_description": "Quickly create a text classifier",
             "app_logo_path": "assets/sleuth_logo_white.svg",
             "document_upload_helper_text": "The csv file must have a header line (of \"text\" and optional \"document_id\")",
-            "system_unavailable": "This is customized"
+            "system_unavailable": "This is customized",
+            "next_zero_shot_model_training_msg": ""
         }
         self.assertEqual(res.get_json(), correct_body)
 
