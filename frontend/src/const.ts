@@ -38,28 +38,31 @@ export const DELETE_CATEGORY_TOOLTIP_MSG = "Delete category";
 // *******************
 
 // Evaluation panel messages
-export const START_EVALUATION_MSG =
-  "Click on Start to start the precision evaluation process";
+export const START_EVALUATION_MSG = (
+  currentModelVersion: number | null,
+  scoreModelVersion: number | null
+) => {
+  return currentModelVersion !== null &&
+    scoreModelVersion !== null &&
+    scoreModelVersion !== currentModelVersion
+    ? ` Current model is ${currentModelVersion}${getOrdinalSuffix(
+        currentModelVersion
+      )}. Start a new precision evaluation to get the updated evaluation.`
+    : "Click on Start to start the precision evaluation process.";
+};
 export const EVALUATION_IN_PROGRESS_MSG =
   "Label all the elements. Once its done, click on Submit to get the precision score.";
 export const WAIT_NEW_MODEL_MSG =
-  "Please wait till the next model is available to start the evaluation";
+  "Please wait till the next model is available to start the evaluation.";
 export const PRECISION_RESULT_MSG = (
   precision: number,
-  currentModelVersion: number,
-  scoreModelVersion: number
+  scoreModelVersion: number | null
 ) =>
-  `
-    The precision of the ${scoreModelVersion}${getOrdinalSuffix(
-    scoreModelVersion
-  )} model is ${precision}%.` +
-  `${
-    scoreModelVersion !== currentModelVersion
-      ? ` Current model is ${currentModelVersion}${getOrdinalSuffix(
-          currentModelVersion
-        )}. Start a new precision evaluation to get the updated evaluation.`
-      : ""
-  }`;
+  scoreModelVersion !== null
+    ? `The precision of the ${scoreModelVersion}${getOrdinalSuffix(
+        scoreModelVersion
+      )} model is ${precision}%. `
+    : "";
 
 export const NO_MODEL_AVAILABLE_MSG = "not available yet";
 export const CREATE_NEW_CATEGORY_MODAL_MSG = "Create new category";
@@ -91,11 +94,11 @@ export const newDataCreatedMessage = (
 ) =>
   `The new dataset '${name}' has been created with ${numDocs} documents and ${numsentences} text entries.`;
 
-
 export const CATEGORY_NAME_MAX_CHARS = 100;
 export const DATASET_NAME_MAX_CHARS = 30;
 
-export const WRONG_INPUT_NAME_LENGTH = (maxLength: number) => `Name may be max ${maxLength} characters long`;
+export const WRONG_INPUT_NAME_LENGTH = (maxLength: number) =>
+  `Name may be max ${maxLength} characters long`;
 export const WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES = `Name may only contain English characters, digits and underscores`;
 export const WRONG_INPUT_NAME_BAD_CHARACTER = `Name may only contain English characters, digits, underscores and spaces`;
 export const REGEX_LETTER_NUMBERS_UNDERSCORE = /^[a-zA-Z0-9_]*$/;

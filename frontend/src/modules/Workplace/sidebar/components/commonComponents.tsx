@@ -51,6 +51,7 @@ export const PanelTypography = styled(Typography)({
   color: "rgba(0,0,0,.54)",
   paddingLeft: "15px",
   paddingRight: "15px",
+  whiteSpace: "pre-line",
 });
 
 export const Loading = () => (
