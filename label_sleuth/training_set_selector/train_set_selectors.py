@@ -31,14 +31,17 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
     for training the model.
     """
 
-    def __init__(self, data_access, background_jobs_manager, label_types=frozenset({LabelType.Standard})):
+    def __init__(self, data_access, background_jobs_manager, label_types=frozenset({LabelType.Standard}),
+                 should_verify_all_labels_in_train=True):
         super().__init__(data_access, background_jobs_manager, label_types=label_types)
+        self.should_verify_all_labels_in_train = should_verify_all_labels_in_train
 
     def get_train_set(self, workspace_id, train_dataset_name, category_id,
                       category_name: str, category_description: str) -> Sequence[TextElement]:
         train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_id,
                                                                         remove_duplicates=True)
-        self.verify_all_labels_are_in_train(train_counts)
+        if self.should_verify_all_labels_in_train:
+            self.verify_all_labels_are_in_train(train_counts)
         logging.info(f"using {len(train_data)} for train using dataset {train_dataset_name}")
         return train_data
 
@@ -62,6 +65,15 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
             raise Exception(
                 f"no train examples for labels: {labels_not_in_train}, cannot train a model: {train_counts}")
 
+
+class TrainSetSelectorAllLabeledNoVerification(TrainSetSelectorAllLabeled):
+    """
+    Implements the basic model training behavior: use all elements labeled by the user - and only those elements -
+    for training the model. This selector will not verify we have items with both positive and negative labels
+    """
+    def __init__(self, data_access, background_jobs_manager, label_types=frozenset({LabelType.Standard})):
+        super().__init__(data_access, background_jobs_manager, label_types=label_types,
+                         should_verify_all_labels_in_train=False)
 
 class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
     """

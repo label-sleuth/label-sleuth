@@ -1,6 +1,6 @@
 from label_sleuth.data_access.core.data_structs import LabelType
 from label_sleuth.training_set_selector.train_set_selectors import TrainSetSelectorAllLabeled, \
-    TrainSetSelectorEnforcePositiveNegativeRatio
+    TrainSetSelectorEnforcePositiveNegativeRatio, TrainSetSelectorAllLabeledNoVerification
 
 
 class TrainSetSelectorAllLabeledIncludeWeak(TrainSetSelectorAllLabeled):
@@ -48,6 +48,7 @@ class TrainSetSelectorsCatalog:
     _unlabeled_ elements will be given to the model as weak negative examples.
     """
     ALL_LABELED = TrainSetSelectorAllLabeled
+    ALL_LABELED_NO_VERIFICATION = TrainSetSelectorAllLabeledNoVerification
     ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO = TrainSetSelectorEqualRatio
     ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO = TrainSetSelectorX2NegativeRatio
     ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO = TrainSetSelectorX10NegativeRatio
