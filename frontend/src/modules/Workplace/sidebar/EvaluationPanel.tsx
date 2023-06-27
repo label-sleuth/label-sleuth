@@ -142,6 +142,40 @@ const EvaluationPanel = () => {
     );
   }, [evaluationElementsCount, currentContentData]);
 
+  const messages = React.useMemo(() => {
+    const l: string[] = [];
+
+    if (isLoading) {
+      return l;
+    } else if (!isInProgress) {
+      let report = "";
+      if (lastScore !== null) {
+        report += PRECISION_RESULT_MSG(
+          Math.round(lastScore * 100),
+          scoreModelVersion
+        );
+      }
+      report += START_EVALUATION_MSG(modelVersion, scoreModelVersion);
+      report += "\n\n";
+      l.push(report);
+    } else if (isInProgress) {
+      l.push(EVALUATION_IN_PROGRESS_MSG);
+    }
+
+    if (nextModelShouldBeTraining) {
+      l.push(WAIT_NEW_MODEL_MSG);
+    } 
+
+    return l;
+  }, [
+    nextModelShouldBeTraining,
+    isInProgress,
+    lastScore,
+    scoreModelVersion,
+    modelVersion,
+    isLoading,
+  ]);
+
   return (
     <Box>
       <Header message={"Precision evaluation"} />
@@ -193,23 +227,9 @@ const EvaluationPanel = () => {
       ) : (
         <>
           <Box sx={{ mt: 2 }}>
-            {isLoading ? null : isInProgress ? (
-              <PanelTypography>{EVALUATION_IN_PROGRESS_MSG} </PanelTypography>
-            ) : lastScore !== null &&
-              scoreModelVersion !== null &&
-              modelVersion !== null ? (
-              <PanelTypography sx={{ fontSize: "0.9rem" }}>
-                {PRECISION_RESULT_MSG(
-                  Math.round(lastScore * 100),
-                  modelVersion,
-                  scoreModelVersion
-                )}
-              </PanelTypography>
-            ) : nextModelShouldBeTraining ? (
-              <PanelTypography>{WAIT_NEW_MODEL_MSG}</PanelTypography>
-            ) : (
-              <PanelTypography sx={{fontSize:"0.9rem"}}>{START_EVALUATION_MSG}</PanelTypography>
-            )}
+            {messages.map((m, i) => (
+              <PanelTypography key={i}>{m}</PanelTypography>
+            ))}
           </Box>
           <Box
             sx={{ mt: isInProgress ? 16 : 12 }}

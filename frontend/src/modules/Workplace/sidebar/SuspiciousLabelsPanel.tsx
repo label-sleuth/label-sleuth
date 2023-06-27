@@ -40,7 +40,7 @@ const SuspiciousLabelsPanel = () => {
       <ElementList
         elements={currentContentData as Element[]}
         loading={loading}
-        nonEmptyResultsMessage={"Review the labels of these examples which the system suspects might be wrong"}
+        nonEmptyResultsMessage={"Review the labels of these examples which the system suspects might be wrong."}
         emptyResultsMessage={"No suspicious labels were found."}
         isPaginationRequired={isPaginationRequired}
         elementsTopPadding={2}
