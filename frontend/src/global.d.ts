@@ -1,5 +1,10 @@
 import { TypedActionCreator } from "@reduxjs/toolkit/dist/mapBuilders";
-import { CustomizableUITextEnum, LabelTypesEnum, PanelIdsEnum } from "./const";
+import {
+  CustomizableUIMiscEnum,
+  CustomizableUITextEnum,
+  LabelTypesEnum,
+  PanelIdsEnum,
+} from "./const";
 interface ReducerObj {
   action: TypedActionCreator;
   reducer: (state: any, action: any) => void;
@@ -152,7 +157,10 @@ interface FeatureFlagsSliceState {
 interface CustomizableUITextSliceState {
   loading: boolean;
   fetched: boolean;
-  texts: {[key in CustomizableUITextEnum]: string };
+  texts: { [key in CustomizableUITextEnum]: string };
+  misc: {
+    [CustomizableUIMiscEnum.DOWNLOAD_MODEL_BULLETS]: string[];
+  };
 }
 
 interface PaginationParam {
@@ -220,7 +228,7 @@ interface ModelSliceState {
   modelUpdateProgress: number;
   downloadingModel: boolean;
   lastModelFailed: boolean;
-  zeroShotModelIsTraining: boolean,
+  zeroShotModelIsTraining: boolean;
   nextModelShouldBeTraining: boolean;
   modelVersion: number | null;
   modelStatusCheckAttempts: number;

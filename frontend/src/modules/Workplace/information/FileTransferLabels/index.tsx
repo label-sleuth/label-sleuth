@@ -46,6 +46,10 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useNotification } from "../../../../utils/notification";
 import { toast } from "react-toastify";
+import {
+  CustomizableUIMiscEnum,
+  CustomizableUITextEnum,
+} from "../../../../const";
 
 interface UploadLabelsDialogProps {
   open: boolean;
@@ -305,6 +309,19 @@ export const DownloadModelDialog = ({
 
   const dispatch = useDispatch();
 
+  const downloadModelDescription = useAppSelector(
+    (state) =>
+      state.customizableUIText.texts[
+        CustomizableUITextEnum.DOWNLOAD_MODEL_DESCRIPTION
+      ]
+  );
+  const downloadModelBullets = useAppSelector(
+    (state) =>
+      state.customizableUIText.misc[
+        CustomizableUIMiscEnum.DOWNLOAD_MODEL_BULLETS
+      ]
+  );
+
   const { notify, closeNotification } = useNotification();
 
   const handleClose = () => {
@@ -315,11 +332,6 @@ export const DownloadModelDialog = ({
     dispatch(downloadModel());
     setOpen(false);
   };
-
-  const bullets = [
-    "the model itself",
-    "a code snippet demonstrating how it can be used within a Python application",
-  ];
 
   useEffect(() => {
     const toastId = "downloading_model_toast";
@@ -344,14 +356,17 @@ export const DownloadModelDialog = ({
         >
           <LargeTitle>Download current model</LargeTitle>
           <MainContent>
-            <p>
-              Download latest ({modelVersion}
-              <sup>{modelVersionSuffix}</sup>) model version for category '
-              {curCategoryName}'.
-            </p>
+            {downloadModelDescription || (
+              <p>
+                Download latest ({modelVersion}
+                <sup>{modelVersionSuffix}</sup>) model version for category '
+                {curCategoryName}'.
+              </p>
+            )}
+
             <p>In the downloaded zip file you will find:</p>
             <ul>
-              {Object.values(bullets).map((item) => (
+              {Object.values(downloadModelBullets).map((item) => (
                 <li key={item} style={{ paddingBottom: "10px" }}>
                   {item}
                 </li>

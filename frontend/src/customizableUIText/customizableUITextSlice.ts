@@ -17,7 +17,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { BASE_URL } from "../config";
 import { client } from "../api/client";
 import { CustomizableUITextSliceState } from "../global";
-import { CustomizableUITextEnum } from "../const";
+import { CustomizableUIMiscEnum, CustomizableUITextEnum } from "../const";
 
 const initialState: CustomizableUITextSliceState = {
   loading: false,
@@ -25,12 +25,15 @@ const initialState: CustomizableUITextSliceState = {
   texts: Object.fromEntries(
     Object.values(CustomizableUITextEnum).map((k) => [k, ""])
   ) as { [key in CustomizableUITextEnum]: string },
+  misc: {
+    [CustomizableUIMiscEnum.DOWNLOAD_MODEL_BULLETS]: [],
+  },
 };
 
-export const fetchCustomizableUIText = createAsyncThunk<
-  { [key in CustomizableUITextEnum]: string },
+export const fetchCustomizableUIElements = createAsyncThunk<
+  CustomizableUITextSliceState["texts"] & CustomizableUITextSliceState["misc"],
   void
->("workspaces/fetchCustomizableUIText", async () => {
+>("workspaces/fetchCustomizableUIElements", async () => {
   const url = `${BASE_URL}/customizable_ui_text`;
   const { data: customizableUIText } = await client.get(url);
   return customizableUIText;
@@ -42,24 +45,44 @@ export const featureFlagsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchCustomizableUIText.pending, (state) => {
+      .addCase(fetchCustomizableUIElements.pending, (state) => {
         state.loading = true;
       })
-      .addCase(fetchCustomizableUIText.fulfilled, (state, { payload }) => {
-        const customizableUIText = payload;
+      .addCase(fetchCustomizableUIElements.fulfilled, (state, { payload }) => {
+        const customizableUIElements = payload;
+
+        // get text attributes from the json file
+        const texts = Object.fromEntries(
+          Object.entries(customizableUIElements).filter(([k, v]) => {
+            return (
+              Object.values(CustomizableUITextEnum).filter((c) => c === k)
+                .length > 0
+            );
+          })
+        ) as { [key in CustomizableUITextEnum]: string };
+
+        // get misc attributes from the json file
+        const misc = Object.fromEntries(
+          Object.entries(customizableUIElements).filter(([k, v]) => {
+            return (
+              Object.values(CustomizableUIMiscEnum).filter((c) => c === k)
+                .length > 0
+            );
+          })
+        ) as { [key in CustomizableUIMiscEnum]: string[] };
+
         return {
           ...state,
           loading: false,
           fetched: true,
-          texts: customizableUIText,
+          texts,
+          misc,
         };
       })
-      .addCase(fetchCustomizableUIText.rejected, (state, { error }) => {
+      .addCase(fetchCustomizableUIElements.rejected, (state, { error }) => {
         state.loading = false;
       });
   },
 });
 
 export const customizableUITextReducer = featureFlagsSlice.reducer;
-
-

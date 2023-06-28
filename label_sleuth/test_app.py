@@ -86,7 +86,12 @@ class TestAppIntegration(unittest.TestCase):
             "app_logo_path": "assets/sleuth_logo_white.svg",
             "document_upload_helper_text": "The csv file must have a header line (of \"text\" and optional \"document_id\")",
             "system_unavailable": "This is customized",
-            "next_zero_shot_model_training_msg": ""
+            "next_zero_shot_model_training_msg": "",
+            "download_model_description": "",
+            "download_model_bullets": [
+                "the model itself", 
+                "a code snippet demonstrating how it can be used within a Python application"
+            ]
         }
         self.assertEqual(res.get_json(), correct_body)
 
