@@ -88,7 +88,10 @@ class TestAppIntegration(unittest.TestCase):
             "system_unavailable": "This is customized",
             "next_zero_shot_model_training_msg": "",
             "download_model_description": "",
-            "download_model_bullets": []
+            "download_model_bullets": [
+                "the model itself", 
+                "a code snippet demonstrating how it can be used within a Python application"
+            ]
         }
         self.assertEqual(res.get_json(), correct_body)
 
