@@ -37,7 +37,7 @@ import { fetchVersion } from "./modules/Workplace/redux";
 import { useCheckSystemHealth } from "./customHooks/useCheckSystemHealth";
 import { ErrorDetailsDialog } from "./error/ErrorDetailsDialog";
 import { useNotification } from "./utils/notification";
-import { fetchCustomizableUIText } from "./customizableUIText/customizableUITextSlice";
+import { fetchCustomizableUIElements } from "./customizableUIText/customizableUITextSlice";
 
 const AppRoutes = () => {
   const { authenticated, authenticationEnabled } = useAuthentication();
@@ -116,7 +116,7 @@ const App = () => {
 
   useEffect(() => {
     dispatch(fetchFeatureFlags());
-    dispatch(fetchCustomizableUIText());
+    dispatch(fetchCustomizableUIElements());
   }, [dispatch]);
 
   useEffect(() => {

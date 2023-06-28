@@ -174,4 +174,9 @@ export enum CustomizableUITextEnum {
   DOCUMENT_UPLOAD_HELPER_TEXT = "document_upload_helper_text",
   SYSTEM_UNAVAILABLE = "system_unavailable",
   NEXT_ZERO_SHOT_MODEL_TRAINING_MSG = "next_zero_shot_model_training_msg",
+  DOWNLOAD_MODEL_DESCRIPTION = "download_model_description",
+}
+
+export enum CustomizableUIMiscEnum {
+  DOWNLOAD_MODEL_BULLETS = "download_model_bullets"
 }
