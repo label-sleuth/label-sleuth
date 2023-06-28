@@ -333,14 +333,6 @@ export const DownloadModelDialog = ({
     setOpen(false);
   };
 
-  const bullets =
-    downloadModelBullets.length > 0
-      ? downloadModelBullets
-      : [
-          "the model itself",
-          "a code snippet demonstrating how it can be used within a Python application",
-        ];
-
   useEffect(() => {
     const toastId = "downloading_model_toast";
     if (downloadingModel) {
@@ -374,7 +366,7 @@ export const DownloadModelDialog = ({
 
             <p>In the downloaded zip file you will find:</p>
             <ul>
-              {Object.values(bullets).map((item) => (
+              {Object.values(downloadModelBullets).map((item) => (
                 <li key={item} style={{ paddingBottom: "10px" }}>
                   {item}
                 </li>
