@@ -93,6 +93,7 @@ interface FocusedElement {
   DOMKey: string | null;
   hackyToggle: boolean;
   highlight: boolean;
+  lastInPage: boolean;
 }
 
 interface ErrorSliceState {

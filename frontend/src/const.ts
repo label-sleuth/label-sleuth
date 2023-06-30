@@ -145,6 +145,7 @@ export const KeyboardKeysEnum = {
   ENTER: "Enter",
   SHIFT: "Shift",
   QUESTION_MARK: "?",
+  P: "p",
 };
 
 export enum LabelTypesEnum {

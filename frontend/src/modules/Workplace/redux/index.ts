@@ -219,4 +219,5 @@ export const {
   decreaseModelStatusCheckAttempts,
   resetModelStatusCheckAttempts,
   setModelIsLoading,
+  focusNextPositivePredictionInCurrentPage
 } = workspaceSlice.actions;
