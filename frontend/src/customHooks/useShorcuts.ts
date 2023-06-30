@@ -39,7 +39,7 @@ import { usePrevious } from "./usePrevious";
 import usePanelPagination from "./usePanelPagination";
 import useLabelState from "./useLabelState";
 import { useFocusMainPanelElement } from "./useFocusMainPanelElement";
-// import { useFocusNextPositivePrediction } from "./useFocusNextPositivePrediction";
+import { useFocusNextPositivePrediction } from "./useFocusNextPositivePrediction";
 
 interface UseSidebarLabelingShortcuts {
   setShortcutsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -76,7 +76,7 @@ export const useSidebarLabelingShortcuts = ({
 
   const pressedKeys = useRef<{ [key: string]: boolean }>({});
 
-  // const { focusNextPositivePrediction } = useFocusNextPositivePrediction();
+  const { focusNextPositivePrediction } = useFocusNextPositivePrediction();
 
   // useLabelState needs to know whether to update the counter on labeling,
   // which is false only in the evalaution panel
@@ -211,7 +211,7 @@ export const useSidebarLabelingShortcuts = ({
         }
         if (modelVersion !== null && modelVersion > -1) {
           if (event.key === KeyboardKeysEnum.P) {
-            // focusNextPositivePrediction();
+            focusNextPositivePrediction();
           }
         }
       }

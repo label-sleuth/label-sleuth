@@ -81,7 +81,6 @@ export const initialState: PanelsSliceState = {
       DOMKey: null,
       hackyToggle: false,
       highlight: false,
-      lastInPage: false,
     },
     focusedSidebarElement: {
       index: null,
@@ -297,45 +296,6 @@ export const reducers = {
         highlight,
         initialState.panels.focusedElement
       );
-    }
-  },
-  focusNextPositivePredictionInCurrentPage(
-    state: WorkspaceState,
-    action: PayloadAction<void>
-  ): any {
-    const highlight = true;
-    const elements = state.panels.panels[PanelIdsEnum.MAIN_PANEL].elements;
-    const focusedElementId = state.panels.focusedElement.id;
-
-    if (elements === null) return;
-
-    let nextPositivePredictionElement: Element | null = null;
-
-    for (const e of Object.values(elements)) {
-      const avoid =
-        focusedElementId === null
-          ? false
-          : getElementIndex(focusedElementId) >= getElementIndex(e.id);
-
-      if (!avoid && e.modelPrediction === LabelTypesEnum.POS) {
-        nextPositivePredictionElement = e;
-        break;
-      }
-    }
-
-
-    console.log('here')
-    if (nextPositivePredictionElement !== null) {
-      state.panels.focusedElement = getUpdatedFocusedElementState(
-        nextPositivePredictionElement,
-        state.panels.focusedElement.hackyToggle,
-        highlight,
-        initialState.panels.focusedElement,
-        PanelIdsEnum.MAIN_PANEL,
-        false
-      );
-    } else {
-      state.panels.focusedElement.lastInPage = true;
     }
   },
 
