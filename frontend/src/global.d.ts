@@ -70,6 +70,11 @@ interface PanelState {
   page: number;
 }
 
+interface MainPanelState extends PanelState {
+  documentPositivePredictionIds: string[] | null;
+}
+
+
 interface ContractingLabelsPanelState extends PanelState {
   pairs: [string, string][];
 }
@@ -132,7 +137,7 @@ interface PanelsSliceState {
       scrollIntoViewOnChange: boolean;
     };
     panels: {
-      [PanelIdsEnum.MAIN_PANEL]: PanelState;
+      [PanelIdsEnum.MAIN_PANEL]: MainPanelState;
       [PanelIdsEnum.SEARCH]: SearchPanelState;
       [PanelIdsEnum.LABEL_NEXT]: PanelState;
       [PanelIdsEnum.POSITIVE_PREDICTIONS]: PositivePredictionsPanelState;

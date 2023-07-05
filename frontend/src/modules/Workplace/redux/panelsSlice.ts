@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { createAsyncThunk, PayloadAction, current } from "@reduxjs/toolkit";
+import { createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import {
   getCategoryQueryString,
@@ -39,7 +39,7 @@ import {
   UnparsedElement,
   WorkspaceState,
 } from "../../../global";
-import { LabelTypesEnum, PanelIdsEnum } from "../../../const";
+import { PanelIdsEnum } from "../../../const";
 import { currentDocNameSelector } from "./documentSlice";
 //import { current } from "@reduxjs/toolkit";
 
@@ -89,6 +89,7 @@ export const initialState: PanelsSliceState = {
     panels: {
       [PanelIdsEnum.MAIN_PANEL]: {
         ...elementsInitialState,
+        documentPositivePredictionIds: null,
       },
       [PanelIdsEnum.SEARCH]: {
         ...elementsInitialState,
@@ -223,6 +224,27 @@ export const fetchDocumentElements = createAsyncThunk<
     params.pagination
   );
 });
+
+export const fetchDocumentPositivePredictions = createAsyncThunk<
+  ReturnType<typeof getPanelElements>,
+  FetchPanelElementsParams,
+  {
+    state: RootState;
+  }
+>(
+  "workspace/fetchDocumentPositivePredictions",
+  async (params, { getState }) => {
+    const state = getState();
+    let docId = params.docId || currentDocNameSelector(state) || "";
+
+    return await getPanelElements(
+      state,
+      `document/${encodeURIComponent(docId)}/positive_predictions`,
+      [],
+      params.pagination
+    );
+  }
+);
 
 export const searchKeywords = createAsyncThunk<
   any, //TODO: find out how to correctly type the return type of this thunk
@@ -605,6 +627,21 @@ export const extraReducers: Array<ReducerObj> = [
         hitCount,
       };
       state.panels.loading[PanelIdsEnum.MAIN_PANEL] = false;
+    },
+  },
+  {
+    action: fetchDocumentPositivePredictions.pending,
+    reducer: (state: WorkspaceState, action) => {},
+  },
+
+  {
+    action: fetchDocumentPositivePredictions.fulfilled,
+    reducer: (state: WorkspaceState, action) => {
+      const { elements: unparsedElements } = action.payload;
+      const { elements } = parseElements(unparsedElements, state.curCategory);
+      state.panels.panels[
+        PanelIdsEnum.MAIN_PANEL
+      ].documentPositivePredictionIds = Object.keys(elements);
     },
   },
 ];
