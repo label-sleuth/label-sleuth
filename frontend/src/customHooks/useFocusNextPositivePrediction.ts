@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "./useRedux";
 import { setFocusedMainPanelElement } from "../modules/Workplace/redux";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect } from "react";
 import { useNotification } from "../utils/notification";
 import { toast } from "react-toastify";
 import { LabelTypesEnum, PanelIdsEnum } from "../const";
@@ -62,7 +62,7 @@ export const useFocusNextPositivePrediction = () => {
 
     if (mainPanelElements === null) return;
     let nextPositivePredictionElement: Element | null = null;
-    console.log(focusedElementId);
+
     for (const e of Object.values(mainPanelElements).slice(
       focusedElementId !== null
         ? (getElementIndex(focusedElementId) % mainPanelElementsPerPage) + 1
@@ -94,14 +94,11 @@ export const useFocusNextPositivePrediction = () => {
         });
         return;
       } else {
-        notify(
-          "There are no more positive predictions in the document.",
-          {
-            toastId: "no-more-positive-predictions-toast",
-            type: toast.TYPE.INFO,
-            autoClose: 3000,
-          }
-        );
+        notify("There are no more positive predictions in the document.", {
+          toastId: "no-more-positive-predictions-toast",
+          type: toast.TYPE.INFO,
+          autoClose: 3000,
+        });
         //dispatch(clearMainPanelFocusedElement());
         return;
       }
@@ -125,5 +122,84 @@ export const useFocusNextPositivePrediction = () => {
     page,
   ]);
 
-  return { focusNextPositivePrediction };
+  const focusPreviousPositivePrediction = useCallback(() => {
+    const noPositivePredictions =
+      mainPanelElements === null
+        ? true
+        : Object.values(mainPanelElements).filter(
+            (e) => e.modelPrediction === LabelTypesEnum.POS
+          ).length === 0;
+
+    if (noPositivePredictions === true) {
+      notify("There are no positive predictions in this page.", {
+        toastId: "no-positive-predictions-toast",
+        type: toast.TYPE.INFO,
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    if (mainPanelElements === null) return;
+    let previousPositivePredictionElement: Element | null = null;
+
+    for (const e of Object.values(mainPanelElements).slice(
+      0,
+      focusedElementId !== null
+        ? (getElementIndex(focusedElementId) % mainPanelElementsPerPage)
+        : undefined
+    ).reverse()) {
+      if (e.modelPrediction === LabelTypesEnum.POS) {
+        previousPositivePredictionElement = e;
+        break;
+      }
+    }
+
+    if (previousPositivePredictionElement === null) {
+      const positivePredictionInPreviousPages =
+        documentPositivePredictionIds !== null
+          ? documentPositivePredictionIds.filter((id) => {
+              const index = getElementIndex(id);
+              return (
+                index <
+                (page - 1) * mainPanelElementsPerPage
+              );
+            })
+          : [];
+
+      if (positivePredictionInPreviousPages.length > 0) {
+        const nextFocusedElementId = positivePredictionInPreviousPages.at(-1);
+        focusMainPanelElement({
+          element: { docId: curDocName, id: nextFocusedElementId },
+          docId: curDocName,
+        });
+        return;
+      } else {
+        notify("There are no more positive predictions in the document.", {
+          toastId: "no-more-positive-predictions-toast",
+          type: toast.TYPE.INFO,
+          autoClose: 3000,
+        });
+        return;
+      }
+    }
+
+    dispatch(
+      setFocusedMainPanelElement({
+        element: previousPositivePredictionElement,
+        highlight: true,
+      })
+    );
+  }, [
+    mainPanelElements,
+    curDocName,
+    dispatch,
+    documentPositivePredictionIds,
+    focusMainPanelElement,
+    focusedElementId,
+    mainPanelElementsPerPage,
+    notify,
+    page,
+  ]);
+
+  return { focusPreviousPositivePrediction, focusNextPositivePrediction };
 };

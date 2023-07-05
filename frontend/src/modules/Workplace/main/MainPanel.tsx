@@ -37,6 +37,7 @@ import { useFetchPrevNextDoc } from "../../../customHooks/useFetchPrevNextDoc";
 import { useMainPagination } from "../../../customHooks/useMainPagination";
 import { Element } from "../../../global";
 import { currentDocNameSelector } from "../redux/documentSlice";
+import { NavigatePositivePredictions } from "./NavigatePositivePredictions";
 
 const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(
   ({ theme, open, rightDrawerWidth }: { theme?: any; open: boolean; rightDrawerWidth: number }) => ({
@@ -102,6 +103,7 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
             <h6>{getDocumentNameFromDocumentId(curDocName)}</h6>
             <em>Text Entries: {hitCount ?? 0}</em>
           </div>
+          <NavigatePositivePredictions />
           <Tooltip
             title={documents.length - 1 !== curDocIndex ? NEXT_DOC_TOOLTIP_MSG : ""}
             placement="left"
