@@ -51,7 +51,13 @@ class TestOrchestratorAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp_dir = tempfile.TemporaryDirectory()
-        background_jobs_manager = BackgroundJobsManager()
+        config = load_config(os.path.abspath(os.path.join(
+                __file__, 
+                os.pardir,
+                os.pardir,
+                "config_for_tests.json"))
+            )
+        background_jobs_manager = BackgroundJobsManager(config.cpu_workers)
         cls.model_factory = ModelFactory(cls.temp_dir.name, background_jobs_manager, None)
         cls.active_learning_factory = ActiveLearningFactory()
         cls.data_access = FileBasedDataAccess(os.path.join(cls.temp_dir.name, "output"), 60)
@@ -60,9 +66,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         cls.orchestrator_api = OrchestratorApi(cls.orchestrator_state, cls.data_access, cls.active_learning_factory,
                                                cls.model_factory, cls.training_set_selection_factory, background_jobs_manager,
                                                None,  # no need to use sentence embedding,
-                                               load_config(os.path.abspath(os.path.join(__file__, os.pardir,
-                                                                                        os.pardir,
-                                                                                        "config_for_tests.json"))))
+                                               config)
 
     @classmethod
     def tearDownClass(cls):
