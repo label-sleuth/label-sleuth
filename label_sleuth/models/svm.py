@@ -39,6 +39,7 @@ class SVMModelComponents:
     model: Union[sklearn.svm.LinearSVC, sklearn.svm.SVC]
     vectorizer: None
     language: Language
+    additional_fields: dict
 
 
 class SVM(ModelAPI):
@@ -72,6 +73,10 @@ class SVM(ModelAPI):
         with open(os.path.join(self.get_model_dir_by_id(model_id), "model"), "wb") as fl:
             pickle.dump(model, fl)
 
+        if self.representation_type == RepresentationType.WORD_EMBEDDING and language.spacy_model_name is not None:
+            with open(os.path.join(self.get_model_dir_by_id(model_id), "spacy_version.txt"), "w") as fl:
+                fl.write(self.sentence_embedding_service.get_spacy_model_version(language))
+
     def load_model(self, model_path) -> SVMModelComponents:
         with open(os.path.join(model_path, "model"), "rb") as fl:
             model = pickle.load(fl)
@@ -79,9 +84,26 @@ class SVM(ModelAPI):
             vectorizer = pickle.load(fl)
         language = self.get_language(model_path)
 
-        return SVMModelComponents(model=model, vectorizer=vectorizer, language=language)
+        additional_fields = {}
+        if self.representation_type == RepresentationType.WORD_EMBEDDING and language.spacy_model_name is not None:
+            spacy_version_file = os.path.join(model_path, "spacy_version.txt")
+            if os.path.exists(spacy_version_file):
+                with open(spacy_version_file) as f:
+                    model_spacy_version = f.read()
+            else:
+                model_spacy_version = '3.2.0'
+            additional_fields['spacy_version'] = model_spacy_version
+
+        return SVMModelComponents(model=model, vectorizer=vectorizer, language=language,
+                                  additional_fields=additional_fields)
 
     def infer(self, model_components: SVMModelComponents, items_to_infer):
+        if 'spacy_version' in model_components.additional_fields:
+            self.sentence_embedding_service.get_spacy_model(model_components.language.spacy_model_name)
+            if self.sentence_embedding_service.get_spacy_model_version(model_components.language) != model_components.additional_fields['spacy_version']:
+                raise Exception("This model is incompatible with the current version of Label Sleuth. To perform "
+                                "inference using this model, please downgrade to version 0.14.0 or earlier.")
+
         features_all_texts, _ = self.input_to_features([x['text'] for x in items_to_infer],
                                                        language=model_components.language,
                                                        vectorizer=model_components.vectorizer)

@@ -12,7 +12,7 @@ Flask-HTTPAuth==4.8.0
 dacite==1.6.0
 waitress==2.1.2
 datasets==2.3.2
-spacy==3.2.5
+spacy==3.5.4
 torch==1.13.1
 tqdm==4.65.0
 transformers==4.23.0
@@ -65,7 +65,7 @@ smmap==5.0.0
 spacy-legacy==3.0.12
 spacy-loggers==1.0.4
 srsly==2.4.6
-thinc==8.0.17
+thinc==8.1.8
 threadpoolctl==3.1.0
 tokenizers==0.13.3
 typer==0.4.2
