@@ -46,6 +46,7 @@ class DocumentNameEmptyException(Exception):
     def __init__(self, message):
         self.message = message
 
+
 class NoTextColumnException(Exception):
     def __init__(self, message):
         self.message = message
@@ -128,7 +129,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_documents(self, workspace_id: Union[None, str], dataset_name: str, uris: Iterable[str],
-                      label_types: Union[None,Set[LabelType]] = frozenset({LabelType.Standard})) \
+                      label_types: Union[None, Set[LabelType]] = frozenset({LabelType.Standard})) \
             -> List[Document]:
         """
         Return a List of Documents, from the given dataset_name, matching the uris provided, and add the label

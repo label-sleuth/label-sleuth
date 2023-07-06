@@ -162,7 +162,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         return model_id
 
     @staticmethod
-    def _infer_item_to_cache_key(item:Mapping):
+    def _infer_item_to_cache_key(item: Mapping):
         """
         returns the unique identifier of an item sent to inference. Currently an item consists only of a text field.
         * The return value is somewhat complex for backward compatability. In the next breaking change, this could
@@ -215,9 +215,9 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                 indices_not_in_cache = [i for i, v in enumerate(infer_res) if v is None]
 
             if len(indices_not_in_cache) > 0:  # i.e., some items aren't in the in-memory cache or the prediction store
-                logging.info(f"model id {model_id}, {len(items_to_infer) - len(indices_not_in_cache)} already in cache, running inference "
-                             f"for {len(indices_not_in_cache)} values (cache size {self.cache.get_current_size()}) "
-                             f"in {self.__class__.__name__}")
+                logging.info(f"model id {model_id}, {len(items_to_infer) - len(indices_not_in_cache)} already in cache,"
+                             f" running inference for {len(indices_not_in_cache)} values "
+                             f"(cache size {self.cache.get_current_size()}) in {self.__class__.__name__}")
                 missing_items_to_infer = [items_to_infer[idx] for idx in indices_not_in_cache]
                 # If duplicates exist, do not infer the same item more than once
                 uniques = set()

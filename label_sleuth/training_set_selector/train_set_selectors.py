@@ -75,6 +75,7 @@ class TrainSetSelectorAllLabeledNoVerification(TrainSetSelectorAllLabeled):
         super().__init__(data_access, background_jobs_manager, label_types=label_types,
                          should_verify_all_labels_in_train=False)
 
+
 class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
     """
     Implements a training behavior that aims to place the ratio between positive and negative examples within a
@@ -134,7 +135,8 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
 
         self.verify_all_labels_are_in_train(train_counts)
 
-        logging.info(f"workspace '{workspace_id}' category id '{category_id}' using {len(train_data)} for train using dataset {train_dataset_name}")
+        logging.info(f"workspace '{workspace_id}' category id '{category_id}' using {len(train_data)} "
+                     f"for train using dataset {train_dataset_name}")
         return train_data
 
     def get_weak_negative_candidates(self, workspace_id, dataset_name, category_id) -> List[TextElement]:

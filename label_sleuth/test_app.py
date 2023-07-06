@@ -18,12 +18,12 @@ import os
 import time
 import tempfile
 import unittest
-import json
 from label_sleuth import app, config, app_utils
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus
 from unittest import mock
 
 HEADERS = {'Content-Type': 'application/json'}
+
 
 class TestAppIntegration(unittest.TestCase):
 
@@ -54,6 +54,7 @@ class TestAppIntegration(unittest.TestCase):
     def test_full_flow(self):
 
         ui_defaults = app_utils.get_default_customizable_UI_text()
+
         def raise_exception(a, b):
             # to make getting the customizable text json to fail and the defaults to work
             raise FileNotFoundError()
@@ -129,7 +130,6 @@ class TestAppIntegration(unittest.TestCase):
                                content_type='multipart/form-data')
         
         self.assertEqual(409, res.status_code, msg="Failed to upload a new dataset")
-
 
         res = self.client.post("/workspace",
                                data='{{"workspace_id":"{}","dataset_id":"{}"}}'.format(workspace_name, dataset_name),
@@ -393,8 +393,9 @@ class TestAppIntegration(unittest.TestCase):
                                   headers=HEADERS)
             response = res.get_json()
 
-            if res.status_code != 200 or (len(response["iterations"]) == num_models
-                                          and response['iterations'][num_models-1]['iteration_status'] == IterationStatus.READY.name):
+            if res.status_code != 200 or \
+                    (len(response["iterations"]) == num_models
+                     and response['iterations'][num_models-1]['iteration_status'] == IterationStatus.READY.name):
                 break
             time.sleep(0.1)
             waiting_count += 1

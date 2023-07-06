@@ -177,7 +177,7 @@ def _get_nearest_neighbors_with_opposite_label(all_elements: List[TextElement], 
     nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(opposite_label_embeddings)
     distances_to_closest_opposite, indices_of_closest_opposite = nbrs.kneighbors(source_label_embeddings)
 
-    distances_to_closest_opposite = [d[0] for d in distances_to_closest_opposite] # one neighbor for each element
+    distances_to_closest_opposite = [d[0] for d in distances_to_closest_opposite]  # one neighbor for each element
     indices_of_closest_opposite = [d[0] for d in indices_of_closest_opposite]
 
     distances_and_pairs = \
@@ -211,7 +211,6 @@ def _filter_nearest_neighbor_pairs(pairs_list: List[Tuple[TextElement]], languag
     # once as a source element, and 0-2 times as a nearest neighbor to another source element)
     uri_counts = defaultdict(lambda: 0)
     filtered_pairs_list = [(source_element, neighbor) for source_element, neighbor in filtered_pairs_list
-                           if uri_counts[neighbor.uri] <= 1 and not uri_counts.update({neighbor.uri:
-                                                                                           uri_counts[
-                                                                                               neighbor.uri] + 1})]
+                           if uri_counts[neighbor.uri] <= 1
+                           and not uri_counts.update({neighbor.uri: uri_counts[neighbor.uri] + 1})]
     return filtered_pairs_list

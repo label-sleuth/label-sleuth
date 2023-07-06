@@ -22,7 +22,6 @@ from label_sleuth.data_access.core.data_structs import TextElement, LabelType
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 
-
 class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
 
     def __init__(self, data_access, background_jobs_manager: BackgroundJobsManager, gpu_support=False,
@@ -33,7 +32,7 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
         self.gpu_support = gpu_support
 
     def collect_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int, category_name: str,
-                          category_description:str, done_callback=None) \
+                          category_description: str, done_callback=None) \
             -> Future:
         future = self.background_jobs_manager.add_background_job(
             self.get_train_set, args=(workspace_id, train_dataset_name, category_id, category_name,
