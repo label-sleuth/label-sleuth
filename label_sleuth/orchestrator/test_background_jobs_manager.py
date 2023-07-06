@@ -14,14 +14,21 @@
 #
 
 import functools
+import os
 import unittest
 from unittest.mock import MagicMock
+from label_sleuth.config import load_config
 
 from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 DUMMY_PREDICTIONS = [Prediction(True, 0.54), Prediction(False, 0.22)]
 
+config = load_config(os.path.abspath(os.path.join(
+        __file__, os.pardir,
+        os.pardir,
+        "config_for_tests.json"))
+    )
 
 def successful_train(mid, dummy_data):
     return mid
@@ -42,7 +49,7 @@ def infer_failed_with_error(mid, dummy_data):
 class TestBackgroundJobsManager(unittest.TestCase):
     def test_simple_training_job(self):
         callback_mock = MagicMock(name='callback')
-        manager = BackgroundJobsManager()
+        manager = BackgroundJobsManager(config.cpu_workers)
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
@@ -54,7 +61,7 @@ class TestBackgroundJobsManager(unittest.TestCase):
 
     def test_training_error(self):
         callback_mock = MagicMock(name='callback')
-        manager = BackgroundJobsManager()
+        manager = BackgroundJobsManager(config.cpu_workers)
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
@@ -65,7 +72,7 @@ class TestBackgroundJobsManager(unittest.TestCase):
 
     def test_simple_infer_job(self):
         callback_mock = MagicMock(name='callback')
-        manager = BackgroundJobsManager()
+        manager = BackgroundJobsManager(config.cpu_workers)
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]
@@ -77,7 +84,7 @@ class TestBackgroundJobsManager(unittest.TestCase):
 
     def test_infer_error(self):
         callback_mock = MagicMock(name='callback')
-        manager = BackgroundJobsManager()
+        manager = BackgroundJobsManager(config.cpu_workers)
         mid = 123
         dummy_callback_data = "workspace1"
         dummy_train_data = ["dummy"]

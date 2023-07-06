@@ -18,16 +18,19 @@ import logging
 from concurrent.futures import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 
-from label_sleuth.definitions import CPU_WORKERS, GPU_WORKERS, GPU_AVAILABLE
+from label_sleuth.definitions import GPU_WORKERS, GPU_AVAILABLE
 
 
 class BackgroundJobsManager:
     """
     This class manages various jobs that are submitted in the background (for example, training and inference).
-    The number of jobs running on CPU/GPU at the same time is limited by the CPU_WORKERS/GPU_WORKERS parameters.
+    The number of jobs running on CPU/GPU at the same time is limited by the cpu_workers/GPU_WORKERS parameters.
     """
-    def __init__(self):
-        self.cpu_executor = ThreadPoolExecutor(CPU_WORKERS, thread_name_prefix=f"CPU_{CPU_WORKERS}_threadpool")
+    def __init__(self, cpu_workers: int = 10):
+        """
+        :param cpu_workers: number of jobs running on CPU
+        """
+        self.cpu_executor = ThreadPoolExecutor(cpu_workers, thread_name_prefix=f"CPU_{cpu_workers}_threadpool")
         self.gpu_executor = ThreadPoolExecutor(GPU_WORKERS, thread_name_prefix=f"GPU_{GPU_WORKERS}_threadpool")
 
     def add_background_job(self, method, args, use_gpu, done_callback) -> Future:

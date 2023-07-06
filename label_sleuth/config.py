@@ -50,6 +50,7 @@ class Configuration:
     snippet_max_token_length: int = 100
     max_dataset_length: int = 3000000
     users: List[dict] = field(default_factory=list)
+    cpu_workers: int = 10
 
 
 converters = {
