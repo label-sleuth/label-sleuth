@@ -96,7 +96,7 @@ def create_app(
                                  preload_fasttext_language_id=config.language.fasttext_language_id)
 
     data_access = FileBasedDataAccess(output_dir, config.max_document_name_length)
-    background_jobs_manager = BackgroundJobsManager()
+    background_jobs_manager = BackgroundJobsManager(app.config['CONFIGURATION'].cpu_workers)
     training_set_selection_factory = TrainingSetSelectionFactory(data_access, background_jobs_manager)
 
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),

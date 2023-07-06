@@ -17,7 +17,6 @@ import torch
 
 INFER_CACHE_SIZE = 10000000
 ACTIVE_LEARNING_SUGGESTION_COUNT = 1000
-CPU_WORKERS = 10  # TODO use number of cores?
 MPS_GPU_AVAILABLE = hasattr(torch.backends, "mps") and torch.backends.mps.is_available()  # relevant for mac machines
 # with GPU devices (e.g., Apple M1 chip). Check if mps exists in torch for backward compatibility
 GPU_AVAILABLE = torch.cuda.is_available() or MPS_GPU_AVAILABLE
