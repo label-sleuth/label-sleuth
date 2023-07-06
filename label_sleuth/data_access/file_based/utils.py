@@ -54,8 +54,8 @@ def build_text_elements_from_dataframe_and_labels(df, labels_dict):
     return text_elements
 
 
-def filter_by_labeled_status(df: pd.DataFrame, labels_series: pd.Series, category_id: int, labeled_status: LabeledStatus,
-                             label_types: Set[LabelType] = None):
+def filter_by_labeled_status(df: pd.DataFrame, labels_series: pd.Series, category_id: int,
+                             labeled_status: LabeledStatus, label_types: Set[LabelType] = None):
     """
     :param df:
     :param labels_series: series of the label dictionary corresponding to each element in the dataframe

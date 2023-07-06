@@ -104,7 +104,7 @@ class NaiveBayes(ModelAPI):
         elif self.representation_type == RepresentationType.WORD_EMBEDDING:
             return self.sentence_embedding_service.get_sentence_embeddings_representation(texts, language=language), None
 
-    def get_model_dir_name(self): # for backward compatibility, we override the default get_model_dir_name()
+    def get_model_dir_name(self):  # for backward compatibility, we override the default get_model_dir_name()
         return "nb"
 
 
@@ -116,7 +116,6 @@ class NaiveBayes_BOW(NaiveBayes):
 
     def get_supported_languages(self):
         return Languages.all_languages()
-
 
 
 class NaiveBayes_WordEmbeddings(NaiveBayes):

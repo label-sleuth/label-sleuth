@@ -33,6 +33,7 @@ from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsMana
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
+
 @dataclass
 class SVMModelComponents:
     model: Union[sklearn.svm.LinearSVC, sklearn.svm.SVC]
@@ -112,7 +113,7 @@ class SVM(ModelAPI):
         elif self.representation_type == RepresentationType.WORD_EMBEDDING:
             return self.sentence_embedding_service.get_sentence_embeddings_representation(texts, language=language), None
 
-    def get_model_dir_name(self): # for backward compatibility, we override the default get_model_dir_name()
+    def get_model_dir_name(self):  # for backward compatibility, we override the default get_model_dir_name()
         return "svm"
 
 

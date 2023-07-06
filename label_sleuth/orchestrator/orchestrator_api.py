@@ -48,7 +48,6 @@ from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Cate
     ModelInfo, OrchestratorStateApi
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
-from label_sleuth.utils import make_error
 
 # constants
 NUMBER_OF_MODELS_TO_KEEP = 2
@@ -807,6 +806,7 @@ class OrchestratorApi:
         logging.info(f"workspace '{workspace_id}' category id {category_id} done generating contradicting elements "
                      f"report")
         return contradictions
+
     def get_suspicious_elements_report(self, workspace_id, category_id,
                                        model_type: ModelType = ModelsCatalog.SVM_ENSEMBLE) -> List[TextElement]:
         logging.info(f"workspace '{workspace_id}' category id {category_id} generating suspicious elements report "
@@ -880,6 +880,7 @@ class OrchestratorApi:
         """
         logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {sample_size} {required_prediction}"
                      f" predictions (start index: {start_idx})")
+
         def batched(iterable, batch_size=100):
             it = iter(iterable)
             while batch := list(itertools.islice(it, batch_size)):
@@ -1058,8 +1059,9 @@ class OrchestratorApi:
         to_upload_text_elements_count = sum([len(doc.text_elements) for doc in documents])
         dataset_elements_count = self.data_access.get_dataset_elements_count(dataset_name)
 
-        if (to_upload_text_elements_count + dataset_elements_count > max_dataset_length):
-            raise DatasetRowCountLimitExceededException(exceeded_by=(to_upload_text_elements_count + dataset_elements_count) - max_dataset_length)
+        if to_upload_text_elements_count + dataset_elements_count > max_dataset_length:
+            raise DatasetRowCountLimitExceededException(
+                exceeded_by=(to_upload_text_elements_count + dataset_elements_count) - max_dataset_length)
 
         document_statistics = self.data_access.add_documents(dataset_name, documents)
         workspaces_to_update = []
