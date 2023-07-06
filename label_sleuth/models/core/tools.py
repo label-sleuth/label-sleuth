@@ -22,13 +22,13 @@ import string
 import tarfile
 import tempfile
 import threading
-import fasttext
-import fasttext.util
 
 from collections import defaultdict
 from enum import Enum
 from typing import List
 
+import fasttext
+import fasttext.util
 import numpy as np
 import requests
 import spacy

@@ -7,20 +7,23 @@ class TrainSetSelectorAllLabeledIncludeWeak(TrainSetSelectorAllLabeled):
     def __init__(self, data_access, background_jobs_manager):
         super().__init__(data_access, background_jobs_manager, label_types={LabelType.Standard, LabelType.Weak})
 
+
 class TrainSetSelectorEqualRatio(TrainSetSelectorEnforcePositiveNegativeRatio):
     def __init__(self, data_access, background_jobs_manager):
         super().__init__(data_access, background_jobs_manager, label_types={LabelType.Standard},
-                                                            required_negative_ratio=1)
+                         required_negative_ratio=1)
+
 
 class TrainSetSelectorX2NegativeRatio(TrainSetSelectorEnforcePositiveNegativeRatio):
     def __init__(self, data_access, background_jobs_manager):
         super().__init__(data_access, background_jobs_manager, label_types={LabelType.Standard},
-                                                            required_negative_ratio=2)
+                         required_negative_ratio=2)
+
 
 class TrainSetSelectorX10NegativeRatio(TrainSetSelectorEnforcePositiveNegativeRatio):
     def __init__(self, data_access, background_jobs_manager):
         super().__init__(data_access, background_jobs_manager, label_types={LabelType.Standard},
-                                                            required_negative_ratio=10)
+                         required_negative_ratio=10)
 
 
 class TrainSetSelectorEqualRatioIncludeWeak(TrainSetSelectorEnforcePositiveNegativeRatio):

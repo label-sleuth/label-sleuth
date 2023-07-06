@@ -66,7 +66,7 @@ class TestEnsembleModel(unittest.TestCase):
             scores = [ensemble_pred.model_type_to_prediction[t.name].score for t in self.ensemble.model_types]
             self.assertEqual(ensemble_pred.score, self.ensemble.aggregation_func(scores))
 
-    #TODO add a test for ensemble model path validation once export is fully implemented
+    # TODO add a test for ensemble model path validation once export is fully implemented
 
     def tearDown(self):
         self.temp_dir.cleanup()

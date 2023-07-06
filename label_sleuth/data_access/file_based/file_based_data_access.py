@@ -37,6 +37,7 @@ from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExist
     LabeledStatus, BadDocumentNamesException, DocumentNameTooLongException, get_document_id, DocumentNameEmptyException
 from label_sleuth.data_access.file_based.utils import get_dataset_name_from_uri
 
+
 def _validate_document_names(documents: Sequence[Document], max_document_name_length):
     # validate non empty
     has_empty_document_ids = any(len(get_document_id(document.uri)) == 0 for document in documents)
@@ -116,9 +117,9 @@ class FileBasedDataAccess(DataAccessApi):
             doc_ids = {document.uri for document in documents}
             intersection = doc_ids.intersection(set(self.get_all_document_uris(dataset_name)))
             if len(intersection) > 0:
-                raise AlreadyExistsException(f"{len(intersection)} documents are already in dataset '{dataset_name}'. "
-                                             f"uris: ({list(intersection)[:5]}{'...' if len(intersection) > 5 else ''})",
-                                             list(intersection))
+                raise AlreadyExistsException(
+                    f"{len(intersection)} documents are already in dataset '{dataset_name}'. "
+                    f"uris: ({list(intersection)[:5]}{'...' if len(intersection) > 5 else ''})", list(intersection))
 
         for doc in documents:
             # save doc to file
@@ -201,7 +202,7 @@ class FileBasedDataAccess(DataAccessApi):
             self._save_labels_data(dataset_name, workspace_id)
 
     def get_documents(self, workspace_id: Union[None, str], dataset_name: str, uris: Iterable[str],
-                      label_types: Union[None,Set[LabelType]] = frozenset({LabelType.Standard})) \
+                      label_types: Union[None, Set[LabelType]] = frozenset({LabelType.Standard})) \
             -> List[Document]:
         """
         Return a List of Documents, from the given dataset_name, matching the uris provided, and add the label
@@ -426,7 +427,7 @@ class FileBasedDataAccess(DataAccessApi):
 
     def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Iterable[str],
                                   label_types: Set[LabelType] = frozenset({LabelType.Standard}))\
-                                                                                    -> List[TextElement]:
+            -> List[TextElement]:
         """
         Return a List of TextElement objects from the given dataset_name, matching the uris provided, and add the label
         information for the workspace to these TextElements, if available.
@@ -562,7 +563,7 @@ class FileBasedDataAccess(DataAccessApi):
                 if label_types is None:
                     elem.category_to_label = labels_info_for_workspace[elem.uri].copy()
                 else:
-                    elem.category_to_label = {cat:label for cat, label in labels_info_for_workspace[elem.uri].items()
+                    elem.category_to_label = {cat: label for cat, label in labels_info_for_workspace[elem.uri].items()
                                               if label.label_type in label_types}
         return text_elements
 

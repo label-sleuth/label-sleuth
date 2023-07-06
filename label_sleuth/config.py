@@ -29,7 +29,6 @@ from label_sleuth.models.core.languages import Language, Languages
 from label_sleuth.models.core.model_policies import ModelPolicies
 from label_sleuth.models.policy.model_policy import ModelPolicy
 from label_sleuth.training_set_selector.train_set_selector_api import TrainSetSelectorAPI
-from label_sleuth.training_set_selector.train_set_selectors import TrainSetSelectorAllLabeled
 from label_sleuth.training_set_selector.train_set_selectors_catalog import TrainSetSelectorsCatalog
 
 
@@ -58,7 +57,7 @@ converters = {
     Type[TrainSetSelectorAPI]: lambda x: getattr(TrainSetSelectorsCatalog, x),
     ActiveLearningStrategy: lambda x: getattr(ActiveLearningCatalog, x),
     ActiveLearningPolicy: lambda x: getattr(ActiveLearningPolicies, x),
-    Language: lambda x: getattr(Languages, x)
+    Language: lambda x: getattr(Languages, x.upper())
 }
 
 
@@ -71,8 +70,8 @@ def load_config(config_path, command_line_args=None) -> Configuration:
     if command_line_args:
         for arg in command_line_args:
             if arg in raw_cfg and command_line_args[arg] is not None:
-                logging.info(f"Overriding config file argument {arg} with a command line argument. "
-                             f"Value changed from {raw_cfg[arg]} to {command_line_args[arg]}")
+                logging.info(f"Overriding config file argument '{arg}' with a command line argument. "
+                             f"Value changed from '{raw_cfg[arg]}' to '{command_line_args[arg]}'")
                 raw_cfg[arg] = command_line_args[arg]
 
     config = dacite.from_dict(

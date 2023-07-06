@@ -1,4 +1,3 @@
-import ast
 import dataclasses
 import logging
 import os
@@ -24,9 +23,9 @@ def load_model_prediction_store_from_disk(path_to_store: str, prediction_class: 
         return {}
     with open(path_to_store) as reader:
         model_prediction_store = ujson.load(reader)
-    res =  {k: prediction_class(**v) for k, v in model_prediction_store.items()}
-
+    res = {k: prediction_class(**v) for k, v in model_prediction_store.items()}
     return res
+
 
 def save_model_prediction_store_to_disk(path_to_store: str, model_cache: Dict[Tuple, Prediction]):
     """

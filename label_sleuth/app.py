@@ -22,12 +22,10 @@ import zipfile
 import pkg_resources
 from concurrent.futures.thread import ThreadPoolExecutor
 from io import BytesIO, StringIO
-from .utils import make_error
-import json
 
 import dacite
 import pandas as pd
-from flask import Flask, jsonify, request, send_file, make_response, send_from_directory, current_app, Blueprint, g, Response
+from flask import Flask, jsonify, request, send_file, make_response, send_from_directory, current_app, Blueprint
 from flask_cors import CORS, cross_origin
 
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
@@ -47,6 +45,7 @@ from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus, OrchestratorStateApi
 from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi
+from label_sleuth.utils import make_error
 
 print("user:")
 print(getpass.getuser())
@@ -75,8 +74,8 @@ def create_app(
             config: Configuration, 
             output_dir, 
             register_main_blueprint=True, 
-            customizable_ui_text_path : str = None,
-            app_root_path : str = None
+            customizable_ui_text_path: str = None,
+            app_root_path: str = None
         ) -> LabelSleuthApp:
 
     os.makedirs(output_dir, exist_ok=True)
@@ -135,7 +134,7 @@ def serve(path):
     app_logo_path = curr_app.config['app_logo_path']
     if path == app_logo_path:
         if curr_app.config['app_root_path']:
-            app_logo_path = os.path.join(curr_app.config['app_root_path'],app_logo_path)
+            app_logo_path = os.path.join(curr_app.config['app_root_path'], app_logo_path)
         return send_file(app_logo_path)
 
     return send_from_directory(curr_app.static_folder, 'index.html')
@@ -183,6 +182,7 @@ def get_all_dataset_ids():
                [{"dataset_id": d} for d in all_datasets]}
     return jsonify(res)
 
+
 @main_blueprint.route('/datasets/<dataset_name>/add_documents', methods=['POST'])
 @cross_origin()
 @login_if_required
@@ -205,7 +205,7 @@ def add_documents(dataset_name):
         csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
         df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
 
-        if not text_column in df.columns:
+        if text_column not in df.columns:
             raise NoTextColumnException("The csv file doesn't have a text column")
 
         temp_dir = os.path.join(curr_app.config["output_dir"], "temp", "csv_upload")
@@ -345,7 +345,7 @@ def delete_workspace(workspace_id):
 
     :param workspace_id:
     """
-    try :
+    try:
         curr_app.orchestrator_api.delete_workspace(workspace_id)
         return jsonify({'workspace_id': workspace_id})
     except Exception as e:
@@ -1055,7 +1055,7 @@ def prepare_model(workspace_id):
             with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
                 for dirpath, dirnames, filenames in os.walk(temp_model_dir):
                     for filename in filenames:
-                        if filename == "model.zip": # skip previously created compressed file
+                        if filename == "model.zip":  # skip previously created compressed file
                             continue
                         file_path = os.path.join(dirpath, filename)
                         archive_file_path = os.path.relpath(file_path, temp_model_dir)
@@ -1117,6 +1117,7 @@ def export_model(workspace_id):
                 f"/export_model invoked without invoking /prepare_model first in workspace"
                 f" {workspace_id} category_id {category_id}"
         }, 500)
+
 
 """
 Labeling reports. These calls return labeled elements which the system suggests for review by the user, aiming to 

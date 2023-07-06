@@ -179,7 +179,6 @@ Hebrew = Language(name='Hebrew',
                   fasttext_language_id="he",
                   right_to_left=True)
 
-
 Arabic = Language(name='Arabic',
                   stop_words=["التى", "التي", "الذى", "الذي", "الذين", "ذلك", "هذا", "هذه", "هؤلاء", "قد", "وقد", "حيث",
                               "ان", "إن", "انه", "وان", "فان", "فإن", "بان", "اي", "أي", "ايضا", "أيضا", "إياه"],
@@ -187,39 +186,91 @@ Arabic = Language(name='Arabic',
                   right_to_left=True)
 
 Spanish = Language(name='Spanish',
-                    stop_words=['de', 'la', 'que', 'el', 'en', 'y', 'a', 'los', 'del', 'se', 'las', 'por', 'un', 'para', 
-                                'con', 'no', 'una', 'su', 'al', 'lo', 'como', 'más', 'pero', 'sus', 'le', 'ya', 'o', 'este', 
-                                'sí', 'porque', 'esta', 'entre', 'cuando', 'muy', 'sin', 'sobre', 'también', 'me', 'hasta', 
-                                'hay', 'donde', 'quien', 'desde', 'todo', 'nos', 'durante', 'todos', 'uno', 'les', 'ni', 
-                                'contra', 'otros', 'ese', 'eso', 'ante', 'ellos', 'e', 'esto', 'mí', 'antes', 'algunos', 
-                                'qué', 'unos', 'yo', 'otro', 'otras', 'otra', 'él', 'tanto', 'esa', 'estos', 'mucho', 'quienes', 
-                                'nada', 'muchos', 'cual', 'poco', 'ella', 'estar', 'estas', 'algunas', 'algo', 'nosotros', 'mi', 
-                                'mis', 'tú', 'te', 'ti', 'tu', 'tus', 'ellas', 'nosotras', 'vosostros', 'vosostras', 'os', 'mío', 
-                                'mía', 'míos', 'mías', 'tuyo', 'tuya', 'tuyos', 'tuyas', 'suyo', 'suya', 'suyos', 'suyas', 'nuestro', 
-                                'nuestra', 'nuestros', 'nuestras', 'vuestro', 'vuestra', 'vuestros', 'vuestras', 'esos', 'esas', 'estoy', 
-                                'estás', 'está', 'estamos', 'estáis', 'están', 'esté', 'estés', 'estemos', 'estéis', 'estén', 'estaré', 
-                                'estarás', 'estará', 'estaremos', 'estaréis', 'estarán', 'estaría', 'estarías', 'estaríamos', 'estaríais', 
-                                'estarían', 'estaba', 'estabas', 'estábamos', 'estabais', 'estaban', 'estuve', 'estuviste', 'estuvo', 
-                                'estuvimos', 'estuvisteis', 'estuvieron', 'estuviera', 'estuvieras', 'estuviéramos', 'estuvierais', 
-                                'estuvieran', 'estuviese', 'estuvieses', 'estuviésemos', 'estuvieseis', 'estuviesen', 'estando', 'estado', 
-                                'estada', 'estados', 'estadas', 'estad', 'he', 'has', 'ha', 'hemos', 'habéis', 'han', 'haya', 'hayas', 
-                                'hayamos', 'hayáis', 'hayan', 'habré', 'habrás', 'habrá', 'habremos', 'habréis', 'habrán', 'habría', 
-                                'habrías', 'habríamos', 'habríais', 'habrían', 'había', 'habías', 'habíamos', 'habíais', 'habían', 'hube', 
-                                'hubiste', 'hubo', 'hubimos', 'hubisteis', 'hubieron', 'hubiera', 'hubieras', 'hubiéramos', 'hubierais', 
-                                'hubieran', 'hubiese', 'hubieses', 'hubiésemos', 'hubieseis', 'hubiesen', 'habiendo', 'habido', 'habida', 
-                                'habidos', 'habidas', 'soy', 'eres', 'es', 'somos', 'sois', 'son', 'sea', 'seas', 'seamos', 'seáis', 'sean', 
-                                'seré', 'serás', 'será', 'seremos', 'seréis', 'serán', 'sería', 'serías', 'seríamos', 'seríais', 'serían', 'era', 
-                                'eras', 'éramos', 'erais', 'eran', 'fui', 'fuiste', 'fue', 'fuimos', 'fuisteis', 'fueron', 'fuera', 'fueras', 
-                                'fuéramos', 'fuerais', 'fueran', 'fuese', 'fueses', 'fuésemos', 'fueseis', 'fuesen', 'tengo', 'tienes', 'tiene', 'tenemos', 'tenéis', 'tienen', 
-                                'tenga', 'tengas', 'tengamos', 'tengáis', 'tengan', 'tendré', 'tendrás', 'tendrá', 'tendremos', 'tendréis', 'tendrán', 
-                                'tendría', 'tendrías', 'tendríamos', 'tendríais', 'tendrían', 'tenía', 'tenías', 'teníamos', 'teníais', 'tenían', 
-                                'tuve', 'tuviste', 'tuvo', 'tuvimos', 'tuvisteis', 'tuvieron', 'tuviera', 'tuvieras', 'tuviéramos', 'tuvierais', 
-                                'tuvieran', 'tuviese', 'tuvieses', 'tuviésemos', 'tuvieseis', 'tuviesen', 'teniendo', 'tenido', 'tenida', 'tenidos', 
-                                'tenidas', 'tened'],
-                                fasttext_language_id='es')
+                   stop_words=['de', 'la', 'que', 'el', 'en', 'y', 'a', 'los', 'del', 'se', 'las', 'por', 'un', 'para',
+                               'con', 'no', 'una', 'su', 'al', 'lo', 'como', 'más', 'pero', 'sus', 'le', 'ya', 'o',
+                               'este', 'sí', 'porque', 'esta', 'entre', 'cuando', 'muy', 'sin', 'sobre', 'también',
+                               'me', 'hasta', 'hay', 'donde', 'quien', 'desde', 'todo', 'nos', 'durante', 'todos',
+                               'uno', 'les', 'ni', 'contra', 'otros', 'ese', 'eso', 'ante', 'ellos', 'e', 'esto', 'mí',
+                               'antes', 'algunos', 'qué', 'unos', 'yo', 'otro', 'otras', 'otra', 'él', 'tanto', 'esa',
+                               'estos', 'mucho', 'quienes', 'nada', 'muchos', 'cual', 'poco', 'ella', 'estar', 'estas',
+                               'algunas', 'algo', 'nosotros', 'mi', 'mis', 'tú', 'te', 'ti', 'tu', 'tus', 'ellas',
+                               'nosotras', 'vosostros', 'vosostras', 'os', 'mío', 'mía', 'míos', 'mías', 'tuyo', 'tuya',
+                               'tuyos', 'tuyas', 'suyo', 'suya', 'suyos', 'suyas', 'nuestro', 'nuestra', 'nuestros',
+                               'nuestras', 'vuestro', 'vuestra', 'vuestros', 'vuestras', 'esos', 'esas', 'estoy',
+                               'estás', 'está', 'estamos', 'estáis', 'están', 'esté', 'estés', 'estemos', 'estéis',
+                               'estén', 'estaré', 'estarás', 'estará', 'estaremos', 'estaréis', 'estarán', 'estaría',
+                               'estarías', 'estaríamos', 'estaríais', 'estarían', 'estaba', 'estabas', 'estábamos',
+                               'estabais', 'estaban', 'estuve', 'estuviste', 'estuvo', 'estuvimos', 'estuvisteis',
+                               'estuvieron', 'estuviera', 'estuvieras', 'estuviéramos', 'estuvierais', 'estuvieran',
+                               'estuviese', 'estuvieses', 'estuviésemos', 'estuvieseis', 'estuviesen', 'estando',
+                               'estado', 'estada', 'estados', 'estadas', 'estad', 'he', 'has', 'ha', 'hemos', 'habéis',
+                               'han', 'haya', 'hayas', 'hayamos', 'hayáis', 'hayan', 'habré', 'habrás', 'habrá',
+                               'habremos', 'habréis', 'habrán', 'habría', 'habrías', 'habríamos', 'habríais', 'habrían',
+                               'había', 'habías', 'habíamos', 'habíais', 'habían', 'hube', 'hubiste', 'hubo', 'hubimos',
+                               'hubisteis', 'hubieron', 'hubiera', 'hubieras', 'hubiéramos', 'hubierais', 'hubieran',
+                               'hubiese', 'hubieses', 'hubiésemos', 'hubieseis', 'hubiesen', 'habiendo', 'habido',
+                               'habida', 'habidos', 'habidas', 'soy', 'eres', 'es', 'somos', 'sois', 'son', 'sea',
+                               'seas', 'seamos', 'seáis', 'sean', 'seré', 'serás', 'será', 'seremos', 'seréis', 'serán',
+                               'sería', 'serías', 'seríamos', 'seríais', 'serían', 'era', 'eras', 'éramos', 'erais',
+                               'eran', 'fui', 'fuiste', 'fue', 'fuimos', 'fuisteis', 'fueron', 'fuera', 'fueras',
+                               'fuéramos', 'fuerais', 'fueran', 'fuese', 'fueses', 'fuésemos', 'fueseis', 'fuesen',
+                               'tengo', 'tienes', 'tiene', 'tenemos', 'tenéis', 'tienen', 'tenga', 'tengas', 'tengamos',
+                               'tengáis', 'tengan', 'tendré', 'tendrás', 'tendrá', 'tendremos', 'tendréis', 'tendrán',
+                               'tendría', 'tendrías', 'tendríamos', 'tendríais', 'tendrían', 'tenía', 'tenías',
+                               'teníamos', 'teníais', 'tenían', 'tuve', 'tuviste', 'tuvo', 'tuvimos', 'tuvisteis',
+                               'tuvieron', 'tuviera', 'tuvieras', 'tuviéramos', 'tuvierais', 'tuvieran', 'tuviese',
+                               'tuvieses', 'tuviésemos', 'tuvieseis', 'tuviesen', 'teniendo', 'tenido', 'tenida',
+                               'tenidos', 'tenidas', 'tened'],
+                   fasttext_language_id='es')
+
+# languages with fasttext word vectors (from https://fasttext.cc/docs/en/crawl-vectors.html), and their associated ids
+fasttext_language_name_to_id = \
+    {"Afrikaans": "af", "Albanian": "sq", "Alemannic": "als", "Amharic": "am", "Arabic": "ar", "Aragonese": "an",
+     "Armenian": "hy", "Assamese": "as", "Asturian": "ast", "Azerbaijani": "az", "Bashkir": "ba", "Basque": "eu",
+     "Bavarian": "bar", "Belarusian": "be", "Bengali": "bn", "Bihari": "bh", "Bishnupriya Manipuri": "bpy",
+     "Bosnian": "bs", "Breton": "br", "Bulgarian": "bg", "Burmese": "my", "Catalan": "ca", "Cebuano": "ceb",
+     "Central Bicolano": "bcl", "Chechen": "ce", "Chinese": "zh", "Chuvash": "cv", "Corsican": "co", "Croatian": "hr",
+     "Czech": "cs", "Danish": "da", "Divehi": "dv", "Dutch": "nl", "Eastern Punjabi": "pa", "Egyptian Arabic": "arz",
+     "Emilian-Romagnol": "eml", "English": "en", "Erzya": "myv", "Esperanto": "eo", "Estonian": "et",
+     "Fiji Hindi": "hif", "Finnish": "fi", "French": "fr", "Galician": "gl", "Georgian": "ka", "German": "de",
+     "Goan Konkani": "gom", "Greek": "el", "Gujarati": "gu", "Haitian": "ht", "Hebrew": "he", "Hill Mari": "mrj",
+     "Hindi": "hi", "Hungarian": "hu", "Icelandic": "is", "Ido": "io", "Ilokano": "ilo", "Indonesian": "id",
+     "Interlingua": "ia", "Irish": "ga", "Italian": "it", "Japanese": "ja", "Javanese": "jv", "Kannada": "kn",
+     "Kapampangan": "pam", "Kazakh": "kk", "Khmer": "km", "Kirghiz": "ky", "Korean": "ko", "Kurdish (Kurmanji)": "ku",
+     "Kurdish (Sorani)": "ckb", "Latin": "la", "Latvian": "lv", "Limburgish": "li", "Lithuanian": "lt",
+     "Lombard": "lmo", "Low Saxon": "nds", "Luxembourgish": "lb", "Macedonian": "mk", "Maithili": "mai",
+     "Malagasy": "mg", "Malay": "ms", "Malayalam": "ml", "Maltese": "mt", "Manx": "gv", "Marathi": "mr",
+     "Mazandarani": "mzn", "Meadow Mari": "mhr", "Minangkabau": "min", "Mingrelian": "xmf", "Mirandese": "mwl",
+     "Mongolian": "mn", "Nahuatl": "nah", "Neapolitan": "nap", "Nepali": "ne", "Newar": "new", "North Frisian": "frr",
+     "Northern Sotho": "nso", "Norwegian (Bokmål)": "no", "Norwegian (Nynorsk)": "nn", "Occitan": "oc", "Oriya": "or",
+     "Ossetian": "os", "Palatinate German": "pfl", "Pashto": "ps", "Persian": "fa", "Piedmontese": "pms",
+     "Polish": "pl", "Portuguese": "pt", "Quechua": "qu", "Romanian": "ro", "Romansh": "rm", "Russian": "ru",
+     "Sakha": "sah", "Sanskrit": "sa", "Sardinian": "sc", "Scots": "sco", "Scottish Gaelic": "gd", "Serbian": "sr",
+     "Serbo-Croatian": "sh", "Sicilian": "scn", "Sindhi": "sd", "Sinhalese": "si", "Slovak": "sk", "Slovenian": "sl",
+     "Somali": "so", "Southern Azerbaijani": "azb", "Spanish": "es", "Sundanese": "su", "Swahili": "sw",
+     "Swedish": "sv", "Tagalog": "tl", "Tajik": "tg", "Tamil": "ta", "Tatar": "tt", "Telugu": "te", "Thai": "th",
+     "Tibetan": "bo", "Turkish": "tr", "Turkmen": "tk", "Ukrainian": "uk", "Upper Sorbian": "hsb", "Urdu": "ur",
+     "Uyghur": "ug", "Uzbek": "uz", "Venetian": "vec", "Vietnamese": "vi", "Volapük": "vo", "Walloon": "wa",
+     "Waray": "war", "Welsh": "cy", "West Flemish": "vls", "West Frisian": "fy", "Western Punjabi": "pnb",
+     "Yiddish": "yi", "Yoruba": "yo", "Zazaki": "diq", "Zeelandic": "zea"}
 
 
+def add_auto_languages(cls):
+    for language_name, language_id in fasttext_language_name_to_id.items():
+        if not hasattr(cls, language_name.upper()):
+            auto_language = Language(name=language_name, stop_words=[], fasttext_language_id=language_id)
+            setattr(cls, language_name.upper(), auto_language)
+    return cls
+
+
+@add_auto_languages
 class Languages:
+    """
+    This class contains Language objects for all languages supported by Label Sleuth. A few Language objects are defined
+    explicitly below - these languages are initialized with a list of stop-words and/or some specific attributes;
+    ~150 additional Language objects are initialized automatically and added to the class by the *add_auto_languages*
+    decorator. The full list of supported languages can be found in *fasttext_language_name_to_id*.
+    """
     ENGLISH = English
     ITALIAN = Italian
     ROMANIAN = Romanian

@@ -174,7 +174,8 @@ def get_text_snippet(text, query_string):
     end_text = " ".join(text_tokens[-int(max_token_length / 2):])
     if not query_string:
         return starting_text + " ... " + end_text
-    matches = [m for m in re.finditer(r"\b[0-9a-zA-Z_`'.-]*"+query_string+r"[0-9a-zA-Z_`'.-]*\b", text, flags=re.IGNORECASE)][:3]
+    matches = [m for m in re.finditer(r"\b[0-9a-zA-Z_`'.-]*"+query_string+r"[0-9a-zA-Z_`'.-]*\b",
+                                      text, flags=re.IGNORECASE)][:3]
     if len(matches) == 0:
         return starting_text + " ... " + end_text
     snippet = ""
@@ -183,7 +184,7 @@ def get_text_snippet(text, query_string):
     for i, m in enumerate(matches):
         start_ind = m.regs[0][0]
         end_ind = m.regs[0][1]
-        match = text[start_ind:end_ind ]
+        match = text[start_ind:end_ind]
         text_before_match = text[:start_ind].split()
         text_after_match = text[end_ind:].split()
         if i == 0 and start_ind - len(" ".join(text_before_match[-num_tokens_before_after_match:])) > 1:
@@ -199,19 +200,21 @@ def get_text_snippet(text, query_string):
 def get_natural_sort_key(text):
     return [int(x) if x.isdigit() else x for x in re.split(r'(\d+)', text)]
 
+
 def get_default_customizable_UI_text():
-    '''
+    """
     Returns a dict with the default values of the UI customizable elements
-    '''
+    """
     with open(os.path.join(os.path.dirname(__file__), "ui_defaults.json"), "rb") as f:
         return json.load(f)
-    
+
+
 def get_customizable_UI_text(path: str = None):
-    '''
+    """
     Returns a dict with the values of the UI customizable components, such as texts, urls and app logo.
-    If path is None, the defaults are returned. If path is not None, the values in the file are 
+    If path is None, the defaults are returned. If path is not None, the values in the file are
     returned. If some values are not present in the provided files, the default values are used.
-    '''
+    """
     default_customizable_UI_text = get_default_customizable_UI_text()
     if path is not None:
         try:
@@ -227,10 +230,11 @@ def get_customizable_UI_text(path: str = None):
         if len(wrong_keys) > 0:
             return make_error({
                 "type": "wrong_customizable_keys",
-                "title": f"The following keys in the provided customizable UI elements are not supported: {', '.join(wrong_keys)}."
+                "title": f"The following keys in the provided customizable UI elements are not supported: "
+                         f"{', '.join(wrong_keys)}."
             }, 404)
-        merged = { dk: dv if dk not in customizable_UI_text else customizable_UI_text[dk] 
-                    for (dk,dv) in default_customizable_UI_text.items()}
+        merged = {dk: dv if dk not in customizable_UI_text else customizable_UI_text[dk]
+                  for dk, dv in default_customizable_UI_text.items()}
         return merged
     else:
         return default_customizable_UI_text
