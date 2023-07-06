@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
+import json
 import logging
 import re
 import os
@@ -141,8 +141,15 @@ class SentenceEmbeddingService:
         Load or download a spacy model by name, and place it inside self.spacy_models_path
         """
         model_path = os.path.join(self.spacy_models_path, model_name)
+
         if os.path.exists(model_path):
-            return spacy.load(model_path)
+            with open(os.path.join(model_path, 'meta.json')) as f:
+                version = json.load(f)['version']
+            if version != '3.5.0':
+                logging.info("Replacing existing spacy model with newer version")
+                shutil.rmtree(model_path)
+            else:
+                return spacy.load(model_path)
 
         logging.info(f"Spacy model does not exist in {model_path}, downloading...")
         self.download_spacy_model(model_name, model_path)
@@ -167,6 +174,12 @@ class SentenceEmbeddingService:
         finally:
             os.chdir(original_cwd)
         return fasttext.load_model(model_path)
+
+    def get_spacy_model_version(self, language):
+        with open(os.path.join(self.spacy_models_path, language.spacy_model_name, 'meta.json')) as f:
+            version = json.load(f)['version']
+
+        return version
 
 
 def remove_stop_words_and_punctuation(sentences: List[str], language=Languages.ENGLISH) -> List[str]:
