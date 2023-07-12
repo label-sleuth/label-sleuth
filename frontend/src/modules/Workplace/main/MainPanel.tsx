@@ -30,7 +30,10 @@ import {
   APPBAR_HEIGHT,
   PanelIdsEnum,
 } from "../../../const";
-import { getPanelDOMKey, getDocumentNameFromDocumentId } from "../../../utils/utils";
+import {
+  getPanelDOMKey,
+  getDocumentNameFromDocumentId,
+} from "../../../utils/utils";
 import { useScrollMainPanelElementIntoView } from "../../../customHooks/useScrollElementIntoView";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
 import { useFetchPrevNextDoc } from "../../../customHooks/useFetchPrevNextDoc";
@@ -38,9 +41,19 @@ import { useMainPagination } from "../../../customHooks/useMainPagination";
 import { Element } from "../../../global";
 import { currentDocNameSelector } from "../redux/documentSlice";
 import { NavigatePositivePredictions } from "./NavigatePositivePredictions";
+import { IconButton, Stack, Typography } from "@mui/material";
+import NumbersIcon from "@mui/icons-material/Numbers";
 
 const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(
-  ({ theme, open, rightDrawerWidth }: { theme?: any; open: boolean; rightDrawerWidth: number }) => ({
+  ({
+    theme,
+    open,
+    rightDrawerWidth,
+  }: {
+    theme?: any;
+    open: boolean;
+    rightDrawerWidth: number;
+  }) => ({
     position: "fixed",
     padding: theme.spacing(3),
     margin: 0,
@@ -62,12 +75,25 @@ interface MainPanelProps {
 
 const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
   const documents = useAppSelector((state) => state.workspace.documents);
-  const mainPanelElementsPerPage = useAppSelector((state) => state.featureFlags.mainPanelElementsPerPage);
+  const mainPanelElementsPerPage = useAppSelector(
+    (state) => state.featureFlags.mainPanelElementsPerPage
+  );
   const curDocIndex = useAppSelector((state) => state.workspace.curDocIndex);
   const curDocName = useAppSelector(currentDocNameSelector);
 
-  const { currentContentData, hitCount, currentPage, onPageChange, isPaginationRequired } =
-    useMainPagination(mainPanelElementsPerPage);
+  const documentPositivePredictionIds = useAppSelector(
+    (state) =>
+      state.workspace.panels.panels[PanelIdsEnum.MAIN_PANEL]
+        .documentPositivePredictionIds
+  );
+
+  const {
+    currentContentData,
+    hitCount,
+    currentPage,
+    onPageChange,
+    isPaginationRequired,
+  } = useMainPagination(mainPanelElementsPerPage);
 
   const { handleFetchNextDoc, handleFetchPrevDoc } = useFetchPrevNextDoc();
 
@@ -76,11 +102,13 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
   return (
     <>
       <Main
-        className={`${classes.main_content} ${isPaginationRequired ? classes.pagination_margin : ""}`}
+        className={`${classes.main_content} ${
+          isPaginationRequired ? classes.pagination_margin : ""
+        }`}
         open={open}
         rightDrawerWidth={rightDrawerWidth}
       >
-        <div className={classes.doc_header}>
+        <Box className={classes.doc_header}>
           <Tooltip
             title={curDocIndex !== 0 ? PREV_DOC_TOOLTIP_MSG : ""}
             placement="right"
@@ -93,7 +121,11 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
             }}
           >
             <button
-              className={curDocIndex === 0 ? classes["doc_button_disabled"] : classes["doc_button"]}
+              className={
+                curDocIndex === 0
+                  ? classes["doc_button_disabled"]
+                  : classes["doc_button"]
+              }
               onClick={handleFetchPrevDoc}
             >
               <img src={left_icon} alt={"previous document"} />
@@ -101,35 +133,83 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
           </Tooltip>
           <div className={classes.doc_stats}>
             <h6>{getDocumentNameFromDocumentId(curDocName)}</h6>
-            <em>Text Entries: {hitCount ?? 0}</em>
+            <Stack
+              direction={"row"}
+              alignItems={"center"}
+              justifyContent={"center"}
+            >
+              {/* <em>Text Entries: {hitCount ?? 0}</em> */}
+              <Tooltip title={"Text entries"}>
+                <span>
+                  <Stack direction={"row"} alignItems={"center"}>
+                    <NumbersIcon sx={{ opacity: 0.4, fontSize: "18px" }} />
+                    <Typography
+                      sx={{
+                        fontSize: "14px",
+                        lineHeight: "14px",
+                        opacity: 0.5,
+                      }}
+                    >
+                      {hitCount ?? 0}
+                    </Typography>
+                  </Stack>
+                </span>
+              </Tooltip>
+              {documentPositivePredictionIds !== null ? (
+                <>
+                  <h6
+                    style={{
+                      opacity: 0.5,
+                      fontSize: "1rem",
+                      marginLeft: "10px",
+                      marginRight: "5px",
+                    }}
+                  >
+                    |
+                  </h6>
+                  <NavigatePositivePredictions />
+                </>
+              ) : null}
+            </Stack>
           </div>
-          <NavigatePositivePredictions />
           <Tooltip
-            title={documents.length - 1 !== curDocIndex ? NEXT_DOC_TOOLTIP_MSG : ""}
+            title={
+              documents.length - 1 !== curDocIndex ? NEXT_DOC_TOOLTIP_MSG : ""
+            }
             placement="left"
             componentsProps={{
               tooltip: {
                 sx: {
-                  bgcolor: documents.length - 1 !== curDocIndex ? "common.black" : "transparent",
+                  bgcolor:
+                    documents.length - 1 !== curDocIndex
+                      ? "common.black"
+                      : "transparent",
                 },
               },
             }}
           >
             <button
-              className={documents.length - 1 === curDocIndex ? classes["doc_button_disabled"] : classes["doc_button"]}
+              className={
+                documents.length - 1 === curDocIndex
+                  ? classes["doc_button_disabled"]
+                  : classes["doc_button"]
+              }
               onClick={handleFetchNextDoc}
             >
               <img src={right_icon} alt={"next document"} />
             </button>
           </Tooltip>
-        </div>
+        </Box>
         <div className={classes.doc_content}>
           <Box id="main-element-view">
             {currentContentData &&
               currentContentData.map((element) => (
                 <MainElement
                   element={element as Element}
-                  key={getPanelDOMKey((element as Element).id, PanelIdsEnum.MAIN_PANEL)}
+                  key={getPanelDOMKey(
+                    (element as Element).id,
+                    PanelIdsEnum.MAIN_PANEL
+                  )}
                 />
               ))}
           </Box>

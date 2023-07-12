@@ -18,12 +18,14 @@ import { useAppSelector } from "../../customHooks/useRedux";
 import classes from "./Element.module.css";
 import labelButtonClasses from "../labelButtons/index.module.css";
 import { getPanelDOMKey } from "../../utils/utils";
-import { PanelIdsEnum } from "../../const";
+import { LabelTypesEnum, PanelIdsEnum } from "../../const";
 import useLabelState from "../../customHooks/useLabelState";
 import { useElemStyles } from "../../customHooks/useElemStyles";
 import { Element } from "../../global";
 import { LabelingButtons } from "./LabelingButtons";
 import { LabelCategoriesMenu } from "./LabelNonCurrentCatMenu";
+import posPredIcon from "../../assets/bot.png";
+import { IconButton } from "@mui/material";
 
 interface ElementProps {
   element: Element;
@@ -36,31 +38,76 @@ export const MainElement = ({ element }: ElementProps) => {
   const rightToLeft = useAppSelector((state) => state.featureFlags.rightToLeft);
 
   const { handlePosLabelAction, handleNegLabelAction } = useLabelState();
-  const elementDOMId = useMemo(() => getPanelDOMKey(id, PanelIdsEnum.MAIN_PANEL), [id]);
-  const elemStyleClasses = useElemStyles({ elementDOMId, prediction: modelPrediction, userLabel });
-
-  const [labelMenuOpenAnchorEl, setLabelMenuOpenAnchorEl] = React.useState<(EventTarget & globalThis.Element) | null>(
-    null
+  const elementDOMId = useMemo(
+    () => getPanelDOMKey(id, PanelIdsEnum.MAIN_PANEL),
+    [id]
   );
-  const labelMenuOpen = useMemo(() => Boolean(labelMenuOpenAnchorEl), [labelMenuOpenAnchorEl]);
+  const elemStyleClasses = useElemStyles({
+    elementDOMId,
+    prediction: modelPrediction,
+    userLabel,
+  });
+
+  const [labelMenuOpenAnchorEl, setLabelMenuOpenAnchorEl] = React.useState<
+    (EventTarget & globalThis.Element) | null
+  >(null);
+  const labelMenuOpen = useMemo(
+    () => Boolean(labelMenuOpenAnchorEl),
+    [labelMenuOpenAnchorEl]
+  );
 
   const evaluationIsInProgress = useAppSelector(
-    (state) => state.workspace.panels.panels[PanelIdsEnum.EVALUATION].isInProgress
+    (state) =>
+      state.workspace.panels.panels[PanelIdsEnum.EVALUATION].isInProgress
   );
-
   return curCategory === null ? (
-    <Box className={`${elemStyleClasses.prediction} ${elemStyleClasses.animation}`} id={elementDOMId}>
-      <p className={`${classes["nodata_text"]} ${rightToLeft ? classes.right_to_left : ""}`}>{text}</p>
+    <Box
+      className={`${elemStyleClasses.prediction} ${elemStyleClasses.animation}`}
+      id={elementDOMId}
+    >
+      <p
+        className={`${classes["nodata_text"]} ${
+          rightToLeft ? classes.right_to_left : ""
+        }`}
+      >
+        {text}
+      </p>
     </Box>
   ) : (
     <>
       <Box
-        className={`${elemStyleClasses.prediction} ${elemStyleClasses.animation} ${labelButtonClasses.text_element} ${
+        className={`${elemStyleClasses.prediction} ${
+          elemStyleClasses.animation
+        } ${labelButtonClasses.text_element} ${
           labelMenuOpen ? classes.hover_element_on_menu_open : ""
         }`}
         id={elementDOMId}
       >
-        <p className={`${classes.data_text} ${elemStyleClasses.userLabel} ${rightToLeft ? classes.right_to_left : ""}`}>
+        {/* {modelPrediction === LabelTypesEnum.POS ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              order: 1,
+              flex: "0 0 auto",
+            }}
+          >
+            <img
+              style={{
+                opacity: 0.5,
+                width: "14px",
+                height: "14px",
+              }}
+              src={posPredIcon}
+              alt="Positive prediction icon"
+            />
+          </div>
+        ) : null} */}
+        <p
+          className={`${classes.data_text} ${elemStyleClasses.userLabel} ${
+            rightToLeft ? classes.right_to_left : ""
+          }`}
+        >
           {snippet || text}
         </p>
         <LabelingButtons

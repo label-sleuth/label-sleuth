@@ -146,6 +146,7 @@ export const KeyboardKeysEnum = {
   SHIFT: "Shift",
   QUESTION_MARK: "?",
   P: "p",
+  O: "o",
 };
 
 export enum LabelTypesEnum {
