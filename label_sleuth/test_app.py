@@ -21,6 +21,7 @@ import unittest
 from label_sleuth import app, config, app_utils
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus
 from unittest import mock
+import json
 
 HEADERS = {'Content-Type': 'application/json'}
 
@@ -105,21 +106,24 @@ class TestAppIntegration(unittest.TestCase):
         category_name = "my_category"
         category_description = "my_category_description"
         data = {}
-
-        data['file'] = (io.BytesIO(
-            b'document_id,text\n'
-            b'document1,this is the first text element of document one\n'
-            b'document1,this is the second text element of document one\n'
-            b'document2,this is the only text element in document two\n'
-            b'document3,"document 3 has three text elements, this is the first"\n'
-            b'document3,"document 3 has three text elements, this is the second that will be labeled as negative"\n'
-            b'document3,"document 3 has three text elements, this is the third"\n'),
+        text_with_parenthesis = "this text contains a parenthesis a a a a a a(b b b b b b c c c c ( x x x x and some more text to force creating a snippet"
+        text_with_parenthesis_snippet = "this text contains a parenthesis a a a a a ... x and some more text to force creating a snippet"
+        text_with_parenthesis_snippet_in_query = " ... a a a a a(b b b b b ... c c c c ( x x x x ... "
+        data['file'] = (io.BytesIO(bytes(
+            'document_id,text\n' 
+            'document1,this is the first text element of document one\n'
+            'document1,this is the second text element of document one\n'
+            'document2,this is the only text element in document two\n'
+            'document3,"document 3 has three text elements, this is the first"\n'
+            'document3,"document 3 has three text elements, this is the second that will be labeled as negative"\n'
+            'document3,"document 3 has three text elements, this is the third"\n'
+            f'document3,{text_with_parenthesis}\n', 'utf-8')),
                         'my_file.csv')
         res = self.client.post(f"/datasets/{dataset_name}/add_documents", data=data, headers=HEADERS,
                                content_type='multipart/form-data')
         self.assertEqual(200, res.status_code, msg="Failed to upload a new dataset")
         self.assertEqual(
-            {'dataset_name': 'my_test_dataset', 'num_docs': 3, 'num_sentences': 6, 'workspaces_to_update': []},
+            {'dataset_name': 'my_test_dataset', 'num_docs': 3, 'num_sentences': 7, 'workspaces_to_update': []},
             res.get_json(), msg="diff in upload dataset response")
         
         data['file'] = (io.BytesIO(
@@ -161,6 +165,7 @@ class TestAppIntegration(unittest.TestCase):
         res = self.client.get(f"/workspace/{workspace_name}/document/{documents[-1]['document_id']}", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to add a document before labeling")
         document3_elements = res.get_json()['elements']
+
         self.assertEqual([
             {'begin': 0, 'docid': 'my_test_dataset-document3', 'end': 53, 'id': 'my_test_dataset-document3-0',
              'model_predictions': {}, 'text': 'document 3 has three text elements, this is the first',
@@ -171,8 +176,12 @@ class TestAppIntegration(unittest.TestCase):
              'user_labels': {}},
             {'begin': 142, 'docid': 'my_test_dataset-document3', 'end': 195, 'id': 'my_test_dataset-document3-2',
              'model_predictions': {}, 'text': 'document 3 has three text elements, this is the third',
-             'user_labels': {}}], document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
-
+             'user_labels': {}},
+            {
+            "begin": 196, "docid": "my_test_dataset-document3", "end": 317, "id": "my_test_dataset-document3-3",
+            "model_predictions": {}, "text": text_with_parenthesis,
+            "user_labels": {}}], 
+            document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}',
                               data='{{"category_id":"{}","value":"{}"}}'.format(category_id, True), headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to set the first label for a category")
@@ -216,6 +225,20 @@ class TestAppIntegration(unittest.TestCase):
                                       'user_labels': {str(category_id): 'true'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json())
 
+        res = self.client.get(f"/workspace/{workspace_name}/query?category_id={category_id}&qry_string=(",
+                              headers=HEADERS)
+        self.assertEqual(
+            {"elements": [
+                {
+                    "begin": 196,"docid": "my_test_dataset-document3","end": 317,"id": "my_test_dataset-document3-3","model_predictions": {},
+                    "snippet": text_with_parenthesis_snippet_in_query,
+                    "text": text_with_parenthesis,
+                    "user_labels": {}
+                }
+            ], "hit_count": 1,  "hit_count_unique": 1}, 
+            res.get_json(), 
+            msg="The searched text differs from the response"
+        )
         res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the third label")
@@ -237,12 +260,16 @@ class TestAppIntegration(unittest.TestCase):
             {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94, 'id': 'my_test_dataset-document1-1',
              'model_predictions': {str(category_id): 'true'}, 'text': 'this is the second text element of document one',
              'user_labels': {}},
+             {
+             "begin": 196, "docid": "my_test_dataset-document3", "end": 317, "id": "my_test_dataset-document3-3",
+             "model_predictions": {"0": "true"}, "snippet": text_with_parenthesis_snippet, "text": text_with_parenthesis,
+             "user_labels": {}},
             {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0',
              'model_predictions': {str(category_id): 'true'}, 'text': 'this is the only text element in document two',
              'user_labels': {}},
             {'begin': 0, 'docid': 'my_test_dataset-document1', 'end': 46, 'id': 'my_test_dataset-document1-0',
              'model_predictions': {str(category_id): 'true'}, 'text': 'this is the first text element of document one',
-             'user_labels': {}}], 'hit_count': 3},
+             'user_labels': {}}], 'hit_count': 4},
             active_learning_response)
 
         # set the first label according to the active learning recommendations
@@ -267,7 +294,7 @@ class TestAppIntegration(unittest.TestCase):
                          res.get_json(), msg="diffs in get status response after setting a label")
 
         # set the second label according to the active learning recommendations
-        res = self.client.put(f'/workspace/{workspace_name}/element/{active_learning_response["elements"][1]["id"]}',
+        res = self.client.put(f'/workspace/{workspace_name}/element/{active_learning_response["elements"][2]["id"]}',
                               data='{{"category_id":"{}","value":"{}"}}'.format(category_id, False),
                               headers=HEADERS)
 
