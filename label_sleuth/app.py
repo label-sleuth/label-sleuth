@@ -677,7 +677,7 @@ def query(workspace_id):
                                            unlabeled_only=False, sample_size=sample_size,
                                            sample_start_idx=sample_start_idx, remove_duplicates=True)
     sorted_elements = sorted(resp["results"], key=lambda te: get_natural_sort_key(te.uri))
-    elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id, query_string=query_string)
+    elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id, query_string=query_string, is_regex=False)
     res = {'elements': elements_transformed,
            'hit_count': resp["hit_count"],
            'hit_count_unique': resp["hit_count_unique"]}

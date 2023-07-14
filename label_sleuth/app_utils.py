@@ -57,7 +57,7 @@ def validate_category_id(function):
 
 
 def elements_back_to_front(workspace_id: str, elements: List[TextElement], category_id: int, need_snippet: bool = True,
-                           query_string: str = None) -> List[Mapping]:
+                           query_string: str = None, is_regex: bool = False) -> List[Mapping]:
     """
     Converts TextElement objects from the backend into dictionaries in the form expected by the frontend, and adds
     the model prediction for the elements if available.
@@ -82,10 +82,9 @@ def elements_back_to_front(workspace_id: str, elements: List[TextElement], categ
               'model_predictions': {}
               }
          for text_element in elements}
-
     if need_snippet:
         for text_element in elements:
-            snippet = get_text_snippet(text_element.text, query_string)
+            snippet = get_text_snippet(text_element.text, query_string, is_regex)
             if snippet != element_uri_to_info[text_element.uri]['text']:
                 element_uri_to_info[text_element.uri]['snippet'] = snippet
 
@@ -154,7 +153,7 @@ def extract_enriched_ngrams_and_weights_list(elements, boolean_labels):
     return ngrams_and_weights_list[:30]
 
 
-def get_text_snippet(text, query_string):
+def get_text_snippet(text, query_string, is_regex: bool):
     """
     Get snippet from full text.
     1. If length of text in tokens is less than snippet maximum length, the full text is returned.
@@ -174,10 +173,17 @@ def get_text_snippet(text, query_string):
     end_text = " ".join(text_tokens[-int(max_token_length / 2):])
     if not query_string:
         return starting_text + " ... " + end_text
-    matches = [m for m in re.finditer(r"\b[0-9a-zA-Z_`'.-]*"+query_string+r"[0-9a-zA-Z_`'.-]*\b",
-                                      text, flags=re.IGNORECASE)][:3]
+    
+    query_string = re.escape(query_string)
+
+    matches = [m for m in re.finditer(
+        r"[\b]?[0-9a-zA-Z_`'.-]*" + query_string + r"[0-9a-zA-Z_`'.-]*[\b]?",
+        text, 
+        flags=re.IGNORECASE if is_regex is False else 0)][:3]
+
     if len(matches) == 0:
         return starting_text + " ... " + end_text
+    
     snippet = ""
     num_tokens_before_after_match = max_token_length - len(matches) * len(query_string.split(" "))
     num_tokens_before_after_match = int(num_tokens_before_after_match/(2*len(matches)))
@@ -194,6 +200,7 @@ def get_text_snippet(text, query_string):
         snippet += " ".join(text_after_match[:num_tokens_before_after_match])
         if end_ind + len(" ".join(text_after_match[:num_tokens_before_after_match])) < len(text):
             snippet += " ... "
+
     return snippet
 
 
