@@ -32,7 +32,7 @@ from label_sleuth.active_learning.core.active_learning_factory import ActiveLear
 from label_sleuth.analysis_utils.labeling_reports import get_suspected_labeling_contradictions_by_distance_with_diffs, \
     get_disagreements_using_cross_validation
 from label_sleuth.config import Configuration
-from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE
+from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE, LABEL_NEGATIVE
 from label_sleuth.data_access.data_access_api import DataAccessApi, DatasetRowCountLimitExceededException
 from label_sleuth.data_access.label_import_utils import process_labels_dataframe
 from label_sleuth.data_access.processors.csv_processor import CsvFileProcessor
@@ -712,28 +712,36 @@ class OrchestratorApi:
                                                  category_id=category_id, remove_duplicates=True,
                                                  counts_for_training=True)
 
-            if force or (LABEL_POSITIVE in label_counts
-                         and label_counts[LABEL_POSITIVE] >= self.config.first_model_positive_threshold
-                         and changes_since_last_model >= self.config.changed_element_threshold):
+            to_log_message = (f"workspace '{workspace_id}' category id '{category_id}', " +
+                    f"{label_counts[LABEL_POSITIVE] if LABEL_POSITIVE in label_counts else 0} positive elements " + 
+                    f"(threshold >= {self.config.first_model_positive_threshold}), " +
+                    (f"{label_counts[LABEL_NEGATIVE] if LABEL_NEGATIVE in label_counts else 0} negative elements " if self.config.first_model_negative_threshold > 0 else "") +
+                    (f"(threshold >= {self.config.first_model_negative_threshold})" if self.config.first_model_negative_threshold > 0 else "") +
+                    f", {changes_since_last_model} elements changed since last model " +
+                    f"(threshold >= {self.config.changed_element_threshold}). ")
+
+            if force or (LABEL_POSITIVE in label_counts and
+                         label_counts[LABEL_POSITIVE] >= self.config.first_model_positive_threshold and
+                         (self.config.first_model_negative_threshold == 0 or
+                         (LABEL_NEGATIVE in label_counts and
+                         label_counts[LABEL_NEGATIVE] >= self.config.first_model_negative_threshold)) and
+                         changes_since_last_model >= self.config.changed_element_threshold):
                 if len(iterations_without_errors) > 0 and iterations_without_errors[-1].status != IterationStatus.READY:
                     logging.info(f"workspace '{workspace_id}' category id '{category_id}' new elements criterion was "
                                  f"met but previous AL not yet ready, not initiating a new training")
                     return None
                 self.orchestrator_state.set_label_change_count_since_last_train(workspace_id, category_id, 0)
-                logging.info(
-                    f"workspace '{workspace_id}' category id '{category_id}' "
-                    f"{label_counts[LABEL_POSITIVE]} positive elements (>={self.config.first_model_positive_threshold})"
-                    f" {changes_since_last_model} elements changed since last model "
-                    f"(>={self.config.changed_element_threshold}). Training a new model")
+                
+                to_log_message += "Training a new model"
+                
                 iteration_num = len(iterations_without_errors)
                 model_type = self.config.model_policy.get_model_type(iteration_num)
                 self.run_iteration(workspace_id=workspace_id, dataset_name=dataset_name, category_id=category_id,
                                    model_type=model_type)
             else:
-                logging.info(f"workspace '{workspace_id}' category id {category_id}: {label_counts[LABEL_POSITIVE]} positive elements "
-                             f"(threshold >={self.config.first_model_positive_threshold}) "
-                             f"AND {changes_since_last_model} elements changed since last model "
-                             f"(threshold >={self.config.changed_element_threshold}). not training a new model")
+                to_log_message += "Not training a new model"
+
+            logging.info(to_log_message)
         except Exception:
             logging.exception(f"train_if_recommended failed for workspace '{workspace_id}' category id {category_id}. "
                               f"trying to set the iteration to error status")
@@ -907,17 +915,23 @@ class OrchestratorApi:
     def get_progress(self, workspace_id: str, dataset_name: str, category_id: int):
         category_label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, remove_duplicates=True,
                                                       counts_for_training=True)
-        if category_label_counts[LABEL_POSITIVE]:
+        if category_label_counts[LABEL_POSITIVE] or category_label_counts[LABEL_NEGATIVE]:
             changed_since_last_model_count = \
                 self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id)
-
             return {"all": min(
                 # for a new training to start both the number of labels changed and the number of positives must be
                 # above their respective thresholds; thus, we determine the status as the minimum of the two ratios
                 max(0, min(round(changed_since_last_model_count / self.config.changed_element_threshold * 100), 100)),
-                max(0, min(round(category_label_counts[LABEL_POSITIVE] /
-                                 self.config.first_model_positive_threshold * 100), 100)))
-            }
+                max(0, 
+                    min(
+                        100,
+                        round((((
+                            min(category_label_counts[LABEL_POSITIVE] if LABEL_POSITIVE in category_label_counts else 0, self.config.first_model_positive_threshold) + 
+                            min(category_label_counts[LABEL_NEGATIVE] if LABEL_NEGATIVE in category_label_counts else 0, self.config.first_model_negative_threshold)) / 
+                            (self.config.first_model_positive_threshold + self.config.first_model_negative_threshold))) * 100)
+                    )
+                )
+            )}
         else:
             return {"all": 0}
 

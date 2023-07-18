@@ -194,24 +194,7 @@ class TestAppIntegration(unittest.TestCase):
         res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
-        self.assertEqual({'labeling_counts': {'true': 1}, 'progress': {'all': 50}},
-                         res.get_json(), msg="diffs in get status response after setting a label")
-
-        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[1]["id"]}',
-                              data='{{"category_id":"{}","value":"{}"}}'.format(category_id, False),
-                              headers=HEADERS)
-        self.assertEqual(200, res.status_code, msg="Failed to set the second label for a category")
-        self.assertEqual({'category_id': str(category_id),
-                          'element': {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 141,
-                                      'id': 'my_test_dataset-document3-1', 'model_predictions': {},
-                                      'text': 'document 3 has three text elements, '
-                                              'this is the second that will be labeled as negative',
-                                      'user_labels': {str(category_id): 'false'}}, 'workspace_id': 'my_test_workspace'},
-                         res.get_json(), msg="diff in setting element's label response")
-        res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
-                              headers=HEADERS)
-        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
-        self.assertEqual({'labeling_counts': {'true': 1, 'false': 1}, 'progress': {'all': 50}},
+        self.assertEqual({'labeling_counts': {'true': 1}, 'progress': {'all': 33}},
                          res.get_json(), msg="diffs in get status response after setting a label")
 
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[2]["id"]}',
@@ -241,10 +224,28 @@ class TestAppIntegration(unittest.TestCase):
         )
         res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
                               headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the second label")
+        self.assertEqual({'labeling_counts': {'true': 2}, 'progress': {'all': 50}},
+                         res.get_json(),
+                         msg="diffs in get status response after setting the second label")
+
+
+        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[1]["id"]}',
+                              data='{{"category_id":"{}","value":"{}"}}'.format(category_id, False),
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to set the second label for a category")
+        self.assertEqual({'category_id': str(category_id),
+                          'element': {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 141,
+                                      'id': 'my_test_dataset-document3-1', 'model_predictions': {},
+                                      'text': 'document 3 has three text elements, '
+                                              'this is the second that will be labeled as negative',
+                                      'user_labels': {str(category_id): 'false'}}, 'workspace_id': 'my_test_workspace'},
+                         res.get_json(), msg="diff in setting element's label response")
+        res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
+                              headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the third label")
         self.assertEqual({'true': 2, 'false': 1},
-                         res.get_json()['labeling_counts'],
-                         msg="diffs in get status response after setting the second label")
+                         res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
 
         res = self.wait_for_new_iteration(category_id, res, workspace_name, 1)
 
@@ -290,7 +291,7 @@ class TestAppIntegration(unittest.TestCase):
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to get status after successfully setting the first label for the second model")
-        self.assertEqual({'labeling_counts': {'true': 3, 'false': 1}, 'progress': {'all': 50}},
+        self.assertEqual({'labeling_counts': {'true': 3, 'false': 1}, 'progress': {'all': 33}},
                          res.get_json(), msg="diffs in get status response after setting a label")
 
         # set the second label according to the active learning recommendations
@@ -311,7 +312,7 @@ class TestAppIntegration(unittest.TestCase):
         res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
-                         msg="Failed to get status after successfully setting the first label for the second model")
+                         msg="Failed to get status after successfully setting the second label for the second model")
         self.assertEqual({'true': 3, 'false': 2},
                          res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
 
@@ -348,6 +349,7 @@ class TestAppIntegration(unittest.TestCase):
                         'hit_count': 3},
                         res.get_json(), msg="diffs in positively labeled elements")
 
+
         # get negatively labeled elements
         res = self.client.get(f"/workspace/{workspace_name}/negative_elements?category_id={category_id}",
                               headers=HEADERS)
@@ -371,6 +373,27 @@ class TestAppIntegration(unittest.TestCase):
                             'user_labels': {'0': 'false'}}],
                         'hit_count': 2},
                         res.get_json(), msg="diffs in negatively labeled elements")
+
+
+        # continue labeling from AL suggestions to get a new model (removing a negative label -> false count decrease)
+        res = self.client.put(f'/workspace/{workspace_name}/element/{active_learning_response["elements"][2]["id"]}',
+                              data='{{"category_id":"{}","value":"{}"}}'.format(category_id, True), headers=HEADERS)
+        self.assertEqual(200, res.status_code,
+                         msg="Failed to set the label for the first element recommended by the active learning")
+        self.assertEqual({'category_id': '0', 
+                          'element': {
+                              'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0', 
+                              'model_predictions': {'0': 'true'}, 'text': 'this is the only text element in document two', 
+                              'user_labels': {'0': 'true'}}, 'workspace_id': 'my_test_workspace'},
+                         res.get_json())
+
+        res = self.client.get(f"/workspace/{workspace_name}/status?category_id={category_id}",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code,
+                         msg="Failed to get status after successfully setting the third label for the second model")
+        self.assertEqual({'true': 4, 'false': 1},
+                         res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
+
 
         # wait for the second models
         res = self.wait_for_new_iteration(category_id, res, workspace_name, 2)
