@@ -193,7 +193,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         mock_get_label_change_count.return_value = sum(label_counts.values())
 
         progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id)
-        self.assertEqual(progress['all'], 100*positive_count/first_model_pos_threshold)
+        self.assertEqual(progress['all'], 67)
 
         self.orchestrator_api.train_if_recommended(workspace_id, category_id)
         mock_run_iteration.assert_not_called()

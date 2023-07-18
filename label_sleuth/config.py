@@ -35,6 +35,7 @@ from label_sleuth.training_set_selector.train_set_selectors_catalog import Train
 @dataclass
 class Configuration:
     first_model_positive_threshold: int
+    first_model_negative_threshold: int
     changed_element_threshold: int
     model_policy: ModelPolicy
     training_set_selection_strategy: Type[TrainSetSelectorAPI]
