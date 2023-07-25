@@ -112,7 +112,7 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
     );
     
     if (matches !== null) {
-      const rowsn = matches.length;
+      const rowsn = matches.length - 2; // -2 to not to count the header row and an "" string
       if (rowsn > maxDatasetLength) {
         const error: Error = {
           type: "max_dataset_row_number",
