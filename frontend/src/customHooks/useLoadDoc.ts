@@ -108,7 +108,7 @@ export const useLoadDoc = ({ toastId }: UseLoadDocProps) => {
 
     const csvContent = await file.text();
     const matches = csvContent.match(
-      /(?:"(?:[^"]|"")*"|[^,\n]*)(?:,(?:"(?:[^"]|"")*"|[^,\n]*))*\n/g
+      /(?:"(?:[^"]|"")*"|[^,\n]*)(?:,(?:"(?:[^"]|"")*"|[^,\n]*))*\n*/g
     );
     
     if (matches !== null) {
