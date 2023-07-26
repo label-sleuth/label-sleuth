@@ -28,6 +28,7 @@
 
 .text_predict {
   border: dotted 2px #a3d8e5 !important;
+  box-shadow: -5px 0px 4px #a3d8e5 !important;
 }
 
 .text_predict:hover,
@@ -60,24 +61,7 @@
   line-height: 18px !important;
 }
 
-.rec_doc_id {
-  display: flex;
-  left: 0;
-  top: 0;
-  padding: 3px 6px;
-  background: #e2e2e2;
-}
-
-.pred_rec_doc_id {
-  display: flex;
-  left: 0;
-  top: 0;
-  padding: 3px 6px;
-  background: rgb(163, 216, 229);
-}
-
 .elem_text {
-  padding: 1px 10px 1px 10px;
   white-space: pre-line;
 }
 

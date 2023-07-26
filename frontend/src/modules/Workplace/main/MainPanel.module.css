@@ -18,7 +18,7 @@
     left: 280px;
     right: 50px;
     bottom: 0;
-    top: 80px;
+    top: 60px;
     overflow: none;
 }
 
@@ -43,7 +43,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 60px;
+    top: 80px;
     bottom: 0;
     overflow-y: scroll;
     padding: 15px 30px;
@@ -82,7 +82,7 @@
     text-align: center;
 }
 
-.doc_stats h6{
+.doc_stats h6 {
     display: block;
     font-size: 18px;
     font-weight: 500;
@@ -98,4 +98,15 @@
     margin: 0;
     padding: 0;
     opacity: 0.5;
+}
+
+.notify-badge{
+    background:#a3d8e5;
+    text-align: center;
+    border-radius: 15px 15px 15px 15px;
+    color:white;
+    padding: 0px 10px;
+    font-size:15px;
+    margin-left: 5px;
+    margin-right: 5px;
 }
