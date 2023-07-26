@@ -62,7 +62,9 @@ export const elementsInitialState: PanelState = {
  * panel.
  */
 const loadingInitialState: { [key: string]: boolean } = {};
-Object.values(PanelIdsEnum).forEach((pId) => (loadingInitialState[pId] = false));
+Object.values(PanelIdsEnum).forEach(
+  (pId) => (loadingInitialState[pId] = false)
+);
 
 /**
  * The initial state for each of the panels. The key for each panel
@@ -87,6 +89,7 @@ export const initialState: PanelsSliceState = {
     panels: {
       [PanelIdsEnum.MAIN_PANEL]: {
         ...elementsInitialState,
+        documentPositivePredictionIds: null,
       },
       [PanelIdsEnum.SEARCH]: {
         ...elementsInitialState,
@@ -133,12 +136,19 @@ const getPanelElements = async (
   extraQueryParams: Array<string> = [],
   pagination: PaginationParam = { startIndex: 0, elementsPerPage: null }
 ): Promise<{ elements: UnparsedElement[]; hit_count: number }> => {
-  pagination.startIndex !== null && extraQueryParams.push(`start_idx=${pagination.startIndex}`);
-  pagination.elementsPerPage !== null && extraQueryParams.push(`size=${pagination.elementsPerPage}`);
+  pagination.startIndex !== null &&
+    extraQueryParams.push(`start_idx=${pagination.startIndex}`);
+  pagination.elementsPerPage !== null &&
+    extraQueryParams.push(`size=${pagination.elementsPerPage}`);
 
-  const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory), ...extraQueryParams]);
+  const queryParams = getQueryParamsString([
+    getCategoryQueryString(state.workspace.curCategory),
+    ...extraQueryParams,
+  ]);
 
-  const url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/${endpoint}${queryParams}`;
+  const url = `${getWorkspace_url}/${encodeURIComponent(
+    getWorkspaceId()
+  )}/${endpoint}${queryParams}`;
 
   const { data } = await client.get(url);
   return data;
@@ -175,10 +185,18 @@ export const getContradictingLabels = createAsyncThunk<
   ReturnType<typeof getPanelElements>,
   FetchPanelElementsParams,
   { state: RootState }
->("workspace/getContradictiveElements", async ({ pagination }, { getState }) => {
-  const state = getState();
-  return await getPanelElements(state, "contradiction_elements", [], pagination);
-});
+>(
+  "workspace/getContradictiveElements",
+  async ({ pagination }, { getState }) => {
+    const state = getState();
+    return await getPanelElements(
+      state,
+      "contradiction_elements",
+      [],
+      pagination
+    );
+  }
+);
 
 export const getPositivePredictions = createAsyncThunk<
   ReturnType<typeof getPanelElements>,
@@ -199,8 +217,34 @@ export const fetchDocumentElements = createAsyncThunk<
   const state = getState();
   let docId = params.docId || currentDocNameSelector(state) || "";
 
-  return await getPanelElements(state, `document/${encodeURIComponent(docId)}`, [], params.pagination);
+  return await getPanelElements(
+    state,
+    `document/${encodeURIComponent(docId)}`,
+    [],
+    params.pagination
+  );
 });
+
+export const fetchDocumentPositivePredictions = createAsyncThunk<
+  ReturnType<typeof getPanelElements>,
+  FetchPanelElementsParams,
+  {
+    state: RootState;
+  }
+>(
+  "workspace/fetchDocumentPositivePredictions",
+  async (params, { getState }) => {
+    const state = getState();
+    let docId = params.docId || currentDocNameSelector(state) || "";
+
+    return await getPanelElements(
+      state,
+      `document/${encodeURIComponent(docId)}/positive_predictions`,
+      [],
+      params.pagination
+    );
+  }
+);
 
 export const searchKeywords = createAsyncThunk<
   any, //TODO: find out how to correctly type the return type of this thunk
@@ -208,18 +252,27 @@ export const searchKeywords = createAsyncThunk<
   {
     state: RootState;
   }
->("workspace/searchKeywords", async ({ useLastSearchString = false, pagination } = {}, { getState }) => {
-  const state = getState();
-  const { input, lastSearchString } = state.workspace.panels.panels[PanelIdsEnum.SEARCH];
-  const searchString = useLastSearchString ? lastSearchString : input;
-  if (searchString === null || searchString === "") return;
-  const extraQueryParams = [`qry_string=${searchString}`];
-  const res = {
-    data: await getPanelElements(state, "query", extraQueryParams, pagination),
-    searchString,
-  };
-  return res;
-});
+>(
+  "workspace/searchKeywords",
+  async ({ useLastSearchString = false, pagination } = {}, { getState }) => {
+    const state = getState();
+    const { input, lastSearchString } =
+      state.workspace.panels.panels[PanelIdsEnum.SEARCH];
+    const searchString = useLastSearchString ? lastSearchString : input;
+    if (searchString === null || searchString === "") return;
+    const extraQueryParams = [`qry_string=${searchString}`];
+    const res = {
+      data: await getPanelElements(
+        state,
+        "query",
+        extraQueryParams,
+        pagination
+      ),
+      searchString,
+    };
+    return res;
+  }
+);
 
 export const reducers = {
   setActivePanel(state: WorkspaceState, action: PayloadAction<PanelIdsEnum>) {
@@ -236,7 +289,10 @@ export const reducers = {
   },
 
   // action reducers for focusing main panel elements
-  setFocusedMainPanelElement(state: WorkspaceState, action: PayloadAction<{ element: Element; highlight: boolean }>) {
+  setFocusedMainPanelElement(
+    state: WorkspaceState,
+    action: PayloadAction<{ element: Element; highlight: boolean }>
+  ) {
     const { element, highlight } = action.payload;
     state.panels.focusedElement = getUpdatedFocusedElementState(
       element,
@@ -245,7 +301,10 @@ export const reducers = {
       initialState.panels.focusedElement
     );
   },
-  clearMainPanelFocusedElement(state: WorkspaceState, action: PayloadAction<void>) {
+  clearMainPanelFocusedElement(
+    state: WorkspaceState,
+    action: PayloadAction<void>
+  ) {
     state.panels.focusedElement = initialState.panels.focusedElement;
   },
   focusFirstElement(state: WorkspaceState, action: PayloadAction<void>) {
@@ -269,38 +328,50 @@ export const reducers = {
   ) {
     const { index, scrollIntoViewOnChange } = action.payload;
     state.panels.focusedSidebarElement.index = index;
-    state.panels.focusedSidebarElement.scrollIntoViewOnChange = scrollIntoViewOnChange;
+    state.panels.focusedSidebarElement.scrollIntoViewOnChange =
+      scrollIntoViewOnChange;
   },
   focusFirstSidebarElement(state: WorkspaceState, action: PayloadAction<void>) {
     const currentSidebarElements = getCurrentSidebarElements(state);
-    if (currentSidebarElements === null || currentSidebarElements.length === 0) return;
+    if (currentSidebarElements === null || currentSidebarElements.length === 0)
+      return;
     state.panels.focusedSidebarElement.index = 0;
     state.panels.focusedSidebarElement.scrollIntoViewOnChange = true;
   },
   focusLastSidebarElement(state: WorkspaceState, action: PayloadAction<void>) {
     const currentSidebarElements = getCurrentSidebarElements(state);
-    if (currentSidebarElements === null || currentSidebarElements.length === 0) return;
-    state.panels.focusedSidebarElement.index = currentSidebarElements.length - 1;
+    if (currentSidebarElements === null || currentSidebarElements.length === 0)
+      return;
+    state.panels.focusedSidebarElement.index =
+      currentSidebarElements.length - 1;
     state.panels.focusedSidebarElement.scrollIntoViewOnChange = true;
   },
   focusNextSidebarElement(state: WorkspaceState, action: PayloadAction<void>) {
     const currentSidebarElements = getCurrentSidebarElements(state);
     // abort if there are no elements
-    if (currentSidebarElements === null || currentSidebarElements.length === 0) return;
-    const currentFocusedSidebarElementIndex = state.panels.focusedSidebarElement.index;
+    if (currentSidebarElements === null || currentSidebarElements.length === 0)
+      return;
+    const currentFocusedSidebarElementIndex =
+      state.panels.focusedSidebarElement.index;
     // abort if there are is no next element in the current page
-    if (currentFocusedSidebarElementIndex === currentSidebarElements.length - 1) return;
+    if (currentFocusedSidebarElementIndex === currentSidebarElements.length - 1)
+      return;
 
     if (state.panels.focusedSidebarElement.index !== null) {
       state.panels.focusedSidebarElement.scrollIntoViewOnChange = true;
       state.panels.focusedSidebarElement.index += 1;
     }
   },
-  focusPreviousSidebarElement(state: WorkspaceState, action: PayloadAction<void>) {
+  focusPreviousSidebarElement(
+    state: WorkspaceState,
+    action: PayloadAction<void>
+  ) {
     const currentSidebarElements = getCurrentSidebarElements(state);
     // abort if there are no elements
-    if (currentSidebarElements === null || currentSidebarElements.length === 0) return;
-    const currentFocusedSidebarElementIndex = state.panels.focusedSidebarElement.index;
+    if (currentSidebarElements === null || currentSidebarElements.length === 0)
+      return;
+    const currentFocusedSidebarElementIndex =
+      state.panels.focusedSidebarElement.index;
     // abort if there are is no next element in the current page
     if (currentFocusedSidebarElementIndex === 0) return;
 
@@ -312,13 +383,18 @@ export const reducers = {
 
   changeCurrentDocument(
     state: WorkspaceState,
-    action: PayloadAction<{ newDocId: string; mainPanelElementsPerPage: number }>
+    action: PayloadAction<{
+      newDocId: string;
+      mainPanelElementsPerPage: number;
+    }>
   ) {
     // mainPanelElementsPerPage has to be passed in as a parameter
     // because the only part of the redux state is the workspace slice
     // mainPanelElementsPerPage is needed to calculate the main panel page
     const { newDocId, mainPanelElementsPerPage } = action.payload;
-    const curDocIndex = state.documents.findIndex((d) => d.documentId === newDocId);
+    const curDocIndex = state.documents.findIndex(
+      (d) => d.documentId === newDocId
+    );
     state.curDocIndex = curDocIndex;
 
     // set the page of the new document based on the focused main panel element, if any
@@ -335,7 +411,10 @@ export const reducers = {
     }
     state.panels.panels[PanelIdsEnum.MAIN_PANEL].page = page;
   },
-  setPage(state: WorkspaceState, action: PayloadAction<{ panelId: PanelIdsEnum; newPage: number }>) {
+  setPage(
+    state: WorkspaceState,
+    action: PayloadAction<{ panelId: PanelIdsEnum; newPage: number }>
+  ) {
     const { panelId, newPage } = action.payload;
     if (panelId !== PanelIdsEnum.NOT_SET) {
       state.panels.panels[panelId].page = newPage;
@@ -344,13 +423,14 @@ export const reducers = {
 };
 
 const getUpdatedFocusedElementState = (
-  element: Element,
+  element: Element | null,
   hackyToggle: boolean,
   highlight: boolean,
   defaultState: FocusedElement,
-  panelId = PanelIdsEnum.MAIN_PANEL
+  panelId = PanelIdsEnum.MAIN_PANEL,
+  lastInPage = false
 ) => {
-  if (element) {
+  if (element !== null) {
     const { id: elementId, docId } = element;
     return {
       id: elementId,
@@ -358,11 +438,13 @@ const getUpdatedFocusedElementState = (
       DOMKey: elementId ? getPanelDOMKey(elementId, panelId) : null,
       hackyToggle: !hackyToggle,
       highlight,
+      lastInPage,
     };
   } else {
     return {
       ...defaultState,
       hackyToggle: hackyToggle,
+      lastInPage,
     };
   }
 };
@@ -378,11 +460,14 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: getPositivePredictions.fulfilled,
     reducer: (state: WorkspaceState, action) => {
-      const { elements: unparsedElements, total_count: hitCount } = action.payload;
+      const { elements: unparsedElements, total_count: hitCount } =
+        action.payload;
       const { elements } = parseElements(unparsedElements, state.curCategory);
       state.panels.loading[PanelIdsEnum.POSITIVE_PREDICTIONS] = false;
-      state.panels.panels[PanelIdsEnum.POSITIVE_PREDICTIONS].elements = elements;
-      state.panels.panels[PanelIdsEnum.POSITIVE_PREDICTIONS].hitCount = hitCount;
+      state.panels.panels[PanelIdsEnum.POSITIVE_PREDICTIONS].elements =
+        elements;
+      state.panels.panels[PanelIdsEnum.POSITIVE_PREDICTIONS].hitCount =
+        hitCount;
     },
   },
   {
@@ -394,7 +479,8 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: getAllPositiveLabels.fulfilled,
     reducer: (state: WorkspaceState, action) => {
-      const { elements: unparsedElements, hit_count: hitCount } = action.payload;
+      const { elements: unparsedElements, hit_count: hitCount } =
+        action.payload;
       const { elements } = parseElements(unparsedElements, state.curCategory);
       state.panels.loading[PanelIdsEnum.POSITIVE_LABELS] = false;
       state.panels.panels[PanelIdsEnum.POSITIVE_LABELS].elements = elements;
@@ -410,7 +496,8 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: getSuspiciousLabels.fulfilled,
     reducer: (state: WorkspaceState, action) => {
-      const { elements: unparsedElements, hit_count: hitCount } = action.payload;
+      const { elements: unparsedElements, hit_count: hitCount } =
+        action.payload;
       const { elements } = parseElements(unparsedElements, state.curCategory);
       state.panels.loading[PanelIdsEnum.SUSPICIOUS_LABELS] = false;
       state.panels.panels[PanelIdsEnum.SUSPICIOUS_LABELS].elements = elements;
@@ -434,7 +521,10 @@ export const extraReducers: Array<ReducerObj> = [
     action: getContradictingLabels.fulfilled,
     reducer: (
       state: WorkspaceState,
-      action: PayloadAction<{ pairs: [UnparsedElement, UnparsedElement][]; hit_count: number }>
+      action: PayloadAction<{
+        pairs: [UnparsedElement, UnparsedElement][];
+        hit_count: number;
+      }>
     ) => {
       const { pairs, hit_count: hitCount } = action.payload;
 
@@ -448,7 +538,8 @@ export const extraReducers: Array<ReducerObj> = [
         elements,
         pairs: pairs.map((pair) => [pair[0].id, pair[1].id]),
       };
-      state.panels.panels[PanelIdsEnum.CONTRADICTING_LABELS].hitCount = hitCount;
+      state.panels.panels[PanelIdsEnum.CONTRADICTING_LABELS].hitCount =
+        hitCount;
     },
   },
   // Label next panel extra reducers
@@ -461,7 +552,8 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: getElementToLabel.fulfilled,
     reducer: (state: WorkspaceState, action) => {
-      const { elements: unparsedElements, hit_count: hitCount } = action.payload;
+      const { elements: unparsedElements, hit_count: hitCount } =
+        action.payload;
       const { elements } = parseElements(unparsedElements, state.curCategory);
 
       state.panels.loading[PanelIdsEnum.LABEL_NEXT] = false;
@@ -486,7 +578,11 @@ export const extraReducers: Array<ReducerObj> = [
     action: searchKeywords.fulfilled,
     reducer: (state: WorkspaceState, action) => {
       const { data, searchString } = action.payload;
-      const { elements: unparsedElements, hit_count_unique: hitCount, hit_count: hitCountWithDuplicates } = data;
+      const {
+        elements: unparsedElements,
+        hit_count_unique: hitCount,
+        hit_count: hitCountWithDuplicates,
+      } = data;
 
       const { elements } = parseElements(unparsedElements, state.curCategory);
 
@@ -520,7 +616,8 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: fetchDocumentElements.fulfilled,
     reducer: (state: WorkspaceState, action) => {
-      const { elements: unparsedElements, hit_count: hitCount } = action.payload;
+      const { elements: unparsedElements, hit_count: hitCount } =
+        action.payload;
 
       const { elements } = parseElements(unparsedElements, state.curCategory);
 
@@ -532,6 +629,21 @@ export const extraReducers: Array<ReducerObj> = [
       state.panels.loading[PanelIdsEnum.MAIN_PANEL] = false;
     },
   },
+  {
+    action: fetchDocumentPositivePredictions.pending,
+    reducer: (state: WorkspaceState, action) => {},
+  },
+
+  {
+    action: fetchDocumentPositivePredictions.fulfilled,
+    reducer: (state: WorkspaceState, action) => {
+      const { elements: unparsedElements } = action.payload;
+      const { elements } = parseElements(unparsedElements, state.curCategory);
+      state.panels.panels[
+        PanelIdsEnum.MAIN_PANEL
+      ].documentPositivePredictionIds = Object.keys(elements);
+    },
+  },
 ];
 
 /**
@@ -541,14 +653,17 @@ export const extraReducers: Array<ReducerObj> = [
  * @param {*} state
  * @returns the focused element with its id, text and docId
  */
-export const focusedSidebarElementSelector = (state: RootState): Element | null => {
+export const focusedSidebarElementSelector = (
+  state: RootState
+): Element | null => {
   const activePanelId = state.workspace.panels.activePanelId;
 
   if (activePanelId === PanelIdsEnum.NOT_SET) return null;
 
   const activePanel = state.workspace.panels.panels[activePanelId];
   let elementsDict = activePanel.elements;
-  const focusedSidebarElementIndex = state.workspace.panels.focusedSidebarElement.index;
+  const focusedSidebarElementIndex =
+    state.workspace.panels.focusedSidebarElement.index;
 
   if (elementsDict === null || focusedSidebarElementIndex === null) return null;
 

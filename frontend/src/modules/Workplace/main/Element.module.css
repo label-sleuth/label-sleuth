@@ -66,7 +66,6 @@
 .text_predict {
   border: dotted 2px #a3d8e5;
   box-shadow: -7px 0px 4px #a3d8e5;
-  border-left: dotted 2px #a3d8e5;
 }
 
 .text_normal:hover,

@@ -104,7 +104,7 @@ export const WRONG_INPUT_NAME_BAD_CHARACTER = `Name may only contain English cha
 export const REGEX_LETTER_NUMBERS_UNDERSCORE = /^[a-zA-Z0-9_]*$/;
 export const REGEX_LETTER_NUMBERS_UNDERSCORE_SPACES = /^[a-zA-Z0-9_ ]*$/;
 
-export const RIGHT_DRAWER_INITIAL_WIDTH = 350;
+export const RIGHT_DRAWER_INITIAL_WIDTH = 500;
 export const RIGHT_DRAWER_MIN_WIDTH = 300;
 export const RIGHT_DRAWER_MAX_WIDTH = 1200;
 export const LEFT_DRAWER_WIDTH = 300;
@@ -145,6 +145,8 @@ export const KeyboardKeysEnum = {
   ENTER: "Enter",
   SHIFT: "Shift",
   QUESTION_MARK: "?",
+  P: "p",
+  O: "o",
 };
 
 export enum LabelTypesEnum {

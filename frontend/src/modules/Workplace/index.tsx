@@ -50,7 +50,7 @@ import { TutorialDialog } from "./tutorial/TutorialDialog";
 
 import useBackdrop from "../../customHooks/useBackdrop";
 import useWorkspaceState from "../../customHooks/useWorkspaceState";
-import { useSidebarLabelingShortcuts } from "../../customHooks/useSidebarLabelingShorcuts";
+import { useSidebarLabelingShortcuts } from "../../customHooks/useShorcuts";
 import { useWorkspaceVisited } from "../../customHooks/useWorkspaceVisited";
 import { usePreloadDataset } from "../../customHooks/usePreloadDataset";
 import { useAppDispatch, useAppSelector } from "../../customHooks/useRedux";

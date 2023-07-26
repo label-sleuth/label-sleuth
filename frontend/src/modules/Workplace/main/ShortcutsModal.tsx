@@ -44,6 +44,8 @@ export const ShortcutsModal = ({ open, setOpen }: ShortcutsModalProps) => {
     { key: "↑", value: "Focus the previous element" },
     { key: "↓", value: "Focus the next element" },
     { key: "Enter", value: "Discover the focused element in the main document view" },
+    { key: "p", value: "Focus the next positive prediction" },
+    { key: "o", value: "Focus the previous positive prediction" },
   ];
 
   return (

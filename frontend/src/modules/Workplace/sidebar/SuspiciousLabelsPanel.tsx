@@ -43,7 +43,7 @@ const SuspiciousLabelsPanel = () => {
         nonEmptyResultsMessage={"Review the labels of these examples which the system suspects might be wrong."}
         emptyResultsMessage={"No suspicious labels were found."}
         isPaginationRequired={isPaginationRequired}
-        elementsTopPadding={2}
+        elementsTopPadding={1}
       />
       <CustomPagination
         hitCount={hitCount}

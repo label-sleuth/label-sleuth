@@ -13,7 +13,13 @@
     limitations under the License.
 */
 
-import React, { useCallback, useMemo, useEffect, useState, useRef } from "react";
+import React, {
+  useCallback,
+  useMemo,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import { useAppDispatch, useAppSelector } from "./useRedux";
 import { useEventListener } from "usehooks-ts";
 import {
@@ -23,12 +29,17 @@ import {
   focusLastSidebarElement,
 } from "../modules/Workplace/redux";
 import { focusedSidebarElementSelector } from "../modules/Workplace/redux/panelsSlice";
-import { KeyboardKeysEnum, focusNextOnLabelingPanels, panelIds } from "../const";
+import {
+  KeyboardKeysEnum,
+  focusNextOnLabelingPanels,
+  panelIds,
+} from "../const";
 
 import { usePrevious } from "./usePrevious";
 import usePanelPagination from "./usePanelPagination";
 import useLabelState from "./useLabelState";
 import { useFocusMainPanelElement } from "./useFocusMainPanelElement";
+import { useFocusNextPositivePrediction } from "./useFocusNextPositivePrediction";
 
 interface UseSidebarLabelingShortcuts {
   setShortcutsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -39,35 +50,63 @@ interface UseSidebarLabelingShortcuts {
  * right sidebar panels. It does so by adding
  * event listeners to the corresponding key down events
  */
-export const useSidebarLabelingShortcuts = ({ setShortcutsModalOpen }: UseSidebarLabelingShortcuts) => {
-  const [focusLastElementOnPageChange, setFocusLastElementOnPageChange] = useState(false);
+export const useSidebarLabelingShortcuts = ({
+  setShortcutsModalOpen,
+}: UseSidebarLabelingShortcuts) => {
+  const [focusLastElementOnPageChange, setFocusLastElementOnPageChange] =
+    useState(false);
 
   const dispatch = useAppDispatch();
 
-  const activePanelId = useAppSelector((state) => state.workspace.panels.activePanelId);
+  const activePanelId = useAppSelector(
+    (state) => state.workspace.panels.activePanelId
+  );
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
-  const sidebarPanelElementsPerPage = useAppSelector((state) => state.featureFlags.sidebarPanelElementsPerPage);
-  const focusedSidebarElementIndex = useAppSelector((state) => state.workspace.panels.focusedSidebarElement.index);
+  const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+  const sidebarPanelElementsPerPage = useAppSelector(
+    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  );
+  const focusedSidebarElementIndex = useAppSelector(
+    (state) => state.workspace.panels.focusedSidebarElement.index
+  );
   const focusedElement = useAppSelector(focusedSidebarElementSelector);
-  const loading = useAppSelector((state) => state.workspace.panels.loading[activePanelId]);
+  const loading = useAppSelector(
+    (state) => state.workspace.panels.loading[activePanelId]
+  );
 
   const pressedKeys = useRef<{ [key: string]: boolean }>({});
 
+  const { focusPreviousPositivePrediction, focusNextPositivePrediction } = useFocusNextPositivePrediction();
+
   // useLabelState needs to know whether to update the counter on labeling,
   // which is false only in the evalaution panel
-  const { handlePosLabelAction, handleNegLabelAction } = useLabelState(activePanelId !== panelIds.EVALUATION);
+  const { handlePosLabelAction, handleNegLabelAction } = useLabelState(
+    activePanelId !== panelIds.EVALUATION
+  );
 
   // use pagination for the active panel without fetching anything
-  const { goToPreviousPage, goToNextPage, currentContentData, currentPage, pageCount } = usePanelPagination({
+  const {
+    goToPreviousPage,
+    goToNextPage,
+    currentContentData,
+    currentPage,
+    pageCount,
+  } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: activePanelId,
     shouldFetch: false,
   });
 
-  const focusNextElementOnLabeling = useMemo(() => focusNextOnLabelingPanels.includes(activePanelId), [activePanelId]);
+  const focusNextElementOnLabeling = useMemo(
+    () => focusNextOnLabelingPanels.includes(activePanelId),
+    [activePanelId]
+  );
 
   const isFirstElementFocused = useMemo(
-    () => currentContentData !== null && currentContentData.length && focusedSidebarElementIndex === 0,
+    () =>
+      currentContentData !== null &&
+      currentContentData.length &&
+      focusedSidebarElementIndex === 0,
     [focusedSidebarElementIndex, currentContentData]
   );
 
@@ -82,7 +121,10 @@ export const useSidebarLabelingShortcuts = ({ setShortcutsModalOpen }: UseSideba
   const previousLoading = usePrevious(loading);
 
   // elementsFetched is true only when the loading state changes from true to false
-  const elementsFetched = useMemo(() => previousLoading && !loading, [previousLoading, loading]);
+  const elementsFetched = useMemo(
+    () => previousLoading && !loading,
+    [previousLoading, loading]
+  );
 
   useEffect(() => {
     if (elementsFetched) {
@@ -103,7 +145,14 @@ export const useSidebarLabelingShortcuts = ({ setShortcutsModalOpen }: UseSideba
     } else {
       dispatch(focusNextSidebarElement());
     }
-  }, [isLastElementFocused, currentPage, pageCount, goToNextPage, setFocusLastElementOnPageChange, dispatch]);
+  }, [
+    isLastElementFocused,
+    currentPage,
+    pageCount,
+    goToNextPage,
+    setFocusLastElementOnPageChange,
+    dispatch,
+  ]);
 
   const focusPreviousElement = useCallback(() => {
     if (isFirstElementFocused) {
@@ -113,7 +162,13 @@ export const useSidebarLabelingShortcuts = ({ setShortcutsModalOpen }: UseSideba
     } else {
       dispatch(focusPreviousSidebarElement());
     }
-  }, [isFirstElementFocused, currentPage, goToPreviousPage, setFocusLastElementOnPageChange, dispatch]);
+  }, [
+    isFirstElementFocused,
+    currentPage,
+    goToPreviousPage,
+    setFocusLastElementOnPageChange,
+    dispatch,
+  ]);
 
   const { focusMainPanelElement } = useFocusMainPanelElement();
 
@@ -154,9 +209,20 @@ export const useSidebarLabelingShortcuts = ({ setShortcutsModalOpen }: UseSideba
             focusNextElement();
           }
         }
+        if (modelVersion !== null && modelVersion > -1) {
+          if (event.key === KeyboardKeysEnum.O) {
+            focusPreviousPositivePrediction();
+          }
+          if (event.key === KeyboardKeysEnum.P) {
+            focusNextPositivePrediction();
+          }
+        }
       }
       if (event.key === KeyboardKeysEnum.ENTER) {
-        focusMainPanelElement({ element: focusedElement, docId: focusedElement.docId });
+        focusMainPanelElement({
+          element: focusedElement,
+          docId: focusedElement.docId,
+        });
       }
     }
     if (
