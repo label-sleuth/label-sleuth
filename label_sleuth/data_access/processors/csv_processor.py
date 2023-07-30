@@ -86,8 +86,7 @@ class CsvFileProcessor(DataProcessorAPI):
             text_element_uri = doc_uri + URI_SEP + str(element_id)
             metadata = {k: v[idx] for k, v in metadata_dict.items()}
             text_element = TextElement(uri=text_element_uri, text=text,
-                                       span=[(text_span_start, (text_span_start+len(text)))], metadata=metadata,
-                                       category_to_label={})
+                                       span=[(text_span_start, (text_span_start+len(text)))], metadata=metadata)
             doc_uri_to_text_elements[doc_uri].append(text_element)
 
         documents = [Document(uri=doc_uri, text_elements=text_elements, metadata={})

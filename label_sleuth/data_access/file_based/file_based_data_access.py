@@ -546,7 +546,7 @@ class FileBasedDataAccess(DataAccessApi):
         if self._dataset_exists(dataset_name):
             self.ds_in_memory[dataset_name] = self._get_ds_in_memory(dataset_name)
         dicts = [dataclasses.asdict(s) for s in text_elements]
-        [d.pop('category_to_label') for d in dicts]  # category_to_labels is not saved in the dataframe
+
         new_sentences_df = pd.DataFrame(dicts)
         if dataset_name in self.ds_in_memory:
             self.ds_in_memory[dataset_name] = self.ds_in_memory[dataset_name].append(new_sentences_df, sort=False)

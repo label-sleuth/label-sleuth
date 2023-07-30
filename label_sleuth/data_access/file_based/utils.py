@@ -17,7 +17,7 @@ import re
 from typing import Set
 
 import pandas as pd
-from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, LabelType
+from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, LabelType, LabeledTextElement
 from label_sleuth.data_access.data_access_api import LabeledStatus
 
 
@@ -48,7 +48,7 @@ def build_text_elements_from_dataframe_and_labels(df, labels_dict):
     # text element fields are extracted from the dataframe, with the exception of the labels, which are stored elsewhere
     element_data_columns = list(TextElement.get_field_names() - {'category_to_label'})
     element_dicts = map(lambda row: dict(zip(element_data_columns, row)), df[element_data_columns].values)
-    text_elements = [TextElement(**d, category_to_label=labels_dict.get(d['uri'], {}).copy())
+    text_elements = [LabeledTextElement(**d, category_to_label=labels_dict.get(d['uri'], {}).copy())
                      for d in element_dicts]
 
     return text_elements

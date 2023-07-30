@@ -16,12 +16,12 @@ import functools
 import json
 import logging
 import re
-from typing import List, Mapping, Sequence
+from typing import List, Mapping, Sequence, Union
 import os
 from flask import current_app, request, jsonify
 
 from label_sleuth.analysis_utils.analyze_tokens import ngrams_by_info_gain
-from label_sleuth.data_access.core.data_structs import TextElement
+from label_sleuth.data_access.core.data_structs import TextElement, LabeledTextElement
 from label_sleuth.data_access.data_access_api import get_document_uri
 from label_sleuth.models.core.languages import Languages
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Iteration, IterationStatus
@@ -56,7 +56,8 @@ def validate_category_id(function):
     return wrapper
 
 
-def elements_back_to_front(workspace_id: str, elements: List[TextElement], category_id: int, need_snippet: bool = True,
+def elements_back_to_front(workspace_id: str, elements: List[Union[TextElement, LabeledTextElement]], category_id: int,
+                           need_snippet: bool = True,
                            query_string: str = None, is_regex: bool = False) -> List[Mapping]:
     """
     Converts TextElement objects from the backend into dictionaries in the form expected by the frontend, and adds
@@ -76,7 +77,7 @@ def elements_back_to_front(workspace_id: str, elements: List[TextElement], categ
               'begin': text_element.span[0][0],
               'end': text_element.span[0][1],
               'text': text_element.text,
-              'user_labels': {k: str(v.label).lower()
+              'user_labels': {} if type(text_element)==TextElement else {k: str(v.label).lower()
                               # TODO current UI is using true and false as strings. change to boolean in the new UI
                               for k, v in text_element.category_to_label.items()},
               'model_predictions': {}

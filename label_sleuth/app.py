@@ -262,6 +262,7 @@ def add_documents(dataset_name):
                 "title": f"The uploaded csv file exceeds the row count limit of {curr_app.config['CONFIGURATION'].max_dataset_length} by {e.exceeded_by} rows."
             }, 409)
     except Exception:
+        logging.exception(f"Failed to load documents to dataset '{dataset_name}'")
         return make_error({
             "type": "document_upload_fail", 
             "title": f"Failed to load or add documents to dataset '{dataset_name}'"
