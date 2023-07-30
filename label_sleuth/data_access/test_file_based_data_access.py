@@ -18,7 +18,7 @@ import unittest
 from collections import Counter
 from typing import List
 import tempfile
-from label_sleuth.data_access.core.data_structs import Document, TextElement, Label
+from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, LabeledTextElement
 from label_sleuth.data_access.file_based.utils import URI_SEP
 
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
@@ -35,7 +35,7 @@ def generate_simple_doc(dataset_name, doc_id=0, add_duplicate=False):
     start_span = 0
     for idx, sentence in enumerate(sentences):
         end_span = start_span + len(sentence)
-        text_elements.append(TextElement(uri=URI_SEP.join([dataset_name, str(doc_id), str(idx)]), text=sentence,
+        text_elements.append(LabeledTextElement(uri=URI_SEP.join([dataset_name, str(doc_id), str(idx)]), text=sentence,
                                          span=[(start_span, end_span)], metadata={}, category_to_label={}))
         start_span = end_span + 1
 

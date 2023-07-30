@@ -54,11 +54,15 @@ class TextElement:
     text: str
     span: List[Tuple]
     metadata: Mapping
-    category_to_label: Mapping[int, Label]
 
     @classmethod
     def get_field_names(cls):
         return cls.__annotations__.keys()
+
+
+@dataclass
+class LabeledTextElement(TextElement):
+    category_to_label: Mapping[int, Label]
 
 
 @dataclass
