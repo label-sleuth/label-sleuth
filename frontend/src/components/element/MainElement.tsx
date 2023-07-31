@@ -34,7 +34,7 @@ interface ElementProps {
 
 export const PosPredIndicator = () => {
   const radius = 20;
-  const border = 2
+  const border = 2;
   return (
     <Tooltip title="Positive prediction" placement="top">
       <Box
@@ -43,7 +43,7 @@ export const PosPredIndicator = () => {
           borderWidth: "2px",
           borderStyle: "solid",
           borderRadius: "100px",
-          height: `${radius + border * 2 }px`,
+          height: `${radius + border * 2}px`,
         }}
       >
         <img
@@ -52,7 +52,7 @@ export const PosPredIndicator = () => {
             width: `${radius}px`,
             height: `${radius}px`,
             margin: 0,
-            padding: 0
+            padding: 0,
           }}
           src={sleuthLogo}
           alt="Positive prediction icon"
@@ -73,7 +73,7 @@ export const MainElement = ({ element }: ElementProps) => {
     () => getPanelDOMKey(id, PanelIdsEnum.MAIN_PANEL),
     [id]
   );
-  
+
   const elemStyleClasses = useElemStyles({
     elementDOMId,
     prediction: modelPrediction,
@@ -144,6 +144,7 @@ export const MainElement = ({ element }: ElementProps) => {
           handleNegLabelAction={handleNegLabelAction}
           hideButtons={evaluationIsInProgress}
           otherCatsTooltipProps={{ placement: "top" }}
+          panelId={PanelIdsEnum.MAIN_PANEL}
         />
       </Box>
       <LabelCategoriesMenu
@@ -151,6 +152,7 @@ export const MainElement = ({ element }: ElementProps) => {
         open={labelMenuOpen}
         setLabelMenuOpenAnchorEl={setLabelMenuOpenAnchorEl}
         element={element}
+        panelId={PanelIdsEnum.MAIN_PANEL}
       />
     </>
   );

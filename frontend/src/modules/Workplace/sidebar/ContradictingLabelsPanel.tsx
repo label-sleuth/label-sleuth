@@ -19,7 +19,7 @@ import classes from "./index.module.css";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import { SidebarElement as ElementComponent } from "../../../components/element/SidebarElement";
 import contradictive_elem_icon from "../../../assets/contradicting.svg";
-import { panelIds, PanelIdsEnum } from "../../../const";
+import { PanelIdsEnum } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
@@ -39,7 +39,7 @@ const ContradictingLabelsPanel = () => {
   const { elements, pairs, hitCount } = useAppSelector(
     (state) => state.workspace.panels.panels[PanelIdsEnum.CONTRADICTING_LABELS]
   );
-  const loading = useAppSelector((state) => state.workspace.panels.loading[panelIds.CONTRADICTING_LABELS]);
+  const loading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.CONTRADICTING_LABELS]);
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
 
   const { currentContentData, currentPage, onPageChange, isPaginationRequired } = usePanelPagination({

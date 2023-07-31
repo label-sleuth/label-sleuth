@@ -32,7 +32,7 @@ import { focusedSidebarElementSelector } from "../modules/Workplace/redux/panels
 import {
   KeyboardKeysEnum,
   focusNextOnLabelingPanels,
-  panelIds,
+  PanelIdsEnum,
 } from "../const";
 
 import { usePrevious } from "./usePrevious";
@@ -76,12 +76,13 @@ export const useSidebarLabelingShortcuts = ({
 
   const pressedKeys = useRef<{ [key: string]: boolean }>({});
 
-  const { focusPreviousPositivePrediction, focusNextPositivePrediction } = useFocusNextPositivePrediction();
+  const { focusPreviousPositivePrediction, focusNextPositivePrediction } =
+    useFocusNextPositivePrediction();
 
   // useLabelState needs to know whether to update the counter on labeling,
   // which is false only in the evalaution panel
   const { handlePosLabelAction, handleNegLabelAction } = useLabelState(
-    activePanelId !== panelIds.EVALUATION
+    activePanelId !== PanelIdsEnum.EVALUATION
   );
 
   // use pagination for the active panel without fetching anything
@@ -198,13 +199,13 @@ export const useSidebarLabelingShortcuts = ({
     if (focusedElement) {
       if (curCategory !== null) {
         if (event.key === KeyboardKeysEnum.ARROW_RIGHT) {
-          handlePosLabelAction(focusedElement);
+          handlePosLabelAction(focusedElement, activePanelId);
           if (focusNextElementOnLabeling) {
             focusNextElement();
           }
         }
         if (event.key === KeyboardKeysEnum.ARROW_LEFT) {
-          handleNegLabelAction(focusedElement);
+          handleNegLabelAction(focusedElement, activePanelId);
           if (focusNextElementOnLabeling) {
             focusNextElement();
           }

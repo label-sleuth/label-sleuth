@@ -56,7 +56,7 @@ export {
   getElementToLabel,
   searchKeywords,
 } from "./panelsSlice";
-export { downloadLabels, uploadLabels, setElementLabelForCurrentCategory, setElementLabel } from "./labelSlice";
+export { downloadLabels, uploadLabels, setElementLabel } from "./labelSlice";
 export { fetchCategories, createCategoryOnServer, deleteCategory, editCategory } from "./categorySlice";
 export { getEvaluationElements, getEvaluationResults, cancelEvaluation } from "./evaluationSlice";
 export { checkModelUpdate, downloadModel } from "./modelSlice";

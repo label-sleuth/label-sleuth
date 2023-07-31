@@ -86,6 +86,7 @@ export const SidebarElement = ({
   const elementRef = useRef<HTMLElement | null>(null);
 
   // used to get the height of the element to position the pos pred icon in the middle
+  // eslint-disable-next-line
   useEffect(() => {
     if (elementRef.current) {
       const parentWidth = elementRef.current.parentElement?.clientWidth || 0;
@@ -200,7 +201,7 @@ export const SidebarElement = ({
               maxWidth: maxTextWidth,
               textOverflow: "ellipsis",
               overflow: "hidden",
-              whiteSpace: "nowrap"
+              whiteSpace: "nowrap",
             }}
             className={rightToLeft ? classes.right_to_left : ""}
           >
@@ -215,6 +216,7 @@ export const SidebarElement = ({
               element={element}
               handlePosLabelAction={handlePosLabelAction}
               handleNegLabelAction={handleNegLabelAction}
+              panelId={activePanelId}
               sx={{
                 justifyContent: "flex-end",
                 marginBottom: 0,
@@ -255,6 +257,7 @@ export const SidebarElement = ({
         open={labelMenuOpen}
         setLabelMenuOpenAnchorEl={setLabelMenuOpenAnchorEl}
         element={element}
+        panelId={activePanelId}
       />
     </>
   );
