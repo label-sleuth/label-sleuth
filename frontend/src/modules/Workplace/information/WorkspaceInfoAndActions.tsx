@@ -39,6 +39,7 @@ export const WorkspaceInfoAndActions = ({
   const lastModelFailed = useAppSelector(
     (state) => state.workspace.lastModelFailed
   );
+
   const zeroShotModelIsTraining = useAppSelector(
     (state) => state.workspace.zeroShotModelIsTraining
   );

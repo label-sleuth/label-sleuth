@@ -14,13 +14,41 @@
 */
 
 import * as React from "react";
-import { IconButton, Collapse, AlertTitle, Alert, Box, Typography, Link } from "@mui/material";
+import {
+  IconButton,
+  Collapse,
+  AlertTitle,
+  Alert,
+  Box,
+  Typography,
+  Link,
+} from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import classes from "./WorkspaceInfo.module.css";
+import { IterationStatusEnum } from "../../../const";
+import { useAppSelector } from "../../../customHooks/useRedux";
+import { useNotification } from "../../../utils/notification";
+import { toast } from "react-toastify";
 
 export const ModelErrorAlert = () => {
   const [collapsed, setCollapsed] = React.useState(true);
+
+  const modelFailureReason = useAppSelector(
+    (state) => state.workspace.modelFailureReason
+  );
+
+  const { notify } = useNotification();
+  React.useEffect(() => {
+    if (
+      modelFailureReason !== null &&
+      modelFailureReason === IterationStatusEnum.INSUFFICIENT_TRAIN_DATA
+    ) {
+      notify("Training was stopped due to not enough positive elements.", {
+        type: toast.TYPE.ERROR,
+      });
+    }
+  }, [modelFailureReason, notify]);
 
   return (
     <Box
@@ -43,22 +71,40 @@ export const ModelErrorAlert = () => {
               setCollapsed((prevValue) => !prevValue);
             }}
           >
-            {collapsed ? <KeyboardArrowUpIcon fontSize="inherit" /> : <KeyboardArrowDownIcon fontSize="inherit" />}
+            {collapsed ? (
+              <KeyboardArrowUpIcon fontSize="inherit" />
+            ) : (
+              <KeyboardArrowDownIcon fontSize="inherit" />
+            )}
           </IconButton>
         }
       >
         <AlertTitle>Model creation failed</AlertTitle>
         <Collapse in={collapsed}>
           <Typography sx={{ wordBreak: "break-word", mr: -4, ml: -3 }}>
-            {"Something went wrong creating the last model. Please ask the system administrator to "}
-            <Link
-              href="https://github.com/label-sleuth/label-sleuth/issues/new/choose"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {"submit an issue"}
-            </Link>
-            {' with the logs located at "logs/label-sleuth.log" inside the Label Sleuth output directory.'}
+            {modelFailureReason === IterationStatusEnum.ERROR ? (
+              <>
+                {
+                  "Something went wrong creating the last model. Please ask the system administrator to "
+                }
+
+                <Link
+                  href="https://github.com/label-sleuth/label-sleuth/issues/new/choose"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {"submit an issue"}
+                </Link>
+                {
+                  ' with the logs located at "logs/label-sleuth.log" inside the Label Sleuth output directory.'
+                }
+              </>
+            ) : modelFailureReason ===
+              IterationStatusEnum.INSUFFICIENT_TRAIN_DATA ? (
+              "Training was stopped due to not enough positive elements."
+            ) : (
+              ""
+            )}
           </Typography>
         </Collapse>
       </Alert>
