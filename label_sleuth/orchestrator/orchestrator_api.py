@@ -466,6 +466,14 @@ class OrchestratorApi:
     def _train(self, workspace_id, category_id, model_type, iteration_index, future):
         try:
             train_data = future.result()
+            if train_data is None:
+                logging.info(f"labeled data was not provided in workspace `{workspace_id} category id `{category_id}`"
+                             f" on iteration {iteration_index}. Stopping iteration. A new model will not be trained.")
+                self.orchestrator_state.update_iteration_status(workspace_id=workspace_id, category_id=category_id,
+                                                                iteration_index=iteration_index,
+                                                                new_status=IterationStatus.INSUFFICIENT_TRAIN_DATA)
+                return
+
         except Exception:
             logging.exception(f"Train set selection failed. Marking workspace '{workspace_id}' "
                               f"category id '{category_id}' iteration {iteration_index} as error")
@@ -703,7 +711,8 @@ class OrchestratorApi:
 
         try:
             iterations_without_errors = [iteration for iteration in iterations
-                                         if iteration.status != IterationStatus.ERROR]
+                                         if iteration.status not in  [IterationStatus.ERROR,
+                                                                      IterationStatus.INSUFFICIENT_TRAIN_DATA]]
 
             changes_since_last_model = \
                 self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id)
@@ -783,7 +792,8 @@ class OrchestratorApi:
         else:
             iteration = iterations[iteration_index]
             if iteration.status in [IterationStatus.PREPARING_DATA, IterationStatus.TRAINING,
-                                    IterationStatus.MODEL_DELETED, IterationStatus.ERROR]:
+                                    IterationStatus.MODEL_DELETED, IterationStatus.ERROR,
+                                    IterationStatus.INSUFFICIENT_TRAIN_DATA]:
                 raise Exception(
                     f"iteration {iteration_index} in workspace '{workspace_id}' category id '{category_id}' "
                     f"is not ready for inference. "
@@ -1095,9 +1105,12 @@ class OrchestratorApi:
                             self.data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts=True)
 
                     if len(category.iterations) > 0:
-                        iteration_index = len(category.iterations) - 1
-                        new_data_infer_thread_pool.submit(self._infer_missing_elements, workspace_id, category_id,
-                                                          dataset_name, iteration_index)
+                        all_iterations_and_indices = self. \
+                            get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)
+                        if len(all_iterations_and_indices)>0:
+                            iteration_index = all_iterations_and_indices[-1][1]
+                            new_data_infer_thread_pool.submit(self._infer_missing_elements, workspace_id, category_id,
+                                                              dataset_name, iteration_index)
                         total_infer_jobs += 1
         logging.info(f"done adding documents to {dataset_name} upload statistics: {document_statistics}."
                      f"{total_infer_jobs} infer jobs were submitted in the background")
@@ -1180,7 +1193,8 @@ class OrchestratorApi:
         for workspace_id in self.list_workspaces():
             for category_id, category in self.get_all_categories(workspace_id).items():
                 if len(category.iterations) > 0 \
-                        and category.iterations[-1].status not in [IterationStatus.ERROR, IterationStatus.READY]:
+                        and category.iterations[-1].status not in [IterationStatus.ERROR, IterationStatus.READY
+                                                                   , IterationStatus.INSUFFICIENT_TRAIN_DATA]:
                     logging.info(f"workspace '{workspace_id}', category id {category_id} ('{category.name}') has "
                                  f"iteration in status {category.iterations[-1]}. Restarting iteration")
                     self.restart_last_iteration(workspace_id, category_id)

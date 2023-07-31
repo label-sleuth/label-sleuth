@@ -38,6 +38,7 @@ class IterationStatus(Enum):
     READY = 4
     ERROR = 5
     MODEL_DELETED = 6
+    INSUFFICIENT_TRAIN_DATA = 7
 
 
 @dataclass

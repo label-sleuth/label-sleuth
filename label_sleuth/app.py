@@ -714,6 +714,8 @@ def set_element_label(workspace_id, element_id):
 
     category_id = int(post_data["category_id"])
     value = post_data["value"]
+    iteration = int(post_data.get("iteration", -1))
+    source = post_data.get("source", "n/a")
     update_counter = post_data.get('update_counter', True)
 
     if value == 'none':
@@ -729,7 +731,8 @@ def set_element_label(workspace_id, element_id):
         else:
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
 
-        uri_with_updated_label = {element_id: {category_id: Label(value)}}
+        uri_with_updated_label = {element_id: {category_id: Label(value,
+                                                                  metadata={"iteration":iteration, "source":source})}}
         curr_app.orchestrator_api. \
             set_labels(workspace_id, uri_with_updated_label,
                        apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts,
