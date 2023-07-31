@@ -20,13 +20,24 @@ import {
   getQueryParamsString,
   synchronizeElement,
 } from "../../../utils/utils";
-import { BASE_URL, WORKSPACE_API, DOWNLOAD_LABELS_API, UPLOAD_LABELS_API } from "../../../config";
+import {
+  BASE_URL,
+  WORKSPACE_API,
+  DOWNLOAD_LABELS_API,
+  UPLOAD_LABELS_API,
+} from "../../../config";
 import fileDownload from "js-file-download";
-import { LabelTypesEnum } from "../../../const";
+import { LabelTypesEnum, PanelIdsEnum } from "../../../const";
 import { client } from "../../../api/client";
 import { getWorkspaceId } from "../../../utils/utils";
 import { RootState } from "../../../store/configureStore";
-import { Element, LabelSliceState, ReducerObj, UploadedLabels, WorkspaceState } from "../../../global";
+import {
+  Element,
+  LabelSliceState,
+  ReducerObj,
+  UploadedLabels,
+  WorkspaceState,
+} from "../../../global";
 
 const getWorkspace_url = `${BASE_URL}/${WORKSPACE_API}`;
 
@@ -51,7 +62,9 @@ export const downloadLabels = createAsyncThunk<
 >("workspace/downloadLabels", async ({ labeledOnly }) => {
   const queryParam = `?labeled_only=${labeledOnly}`;
 
-  const url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/${DOWNLOAD_LABELS_API}${queryParam}`;
+  const url = `${getWorkspace_url}/${encodeURIComponent(
+    getWorkspaceId()
+  )}/${DOWNLOAD_LABELS_API}${queryParam}`;
 
   const { data } = await client.get(url, {
     headers: {
@@ -70,7 +83,9 @@ export const uploadLabels = createAsyncThunk<
     state: RootState;
   }
 >(`workspace/uploadLabels`, async (formData) => {
-  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/${UPLOAD_LABELS_API}`;
+  var url = `${getWorkspace_url}/${encodeURIComponent(
+    getWorkspaceId()
+  )}/${UPLOAD_LABELS_API}`;
   const { data } = await client.post(url, formData, {
     stringifyBody: false,
     omitContentType: true,
@@ -80,47 +95,37 @@ export const uploadLabels = createAsyncThunk<
 
 export const setElementLabel = createAsyncThunk<
   void,
-  { element_id: string; label: string; categoryId: number | null; update_counter: boolean },
   {
-    state: RootState;
-  }
->("workspace/set_element_label", async (request, { getState }) => {
-  const { element_id, label, categoryId, update_counter } = request;
-
-  const queryParams = getQueryParamsString([getCategoryQueryString(categoryId)]);
-
-  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/element/${encodeURIComponent(
-    element_id
-  )}${queryParams}`;
-
-  await client.put(url, {
-    category_id: categoryId,
-    value: label,
-    update_counter: update_counter,
-  });
-});
-
-export const setElementLabelForCurrentCategory = createAsyncThunk<
-  void,
-  { element_id: string; label: string; update_counter: boolean },
+    element_id: string;
+    label: string;
+    categoryId: number | null;
+    update_counter: boolean;
+    panelId: PanelIdsEnum;
+  },
   {
     state: RootState;
   }
 >("workspace/set_element_label", async (request, { getState }) => {
   const state = getState();
+  const { element_id, label, categoryId, update_counter, panelId } = request;
+  const queryParams = getQueryParamsString([
+    getCategoryQueryString(categoryId),
+  ]);
 
-  const { element_id, label, update_counter } = request;
-
-  const queryParams = getQueryParamsString([getCategoryQueryString(state.workspace.curCategory)]);
-
-  var url = `${getWorkspace_url}/${encodeURIComponent(getWorkspaceId())}/element/${encodeURIComponent(
-    element_id
-  )}${queryParams}`;
+  var url = `${getWorkspace_url}/${encodeURIComponent(
+    getWorkspaceId()
+  )}/element/${encodeURIComponent(element_id)}${queryParams}`;
 
   await client.put(url, {
-    category_id: state.workspace.curCategory,
+    category_id: categoryId,
     value: label,
     update_counter: update_counter,
+    source: panelId,
+    iteration:
+      state.workspace.modelVersion !== null &&
+      state.workspace.modelVersion !== -1
+        ? state.workspace.modelVersion - 1
+        : -1,
   });
 });
 
@@ -130,7 +135,11 @@ export const reducers = {
   },
   updateElementOptimistically(
     state: WorkspaceState,
-    action: PayloadAction<{ element: Element; newLabel: LabelTypesEnum; categoryId?: number }>
+    action: PayloadAction<{
+      element: Element;
+      newLabel: LabelTypesEnum;
+      categoryId?: number;
+    }>
   ) {
     const { element, newLabel, categoryId } = action.payload;
     const updatedElement = {
@@ -143,14 +152,22 @@ export const reducers = {
       {
         panels: state.panels,
       },
-      categoryId !== undefined ? categoryId : null,
+      categoryId !== undefined ? categoryId : null
     );
 
     state.panels.panels = panelsState.panels.panels;
   },
-  reverseOptimisticUpdate(state: WorkspaceState, action: PayloadAction<{ element: Element }>) {
+  reverseOptimisticUpdate(
+    state: WorkspaceState,
+    action: PayloadAction<{ element: Element }>
+  ) {
     const { element } = action.payload;
-    const { panelsState } = synchronizeElement(element.id, element.userLabel, { panels: state.panels }, 1); // TODO: fiishe
+    const { panelsState } = synchronizeElement(
+      element.id,
+      element.userLabel,
+      { panels: state.panels },
+      1
+    ); // TODO: fiishe
     state.panels.panels = panelsState.panels.panels;
   },
 };
@@ -177,7 +194,9 @@ export const extraReducers: ReducerObj[] = [
       const date = `${current.getFullYear()}-${convertDateSectionToString(
         current.getMonth() + 1
       )}-${convertDateSectionToString(current.getDate())}`;
-      const time = `${convertDateSectionToString(current.getHours())}-${convertDateSectionToString(
+      const time = `${convertDateSectionToString(
+        current.getHours()
+      )}-${convertDateSectionToString(
         current.getMinutes()
       )}-${convertDateSectionToString(current.getSeconds())}`;
       const fileName = `labeled_data_${date}_${time}.csv`;

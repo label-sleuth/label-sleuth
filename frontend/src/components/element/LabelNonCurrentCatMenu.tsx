@@ -12,11 +12,15 @@ import {
   styled,
   BadgeProps,
 } from "@mui/material";
-import { LabelTypesEnum } from "../../const";
+import { LabelTypesEnum, PanelIdsEnum } from "../../const";
 import { useAppSelector } from "../../customHooks/useRedux";
 import { Category, Element } from "../../global";
 import useLabelState from "../../customHooks/useLabelState";
-import { NegButton, PosButton, TooltipProps } from "../labelButtons/LabelButtons";
+import {
+  NegButton,
+  PosButton,
+  TooltipProps,
+} from "../labelButtons/LabelButtons";
 import classes from "./Element.module.css";
 import React from "react";
 import AddIcon from "@mui/icons-material/Add";
@@ -26,11 +30,17 @@ interface CategoryMenuItemProps {
   category: Category;
   userLabel: LabelTypesEnum;
   element: Element;
+  panelId: PanelIdsEnum;
 }
 
 const ITEM_HEIGHT = 40;
 
-const CategoryMenuItem = ({ element, category, userLabel }: CategoryMenuItemProps) => {
+const CategoryMenuItem = ({
+  element,
+  category,
+  userLabel,
+  panelId,
+}: CategoryMenuItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const { handlePosLabelAction, handleNegLabelAction } = useLabelState();
 
@@ -60,12 +70,16 @@ const CategoryMenuItem = ({ element, category, userLabel }: CategoryMenuItemProp
       >
         {category.category_name}
       </Typography>
-      <Stack direction="row" spacing={0} sx={{ justifyContent: "flex-end", minWidth: "80px" }}>
+      <Stack
+        direction="row"
+        spacing={0}
+        sx={{ justifyContent: "flex-end", minWidth: "80px" }}
+      >
         <NegButton
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            handleNegLabelAction(element, category.category_id);
+            handleNegLabelAction(element, panelId, category.category_id);
           }}
           userLabel={userLabel}
           show={isHovered}
@@ -75,7 +89,7 @@ const CategoryMenuItem = ({ element, category, userLabel }: CategoryMenuItemProp
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            handlePosLabelAction(element, category.category_id);
+            handlePosLabelAction(element, panelId, category.category_id);
           }}
           userLabel={userLabel}
           show={isHovered}
@@ -91,6 +105,7 @@ interface LabelCategoriesMenuProps {
   open: boolean;
   element: Element;
   setLabelMenuOpenAnchorEl: any;
+  panelId: PanelIdsEnum;
 }
 
 export const LabelCategoriesMenu = ({
@@ -98,12 +113,15 @@ export const LabelCategoriesMenu = ({
   open,
   element,
   setLabelMenuOpenAnchorEl,
+  panelId,
 }: LabelCategoriesMenuProps) => {
   const categories = useAppSelector((state) => state.workspace.categories);
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
 
   // copy the array categories because sort is inplace
-  const categoriesSorted = [...categories].sort((a, b) => a.category_name.localeCompare(b.category_name));
+  const categoriesSorted = [...categories].sort((a, b) =>
+    a.category_name.localeCompare(b.category_name)
+  );
 
   const handleClose = (e: any) => {
     e.stopPropagation();
@@ -132,7 +150,9 @@ export const LabelCategoriesMenu = ({
       onClick={(e) => e.stopPropagation()}
     >
       <MenuList>
-        <p className={classes["menu-title"]}>Assign text to another category:</p>
+        <p className={classes["menu-title"]}>
+          Assign text to another category:
+        </p>
         <Divider sx={{ marginBottom: "10px" }} />
         {categoriesSorted.map((category, i) =>
           category.category_id !== curCategory ? (
@@ -141,6 +161,7 @@ export const LabelCategoriesMenu = ({
               category={category}
               userLabel={element.otherUserLabels[category.category_id]}
               element={element}
+              panelId={panelId}
             />
           ) : null
         )}
@@ -193,14 +214,19 @@ export const LabelCategoriesMenuButton = ({
   };
 
   const numberOfOtherCategoriesLabeled = useMemo(
-    () => Object.values(element.otherUserLabels).filter((value) => value !== LabelTypesEnum.NONE).length,
+    () =>
+      Object.values(element.otherUserLabels).filter(
+        (value) => value !== LabelTypesEnum.NONE
+      ).length,
     [element]
   );
 
   const tooltipTitle = useMemo(
     () =>
       `Label to another category ${
-        numberOfOtherCategoriesLabeled > 0 ? `(${numberOfOtherCategoriesLabeled} already labeled)` : ""
+        numberOfOtherCategoriesLabeled > 0
+          ? `(${numberOfOtherCategoriesLabeled} already labeled)`
+          : ""
       }`,
     [numberOfOtherCategoriesLabeled]
   );
@@ -208,9 +234,9 @@ export const LabelCategoriesMenuButton = ({
   return (
     <Tooltip
       {...{ title: tooltipTitle, ...tooltipProps }}
-      className={`${categories.length === 1 ? classes["button-disabled-pointer"] : ""} ${
-        !labelMenuOpen ? labelButtonClasses.visibility : ""
-      }`}
+      className={`${
+        categories.length === 1 ? classes["button-disabled-pointer"] : ""
+      } ${!labelMenuOpen ? labelButtonClasses.visibility : ""}`}
       onClick={handleClickHack}
     >
       <span>

@@ -16,7 +16,7 @@
 import { useRef } from "react";
 import { Box } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
-import { RIGHT_DRAWER_INITIAL_WIDTH, ACTIONS_DRAWER_WIDTH, panelIds } from "../../const";
+import { RIGHT_DRAWER_INITIAL_WIDTH, ACTIONS_DRAWER_WIDTH, PanelIdsEnum } from "../../const";
 import MainPanel from "./main/MainPanel";
 import { useAppSelector } from "../../customHooks/useRedux";
 import AllPositiveLabelsPanel from "./sidebar/AllPositiveLabelsPanel";
@@ -102,13 +102,13 @@ export const PanelManager = ({rightDrawerWidth, setRightDrawerWidth, rightPanelO
         anchor="right"
         open={rightPanelOpen}
       >
-        {activePanelId === panelIds.SEARCH && <SearchPanel clearSearchInput={clearSearchInput} ref={textInputRef} />}
-        {activePanelId === panelIds.LABEL_NEXT && <LabelNextPanel />}
-        {activePanelId === panelIds.POSITIVE_PREDICTIONS && <PosPredictionsPanel />}
-        {activePanelId === panelIds.POSITIVE_LABELS && <AllPositiveLabelsPanel />}
-        {activePanelId === panelIds.SUSPICIOUS_LABELS && <SuspiciousLabelsPanel />}
-        {activePanelId === panelIds.CONTRADICTING_LABELS && <ContradictingLabelsPanel />}
-        {activePanelId === panelIds.EVALUATION && <EvaluationPanel />}
+        {activePanelId === PanelIdsEnum.SEARCH && <SearchPanel clearSearchInput={clearSearchInput} ref={textInputRef} />}
+        {activePanelId === PanelIdsEnum.LABEL_NEXT && <LabelNextPanel />}
+        {activePanelId === PanelIdsEnum.POSITIVE_PREDICTIONS && <PosPredictionsPanel />}
+        {activePanelId === PanelIdsEnum.POSITIVE_LABELS && <AllPositiveLabelsPanel />}
+        {activePanelId === PanelIdsEnum.SUSPICIOUS_LABELS && <SuspiciousLabelsPanel />}
+        {activePanelId === PanelIdsEnum.CONTRADICTING_LABELS && <ContradictingLabelsPanel />}
+        {activePanelId === PanelIdsEnum.EVALUATION && <EvaluationPanel />}
       </Drawer>
     </Box>
   );

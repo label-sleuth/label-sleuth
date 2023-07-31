@@ -5,6 +5,7 @@ import { Element } from "../../global";
 import { LabelCategoriesMenuButton } from "./LabelNonCurrentCatMenu";
 import classes from "./Element.module.css";
 import React from "react";
+import { PanelIdsEnum } from "../../const";
 
 interface LabelingButtonsProps {
   isElementFocused?: boolean;
@@ -19,7 +20,9 @@ interface LabelingButtonsProps {
   posTooltipProps?: TooltipProps;
   negTooltipProps?: TooltipProps;
   otherCatsTooltipProps?: TooltipProps;
+  panelId: PanelIdsEnum;
 }
+
 export const LabelingButtons = ({
   isElementFocused = false,
   labelMenuOpen,
@@ -32,6 +35,7 @@ export const LabelingButtons = ({
   posTooltipProps,
   negTooltipProps,
   otherCatsTooltipProps,
+  panelId,
 }: LabelingButtonsProps) => {
   return !!!hideButtons ? (
     <Stack
@@ -50,7 +54,7 @@ export const LabelingButtons = ({
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          handleNegLabelAction(element);
+          handleNegLabelAction(element, panelId);
         }}
         userLabel={element.userLabel}
         show={labelMenuOpen || isElementFocused}
@@ -60,7 +64,7 @@ export const LabelingButtons = ({
         onClick={(e: React.UIEvent) => {
           e.stopPropagation();
           e.preventDefault();
-          handlePosLabelAction(element);
+          handlePosLabelAction(element, panelId);
         }}
         userLabel={element.userLabel}
         show={labelMenuOpen || isElementFocused}

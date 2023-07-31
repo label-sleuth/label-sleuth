@@ -22,7 +22,7 @@ import {
 import { getNewLabelState, getBooleanLabel } from "../utils/utils";
 import { Action, isRejected } from "@reduxjs/toolkit";
 import { useAppDispatch, useAppSelector } from "./useRedux";
-import { LabelActionsEnum } from "../const";
+import { LabelActionsEnum, PanelIdsEnum } from "../const";
 import { Element } from "../global";
 
 /**
@@ -52,7 +52,7 @@ const useLabelState = (updateCounter = true) => {
    * @param  {The label action: can be 'pos' or 'neg'} labelAction
    * @param  {the category to which the label will be applied} categoryId
    */
-  const handleLabelState = (element: Element, labelAction: LabelActionsEnum, categoryId?: number) => {
+  const handleLabelState = (element: Element, labelAction: LabelActionsEnum, panelId: PanelIdsEnum, categoryId?: number) => {
     // if the categoryId is undefined, it defaults to the current category
     let categoryToLabel = categoryId !== undefined ? categoryId : curCategory
     if (categoryToLabel === null) return;
@@ -68,6 +68,7 @@ const useLabelState = (updateCounter = true) => {
         label: getBooleanLabel(newLabel),
         update_counter: updateCounter,
         categoryId: categoryToLabel,
+        panelId,
       })
     ).then((action: Action) => {
       if (isRejected(action)) {
@@ -79,12 +80,12 @@ const useLabelState = (updateCounter = true) => {
     });
   };
 
-  const handlePosLabelAction = (element: Element, categoryId?: number) => {
-    handleLabelState(element, LabelActionsEnum.POS, categoryId);
+  const handlePosLabelAction = (element: Element, panelId: PanelIdsEnum, categoryId?: number) => {
+    handleLabelState(element, LabelActionsEnum.POS, panelId, categoryId);
   };
 
-  const handleNegLabelAction = (element: Element, categoryId?: number) => {
-    handleLabelState(element, LabelActionsEnum.NEG, categoryId);
+  const handleNegLabelAction = (element: Element, panelId: PanelIdsEnum, categoryId?: number) => {
+    handleLabelState(element, LabelActionsEnum.NEG, panelId, categoryId);
   };
 
   return {

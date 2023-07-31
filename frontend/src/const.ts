@@ -111,27 +111,15 @@ export const LEFT_DRAWER_WIDTH = 300;
 export const ACTIONS_DRAWER_WIDTH = 50;
 export const APPBAR_HEIGHT = 80;
 
-export const panelIds = {
-  MAIN_PANEL: "__MAIN_PANEL",
-  LABEL_NEXT: "__LABEL_NEXT",
-  SEARCH: "__SEARCH",
-  POSITIVE_LABELS: "__ALL_POSITIVE_LABELS",
-  CONTRADICTING_LABELS: "__CONTRADICTING_LABELS",
-  SUSPICIOUS_LABELS: "__SUSPICIOUS_LABELS",
-  POSITIVE_PREDICTIONS: "__POSITIVE_PREDICTIONS",
-  EVALUATION: "__EVALUATION",
-  NOT_SET: "",
-};
-
 export enum PanelIdsEnum {
-  MAIN_PANEL = "__MAIN_PANEL",
-  LABEL_NEXT = "__LABEL_NEXT",
-  SEARCH = "__SEARCH",
-  POSITIVE_LABELS = "__ALL_POSITIVE_LABELS",
-  CONTRADICTING_LABELS = "__CONTRADICTING_LABELS",
-  SUSPICIOUS_LABELS = "__SUSPICIOUS_LABELS",
-  POSITIVE_PREDICTIONS = "__POSITIVE_PREDICTIONS",
-  EVALUATION = "__EVALUATION",
+  MAIN_PANEL = "doc_view",
+  LABEL_NEXT = "label_next",
+  SEARCH = "search",
+  POSITIVE_LABELS = "positive_labels",
+  CONTRADICTING_LABELS = "contradicting_labels",
+  SUSPICIOUS_LABELS = "suspicious_labels",
+  POSITIVE_PREDICTIONS = "positive_predictions",
+  EVALUATION = "evaluation",
   NOT_SET = "",
 }
 
@@ -180,5 +168,5 @@ export enum CustomizableUITextEnum {
 }
 
 export enum CustomizableUIMiscEnum {
-  DOWNLOAD_MODEL_BULLETS = "download_model_bullets"
+  DOWNLOAD_MODEL_BULLETS = "download_model_bullets",
 }
