@@ -2,6 +2,7 @@ import { TypedActionCreator } from "@reduxjs/toolkit/dist/mapBuilders";
 import {
   CustomizableUIMiscEnum,
   CustomizableUITextEnum,
+  IterationStatusEnum,
   LabelTypesEnum,
   PanelIdsEnum,
 } from "./const";
@@ -31,7 +32,7 @@ interface UnparsedIteration {
   changed_fraction?: number;
   creation_epoch: number;
   iteration: number;
-  iteration_status: string;
+  iteration_status: IterationStatusEnum;
   model_metadata: {
     train_counts: { [key: string]: number };
   };
@@ -234,6 +235,7 @@ interface ModelSliceState {
   modelUpdateProgress: number;
   downloadingModel: boolean;
   lastModelFailed: boolean;
+  modelFailureReason: IterationStatusEnum | null;
   zeroShotModelIsTraining: boolean;
   nextModelShouldBeTraining: boolean;
   modelVersion: number | null;

@@ -16,7 +16,7 @@
 import { createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { downloadFile } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
-import { PanelIdsEnum } from "../../../const";
+import { IterationStatusEnum, PanelIdsEnum } from "../../../const";
 import { client } from "../../../api/client";
 import { curCategoryNameSelector } from ".";
 import {
@@ -48,6 +48,7 @@ export const initialState: ModelSliceState = {
   modelStatusCheckAttempts: 0,
   downloadingModel: false,
   lastModelFailed: false,
+  modelFailureReason: null,
 };
 
 export const checkModelUpdate = createAsyncThunk<
@@ -152,21 +153,27 @@ export const extraReducers = [
       let nextModelShouldBeTraining: boolean = false;
       let modelIsTraining = false;
 
-      const lastModelFailed = iterations.length
-        ? iterations[iterations.length - 1]["iteration_status"] === "ERROR"
-        : false;
+      let lastModelFailed = false;
+      let modelFailureReason = null;
+
+      if (iterations.length && [IterationStatusEnum.ERROR, IterationStatusEnum.INSUFFICIENT_TRAIN_DATA].includes(
+        iterations[iterations.length - 1]["iteration_status"]
+      )) {
+        lastModelFailed = true;
+        modelFailureReason = iterations[iterations.length - 1]["iteration_status"]
+      }
 
       iterations.reverse().forEach((iteration) => {
         if (latestReadyModelVersion === null) {
-          if (iteration["iteration_status"] === "READY") {
+          if (iteration["iteration_status"] === IterationStatusEnum.READY) {
             latestReadyModelVersion = iteration["iteration"];
           } else if (
             [
-              "PREPARING_DATA",
-              "TRAINING",
-              "RUNNING_INFERENCE",
-              "RUNNING_ACTIVE_LEARNING",
-              "CALCULATING_STATISTICS",
+              IterationStatusEnum.PREPARING_DATA,
+              IterationStatusEnum.TRAINING,
+              IterationStatusEnum.RUNNING_INFERENCE,
+              IterationStatusEnum.RUNNING_ACTIVE_LEARNING,
+              IterationStatusEnum.CALCULATING_STATISTICS,
             ].includes(iteration["iteration_status"])
           ) {
             modelIsTraining = true;
@@ -249,6 +256,7 @@ export const extraReducers = [
 
       state.modelVersion = latestReadyModelVersion;
       state.lastModelFailed = lastModelFailed;
+      state.modelFailureReason = modelFailureReason;
       state.nextModelShouldBeTraining = nextModelShouldBeTraining;
       state.panels.panels[PanelIdsEnum.EVALUATION] = {
         ...state.panels.panels[PanelIdsEnum.EVALUATION],
