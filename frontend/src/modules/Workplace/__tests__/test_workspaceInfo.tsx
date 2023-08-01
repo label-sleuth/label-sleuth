@@ -17,6 +17,7 @@ import { screen } from "@testing-library/react";
 import { renderWithProviderAndRouter } from "../../../utils/test-utils";
 import { initialState as initialWorkspaceState } from "../redux";
 import { WorkspaceInfo } from "../information";
+import { IterationStatusEnum } from "../../../const";
 
 test("workspace information is displayed correctly", async () => {
   renderWithProviderAndRouter(<WorkspaceInfo shouldFireConfetti={false} />, {
@@ -147,6 +148,7 @@ test("model error is shown if model creation failed", async () => {
         curCategory: 0,
         modelVersion: 12,
         lastModelFailed: true,
+        modelFailureReason: IterationStatusEnum.ERROR
       },
     },
   });

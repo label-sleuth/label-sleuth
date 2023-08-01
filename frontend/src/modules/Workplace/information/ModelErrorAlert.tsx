@@ -26,7 +26,7 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import classes from "./WorkspaceInfo.module.css";
-import { IterationStatusEnum } from "../../../const";
+import { CustomizableUITextEnum, IterationStatusEnum } from "../../../const";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import { useNotification } from "../../../utils/notification";
 import { toast } from "react-toastify";
@@ -38,17 +38,29 @@ export const ModelErrorAlert = () => {
     (state) => state.workspace.modelFailureReason
   );
 
+  const insufficientTrainDataToastMessage = useAppSelector(
+    (state) =>
+      state.customizableUIText.texts[
+        CustomizableUITextEnum.INSUFFICIENT_TRAIN_DATA_TOAST_MESSAGE
+      ]
+  );
+
+  const insufficientTrainDataDescription = useAppSelector(
+    (state) =>
+      state.customizableUIText.texts[
+        CustomizableUITextEnum.INSUFFICIENT_TRAIN_DATA_DESCRIPTION
+      ]
+  );
+
   const { notify } = useNotification();
+
   React.useEffect(() => {
-    if (
-      modelFailureReason !== null &&
-      modelFailureReason === IterationStatusEnum.INSUFFICIENT_TRAIN_DATA
-    ) {
-      notify("Please use a query to label more positive elements", {
-        type: toast.TYPE.ERROR,
+    if (modelFailureReason === IterationStatusEnum.INSUFFICIENT_TRAIN_DATA) {
+      notify(insufficientTrainDataToastMessage, {
+        type: toast.TYPE.INFO,
       });
     }
-  }, [modelFailureReason, notify]);
+  }, [modelFailureReason, insufficientTrainDataToastMessage, notify]);
 
   return (
     <Box
@@ -60,7 +72,13 @@ export const ModelErrorAlert = () => {
       }}
     >
       <Alert
-        severity="error"
+        severity={
+          modelFailureReason === IterationStatusEnum.ERROR
+            ? "error"
+            : modelFailureReason === IterationStatusEnum.INSUFFICIENT_TRAIN_DATA
+            ? "info"
+            : "error"
+        }
         className={classes.alert}
         action={
           <IconButton
@@ -79,7 +97,13 @@ export const ModelErrorAlert = () => {
           </IconButton>
         }
       >
-        <AlertTitle>Model creation failed</AlertTitle>
+        <AlertTitle>
+          {modelFailureReason === IterationStatusEnum.ERROR
+            ? "Model creation failed"
+            : modelFailureReason === IterationStatusEnum.INSUFFICIENT_TRAIN_DATA
+            ? "Insufficient train data"
+            : ""}
+        </AlertTitle>
         <Collapse in={collapsed}>
           <Typography sx={{ wordBreak: "break-word", mr: -4, ml: -3 }}>
             {modelFailureReason === IterationStatusEnum.ERROR ? (
@@ -101,7 +125,7 @@ export const ModelErrorAlert = () => {
               </>
             ) : modelFailureReason ===
               IterationStatusEnum.INSUFFICIENT_TRAIN_DATA ? (
-              "Training was stopped due to not enough positive elements."
+              insufficientTrainDataDescription
             ) : (
               ""
             )}
