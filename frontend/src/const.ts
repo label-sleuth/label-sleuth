@@ -165,6 +165,8 @@ export enum CustomizableUITextEnum {
   SYSTEM_UNAVAILABLE = "system_unavailable",
   NEXT_ZERO_SHOT_MODEL_TRAINING_MSG = "next_zero_shot_model_training_msg",
   DOWNLOAD_MODEL_DESCRIPTION = "download_model_description",
+  INSUFFICIENT_TRAIN_DATA_TOAST_MESSAGE = "insufficient_train_data_toast_message",
+  INSUFFICIENT_TRAIN_DATA_DESCRIPTION = "insufficient_train_data_toast_description"
 }
 
 export enum CustomizableUIMiscEnum {

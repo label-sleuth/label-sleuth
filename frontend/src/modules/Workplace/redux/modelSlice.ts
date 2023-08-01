@@ -156,11 +156,16 @@ export const extraReducers = [
       let lastModelFailed = false;
       let modelFailureReason = null;
 
-      if (iterations.length && [IterationStatusEnum.ERROR, IterationStatusEnum.INSUFFICIENT_TRAIN_DATA].includes(
-        iterations[iterations.length - 1]["iteration_status"]
-      )) {
+      if (
+        iterations.length &&
+        [
+          IterationStatusEnum.ERROR,
+          IterationStatusEnum.INSUFFICIENT_TRAIN_DATA,
+        ].includes(iterations[iterations.length - 1]["iteration_status"])
+      ) {
         lastModelFailed = true;
-        modelFailureReason = iterations[iterations.length - 1]["iteration_status"]
+        modelFailureReason =
+          iterations[iterations.length - 1]["iteration_status"];
       }
 
       iterations.reverse().forEach((iteration) => {
