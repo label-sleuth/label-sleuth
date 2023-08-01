@@ -44,7 +44,7 @@ export const ModelErrorAlert = () => {
       modelFailureReason !== null &&
       modelFailureReason === IterationStatusEnum.INSUFFICIENT_TRAIN_DATA
     ) {
-      notify("Training was stopped due to not enough positive elements.", {
+      notify("Please use a query to label more positive elements", {
         type: toast.TYPE.ERROR,
       });
     }
