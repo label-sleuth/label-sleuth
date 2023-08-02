@@ -95,7 +95,7 @@ class TestAppIntegration(unittest.TestCase):
                 "a code snippet demonstrating how it can be used within a Python application"
             ],
             "insufficient_train_data_toast_message": "Please use a query to label more positive elements",
-            "insufficient_train_data_toast_description": "The model did not train due to insufficient number of positive labels. Use the search panel at the top-right side to query the data and collect more positive labels manually. If issue persists, please reach out at #foundation-models-lm-utilization channel on Slack."
+            "insufficient_train_data_toast_description": "The model did not train due to insufficient number of positive labels. Use the search panel at the top-right side to query the data and collect more positive labels manually."
         }
         self.assertEqual(res.get_json(), correct_body)
 
