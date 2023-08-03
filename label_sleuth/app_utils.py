@@ -236,6 +236,7 @@ def get_customizable_UI_text(path: str = None):
             }, 404)
         wrong_keys = [k for k in customizable_UI_text.keys() if k not in default_customizable_UI_text.keys()]
         if len(wrong_keys) > 0:
+            logging.error(f"wrong keys in custom ui file {path}. keys {wrong_keys}")
             return make_error({
                 "type": "wrong_customizable_keys",
                 "title": f"The following keys in the provided customizable UI elements are not supported: "
