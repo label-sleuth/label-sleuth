@@ -350,6 +350,7 @@ def delete_workspace(workspace_id):
         curr_app.orchestrator_api.delete_workspace(workspace_id)
         return jsonify({'workspace_id': workspace_id})
     except Exception as e:
+        logging.exception(f"failed to delete workspace {workspace_id}")
         return make_error({
             "type": "delete_workspace_failed",
             "title": f"Error deleting workspace '{workspace_id}'"
@@ -455,12 +456,15 @@ def update_category(workspace_id, category_id):
     try:
         category_id = int(category_id)
     except:
+        logging.exception(f"failed to update workspace {workspace_id} cannot parse category_id '{category_id}'")
         return make_error({
             "type": "category_id_error",
             "title": f"category_id should be an integer (got {category_id})"
         })
 
     if category_id not in curr_app.orchestrator_api.get_all_categories(workspace_id):
+        logging.error(f"failed to update category in workspace {workspace_id}, category id '{category_id}' "
+                      f"does not exist")
         return make_error({
             "type": "category_id_does_not_exist",
             "title": f"category_id {category_id} does not exist in workspace {workspace_id}"
@@ -492,6 +496,7 @@ def delete_category(workspace_id, category_id):
     try:
         category_id = int(category_id)
     except:
+        logging.exception(f"failed to update workspace {workspace_id} cannot parse category_id '{category_id}'")
         return make_error({
             "type": "category_id_error",
             "title": f"category_id should be an integer (got {category_id}) "
@@ -844,6 +849,7 @@ def import_labels(workspace_id):
             missing_columns.append(e.__str__())
 
     if len(missing_columns) > 0:
+        logging.error(f"workspace {workspace_id} failed to import labels due to missing columns: {missing_columns}")
         return make_error({
             'type': 'missing_required_columns',
             'title': f"Missing the following required columns: {','.join(missing_columns)}"
@@ -853,6 +859,7 @@ def import_labels(workspace_id):
     try:
         return jsonify(curr_app.orchestrator_api.import_category_labels(workspace_id, df))
     except Exception as e:
+        logging.exception(f"failed to import labels in workspace {workspace_id}")
         return make_error({
             'type': 'invalid_upload', 
             'title': "Invalid csv file"
@@ -1223,6 +1230,7 @@ def get_contradicting_elements(workspace_id):
         res = {'pairs': element_pairs_transformed, 'diffs': diffs, 'hit_count': hit_count}
         return jsonify(res)
     except Exception:
+        logging.exception(f"workspace {workspace_id} category_id '{category_id}' failed to create contradiction report")
         return make_error({
             "type": "contradiction_report_generation_error", 
             "title": 
