@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
+import ast
 import logging
 import re
 import sys
@@ -102,10 +102,12 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
             )
     category_to_uri_to_label = {}
     for category_name, category_df in df.groupby(DisplayFields.category_name):
-        uri_to_label = {}
-        for uri, uri_df in category_df.groupby(DisplayFields.uri):
-            for (label, label_type), _ in uri_df.groupby([DisplayFields.label, DisplayFields.label_type]):
-                uri_to_label[uri] = {category_name: Label(label=bool(label), label_type=LabelType[label_type])}
+        uri_to_label = {row[DisplayFields.uri]:
+                            {category_name: Label(label=bool(row[DisplayFields.label]),
+                                                  label_type=LabelType[row[DisplayFields.label_type]],
+                                                  metadata={} if DisplayFields.label_metadata not in row
+                                                  else ast.literal_eval(row[DisplayFields.label_metadata]))}
+                        for row in category_df.to_dict("records")}
         category_to_uri_to_label[category_name] = uri_to_label
 
     return category_to_uri_to_label, contradicting_labels_info

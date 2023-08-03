@@ -1046,8 +1046,7 @@ class OrchestratorApi:
                   # column for each metadata field, using the same format as in document upload
                   **{DisplayFields.csv_metadata_column_prefix + k: v for k, v in element.metadata.items()},
                   DisplayFields.label: element.category_to_label[category_id].label,
-                  # TODO uncomment when adding metadata
-                  # DisplayFields.label_metadata: le.category_to_label[category_id].metadata,
+                  DisplayFields.label_metadata: element.category_to_label[category_id].metadata,
                   DisplayFields.label_type: element.category_to_label[category_id].label_type.name
                   }
                  for element in text_elements])
