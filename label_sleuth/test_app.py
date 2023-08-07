@@ -53,7 +53,6 @@ class TestAppIntegration(unittest.TestCase):
         cls.temp_dir.cleanup()
 
     def test_full_flow(self):
-
         ui_defaults = app_utils.get_default_customizable_UI_text()
 
         def raise_exception(a, b):
@@ -107,27 +106,9 @@ class TestAppIntegration(unittest.TestCase):
         workspace_name = "my_test_workspace"
         category_name = "my_category"
         category_description = "my_category_description"
-        data = {}
-        text_with_parenthesis = "this text contains a parenthesis a a a a a a(b b b b b b c c c c ( x x x x and some more text to force creating a snippet"
-        text_with_parenthesis_snippet = "this text contains a parenthesis a a a a a ... x and some more text to force creating a snippet"
-        text_with_parenthesis_snippet_in_query = " ... a a a a a(b b b b b ... c c c c ( x x x x ... "
-        data['file'] = (io.BytesIO(bytes(
-            'document_id,text\n' 
-            'document1,this is the first text element of document one\n'
-            'document1,this is the second text element of document one\n'
-            'document2,this is the only text element in document two\n'
-            'document3,"document 3 has three text elements, this is the first"\n'
-            'document3,"document 3 has three text elements, this is the second that will be labeled as negative"\n'
-            'document3,"document 3 has three text elements, this is the third"\n'
-            f'document3,{text_with_parenthesis}\n', 'utf-8')),
-                        'my_file.csv')
-        res = self.client.post(f"/datasets/{dataset_name}/add_documents", data=data, headers=HEADERS,
-                               content_type='multipart/form-data')
-        self.assertEqual(200, res.status_code, msg="Failed to upload a new dataset")
-        self.assertEqual(
-            {'dataset_name': 'my_test_dataset', 'num_docs': 3, 'num_sentences': 7, 'workspaces_to_update': []},
-            res.get_json(), msg="diff in upload dataset response")
-        
+        data, text_with_parenthesis, text_with_parenthesis_snippet, text_with_parenthesis_snippet_in_query = self.create_dataset(
+            dataset_name)
+
         data['file'] = (io.BytesIO(
             b'document_id,text\n'
             b'document3,"adding this text element makes the request to fail because of the row count limit of 7"\n'),
@@ -433,6 +414,29 @@ class TestAppIntegration(unittest.TestCase):
 
         print("Done")
 
+    def create_dataset(self, dataset_name):
+        data = {}
+        text_with_parenthesis = "this text contains a parenthesis a a a a a a(b b b b b b c c c c ( x x x x and some more text to force creating a snippet"
+        text_with_parenthesis_snippet = "this text contains a parenthesis a a a a a ... x and some more text to force creating a snippet"
+        text_with_parenthesis_snippet_in_query = " ... a a a a a(b b b b b ... c c c c ( x x x x ... "
+        data['file'] = (io.BytesIO(bytes(
+            'document_id,text\n'
+            'document1,this is the first text element of document one\n'
+            'document1,this is the second text element of document one\n'
+            'document2,this is the only text element in document two\n'
+            'document3,"document 3 has three text elements, this is the first"\n'
+            'document3,"document 3 has three text elements, this is the second that will be labeled as negative"\n'
+            'document3,"document 3 has three text elements, this is the third"\n'
+            f'document3,{text_with_parenthesis}\n', 'utf-8')),
+                        'my_file.csv')
+        res = self.client.post(f"/datasets/{dataset_name}/add_documents", data=data, headers=HEADERS,
+                               content_type='multipart/form-data')
+        self.assertEqual(200, res.status_code, msg="Failed to upload a new dataset")
+        self.assertEqual(
+            {'dataset_name': dataset_name, 'num_docs': 3, 'num_sentences': 7, 'workspaces_to_update': []},
+            res.get_json(), msg="diff in upload dataset response")
+        return data, text_with_parenthesis, text_with_parenthesis_snippet, text_with_parenthesis_snippet_in_query
+
     def wait_for_new_iteration(self, category_id, res, workspace_name, num_models):
         waiting_count = 0
         MAX_WAITING_FOR_TRAINING = 100
@@ -452,3 +456,33 @@ class TestAppIntegration(unittest.TestCase):
             time.sleep(0.1)
             waiting_count += 1
         return res
+
+
+    def test_full_flow_multiclass(self):
+        workspace_name = "multiclass_workspace"
+        dataset_name = "multiclass_dataset"
+        self.create_dataset(dataset_name)
+        res = self.client.post("/workspace",
+                               data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"Multiclass"}}'.format(workspace_name, dataset_name),
+                               headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to create a workspace")
+        self.assertEqual(
+            {"workspace": {'dataset_name': 'multiclass_dataset', 'first_document_id': 'multiclass_dataset-document1',
+                           'workspace_id': 'multiclass_workspace'}}, res.get_json(),
+            msg="diff in create workspace response")
+
+        category_name1 = "cat1"
+        category_name2 = "cat2"
+        category_name3 = "cat3"
+        category_desc1 = "desc1"
+        category_desc2 = "desc2"
+        category_desc3 = "desc3"
+
+        res = self.client.post(f"/workspace/{workspace_name}/category_list",
+                               data=f'{{"category_to_description":{{"{category_name1}":"{category_desc1}","{category_name2}":"{category_desc2}", "{category_name3}":"{category_desc3}"}}}}',
+                               headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to set category list")
+        self.assertEqual(res.get_json(),{'0': {'description': 'desc1', 'id': 0, 'name': 'cat1'},
+                                         '1': {'description': 'desc2', 'id': 1, 'name': 'cat2'},
+                                         '2': {'description': 'desc3', 'id': 2, 'name': 'cat3'}},
+                         msg="diff in set category list response")

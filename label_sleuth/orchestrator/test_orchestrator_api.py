@@ -24,7 +24,8 @@ import pandas as pd
 
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.config import load_config
-from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, LABEL_NEGATIVE, LABEL_POSITIVE
+from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, LABEL_NEGATIVE, LABEL_POSITIVE, \
+    LabeledTextElement
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.data_access.test_file_based_data_access import generate_corpus
 from label_sleuth.models.core.model_api import ModelStatus
@@ -40,6 +41,7 @@ from label_sleuth.training_set_selector.training_set_selector_factory import Tra
 def add_random_labels_to_document(doc: Document, min_num_sentences_to_label: int, categories, seed=0):
     random.seed(seed)
     text_elements_to_label = random.sample(doc.text_elements, min(min_num_sentences_to_label, len(doc.text_elements)))
+    text_elements_to_label = [LabeledTextElement(**vars(text_element)) for text_element in text_elements_to_label]
     for elem in text_elements_to_label:
         categories_to_label = random.sample(categories, random.randint(0, len(categories)))
         elem.category_to_label.update({cat: Label(label=random.sample([LABEL_POSITIVE, LABEL_NEGATIVE], 1)[0])
@@ -158,7 +160,7 @@ class TestOrchestratorAPI(unittest.TestCase):
             self.assertIn(column, DisplayFields.__dict__.values())
 
         # import the resulting dataframe using import_category_labels()
-        self.orchestrator_state.create_workspace(workspace_id='mock_workspace_2', dataset_name=dataset_name)
+        self.orchestrator_api.create_workspace(workspace_id='mock_workspace_2', dataset_name=dataset_name)
         self.orchestrator_api.import_category_labels('mock_workspace_2', exported_df)
 
         unique = set()
