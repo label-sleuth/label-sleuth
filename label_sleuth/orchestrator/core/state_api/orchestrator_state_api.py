@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
+import dataclasses
 import os
 import threading
 import logging
@@ -25,6 +25,7 @@ from typing import Dict, List, Sequence, Tuple, Mapping
 
 import jsonpickle
 
+from label_sleuth.data_access.core.data_structs import WorkspaceType
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.model_type import ModelType
 
@@ -78,6 +79,24 @@ class Workspace:
     dataset_name: str
     categories: Dict[int, Category] = field(default_factory=dict)
 
+@dataclass
+class MulticlassCategory:
+    name: str
+    id: int
+    description: str
+
+    def __copy__(self):
+        return dataclasses.replace(self)
+
+
+@dataclass
+class MulticlassWorkspace:
+    workspace_id: str
+    dataset_name: str
+    label_change_count_since_last_train: int = 0
+    categories: Dict[int, MulticlassCategory] = field(default_factory=dict)
+    iterations: List[Iteration] = field(default_factory=list)
+
 
 class WorkspaceSchemeChangedException(Exception):
     def __init__(self, message):
@@ -94,13 +113,16 @@ class OrchestratorStateApi:
 
     # Workspace-related methods
 
-    def create_workspace(self, workspace_id: str, dataset_name: str):
+    def create_workspace(self, workspace_id: str, dataset_name: str,
+                         workspace_type:WorkspaceType=WorkspaceType.BinaryClasses):
         with self.workspaces_lock[workspace_id]:
             illegal_chars = "".join(x for x in workspace_id if not x.isalnum() and x not in "_-")
             assert len(illegal_chars) == 0, \
                 f"Workspace id '{workspace_id}' contains illegal characters: '{illegal_chars}'"
-
-            workspace = Workspace(workspace_id=workspace_id, dataset_name=dataset_name)
+            if workspace_type == WorkspaceType.BinaryClasses:
+                workspace = Workspace(workspace_id=workspace_id, dataset_name=dataset_name)
+            else:
+                workspace = MulticlassWorkspace(workspace_id,dataset_name)
 
             if self._filename_from_workspace_id(workspace_id) in os.listdir(self.workspace_dir):
                 raise Exception(f"workspace name '{workspace_id}' already exists")
@@ -152,8 +174,9 @@ class OrchestratorStateApi:
             workspace = json_file.read()
         workspace = jsonpickle.decode(workspace)
         # int dictionary keys are converted to string when writing to json, see https://bugs.python.org/issue34972
-        workspace.categories = {int(category_id_str): category
-                                for category_id_str, category in workspace.categories.items()}
+        if type(workspace) == Workspace:
+            workspace.categories = {int(category_id_str): category
+                                    for category_id_str, category in workspace.categories.items()}
         self.workspaces[workspace_id] = workspace
         return workspace
 
@@ -232,6 +255,20 @@ class OrchestratorStateApi:
             workspace.categories[category_id].label_change_count_since_last_train = \
                 workspace.categories[category_id].label_change_count_since_last_train + number_of_new_changes
             self._save_workspace(workspace)
+
+    # multiclass-related category methods
+    def set_category_list(self, workspace_id: str, category_to_description:Mapping):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            if len(workspace.categories) > 0:
+                raise Exception(f"workspace {workspace} already has a category list")
+            workspace.categories = \
+                {id: MulticlassCategory(category_name, id, category_desc) for id, (category_name, category_desc)
+                                    in enumerate(category_to_description.items())}
+
+            self._save_workspace(workspace)
+            return workspace.categories
+
 
     # Iteration-related methods
 

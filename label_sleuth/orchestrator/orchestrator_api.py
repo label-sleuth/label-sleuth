@@ -32,7 +32,8 @@ from label_sleuth.active_learning.core.active_learning_factory import ActiveLear
 from label_sleuth.analysis_utils.labeling_reports import get_suspected_labeling_contradictions_by_distance_with_diffs, \
     get_disagreements_using_cross_validation
 from label_sleuth.config import Configuration
-from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE, LABEL_NEGATIVE
+from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE, \
+    LABEL_NEGATIVE, WorkspaceType, MulticlassLabel
 from label_sleuth.data_access.data_access_api import DataAccessApi, DatasetRowCountLimitExceededException
 from label_sleuth.data_access.label_import_utils import process_labels_dataframe
 from label_sleuth.data_access.processors.csv_processor import CsvFileProcessor
@@ -78,7 +79,8 @@ class OrchestratorApi:
 
     # Workspace-related methods
 
-    def create_workspace(self, workspace_id: str, dataset_name: str):
+    def create_workspace(self, workspace_id: str, dataset_name: str,
+                         workspace_type:WorkspaceType=WorkspaceType.BinaryClasses):
         """
         Create a new workspace
         :param workspace_id:
@@ -89,7 +91,9 @@ class OrchestratorApi:
             message = f"{dataset_name} does not exist. Cannot create workspace {workspace_id}"
             logging.error(message)
             raise Exception(message)
-        self.orchestrator_state.create_workspace(workspace_id, dataset_name)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type)
+        self.orchestrator_state.create_workspace(workspace_id, dataset_name, workspace_type)
+
 
     def delete_workspace(self, workspace_id: str):
         """
@@ -162,6 +166,15 @@ class OrchestratorApi:
         """
         logging.info(f"Creating a new category '{category_name}' in workspace '{workspace_id}'")
         return self.orchestrator_state.add_category_to_workspace(workspace_id, category_name, category_description)
+
+
+    def set_category_list(self, workspace_id: str, category_to_description:Mapping):
+        """
+        TBD
+        """
+        logging.info(f"setting the category list of workspace {workspace_id}")
+        return self.orchestrator_state.set_category_list(workspace_id, category_to_description)
+
 
     def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str):
         old_category_name = self.orchestrator_state.get_workspace(workspace_id).categories[category_id].name
@@ -300,7 +313,8 @@ class OrchestratorApi:
                                                       query=query, is_regex=is_regex,
                                                       remove_duplicates=remove_duplicates)
 
-    def set_labels(self, workspace_id: str, uri_to_label: Mapping[str, Mapping[int, Label]],
+    def set_labels(self, workspace_id: str, uri_to_label: Union[Mapping[str, Mapping[int, Label]],
+                                                                Mapping[str, MulticlassLabel]],
                    apply_to_duplicate_texts=True, update_label_counter=True):
         """
         Set user labels for a set of element URIs.
@@ -313,6 +327,8 @@ class OrchestratorApi:
         of the categories. Since an increase in label change counts can trigger the training of a new model, in some
         specific situations this parameter is set to False and the updating of the counter is performed at a later time.
         """
+        if len(uri_to_label)>0 and next(iter(uri_to_label.values())) == MulticlassLabel:
+            raise Exception ("TODO set label in multiclass is not implemented yet")
         if update_label_counter:
             train_set_selector = self.training_set_selection_factory.\
                 get_training_set_selector(self.config.training_set_selection_strategy)

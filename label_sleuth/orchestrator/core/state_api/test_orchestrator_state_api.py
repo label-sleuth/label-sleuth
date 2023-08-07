@@ -19,11 +19,11 @@ import shutil
 import tempfile
 from datetime import datetime
 
-from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, Document
+from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, Document, WorkspaceType
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, ModelInfo, \
-    IterationStatus, Iteration, Category, Workspace
+    IterationStatus, Iteration, Category, Workspace, MulticlassWorkspace
 
 
 def generate_simple_doc(dataset_name, num_sentences, doc_id=0):
@@ -194,3 +194,24 @@ class TestOrchestratorStateAPI(unittest.TestCase):
                                  "Iteration fields have changed, this may break existing user files")
                 self.assertEqual(iteration.model.__dict__.keys(), ModelInfo.__annotations__.keys(),
                                  "ModelInfo fields have changed, this may break existing user files")
+
+
+    def test_create_and_load_multiclass_workspace(self):
+        workspace_id = "workspace_1"
+
+        dataset_name = 'non_existing_dump'
+
+        self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name,
+                                                     workspace_type=WorkspaceType.Multiclass)
+        categories = self.orchestrator_state_api.set_category_list(workspace_id,{"cat1":"desc1", "cat2":"desc2"})
+
+        loaded = self.orchestrator_state_api.get_workspace(workspace_id)
+        self.assertEqual(workspace_id, loaded.workspace_id)
+        self.assertEqual(dataset_name, loaded.dataset_name)
+        self.assertEqual(MulticlassWorkspace, type(loaded))
+        loaded_categories = {category.name for category in loaded.categories.values()}
+        loaded_descriptions = {category.description for category in loaded.categories.values()}
+        self.assertIn("cat1", loaded_categories)
+        self.assertIn("cat2", loaded_categories)
+        self.assertIn("desc1", loaded_descriptions)
+        self.assertIn("desc2", loaded_descriptions)

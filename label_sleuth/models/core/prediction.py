@@ -14,6 +14,7 @@
 #
 
 from dataclasses import dataclass
+from typing import List
 
 
 @dataclass
@@ -34,3 +35,13 @@ class Prediction:
 
         if self.score < 0 or self.score > 1:
             raise Exception(f'Model score {self.score} is outside the range [0-1]')
+
+
+
+@dataclass
+class MulticlassPrediction:
+    """
+    TBA
+    """
+    label: int
+    scores: List[float]
