@@ -19,7 +19,8 @@ from dataclasses import dataclass
 from enum import Enum
 
 from typing import Iterable, Sequence, Mapping, List, Union, Set
-from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, URI_SEP, LabelType
+from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, URI_SEP, LabelType, \
+    MulticlassLabel, WorkspaceType
 
 
 class AlreadyExistsException(Exception):
@@ -101,7 +102,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def set_labels(self, workspace_id: str, uris_to_labels: Mapping[str, Mapping[int, Label]],
+    def set_labels(self, workspace_id: str, uris_to_labels: Union[Mapping[str, Mapping[int, Label]],
+                                                                Mapping[str, MulticlassLabel]],
                    apply_to_duplicate_texts=False):
         """
         Set labels to TextElements in dataset for a given workspace_id.
@@ -334,3 +336,13 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         Get the number of text elements of a dataset
         :param dataset_name:
         """
+
+    @abc.abstractmethod
+    def initialize_user_labels(self, workspace_id:str, dataset_name:str, workspace_type:WorkspaceType):
+        """
+        Save user labels object when creating a workspace
+        :param workspace_id:
+        :param dataset_name:
+        :param workspace_type:
+        """
+        # Save empty dict to disk

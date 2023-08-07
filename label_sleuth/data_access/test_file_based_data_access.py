@@ -15,10 +15,11 @@
 
 import random
 import unittest
-from collections import Counter
+from collections import Counter, defaultdict
 from typing import List
 import tempfile
-from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, LabeledTextElement
+from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, LabeledTextElement, WorkspaceType, \
+    MulticlassLabel
 from label_sleuth.data_access.file_based.utils import URI_SEP
 
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
@@ -35,8 +36,8 @@ def generate_simple_doc(dataset_name, doc_id=0, add_duplicate=False):
     start_span = 0
     for idx, sentence in enumerate(sentences):
         end_span = start_span + len(sentence)
-        text_elements.append(LabeledTextElement(uri=URI_SEP.join([dataset_name, str(doc_id), str(idx)]), text=sentence,
-                                         span=[(start_span, end_span)], metadata={}, category_to_label={}))
+        text_elements.append(TextElement(uri=URI_SEP.join([dataset_name, str(doc_id), str(idx)]), text=sentence,
+                                         span=[(start_span, end_span)], metadata={}))
         start_span = end_span + 1
 
     doc = Document(uri=dataset_name + URI_SEP + str(doc_id), text_elements=text_elements, metadata={})
@@ -59,6 +60,15 @@ def add_random_labels_to_document(doc: Document, min_num_sentences_to_label: int
         labels = {cat: Label(label=LABEL_POSITIVE) if cat in categories_to_label else Label(
             label=LABEL_NEGATIVE) for cat in categories}
         uri_to_label[elem.uri] = labels
+    return uri_to_label
+
+
+def add_random_multiclass_labels_to_document(doc: Document, min_num_sentences_to_label: int, categories: List[int], seed=0):
+    random.seed(seed)
+    uri_to_label = {}
+    text_elements_to_label = random.sample(doc.text_elements, min(min_num_sentences_to_label, len(doc.text_elements)))
+    for elem in text_elements_to_label:
+        uri_to_label[elem.uri] = MulticlassLabel(random.randint(0, len(categories)-1))
     return uri_to_label
 
 
@@ -94,9 +104,10 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_set_labels_and_get_documents(self):
         workspace_id = 'test_set_labels'
         dataset_name = self.test_set_labels_and_get_documents.__name__ + '_dump'
-        categories = ['cat_' + str(i) for i in range(3)]
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        category_ids = range(3)
         doc = generate_corpus(self.data_access, dataset_name)[0]
-        uri_to_label = add_random_labels_to_document(doc, 5, categories)
+        uri_to_label = add_random_labels_to_document(doc, 5, category_ids)
         self.data_access.set_labels(workspace_id, uri_to_label)
 
         doc_with_labels_info = self.data_access.get_documents(workspace_id, dataset_name, [doc.uri])
@@ -108,9 +119,49 @@ class TestFileBasedDataAccess(unittest.TestCase):
                 self.assertDictEqual(text.category_to_label, {})
         self.data_access.delete_dataset(dataset_name)
 
+
+    def test_set_labels_and_get_documents_no_cache(self):
+        workspace_id = 'test_set_labels_no_cache'
+        dataset_name = self.test_set_labels_and_get_documents_no_cache.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        category_ids = range(3)
+        doc = generate_corpus(self.data_access, dataset_name)[0]
+        uri_to_label = add_random_labels_to_document(doc, 5, category_ids)
+        self.data_access.set_labels(workspace_id, uri_to_label)
+        self.data_access.labels_in_memory = defaultdict(lambda: defaultdict(lambda: defaultdict()))
+        doc_with_labels_info = self.data_access.get_documents(workspace_id, dataset_name, [doc.uri])
+        texts_and_labels_dict = dict(uri_to_label)
+        for text in doc_with_labels_info[0].text_elements:
+            if text.uri in texts_and_labels_dict:
+                self.assertDictEqual(text.category_to_label, texts_and_labels_dict[text.uri])
+            else:
+                self.assertDictEqual(text.category_to_label, {})
+        self.data_access.delete_dataset(dataset_name)
+
+
+    def test_set_labels_and_get_documents_multiclass(self):
+        workspace_id = 'test_set_labels_multiclass'
+        dataset_name = self.test_set_labels_and_get_documents_multiclass.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.Multiclass)
+        category_ids = list(range(3))
+        doc = generate_corpus(self.data_access, dataset_name)[0]
+        uri_to_label = add_random_multiclass_labels_to_document(doc, 2, category_ids)
+        self.data_access.set_labels(workspace_id, uri_to_label)
+
+        doc_with_labels_info = self.data_access.get_documents(workspace_id, dataset_name, [doc.uri])
+        texts_and_labels_dict = dict(uri_to_label)
+        for labeled_text_element in doc_with_labels_info[0].text_elements:
+            if labeled_text_element.uri in texts_and_labels_dict:
+                self.assertEqual(labeled_text_element.label, texts_and_labels_dict[labeled_text_element.uri])
+            else:
+                self.assertEqual(labeled_text_element.label, None)
+        self.data_access.delete_dataset(dataset_name)
+
+
     def test_unset_labels(self):
         workspace_id = 'test_unset_labels'
         dataset_name = self.test_set_labels_and_get_documents.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
         category_id = 0
         doc = generate_corpus(self.data_access, dataset_name)[0]
         texts_and_labels_list = add_labels_to_doc(doc, category_id)
@@ -144,7 +195,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
         docs = generate_corpus(self.data_access, dataset_name, random.randint(1, 10))
         text_elements_found = self.data_access.get_all_text_elements(dataset_name)
         text_elements_found.sort(key=lambda t: t.uri)
-        text_elements_expected = [text for doc in docs for text in doc.text_elements]
+        text_elements_expected = [LabeledTextElement(**vars(text_element)) for doc in docs for text_element in doc.text_elements]
         text_elements_expected.sort(key=lambda t: t.uri)
         self.assertListEqual(text_elements_expected, text_elements_found)
 
@@ -188,6 +239,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
 
         workspace_id = 'test_sample_text_elements'
         dataset_name = self.test_get_text_elements.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
         docs = generate_corpus(self.data_access, dataset_name, 5)
         # add labels info for a single doc
@@ -204,6 +256,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_get_unlabeled_text_elements(self):
         workspace_id = 'test_sample_unlabeled_text_elements'
         dataset_name = self.test_get_unlabeled_text_elements.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
         category_id = 0
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
         docs = generate_corpus(self.data_access, dataset_name, 2)
@@ -221,6 +274,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_get_labeled_text_elements(self):
         workspace_id = 'test_sample_labeled_text_elements'
         dataset_name = self.test_get_labeled_text_elements.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
         category_id = 2
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
         docs = generate_corpus(self.data_access, dataset_name, 2)
@@ -245,6 +299,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_sample_by_query_text_elements(self):
         workspace_id = 'test_sample_by_query_text_elements'
         dataset_name = self.test_sample_by_query_text_elements.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
         category_id = 0
         query = 'sentence'
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
@@ -281,6 +336,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_query_text_elements_pagination(self):
         workspace_id = 'test_sample_by_query_text_elements'
         dataset_name = self.test_sample_by_query_text_elements.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
         category_id = 0
         query = 'sentence'
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
@@ -321,6 +377,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
         num_docs = 100
         workspace_id = 'test_multithread_set_labels'
         dataset_name = self.test_multithread_async_set_labels.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
         category_id = 0
         categories = [category_id]
         corpus = generate_corpus(self.data_access, dataset_name, num_of_documents=num_docs)
@@ -360,6 +417,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_get_label_counts(self):
         workspace_id = 'test_get_label_counts'
         dataset_name = self.test_get_label_counts.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
         category_to_count = 2
         docs = generate_corpus(self.data_access, dataset_name, 2)
         # add labels info for a single doc
@@ -383,6 +441,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_get_text_elements_by_id(self):
         workspace_id = "test_get_text_elements_by_id"
         dataset_name = self.test_get_text_elements_by_id.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
         categories = [i for i in range(3)]
         docs = generate_corpus(self.data_access, dataset_name, 2)
         doc = docs[0]
@@ -409,6 +468,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_duplicates_removal(self):
         workspace_id = 'test_duplicates_removal'
         dataset_name = self.test_duplicates_removal.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
         generate_corpus(self.data_access, dataset_name, 1, add_duplicate=True)
         category_id = 0
         all_elements = sorted(self.data_access.get_all_text_elements(dataset_name),

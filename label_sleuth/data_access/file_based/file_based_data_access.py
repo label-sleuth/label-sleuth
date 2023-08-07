@@ -32,7 +32,8 @@ from collections import Counter, defaultdict
 from typing import Sequence, Iterable, Mapping, List, Union, Set
 
 import label_sleuth.data_access.file_based.utils as utils
-from label_sleuth.data_access.core.data_structs import Document, Label, TextElement, LabelType
+from label_sleuth.data_access.core.data_structs import Document, Label, TextElement, LabelType, MulticlassLabel, \
+    WorkspaceType, MulticlassLabeledTextElement, LabeledTextElement
 from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, \
     LabeledStatus, BadDocumentNamesException, DocumentNameTooLongException, get_document_id, DocumentNameEmptyException
 from label_sleuth.data_access.file_based.utils import get_dataset_name_from_uri
@@ -89,7 +90,7 @@ class FileBasedDataAccess(DataAccessApi):
 
     workspace_to_labels_lock_objects = defaultdict(threading.Lock)
     ds_in_memory = defaultdict(pd.DataFrame)
-    labels_in_memory = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(Label))))
+    labels_in_memory = defaultdict(lambda: defaultdict(lambda: defaultdict()))
     dataset_in_memory_lock = threading.RLock()
 
     def __init__(self, output_dir, max_document_name_length=60):
@@ -137,7 +138,8 @@ class FileBasedDataAccess(DataAccessApi):
                      f'({num_of_text_elements} text elements) under {doc_dump_dir}')
         return DocumentStatistics(len(documents), num_of_text_elements)
 
-    def set_labels(self, workspace_id: str, uris_to_labels: Mapping[str, Mapping[int, Label]],
+    def set_labels(self, workspace_id: str, uris_to_labels: Union[Mapping[str, Mapping[int, Label]],
+                                                                Mapping[str, MulticlassLabel]],
                    apply_to_duplicate_texts=False):
         """
         Set labels to TextElements in dataset for a given workspace_id.
@@ -147,6 +149,7 @@ class FileBasedDataAccess(DataAccessApi):
         The dict keys are category ids and values are Labels. For example: [(uri_1, {0: Label_cat_1}),
                                                                             (uri_2, {0: Label_cat_1,
                                                                                      1: Label_cat_2})]
+         TODO update docs for MulticlassLabel
         :param apply_to_duplicate_texts: if True, also set the same labels for additional URIs that are duplicates
         of the URIs provided.
         """
@@ -163,12 +166,21 @@ class FileBasedDataAccess(DataAccessApi):
                 if apply_to_duplicate_texts:  # set the given label for all elements with the same text
                     same_text_uris = self._get_uris_with_the_same_text(dataset_name, uri)
                     for same_text_uri in same_text_uris:
-                        ds_labels[same_text_uri].update(labels)
+                        self._set_single_uri_labels(same_text_uri, ds_labels, labels)
                 else:
                     # Note: we do not override existing labels if they are from another category
-                    ds_labels[uri].update(labels)
+                    self._set_single_uri_labels(uri, ds_labels, labels)
             # Save updated labels dict to disk
             self._save_labels_data(dataset_name, workspace_id)
+
+    @staticmethod
+    def _set_single_uri_labels(uri, existing_labels, label: Union[Mapping[int, Label], MulticlassLabel]):
+        if type(label) == MulticlassLabel:
+            existing_labels[uri] = label
+        else:
+            existing_labels[uri] = existing_labels.get(uri, {})
+            existing_labels[uri].update(label)
+
 
     def unset_labels(self, workspace_id: str, category_id: int, uris: Sequence[str], apply_to_duplicate_texts=False):
         """
@@ -191,6 +203,7 @@ class FileBasedDataAccess(DataAccessApi):
                 if apply_to_duplicate_texts:  # unset the given label for all elements with the same text
                     same_text_uris = self._get_uris_with_the_same_text(dataset_name, uri)
                     for same_text_uri in same_text_uris:
+                        ds_labels[same_text_uri] = ds_labels.get(same_text_uri, {})
                         ds_labels[same_text_uri].pop(category_id)
                         if len(ds_labels[same_text_uri]) == 0:
                             ds_labels.pop(same_text_uri)
@@ -231,7 +244,8 @@ class FileBasedDataAccess(DataAccessApi):
         if workspace_id is not None:
             with self._get_lock_object_for_workspace(workspace_id):
                 for d in docs:
-                    self._add_labels_info_for_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+                    #TODO show Ariel we set the text elements
+                    d.text_elements = self._add_labels_info_for_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                             text_elements=d.text_elements, label_types=label_types)
         return docs
 
@@ -526,20 +540,24 @@ class FileBasedDataAccess(DataAccessApi):
     def _get_labels(self, workspace_id, dataset_name):
         if workspace_id not in self.labels_in_memory or dataset_name not in self.labels_in_memory[workspace_id]:
             file_path = self._get_workspace_labels_dump_filename(workspace_id, dataset_name)
-            if os.path.isfile(file_path):
-                # Read dict from disk
-                with open(file_path) as f:
-                    labels_encoded = f.read()
-                simplified_dict = json.loads(labels_encoded)
+            if not os.path.isfile(file_path):
+                raise Exception(f"could not find workspace id '{workspace_id}' user labels file on {file_path}")
+            # Read dict from disk
+            with open(file_path) as f:
+                labels_encoded = f.read()
+            simplified_dict = json.loads(labels_encoded)
+
+            if self.is_multiclass(workspace_id):
+                for uri, label_dict in simplified_dict.items():
+                   self.labels_in_memory[workspace_id][dataset_name][uri] = MulticlassLabel(**label_dict)
+            else:
                 for uri, category_to_label in simplified_dict.items():
                     for category_id, label_dict in category_to_label.items():
+                        self.labels_in_memory[workspace_id][dataset_name][uri] = self.labels_in_memory[workspace_id][dataset_name].get(uri, {})
                         self.labels_in_memory[workspace_id][dataset_name][uri][int(category_id)] = Label(**label_dict)
-            else:
-                # Save empty dict to disk
-                os.makedirs(Path(file_path).parent, exist_ok=True)
-                empty_dict_encoded = json.dumps(self.labels_in_memory[workspace_id][dataset_name])
-                with open(file_path, 'w') as f:
-                    f.write(empty_dict_encoded)
+
+
+
         return self.labels_in_memory[workspace_id][dataset_name]
 
     def _add_sentences_to_dataset_in_memory(self, dataset_name, text_elements: Iterable[TextElement]):
@@ -555,16 +573,23 @@ class FileBasedDataAccess(DataAccessApi):
         self.ds_in_memory[dataset_name] = self._add_text_unique_ids(self.ds_in_memory[dataset_name])
         self.ds_in_memory[dataset_name].to_csv(self._get_dataset_dump_filename(dataset_name), index=False)
 
-    def _add_labels_info_for_text_elements(self, workspace_id, dataset_name, text_elements: List[TextElement],
+    def _add_labels_info_for_text_elements(self, workspace_id, dataset_name,
+                                           text_elements: List[Union[LabeledTextElement, MulticlassLabeledTextElement]],
                                            label_types):
         labels_info_for_workspace = self._get_labels(workspace_id, dataset_name)
+        text_elements = [MulticlassLabeledTextElement(**vars(text_element)) if self.is_multiclass(workspace_id)
+                         else LabeledTextElement(**vars(text_element)) for text_element in text_elements]
         for elem in text_elements:
             if elem.uri in labels_info_for_workspace:
                 if label_types is None:
                     elem.category_to_label = labels_info_for_workspace[elem.uri].copy()
                 else:
-                    elem.category_to_label = {cat: label for cat, label in labels_info_for_workspace[elem.uri].items()
-                                              if label.label_type in label_types}
+                    if self.is_multiclass(workspace_id):
+                        if labels_info_for_workspace[elem.uri].label_type in label_types:
+                            elem.label = labels_info_for_workspace[elem.uri]
+                    else:
+                        elem.category_to_label = {cat: label for cat, label in labels_info_for_workspace[elem.uri].items()
+                                                  if label.label_type in label_types}
         return text_elements
 
     def _get_text_elements(self, workspace_id: str, dataset_name: str, filter_func, sample_size: int,
@@ -606,11 +631,20 @@ class FileBasedDataAccess(DataAccessApi):
         file_path = self._get_workspace_labels_dump_filename(workspace_id, dataset_name)
         os.makedirs(Path(file_path).parent, exist_ok=True)
         labels = self.labels_in_memory[workspace_id][dataset_name]
-        simplified_labels = {k: {str(category_id): label.to_dict() for category_id, label in v.items()}
-                             for k, v in labels.items()}
+        if self.is_multiclass(workspace_id):
+            simplified_labels = {uri:label.to_dict() for uri, label in labels.items()}
+        else:
+            simplified_labels = {uri: {str(category_id): label.to_dict() for category_id, label in uri_labels.items()}
+                                 for uri, uri_labels in labels.items()}
         labels_in_memory_encoded = json.dumps(simplified_labels)
         with open(file_path, 'w') as f:
             f.write(labels_in_memory_encoded)
+
+
+    def is_multiclass(self, workspace_id):
+        return os.path.isfile(os.path.join(self._get_workspace_labels_dir(workspace_id),
+                                       WorkspaceType.Multiclass.name))
+
 
     @staticmethod
     def _add_text_unique_ids(df):
@@ -655,3 +689,18 @@ class FileBasedDataAccess(DataAccessApi):
 
     def preload_dataset(self, dataset_name):
         self._get_ds_in_memory(dataset_name)
+
+    def initialize_user_labels(self, workspace_id:str, dataset_name:str, workspace_type:WorkspaceType):
+        """
+        Save user labels object when creating a workspace
+        :param workspace_id:
+        :param dataset_name:
+        :param workspace_type:
+        """
+        # Save empty dict to disk
+        file_path = self._get_workspace_labels_dump_filename(workspace_id, dataset_name)
+        os.makedirs(Path(file_path).parent, exist_ok=True)
+        empty_dict_encoded = json.dumps({})
+        open(os.path.join(self._get_workspace_labels_dir(workspace_id), workspace_type.name), 'w').close()
+        with open(file_path, 'w') as f:
+            f.write(empty_dict_encoded)
