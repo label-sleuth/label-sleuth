@@ -23,10 +23,25 @@ LABEL_NEGATIVE = False
 BINARY_LABELS = frozenset({LABEL_NEGATIVE, LABEL_POSITIVE})
 URI_SEP = "-"
 
+class WorkspaceType(Enum):
+    BinaryClasses = 0 #TODO revisit name
+    Multiclass = 1
+
 
 class LabelType(Enum):
     Standard = 0
     Weak = 1
+
+
+@dataclass
+class MulticlassLabel:
+    label: int
+    metadata: Mapping = field(default_factory=dict)
+    label_type: LabelType = field(default=LabelType.Standard)
+
+    def to_dict(self):
+        dict_for_json = {'label': self.label, 'metadata': self.metadata, 'label_type': self.label_type.value}
+        return dict_for_json
 
 
 @dataclass
@@ -62,7 +77,12 @@ class TextElement:
 
 @dataclass
 class LabeledTextElement(TextElement):
-    category_to_label: Mapping[int, Label]
+    category_to_label: Mapping[int, Label]=field(default_factory=dict)
+
+
+@dataclass
+class MulticlassLabeledTextElement(TextElement):
+    label: int=None
 
 
 @dataclass
