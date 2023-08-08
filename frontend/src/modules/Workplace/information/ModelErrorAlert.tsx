@@ -26,10 +26,15 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import classes from "./WorkspaceInfo.module.css";
-import { CustomizableUITextEnum, IterationStatusEnum } from "../../../const";
-import { useAppSelector } from "../../../customHooks/useRedux";
+import {
+  CustomizableUITextEnum,
+  IterationStatusEnum,
+  PanelIdsEnum,
+} from "../../../const";
+import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
 import { useNotification } from "../../../utils/notification";
 import { toast } from "react-toastify";
+import { setActivePanel } from "../redux";
 
 export const ModelErrorAlert = () => {
   const [collapsed, setCollapsed] = React.useState(true);
@@ -52,6 +57,8 @@ export const ModelErrorAlert = () => {
       ]
   );
 
+  const dispatch = useAppDispatch();
+
   const { notify } = useNotification();
 
   React.useEffect(() => {
@@ -60,7 +67,8 @@ export const ModelErrorAlert = () => {
         type: toast.TYPE.INFO,
       });
     }
-  }, [modelFailureReason, insufficientTrainDataToastMessage, notify]);
+    dispatch(setActivePanel(PanelIdsEnum.SEARCH));
+  }, [modelFailureReason, insufficientTrainDataToastMessage, notify, dispatch]);
 
   return (
     <Box
