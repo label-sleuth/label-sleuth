@@ -21,7 +21,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Sequence, Tuple, Mapping
+from typing import Dict, List, Sequence, Tuple, Mapping, Union
 
 import jsonpickle
 
@@ -138,6 +138,15 @@ class OrchestratorStateApi:
                     f"workspace scheme upgrade. Please open an issue on "
                     f"https://github.com/label-sleuth/label-sleuth/issues/new/choose for additional support") from e
 
+    def get_all_category_ids(self, workspace_id):
+        with self.workspaces_lock[workspace_id]:
+            try:
+                return self._load_workspace(workspace_id).categories.keys()
+
+            except Exception as e:
+                raise Exception(
+                    f"Failed to get all category ids in workspace {workspace_id}") from e
+
     def get_all_categories(self, workspace_id) -> Mapping[int, Category]:
         return {category_id: category for category_id, category in
                 self.get_workspace(workspace_id).categories.items() if category is not None}
@@ -166,7 +175,7 @@ class OrchestratorStateApi:
             all_workspaces.append(workspace)
         return all_workspaces
 
-    def _load_workspace(self, workspace_id) -> Workspace:
+    def _load_workspace(self, workspace_id) -> Union[Workspace, MulticlassWorkspace]:
         cached_workspace = self.workspaces.get(workspace_id)
         if cached_workspace:
             return cached_workspace
@@ -237,10 +246,13 @@ class OrchestratorStateApi:
                 = recommended_items
             self._save_workspace(workspace)
 
-    def get_label_change_count_since_last_train(self, workspace_id: str, category_id: int) -> int:
+    def get_label_change_count_since_last_train(self, workspace_id: str, category_id: Union[int, None]) -> int:
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            return workspace.categories[category_id].label_change_count_since_last_train
+            if category_id is not None:
+                return workspace.categories[category_id].label_change_count_since_last_train
+            else:
+                return workspace.label_change_count_since_last_train
 
     def set_label_change_count_since_last_train(self, workspace_id: str, category_id: int, number_of_changes: int):
         with self.workspaces_lock[workspace_id]:
@@ -300,10 +312,13 @@ class OrchestratorStateApi:
             workspace.categories[category_id].iterations[iteration_index].status = new_status
             self._save_workspace(workspace)
 
-    def get_all_iterations(self, workspace_id, category_id: int) -> List[Iteration]:
+    def get_all_iterations(self, workspace_id, category_id: Union[int, None]) -> List[Iteration]:
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            return workspace.categories[category_id].iterations
+            if category_id is not None:
+                return workspace.categories[category_id].iterations
+            else:
+                return workspace.iterations
 
     def delete_last_iteration(self, workspace_id, category_id: int):
         """
