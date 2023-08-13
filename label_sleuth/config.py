@@ -37,6 +37,8 @@ class Configuration:
     first_model_positive_threshold: int
     first_model_negative_threshold: int
     changed_element_threshold: int
+    multiclass_per_class_threshold: int
+    multiclass_changed_element_threshold: int
     model_policy: ModelPolicy
     training_set_selection_strategy: Type[TrainSetSelectorAPI]
     precision_evaluation_size: int

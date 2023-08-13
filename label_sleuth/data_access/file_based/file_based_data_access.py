@@ -405,9 +405,12 @@ class FileBasedDataAccess(DataAccessApi):
             labels_by_uri = {uri: category_to_label for uri, category_to_label in labels_by_uri.items()
                              if uri in uris_to_keep}
 
-        category_label_list = \
-            [category_to_label[category_id] for category_to_label in labels_by_uri.values()
-             if category_id in category_to_label and category_to_label[category_id].label_type in label_types]
+        if category_id is None:
+            category_label_list = [label for label in labels_by_uri.values() if label.label_type in label_types]
+        else:
+            category_label_list = \
+                [category_to_label[category_id] for category_to_label in labels_by_uri.values()
+                 if category_id in category_to_label and category_to_label[category_id].label_type in label_types]
 
         if fine_grained_counts:
             return Counter(lbl_obj.get_detailed_label_name() for lbl_obj in category_label_list)

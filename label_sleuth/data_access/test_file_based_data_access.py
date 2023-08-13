@@ -158,6 +158,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
         self.data_access.delete_dataset(dataset_name)
 
 
+
     def test_unset_labels(self):
         workspace_id = 'test_unset_labels'
         dataset_name = self.test_set_labels_and_get_documents.__name__ + '_dump'
@@ -436,6 +437,20 @@ class TestFileBasedDataAccess(unittest.TestCase):
                 [label for uri, label in uri_to_label_dict.items() if
                  category_to_count in label and label_val == str(label[category_to_count].label).lower()])
             self.assertEqual(expected_count, observed_count, f'count for {label_val} does not match.')
+        self.data_access.delete_dataset(dataset_name)
+
+
+    def test_get_label_counts_multiclass(self):
+        workspace_id = 'test_get_label_counts_multiclass'
+        dataset_name = self.test_get_label_counts.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.Multiclass)
+        category_ids = list(range(3))
+        doc = generate_corpus(self.data_access, dataset_name,num_of_documents=2)[1]
+        uri_to_label = add_random_multiclass_labels_to_document(doc, 4, category_ids)
+        self.data_access.set_labels(workspace_id, uri_to_label)
+
+        category_label_counts = self.data_access.get_label_counts(workspace_id, dataset_name,category_id=None)
+        self.assertDictEqual(Counter({'1': 3, '2': 1}),category_label_counts)
         self.data_access.delete_dataset(dataset_name)
 
     def test_get_text_elements_by_id(self):

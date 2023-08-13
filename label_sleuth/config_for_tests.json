@@ -2,7 +2,8 @@
     "first_model_positive_threshold": 1,
     "first_model_negative_threshold": 1,
     "changed_element_threshold": 3,
-
+    "multiclass_per_class_threshold": 1,
+    "multiclass_changed_element_threshold": 3,
     "training_set_selection_strategy": "ALL_LABELED",
     "model_policy": "STATIC_SVM_BOW",
     "active_learning_strategy": "HARD_MINING",

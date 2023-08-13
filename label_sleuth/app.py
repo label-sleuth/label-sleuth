@@ -927,10 +927,12 @@ def get_labelling_status(workspace_id):
     labeling using active learning, and calculating various statistics.
 
     :param workspace_id:
-    :request_arg category_id:
+    :request_arg category_id: category_id or empty in Multiclass mode
     """
 
-    category_id = int(request.args['category_id'])
+    category_id = request.args.get('category_id')
+    if category_id is not None:
+        category_id = int(category_id)
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
 
     labeling_counts = curr_app.orchestrator_api. \

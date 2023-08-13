@@ -39,6 +39,10 @@ class MulticlassLabel:
     metadata: Mapping = field(default_factory=dict)
     label_type: LabelType = field(default=LabelType.Standard)
 
+    def get_detailed_label_name(self):
+        return str(self.label).lower() if self.label_type == LabelType.Standard \
+            else f'{self.label_type.name}_{self.label}'.lower()
+
     def to_dict(self):
         dict_for_json = {'label': self.label, 'metadata': self.metadata, 'label_type': self.label_type.value}
         return dict_for_json
