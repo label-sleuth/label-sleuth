@@ -25,7 +25,7 @@ import pandas as pd
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.config import load_config
 from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, LABEL_NEGATIVE, LABEL_POSITIVE, \
-    LabeledTextElement
+    LabeledTextElement, WorkspaceType
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.data_access.test_file_based_data_access import generate_corpus
 from label_sleuth.models.core.model_api import ModelStatus
@@ -216,6 +216,95 @@ class TestOrchestratorAPI(unittest.TestCase):
         with patch.object(train_set_selector, 'get_train_set'):
             self.orchestrator_api.train_if_recommended(workspace_id, category_id)
         mock_run_iteration.assert_called()
+
+    @patch.object(OrchestratorApi, 'run_iteration')
+    @patch.object(OrchestratorStateApi, 'get_label_change_count_since_last_train')
+    @patch.object(FileBasedDataAccess, 'get_label_counts')
+    def test_get_train_if_recommended_multiclass(self, mock_get_label_counts, mock_get_label_change_count, mock_run_iteration):
+        workspace_id = self.test_get_train_if_recommended_multiclass.__name__
+        dataset_name = f'{workspace_id}_dump'
+        category_name = f'{workspace_id}_cat'
+        generate_corpus(self.data_access, dataset_name)
+        self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceType.Multiclass)
+        self.orchestrator_api.set_category_list(workspace_id, {"cat1": "desc1", "cat2": "desc2", "cat3": "desc3"})
+
+        change_threshold = self.orchestrator_api.config.multiclass_changed_element_threshold
+        per_class_threshold = self.orchestrator_api.config.multiclass_per_class_threshold
+
+        # do not trigger training
+
+        label_counts = {0: 1, 1: 1, 2: 0}
+        mock_get_label_counts.return_value = label_counts
+        mock_get_label_change_count.return_value = sum(label_counts.values())
+
+        self.orchestrator_api.config.multiclass_per_class_threshold = 1
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(progress['all'], 67)
+
+        self.orchestrator_api.train_if_recommended(workspace_id, None)
+        mock_run_iteration.assert_not_called()
+
+        label_counts = {0: 1, 1: 1, 2: 1}
+        mock_get_label_counts.return_value = label_counts
+        mock_get_label_change_count.return_value = sum(label_counts.values())
+
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(progress['all'], 100)
+
+    @patch.object(OrchestratorStateApi, 'get_label_change_count_since_last_train')
+    @patch.object(FileBasedDataAccess, 'get_label_counts')
+    def test_get_progress_multiclass(self, mock_get_label_counts, mock_get_label_change_count):
+        workspace_id = self.test_get_progress_multiclass.__name__
+        dataset_name = f'{workspace_id}_dump'
+        category_name = f'{workspace_id}_cat'
+        generate_corpus(self.data_access, dataset_name)
+        self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceType.Multiclass)
+        self.orchestrator_api.set_category_list(workspace_id,{"cat1":"desc1", "cat2":"desc2", "cat3":"desc3"})
+
+        change_threshold = self.orchestrator_api.config.multiclass_changed_element_threshold
+        per_class_threshold = self.orchestrator_api.config.multiclass_per_class_threshold
+
+        # do not trigger training
+
+        label_counts = {0:1, 1:1, 2:0}
+        mock_get_label_counts.return_value = label_counts
+        mock_get_label_change_count.return_value = sum(label_counts.values())
+
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(progress['all'], 67)
+
+        label_counts = {0: 1, 1: 1, 2: 0}
+        mock_get_label_counts.return_value = label_counts
+        mock_get_label_change_count.return_value = sum(label_counts.values())
+
+        self.orchestrator_api.config.multiclass_per_class_threshold = 2
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(progress['all'], 33)
+
+        label_counts = {0: 100, 1: 1, 2: 0}
+        mock_get_label_counts.return_value = label_counts
+        mock_get_label_change_count.return_value = sum(label_counts.values())
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(progress['all'], 50)
+
+        label_counts = {0: 1, 1: 2, 2: 1}
+        mock_get_label_counts.return_value = label_counts
+        mock_get_label_change_count.return_value = sum(label_counts.values())
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(progress['all'], 67)
+
+        label_counts = {0: 0, 1: 0, 2: 0}
+        mock_get_label_counts.return_value = label_counts
+        mock_get_label_change_count.return_value = sum(label_counts.values())
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(progress['all'], 0)
+
+        label_counts = {0: 2, 1: 3, 2: 3}
+        mock_get_label_counts.return_value = label_counts
+        mock_get_label_change_count.return_value = sum(label_counts.values())
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(progress['all'], 100)
+
 
     def test_set_label_increases_change_count(self):
         workspace_id = self.test_set_label_increases_change_count.__name__
