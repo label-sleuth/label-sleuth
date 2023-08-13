@@ -24,13 +24,13 @@ import tempfile
 from collections import defaultdict
 from concurrent.futures import Future
 from enum import Enum
-from typing import Mapping, Sequence, Tuple, Set
+from typing import Mapping, Sequence, Tuple, Set, Union
 
 import jsonpickle
 
 import label_sleuth.definitions as definitions
 from label_sleuth.models.core.languages import Languages, Language
-from label_sleuth.models.core.prediction import Prediction
+from label_sleuth.models.core.prediction import Prediction, MulticlassPrediction
 from label_sleuth.models.util.disk_cache import load_model_prediction_store_from_disk, \
     save_model_prediction_store_to_disk
 from label_sleuth.models.util.LRUCache import LRUCache
@@ -92,7 +92,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def infer(self, model_components, items_to_infer) -> Sequence[Prediction]:
+    def infer(self, model_components, items_to_infer) -> Sequence[Union[Prediction, MulticlassPrediction]]:
         """
         Perform inference using *model_components* on *items_to_infer*, and return the predictions. This method is
         specific to each classification model.
