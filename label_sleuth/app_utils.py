@@ -21,7 +21,7 @@ import os
 from flask import current_app, request, jsonify
 
 from label_sleuth.analysis_utils.analyze_tokens import ngrams_by_info_gain
-from label_sleuth.data_access.core.data_structs import TextElement, LabeledTextElement
+from label_sleuth.data_access.core.data_structs import TextElement, LabeledTextElement, MulticlassLabeledTextElement
 from label_sleuth.data_access.data_access_api import get_document_uri
 from label_sleuth.models.core.languages import Languages
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Iteration, IterationStatus
@@ -56,6 +56,15 @@ def validate_category_id(function):
     return wrapper
 
 
+def _text_element_to_user_labels(text_element:Union[TextElement, LabeledTextElement, MulticlassLabeledTextElement]):
+    if type(text_element) == TextElement:
+        return {}
+    elif type(text_element) == LabeledTextElement:
+        return {k: str(v.label).lower() for k, v in text_element.category_to_label.items()}
+    elif type(text_element) == MulticlassLabeledTextElement:
+        return text_element.label  #TODO do we want a dict here?
+
+
 def elements_back_to_front(workspace_id: str, elements: List[Union[TextElement, LabeledTextElement]], category_id: int,
                            need_snippet: bool = True,
                            query_string: str = None, is_regex: bool = False) -> List[Mapping]:
@@ -77,9 +86,7 @@ def elements_back_to_front(workspace_id: str, elements: List[Union[TextElement, 
               'begin': text_element.span[0][0],
               'end': text_element.span[0][1],
               'text': text_element.text,
-              'user_labels': {} if type(text_element)==TextElement else {k: str(v.label).lower()
-                              # TODO current UI is using true and false as strings. change to boolean in the new UI
-                              for k, v in text_element.category_to_label.items()},
+              'user_labels': _text_element_to_user_labels(text_element),
               'model_predictions': {}
               }
          for text_element in elements}

@@ -486,3 +486,35 @@ class TestAppIntegration(unittest.TestCase):
                                          '1': {'description': 'desc2', 'id': 1, 'name': 'cat2'},
                                          '2': {'description': 'desc3', 'id': 2, 'name': 'cat3'}},
                          msg="diff in set category list response")
+
+        res = self.client.get(f"/workspace/{workspace_name}/documents", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get all documents uris")
+        documents = res.get_json()['documents']
+        self.assertEqual(3, len(documents),
+                         msg="Number of retrieved documents is different the number of documents loaded")
+        self.assertEqual({'documents': [{'document_id': 'multiclass_dataset-document1'},
+                                        {'document_id': 'multiclass_dataset-document2'},
+                                        {'document_id': 'multiclass_dataset-document3'}]}, res.get_json(),
+                         msg="diff in get documents")
+        res = self.client.get(f"/workspace/{workspace_name}/document/{documents[-1]['document_id']}", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to add a document before labeling")
+        document3_elements = res.get_json()['elements']
+
+        # self.assertEqual([
+        #     {'begin': 0, 'docid': 'my_test_dataset-document3', 'end': 53, 'id': 'my_test_dataset-document3-0',
+        #      'model_predictions': {}, 'text': 'document 3 has three text elements, this is the first',
+        #      'user_labels': {}},
+        #     {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 141, 'id': 'my_test_dataset-document3-1',
+        #      'model_predictions': {},
+        #      'text': 'document 3 has three text elements, this is the second that will be labeled as negative',
+        #      'user_labels': {}},
+        #     {'begin': 142, 'docid': 'my_test_dataset-document3', 'end': 195, 'id': 'my_test_dataset-document3-2',
+        #      'model_predictions': {}, 'text': 'document 3 has three text elements, this is the third',
+        #      'user_labels': {}},
+        #     {
+        #         "begin": 196, "docid": "my_test_dataset-document3", "end": 317, "id": "my_test_dataset-document3-3",
+        #         "model_predictions": {}, "text": text_with_parenthesis,
+        #         "user_labels": {}}],
+        #     document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
+        # res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}',
+        #                       data='{{"category_id":"{}","value":"{}"}}'.format(category_id, True), headers=HEADERS)
