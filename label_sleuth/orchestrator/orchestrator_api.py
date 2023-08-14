@@ -328,19 +328,25 @@ class OrchestratorApi:
         of the categories. Since an increase in label change counts can trigger the training of a new model, in some
         specific situations this parameter is set to False and the updating of the counter is performed at a later time.
         """
-        if len(uri_to_label)>0 and next(iter(uri_to_label.values())) == MulticlassLabel:
-            raise Exception ("TODO set label in multiclass is not implemented yet")
-        if update_label_counter:
-            train_set_selector = self.training_set_selection_factory.\
-                get_training_set_selector(self.config.training_set_selection_strategy)
+        if len(uri_to_label)>0 and type(next(iter(uri_to_label.values()))) == MulticlassLabel: # Multiclass workspace
+            if update_label_counter:
+                self.orchestrator_state.increase_label_change_count_since_last_train(
+                    workspace_id,
+                    category_id=None,
+                    number_of_new_changes=len(uri_to_label))
 
-            used_label_types = train_set_selector.get_label_types()
-            # count the number of labels for each category
-            changes_per_cat = Counter([cat for uri, labels_dict in uri_to_label.items()
-                                       for cat, cat_label in labels_dict.items()
-                                       if cat_label.label_type in used_label_types])
-            for cat, num_changes in changes_per_cat.items():
-                self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, cat, num_changes)
+        else:  #Multi binary workspace
+            if update_label_counter:
+                train_set_selector = self.training_set_selection_factory.\
+                    get_training_set_selector(self.config.training_set_selection_strategy)
+
+                used_label_types = train_set_selector.get_label_types()
+                # count the number of labels for each category
+                changes_per_cat = Counter([cat for uri, labels_dict in uri_to_label.items()
+                                           for cat, cat_label in labels_dict.items()
+                                           if cat_label.label_type in used_label_types])
+                for cat, num_changes in changes_per_cat.items():
+                    self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, cat, num_changes)
         self.data_access.set_labels(workspace_id, uri_to_label, apply_to_duplicate_texts)
 
     def unset_labels(self, workspace_id: str, category_id: int, uris: Sequence[str], apply_to_duplicate_texts=True):

@@ -260,12 +260,24 @@ class OrchestratorStateApi:
             workspace.categories[category_id].label_change_count_since_last_train = number_of_changes
             self._save_workspace(workspace)
 
-    def increase_label_change_count_since_last_train(self, workspace_id: str, category_id: int,
+    def increase_label_change_count_since_last_train(self, workspace_id: str, category_id: Union[int, None],
                                                      number_of_new_changes: int):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            workspace.categories[category_id].label_change_count_since_last_train = \
-                workspace.categories[category_id].label_change_count_since_last_train + number_of_new_changes
+            if type(workspace) == Workspace:
+                if category_id is None:
+                    raise Exception(f"category cannot be None when increasing change count in Workspace type"
+                                    f" {type(Workspace)}. workspace_id: {workspace_id}")
+                workspace.categories[category_id].label_change_count_since_last_train = \
+                    workspace.categories[category_id].label_change_count_since_last_train + number_of_new_changes
+            elif type(workspace) == MulticlassWorkspace:
+                if category_id is not None:
+                    raise Exception(f"Workspace type is {type(workspace)}, and category_id was provided when "
+                                    f"increasing change count in workspace {workspace_id}")
+                workspace.label_change_count_since_last_train  = workspace.label_change_count_since_last_train + \
+                                                                 number_of_new_changes
+            else:
+                raise Exception(f"Workspace type {type} is not supported")
             self._save_workspace(workspace)
 
     # multiclass-related category methods
@@ -333,8 +345,15 @@ class OrchestratorStateApi:
             List[Tuple[Iteration, int]]:
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            return [(iteration, idx) for idx, iteration in enumerate(workspace.categories[category_id].iterations)
-                    if iteration.status == status]
+            if type(workspace) == Workspace:
+                return [(iteration, idx) for idx, iteration in enumerate(workspace.categories[category_id].iterations)
+                        if iteration.status == status]
+            elif type(workspace) == MulticlassWorkspace:
+                return [(iteration, idx) for idx, iteration in enumerate(workspace.iterations)
+                        if iteration.status == status]
+            else:
+                raise Exception(f"get_all_iterations_by_status does not support workspace of type {type}. "
+                                f"workspace_id '{workspace_id}'")
 
     def add_iteration_statistics(self, workspace_id, category_id: int, iteration_index: int, statistics_dict: dict):
         with self.workspaces_lock[workspace_id]:

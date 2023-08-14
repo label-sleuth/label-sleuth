@@ -14,10 +14,11 @@
 #
 
 import re
-from typing import Set
+from typing import Set, Union
 
 import pandas as pd
-from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, LabelType, LabeledTextElement
+from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, LabelType, LabeledTextElement, \
+    MulticlassLabeledTextElement
 from label_sleuth.data_access.data_access_api import LabeledStatus
 
 
@@ -44,14 +45,19 @@ def filename_to_uri(filename):
     return uri
 
 
-def build_text_elements_from_dataframe_and_labels(df, labels_dict):
+def build_text_elements_from_dataframe_and_labels(df, labels_dict, is_multiclass:Union[bool,None]):
     # text element fields are extracted from the dataframe, with the exception of the labels, which are stored elsewhere
     element_data_columns = list(TextElement.get_field_names() - {'category_to_label'})
     element_dicts = map(lambda row: dict(zip(element_data_columns, row)), df[element_data_columns].values)
-    text_elements = [LabeledTextElement(**d, category_to_label=labels_dict.get(d['uri'], {}).copy())
-                     for d in element_dicts]
-
-    return text_elements
+    if len(labels_dict) == 0:
+        return [TextElement(**d) for d in element_dicts]
+    else:
+        if not is_multiclass:
+            return [LabeledTextElement(**d, category_to_label=labels_dict.get(d['uri'], {}).copy())
+                             for d in element_dicts]
+        else:
+            return [MulticlassLabeledTextElement(**d, label=labels_dict.get(d['uri'], None).copy())
+                             for d in element_dicts]
 
 
 def filter_by_labeled_status(df: pd.DataFrame, labels_series: pd.Series, category_id: int,

@@ -62,7 +62,7 @@ def _text_element_to_user_labels(text_element:Union[TextElement, LabeledTextElem
     elif type(text_element) == LabeledTextElement:
         return {k: str(v.label).lower() for k, v in text_element.category_to_label.items()}
     elif type(text_element) == MulticlassLabeledTextElement:
-        return text_element.label  #TODO do we want a dict here?
+        return {0:text_element.label.label} if text_element.label is not None else {} #TODO do we want a dict here for compatability with the TextElement labels dict?
 
 
 def elements_back_to_front(workspace_id: str, elements: List[Union[TextElement, LabeledTextElement]], category_id: int,

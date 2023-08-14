@@ -196,7 +196,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
         docs = generate_corpus(self.data_access, dataset_name, random.randint(1, 10))
         text_elements_found = self.data_access.get_all_text_elements(dataset_name)
         text_elements_found.sort(key=lambda t: t.uri)
-        text_elements_expected = [LabeledTextElement(**vars(text_element)) for doc in docs for text_element in doc.text_elements]
+        text_elements_expected = [TextElement(**vars(text_element)) for doc in docs for text_element in doc.text_elements]
         text_elements_expected.sort(key=lambda t: t.uri)
         self.assertListEqual(text_elements_expected, text_elements_found)
 
