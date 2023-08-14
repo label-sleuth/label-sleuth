@@ -86,7 +86,7 @@ class LabeledTextElement(TextElement):
 
 @dataclass
 class MulticlassLabeledTextElement(TextElement):
-    label: int = None
+    label: MulticlassLabel = None
 
 
 @dataclass
