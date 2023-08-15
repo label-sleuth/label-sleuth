@@ -3,7 +3,7 @@ import { setFocusedMainPanelElement } from "../modules/Workplace/redux";
 import { useCallback, useEffect } from "react";
 import { useNotification } from "../utils/notification";
 import { toast } from "react-toastify";
-import { LabelTypesEnum, PanelIdsEnum } from "../const";
+import { LabelTypesEnum, PanelIdsEnum, WorkspaceMode } from "../const";
 import { getElementIndex } from "../utils/utils";
 import { Element } from "../global";
 import { fetchDocumentPositivePredictions } from "../modules/Workplace/redux/panelsSlice";
@@ -18,6 +18,7 @@ export const useFocusNextPositivePrediction = () => {
     (state) => state.workspace.panels.panels[PanelIdsEnum.MAIN_PANEL].elements
   );
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+  const mode = useAppSelector((state) => state.workspace.mode);
   const curDocIndex = useAppSelector((state) => state.workspace.curDocIndex);
   const focusedElementId = useAppSelector(
     (state) => state.workspace.panels.focusedElement.id
@@ -38,10 +39,10 @@ export const useFocusNextPositivePrediction = () => {
   const { focusMainPanelElement } = useFocusMainPanelElement();
 
   useEffect(() => {
-    if (modelVersion !== null && modelVersion > 0) {
+    if (mode === WorkspaceMode.BINARY && modelVersion !== null && modelVersion > 0) {
       dispatch(fetchDocumentPositivePredictions({}));
     }
-  }, [modelVersion, curDocIndex, dispatch]);
+  }, [mode, modelVersion, curDocIndex, dispatch]);
 
   const focusNextPositivePrediction = useCallback(() => {
     const noPositivePredictions =

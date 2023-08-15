@@ -5,6 +5,7 @@ import {
   IterationStatusEnum,
   LabelTypesEnum,
   PanelIdsEnum,
+  WorkspaceMode,
 } from "./const";
 
 interface ReducerObj {
@@ -16,11 +17,13 @@ interface CreatedWorkspace {
   dataset_name: string;
   first_document_id: string;
   workspace_id: string;
+  workspaceMode: WorkspaceMode;
 }
 
 interface CreateWorkspaceBody {
   dataset_id: string;
   workspace_id: string;
+  workspace_type: WorkspaceMode;
 }
 
 interface CheckStatusResponse {
@@ -44,8 +47,8 @@ interface UnparsedIteration {
 }
 
 interface UnparsedElement {
-  user_labels: { [key: number]: boolean };
-  model_predictions: { [key: string]: boolean };
+  user_labels: { [key: number]: boolean | int };
+  model_predictions: { [key: string]: boolean } | number;
   docid: string;
   id: string;
   text: string;
@@ -56,7 +59,9 @@ interface Element {
   id: string;
   docId: string;
   userLabel: LabelTypesEnum;
+  multiclassUserLabel: number | null;
   modelPrediction: LabelTypesEnum;
+  multiclassModelPrediction: number | null;
   text: string;
   otherUserLabels: { [categoryId: number]: LabelTypesEnum };
   snippet: string | null;
@@ -75,7 +80,6 @@ interface PanelState {
 interface MainPanelState extends PanelState {
   documentPositivePredictionIds: string[] | null;
 }
-
 
 interface ContractingLabelsPanelState extends PanelState {
   pairs: [string, string][];
@@ -121,7 +125,7 @@ interface Dataset {
 interface WorkspaceConfigSliceState {
   datasetAdded: AddedDataset | null;
   isWorkspaceAdded: boolean;
-  workspaces: string[];
+  workspaces: Workspace[];
   active_workspace: string;
   datasets: Dataset[];
   loading: boolean;
@@ -182,10 +186,16 @@ interface EditCategoryResponse {
   workspace_id: string;
 }
 
+interface BadgeColor {
+  name: string;
+  palette: { [key: string]: string };
+}
+
 interface Category {
-  category_id: number; // Rename to categoryId
-  category_name: string; // Rename to categoryId
+  category_id: number; // Rename to id
+  category_name: string; // Rename to name
   category_description: string;
+  color?: BadgeColor;
 }
 
 interface CategorySliceState {
@@ -216,12 +226,16 @@ interface LabelSliceState {
   uploadedLabels: UploadedLabels | null;
   uploadingLabels: boolean;
   downloadingLabels: boolean;
-  labelCount: {
-    pos: number;
-    neg: number;
-    weakPos: number;
-    weakNeg: number;
-  };
+  labelCount:
+    | {
+        pos: number;
+        neg: number;
+        weakPos: number;
+        weakNeg: number;
+      }
+    | {
+        [key: string]: number;
+      };
 }
 
 interface LabelingCountsUnparsed {
@@ -229,6 +243,7 @@ interface LabelingCountsUnparsed {
   false?: number;
   weak_true?: number;
   weak_false?: number;
+  [key: string]: number;
 }
 
 interface ModelSliceState {
@@ -251,12 +266,15 @@ type WorkspaceState = CategorySliceState &
     systemVersion: string | null;
     isSearchActive: boolean;
     errorMessage: string | null;
+    mode: WorkspaceMode;
   };
 
 interface FetchPanelElementsParams {
   pagination?: PaginationParam;
   docId?: string;
   useLastSearchString?: boolean;
+  // value is used to filter user label and model prediction by category in mcmode and by true or neg label en bmode
+  value?: string
 }
 
 interface ErrorResponse {
@@ -272,4 +290,9 @@ interface Error {
     text?: string;
   };
   error_id?: string;
+}
+
+interface Workspace {
+  id: string;
+  mode: WorkspaceMode;
 }

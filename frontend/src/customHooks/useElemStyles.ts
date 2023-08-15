@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import classes from "../modules/Workplace/main/Element.module.css";
+import classes from "../components/element/Element.module.css";
 import { useMemo } from "react";
 import { useAppSelector } from "./useRedux";
 import { LabelTypesEnum } from "../const";

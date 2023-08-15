@@ -21,12 +21,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { WORKSPACE_PATH } from "../config";
-import { SELECT_WORKSPACE } from "../const";
+import { SELECT_WORKSPACE, WorkspaceMode } from "../const";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { useWorkspaceId } from "./useWorkspaceId";
 import { useAppSelector, useAppDispatch } from "./useRedux";
 import { useNotification } from "../utils/notification";
 import { DropdownOption } from "../components/dropdown/Dropdown";
+import { changeMode } from "../modules/Workplace/redux";
 
 interface UseExistWorkspaceProps {
   toastId: string;
@@ -62,6 +63,8 @@ const useExistWorkspace = ({ toastId }: UseExistWorkspaceProps) => {
       });
     } else {
       setWorkspaceId(value);
+      const workspaceMode = workspaces.find((w) => w.id === value)?.mode;
+      workspaceMode && dispatch(changeMode(workspaceMode));
       navigate(WORKSPACE_PATH);
     }
   };
@@ -87,7 +90,17 @@ const useExistWorkspace = ({ toastId }: UseExistWorkspaceProps) => {
   };
 
   const options: DropdownOption[] = useMemo(
-    () => workspaces.map((item) => ({ value: item, title: item })),
+    () =>
+      workspaces.map((item) => ({
+        value: item.id,
+        title: item.id,
+        chip:
+          item.mode === WorkspaceMode.BINARY
+            ? "Binary"
+            : WorkspaceMode.MULTICLASS
+            ? "Multi class (beta)"
+            : "Not set",
+      })),
     [workspaces]
   );
 

@@ -27,6 +27,7 @@ import {
   WRONG_INPUT_NAME_BAD_CHARACTER_NO_SPACES,
   REGEX_LETTER_NUMBERS_UNDERSCORE,
   CATEGORY_NAME_MAX_CHARS,
+  WorkspaceMode,
 } from "../const";
 import { useWorkspaceId } from "./useWorkspaceId";
 import { useAppDispatch, useAppSelector } from "./useRedux";
@@ -43,6 +44,7 @@ const useNewWorkspace = (toastId: string) => {
   const [textValue, setTextValue] = useState("");
   const [newWorkspaceNameError, setNewWorkspaceNameError] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
+  const [mode, setMode] = React.useState<WorkspaceMode>(WorkspaceMode.BINARY);
   const { setWorkspaceId } = useWorkspaceId();
   const { notify } = useNotification();
 
@@ -58,6 +60,12 @@ const useNewWorkspace = (toastId: string) => {
     setTextValue(val);
   };
 
+  const handleModeSelectionChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setMode((event.target as HTMLInputElement).value as WorkspaceMode);
+  };
+
   useEffect(() => {
     if (isWorkspaceAdded) {
       setWorkspaceId(textValue);
@@ -69,22 +77,29 @@ const useNewWorkspace = (toastId: string) => {
   }, [isWorkspaceAdded, textValue, setWorkspaceId, dispatch, navigate]);
 
   const handleNewWorkspace = () => {
-    const workspaceNameProvided = !!textValue
-    const datasetOptionProvided = !!selectedValue
+    const workspaceNameProvided = !!textValue;
+    const datasetOptionProvided = !!selectedValue;
 
     if (!datasetOptionProvided || !workspaceNameProvided) {
       let nonProvidedFields: string;
       if (!datasetOptionProvided && !workspaceNameProvided) {
-        nonProvidedFields = 'Workspace name and dataset were not provided.'
+        nonProvidedFields = "Workspace name and dataset were not provided.";
       } else if (!datasetOptionProvided) {
-        nonProvidedFields = 'Dataset was not selected.'
+        nonProvidedFields = "Dataset was not selected.";
       } else {
-        nonProvidedFields = 'Workspace name was not provided.'
+        nonProvidedFields = "Workspace name was not provided.";
       }
-      notify(FILL_REQUIRED_FIELDS(nonProvidedFields), { toastId, type: toast.TYPE.INFO });
+      notify(FILL_REQUIRED_FIELDS(nonProvidedFields), {
+        toastId,
+        type: toast.TYPE.INFO,
+      });
     } else {
       dispatch(
-        createWorkspace({ workspace_id: textValue, dataset_id: selectedValue })
+        createWorkspace({
+          workspace_id: textValue,
+          dataset_id: selectedValue,
+          workspace_type: mode,
+        })
       );
     }
   };
@@ -106,6 +121,8 @@ const useNewWorkspace = (toastId: string) => {
     selectedValue,
     textValue,
     newWorkspaceNameError,
+    mode,
+    handleModeSelectionChange,
   };
 };
 

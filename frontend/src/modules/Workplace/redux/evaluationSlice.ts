@@ -16,11 +16,13 @@
 import { createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import {
   getCategoryQueryString,
+  getModeQueryParam,
   getQueryParamsString,
   parseElements,
+  returnByMode,
 } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
-import { PanelIdsEnum } from "../../../const";
+import { PanelIdsEnum, WorkspaceMode } from "../../../const";
 import { client } from "../../../api/client";
 import { getWorkspaceId } from "../../../utils/utils";
 import { RootState } from "../../../store/configureStore";
@@ -43,13 +45,19 @@ export const getEvaluationElements = createAsyncThunk<
 >("workspace/getEvaluationElements", async (request, { getState }) => {
   const state = getState();
 
+  // add mode to the query params
   const queryParams = getQueryParamsString([
     getCategoryQueryString(state.workspace.curCategory),
+    getModeQueryParam(state.workspace.mode),
   ]);
 
   var url = `${getWorkspace_url}/${encodeURIComponent(
     getWorkspaceId()
-  )}/precision_evaluation_elements${queryParams}`;
+  )}/${returnByMode(
+    "precision",
+    "accuracy",
+    state.workspace.mode
+  )}_evaluation_elements${queryParams}`;
 
   const response = await client.get(url);
   return response.data;
@@ -77,11 +85,16 @@ export const getEvaluationResults = createAsyncThunk<
     const iteration = state.workspace.modelVersion - 1;
     const queryParams = getQueryParamsString([
       getCategoryQueryString(state.workspace.curCategory),
+      getModeQueryParam(state.workspace.mode),
     ]);
 
-    var url = `${getWorkspace_url}/${encodeURIComponent(
+    const url = `${getWorkspace_url}/${encodeURIComponent(
       getWorkspaceId()
-    )}/precision_evaluation_elements${queryParams}`;
+    )}/${returnByMode(
+      "precision",
+      "accuracy",
+      state.workspace.mode
+    )}_evaluation_elements${queryParams}`;
 
     const response = await client.post(url, {
       ids,
@@ -106,11 +119,16 @@ export const cancelEvaluation = createAsyncThunk<
     if (cancelByAPI) {
       const queryParams = getQueryParamsString([
         getCategoryQueryString(state.workspace.curCategory),
+        getModeQueryParam(state.workspace.mode),
       ]);
 
       var url = `${getWorkspace_url}/${encodeURIComponent(
         getWorkspaceId()
-      )}/cancel_precision_evaluation${queryParams}`;
+      )}/cancel_${returnByMode(
+        "precision",
+        "accuracy",
+        state.workspace.mode
+      )}_evaluation${queryParams}`;
 
       const response = await client.post(url, {
         changed_elements_count: changedElementsCount,
@@ -141,13 +159,14 @@ export const extraReducers = [
       state: WorkspaceState,
       action: PayloadAction<{ elements: UnparsedElement[] }>
     ) => {
-      if (state.curCategory === null) return;
+      if (state.mode === WorkspaceMode.BINARY && state.curCategory === null) return;
 
       const { elements: unparsedElements } = action.payload;
 
       const { elements: initialElements } = parseElements(
         unparsedElements,
-        state.curCategory
+        state.curCategory,
+        state.mode
       );
 
       state.panels.panels[PanelIdsEnum.EVALUATION].isInProgress = true;

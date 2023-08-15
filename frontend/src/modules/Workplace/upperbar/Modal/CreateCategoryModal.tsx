@@ -17,12 +17,12 @@ import * as React from "react";
 import { useAppDispatch } from "../../../../customHooks/useRedux";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { createCategoryOnServer } from "../../redux";
-import {
-  CREATE_NEW_CATEGORY_MODAL_MSG,
-} from "../../../../const";
+import { CREATE_NEW_CATEGORY_MODAL_MSG } from "../../../../const";
 import { useNotification } from "../../../../utils/notification";
 import { toast } from "react-toastify";
 import { EditOrCreateCategoryModal } from "./EditOrCreateCategoryModal";
+import { BadgeColor } from "../../../../global";
+import { badgePalettes } from "../../../../utils/utils";
 
 interface CreateCategoryModalProps {
   open: boolean;
@@ -35,6 +35,9 @@ export const CreateCategoryModal = ({
 }: CreateCategoryModalProps) => {
   const [categoryName, setCategoryName] = React.useState("");
   const [categoryDescription, setCategoryDescription] = React.useState("");
+  const [categoryColor, setCategoryColor] = React.useState<
+    BadgeColor | undefined
+  >({ name: "green", palette: badgePalettes["green"] });
   const [categoryNameError, setCategoryNameError] = React.useState("");
   const dispatch = useAppDispatch();
   const { notify } = useNotification();
@@ -51,6 +54,7 @@ export const CreateCategoryModal = ({
       createCategoryOnServer({
         categoryName: categoryName.trim(),
         categoryDescription: categoryDescription.trim(),
+        categoryColor,
       })
     ).then((actionResult) => {
       if (isFulfilled(actionResult)) {
@@ -70,6 +74,8 @@ export const CreateCategoryModal = ({
       setCategoryName={setCategoryName}
       categoryDescription={categoryDescription}
       setCategoryDescription={setCategoryDescription}
+      categoryColor={categoryColor}
+      setCategoryColor={setCategoryColor}
       categoryNameError={categoryNameError}
       setCategoryNameError={setCategoryNameError}
       open={open}

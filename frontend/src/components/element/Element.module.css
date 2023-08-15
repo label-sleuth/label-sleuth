@@ -18,9 +18,10 @@
   width: calc(100% - 140px);
   margin: 0 !important;
   font-size: 15px;
-  min-height: 35px;
   line-height: 20px;
   white-space: pre-line;
+  min-height: 32px;
+  font-size: 15px;
 }
 
 .nodata_text {
@@ -34,21 +35,18 @@
 
 .text_predict,
 .text_normal {
-  color: #161616 !important;
-  border: solid 2px transparent;
-  outline: none;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 0px;
   min-height: 25px;
   line-height: 10px;
 }
 
-.text_predict {
+/* .text_predict {
   border: dotted 2px #a3d8e5;
-}
+  box-shadow: -7px 0px 4px #a3d8e5 !important;
+} */
 
 .text_normal:hover,
 .text_predict:hover {
@@ -142,3 +140,15 @@
   cursor: default !important;
 }
 
+.element { 
+  position: relative;
+  color: #161616 !important;
+  outline: none;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.element:hover {
+  background: #f4f4f4;
+  color: #000 !important;
+}

@@ -19,14 +19,39 @@ import {
   LabelActionsEnum,
   LabelTypesEnum,
   PanelIdsEnum,
+  WorkspaceMode,
 } from "../const";
 import {
+  BadgeColor,
   Category,
   Element,
   ElementsDict,
   PanelsSliceState,
   UnparsedElement,
 } from "../global";
+
+import {
+  amber,
+  blue,
+  blueGrey,
+  brown,
+  // common,
+  cyan,
+  deepOrange,
+  deepPurple,
+  green,
+  // grey,
+  indigo,
+  lightBlue,
+  lightGreen,
+  lime,
+  orange,
+  pink,
+  purple,
+  red,
+  teal,
+  // yellow,
+} from "@mui/material/colors";
 
 /**
  * Returns the suffix of a number in its ordinal form
@@ -53,7 +78,7 @@ export const getOrdinalSuffix = (x: number): string => {
   return prefix;
 };
 export const getCategoryQueryString = (
-  curCategoryId: number | null
+  curCategoryId: number | string | null
 ): string => {
   return curCategoryId !== null ? `category_id=${curCategoryId}` : "";
 };
@@ -140,12 +165,13 @@ export const getStringLabel = (unparsedLabel: string): LabelTypesEnum => {
  */
 export const parseElements = (
   unparsedElements: UnparsedElement[],
-  curCategoryId: number | null
+  curCategoryId: number | null,
+  workspaceMode: WorkspaceMode
 ): { elements: ElementsDict } => {
   let elements: ElementsDict = {};
 
   unparsedElements.forEach((element) => {
-    elements[element.id] = parseElement(element, curCategoryId);
+    elements[element.id] = parseElement(element, curCategoryId, workspaceMode);
   });
 
   return {
@@ -155,32 +181,53 @@ export const parseElements = (
 
 export const parseElement = (
   { docid, id, model_predictions, user_labels, text, snippet }: UnparsedElement,
-  curCategoryId: number | null
-): Element => ({
-  docId: docid,
-  id: id,
-  modelPrediction:
-    curCategoryId !== null
-      ? getStringLabel(`${model_predictions[curCategoryId]}`)
-      : LabelTypesEnum.NONE,
-  userLabel:
-    curCategoryId !== null
-      ? getStringLabel(`${user_labels[curCategoryId]}`)
-      : LabelTypesEnum.NONE,
-  text,
-  snippet: snippet !== undefined ? snippet : null,
-  otherUserLabels:
-    curCategoryId !== null
-      ? Object.assign(
-          {},
-          ...Object.keys(user_labels).map((categoryId) =>
-            +categoryId !== curCategoryId
-              ? { [categoryId]: getStringLabel(`${user_labels[+categoryId]}`) }
-              : {}
+  curCategoryId: number | null,
+  workspaceMode: WorkspaceMode
+): Element => {
+  return {
+    docId: docid,
+    id: id,
+    modelPrediction:
+      workspaceMode === WorkspaceMode.BINARY && curCategoryId !== null
+        ? getStringLabel(
+            `${
+              (model_predictions as { [key: string]: boolean })[curCategoryId]
+            }`
           )
-        )
-      : {},
-});
+        : LabelTypesEnum.NONE,
+    userLabel:
+      workspaceMode === WorkspaceMode.BINARY && curCategoryId !== null
+        ? getStringLabel(`${user_labels[curCategoryId]}`)
+        : LabelTypesEnum.NONE,
+    text,
+    snippet: snippet !== undefined ? snippet : null,
+    otherUserLabels:
+      workspaceMode === WorkspaceMode.BINARY && curCategoryId !== null
+        ? Object.assign(
+            {},
+            ...Object.keys(user_labels).map((categoryId) =>
+              +categoryId !== curCategoryId
+                ? {
+                    [categoryId]: getStringLabel(`${user_labels[+categoryId]}`),
+                  }
+                : {}
+            )
+          )
+        : {},
+    multiclassUserLabel:
+      // check whether mode is multiclass and there is a label in key=0 (current implementation, this may change)
+      workspaceMode === WorkspaceMode.MULTICLASS &&
+      Object.keys(user_labels).length > 0
+        ? user_labels[0]
+        : null,
+    // for model predictions, the backend sends a number when there is a prediction and an empty object when there are no models
+    multiclassModelPrediction:
+      workspaceMode === WorkspaceMode.MULTICLASS &&
+      typeof model_predictions === "number"
+        ? (model_predictions as number)
+        : null,
+  };
+};
 
 export const getPanelDOMKey = (
   elementId: string,
@@ -208,9 +255,10 @@ export const getPanelDOMKey = (
  */
 export const synchronizeElement = (
   elementId: string,
-  userLabel: LabelTypesEnum,
+  userLabel: LabelTypesEnum | number | null,
   panelsState: PanelsSliceState,
-  categoryId: number | null
+  categoryId: number | null,
+  mode: WorkspaceMode
 ): {
   panelsState: PanelsSliceState;
 } => {
@@ -219,13 +267,17 @@ export const synchronizeElement = (
     const elements = panel.elements;
     if (elements !== null && elementId in elements) {
       let element = elements[elementId];
-      if (categoryId === null) {
-        element.userLabel = userLabel;
-      } else if (categoryId !== null) {
-        element.otherUserLabels = {
-          ...element.otherUserLabels,
-          [categoryId]: userLabel,
-        };
+      if (mode === WorkspaceMode.BINARY) {
+        if (categoryId === null) {
+          element.userLabel = userLabel as LabelTypesEnum;
+        } else if (categoryId !== null) {
+          element.otherUserLabels = {
+            ...element.otherUserLabels,
+            [categoryId]: userLabel as LabelTypesEnum,
+          };
+        }
+      } else if (mode === WorkspaceMode.MULTICLASS) {
+        element.multiclassUserLabel = userLabel === null ? null : +(userLabel as number);
       }
       elements[elementId] = element;
     }
@@ -313,8 +365,8 @@ export const getCategoryNameFromId = (
   categories: Category[]
 ): string => {
   return (
-    categories.find((cat) => cat.category_id === categoryId)?.category_name ||
-    ""
+    // eslint-disable-next-line
+    categories.find((cat) => cat.category_id == categoryId)?.category_name || ""
   );
 };
 
@@ -340,14 +392,66 @@ export const downloadFile = (url: string, fileName: string) => {
   }, 200);
 };
 
-export const parseErrorId = (errorId: string | undefined) : string =>
-  errorId ? errorId.slice(0, 8) : ""
+export const parseErrorId = (errorId: string | undefined): string =>
+  errorId ? errorId.slice(0, 8) : "";
 
-
- export const onEnter = (event: React.KeyboardEvent, f: (event: React.KeyboardEvent) => void): void => {
+export const onEnter = (
+  event: React.KeyboardEvent,
+  f: (event: React.KeyboardEvent) => void
+): void => {
   if (event.key === KeyboardKeysEnum.ENTER) {
-    event.preventDefault()
+    event.preventDefault();
     event.stopPropagation();
     f(event);
   }
+};
+
+export const returnByMode = (ifB: any, ifMC: any, mode: WorkspaceMode): any =>
+  mode === WorkspaceMode.BINARY ? ifB : ifMC;
+
+export const badgePalettes: { [key: string]: { [key: string]: string } } = {
+  amber,
+  blue,
+  blueGrey,
+  brown,
+  //common,
+  cyan,
+  deepOrange,
+  deepPurple,
+  green,
+  //grey,
+  indigo,
+  lightBlue,
+  lightGreen,
+  lime,
+  orange,
+  pink,
+  purple,
+  red,
+  teal,
+  //yellow,
+};
+
+export const getRandomColor = (): string => {
+  return Object.keys(badgePalettes)[
+    Math.floor(Math.random() * Object.keys(badgePalettes).length)
+  ];
+};
+
+export const getCategoryColorFromId = (
+  categoryId: number | null,
+  categories: Category[]
+): BadgeColor | null => {
+  if (categoryId === null) return null;
+
+  const categoryColor = categories.find(
+    // eslint-disable-next-line
+    (cat: Category) => cat.category_id == categoryId
+  )?.color;
+
+  return categoryColor ? categoryColor : null;
+};
+
+export const getModeQueryParam = (mode: WorkspaceMode) => {
+  return `mode=${mode}`;
 };

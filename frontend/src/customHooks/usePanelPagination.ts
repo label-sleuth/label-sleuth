@@ -30,6 +30,7 @@ interface UsePanelPaginationProps {
   fakePagination?: boolean;
   fetchOnFirstRender?: boolean;
   modelAvailableRequired?: boolean;
+  value?: string;
 }
 
 const usePanelPagination = ({
@@ -40,9 +41,9 @@ const usePanelPagination = ({
   fakePagination = false,
   fetchOnFirstRender = true,
   modelAvailableRequired,
+  value,
 }: UsePanelPaginationProps) => {
   const fetchPanelElements = useFetchPanelElements({ panelId });
-
   const {
     elements,
     hitCount,
@@ -69,8 +70,8 @@ const usePanelPagination = ({
   const firstRenderHappened = React.useRef(false);
 
   const modelAvailable = React.useMemo(
-    () => curCategory !== null && modelVersion !== null && modelVersion > 0,
-    [curCategory, modelVersion]
+    () => modelVersion !== null && modelVersion > 0,
+    [modelVersion]
   );
 
   /**
@@ -105,7 +106,6 @@ const usePanelPagination = ({
       hitCount > elementsPerPage,
     [currentContentData, elementsPerPage, hitCount]
   );
-
   React.useEffect(
     () => {
       if (
@@ -114,7 +114,7 @@ const usePanelPagination = ({
         (fetchOnFirstRender || firstRenderHappened.current) &&
         (!modelAvailableRequired || modelAvailable)
       ) {
-        fetchPanelElements();
+        fetchPanelElements(value ? { value } : undefined);
       }
     },
     // disable eslint on some lines
@@ -128,6 +128,7 @@ const usePanelPagination = ({
       fetchPanelElements,
       modelAvailableRequired,
       modelAvailable,
+      value,
       // eslint-disable-next-line react-hooks/exhaustive-deps
       ...otherDependencies,
     ]

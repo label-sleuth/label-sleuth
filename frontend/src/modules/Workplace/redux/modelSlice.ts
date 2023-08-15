@@ -14,7 +14,7 @@
 */
 
 import { createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { downloadFile } from "../../../utils/utils";
+import { downloadFile, getModeQueryParam } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { IterationStatusEnum, PanelIdsEnum } from "../../../const";
 import { client } from "../../../api/client";
@@ -62,6 +62,7 @@ export const checkModelUpdate = createAsyncThunk<
 
   const queryParams = getQueryParamsString([
     getCategoryQueryString(state.workspace.curCategory),
+    getModeQueryParam(state.workspace.mode)
   ]);
 
   var url = `${getWorkspace_url}/${encodeURIComponent(
@@ -85,6 +86,7 @@ export const downloadModel = createAsyncThunk<
 
   const queryParams = getQueryParamsString([
     getCategoryQueryString(state.workspace.curCategory),
+    getModeQueryParam(state.workspace.mode)
   ]);
 
   const prepareUrl = `${getWorkspace_url}/${encodeURIComponent(

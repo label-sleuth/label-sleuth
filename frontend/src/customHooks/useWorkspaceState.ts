@@ -22,12 +22,16 @@ import {
   cleanUploadedLabels,
   clearMainPanelFocusedElement,
   resetModelStatusCheckAttempts,
+  changeMode,
 } from "../modules/Workplace/redux";
 import * as React from "react";
 import { useAppDispatch, useAppSelector } from "./useRedux";
 
-import { PanelIdsEnum } from "../const";
+import { PanelIdsEnum, WorkspaceMode } from "../const";
 import { useFetchPanelElements } from "./useFetchPanelElements";
+import { getWorkspaces } from "../modules/Workspace-config/workspaceConfigSlice";
+import { useWorkspaceId } from "./useWorkspaceId";
+import { Workspace } from "../global";
 
 /**
  * Custom hook for dispatching workspace related actions
@@ -37,27 +41,39 @@ const useWorkspaceState = () => {
 
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
-  const uploadedLabels = useAppSelector((state) => state.workspace.uploadedLabels);
+  const uploadedLabels = useAppSelector(
+    (state) => state.workspace.uploadedLabels
+  );
+  const mode = useAppSelector((state) => state.workspace.mode);
 
+  const { workspaceId } = useWorkspaceId();
 
-  const fetchMainPanelElements = useFetchPanelElements({ panelId: PanelIdsEnum.MAIN_PANEL });
-  const fetchPositiveLabelsElements = useFetchPanelElements({ panelId: PanelIdsEnum.POSITIVE_LABELS });
+  const fetchMainPanelElements = useFetchPanelElements({
+    panelId: PanelIdsEnum.MAIN_PANEL,
+  });
+  const fetchPositiveLabelsElements = useFetchPanelElements({
+    panelId: PanelIdsEnum.POSITIVE_LABELS,
+  });
 
   React.useEffect(() => {
     // fetch documents only once, they won't change
     dispatch(fetchDocumentsMetadata());
-
-    // fetch categories only once, they will be fetched again if a new category is added
-    dispatch(fetchCategories());
   }, [dispatch]);
 
   React.useEffect(() => {
+    if (mode !== WorkspaceMode.NOT_SET) {
+      // fetch categories only once, they will be fetched again if a new category is added
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, mode]);
+
+  React.useEffect(() => {
     // update the model version when the category changes (if any)
-    if (curCategory !== null) {
+    if (mode === WorkspaceMode.BINARY && curCategory !== null) {
       dispatch(checkModelUpdate());
       dispatch(cleanEvaluationState());
       dispatch(clearMainPanelFocusedElement());
-      dispatch(resetModelStatusCheckAttempts())
+      dispatch(resetModelStatusCheckAttempts());
     }
   }, [curCategory, dispatch]);
 
@@ -65,10 +81,30 @@ const useWorkspaceState = () => {
     // category changes or modelVersion changes means
     // run only if category is not null and the model version has been set
     // also the status is updated
-    if (curCategory !== null && modelVersion !== null) {
+    if (
+      ((mode === WorkspaceMode.BINARY && curCategory !== null) ||
+        mode === WorkspaceMode.MULTICLASS) &&
+      modelVersion !== null
+    ) {
       dispatch(checkStatus());
     }
-  }, [curCategory, modelVersion, dispatch]);
+  }, [mode, curCategory, modelVersion, dispatch]);
+
+  React.useEffect(() => {
+    if (mode === WorkspaceMode.NOT_SET) {
+      dispatch(getWorkspaces()).then((action) => {
+        const workspaceMode = action.payload.workspaces.find(
+          (w: Workspace) => w.id === workspaceId
+        )?.mode;
+        workspaceMode && dispatch(changeMode(workspaceMode));
+      });
+    }
+
+    if (mode === WorkspaceMode.MULTICLASS) {
+      dispatch(checkStatus());
+      dispatch(checkModelUpdate());
+    }
+  }, [mode, workspaceId, dispatch]);
 
   React.useEffect(() => {
     // this useEffect manages the actions to be carried out when new labels have been imported
@@ -87,7 +123,13 @@ const useWorkspaceState = () => {
       }
       dispatch(cleanUploadedLabels());
     }
-  }, [uploadedLabels, curCategory, fetchPositiveLabelsElements, fetchMainPanelElements, dispatch]);
+  }, [
+    uploadedLabels,
+    curCategory,
+    fetchPositiveLabelsElements,
+    fetchMainPanelElements,
+    dispatch,
+  ]);
 };
 
 export default useWorkspaceState;

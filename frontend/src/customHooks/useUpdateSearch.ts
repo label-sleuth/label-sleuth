@@ -14,8 +14,12 @@
 */
 
 import React, { useCallback, useEffect } from "react";
-import { resetSearchResults, setSearchInput, resetLastSearchString } from "../modules/Workplace/redux";
-import { PanelIdsEnum } from "../const";
+import {
+  resetSearchResults,
+  setSearchInput,
+  resetLastSearchString,
+} from "../modules/Workplace/redux";
+import { PanelIdsEnum, WorkspaceMode } from "../const";
 import { useFetchPanelElements } from "./useFetchPanelElements";
 import { useAppDispatch, useAppSelector } from "./useRedux";
 
@@ -24,15 +28,24 @@ import { useAppDispatch, useAppSelector } from "./useRedux";
  * @param {A reference to the input to clear and focus it} textInputRef
  * @returns
  */
-export const useUpdateSearch = (textInputRef: React.MutableRefObject<HTMLInputElement | null>) => {
-  
+export const useUpdateSearch = (
+  textInputRef: React.MutableRefObject<HTMLInputElement | null>
+) => {
   const dispatch = useAppDispatch();
-  
-  const uploadedLabels = useAppSelector((state) => state.workspace.uploadedLabels);
-  const curCategory = useAppSelector((state) => state.workspace.curCategory);
-  const lastSearchString = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.SEARCH].lastSearchString);
 
-  const fetchSearchPanelElements = useFetchPanelElements({ panelId: PanelIdsEnum.SEARCH });
+  const uploadedLabels = useAppSelector(
+    (state) => state.workspace.uploadedLabels
+  );
+  const curCategory = useAppSelector((state) => state.workspace.curCategory);
+  const lastSearchString = useAppSelector(
+    (state) =>
+      state.workspace.panels.panels[PanelIdsEnum.SEARCH].lastSearchString
+  );
+  const mode = useAppSelector((state) => state.workspace.mode);
+
+  const fetchSearchPanelElements = useFetchPanelElements({
+    panelId: PanelIdsEnum.SEARCH,
+  });
 
   /**
    * Clear the search sidebar panel by reseting the
@@ -55,12 +68,14 @@ export const useUpdateSearch = (textInputRef: React.MutableRefObject<HTMLInputEl
    * Clear the search state when the category changes
    */
   useEffect(() => {
-    clearSearch();
-    dispatch(resetLastSearchString());
-    if (textInputRef.current) {
-      textInputRef.current.focus();
+    if (mode === WorkspaceMode.BINARY) {
+      dispatch(resetLastSearchString());
+      if (textInputRef.current) {
+        textInputRef.current.focus();
+      }
+      clearSearch();
     }
-  }, [curCategory, clearSearch, dispatch, textInputRef]);
+  }, [curCategory, clearSearch, dispatch, textInputRef, mode]);
 
   /**
    * When uploading labels, update the search results

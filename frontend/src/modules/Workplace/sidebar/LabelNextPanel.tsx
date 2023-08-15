@@ -36,13 +36,7 @@ const LabelNextPanel = () => {
   );
 
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
-
-  const {
-    currentContentData,
-    currentPage,
-    onPageChange,
-    isPaginationRequired,
-  } = usePanelPagination({
+  const { currentContentData, currentPage, onPageChange, isPaginationRequired } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: PanelIdsEnum.LABEL_NEXT,
     modelAvailableRequired: true,

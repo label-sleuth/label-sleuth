@@ -22,7 +22,7 @@ import {
 import { getNewLabelState, getBooleanLabel } from "../utils/utils";
 import { Action, isRejected } from "@reduxjs/toolkit";
 import { useAppDispatch, useAppSelector } from "./useRedux";
-import { LabelActionsEnum, PanelIdsEnum } from "../const";
+import { LabelActionsEnum, LabelTypesEnum, PanelIdsEnum } from "../const";
 import { Element } from "../global";
 
 /**
@@ -52,15 +52,23 @@ const useLabelState = (updateCounter = true) => {
    * @param  {The label action: can be 'pos' or 'neg'} labelAction
    * @param  {the category to which the label will be applied} categoryId
    */
-  const handleLabelState = (element: Element, labelAction: LabelActionsEnum, panelId: PanelIdsEnum, categoryId?: number) => {
+  const handleLabelState = (
+    element: Element,
+    labelAction: LabelActionsEnum,
+    panelId: PanelIdsEnum,
+    categoryId?: number
+  ) => {
     // if the categoryId is undefined, it defaults to the current category
-    let categoryToLabel = categoryId !== undefined ? categoryId : curCategory
+    let categoryToLabel = categoryId !== undefined ? categoryId : curCategory;
     if (categoryToLabel === null) return;
 
     const { newLabel } = getNewLabelState(
-      categoryToLabel === curCategory ? element.userLabel : element.otherUserLabels[categoryToLabel],
+      categoryToLabel === curCategory
+        ? element.userLabel
+        : element.otherUserLabels[categoryToLabel],
       labelAction
     );
+
     dispatch(updateElementOptimistically({ element, newLabel, categoryId }));
     dispatch(
       setElementLabel({
@@ -73,24 +81,59 @@ const useLabelState = (updateCounter = true) => {
     ).then((action: Action) => {
       if (isRejected(action)) {
         dispatch(reverseOptimisticUpdate({ element }));
-        
-      } else if (categoryToLabel === curCategory) { // only make updates if current cat is being labeled
+      } else if (categoryToLabel === curCategory) {
+        // only make updates if current cat is being labeled
         dispatch(checkStatus());
       }
     });
   };
 
-  const handlePosLabelAction = (element: Element, panelId: PanelIdsEnum, categoryId?: number) => {
+  const handlePosLabelAction = (
+    element: Element,
+    panelId: PanelIdsEnum,
+    categoryId?: number
+  ) => {
     handleLabelState(element, LabelActionsEnum.POS, panelId, categoryId);
   };
 
-  const handleNegLabelAction = (element: Element, panelId: PanelIdsEnum, categoryId?: number) => {
+  const handleNegLabelAction = (
+    element: Element,
+    panelId: PanelIdsEnum,
+    categoryId?: number
+  ) => {
     handleLabelState(element, LabelActionsEnum.NEG, panelId, categoryId);
+  };
+
+  const chageMultiClassLabel = (
+    element: Element,
+    panelId: PanelIdsEnum,
+    newCategory: number | null
+  ) => {
+    // the label is actually a category in contrast to the binary case where it is of type LabelTypesEnum
+    // update label optimistically and then label the new category as positive and the old one as None using REST
+    dispatch(updateElementOptimistically({ element, newLabel: newCategory }));
+
+    // labes the element to the new category
+    dispatch(
+      setElementLabel({
+        element_id: element.id,
+        update_counter: updateCounter,
+        categoryId: newCategory !== null ? newCategory : "none",
+        panelId,
+      })
+    ).then((action: Action) => {
+      if (isRejected(action)) {
+        dispatch(reverseOptimisticUpdate({ element }));
+      } else {
+        dispatch(checkStatus());
+      }
+    });
   };
 
   return {
     handlePosLabelAction,
     handleNegLabelAction,
+    chageMultiClassLabel,
   };
 };
 

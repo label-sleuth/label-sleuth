@@ -21,7 +21,7 @@ export const SEARCH_ALL_DOCS_TOOLTIP_MSG = "Search all documents";
 export const NEXT_TO_LABEL_TOOLTIP_MSG = "Label next";
 export const LABEL_NEXT_HELPER_MSG =
   "The system suggests to label these elements next to best assist it to improve";
-export const POSITIVE_PRED_TOOLTIP_MSG = "Positive predictions";
+export const POSITIVE_PRED_TOOLTIP_MSG = "Predictions";
 export const DISAGREEMENTS_TOOLTIP_MSG = "label-prediction disagreements";
 export const SUSPICIOUS_LABELS_TOOLTIP_MSG = "Suspicious labels";
 export const CONTRADICTING_LABELS_TOOLTIP_MSG = "Contradicting labels";
@@ -146,6 +146,7 @@ export enum LabelTypesEnum {
 export enum LabelActionsEnum {
   POS = "pos",
   NEG = "neg",
+  NONE = "none",
 }
 
 export const BOMCharacter = "\uFEFF";
@@ -166,7 +167,7 @@ export enum CustomizableUITextEnum {
   NEXT_ZERO_SHOT_MODEL_TRAINING_MSG = "next_zero_shot_model_training_msg",
   DOWNLOAD_MODEL_DESCRIPTION = "download_model_description",
   INSUFFICIENT_TRAIN_DATA_TOAST_MESSAGE = "insufficient_train_data_toast_message",
-  INSUFFICIENT_TRAIN_DATA_DESCRIPTION = "insufficient_train_data_toast_description"
+  INSUFFICIENT_TRAIN_DATA_DESCRIPTION = "insufficient_train_data_toast_description",
 }
 
 export enum CustomizableUIMiscEnum {
@@ -182,4 +183,11 @@ export enum IterationStatusEnum {
   RUNNING_INFERENCE = "RUNNING_INFERENCE",
   RUNNING_ACTIVE_LEARNING = "RUNNING_ACTIVE_LEARNING",
   CALCULATING_STATISTICS = "CALCULATING_STATISTICS",
+}
+
+export enum WorkspaceMode {
+  MULTICLASS = "MultiClass",
+  BINARY = "Binary",
+  MULTILABEL = "MultiLabel",
+  NOT_SET = "NOT_SET",
 }

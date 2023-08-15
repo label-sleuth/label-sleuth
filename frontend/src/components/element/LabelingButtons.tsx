@@ -2,10 +2,13 @@ import { Stack } from "@mui/material";
 import { NegButton, TooltipProps } from "../labelButtons/LabelButtons";
 import { PosButton } from "../labelButtons/LabelButtons";
 import { Element } from "../../global";
-import { LabelCategoriesMenuButton } from "./LabelNonCurrentCatMenu";
+import { LabelCategoriesMenuButton as LabelCategoriesMenuButtonBMode } from "./LabelNonCurrentCatMenu";
+import { LabelCategoriesMenuButton as LabelCategoriesMenuButtonMCMode } from "./LabelCategoryMCMode";
 import classes from "./Element.module.css";
 import React from "react";
 import { PanelIdsEnum } from "../../const";
+import { useAppSelector } from "../../customHooks/useRedux";
+import { returnByMode } from "../../utils/utils";
 
 interface LabelingButtonsProps {
   isElementFocused?: boolean;
@@ -13,8 +16,8 @@ interface LabelingButtonsProps {
   labelMenuOpenAnchorEl: any;
   setLabelMenuOpenAnchorEl: any;
   element: Element;
-  handlePosLabelAction: any;
-  handleNegLabelAction: any;
+  handlePosLabelAction?: any;
+  handleNegLabelAction?: any;
   hideButtons?: boolean;
   sx?: { [key: string]: string | number };
   posTooltipProps?: TooltipProps;
@@ -37,6 +40,8 @@ export const LabelingButtons = ({
   otherCatsTooltipProps,
   panelId,
 }: LabelingButtonsProps) => {
+  const mode = useAppSelector((state) => state.workspace.mode);
+
   return !!!hideButtons ? (
     <Stack
       sx={{ justifyContent: "flex-end", alignItems: "center", ...sx }}
@@ -44,32 +49,47 @@ export const LabelingButtons = ({
       spacing={0}
       className={classes.checking_buttons}
     >
-      <LabelCategoriesMenuButton
-        setAnchorEl={setLabelMenuOpenAnchorEl}
-        tooltipProps={otherCatsTooltipProps}
-        labelMenuOpen={labelMenuOpen}
-        element={element}
-      />
-      <NegButton
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          handleNegLabelAction(element, panelId);
-        }}
-        userLabel={element.userLabel}
-        show={labelMenuOpen || isElementFocused}
-        tooltipProps={negTooltipProps}
-      />
-      <PosButton
-        onClick={(e: React.UIEvent) => {
-          e.stopPropagation();
-          e.preventDefault();
-          handlePosLabelAction(element, panelId);
-        }}
-        userLabel={element.userLabel}
-        show={labelMenuOpen || isElementFocused}
-        tooltipProps={posTooltipProps}
-      />
+      {returnByMode(
+        <LabelCategoriesMenuButtonBMode
+          setAnchorEl={setLabelMenuOpenAnchorEl}
+          tooltipProps={otherCatsTooltipProps}
+          labelMenuOpen={labelMenuOpen}
+          element={element}
+        />,
+        <LabelCategoriesMenuButtonMCMode
+          setAnchorEl={setLabelMenuOpenAnchorEl}
+          tooltipProps={otherCatsTooltipProps}
+          labelMenuOpen={labelMenuOpen}
+        />,
+        mode
+      )}
+
+      {returnByMode(
+        <>
+          <NegButton
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleNegLabelAction(element, panelId);
+            }}
+            userLabel={element.userLabel}
+            show={labelMenuOpen || isElementFocused}
+            tooltipProps={negTooltipProps}
+          />
+          <PosButton
+            onClick={(e: React.UIEvent) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handlePosLabelAction(element, panelId);
+            }}
+            userLabel={element.userLabel}
+            show={labelMenuOpen || isElementFocused}
+            tooltipProps={posTooltipProps}
+          />
+        </>,
+        null,
+        mode
+      )}
     </Stack>
   ) : null;
 };

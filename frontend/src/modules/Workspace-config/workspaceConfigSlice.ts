@@ -27,8 +27,10 @@ import {
   CreatedWorkspace,
   CreateWorkspaceBody,
   Dataset,
+  Workspace,
   WorkspaceConfigSliceState,
 } from "../../global";
+import { changeMode } from "../Workplace/redux";
 
 const initialState: WorkspaceConfigSliceState = {
   datasetAdded: {
@@ -61,9 +63,10 @@ export const getWorkspaces = createAsyncThunk(
 export const createWorkspace = createAsyncThunk<
   CreatedWorkspace,
   CreateWorkspaceBody
->(`workspaces/createWorkspace`, async (body) => {
+>(`workspaces/createWorkspace`, async (body, { dispatch }) => {
   const { data } = await client.post(createWorkset_url, body);
-  return data;
+  dispatch(changeMode(body.workspace_type));
+  return { ...data.workspace, workspaceMode: body.workspace_type };
 });
 
 export const deleteWorkspace = createAsyncThunk<
@@ -133,7 +136,7 @@ export const workspacesSlice = createSlice({
       })
       .addCase(
         getWorkspaces.fulfilled,
-        (state, { payload }: PayloadAction<{ workspaces: string[] }>) => {
+        (state, { payload }: PayloadAction<{ workspaces: Workspace[] }>) => {
           state.loading = false;
           state.workspaces = payload.workspaces;
         }
@@ -160,9 +163,13 @@ export const workspacesSlice = createSlice({
       .addCase(createWorkspace.pending, (state) => {
         state.loading = true;
       })
-      .addCase(createWorkspace.fulfilled, (state) => {
+      .addCase(createWorkspace.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.isWorkspaceAdded = true;
+        state.workspaces = [
+          ...state.workspaces,
+          { id: payload.workspace_id, mode: payload.workspaceMode },
+        ];
       })
       .addCase(deleteWorkspace.rejected, (state) => {
         state.loading = false;
@@ -176,7 +183,7 @@ export const workspacesSlice = createSlice({
           const deletedWorkspaceId = action.payload;
           state.loading = false;
           state.workspaces = state.workspaces.filter(
-            (w) => w !== deletedWorkspaceId
+            (w) => w.id !== deletedWorkspaceId
           );
         }
       )
@@ -204,7 +211,7 @@ export const workspacesSlice = createSlice({
             (d) => d.dataset_id !== deletedDatasetName
           );
           state.workspaces = state.workspaces.filter(
-            (w) => !deletedWorkspaceIds.includes(w)
+            (w) => !deletedWorkspaceIds.includes(w.id)
           );
         }
       )

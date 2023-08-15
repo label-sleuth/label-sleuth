@@ -26,7 +26,16 @@ import classes from "./workspace-config.module.css";
 import {
   NEW_WORKSPACE_NAME_PLACEHOLER_MSG,
   NEW_WORKSPACE_NAME_MSG,
+  WorkspaceMode,
 } from "../../const";
+import {
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  RadioGroup,
+  Stack,
+} from "@mui/material";
+import info_icon from "../../assets/workspace/help.svg";
 
 interface NewWorkspaceFormProps {
   handleDatasetChange: (value: string) => void;
@@ -36,6 +45,10 @@ interface NewWorkspaceFormProps {
   handleNewWorkspace: () => void;
   textValue: string;
   newWorkspaceNameError: string;
+  mode: WorkspaceMode;
+  handleModeSelectionChange: (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => void;
 }
 
 const NewWorkspaceForm = ({
@@ -46,6 +59,8 @@ const NewWorkspaceForm = ({
   handleNewWorkspace,
   textValue,
   newWorkspaceNameError,
+  mode,
+  handleModeSelectionChange,
 }: NewWorkspaceFormProps) => {
   return (
     <Box
@@ -68,9 +83,6 @@ const NewWorkspaceForm = ({
               sx: {
                 background: "#fff",
                 padding: "9px",
-                "&::placeholder": {
-                  color: "#b5b5b5",
-                },
               },
             }}
             InputLabelProps={{
@@ -87,7 +99,7 @@ const NewWorkspaceForm = ({
         </FormControl>
         <FormControl
           variant="standard"
-          sx={{ minWidth: 300, ml: "25px", mr: "25px" }}
+          sx={{ minWidth: 300, ml: "25px", mr: "25px", mb: "25px" }}
         >
           <ControlledSelect
             label="Select dataset"
@@ -98,12 +110,107 @@ const NewWorkspaceForm = ({
             noOptionsPlaceholder="No datasets available"
           />
         </FormControl>
+        <FormControl
+          variant={"standard"}
+          sx={{ minWidth: 300, ml: "25px", mr: "25px" }}
+        >
+          <FormLabel
+            id="demo-row-radio-buttons-group-label"
+            sx={{
+              fontSize: "14px",
+              marginTop: "-8px",
+              color: "#00000099",
+            }}
+          >
+            Mode
+          </FormLabel>
+          <RadioGroup
+            aria-labelledby="demo-row-radio-buttons-group-label"
+            name="row-radio-buttons-group"
+            onChange={handleModeSelectionChange}
+            value={mode}
+          >
+            <Stack direction={"row"} alignItems="center">
+              <FormControlLabel
+                value={WorkspaceMode.BINARY}
+                sx={{ color: "gray", mr: 1 }}
+                control={
+                  <Radio
+                    size="small"
+                    sx={{
+                      "& .MuiSvgIcon-root": {
+                        fontSize: 20,
+                      },
+                      pr: 0.5,
+                    }}
+                  />
+                }
+                label="Binary"
+              />
+              <Box
+                component="img"
+                src={info_icon}
+                className={classes.moreinfo}
+                sx={{ width: "14px", height: "14px" }}
+              />
+            </Stack>
+            <Stack direction={"row"} alignItems="center">
+              <FormControlLabel
+                value={WorkspaceMode.MULTICLASS}
+                sx={{ color: "gray", mr: 1 }}
+                control={
+                  <Radio
+                    size="small"
+                    sx={{
+                      "& .MuiSvgIcon-root": {
+                        fontSize: 20,
+                      },
+                      pr: 0.5,
+                    }}
+                  />
+                }
+                label="Multi class (beta)"
+              />
+              <Box
+                component="img"
+                src={info_icon}
+                className={classes.moreinfo}
+                sx={{ width: "14px", height: "14px" }}
+              />
+            </Stack>
+            <Stack direction={"row"} alignItems="center">
+              <FormControlLabel
+                disabled
+                value={WorkspaceMode.MULTILABEL}
+                sx={{ color: "gray", mr: 1 }}
+                control={
+                  <Radio
+                    size="small"
+                    sx={{
+                      "& .MuiSvgIcon-root": {
+                        fontSize: 20,
+                      },
+                      pr: 0.5,
+                    }}
+                  />
+                }
+                label="Multi label (coming soon)"
+              />
+              <Box
+                component="img"
+                src={info_icon}
+                className={classes.moreinfo}
+                sx={{ width: "14px", height: "14px" }}
+              />
+            </Stack>
+          </RadioGroup>
+        </FormControl>
         <div
           style={{
             width: "100%",
             display: "flex",
             justifyContent: "right",
-            marginTop: "20px",
+            marginTop: "10px",
           }}
         >
           <ButtonIBM

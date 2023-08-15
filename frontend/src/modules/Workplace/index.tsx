@@ -41,6 +41,7 @@ import {
   EVALUATION_TOOLTIP_MSG,
   PanelIdsEnum,
   RIGHT_DRAWER_INITIAL_WIDTH,
+  WorkspaceMode,
 } from "../../const";
 import { ShortcutsModal } from "./main/ShortcutsModal";
 import Drawer from "@mui/material/Drawer";
@@ -58,18 +59,33 @@ import { useNotifyNewModelTraining } from "../../customHooks/useNotifyNewModelTr
 
 export const Workplace = () => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
-  const activePanelId = useAppSelector((state) => state.workspace.panels.activePanelId);
-  const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
-  const evaluationIsInProgress = useAppSelector(
-    (state) => state.workspace.panels.panels[PanelIdsEnum.EVALUATION].isInProgress
+  const activePanelId = useAppSelector(
+    (state) => state.workspace.panels.activePanelId
   );
-  const evaluationLoading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.EVALUATION]);
+  const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+  const mode = useAppSelector((state) => state.workspace.mode);
+
+  const isMulticlass = useMemo(() => {
+    return mode === WorkspaceMode.MULTICLASS;
+  }, [mode]);
+
+  const evaluationIsInProgress = useAppSelector(
+    (state) =>
+      state.workspace.panels.panels[PanelIdsEnum.EVALUATION].isInProgress
+  );
+  const evaluationLoading = useAppSelector(
+    (state) => state.workspace.panels.loading[PanelIdsEnum.EVALUATION]
+  );
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const workspaceVisited = useWorkspaceVisited();
 
-  const [tutorialDialogOpen, setTutorialDialogOpen] = useState(!!!workspaceVisited);
-  const [rightDrawerWidth, setRightDrawerWidth] = useState(RIGHT_DRAWER_INITIAL_WIDTH);
+  const [tutorialDialogOpen, setTutorialDialogOpen] = useState(
+    !!!workspaceVisited
+  );
+  const [rightDrawerWidth, setRightDrawerWidth] = useState(
+    RIGHT_DRAWER_INITIAL_WIDTH
+  );
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
 
   const workspaceRef = useRef();
@@ -81,11 +97,17 @@ export const Workplace = () => {
   usePreloadDataset();
   useWorkspaceState();
   useNotifyNewModelTraining();
-  
+
   const noCategory = useMemo(() => curCategory === null, [curCategory]);
+
   const noCategoryAndNoModel = useMemo(
     () => noCategory || modelVersion === null || modelVersion === -1,
     [noCategory, modelVersion]
+  );
+
+  const noModel = useMemo(
+    () => modelVersion === null || modelVersion === -1,
+    [modelVersion]
   );
 
   interface SidebarButtonProps {
@@ -96,9 +118,20 @@ export const Workplace = () => {
     panelId: PanelIdsEnum;
   }
 
-  const SidebarButton = ({ tooltipMessage, componentId, imgSource, disabled, panelId }: SidebarButtonProps) => {
+  const SidebarButton = ({
+    tooltipMessage,
+    componentId,
+    imgSource,
+    disabled,
+    panelId,
+  }: SidebarButtonProps) => {
     const isSelected = activePanelId === panelId;
-    const onClick = () => dispatch(setActivePanel(panelId === activePanelId ? PanelIdsEnum.NOT_SET : panelId));
+    const onClick = () =>
+      dispatch(
+        setActivePanel(
+          panelId === activePanelId ? PanelIdsEnum.NOT_SET : panelId
+        )
+      );
 
     const Button = () => (
       <div>
@@ -110,7 +143,9 @@ export const Workplace = () => {
         >
           <img
             src={imgSource}
-            className={isSelected ? classes["blue-filter"] : classes["gray-filter"]}
+            className={
+              isSelected ? classes["blue-filter"] : classes["gray-filter"]
+            }
             alt={componentId}
           />
         </IconButton>
@@ -128,11 +163,18 @@ export const Workplace = () => {
 
   return (
     <>
-      <Box sx={{ display: "flex" }} style={tutorialOpen ? { filter: "blur(2px)" } : {}} ref={workspaceRef}>
+      <Box
+        sx={{ display: "flex" }}
+        style={tutorialOpen ? { filter: "blur(2px)" } : {}}
+        ref={workspaceRef}
+      >
         <CssBaseline />
         <WorkspaceInfo setTutorialOpen={setTutorialOpen} />
         <Box component="main" sx={{ padding: 0 }}>
-          <UpperBar rightDrawerWidth={rightDrawerWidth} rightPanelOpen={rightPanelOpen} />
+          <UpperBar
+            rightDrawerWidth={rightDrawerWidth}
+            rightPanelOpen={rightPanelOpen}
+          />
           <PanelManager
             rightDrawerWidth={rightDrawerWidth}
             setRightDrawerWidth={setRightDrawerWidth}
@@ -140,7 +182,11 @@ export const Workplace = () => {
             setRightPanelOpen={setRightPanelOpen}
           />
           {/* Panel tabs  */}
-          <Drawer variant="permanent" anchor="right" PaperProps={{ sx: { minWidth: 50 } }}>
+          <Drawer
+            variant="permanent"
+            anchor="right"
+            PaperProps={{ sx: { minWidth: 50 } }}
+          >
             <Stack
               sx={{
                 display: "flex",
@@ -163,14 +209,24 @@ export const Workplace = () => {
                   tooltipMessage={NEXT_TO_LABEL_TOOLTIP_MSG}
                   componentId={"sidebar-recommended-button"}
                   imgSource={recommend_icon}
-                  disabled={evaluationIsInProgress || evaluationLoading || noCategoryAndNoModel}
+                  disabled={
+                    evaluationIsInProgress ||
+                    evaluationLoading ||
+                    (!isMulticlass && noCategoryAndNoModel) ||
+                    (isMulticlass && noModel)
+                  }
                   panelId={PanelIdsEnum.LABEL_NEXT}
                 />
                 <SidebarButton
                   tooltipMessage={POSITIVE_PRED_TOOLTIP_MSG}
                   componentId={"sidebar-pos-pred-button"}
                   imgSource={pos_pred_icon}
-                  disabled={evaluationIsInProgress || evaluationLoading || noCategoryAndNoModel}
+                  disabled={
+                    evaluationIsInProgress ||
+                    evaluationLoading ||
+                    (!isMulticlass && noCategoryAndNoModel) ||
+                    (isMulticlass && noModel)
+                  }
                   panelId={PanelIdsEnum.POSITIVE_PREDICTIONS}
                 />
               </Stack>
@@ -179,40 +235,75 @@ export const Workplace = () => {
                   tooltipMessage={ALL_POSITIVE_LABELS_TOOLTIP_MSG}
                   componentId={"sidebar-pos-elem-button"}
                   imgSource={pos_elem_icon}
-                  disabled={evaluationIsInProgress || evaluationLoading || noCategory}
+                  disabled={
+                    evaluationIsInProgress ||
+                    evaluationLoading ||
+                    (!isMulticlass && noCategory) ||
+                    isMulticlass
+                  }
                   panelId={PanelIdsEnum.POSITIVE_LABELS}
                 />
                 <SidebarButton
                   tooltipMessage={SUSPICIOUS_LABELS_TOOLTIP_MSG}
                   componentId={"sidebar-suspicious-elem-button"}
                   imgSource={suspicious_elem_icon}
-                  disabled={evaluationIsInProgress || evaluationLoading || noCategoryAndNoModel}
+                  disabled={
+                    evaluationIsInProgress ||
+                    evaluationLoading ||
+                    (!isMulticlass && noCategoryAndNoModel) ||
+                    (isMulticlass && noModel) ||
+                    isMulticlass
+                  }
                   panelId={PanelIdsEnum.SUSPICIOUS_LABELS}
                 />
                 <SidebarButton
                   tooltipMessage={CONTRADICTING_LABELS_TOOLTIP_MSG}
                   componentId={"sidebar-contradictive-elem-button"}
                   imgSource={contradictive_elem_icon}
-                  disabled={evaluationIsInProgress || evaluationLoading || noCategory}
+                  disabled={
+                    evaluationIsInProgress ||
+                    evaluationLoading ||
+                    (!isMulticlass && noCategory) ||
+                    isMulticlass
+                  }
                   panelId={PanelIdsEnum.CONTRADICTING_LABELS}
                 />
                 <SidebarButton
                   tooltipMessage={EVALUATION_TOOLTIP_MSG}
                   componentId={"sidebar-contradictive-elem-button"}
                   imgSource={evaluation_icon}
-                  disabled={noCategoryAndNoModel}
+                  disabled={
+                    evaluationIsInProgress ||
+                    evaluationLoading ||
+                    (!isMulticlass && noCategoryAndNoModel) ||
+                    (isMulticlass && noModel)
+                  }
                   panelId={PanelIdsEnum.EVALUATION}
                 />
               </Stack>
             </Stack>
           </Drawer>
         </Box>
-        <Tutorial tutorialOpen={tutorialOpen} setTutorialOpen={setTutorialOpen} />
-        <TutorialDialog open={tutorialDialogOpen} setOpen={setTutorialDialogOpen} setTutorialOpen={setTutorialOpen} />
-        <ShortcutsModal open={shortcutsModalOpen} setOpen={setShortcutsModalOpen} />
+        <Tutorial
+          tutorialOpen={tutorialOpen}
+          setTutorialOpen={setTutorialOpen}
+        />
+        <TutorialDialog
+          open={tutorialDialogOpen}
+          setOpen={setTutorialDialogOpen}
+          setTutorialOpen={setTutorialOpen}
+        />
+        <ShortcutsModal
+          open={shortcutsModalOpen}
+          setOpen={setShortcutsModalOpen}
+        />
       </Box>
       <Backdrop
-        sx={{ color: "#fff", zIndex: backdropOpen ? 10000 : -1, display: backdropOpen ? "flex" : "none" }}
+        sx={{
+          color: "#fff",
+          zIndex: backdropOpen ? 10000 : -1,
+          display: backdropOpen ? "flex" : "none",
+        }}
         open={backdropOpen}
       >
         <CircularProgress color="inherit" />

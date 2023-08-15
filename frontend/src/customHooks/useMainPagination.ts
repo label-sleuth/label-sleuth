@@ -15,7 +15,7 @@
 
 import { useCallback } from "react";
 import "../components/pagination/pagination.css";
-import { PanelIdsEnum } from "../const";
+import { PanelIdsEnum, WorkspaceMode } from "../const";
 import usePanelPagination from "./usePanelPagination";
 import { clearMainPanelFocusedElement } from "../modules/Workplace/redux";
 import { useAppDispatch, useAppSelector } from "./useRedux";
@@ -24,7 +24,10 @@ export const useMainPagination = (elementsPerPage: number) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const curDocIndex = useAppSelector((state) => state.workspace.curDocIndex);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
-  const page = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.MAIN_PANEL].page);
+  const mode = useAppSelector((state) => state.workspace.mode);
+  const page = useAppSelector(
+    (state) => state.workspace.panels.panels[PanelIdsEnum.MAIN_PANEL].page
+  );
   const dispatch = useAppDispatch();
 
   // (curCategory === null || modelVersion !== null) means category isn't selected or model version has been set
@@ -40,9 +43,16 @@ export const useMainPagination = (elementsPerPage: number) => {
   } = usePanelPagination({
     elementsPerPage,
     panelId: PanelIdsEnum.MAIN_PANEL,
-    shouldFetch: curDocIndex !== null && page !== null && (curCategory === null || modelVersion !== null),
+    shouldFetch:
+      curDocIndex !== null &&
+      page !== null &&
+      (curCategory === null || modelVersion !== null) &&
+      // dont fetch if we don't know the mode of the workspace
+      // we don't do the same for fetching other panels because 
+      // TODO: on multiclass mode we will have to do this for all panels
+      mode !== WorkspaceMode.NOT_SET,
     modelAvailableRequired: false,
-    otherDependencies: [curDocIndex, curCategory, modelVersion],
+    otherDependencies: [curDocIndex, curCategory, modelVersion, mode],
   });
 
   const onMainPageChange = useCallback(

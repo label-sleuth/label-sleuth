@@ -57,6 +57,7 @@ const ExistingWorkspaceForm = ({
             onChange={handleChange}
             placeholder="Choose from List"
             noOptionsPlaceholder="No workspaces available"
+            itemMinHeight={35}
           />
         </FormControl>
         <div style={{ width: "100%", display: "flex", justifyContent: "right", marginTop: "20px" }}>

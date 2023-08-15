@@ -18,6 +18,7 @@ import {
   LOGOUT_TOOLTIP_MSG,
   GO_TO_WORKSPACE_CONFIG_TOOLTIP_MSG,
   CustomizableUITextEnum,
+  WorkspaceMode,
 } from "../../../const";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import { currentDocNameSelector } from "../redux/documentSlice";
@@ -30,6 +31,7 @@ interface HeaderProps {
 
 export const Header = ({ setTutorialOpen }: HeaderProps) => {
   const curDocName = useAppSelector(currentDocNameSelector);
+  const mode = useAppSelector((state) => state.workspace.mode);
   const { logout } = useLogOut();
   const navigate = useNavigate();
   const { authenticationEnabled } = useAuthentication();
@@ -66,6 +68,7 @@ export const Header = ({ setTutorialOpen }: HeaderProps) => {
             alt="Open Tutorial"
           />
         </h2>
+        {/* <Switch value={mode} onChange={() => dispatch(switchMode()) }/> */}
         {authenticationEnabled ? (
           <Tooltip title={LOGOUT_TOOLTIP_MSG} placement="right">
             <img
@@ -117,6 +120,17 @@ export const Header = ({ setTutorialOpen }: HeaderProps) => {
           <label style={{ marginTop: "15px" }}>Dataset</label>
           <p>
             <b>{getDatasetNameFromDocumentId(curDocName)}</b>
+          </p>
+
+          <label style={{ marginTop: "15px" }}>Mode</label>
+          <p>
+            <b>
+              {mode === WorkspaceMode.BINARY
+                ? "Binary"
+                : mode === WorkspaceMode.MULTICLASS
+                ? "Multi class (beta)"
+                : ""}
+            </b>
           </p>
         </Stack>
       </DrawerHeader>

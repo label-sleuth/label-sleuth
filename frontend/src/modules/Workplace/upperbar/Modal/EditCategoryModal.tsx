@@ -27,6 +27,7 @@ import { useNotification } from "../../../../utils/notification";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import { EditOrCreateCategoryModal } from "./EditOrCreateCategoryModal";
+import { BadgeColor } from "../../../../global";
 
 interface EditCategoryModalProps {
   open: boolean;
@@ -47,6 +48,7 @@ export const EditCategoryModal = ({
 
   const [newCategoryName, setNewCategoryName] = React.useState("");
   const [categoryDescription, setCategoryDescription] = React.useState("");
+  const [categoryColor, setCategoryColor] = React.useState<BadgeColor | undefined>(undefined);
 
   React.useEffect(() => {
     setNewCategoryName(initialCategoryName);
@@ -87,6 +89,8 @@ export const EditCategoryModal = ({
       setCategoryName={setNewCategoryName}
       categoryDescription={categoryDescription}
       setCategoryDescription={setCategoryDescription}
+      categoryColor={categoryColor}
+      setCategoryColor={setCategoryColor}
       categoryNameError={categoryNameError}
       setCategoryNameError={setCategoryNameError}
       open={open}

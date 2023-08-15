@@ -17,15 +17,14 @@ export const CategoryFormControl = () => {
   const [showShortcutsNotification, setShowShortcutsNotification] =
     useLocalStorage("showShortcutsNotification", true);
   const { notify } = useNotification();
-
   const options: DropdownOption[] = categories
-    .map((item) => ({
-      value: `${item.category_id}`,
-      title: item.category_name,
-      caption: item.category_description,
-    }))
-    .sort((a, b) => a.title.localeCompare(b.title));
-
+  .map((item) => ({
+    value: `${item.category_id}`,
+    title: item.category_name,
+    caption: item.category_description,
+  }))
+  .sort((a, b) => a.title.localeCompare(b.title));
+  
   const ShortcutsMessageComponent = () => (
     <Typography>
       Press <Keyboard kbd={"Shift"} /> + <Keyboard kbd={"?"} /> to see the
@@ -53,7 +52,6 @@ export const CategoryFormControl = () => {
   return (
     <FormControl
       variant="standard"
-      sx={{ minWidth: "200px", marginBottom: "16px" }}
     >
       <ControlledSelect
         value={curCategory !== null ? `${curCategory}` : ""}
@@ -66,7 +64,9 @@ export const CategoryFormControl = () => {
         itemHeightCount={null}
         itemMinWidth="500px"
         itemTextSx={{fontWeight: 450}}
+        sx={{minWidth: "200px"}}
       />
     </FormControl>
   );
+
 };

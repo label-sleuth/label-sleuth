@@ -18,7 +18,7 @@ import { fetchDocumentElements } from "../modules/Workplace/redux/panelsSlice";
 import { searchKeywords } from "../modules/Workplace/redux/panelsSlice";
 import { getElementToLabel } from "../modules/Workplace/redux/panelsSlice";
 import { getPositivePredictions } from "../modules/Workplace/redux/panelsSlice";
-import { getAllPositiveLabels } from "../modules/Workplace/redux/panelsSlice";
+import { getUserLabels } from "../modules/Workplace/redux/panelsSlice";
 import { getSuspiciousLabels } from "../modules/Workplace/redux/panelsSlice";
 import { getContradictingLabels } from "../modules/Workplace/redux/panelsSlice";
 import { getEvaluationElements } from "../modules/Workplace/redux/evaluationSlice";
@@ -37,7 +37,7 @@ const getFetchActionByPanelId = (panelId: PanelIdsEnum) => {
     case PanelIdsEnum.POSITIVE_PREDICTIONS:
       return getPositivePredictions;
     case PanelIdsEnum.POSITIVE_LABELS:
-      return getAllPositiveLabels;
+      return getUserLabels;
     case PanelIdsEnum.SUSPICIOUS_LABELS:
       return getSuspiciousLabels;
     case PanelIdsEnum.CONTRADICTING_LABELS:

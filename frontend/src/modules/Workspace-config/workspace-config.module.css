@@ -14,7 +14,7 @@
 */
 
 
-.container{
+.container {
     position: fixed;
     left: 0;
     right: 0;
@@ -72,7 +72,7 @@
 }
  
 .wrapper {
-    background: #f4f4f4;
+    background: #f4f4f4 !important;
     margin: 0 5px;
     border-right: solid 1px #8d8d8d;
     border-bottom: solid 1px #8d8d8d;

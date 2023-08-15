@@ -17,6 +17,7 @@ import { createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import {
   addBOMCharacter,
   getCategoryQueryString,
+  getModeQueryParam,
   getQueryParamsString,
   synchronizeElement,
 } from "../../../utils/utils";
@@ -27,7 +28,7 @@ import {
   UPLOAD_LABELS_API,
 } from "../../../config";
 import fileDownload from "js-file-download";
-import { LabelTypesEnum, PanelIdsEnum } from "../../../const";
+import { LabelTypesEnum, PanelIdsEnum, WorkspaceMode } from "../../../const";
 import { client } from "../../../api/client";
 import { getWorkspaceId } from "../../../utils/utils";
 import { RootState } from "../../../store/configureStore";
@@ -45,12 +46,7 @@ export const initialState: LabelSliceState = {
   uploadedLabels: null,
   uploadingLabels: false,
   downloadingLabels: false,
-  labelCount: {
-    pos: 0,
-    neg: 0,
-    weakPos: 0,
-    weakNeg: 0,
-  },
+  labelCount: {},
 };
 
 export const downloadLabels = createAsyncThunk<
@@ -97,8 +93,8 @@ export const setElementLabel = createAsyncThunk<
   void,
   {
     element_id: string;
-    label: string;
-    categoryId: number | null;
+    label?: string;
+    categoryId: number | string | null;
     update_counter: boolean;
     panelId: PanelIdsEnum;
   },
@@ -107,18 +103,26 @@ export const setElementLabel = createAsyncThunk<
   }
 >("workspace/set_element_label", async (request, { getState }) => {
   const state = getState();
+  const mode = state.workspace.mode;
   const { element_id, label, categoryId, update_counter, panelId } = request;
   const queryParams = getQueryParamsString([
     getCategoryQueryString(categoryId),
+    getModeQueryParam(mode),
   ]);
-
-  var url = `${getWorkspace_url}/${encodeURIComponent(
+  const url = `${getWorkspace_url}/${encodeURIComponent(
     getWorkspaceId()
   )}/element/${encodeURIComponent(element_id)}${queryParams}`;
 
   await client.put(url, {
-    category_id: categoryId,
-    value: label,
+    // category_id is used in binary mode, its undefined in multiclass mode
+    category_id:
+      mode === WorkspaceMode.BINARY
+        ? categoryId !== null
+          ? +categoryId
+          : null
+        : undefined,
+    // in multiclass mode the new category is specified in the 'value' attribute, while it is true, false or none in binary mode
+    value: mode === WorkspaceMode.BINARY ? label : categoryId,
     update_counter: update_counter,
     source: panelId,
     iteration:
@@ -137,22 +141,19 @@ export const reducers = {
     state: WorkspaceState,
     action: PayloadAction<{
       element: Element;
-      newLabel: LabelTypesEnum;
+      newLabel: LabelTypesEnum | number | null;
       categoryId?: number;
     }>
   ) {
     const { element, newLabel, categoryId } = action.payload;
-    const updatedElement = {
-      ...element,
-      userLabel: newLabel,
-    };
     const { panelsState } = synchronizeElement(
-      updatedElement.id,
-      updatedElement.userLabel,
+      element.id,
+      newLabel,
       {
         panels: state.panels,
       },
-      categoryId !== undefined ? categoryId : null
+      categoryId !== undefined ? categoryId : null,
+      state.mode
     );
 
     state.panels.panels = panelsState.panels.panels;
@@ -166,7 +167,8 @@ export const reducers = {
       element.id,
       element.userLabel,
       { panels: state.panels },
-      1
+      1,
+      state.mode
     ); // TODO: fiishe
     state.panels.panels = panelsState.panels.panels;
   },

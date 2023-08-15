@@ -25,11 +25,6 @@
   box-shadow: none !important;
 }
 
-.text_predict {
-  border: dotted 2px #a3d8e5 !important;
-  box-shadow: -5px 0px 4px #a3d8e5 !important;
-}
-
 .text_predict:hover,
 .text_normal:hover {
   background: #f4f4f4;

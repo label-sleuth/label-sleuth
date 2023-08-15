@@ -17,13 +17,14 @@ import MenuItem from "@mui/material/MenuItem/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import classes from "./Dropdown.module.css";
-import { Stack, SxProps, Theme, Typography } from "@mui/material";
+import { Box, Chip, Stack, SxProps, Theme, Typography } from "@mui/material";
 import { ReactNode, useMemo } from "react";
 
 export interface DropdownOption {
   value: string;
   title: string;
   caption?: string;
+  chip?: string;
 }
 
 interface ControlledSelectProps {
@@ -38,7 +39,8 @@ interface ControlledSelectProps {
   itemHeightCount?: number | null; // number of limits before adding scroll
   sx?: SxProps<Theme>;
   itemMinWidth?: string;
-  itemTextSx?: SxProps<Theme>; 
+  itemMinHeight?: number;
+  itemTextSx?: SxProps<Theme>;
 }
 
 const ControlledSelect = ({
@@ -53,9 +55,10 @@ const ControlledSelect = ({
   itemHeightCount = 5,
   sx,
   itemMinWidth,
+  itemMinHeight,
   itemTextSx,
 }: ControlledSelectProps) => {
-  const ITEM_HEIGHT = 30;
+  const ITEM_HEIGHT = itemMinHeight || 30;
 
   // category name with max size (100 characters) spans 800 px -> 8px per character
   const maxOptionTitleLength = useMemo(() => {
@@ -106,16 +109,18 @@ const ControlledSelect = ({
 
   return (
     <>
-      <InputLabel
-        id={`${aria}-label`}
-        shrink={true}
-        style={{
-          fontSize: "18px",
-          marginTop: "-8px",
-        }}
-      >
-        {label}
-      </InputLabel>
+      {label && (
+        <InputLabel
+          id={`${aria}-label`}
+          shrink={true}
+          style={{
+            fontSize: "18px",
+            marginTop: "-8px",
+          }}
+        >
+          {label}
+        </InputLabel>
+      )}
       <Select
         labelId={`${aria}-label`}
         id={`${aria}-helper`}
@@ -141,9 +146,33 @@ const ControlledSelect = ({
                 value={option.value}
               >
                 <Stack direction={"column"}>
-                  <Typography sx={itemTextSx}>
-                    {option.title ?? option.value}
-                  </Typography>
+                  {option.chip ? (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        left: 0,
+                        pr: 2,
+                        pl: 2,
+                        pb: 1,
+                        pt: 1,
+                      }}
+                    >
+                      <Stack direction={"row"} justifyContent={"space-between"}>
+                        <Typography sx={{ ...itemTextSx }}>
+                          {option.title ?? option.value}
+                        </Typography>
+                        <Chip label={option.chip} size={"small"} />
+                      </Stack>
+                    </Box>
+                  ) : (
+                    <Typography sx={itemTextSx}>
+                      {option.title ?? option.value}
+                    </Typography>
+                  )}
+
                   {option.caption !== undefined && (
                     <Typography
                       variant="caption"

@@ -73,6 +73,7 @@ interface ElementListProps {
   children?: React.ReactElement;
   isPaginationRequired: boolean;
   elementsTopPadding?: number;
+  Filters?: React.FC;
 }
 
 export const ElementList = ({
@@ -83,6 +84,7 @@ export const ElementList = ({
   children,
   isPaginationRequired,
   elementsTopPadding = 0,
+  Filters,
 }: ElementListProps) => {
   return (
     <Stack
@@ -92,6 +94,7 @@ export const ElementList = ({
         direction: "column",
         mt: 1,
         height: isPaginationRequired ? "88vh" : "90.5vh",
+        flexDirection: "column"
       }}
     >
       {elements === null ? (
@@ -101,6 +104,7 @@ export const ElementList = ({
       ) : (
         <PanelTypography>{nonEmptyResultsMessage}</PanelTypography>
       )}
+      {Filters !== undefined && <Filters/>}
       <Box
         className={`${classes["element-list"]} ${isPaginationRequired ? classes.pagination_margin : ""}`}
         sx={elementsTopPadding ? { mt: elementsTopPadding } : {mt: 2}}
@@ -110,7 +114,9 @@ export const ElementList = ({
         ) : children ? (
           { ...children }
         ) : elements && elements.length > 0 ? (
-          elements.map((element, i) => <SidebarElement element={element} key={element.id} index={i} />)
+          elements.map((element, i) => (
+            <SidebarElement element={element} key={element.id} index={i} />
+          ))
         ) : null}
       </Box>
     </Stack>

@@ -16,8 +16,9 @@
 import React from "react";
 import { usePrevious } from "./usePrevious";
 import { useNotification } from "../utils/notification";
-import { useAppDispatch } from "./useRedux";
+import { useAppDispatch, useAppSelector } from "./useRedux";
 import { toast } from "react-toastify";
+import { WorkspaceMode } from "../const";
 
 interface UseNewModelNotifications {
   curCategory: number | null;
@@ -36,6 +37,7 @@ export const useNewModelNotifications = ({
   shouldFireConfetti,
 }: UseNewModelNotifications) => {
   const dispatch = useAppDispatch();
+  const mode = useAppSelector((state) => state.workspace.mode);
   const prevModelVersion = usePrevious(modelVersion);
   const newModelVersionAvailable = React.useMemo(
     () =>
@@ -48,7 +50,11 @@ export const useNewModelNotifications = ({
   const { notify } = useNotification();
 
   React.useEffect(() => {
-    if (curCategory !== null && newModelVersionAvailable === true) {
+    if (
+      ((mode === WorkspaceMode.BINARY && curCategory !== null) ||
+        mode === WorkspaceMode.MULTICLASS) &&
+      newModelVersionAvailable === true
+    ) {
       shouldFireConfetti && fire();
       if (modelVersion === 1) {
         notify("A new model is available!", {

@@ -14,6 +14,7 @@
 */
 
 import { useEffect } from "react";
+import { WorkspaceMode } from "../const";
 import { decreaseModelStatusCheckAttempts } from "../modules/Workplace/redux";
 import { checkModelUpdate } from "../modules/Workplace/redux/modelSlice";
 import { useAppDispatch, useAppSelector } from "./useRedux";
@@ -26,23 +27,40 @@ interface UseCheckModelStateProps {
  * Update the model state every checkModelInterval milliseconds
  * Do it only if nextModelShouldBeTraining is true
  */
-export const useCheckModelState = ({ checkModelInterval }: UseCheckModelStateProps) => {
+export const useCheckModelState = ({
+  checkModelInterval,
+}: UseCheckModelStateProps) => {
   const dispatch = useAppDispatch();
 
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
-  const nextModelShouldBeTraining = useAppSelector((state) => state.workspace.nextModelShouldBeTraining);
-  const modelStatusCheckAttempts = useAppSelector((state) => state.workspace.modelStatusCheckAttempts);
+  const mode = useAppSelector((state) => state.workspace.mode);
+  const nextModelShouldBeTraining = useAppSelector(
+    (state) => state.workspace.nextModelShouldBeTraining
+  );
+  const modelStatusCheckAttempts = useAppSelector(
+    (state) => state.workspace.modelStatusCheckAttempts
+  );
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (curCategory !== null && (nextModelShouldBeTraining || modelStatusCheckAttempts > 0)) {
+      if (
+        ((mode === WorkspaceMode.BINARY && curCategory !== null) ||
+          mode === WorkspaceMode.MULTICLASS) &&
+        (nextModelShouldBeTraining || modelStatusCheckAttempts > 0)
+      ) {
         dispatch(checkModelUpdate());
         if (modelStatusCheckAttempts > 0) {
-          dispatch(decreaseModelStatusCheckAttempts())
+          dispatch(decreaseModelStatusCheckAttempts());
         }
       }
     }, checkModelInterval);
 
     return () => clearInterval(interval);
-  }, [curCategory, checkModelInterval, nextModelShouldBeTraining, modelStatusCheckAttempts, dispatch]);
+  }, [
+    curCategory,
+    checkModelInterval,
+    nextModelShouldBeTraining,
+    modelStatusCheckAttempts,
+    dispatch,
+  ]);
 };

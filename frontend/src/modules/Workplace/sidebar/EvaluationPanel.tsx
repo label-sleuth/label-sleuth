@@ -35,6 +35,7 @@ import {
 } from "./components/commonComponents";
 import { useFetchPanelElements } from "../../../customHooks/useFetchPanelElements";
 import { Element } from "../../../global";
+import { returnByMode } from "../../../utils/utils";
 
 const EvaluationPanel = () => {
   const dispatch = useAppDispatch();
@@ -56,6 +57,7 @@ const EvaluationPanel = () => {
     (state) => state.workspace.panels.loading[PanelIdsEnum.EVALUATION]
   );
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+  const mode = useAppSelector((state) => state.workspace.mode);
   const nextModelShouldBeTraining = useAppSelector(
     (state) => state.workspace.nextModelShouldBeTraining
   );
@@ -73,14 +75,20 @@ const EvaluationPanel = () => {
     () =>
       currentContentData
         ? currentContentData
-            .map((element) => element.userLabel !== LabelTypesEnum.NONE)
+            .map((element) =>
+              returnByMode(
+                element.userLabel !== LabelTypesEnum.NONE,
+                element.multiclassUserLabel !== null,
+                mode
+              )
+            )
             .reduce(
               (partialSum: number, isLabeled: boolean) =>
                 partialSum + (isLabeled ? 1 : 0),
               0
             )
         : 0,
-    [currentContentData]
+    [currentContentData, mode]
   );
 
   const noPositivePredictions = React.useMemo(
@@ -109,11 +117,16 @@ const EvaluationPanel = () => {
   const getChangedElementsCount = useCallback(
     () =>
       elements !== null
-        ? Object.keys(elements).filter(
-            (k) => elements[k].userLabel !== initialElements[k].userLabel
+        ? Object.keys(elements).filter((k) =>
+            returnByMode(
+              elements[k].userLabel !== initialElements[k].userLabel,
+              elements[k].multiclassUserLabel !==
+                initialElements[k].multiclassUserLabel,
+              mode
+            )
           ).length
         : 0,
-    [elements, initialElements]
+    [elements, initialElements, mode]
   );
 
   const submitEvaluation = useCallback(() => {
@@ -176,7 +189,9 @@ const EvaluationPanel = () => {
 
   return (
     <Box>
-      <Header message={"Precision evaluation"} />
+      <Header
+        message={`${returnByMode("Precision", "Accuracy", mode)} evaluation`}
+      />
       <Box
         sx={{
           display: "flex",
@@ -230,8 +245,8 @@ const EvaluationPanel = () => {
           </PanelTypography>
         </Box>
       ) : (
-        <Box sx={{height: "90vh"}}>
-          <Box sx={{mb: 2}}>
+        <Box sx={{ height: "90vh" }}>
+          <Box sx={{ mb: 2 }}>
             {messages.map((m, i) => (
               <PanelTypography key={i}>{m}</PanelTypography>
             ))}

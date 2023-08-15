@@ -13,34 +13,18 @@
     limitations under the License.
 */
 
-import React from "react";
-import { styled } from "@mui/material/styles";
-import Box from "@mui/material/Box";
-
-import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
-import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
-import classes from "./UpperBar.module.css";
-import Tooltip from "@mui/material/Tooltip";
-import {
-  CREATE_NEW_CATEGORY_TOOLTIP_MSG,
-  DELETE_CATEGORY_TOOLTIP_MSG,
-  EDIT_CATEGORY_TOOLTIP_MSG,
-  APPBAR_HEIGHT,
-  LEFT_DRAWER_WIDTH,
-  ACTIONS_DRAWER_WIDTH,
-} from "../../../const";
+import { FC } from "react";
+import { ACTIONS_DRAWER_WIDTH, APPBAR_HEIGHT, LEFT_DRAWER_WIDTH } from "../../../const";
 import { useAppSelector } from "../../../customHooks/useRedux";
-import { CategoryCard } from "./CategoryCard";
-import { IconButton } from "@mui/material";
-import { useState } from "react";
-import { CreateCategoryModal } from "./Modal/CreateCategoryModal";
-import { DeleteCategoryModal } from "./Modal/DeleteCategoryModal";
-import { EditCategoryModal } from "./Modal/EditCategoryModal";
-import { CategoryFormControl } from "./CategoryFormControl";
+import { returnByMode } from "../../../utils/utils";
+import { UpperBarMCMode } from "./UpperBarMCMode";
+import { UpperBarBMode } from "./UpperBarBMode";
+import { Box, styled } from "@mui/material";
+
+
 
 // the AppBar component from mui isn't used because it's width doens't get updated when resizing the right sidebar
-const AppBarLS = styled(Box)(
+export const AppBarLS = styled(Box)(
   ({ rightDrawerWidth, rightPanelOpen }: UpperBarProps) => ({
     position: "fixed",
     top: 0,
@@ -59,93 +43,16 @@ const AppBarLS = styled(Box)(
   })
 );
 
-interface UpperBarProps {
+export interface UpperBarProps {
   rightDrawerWidth: number;
   rightPanelOpen: boolean;
 }
 
-export const UpperBar = ({
-  rightDrawerWidth,
-  rightPanelOpen,
-}: UpperBarProps) => {
-  const curCategory = useAppSelector((state) => state.workspace.curCategory);
-  const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false);
-  const [deleteCategoryModalOpen, setDeleteCategoryModalOpen] = useState(false);
-  const [editCategoryModalOpen, setEditCategoryModalOpen] = useState(false);
-  const [cardOpen, setCardOpen] = React.useState(true);
-
-  const handleAddCategory = () => {
-    setCreateCategoryModalOpen(true);
-  };
-
-  const handleDeleteCategory = () => {
-    setDeleteCategoryModalOpen(true);
-  };
-
-  const handleEditCategory = () => {
-    setEditCategoryModalOpen(true);
-  };
-
-  React.useEffect(() => {
-    if (curCategory !== null && cardOpen) {
-      setCardOpen(false);
-    }
-  }, [curCategory, cardOpen]);
-
-  return (
-    <AppBarLS
-      rightDrawerWidth={rightDrawerWidth}
-      rightPanelOpen={rightPanelOpen}
-    >
-      <Box className={classes["app-bar-container"]}>
-        <Box className={classes["app-bar-container"]}>
-          <p className={classes["dropdown-label"]}>Category: </p>
-          <CategoryFormControl />
-          <Tooltip title={CREATE_NEW_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-            <IconButton
-              onClick={handleAddCategory}
-              id="upperbar-add-category"
-              className={classes["category-action-button"]}
-            >
-              <AddOutlinedIcon />
-            </IconButton>
-          </Tooltip>
-          {curCategory !== null ? (
-            <>
-              <Tooltip title={DELETE_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-                <IconButton
-                  className={classes["category-action-button"]}
-                  onClick={handleDeleteCategory}
-                >
-                  <DeleteOutlineOutlinedIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={EDIT_CATEGORY_TOOLTIP_MSG} disableFocusListener>
-                <IconButton
-                  className={classes["category-action-button"]}
-                  onClick={handleEditCategory}
-                >
-                  <ModeEditOutlineOutlinedIcon />
-                </IconButton>
-              </Tooltip>
-            </>
-          ) : null}
-        </Box>
-
-        {cardOpen ? <CategoryCard setCardOpen={setCardOpen} /> : null}
-      </Box>
-      <CreateCategoryModal
-        open={createCategoryModalOpen}
-        setOpen={setCreateCategoryModalOpen}
-      />
-      <DeleteCategoryModal
-        open={deleteCategoryModalOpen}
-        setOpen={setDeleteCategoryModalOpen}
-      />
-      <EditCategoryModal
-        open={editCategoryModalOpen}
-        setOpen={setEditCategoryModalOpen}
-      />
-    </AppBarLS>
+export const UpperBar: FC<UpperBarProps> = (props) => {
+  const mode = useAppSelector((state) => state.workspace.mode);
+  return returnByMode(
+    <UpperBarBMode {...props} />,
+    <UpperBarMCMode {...props} />,
+    mode
   );
 };

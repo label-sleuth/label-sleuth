@@ -3,6 +3,7 @@ import {
   NO_MODEL_AVAILABLE_MSG,
   NEXT_MODEL_TRAINING_MSG,
   CustomizableUITextEnum,
+  WorkspaceMode,
 } from "../../../const";
 import { useTheme } from "@mui/material/styles";
 import { LinearWithValueLabel } from "./ModelProgressBar";
@@ -30,6 +31,7 @@ export const WorkspaceInfoAndActions = ({
 }: WorkspaceInfoAndActionsProps) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+  const mode = useAppSelector((state) => state.workspace.mode);
   const nextZeroShotModelTrainingMsg = useAppSelector(
     (state) => state.customizableUIText.texts[CustomizableUITextEnum.NEXT_ZERO_SHOT_MODEL_TRAINING_MSG]
   );
@@ -56,7 +58,7 @@ export const WorkspaceInfoAndActions = ({
 
   return (
     <>
-      {curCategory !== null ? (
+      {curCategory !== null || mode === WorkspaceMode.MULTICLASS ? (
         <Stack style={{ paddingTop: "12px", paddingBottom: "24px" }}>
           <LabelCountPanel />
           <Divider />
