@@ -69,7 +69,7 @@ interface ElementListProps {
   elements: Element[];
   loading: boolean;
   emptyResultsMessage: string;
-  nonEmptyResultsMessage: string;
+  nonEmptyResultsMessage: string | JSX.Element;
   children?: React.ReactElement;
   isPaginationRequired: boolean;
   elementsTopPadding?: number;

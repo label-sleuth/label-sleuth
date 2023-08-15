@@ -20,6 +20,7 @@ import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
 import { Element } from "../../../global";
+import animationClasses from "../../../components/element/Element.module.css"
 
 const LabelNextPanel = () => {
   const { hitCount } = useAppSelector(
@@ -56,7 +57,17 @@ const LabelNextPanel = () => {
       <ElementList
         elements={currentContentData as Element[]}
         loading={loading}
-        nonEmptyResultsMessage={"Labeling these elements next will be most effective at improving the model. The suggested elements do not reflect the model performance. To evaluate the model go to the evaluation panel."}
+        nonEmptyResultsMessage={
+          <span>
+            {
+              "Labeling these elements next will be most effective at improving the model. "
+            }
+            <strong className={animationClasses.text_auto_focus}>
+              {"The suggested elements do not reflect the model performance."}
+            </strong>
+            {" To evaluate the model go to the evaluation panel."}
+          </span>
+        }
         emptyResultsMessage={""}
         isPaginationRequired={isPaginationRequired}
       />
