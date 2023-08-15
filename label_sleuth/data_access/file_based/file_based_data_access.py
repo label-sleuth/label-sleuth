@@ -244,7 +244,7 @@ class FileBasedDataAccess(DataAccessApi):
         if workspace_id is not None:
             with self._get_lock_object_for_workspace(workspace_id):
                 for d in docs:
-                    #TODO show Ariel we set the text elements
+                    #TODO show Ariel we set the text elements. check since we do [:], d.text_elements =  is not necessary
                     d.text_elements = self._add_labels_info_for_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                             text_elements=d.text_elements, label_types=label_types)
         return docs
@@ -586,7 +586,7 @@ class FileBasedDataAccess(DataAccessApi):
                                            text_elements: List[Union[LabeledTextElement, MulticlassLabeledTextElement]],
                                            label_types):
         labels_info_for_workspace = self._get_labels(workspace_id, dataset_name)
-        text_elements = [MulticlassLabeledTextElement(**vars(text_element)) if self.is_multiclass(workspace_id)
+        text_elements[:] = [MulticlassLabeledTextElement(**vars(text_element)) if self.is_multiclass(workspace_id)
                          else LabeledTextElement(**vars(text_element)) for text_element in text_elements]
         for elem in text_elements:
             if elem.uri in labels_info_for_workspace:
