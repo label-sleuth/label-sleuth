@@ -32,7 +32,7 @@ from collections import Counter, defaultdict
 from typing import Sequence, Iterable, Mapping, List, Union, Set
 
 import label_sleuth.data_access.file_based.utils as utils
-from label_sleuth.data_access.core.data_structs import Document, Label, TextElement, LabelType
+from label_sleuth.data_access.core.data_structs import Document, Label, TextElement, LabelType, LabeledTextElement
 from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, \
     LabeledStatus, BadDocumentNamesException, DocumentNameTooLongException, get_document_id, DocumentNameEmptyException
 from label_sleuth.data_access.file_based.utils import get_dataset_name_from_uri
@@ -558,6 +558,7 @@ class FileBasedDataAccess(DataAccessApi):
     def _add_labels_info_for_text_elements(self, workspace_id, dataset_name, text_elements: List[TextElement],
                                            label_types):
         labels_info_for_workspace = self._get_labels(workspace_id, dataset_name)
+        text_elements[:] = [LabeledTextElement(**vars(text_element)) for text_element in text_elements]
         for elem in text_elements:
             if elem.uri in labels_info_for_workspace:
                 if label_types is None:

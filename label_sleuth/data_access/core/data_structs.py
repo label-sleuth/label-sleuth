@@ -62,7 +62,7 @@ class TextElement:
 
 @dataclass
 class LabeledTextElement(TextElement):
-    category_to_label: Mapping[int, Label]
+    category_to_label: Mapping[int, Label] = None
 
 
 @dataclass

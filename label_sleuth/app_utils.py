@@ -77,7 +77,7 @@ def elements_back_to_front(workspace_id: str, elements: List[Union[TextElement, 
               'begin': text_element.span[0][0],
               'end': text_element.span[0][1],
               'text': text_element.text,
-              'user_labels': {} if type(text_element)==TextElement else {k: str(v.label).lower()
+              'user_labels': {} if type(text_element)==TextElement or text_element.category_to_label is None else {k: str(v.label).lower()
                               # TODO current UI is using true and false as strings. change to boolean in the new UI
                               for k, v in text_element.category_to_label.items()},
               'model_predictions': {}
