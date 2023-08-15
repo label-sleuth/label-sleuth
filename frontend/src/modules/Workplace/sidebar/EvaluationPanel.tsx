@@ -51,8 +51,6 @@ const EvaluationPanel = () => {
   } = useAppSelector(
     (state) => state.workspace.panels.panels[PanelIdsEnum.EVALUATION]
   );
-  //const elements: ElementsDict | null = {};
-  //const initialElements: ElementsDict | null = {};
 
   const isLoading = useAppSelector(
     (state) => state.workspace.panels.loading[PanelIdsEnum.EVALUATION]
@@ -164,7 +162,7 @@ const EvaluationPanel = () => {
 
     if (nextModelShouldBeTraining) {
       l.push(WAIT_NEW_MODEL_MSG);
-    } 
+    }
 
     return l;
   }, [
@@ -179,7 +177,14 @@ const EvaluationPanel = () => {
   return (
     <Box>
       <Header message={"Precision evaluation"} />
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 1, mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          mt: 1,
+          mb: 2,
+        }}
+      >
         <Stack>
           {isInProgress && !noPositivePredictions && (
             <PanelTypography
@@ -215,9 +220,9 @@ const EvaluationPanel = () => {
           </ButtonGroup>
         </Stack>
       </Box>
-      <Divider variant="middle" />
+      <Divider variant="middle" sx={{ mb: 2 }} />
       {currentContentData?.length === 0 ? (
-        <Box sx={{ mt: 1 }}>
+        <Box>
           <PanelTypography sx={{ fontSize: "1rem" }}>
             {
               "Currently it's not possible to evaluate the precision of the model because there are no positive predictions."
@@ -225,16 +230,13 @@ const EvaluationPanel = () => {
           </PanelTypography>
         </Box>
       ) : (
-        <>
-          <Box sx={{ mt: 2 }}>
+        <Box sx={{height: "90vh"}}>
+          <Box sx={{mb: 2}}>
             {messages.map((m, i) => (
               <PanelTypography key={i}>{m}</PanelTypography>
             ))}
           </Box>
-          <Box
-            sx={{ mt: isInProgress ? 16 : 12 }}
-            className={classes["element-list"]}
-          >
+          <Box className={classes["element-list"]}>
             {isLoading ? (
               <Loading />
             ) : isInProgress && currentContentData !== null ? (
@@ -250,7 +252,7 @@ const EvaluationPanel = () => {
               </Box>
             ) : null}
           </Box>
-        </>
+        </Box>
       )}
     </Box>
   );

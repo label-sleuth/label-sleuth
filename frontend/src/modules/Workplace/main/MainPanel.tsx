@@ -54,13 +54,14 @@ const Main = styled(Box, { shouldForwardProp: (prop) => prop !== "open" })(
     rightDrawerWidth: number;
   }) => ({
     position: "fixed",
-    padding: theme.spacing(3),
     margin: 0,
     right: ACTIONS_DRAWER_WIDTH,
     left: LEFT_DRAWER_WIDTH,
     top: APPBAR_HEIGHT,
     bottom: 0,
     overflow: "none",
+    display: "flex",
+    flexDirection: "column",
     ...(open && {
       marginRight: rightDrawerWidth,
     }),
@@ -101,13 +102,11 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
   return (
     <>
       <Main
-        className={`${classes.main_content} ${
-          isPaginationRequired ? classes.pagination_margin : ""
-        }`}
+        className={`${classes.main_content} `}
         open={open}
         rightDrawerWidth={rightDrawerWidth}
       >
-        <Box className={classes.doc_header}>
+        <Box className={classes.doc_header} sx={{ pb: 1.2, pt: 1 }}>
           <Tooltip
             title={curDocIndex !== 0 ? PREV_DOC_TOOLTIP_MSG : ""}
             placement="right"
@@ -130,30 +129,17 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
               <img src={left_icon} alt={"previous document"} />
             </button>
           </Tooltip>
-          <div className={classes.doc_stats}>
+          <Box className={classes.doc_stats}>
             <h6>{getDocumentNameFromDocumentId(curDocName)}</h6>
             <Stack
               direction={"row"}
               alignItems={"center"}
               justifyContent={"center"}
+              sx={{ mt: 0 }}
             >
-              {/* <Tooltip title={"Text entries"}>
-                <span>
-                  <Stack direction={"row"} alignItems={"center"}>
-                    <NumbersIcon sx={{ opacity: 0.4, fontSize: "18px" }} />
-                    <Typography
-                      sx={{
-                        fontSize: "14px",
-                        lineHeight: "14px",
-                        opacity: 0.5,
-                      }}
-                    >
-                      {hitCount ?? 0}
-                    </Typography>
-                  </Stack>
-                </span>
-              </Tooltip> */}
-              <em style={{fontSize: "0.80em"}}>Text elements: {hitCount ?? 0}</em>
+              <em style={{ fontSize: "0.80em" }}>
+                Text elements: {hitCount ?? 0}
+              </em>
 
               {documentPositivePredictionIds !== null ? (
                 <>
@@ -171,7 +157,7 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
                 </>
               ) : null}
             </Stack>
-          </div>
+          </Box>
           <Tooltip
             title={
               documents.length - 1 !== curDocIndex ? NEXT_DOC_TOOLTIP_MSG : ""
@@ -200,27 +186,32 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
             </button>
           </Tooltip>
         </Box>
-        <div className={classes.doc_content}>
-          <Box id="main-element-view">
-            {currentContentData &&
-              currentContentData.map((element) => (
-                <MainElement
-                  element={element as Element}
-                  key={getPanelDOMKey(
-                    (element as Element).id,
-                    PanelIdsEnum.MAIN_PANEL
-                  )}
-                />
-              ))}
-          </Box>
-        </div>
+        <Box
+          id="main-element-view"
+          sx={(theme) => ({
+            paddingLeft: theme.spacing(3),
+            paddingRight: theme.spacing(3),
+            paddingTop: theme.spacing(3),
+            overflow: "auto",
+          })}
+        >
+          {currentContentData &&
+            currentContentData.map((element) => (
+              <MainElement
+                element={element as Element}
+                key={getPanelDOMKey(
+                  (element as Element).id,
+                  PanelIdsEnum.MAIN_PANEL
+                )}
+              />
+            ))}
+        </Box>
         <CustomPagination
           hitCount={hitCount}
           sidebarPanelElementsPerPage={mainPanelElementsPerPage}
           currentPage={currentPage}
           onPageChange={onPageChange}
           size="medium"
-          sx={{ bottom: "-50px" }}
           isPaginationRequired={isPaginationRequired}
         />
       </Main>

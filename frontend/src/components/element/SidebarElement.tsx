@@ -16,7 +16,7 @@
 import Highlighter from "react-highlight-words";
 import classes from "./index.module.css";
 import labelButtonClasses from "../labelButtons/index.module.css";
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack, SxProps, Typography } from "@mui/material";
 import { useAppSelector, useAppDispatch } from "../../customHooks/useRedux";
 import { PanelIdsEnum, LabelTypesEnum } from "../../const";
 import {
@@ -59,12 +59,14 @@ interface SidebarElementProps {
   element: Element;
   updateCounterOnLabeling?: boolean;
   index: number;
+  sx?: SxProps;
 }
 
 export const SidebarElement = ({
   element,
   updateCounterOnLabeling = true,
   index,
+  sx,
 }: SidebarElementProps) => {
   const { id, docId, text, userLabel, modelPrediction, snippet } = element;
 
@@ -146,11 +148,12 @@ export const SidebarElement = ({
         }`}
         sx={{
           padding: "0 !important",
-          mb: 2,
           ml: modelPrediction === LabelTypesEnum.POS ? "17px" : "13px",
-          mr: 0,
+          mr: 1,
+          mb: 2,
           alignSelf: "stretch",
           backgroundColor: "white",
+          ...sx,
         }}
         style={{ cursor: "pointer" }}
         id={elementDOMkey}

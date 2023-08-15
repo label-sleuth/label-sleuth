@@ -35,14 +35,23 @@ interface ContradictingPairProps {
 }
 
 const ContradictingLabelsPanel = () => {
-  const sidebarPanelElementsPerPage = useAppSelector((state) => state.featureFlags.sidebarPanelElementsPerPage);
+  const sidebarPanelElementsPerPage = useAppSelector(
+    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  );
   const { elements, pairs, hitCount } = useAppSelector(
     (state) => state.workspace.panels.panels[PanelIdsEnum.CONTRADICTING_LABELS]
   );
-  const loading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.CONTRADICTING_LABELS]);
+  const loading = useAppSelector(
+    (state) => state.workspace.panels.loading[PanelIdsEnum.CONTRADICTING_LABELS]
+  );
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
 
-  const { currentContentData, currentPage, onPageChange, isPaginationRequired } = usePanelPagination({
+  const {
+    currentContentData,
+    currentPage,
+    onPageChange,
+    isPaginationRequired,
+  } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: PanelIdsEnum.CONTRADICTING_LABELS,
     modelAvailableRequired: false,
@@ -51,21 +60,34 @@ const ContradictingLabelsPanel = () => {
 
   const Separator = () => (
     <Divider variant="middle" flexItem>
-      <Stack direction={"row"} sx={{ mt: "40px", mb: "40px" }}>
-        <div className={classes["dot-separator"]} style={{ marginRight: "6px" }} />
-        <div className={classes["dot-separator"]} style={{ marginRight: "6px" }} />
+      <Stack direction={"row"}>
+        <div
+          className={classes["dot-separator"]}
+          style={{ marginRight: "6px" }}
+        />
+        <div
+          className={classes["dot-separator"]}
+          style={{ marginRight: "6px" }}
+        />
         <div className={classes["dot-separator"]} />
       </Stack>
     </Divider>
   );
 
-  const ContradictingPair = ({ addSeparator, children }: ContradictingPairProps) => {
+  const ContradictingPair = ({
+    addSeparator,
+    children,
+  }: ContradictingPairProps) => {
     const childrenArray = React.Children.toArray(children);
     return (
       <Stack direction={"column"} sx={{ alignItems: "center" }}>
         {childrenArray[0]}
-        <Box sx={{ display: "flex", flexDirection: "row" }}>
-          <img src={contradictive_elem_icon} alt={"contradictive element"} style={{ paddingRight: "5px" }} />
+        <Box sx={{ display: "flex", flexDirection: "row", mt: 1, mb: 1 }}>
+          <img
+            src={contradictive_elem_icon}
+            alt={"contradictive element"}
+            style={{ paddingRight: "5px" }}
+          />
           {"?"}
         </Box>
         {childrenArray[1]}
@@ -83,7 +105,14 @@ const ContradictingLabelsPanel = () => {
               {pair.map((elementId, j) => {
                 if (elements === null) return null;
                 const element = elements[elementId];
-                return <ElementComponent key={2 * i + j} index={2 * i + j} element={element} />;
+                return (
+                  <ElementComponent
+                    key={2 * i + j}
+                    index={2 * i + j}
+                    element={element}
+                    sx={j === 0 ? { mb: 0 } : {}}
+                  />
+                );
               })}
             </ContradictingPair>
           ))}
@@ -100,7 +129,6 @@ const ContradictingLabelsPanel = () => {
         nonEmptyResultsMessage={`Review these ${pairs.length} pairs of examples, which are semantically similar but were labeled by you with contradicting labels`}
         emptyResultsMessage={"No contradicting pairs of examples were found."}
         isPaginationRequired={isPaginationRequired}
-        elementsTopPadding={4}
       >
         <PairList pairs={pairs} />
       </ElementList>

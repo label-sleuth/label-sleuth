@@ -18,20 +18,10 @@
     left: 280px;
     right: 50px;
     bottom: 0;
-    top: 60px;
     overflow: none;
 }
 
-.pagination_margin {
-    bottom: 60px !important;
-}
-
 .doc_header {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 60px;
     border-bottom: solid 1px #d5d5d5;
     display: flex;
     justify-content: space-between;
@@ -40,11 +30,6 @@
 }
 
 .doc_content{
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 80px;
-    bottom: 0;
     overflow-y: scroll;
     padding: 15px 30px;
 }
