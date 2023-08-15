@@ -50,11 +50,9 @@ export const CustomPagination = ({
         position: "absolute",
         bottom: "15px",
         textAlign: "center",
-        left: 0,
-        right: 0,
-        top: "auto",
         display: "flex",
         justifyContent: "center",
+        width: "100%",
         ...sx,
       }}
       count={pageCount}

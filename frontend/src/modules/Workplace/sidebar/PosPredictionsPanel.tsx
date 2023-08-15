@@ -57,7 +57,6 @@ const PosPredictionsPanel = () => {
         nonEmptyResultsMessage={nonEmptyResultsMessage}
         emptyResultsMessage={""}
         isPaginationRequired={isPaginationRequired}
-        elementsTopPadding={2}
       />
       <ArrowsOnlyPagination
         hitCount={hitCount}

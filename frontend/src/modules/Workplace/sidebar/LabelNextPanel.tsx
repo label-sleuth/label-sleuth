@@ -22,15 +22,26 @@ import { CustomPagination } from "../../../components/pagination/CustomPaginatio
 import { Element } from "../../../global";
 
 const LabelNextPanel = () => {
-  const { hitCount } = useAppSelector((state) => state.workspace.panels.panels[PanelIdsEnum.LABEL_NEXT]);
+  const { hitCount } = useAppSelector(
+    (state) => state.workspace.panels.panels[PanelIdsEnum.LABEL_NEXT]
+  );
 
-  const loading = useAppSelector((state) => state.workspace.panels.loading[PanelIdsEnum.LABEL_NEXT]);
+  const loading = useAppSelector(
+    (state) => state.workspace.panels.loading[PanelIdsEnum.LABEL_NEXT]
+  );
 
-  const sidebarPanelElementsPerPage = useAppSelector((state) => state.featureFlags.sidebarPanelElementsPerPage);
+  const sidebarPanelElementsPerPage = useAppSelector(
+    (state) => state.featureFlags.sidebarPanelElementsPerPage
+  );
 
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
 
-  const { currentContentData, currentPage, onPageChange, isPaginationRequired } = usePanelPagination({
+  const {
+    currentContentData,
+    currentPage,
+    onPageChange,
+    isPaginationRequired,
+  } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
     panelId: PanelIdsEnum.LABEL_NEXT,
     modelAvailableRequired: true,
@@ -48,7 +59,6 @@ const LabelNextPanel = () => {
         nonEmptyResultsMessage={"Labeling these elements next will be most effective at improving the model. The suggested elements do not reflect the model performance. To evaluate the model go to the evaluation panel."}
         emptyResultsMessage={""}
         isPaginationRequired={isPaginationRequired}
-        elementsTopPadding={3}
       />
       <CustomPagination
         hitCount={hitCount}

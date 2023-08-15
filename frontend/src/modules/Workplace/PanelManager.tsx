@@ -16,7 +16,11 @@
 import { useRef } from "react";
 import { Box } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
-import { RIGHT_DRAWER_INITIAL_WIDTH, ACTIONS_DRAWER_WIDTH, PanelIdsEnum } from "../../const";
+import {
+  RIGHT_DRAWER_INITIAL_WIDTH,
+  ACTIONS_DRAWER_WIDTH,
+  PanelIdsEnum,
+} from "../../const";
 import MainPanel from "./main/MainPanel";
 import { useAppSelector } from "../../customHooks/useRedux";
 import AllPositiveLabelsPanel from "./sidebar/AllPositiveLabelsPanel";
@@ -64,8 +68,15 @@ interface PanelManagerProps {
 /**
  * Manages the panels, that is, the sidebar panels and the main panels.
  */
-export const PanelManager = ({rightDrawerWidth, setRightDrawerWidth, rightPanelOpen, setRightPanelOpen}: PanelManagerProps) => {
-  const activePanelId = useAppSelector((state) => state.workspace.panels.activePanelId);
+export const PanelManager = ({
+  rightDrawerWidth,
+  setRightDrawerWidth,
+  rightPanelOpen,
+  setRightPanelOpen,
+}: PanelManagerProps) => {
+  const activePanelId = useAppSelector(
+    (state) => state.workspace.panels.activePanelId
+  );
 
   const textInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -85,7 +96,12 @@ export const PanelManager = ({rightDrawerWidth, setRightDrawerWidth, rightPanelO
   return (
     <Box>
       <MainPanel rightDrawerWidth={rightDrawerWidth} open={rightPanelOpen} />
-      {rightPanelOpen && <ResizableDiv onMouseDown={handleMouseDown} rightDrawerWidth={rightDrawerWidth} />}
+      {rightPanelOpen && (
+        <ResizableDiv
+          onMouseDown={handleMouseDown}
+          rightDrawerWidth={rightDrawerWidth}
+        />
+      )}
       <Drawer
         sx={{
           width: RIGHT_DRAWER_INITIAL_WIDTH,
@@ -96,18 +112,31 @@ export const PanelManager = ({rightDrawerWidth, setRightDrawerWidth, rightPanelO
           },
         }}
         PaperProps={{
-          sx: { backgroundColor: "#f8f9fa !important", right: ACTIONS_DRAWER_WIDTH },
+          sx: {
+            backgroundColor: "#f8f9fa !important",
+            right: ACTIONS_DRAWER_WIDTH,
+          },
         }}
         variant="persistent"
         anchor="right"
         open={rightPanelOpen}
       >
-        {activePanelId === PanelIdsEnum.SEARCH && <SearchPanel clearSearchInput={clearSearchInput} ref={textInputRef} />}
+        {activePanelId === PanelIdsEnum.SEARCH && (
+          <SearchPanel clearSearchInput={clearSearchInput} ref={textInputRef} />
+        )}
         {activePanelId === PanelIdsEnum.LABEL_NEXT && <LabelNextPanel />}
-        {activePanelId === PanelIdsEnum.POSITIVE_PREDICTIONS && <PosPredictionsPanel />}
-        {activePanelId === PanelIdsEnum.POSITIVE_LABELS && <AllPositiveLabelsPanel />}
-        {activePanelId === PanelIdsEnum.SUSPICIOUS_LABELS && <SuspiciousLabelsPanel />}
-        {activePanelId === PanelIdsEnum.CONTRADICTING_LABELS && <ContradictingLabelsPanel />}
+        {activePanelId === PanelIdsEnum.POSITIVE_PREDICTIONS && (
+          <PosPredictionsPanel />
+        )}
+        {activePanelId === PanelIdsEnum.POSITIVE_LABELS && (
+          <AllPositiveLabelsPanel />
+        )}
+        {activePanelId === PanelIdsEnum.SUSPICIOUS_LABELS && (
+          <SuspiciousLabelsPanel />
+        )}
+        {activePanelId === PanelIdsEnum.CONTRADICTING_LABELS && (
+          <ContradictingLabelsPanel />
+        )}
         {activePanelId === PanelIdsEnum.EVALUATION && <EvaluationPanel />}
       </Drawer>
     </Box>
