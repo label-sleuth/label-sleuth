@@ -45,7 +45,6 @@ const AllPositiveLabelsPanel = () => {
         nonEmptyResultsMessage={"These are all the examples labeled by you as positive."}
         emptyResultsMessage={"You didn't label any elements as positive so far."}
         isPaginationRequired={isPaginationRequired}
-        elementsTopPadding={0}
       />
       <CustomPagination
         hitCount={hitCount}

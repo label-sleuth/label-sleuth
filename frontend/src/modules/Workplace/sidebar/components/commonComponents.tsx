@@ -14,7 +14,7 @@
 */
 
 import Box from "@mui/material/Box";
-import { Typography, CircularProgress } from "@mui/material";
+import { Typography, CircularProgress, Stack } from "@mui/material";
 import classes from "../index.module.css";
 import { SidebarElement } from "../../../../components/element/SidebarElement";
 import { styled } from "@mui/system";
@@ -85,11 +85,13 @@ export const ElementList = ({
   elementsTopPadding = 0,
 }: ElementListProps) => {
   return (
-    <Box
+    <Stack
       sx={{
         display: "flex",
-        justifyContent: "center",
+        justifyContent: "flex-start",
+        direction: "column",
         mt: 1,
+        height: isPaginationRequired ? "88vh" : "90.5vh",
       }}
     >
       {elements === null ? (
@@ -101,7 +103,7 @@ export const ElementList = ({
       )}
       <Box
         className={`${classes["element-list"]} ${isPaginationRequired ? classes.pagination_margin : ""}`}
-        sx={elementsTopPadding ? { mt: elementsTopPadding } : {}}
+        sx={elementsTopPadding ? { mt: elementsTopPadding } : {mt: 2}}
       >
         {loading ? (
           <Loading />
@@ -111,6 +113,6 @@ export const ElementList = ({
           elements.map((element, i) => <SidebarElement element={element} key={element.id} index={i} />)
         ) : null}
       </Box>
-    </Box>
+    </Stack>
   );
 };
