@@ -147,9 +147,15 @@ class OrchestratorStateApi:
                 raise Exception(
                     f"Failed to get all category ids in workspace {workspace_id}") from e
 
-    def get_all_categories(self, workspace_id) -> Mapping[int, Category]:
-        return {category_id: category for category_id, category in
-                self.get_workspace(workspace_id).categories.items() if category is not None}
+    def get_all_categories(self, workspace_id) -> Mapping[int, Union[Category, MulticlassCategory]]:
+        workspace = self.get_workspace(workspace_id)
+        if type(workspace) == Workspace:
+            return {category_id: category for category_id, category in
+                    workspace.categories.items() if category is not None}
+        elif type(workspace) == MulticlassWorkspace:
+            return workspace.categories
+        else:
+            raise Exception (f"workspace id '{workspace_id}' type ({type(workspace)}) is not supported")
 
     def workspace_exists(self, workspace_id: str) -> bool:
         with self.workspaces_lock[workspace_id]:
@@ -257,7 +263,13 @@ class OrchestratorStateApi:
     def set_label_change_count_since_last_train(self, workspace_id: str, category_id: int, number_of_changes: int):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            workspace.categories[category_id].label_change_count_since_last_train = number_of_changes
+            if type(workspace) == Workspace:
+                workspace.categories[category_id].label_change_count_since_last_train = number_of_changes
+            elif type(workspace) == MulticlassWorkspace:
+                workspace.label_change_count_since_last_train = number_of_changes
+            else:
+                raise Exception(f"workspace id '{workspace_id}' type ({type(workspace)}) is not supported")
+
             self._save_workspace(workspace)
 
     def increase_label_change_count_since_last_train(self, workspace_id: str, category_id: Union[int, None],

@@ -251,6 +251,14 @@ class TestOrchestratorAPI(unittest.TestCase):
         progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
         self.assertEqual(progress['all'], 100)
 
+
+        train_set_selector = \
+            self.orchestrator_api.training_set_selection_factory.get_training_set_selector(
+                self.orchestrator_api.config.training_set_selection_strategy).__class__
+        with patch.object(train_set_selector, 'get_train_set'):
+            self.orchestrator_api.train_if_recommended(workspace_id, None)
+        mock_run_iteration.assert_called()
+
     @patch.object(OrchestratorStateApi, 'get_label_change_count_since_last_train')
     @patch.object(FileBasedDataAccess, 'get_label_counts')
     def test_get_progress_multiclass(self, mock_get_label_counts, mock_get_label_change_count):

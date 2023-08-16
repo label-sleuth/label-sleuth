@@ -47,7 +47,7 @@ from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
-    ModelInfo, OrchestratorStateApi
+    ModelInfo, OrchestratorStateApi, MulticlassCategory
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 
@@ -202,8 +202,11 @@ class OrchestratorApi:
         self._delete_category_models(workspace_id, category_id)
         self.orchestrator_state.delete_category_from_workspace(workspace_id, category_id)
 
-    def get_all_categories(self, workspace_id: str) -> Mapping[int, Category]:
+    def get_all_categories(self, workspace_id: str) -> Mapping[int, Union[Category, MulticlassCategory]]:
         return self.orchestrator_state.get_all_categories(workspace_id)
+
+    def get_all_category_ids(self, workspace_id):
+        return self.orchestrator_state.get_all_category_ids(workspace_id)
 
     # Data access methods
 
@@ -734,18 +737,22 @@ class OrchestratorApi:
         else:
             iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_id).copy()
 
-            try:
-                iterations_without_errors = [iteration for iteration in iterations
-                                             if iteration.status not in  [IterationStatus.ERROR,
-                                                                          IterationStatus.INSUFFICIENT_TRAIN_DATA]]
+        try:
+            iterations_without_errors = [iteration for iteration in iterations
+                                         if iteration.status not in  [IterationStatus.ERROR,
+                                                                      IterationStatus.INSUFFICIENT_TRAIN_DATA]]
 
-                changes_since_last_model = \
-                    self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id)
+            changes_since_last_model = \
+                self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id)
 
-                label_counts = self.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                     category_id=category_id, remove_duplicates=True,
-                                                     counts_for_training=True)
+            label_counts = self.get_label_counts(workspace_id=workspace_id, dataset_name=dataset_name,
+                                                 category_id=category_id, remove_duplicates=True,
+                                                 counts_for_training=True)
 
+            category_ids = self.get_all_category_ids(workspace_id)
+
+
+            if category_id is not None:
                 to_log_message = (f"workspace '{workspace_id}' category id '{category_id}', " +
                         f"{label_counts[LABEL_POSITIVE] if LABEL_POSITIVE in label_counts else 0} positive elements " +
                         f"(threshold >= {self.config.first_model_positive_threshold}), " +
@@ -753,49 +760,63 @@ class OrchestratorApi:
                         (f"(threshold >= {self.config.first_model_negative_threshold})" if self.config.first_model_negative_threshold > 0 else "") +
                         f", {changes_since_last_model} elements changed since last model " +
                         f"(threshold >= {self.config.changed_element_threshold}). ")
+            else: # multiclass
+                to_log_message = (f"workspace '{workspace_id}' (multiclass) " +
+                                  f"label counts {label_counts}. min change threshold is {self.config.multiclass_changed_element_threshold}"
+                                  f"number of changes {changes_since_last_model}. min examples per class threshold is {self.config.multiclass_per_class_threshold}"
+                                  f"number of classes {len(category_ids)}.")
 
-                if force or (LABEL_POSITIVE in label_counts and
-                             label_counts[LABEL_POSITIVE] >= self.config.first_model_positive_threshold and
-                             (self.config.first_model_negative_threshold == 0 or
-                             (LABEL_NEGATIVE in label_counts and
-                             label_counts[LABEL_NEGATIVE] >= self.config.first_model_negative_threshold)) and
-                             changes_since_last_model >= self.config.changed_element_threshold):
-                    if len(iterations_without_errors) > 0 and iterations_without_errors[-1].status != IterationStatus.READY:
-                        logging.info(f"workspace '{workspace_id}' category id '{category_id}' new elements criterion was "
-                                     f"met but previous AL not yet ready, not initiating a new training")
-                        return None
-                    self.orchestrator_state.set_label_change_count_since_last_train(workspace_id, category_id, 0)
+            if force or (category_id is not None and self._should_train_multilabel_condition(changes_since_last_model, label_counts))\
+                    or (category_id is None and self._should_train_multiclass_condition(changes_since_last_model, label_counts, len(category_ids))):
+                if len(iterations_without_errors) > 0 and iterations_without_errors[-1].status != IterationStatus.READY:
+                    logging.info(f"workspace '{workspace_id}' category id '{category_id}' new elements criterion was "
+                                 f"met but previous AL not yet ready, not initiating a new training")
+                    return None
+                self.orchestrator_state.set_label_change_count_since_last_train(workspace_id, category_id, 0)
 
-                    to_log_message += "Training a new model"
+                to_log_message += "Training a new model"
 
-                    iteration_num = len(iterations_without_errors)
-                    model_type = self.config.model_policy.get_model_type(iteration_num)
-                    self.run_iteration(workspace_id=workspace_id, dataset_name=dataset_name, category_id=category_id,
-                                       model_type=model_type)
-                else:
-                    to_log_message += "Not training a new model"
+                iteration_num = len(iterations_without_errors)
+                model_type = self.config.model_policy.get_model_type(iteration_num)
+                self.run_iteration(workspace_id=workspace_id, dataset_name=dataset_name, category_id=category_id,
+                                   model_type=model_type)
+            else:
+                to_log_message += "Not training a new model"
 
-                logging.info(to_log_message)
-            except Exception:
-                logging.exception(f"train_if_recommended failed for workspace '{workspace_id}' category id {category_id}. "
-                                  f"trying to set the iteration to error status")
-                iterations_latest = self.orchestrator_state.get_all_iterations(workspace_id, category_id)
-                if len(iterations) != len(iterations_latest):
-                    # iteration was already created, set the status to error
-                    iteration_index = len(iterations_latest) - 1
-                    self.orchestrator_state.update_iteration_status(workspace_id, category_id, iteration_index,
-                                                                    IterationStatus.ERROR)
-                    self.orchestrator_state.update_model_status(workspace_id=workspace_id, category_id=category_id,
-                                                                iteration_index=iteration_index,
-                                                                new_status=ModelStatus.ERROR)
-                else:
-                    # iteration yet to be created, add and set status to error
-                    iteration_index = len(iterations_latest)
-                    self.orchestrator_state.add_iteration(workspace_id, category_id)
-                    self.orchestrator_state.update_iteration_status(workspace_id, category_id, iteration_index,
-                                                                    IterationStatus.ERROR)
+            logging.info(to_log_message)
+        except Exception:
+            logging.exception(f"train_if_recommended failed for workspace '{workspace_id}' category id {category_id}. "
+                              f"trying to set the iteration to error status")
+            iterations_latest = self.orchestrator_state.get_all_iterations(workspace_id, category_id)
+            if len(iterations) != len(iterations_latest):
+                # iteration was already created, set the status to error
+                iteration_index = len(iterations_latest) - 1
+                self.orchestrator_state.update_iteration_status(workspace_id, category_id, iteration_index,
+                                                                IterationStatus.ERROR)
+                self.orchestrator_state.update_model_status(workspace_id=workspace_id, category_id=category_id,
+                                                            iteration_index=iteration_index,
+                                                            new_status=ModelStatus.ERROR)
+            else:
+                # iteration yet to be created, add and set status to error
+                iteration_index = len(iterations_latest)
+                self.orchestrator_state.add_iteration(workspace_id, category_id)
+                self.orchestrator_state.update_iteration_status(workspace_id, category_id, iteration_index,
+                                                                IterationStatus.ERROR)
 
-                logging.exception(f"train_if_recommended failed in iteration {iteration_index}. Model will not be trained")
+            logging.exception(f"train_if_recommended failed in iteration {iteration_index}. Model will not be trained")
+
+    def _should_train_multilabel_condition(self, changes_since_last_model, label_counts):
+        return (LABEL_POSITIVE in label_counts and
+                label_counts[LABEL_POSITIVE] >= self.config.first_model_positive_threshold and
+                (self.config.first_model_negative_threshold == 0 or
+                 (LABEL_NEGATIVE in label_counts and
+                  label_counts[LABEL_NEGATIVE] >= self.config.first_model_negative_threshold)) and
+                changes_since_last_model >= self.config.changed_element_threshold)
+
+    def _should_train_multiclass_condition(self, changes_since_last_model, label_counts, num_classes):
+        return (self.config.first_model_positive_threshold == 0 and changes_since_last_model >= self.config.multiclass_changed_element_threshold) or \
+                (len(label_counts) == num_classes and all(count >= self.config.multiclass_per_class_threshold for count in label_counts.values()) and
+                changes_since_last_model >= self.config.multiclass_changed_element_threshold)
 
     def infer(self, workspace_id: str, category_id: int, elements_to_infer: Sequence[TextElement],
               iteration_index: int = None, use_cache: bool = True) -> Sequence[Prediction]:
