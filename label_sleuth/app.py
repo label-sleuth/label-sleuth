@@ -915,7 +915,6 @@ Models and Iterations
 
 @main_blueprint.route("/workspace/<workspace_id>/status", methods=['GET'])
 @login_if_required
-@validate_category_id
 @validate_workspace_id
 def get_labelling_status(workspace_id):
     """
