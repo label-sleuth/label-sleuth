@@ -56,7 +56,8 @@ def build_text_elements_from_dataframe_and_labels(df, labels_dict, is_multiclass
             return [LabeledTextElement(**d, category_to_label=labels_dict.get(d['uri'], {}).copy())
                              for d in element_dicts]
         else:
-            return [MulticlassLabeledTextElement(**d, label=labels_dict.get(d['uri'], None).copy())
+            # labels_dict.get can be None and None has no copy() method
+            return [MulticlassLabeledTextElement(**d, label=labels_dict.get(d['uri']).copy() if labels_dict.get(d['uri'], None) is not None else None)
                              for d in element_dicts]
 
 

@@ -577,3 +577,25 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
         self.assertEqual({'0': 1, '1': 1, '2': 1},
                          res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
+        
+        res = self.client.get(f"/workspace/{workspace_name}/query?qry_string=second%20text",
+                              headers=HEADERS)
+        self.assertEqual(
+            {
+                "elements": [
+                    {
+                        "begin": 47,
+                        "docid": "multiclass_dataset-document1",
+                        "end": 94,
+                        "id": "multiclass_dataset-document1-1",
+                        "model_predictions": {},
+                        "text": "this is the second text element of document one",
+                        "user_labels": {}
+                    }
+            ],
+                "hit_count": 1,
+                "hit_count_unique": 1
+            }, 
+            res.get_json(), 
+            msg="The searched text differs from the response"
+        )
