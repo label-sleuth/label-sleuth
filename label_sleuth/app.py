@@ -736,7 +736,7 @@ def set_element_label(workspace_id, element_id):
 
     category_id = int(post_data["category_id"])
     value = post_data["value"]
-    multiclass = post_data.get("multiclass") == "True" or 'true' or True
+    multiclass = post_data.get("multiclass", False)
     iteration = int(post_data.get("iteration", -1))
     source = post_data.get("source", "n/a")
     update_counter = post_data.get('update_counter', True)

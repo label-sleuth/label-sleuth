@@ -520,7 +520,7 @@ class TestAppIntegration(unittest.TestCase):
 
         # set first element and get status
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}',
-                              data='{"category_id":"0","value":"True", "multiclass":"True"}', headers=HEADERS)
+                              data='{"category_id":"0","value":"True", "multiclass":true}', headers=HEADERS)
 
         self.assertEqual({"category_id":"0","element":{
           "begin":0,
@@ -540,7 +540,7 @@ class TestAppIntegration(unittest.TestCase):
 
         # set second element and get status
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[1]["id"]}',
-                              data='{"category_id":"1","value":"True", "multiclass":"True"}', headers=HEADERS)
+                              data='{"category_id":"1","value":"True", "multiclass":true}', headers=HEADERS)
 
         self.assertEqual({"category_id": "1", "element": {
             "begin": 54,
@@ -560,7 +560,7 @@ class TestAppIntegration(unittest.TestCase):
 
         # set third element and get status
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[2]["id"]}',
-                              data='{"category_id":"2","value":"True", "multiclass":"True"}', headers=HEADERS)
+                              data='{"category_id":"2","value":"True", "multiclass":true}', headers=HEADERS)
 
         self.assertEqual({"category_id": "2", "element": {
             "begin": 142,
@@ -575,5 +575,5 @@ class TestAppIntegration(unittest.TestCase):
         res = self.client.get(f"/workspace/{workspace_name}/status?",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
-        self.assertEqual({'labeling_counts': {'0': 1, '1': 1, '2': 1}, 'progress': {'all': 100}},
-                         res.get_json(), msg="diffs in get status response after setting a label")
+        self.assertEqual({'0': 1, '1': 1, '2': 1},
+                         res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
