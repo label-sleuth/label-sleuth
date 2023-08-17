@@ -1,4 +1,5 @@
 from label_sleuth.data_access.core.data_structs import LabelType
+from label_sleuth.training_set_selector.multiclass_train_set_selectors import TrainSetSelectorMulticlassAllLabeled
 from label_sleuth.training_set_selector.train_set_selectors import TrainSetSelectorAllLabeled, \
     TrainSetSelectorEnforcePositiveNegativeRatio, TrainSetSelectorAllLabeledNoVerification
 
@@ -59,3 +60,4 @@ class TrainSetSelectorsCatalog:
     ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_EQUAL_RATIO = TrainSetSelectorEqualRatioIncludeWeak
     ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO = TrainSetSelectorX2NegativeRatioIncludeWeak
     ALL_LABELED_INCLUDE_WEAK_PLUS_UNLABELED_AS_NEGATIVE_X10_RATIO = TrainSetSelectorX10NegativeRatioIncludeWeak
+    ALL_LABELED_MULTICLASS = TrainSetSelectorMulticlassAllLabeled

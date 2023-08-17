@@ -21,7 +21,7 @@ from collections import Counter
 from typing import Sequence, List
 
 from label_sleuth.data_access.core.data_structs import Label, LabelType, TextElement, BINARY_LABELS, LABEL_POSITIVE, \
-    LABEL_NEGATIVE
+    LABEL_NEGATIVE, LabeledTextElement
 from label_sleuth.training_set_selector.train_set_selector_api import TrainSetSelectorAPI
 
 
@@ -37,7 +37,7 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
         self.should_verify_all_labels_in_train = should_verify_all_labels_in_train
 
     def get_train_set(self, workspace_id, train_dataset_name, category_id,
-                      category_name: str, category_description: str) -> Sequence[TextElement]:
+                      category_name: str, category_description: str) -> Sequence[LabeledTextElement]:
         train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_id,
                                                                         remove_duplicates=True)
         if self.should_verify_all_labels_in_train:

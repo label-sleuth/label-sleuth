@@ -15,12 +15,12 @@
 
 import abc
 
-from typing import Sequence, Type
+from typing import Sequence, Type, Union
 
 import numpy as np
 
 from label_sleuth.data_access.core.data_structs import TextElement
-from label_sleuth.models.core.prediction import Prediction
+from label_sleuth.models.core.prediction import Prediction, MulticlassPrediction
 
 
 class ActiveLearner:
@@ -29,7 +29,7 @@ class ActiveLearner:
     """
     def get_recommended_items_for_labeling(self, workspace_id: str, dataset_name: str, category_id: int,
                                            candidate_text_elements: Sequence[TextElement],
-                                           candidate_text_element_predictions: Sequence[Prediction],
+                                           candidate_text_element_predictions: Union[Sequence[Prediction], Sequence[MulticlassPrediction]],
                                            sample_size: int = 1) -> Sequence[TextElement]:
         """
         Returns a batch of *sample_size* elements suggested by the active learning module,

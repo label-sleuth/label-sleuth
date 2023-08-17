@@ -248,8 +248,11 @@ class OrchestratorStateApi:
                                         recommended_items: Sequence[str]):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            workspace.categories[category_id].iterations[iteration_index].active_learning_recommendations \
-                = recommended_items
+            if category_id is not None:
+                workspace.categories[category_id].iterations[iteration_index].active_learning_recommendations \
+                    = recommended_items
+            else:
+                workspace.iterations[iteration_index].active_learning_recommendations = recommended_items
             self._save_workspace(workspace)
 
     def get_label_change_count_since_last_train(self, workspace_id: str, category_id: Union[int, None]) -> int:
@@ -308,20 +311,30 @@ class OrchestratorStateApi:
 
     # Iteration-related methods
 
-    def add_iteration(self, workspace_id: str, category_id: int):
+    def add_iteration(self, workspace_id: str, category_id: Union[int, None]):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
             iteration = Iteration(status=IterationStatus.PREPARING_DATA)
-            workspace.categories[category_id].iterations.append(iteration)
+            if category_id is None:
+                workspace.iterations.append(iteration)
+            else:
+                workspace.categories[category_id].iterations.append(iteration)
             self._save_workspace(workspace)
 
     def add_model(self, workspace_id: str, category_id: int, iteration_index: int, model_info: ModelInfo):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            if workspace.categories[category_id].iterations[iteration_index].model is not None:
-                raise Exception(f"Workspace '{workspace_id}' category '{category_id}' iteration {iteration_index} "
-                                f"already has a model, cannot add a model")
-            workspace.categories[category_id].iterations[iteration_index].model = model_info
+            if category_id is not None:
+                if workspace.categories[category_id].iterations[iteration_index].model is not None:
+                    raise Exception(f"Workspace '{workspace_id}' category '{category_id}' iteration {iteration_index} "
+                                    f"already has a model, cannot add a model")
+                workspace.categories[category_id].iterations[iteration_index].model = model_info
+            else:
+
+                if workspace.iterations[iteration_index].model is not None:
+                    raise Exception(f"Workspace '{workspace_id}' (multiclass) iteration {iteration_index} "
+                                    f"already has a model, cannot add a model")
+                workspace.iterations[iteration_index].model = model_info
             self._save_workspace(workspace)
 
     def get_iteration_status(self, workspace_id: str, category_id: int, iteration_index: int) -> IterationStatus:
@@ -329,11 +342,14 @@ class OrchestratorStateApi:
             workspace = self._load_workspace(workspace_id)
             return workspace.categories[category_id].iterations[iteration_index].status
 
-    def update_iteration_status(self, workspace_id: str, category_id: int, iteration_index: int,
+    def update_iteration_status(self, workspace_id: str, category_id: Union[int, None], iteration_index: int,
                                 new_status: IterationStatus):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            workspace.categories[category_id].iterations[iteration_index].status = new_status
+            if category_id is not None:
+                workspace.categories[category_id].iterations[iteration_index].status = new_status
+            else:
+                workspace.iterations[iteration_index].status = new_status
             self._save_workspace(workspace)
 
     def get_all_iterations(self, workspace_id, category_id: Union[int, None]) -> List[Iteration]:
@@ -370,14 +386,21 @@ class OrchestratorStateApi:
     def add_iteration_statistics(self, workspace_id, category_id: int, iteration_index: int, statistics_dict: dict):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            iteration = workspace.categories[category_id].iterations[iteration_index]
+            if category_id is not None:
+                iteration = workspace.categories[category_id].iterations[iteration_index]
+            else:
+                iteration = workspace.iterations[iteration_index]
+
             iteration.iteration_statistics.update(statistics_dict)
             self._save_workspace(workspace)
 
     def update_model_status(self, workspace_id: str, category_id: int, iteration_index: int, new_status: ModelStatus):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            iterations = workspace.categories[category_id].iterations
+            if category_id is not None:
+                iterations = workspace.categories[category_id].iterations
+            else:
+                iterations = workspace.iterations
             assert len(iterations) > iteration_index,\
                 f"Iteration '{iteration_index}' doesn't exist in workspace '{workspace_id}'"
             iterations[iteration_index].model.model_status = new_status

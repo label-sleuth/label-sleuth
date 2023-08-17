@@ -11,3 +11,4 @@ class ActiveLearningPolicies:
     STATIC_RETROSPECTIVE = StaticActiveLearningPolicy(ActiveLearningCatalog.RETROSPECTIVE)
     STATIC_HARD_MINING = StaticActiveLearningPolicy(ActiveLearningCatalog.HARD_MINING)
     STATIC_RANDOM = StaticActiveLearningPolicy(ActiveLearningCatalog.RANDOM)
+    STATIC_MULTICLASS_ENTROPY = StaticActiveLearningPolicy(ActiveLearningCatalog.MULTICLASS_ENTROPY)

@@ -40,13 +40,17 @@ class Configuration:
     multiclass_per_class_threshold: int
     multiclass_changed_element_threshold: int
     model_policy: ModelPolicy
+    multiclass_model_policy: ModelPolicy
     training_set_selection_strategy: Type[TrainSetSelectorAPI]
+    multiclass_training_set_selection_strategy: Type[TrainSetSelectorAPI]
     precision_evaluation_size: int
     apply_labels_to_duplicate_texts: bool
     language: Language
     login_required: bool
     active_learning_strategy: ActiveLearningStrategy = None
+    multiclass_active_learning_strategy: ActiveLearningStrategy = None
     active_learning_policy: ActiveLearningPolicy = None
+    multiclass_active_learning_policy = ActiveLearningPolicy = None
     max_document_name_length: int = 60
     main_panel_elements_per_page: int = 500
     sidebar_panel_elements_per_page: int = 50

@@ -617,7 +617,11 @@ class FileBasedDataAccess(DataAccessApi):
             labels_dict = self._get_labels(workspace_id, dataset_name)
         else:
             labels_dict = {}
-        labels_series = corpus_df['uri'].apply(lambda u: labels_dict[u] if u in labels_dict else {})
+        if self.is_multiclass(workspace_id):
+            labels_series = corpus_df['uri'].apply(lambda u: labels_dict[u] if u in labels_dict else None)
+        else:
+            labels_series = corpus_df['uri'].apply(lambda u: labels_dict[u] if u in labels_dict else {})
+
         corpus_df = filter_func(corpus_df, labels_series)
 
         results_dict = {'hit_count': len(corpus_df)}
@@ -652,11 +656,9 @@ class FileBasedDataAccess(DataAccessApi):
         with open(file_path, 'w') as f:
             f.write(labels_in_memory_encoded)
 
-
     def is_multiclass(self, workspace_id):
         return os.path.isfile(os.path.join(self._get_workspace_labels_dir(workspace_id),
                                        WorkspaceType.Multiclass.name))
-
 
     @staticmethod
     def _add_text_unique_ids(df):

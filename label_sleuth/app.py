@@ -950,7 +950,6 @@ def get_labelling_status(workspace_id):
 
 @main_blueprint.route("/workspace/<workspace_id>/iterations", methods=['GET'])
 @login_if_required
-@validate_category_id
 @validate_workspace_id
 @cross_origin()
 def get_all_iterations_for_category(workspace_id):
@@ -958,10 +957,12 @@ def get_all_iterations_for_category(workspace_id):
     Return information about all the Iteration flows for this category and their current status.
 
     :param workspace_id:
-    :request_arg category_id:
+    :request_arg category_id: for multi label workspace only
     :return: array of all iterations sorted from oldest to newest
     """
-    category_id = int(request.args['category_id'])
+    category_id = request.args.get('category_id', None)
+    if category_id is not None:
+        category_id = int(category_id)
     iterations = curr_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id)
     res = {'iterations': extract_iteration_information_list(iterations)}
     return jsonify(res)
@@ -969,7 +970,6 @@ def get_all_iterations_for_category(workspace_id):
 
 @main_blueprint.route("/workspace/<workspace_id>/active_learning", methods=['GET'])
 @login_if_required
-@validate_category_id
 @validate_workspace_id
 def get_elements_to_label(workspace_id):
     """

@@ -338,6 +338,12 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
+    def is_multiclass(self, workspace_id):
+        """
+        return whether a workspace is multiclass or not
+        """
+
+    @abc.abstractmethod
     def initialize_user_labels(self, workspace_id:str, dataset_name:str, workspace_type:WorkspaceType):
         """
         Save user labels object when creating a workspace

@@ -445,7 +445,7 @@ class TestAppIntegration(unittest.TestCase):
         while waiting_count < MAX_WAITING_FOR_TRAINING:
             # since get_status is asynchronously starting a new training, we need to wait until it added to the
             # iterations list and finishes successfully
-            res = self.client.get(f"/workspace/{workspace_name}/iterations?category_id={category_id}",
+            res = self.client.get(f"/workspace/{workspace_name}/iterations?{'category_id='+str(category_id) if category_id is not None else ''}",
                                   headers=HEADERS)
             response = res.get_json()
 
@@ -599,3 +599,30 @@ class TestAppIntegration(unittest.TestCase):
             res.get_json(), 
             msg="The searched text differs from the response"
         )
+
+        res = self.wait_for_new_iteration(None, res, workspace_name, 1)
+
+        self.assertEqual(200, res.status_code, msg="Failed to get iterations list")
+        self.assertEqual(1, len(res.get_json()["iterations"]), msg="first model was not added to the models list")
+
+        # get active learning recommendations
+        # res = self.client.get(f"/workspace/{workspace_name}/active_learning?",
+        #                       headers=HEADERS)
+        # self.assertEqual(200, res.status_code, msg="Failed to get active learning recommendations")
+        # active_learning_response = res.get_json()
+        # self.assertEqual({'elements': [
+        #     {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94, 'id': 'my_test_dataset-document1-1',
+        #      'model_predictions': {str(category_id): 'true'}, 'text': 'this is the second text element of document one',
+        #      'user_labels': {}},
+        #     {
+        #         "begin": 196, "docid": "my_test_dataset-document3", "end": 317, "id": "my_test_dataset-document3-3",
+        #         "model_predictions": {"0": "true"}, "snippet": text_with_parenthesis_snippet,
+        #         "text": text_with_parenthesis,
+        #         "user_labels": {}},
+        #     {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0',
+        #      'model_predictions': {str(category_id): 'true'}, 'text': 'this is the only text element in document two',
+        #      'user_labels': {}},
+        #     {'begin': 0, 'docid': 'my_test_dataset-document1', 'end': 46, 'id': 'my_test_dataset-document1-0',
+        #      'model_predictions': {str(category_id): 'true'}, 'text': 'this is the first text element of document one',
+        #      'user_labels': {}}], 'hit_count': 4},
+        #     active_learning_response)

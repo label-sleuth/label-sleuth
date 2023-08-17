@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
+import dataclasses
 import re
 from typing import Set, Union
 
@@ -56,12 +56,11 @@ def build_text_elements_from_dataframe_and_labels(df, labels_dict, is_multiclass
             return [LabeledTextElement(**d, category_to_label=labels_dict.get(d['uri'], {}).copy())
                              for d in element_dicts]
         else:
-            # labels_dict.get can be None and None has no copy() method
-            return [MulticlassLabeledTextElement(**d, label=labels_dict.get(d['uri']).copy() if labels_dict.get(d['uri'], None) is not None else None)
+            return [MulticlassLabeledTextElement(**d, label=dataclasses.replace(labels_dict.get(d['uri'])) if d['uri'] in labels_dict else None)
                              for d in element_dicts]
 
 
-def filter_by_labeled_status(df: pd.DataFrame, labels_series: pd.Series, category_id: int,
+def filter_by_labeled_status(df: pd.DataFrame, labels_series: pd.Series, category_id: Union[int, None],
                              labeled_status: LabeledStatus, label_types: Set[LabelType] = None):
     """
     :param df:
@@ -78,9 +77,15 @@ def filter_by_labeled_status(df: pd.DataFrame, labels_series: pd.Series, categor
         raise Exception(f"label_types must be provided when filtering labeled elements")
 
     if labeled_status == LabeledStatus.UNLABELED:
-        return df[labels_series.apply(lambda x: category_id not in x)]
+        if category_id is None:
+            return df[labels_series.apply(lambda x: x is None)]
+        else:
+            return df[labels_series.apply(lambda x: category_id not in x)]
     elif labeled_status == LabeledStatus.LABELED:
-        return df[labels_series.apply(lambda x: category_id in x and x[category_id].label_type in label_types)]
+        if category_id is None:
+            return df[labels_series.apply(lambda x:x is not None and x.label_type in label_types)]
+        else:
+            return df[labels_series.apply(lambda x: category_id in x and x[category_id].label_type in label_types)]
 
     return df
 

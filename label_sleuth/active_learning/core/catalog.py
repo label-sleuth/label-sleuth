@@ -16,6 +16,7 @@
 from label_sleuth.active_learning.core.active_learning_api import ActiveLearningStrategy
 from label_sleuth.active_learning.strategies.combined_hm_retro import CombinedHMRetro
 from label_sleuth.active_learning.strategies.hard_example_mining import HardMiningLearner
+from label_sleuth.active_learning.strategies.multiclass_strategies import EntropyMulticlassLearner
 from label_sleuth.active_learning.strategies.random_sampling import RandomSampling
 from label_sleuth.active_learning.strategies.retrospective import RetrospectiveLearner
 
@@ -25,3 +26,4 @@ class ActiveLearningCatalog:
     HARD_MINING = ActiveLearningStrategy(HardMiningLearner)
     RETROSPECTIVE = ActiveLearningStrategy(RetrospectiveLearner)
     COMBINED_RETROSPECTIVE_HM = ActiveLearningStrategy(CombinedHMRetro)
+    MULTICLASS_ENTROPY = ActiveLearningStrategy(EntropyMulticlassLearner)

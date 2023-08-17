@@ -15,10 +15,10 @@
 
 from typing import Mapping, Sequence
 
-from label_sleuth.data_access.core.data_structs import TextElement
+from label_sleuth.data_access.core.data_structs import TextElement, LabeledTextElement, MulticlassLabeledTextElement
 
 
-def convert_text_elements_to_train_data(elements: Sequence[TextElement], category_id) -> Sequence[Mapping]:
+def convert_text_elements_to_train_data(elements: Sequence[LabeledTextElement], category_id) -> Sequence[Mapping]:
     """
     Convert a list of text elements to the expected format for training a model.
     :param elements: a list of TextElement objects
@@ -28,6 +28,23 @@ def convert_text_elements_to_train_data(elements: Sequence[TextElement], categor
     """
     labels = [element.category_to_label[category_id].label for element in elements]
     metadata = [element.category_to_label[category_id].metadata for element in elements]
+
+    converted_data = [{"text": element.text, "label": label, **example_metadata}
+                      for element, label, example_metadata in zip(elements, labels, metadata)]
+    return converted_data
+
+
+def convert_text_elements_to_multiclass_train_data(elements: Sequence[MulticlassLabeledTextElement]) -> \
+        Sequence[Mapping]:
+    """
+    Convert a list of text elements to the expected format for training a model.
+    :param elements: a list of TextElement objects
+    :param category_id:
+    :return: a list of dictionaries with at least the "text" and "label" fields, e.g. [{'text': 'text1', 'label': 1,
+    'additional_field': 'value1'}, {'text': 'text2', 'label': 0,  'additional_field': 'value2'}]
+    """
+    labels = [element.label.label for element in elements]
+    metadata = [element.label.metadata for element in elements]
 
     converted_data = [{"text": element.text, "label": label, **example_metadata}
                       for element, label, example_metadata in zip(elements, labels, metadata)]

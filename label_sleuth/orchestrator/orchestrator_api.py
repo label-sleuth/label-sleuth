@@ -48,7 +48,8 @@ from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
     ModelInfo, OrchestratorStateApi, MulticlassCategory
-from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
+from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data, \
+    convert_text_elements_to_multiclass_train_data
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 
 # constants
@@ -475,21 +476,33 @@ class OrchestratorApi:
         :param model_type:
         """
         new_iteration_index = len(self.orchestrator_state.get_all_iterations(workspace_id, category_id))
-        logging.info(f"starting iteration {new_iteration_index} in background for workspace '{workspace_id}' "
-                     f"category id '{category_id}'")
-        category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
         self.orchestrator_state.add_iteration(workspace_id=workspace_id, category_id=category_id)
-        train_set_selector = self.training_set_selection_factory.get_training_set_selector(
-            self.config.training_set_selection_strategy)
+        is_multiclass = self.data_access.is_multiclass(workspace_id)
+
+        if is_multiclass:
+            logging.info(f"starting iteration {new_iteration_index} in background for workspace '{workspace_id}' "
+                         f"(multiclass workspace)")
+            train_set_selector = self.training_set_selection_factory.get_training_set_selector(
+                self.config.multiclass_training_set_selection_strategy)
+            category = None
+        else:
+            logging.info(f"starting iteration {new_iteration_index} in background for workspace '{workspace_id}' "
+                         f"category id '{category_id}'")
+            train_set_selector = self.training_set_selection_factory.get_training_set_selector(
+                self.config.training_set_selection_strategy)
+            category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
+
+
         future = train_set_selector.collect_train_set(workspace_id=workspace_id,
                                                       train_dataset_name=dataset_name,
-                                                      category_id=category_id,
-                                                      category_name=category.name,
-                                                      category_description=category.description)
+                                                      category_id=category_id, #TODO decide if we want to change the API (breaking change) that will enable passing more information
+                                                      category_name=category.name if category is not None else None,
+                                                      category_description=category.description if category is not None else None)
         future.add_done_callback(functools.partial(self._train, workspace_id, category_id, model_type,
                                                    new_iteration_index))
 
     def _train(self, workspace_id, category_id, model_type, iteration_index, future):
+
         try:
             train_data = future.result()
             if train_data is None:
@@ -512,30 +525,52 @@ class OrchestratorApi:
             These label counts reflect the more detailed description of training labels, e.g. how many of the elements
             have weak labels
             """
-            label_names = [element.category_to_label[category_id].get_detailed_label_name()
-                           for element in text_elements]
-
+            if category_id is not None:
+                label_names = [element.category_to_label[category_id].get_detailed_label_name()
+                               for element in text_elements]
+            else:
+                label_names = [element.label.get_detailed_label_name()
+                               for element in text_elements]
             return dict(Counter(label_names))
 
+        is_multiclass = self.data_access.is_multiclass(workspace_id)
+
         train_counts = _get_counts_per_label(train_data, category_id)
-        train_data = convert_text_elements_to_train_data(train_data, category_id)
         train_statistics = {TRAIN_COUNTS_STR_KEY: train_counts}
+
+        if is_multiclass:
+            train_data = convert_text_elements_to_multiclass_train_data(train_data)
+            logging.info(f"workspace '{workspace_id}' (multiclass) training a model."
+                         f"train_statistics: {train_statistics}")
+            model_params = {
+                "category_id_to_info": {
+                    cat_id: {
+                        "category_name": category.name,
+                        "category_description": category.description,
+                    } for cat_id, category in self.orchestrator_state.get_workspace(workspace_id).categories.items()
+                }
+            }
+        else:
+            train_data = convert_text_elements_to_train_data(train_data, category_id)
+            category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
+            logging.info(f"workspace '{workspace_id}' training a model for category id '{category_id}', "
+                         f"train_statistics: {train_statistics}")
+            model_params = {
+                "category_id_to_info": {
+                    category_id: {
+                        "category_name": category.name,
+                        "category_description": category.description,
+                    }
+                }
+            }
+
+
+
 
         self.orchestrator_state.update_iteration_status(workspace_id=workspace_id, category_id=category_id,
                                                         iteration_index=iteration_index,
                                                         new_status=IterationStatus.TRAINING)
         model_api = self.model_factory.get_model_api(model_type)
-        category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
-        logging.info(f"workspace '{workspace_id}' training a model for category id '{category_id}', "
-                     f"train_statistics: {train_statistics}")
-        model_params = {
-            "category_id_to_info": {
-                category_id: {
-                    "category_name": category.name,
-                    "category_description": category.description,
-                }
-            }
-        }
         model_id, future = model_api.train(train_data=train_data, language=self.config.language,
                                            model_params=model_params)
         model_status = model_api.get_model_status(model_id)
@@ -679,10 +714,19 @@ class OrchestratorApi:
         :param iteration_index: iteration to use
         """
 
-        if self.config.active_learning_strategy is not None:
-            active_learning_strategy = self.config.active_learning_strategy
+        if category_id is not None:
+            if self.config.active_learning_strategy is not None:
+                active_learning_strategy = self.config.active_learning_strategy
+            else:
+                active_learning_strategy = self.config.\
+                    active_learning_policy.get_active_learning_strategy(iteration_index)
         else:
-            active_learning_strategy = self.config.active_learning_policy.get_active_learning_strategy(iteration_index)
+            if self.config.multiclass_active_learning_strategy is not None:
+                active_learning_strategy = self.config.multiclass_active_learning_strategy
+            else:
+                active_learning_strategy = self.\
+                    config.multiclass_active_learning_policy.get_active_learning_strategy(iteration_index)
+
 
         active_learner = self.active_learning_factory.get_active_learner(active_learning_strategy)
         logging.info(f"using active learning {active_learner.__class__.__name__}")
@@ -762,8 +806,8 @@ class OrchestratorApi:
                         f"(threshold >= {self.config.changed_element_threshold}). ")
             else: # multiclass
                 to_log_message = (f"workspace '{workspace_id}' (multiclass) " +
-                                  f"label counts {label_counts}. min change threshold is {self.config.multiclass_changed_element_threshold}"
-                                  f"number of changes {changes_since_last_model}. min examples per class threshold is {self.config.multiclass_per_class_threshold}"
+                                  f"label counts {label_counts}. min change threshold is {self.config.multiclass_changed_element_threshold} "
+                                  f"number of changes {changes_since_last_model}. min examples per class threshold is {self.config.multiclass_per_class_threshold} "
                                   f"number of classes {len(category_ids)}.")
 
             if force or (category_id is not None and self._should_train_multilabel_condition(changes_since_last_model, label_counts))\
@@ -777,7 +821,10 @@ class OrchestratorApi:
                 to_log_message += "Training a new model"
 
                 iteration_num = len(iterations_without_errors)
-                model_type = self.config.model_policy.get_model_type(iteration_num)
+                if category_id is not None:
+                    model_type = self.config.model_policy.get_model_type(iteration_num)
+                else:
+                    model_type = self.config.multiclass_model_policy.get_model_type(iteration_num)
                 self.run_iteration(workspace_id=workspace_id, dataset_name=dataset_name, category_id=category_id,
                                    model_type=model_type)
             else:

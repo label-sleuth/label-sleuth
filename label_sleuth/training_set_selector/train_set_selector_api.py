@@ -16,9 +16,10 @@
 import abc
 
 from concurrent.futures import Future
-from typing import Sequence, Set
+from typing import Sequence, Set, Union
 
-from label_sleuth.data_access.core.data_structs import TextElement, LabelType
+from label_sleuth.data_access.core.data_structs import TextElement, LabelType, LabeledTextElement, \
+    MulticlassLabeledTextElement
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 
@@ -31,6 +32,7 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
         self.background_jobs_manager = background_jobs_manager
         self.gpu_support = gpu_support
 
+    # TODO consider a breaking change in the input to better support multiclass
     def collect_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int, category_name: str,
                           category_description: str, done_callback=None) \
             -> Future:
@@ -42,7 +44,8 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int,
-                      category_name: str, category_description: str) -> Sequence[TextElement]:
+                      category_name: str, category_description: str) -> \
+            Sequence[Union[LabeledTextElement, MulticlassLabeledTextElement]]:
         """
         For a given workspace, dataset and category, prepare and return a train set for training the model.
         Returns a list of TextElement objects (containing labels for the category, and possibly metadata about
