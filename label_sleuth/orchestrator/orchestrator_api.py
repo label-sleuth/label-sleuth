@@ -47,9 +47,8 @@ from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
-    ModelInfo, OrchestratorStateApi, MulticlassCategory
-from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data, \
-    convert_text_elements_to_multiclass_train_data
+    ModelInfo, MulticlassWorkspace, OrchestratorStateApi, MulticlassCategory
+from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 
 # constants
@@ -149,8 +148,18 @@ class OrchestratorApi:
     def workspace_exists(self, workspace_id: str) -> bool:
         return self.orchestrator_state.workspace_exists(workspace_id)
 
-    def list_workspaces(self):
-        return sorted([x.workspace_id for x in self.orchestrator_state.get_all_workspaces()])
+    def list_workspaces(self, include_mode=False):
+        if (include_mode):
+            return sorted([{
+                            "id": w.workspace_id, 
+                            "mode": WorkspaceType.Multiclass.name if (type(w) == MulticlassWorkspace) else WorkspaceType.BinaryClasses.name 
+                        } 
+                       for w in self.orchestrator_state.get_all_workspaces()],
+                       key = lambda w: w['id'])
+        else:
+            return sorted([x.workspace_id for x in self.orchestrator_state.get_all_workspaces()])
+
+        
 
     def get_dataset_name(self, workspace_id: str) -> str:
         return self.orchestrator_state.get_workspace(workspace_id).dataset_name

@@ -335,7 +335,7 @@ def get_all_workspace_ids():
     """
     Get the ids of all existing workspaces
     """
-    res = {'workspaces': curr_app.orchestrator_api.list_workspaces()}
+    res = {'workspaces': curr_app.orchestrator_api.list_workspaces(include_mode=True)}
     return jsonify(res)
 
 
