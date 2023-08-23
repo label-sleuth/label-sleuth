@@ -23,9 +23,10 @@ LABEL_NEGATIVE = False
 BINARY_LABELS = frozenset({LABEL_NEGATIVE, LABEL_POSITIVE})
 URI_SEP = "-"
 
-class WorkspaceType(Enum):
-    BinaryClasses = 0 #TODO revisit name
-    Multiclass = 1
+class WorkspaceModelType(Enum):
+    Binary = 0
+    MultiClass = 1
+    MultiLabel = 2
 
 
 class LabelType(Enum):

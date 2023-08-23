@@ -45,9 +45,8 @@ def filename_to_uri(filename):
     return uri
 
 
-def build_text_elements_from_dataframe_and_labels(df, labels_dict, is_multiclass:Union[bool,None]):
-    # text element fields are extracted from the dataframe, with the exception of the labels, which are stored elsewhere
-    element_data_columns = list(TextElement.get_field_names() - {'category_to_label'})
+def build_text_elements_from_dataframe_and_labels(df, labels_dict, is_multiclass:Union[bool, None] = None):
+    element_data_columns = list(TextElement.get_field_names())
     element_dicts = map(lambda row: dict(zip(element_data_columns, row)), df[element_data_columns].values)
     if len(labels_dict) == 0:
         return [TextElement(**d) for d in element_dicts]
@@ -56,7 +55,7 @@ def build_text_elements_from_dataframe_and_labels(df, labels_dict, is_multiclass
             return [LabeledTextElement(**d, category_to_label=labels_dict.get(d['uri'], {}).copy())
                              for d in element_dicts]
         else:
-            return [MulticlassLabeledTextElement(**d, label=dataclasses.replace(labels_dict.get(d['uri'])) if d['uri'] in labels_dict else None)
+            return [MulticlassLabeledTextElement(**d, label=dataclasses.replace(labels_dict[d['uri']]) if d['uri'] in labels_dict else None)
                              for d in element_dicts]
 
 

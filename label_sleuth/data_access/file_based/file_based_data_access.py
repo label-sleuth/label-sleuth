@@ -33,7 +33,7 @@ from typing import Sequence, Iterable, Mapping, List, Union, Set
 
 import label_sleuth.data_access.file_based.utils as utils
 from label_sleuth.data_access.core.data_structs import Document, Label, TextElement, LabelType, MulticlassLabel, \
-    WorkspaceType, MulticlassLabeledTextElement, LabeledTextElement
+    WorkspaceModelType, MulticlassLabeledTextElement, LabeledTextElement
 from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, \
     LabeledStatus, BadDocumentNamesException, DocumentNameTooLongException, get_document_id, DocumentNameEmptyException
 from label_sleuth.data_access.file_based.utils import get_dataset_name_from_uri
@@ -174,12 +174,12 @@ class FileBasedDataAccess(DataAccessApi):
             self._save_labels_data(dataset_name, workspace_id)
 
     @staticmethod
-    def _set_single_uri_labels(uri, existing_labels, label: Union[Mapping[int, Label], MulticlassLabel]):
-        if type(label) == MulticlassLabel:
-            existing_labels[uri] = label
+    def _set_single_uri_labels(uri, existing_labels, labels_info: Union[Mapping[int, Label], MulticlassLabel]):
+        if type(labels_info) == MulticlassLabel:
+            existing_labels[uri] = labels_info
         else:
             existing_labels[uri] = existing_labels.get(uri, {})
-            existing_labels[uri].update(label)
+            existing_labels[uri].update(labels_info)
 
 
     def unset_labels(self, workspace_id: str, category_id: int, uris: Sequence[str], apply_to_duplicate_texts=False):
@@ -244,8 +244,7 @@ class FileBasedDataAccess(DataAccessApi):
         if workspace_id is not None:
             with self._get_lock_object_for_workspace(workspace_id):
                 for d in docs:
-                    #TODO show Ariel we set the text elements. check since we do [:], d.text_elements =  is not necessary
-                    d.text_elements = self._add_labels_info_for_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+                    self._add_labels_info_for_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                                             text_elements=d.text_elements, label_types=label_types)
         return docs
 
@@ -288,8 +287,7 @@ class FileBasedDataAccess(DataAccessApi):
         """
         return utils.build_text_elements_from_dataframe_and_labels(
             self._get_ds_in_memory(dataset_name),
-            labels_dict={},
-            is_multiclass=None)
+            labels_dict={})
 
     def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize,
                           sample_start_idx: int = 0, query: str = None, is_regex: bool = False, document_uri=None,
@@ -456,6 +454,8 @@ class FileBasedDataAccess(DataAccessApi):
         :param uris:
         :param label_types:  by default, only the LabelType.Standard (strong labels) are retrieved.
         """
+
+        #TODO can we use self._get_text_elements(workspace_id,dataset_name,filter_func=func,...) for this purpose?
         corpus_df = self._get_ds_in_memory(dataset_name)
         uris = list(uris)
         corpus_df = corpus_df.loc[corpus_df['uri'].isin(uris)]
@@ -658,7 +658,7 @@ class FileBasedDataAccess(DataAccessApi):
 
     def is_multiclass(self, workspace_id):
         return os.path.isfile(os.path.join(self._get_workspace_labels_dir(workspace_id),
-                                       WorkspaceType.Multiclass.name))
+                                           WorkspaceModelType.MultiClass.name))
 
     @staticmethod
     def _add_text_unique_ids(df):
@@ -704,7 +704,7 @@ class FileBasedDataAccess(DataAccessApi):
     def preload_dataset(self, dataset_name):
         self._get_ds_in_memory(dataset_name)
 
-    def initialize_user_labels(self, workspace_id:str, dataset_name:str, workspace_type:WorkspaceType):
+    def initialize_user_labels(self, workspace_id:str, dataset_name:str, workspace_type:WorkspaceModelType):
         """
         Save user labels object when creating a workspace
         :param workspace_id:

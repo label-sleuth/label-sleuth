@@ -19,7 +19,7 @@ import shutil
 import tempfile
 from datetime import datetime
 
-from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, Document, WorkspaceType
+from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, Document, WorkspaceModelType
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, ModelInfo, \
@@ -202,7 +202,7 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         dataset_name = 'non_existing_dump'
 
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                     workspace_type=WorkspaceType.Multiclass)
+                                                     workspace_type=WorkspaceModelType.MultiClass)
         categories = self.orchestrator_state_api.set_category_list(workspace_id,{"cat1":"desc1", "cat2":"desc2"})
 
         loaded = self.orchestrator_state_api.get_workspace(workspace_id)

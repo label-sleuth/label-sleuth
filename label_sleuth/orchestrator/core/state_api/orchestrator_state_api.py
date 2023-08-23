@@ -25,7 +25,7 @@ from typing import Dict, List, Sequence, Tuple, Mapping, Union
 
 import jsonpickle
 
-from label_sleuth.data_access.core.data_structs import WorkspaceType
+from label_sleuth.data_access.core.data_structs import WorkspaceModelType
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.model_type import ModelType
 
@@ -114,15 +114,17 @@ class OrchestratorStateApi:
     # Workspace-related methods
 
     def create_workspace(self, workspace_id: str, dataset_name: str,
-                         workspace_type:WorkspaceType=WorkspaceType.BinaryClasses):
+                         workspace_type:WorkspaceModelType=WorkspaceModelType.Binary):
         with self.workspaces_lock[workspace_id]:
             illegal_chars = "".join(x for x in workspace_id if not x.isalnum() and x not in "_-")
             assert len(illegal_chars) == 0, \
                 f"Workspace id '{workspace_id}' contains illegal characters: '{illegal_chars}'"
-            if workspace_type == WorkspaceType.BinaryClasses:
+            if workspace_type == WorkspaceModelType.Binary:
                 workspace = Workspace(workspace_id=workspace_id, dataset_name=dataset_name)
-            else:
+            elif workspace_type == WorkspaceModelType.MultiClass:
                 workspace = MulticlassWorkspace(workspace_id,dataset_name)
+            else:
+                raise Exception(f"Workspace type {workspace_type} is not supported")
 
             if self._filename_from_workspace_id(workspace_id) in os.listdir(self.workspace_dir):
                 raise Exception(f"workspace name '{workspace_id}' already exists")

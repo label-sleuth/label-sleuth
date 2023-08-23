@@ -34,7 +34,7 @@ from label_sleuth.analysis_utils.labeling_reports import get_suspected_labeling_
     get_disagreements_using_cross_validation
 from label_sleuth.config import Configuration
 from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE, \
-    LABEL_NEGATIVE, WorkspaceType, MulticlassLabel
+    LABEL_NEGATIVE, WorkspaceModelType, MulticlassLabel
 from label_sleuth.data_access.data_access_api import DataAccessApi, DatasetRowCountLimitExceededException
 from label_sleuth.data_access.label_import_utils import process_labels_dataframe
 from label_sleuth.data_access.processors.csv_processor import CsvFileProcessor
@@ -48,7 +48,8 @@ from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
     ModelInfo, MulticlassWorkspace, OrchestratorStateApi, MulticlassCategory
-from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
+from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data, \
+    convert_text_elements_to_multiclass_train_data
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 
 # constants
@@ -81,7 +82,7 @@ class OrchestratorApi:
     # Workspace-related methods
 
     def create_workspace(self, workspace_id: str, dataset_name: str,
-                         workspace_type:WorkspaceType=WorkspaceType.BinaryClasses):
+                         workspace_type:WorkspaceModelType=WorkspaceModelType.Binary):
         """
         Create a new workspace
         :param workspace_id:
@@ -101,6 +102,7 @@ class OrchestratorApi:
         Delete a given workspace
         :param workspace_id:
         """
+        # TODO handle labels deletion in multiclass workspace
         logging.info(f"deleting workspace '{workspace_id}'")
         if self.workspace_exists(workspace_id):
             workspace = self.orchestrator_state.get_workspace(workspace_id)
@@ -152,7 +154,7 @@ class OrchestratorApi:
         if (include_mode):
             return sorted([{
                             "id": w.workspace_id, 
-                            "mode": WorkspaceType.Multiclass.name if (type(w) == MulticlassWorkspace) else WorkspaceType.BinaryClasses.name 
+                            "mode": WorkspaceModelType.MultiClass.name if (type(w) == MulticlassWorkspace) else WorkspaceModelType.Binary.name
                         } 
                        for w in self.orchestrator_state.get_all_workspaces()],
                        key = lambda w: w['id'])
@@ -1052,7 +1054,7 @@ class OrchestratorApi:
             label_counts = defaultdict(int, label_counts)
             category_ids = self.orchestrator_state.get_all_category_ids(workspace_id)
             changed_since_last_model_count = \
-                self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id)
+                self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id=None)
             return {"all": min(
                 # for a new training to start both the number of labels changed and the number of labeled elements must
                 # be above their respective thresholds; thus, we determine the status as the minimum of the two ratios

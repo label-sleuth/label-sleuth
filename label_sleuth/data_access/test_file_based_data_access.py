@@ -18,7 +18,7 @@ import unittest
 from collections import Counter, defaultdict
 from typing import List
 import tempfile
-from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, LabeledTextElement, WorkspaceType, \
+from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, LabeledTextElement, WorkspaceModelType, \
     MulticlassLabel
 from label_sleuth.data_access.file_based.utils import URI_SEP
 
@@ -104,7 +104,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_set_labels_and_get_documents(self):
         workspace_id = 'test_set_labels'
         dataset_name = self.test_set_labels_and_get_documents.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         category_ids = range(3)
         doc = generate_corpus(self.data_access, dataset_name)[0]
         uri_to_label = add_random_labels_to_document(doc, 5, category_ids)
@@ -123,7 +123,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_set_labels_and_get_documents_no_cache(self):
         workspace_id = 'test_set_labels_no_cache'
         dataset_name = self.test_set_labels_and_get_documents_no_cache.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         category_ids = range(3)
         doc = generate_corpus(self.data_access, dataset_name)[0]
         uri_to_label = add_random_labels_to_document(doc, 5, category_ids)
@@ -142,7 +142,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_set_labels_and_get_documents_multiclass(self):
         workspace_id = 'test_set_labels_multiclass'
         dataset_name = self.test_set_labels_and_get_documents_multiclass.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.Multiclass)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
         category_ids = list(range(3))
         doc = generate_corpus(self.data_access, dataset_name)[0]
         uri_to_label = add_random_multiclass_labels_to_document(doc, 2, category_ids)
@@ -162,7 +162,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_unset_labels(self):
         workspace_id = 'test_unset_labels'
         dataset_name = self.test_set_labels_and_get_documents.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         category_id = 0
         doc = generate_corpus(self.data_access, dataset_name)[0]
         texts_and_labels_list = add_labels_to_doc(doc, category_id)
@@ -240,7 +240,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
 
         workspace_id = 'test_sample_text_elements'
         dataset_name = self.test_get_text_elements.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
         docs = generate_corpus(self.data_access, dataset_name, 5)
         # add labels info for a single doc
@@ -257,7 +257,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_get_unlabeled_text_elements(self):
         workspace_id = 'test_sample_unlabeled_text_elements'
         dataset_name = self.test_get_unlabeled_text_elements.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         category_id = 0
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
         docs = generate_corpus(self.data_access, dataset_name, 2)
@@ -275,7 +275,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_get_labeled_text_elements(self):
         workspace_id = 'test_sample_labeled_text_elements'
         dataset_name = self.test_get_labeled_text_elements.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         category_id = 2
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
         docs = generate_corpus(self.data_access, dataset_name, 2)
@@ -300,7 +300,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_sample_by_query_text_elements(self):
         workspace_id = 'test_sample_by_query_text_elements'
         dataset_name = self.test_sample_by_query_text_elements.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         category_id = 0
         query = 'sentence'
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
@@ -337,7 +337,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_query_text_elements_pagination(self):
         workspace_id = 'test_sample_by_query_text_elements'
         dataset_name = self.test_sample_by_query_text_elements.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         category_id = 0
         query = 'sentence'
         sample_all = 10 ** 100  # a huge sample_size to sample all elements
@@ -378,7 +378,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
         num_docs = 100
         workspace_id = 'test_multithread_set_labels'
         dataset_name = self.test_multithread_async_set_labels.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         category_id = 0
         categories = [category_id]
         corpus = generate_corpus(self.data_access, dataset_name, num_of_documents=num_docs)
@@ -418,7 +418,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_get_label_counts(self):
         workspace_id = 'test_get_label_counts'
         dataset_name = self.test_get_label_counts.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         category_to_count = 2
         docs = generate_corpus(self.data_access, dataset_name, 2)
         # add labels info for a single doc
@@ -443,7 +443,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_get_label_counts_multiclass(self):
         workspace_id = 'test_get_label_counts_multiclass'
         dataset_name = self.test_get_label_counts.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.Multiclass)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
         category_ids = list(range(3))
         doc = generate_corpus(self.data_access, dataset_name,num_of_documents=2)[1]
         uri_to_label = add_random_multiclass_labels_to_document(doc, 4, category_ids)
@@ -456,7 +456,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_get_text_elements_by_id(self):
         workspace_id = "test_get_text_elements_by_id"
         dataset_name = self.test_get_text_elements_by_id.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         categories = [i for i in range(3)]
         docs = generate_corpus(self.data_access, dataset_name, 2)
         doc = docs[0]
@@ -483,7 +483,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
     def test_duplicates_removal(self):
         workspace_id = 'test_duplicates_removal'
         dataset_name = self.test_duplicates_removal.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceType.BinaryClasses)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
         generate_corpus(self.data_access, dataset_name, 1, add_duplicate=True)
         category_id = 0
         all_elements = sorted(self.data_access.get_all_text_elements(dataset_name),

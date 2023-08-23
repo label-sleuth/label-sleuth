@@ -25,7 +25,7 @@ import pandas as pd
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.config import load_config
 from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, LABEL_NEGATIVE, LABEL_POSITIVE, \
-    LabeledTextElement, WorkspaceType
+    LabeledTextElement, WorkspaceModelType
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.data_access.test_file_based_data_access import generate_corpus
 from label_sleuth.models.core.model_api import ModelStatus
@@ -225,7 +225,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         dataset_name = f'{workspace_id}_dump'
         category_name = f'{workspace_id}_cat'
         generate_corpus(self.data_access, dataset_name)
-        self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceType.Multiclass)
+        self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
         self.orchestrator_api.set_category_list(workspace_id, {"cat1": "desc1", "cat2": "desc2", "cat3": "desc3"})
 
         change_threshold = self.orchestrator_api.config.multiclass_changed_element_threshold
@@ -266,7 +266,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         dataset_name = f'{workspace_id}_dump'
         category_name = f'{workspace_id}_cat'
         generate_corpus(self.data_access, dataset_name)
-        self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceType.Multiclass)
+        self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
         self.orchestrator_api.set_category_list(workspace_id,{"cat1":"desc1", "cat2":"desc2", "cat3":"desc3"})
 
         change_threshold = self.orchestrator_api.config.multiclass_changed_element_threshold

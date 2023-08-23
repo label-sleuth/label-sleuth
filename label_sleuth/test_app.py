@@ -463,7 +463,7 @@ class TestAppIntegration(unittest.TestCase):
         dataset_name = "multiclass_dataset"
         data, text_with_parenthesis, text_with_parenthesis_snippet, text_with_parenthesis_snippet_in_query = self.create_dataset(dataset_name)
         res = self.client.post("/workspace",
-                               data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"Multiclass"}}'.format(workspace_name, dataset_name),
+                               data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"MultiClass"}}'.format(workspace_name, dataset_name),
                                headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to create a workspace")
         self.assertEqual(
@@ -605,7 +605,7 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code, msg="Failed to get iterations list")
         self.assertEqual(1, len(res.get_json()["iterations"]), msg="first model was not added to the models list")
 
-        # get active learning recommendations
+        #TODO get active learning recommendations
         # res = self.client.get(f"/workspace/{workspace_name}/active_learning?",
         #                       headers=HEADERS)
         # self.assertEqual(200, res.status_code, msg="Failed to get active learning recommendations")

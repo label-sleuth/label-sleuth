@@ -38,7 +38,7 @@ from label_sleuth.active_learning.core.active_learning_factory import ActiveLear
 from label_sleuth.config import Configuration
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, DisplayFields, Label, \
-    WorkspaceType, MulticlassLabel
+    WorkspaceModelType, MulticlassLabel
 from label_sleuth.data_access.data_access_api import AlreadyExistsException, BadDocumentNamesException, DatasetRowCountLimitExceededException, \
     DocumentNameTooLongException, DocumentNameEmptyException, NoTextColumnException
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
@@ -311,7 +311,7 @@ def create_workspace():
     post_data = request.get_json(force=True)
     workspace_id = post_data["workspace_id"]
     dataset_name = post_data["dataset_id"]
-    workspace_type = WorkspaceType[post_data.get("workspace_type",WorkspaceType.BinaryClasses.name)]
+    workspace_type = WorkspaceModelType[post_data.get("workspace_type", WorkspaceModelType.Binary.name)]
 
     if curr_app.orchestrator_api.workspace_exists(workspace_id):
         logging.info(f"Trying to create workspace '{workspace_id}' which already exists")
@@ -743,7 +743,7 @@ def set_element_label(workspace_id, element_id):
     if multiclass and (value not in  ['true', "True", "TRUE", "none", True]):
         make_error(f"in multiclass value can only be {['true', 'True', 'TRUE', True]} or none")
     if value == 'none':
-        if multiclass:
+        if multiclass: # TODO implement
             raise Exception("TODO unset label for multiclass is not implemented yet")
         curr_app.orchestrator_api. \
             unset_labels(workspace_id, category_id, [element_id],
@@ -758,10 +758,12 @@ def set_element_label(workspace_id, element_id):
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
         if multiclass:
             uri_with_updated_label = {element_id: MulticlassLabel(category_id,
-                                                                  metadata={"iteration":iteration, "source":source})}
+                                                                  metadata={"iteration": iteration,
+                                                                            "source": source})}
         else:
             uri_with_updated_label = {element_id: {category_id: Label(value,
-                                                                      metadata={"iteration":iteration, "source":source})}}
+                                                                      metadata={"iteration": iteration,
+                                                                                "source" :source})}}
         curr_app.orchestrator_api. \
             set_labels(workspace_id, uri_with_updated_label,
                        apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts,

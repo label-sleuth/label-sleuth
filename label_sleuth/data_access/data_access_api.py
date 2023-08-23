@@ -20,7 +20,7 @@ from enum import Enum
 
 from typing import Iterable, Sequence, Mapping, List, Union, Set
 from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, URI_SEP, LabelType, \
-    MulticlassLabel, WorkspaceType
+    MulticlassLabel, WorkspaceModelType
 
 
 class AlreadyExistsException(Exception):
@@ -344,7 +344,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def initialize_user_labels(self, workspace_id:str, dataset_name:str, workspace_type:WorkspaceType):
+    def initialize_user_labels(self, workspace_id:str, dataset_name:str, workspace_type:WorkspaceModelType):
         """
         Save user labels object when creating a workspace
         :param workspace_id:

@@ -33,7 +33,7 @@ from label_sleuth.training_set_selector.train_set_selectors_catalog import Train
 
 
 @dataclass
-class Configuration:
+class Configuration: # TODO Split to multiple dataclasses
     first_model_positive_threshold: int
     first_model_negative_threshold: int
     changed_element_threshold: int
