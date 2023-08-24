@@ -16,10 +16,10 @@
 import random
 import unittest
 from collections import Counter, defaultdict
-from typing import List
+from typing import List, Sequence
 import tempfile
-from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, LabeledTextElement, WorkspaceModelType, \
-    MulticlassLabel
+from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, LabeledTextElement, \
+    WorkspaceModelType, MulticlassLabel
 from label_sleuth.data_access.file_based.utils import URI_SEP
 
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
@@ -51,7 +51,7 @@ def generate_corpus(data_access, dataset_name, num_of_documents=1, add_duplicate
     return docs
 
 
-def add_random_labels_to_document(doc: Document, min_num_sentences_to_label: int, categories: List[int], seed=0):
+def add_random_labels_to_document(doc: Document, min_num_sentences_to_label: int, categories: Sequence[int], seed=0):
     uri_to_label = {}
     random.seed(seed)
     text_elements_to_label = random.sample(doc.text_elements, min(min_num_sentences_to_label, len(doc.text_elements)))
@@ -63,7 +63,8 @@ def add_random_labels_to_document(doc: Document, min_num_sentences_to_label: int
     return uri_to_label
 
 
-def add_random_multiclass_labels_to_document(doc: Document, min_num_sentences_to_label: int, categories: List[int], seed=0):
+def add_random_multiclass_labels_to_document(doc: Document, min_num_sentences_to_label: int, categories: List[int],
+                                             seed=0):
     random.seed(seed)
     uri_to_label = {}
     text_elements_to_label = random.sample(doc.text_elements, min(min_num_sentences_to_label, len(doc.text_elements)))
@@ -119,7 +120,6 @@ class TestFileBasedDataAccess(unittest.TestCase):
                 self.assertDictEqual(text.category_to_label, {})
         self.data_access.delete_dataset(dataset_name)
 
-
     def test_set_labels_and_get_documents_no_cache(self):
         workspace_id = 'test_set_labels_no_cache'
         dataset_name = self.test_set_labels_and_get_documents_no_cache.__name__ + '_dump'
@@ -138,11 +138,11 @@ class TestFileBasedDataAccess(unittest.TestCase):
                 self.assertDictEqual(text.category_to_label, {})
         self.data_access.delete_dataset(dataset_name)
 
-
     def test_set_labels_and_get_documents_multiclass(self):
         workspace_id = 'test_set_labels_multiclass'
         dataset_name = self.test_set_labels_and_get_documents_multiclass.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name,
+                                                workspace_type=WorkspaceModelType.MultiClass)
         category_ids = list(range(3))
         doc = generate_corpus(self.data_access, dataset_name)[0]
         uri_to_label = add_random_multiclass_labels_to_document(doc, 2, category_ids)
@@ -156,8 +156,6 @@ class TestFileBasedDataAccess(unittest.TestCase):
             else:
                 self.assertEqual(labeled_text_element.label, None)
         self.data_access.delete_dataset(dataset_name)
-
-
 
     def test_unset_labels(self):
         workspace_id = 'test_unset_labels'
@@ -196,7 +194,8 @@ class TestFileBasedDataAccess(unittest.TestCase):
         docs = generate_corpus(self.data_access, dataset_name, random.randint(1, 10))
         text_elements_found = self.data_access.get_all_text_elements(dataset_name)
         text_elements_found.sort(key=lambda t: t.uri)
-        text_elements_expected = [TextElement(**vars(text_element)) for doc in docs for text_element in doc.text_elements]
+        text_elements_expected = [TextElement(**vars(text_element))
+                                  for doc in docs for text_element in doc.text_elements]
         text_elements_expected.sort(key=lambda t: t.uri)
         self.assertListEqual(text_elements_expected, text_elements_found)
 
@@ -322,8 +321,8 @@ class TestFileBasedDataAccess(unittest.TestCase):
             self.assertDictEqual(sampled_text.category_to_label, {})
 
         # query + labeled elements
-        sampled_texts_res = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id, sample_all,
-                                                                       query)
+        sampled_texts_res = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
+                                                                       sample_all, query)
         self.assertEqual(1, len(sampled_texts_res['results']),
                          f'all and only the {len(uri_to_label_dict)} labeled elements should have been sampled.')
 
@@ -439,18 +438,18 @@ class TestFileBasedDataAccess(unittest.TestCase):
             self.assertEqual(expected_count, observed_count, f'count for {label_val} does not match.')
         self.data_access.delete_dataset(dataset_name)
 
-
     def test_get_label_counts_multiclass(self):
         workspace_id = 'test_get_label_counts_multiclass'
         dataset_name = self.test_get_label_counts.__name__ + '_dump'
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name,
+                                                workspace_type=WorkspaceModelType.MultiClass)
         category_ids = list(range(3))
-        doc = generate_corpus(self.data_access, dataset_name,num_of_documents=2)[1]
+        doc = generate_corpus(self.data_access, dataset_name, num_of_documents=2)[1]
         uri_to_label = add_random_multiclass_labels_to_document(doc, 4, category_ids)
         self.data_access.set_labels(workspace_id, uri_to_label)
 
-        category_label_counts = self.data_access.get_label_counts(workspace_id, dataset_name,category_id=None)
-        self.assertDictEqual(Counter({'1': 3, '2': 1}),category_label_counts)
+        category_label_counts = self.data_access.get_label_counts(workspace_id, dataset_name, category_id=None)
+        self.assertDictEqual(Counter({'1': 3, '2': 1}), category_label_counts)
         self.data_access.delete_dataset(dataset_name)
 
     def test_get_text_elements_by_id(self):

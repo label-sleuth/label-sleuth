@@ -24,7 +24,7 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
 from label_sleuth.analysis_utils.analyze_tokens import get_token_overlap
-from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, TextElement, BINARY_LABELS
+from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, LabeledTextElement, BINARY_LABELS
 from label_sleuth.models.core.languages import Language
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.core.tools import remove_stop_words_and_punctuation
@@ -33,7 +33,7 @@ from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data
 MIN_TOKEN_OVERLAP_THRESHOLD = 0.6
 
 
-def get_disagreements_using_cross_validation(workspace_id, category_id: int, labeled_elements: List[TextElement],
+def get_disagreements_using_cross_validation(workspace_id, category_id: int, labeled_elements: List[LabeledTextElement],
                                              model_factory, language: Language, model_type=ModelsCatalog.SVM_ENSEMBLE,
                                              num_folds=4):
     """
@@ -124,9 +124,9 @@ def get_suspected_labeling_contradictions_by_distance_with_diffs(category_id: in
     return {'pairs': pairs, 'diffs': diffs}
 
 
-def get_suspected_labeling_contradictions_by_distance(category_id, labeled_elements: List[TextElement],
+def get_suspected_labeling_contradictions_by_distance(category_id, labeled_elements: List[LabeledTextElement],
                                                       embedding_func, language: Language) \
-        -> List[List[TextElement]]:
+        -> List[List[LabeledTextElement]]:
     """
     This method uses text embeddings in order to identify user labels that may be inconsistent with each other.
     For each of the *labeled_elements*, we identify a nearest neighbor that was given the opposite label.
@@ -165,8 +165,9 @@ def get_suspected_labeling_contradictions_by_distance(category_id, labeled_eleme
     return unified_pairs_list
 
 
-def _get_nearest_neighbors_with_opposite_label(all_elements: List[TextElement], embedding_vectors: List, category_id,
-                                               source_label) -> List[Tuple[float, Tuple[TextElement, TextElement]]]:
+def _get_nearest_neighbors_with_opposite_label(all_elements: List[LabeledTextElement], embedding_vectors: List,
+                                               category_id, source_label) \
+        -> List[Tuple[float, Tuple[LabeledTextElement, LabeledTextElement]]]:
     source_label_idxs = [i for i, (element, rep) in enumerate(zip(all_elements, embedding_vectors))
                          if element.category_to_label[category_id].label == source_label and rep[0] != 0]
     opposite_label_idxs = [i for i, (element, rep) in enumerate(zip(all_elements, embedding_vectors))
@@ -188,7 +189,7 @@ def _get_nearest_neighbors_with_opposite_label(all_elements: List[TextElement], 
     return distances_and_pairs
 
 
-def _filter_nearest_neighbor_pairs(pairs_list: List[Tuple[TextElement]], language: Language):
+def _filter_nearest_neighbor_pairs(pairs_list: List[Tuple[LabeledTextElement]], language: Language):
     """
     :param pairs_list: a list of tuples of TextElements, where the element in tuple index 1 is the nearest neighbor of
     the element in tuple index 0

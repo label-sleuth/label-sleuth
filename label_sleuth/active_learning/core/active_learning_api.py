@@ -29,7 +29,8 @@ class ActiveLearner:
     """
     def get_recommended_items_for_labeling(self, workspace_id: str, dataset_name: str, category_id: int,
                                            candidate_text_elements: Sequence[TextElement],
-                                           candidate_text_element_predictions: Union[Sequence[Prediction], Sequence[MulticlassPrediction]],
+                                           candidate_text_element_predictions: Union[Sequence[Prediction],
+                                                                                     Sequence[MulticlassPrediction]],
                                            sample_size: int = 1) -> Sequence[TextElement]:
         """
         Returns a batch of *sample_size* elements suggested by the active learning module,
@@ -50,7 +51,8 @@ class ActiveLearner:
 
     @abc.abstractmethod
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
-                              candidate_text_element_predictions: Sequence[Prediction],
+                              candidate_text_element_predictions: Union[Sequence[Prediction],
+                                                                        Sequence[MulticlassPrediction]],
                               workspace_id: str, dataset_name: str, category_id: int) -> Sequence[float]:
         """
         For a given sequence of TextElements and their model predictions, return a score for each element

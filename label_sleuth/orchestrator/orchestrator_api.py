@@ -34,7 +34,7 @@ from label_sleuth.analysis_utils.labeling_reports import get_suspected_labeling_
     get_disagreements_using_cross_validation
 from label_sleuth.config import Configuration
 from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, TextElement, LABEL_POSITIVE, \
-    LABEL_NEGATIVE, WorkspaceModelType, MulticlassLabel
+    LABEL_NEGATIVE, WorkspaceModelType, MulticlassLabel, LabeledTextElement, MulticlassLabeledTextElement
 from label_sleuth.data_access.data_access_api import DataAccessApi, DatasetRowCountLimitExceededException
 from label_sleuth.data_access.label_import_utils import process_labels_dataframe
 from label_sleuth.data_access.processors.csv_processor import CsvFileProcessor
@@ -82,7 +82,7 @@ class OrchestratorApi:
     # Workspace-related methods
 
     def create_workspace(self, workspace_id: str, dataset_name: str,
-                         workspace_type:WorkspaceModelType=WorkspaceModelType.Binary):
+                         workspace_type: WorkspaceModelType = WorkspaceModelType.Binary):
         """
         Create a new workspace
         :param workspace_id:
@@ -95,7 +95,6 @@ class OrchestratorApi:
             raise Exception(message)
         self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type)
         self.orchestrator_state.create_workspace(workspace_id, dataset_name, workspace_type)
-
 
     def delete_workspace(self, workspace_id: str):
         """
@@ -151,17 +150,15 @@ class OrchestratorApi:
         return self.orchestrator_state.workspace_exists(workspace_id)
 
     def list_workspaces(self, include_mode=False):
-        if (include_mode):
-            return sorted([{
-                            "id": w.workspace_id, 
-                            "mode": WorkspaceModelType.MultiClass.name if (type(w) == MulticlassWorkspace) else WorkspaceModelType.Binary.name
-                        } 
-                       for w in self.orchestrator_state.get_all_workspaces()],
-                       key = lambda w: w['id'])
+        if include_mode:
+            return sorted(
+                [{"id": w.workspace_id,
+                  "mode": WorkspaceModelType.MultiClass.name
+                          if (type(w) == MulticlassWorkspace) else WorkspaceModelType.Binary.name
+                  } for w in self.orchestrator_state.get_all_workspaces()],
+                key=lambda w: w['id'])
         else:
             return sorted([x.workspace_id for x in self.orchestrator_state.get_all_workspaces()])
-
-        
 
     def get_dataset_name(self, workspace_id: str) -> str:
         return self.orchestrator_state.get_workspace(workspace_id).dataset_name
@@ -180,14 +177,12 @@ class OrchestratorApi:
         logging.info(f"Creating a new category '{category_name}' in workspace '{workspace_id}'")
         return self.orchestrator_state.add_category_to_workspace(workspace_id, category_name, category_description)
 
-
-    def set_category_list(self, workspace_id: str, category_to_description:Mapping):
+    def set_category_list(self, workspace_id: str, category_to_description: Mapping):
         """
         TBD
         """
         logging.info(f"setting the category list of workspace {workspace_id}")
         return self.orchestrator_state.set_category_list(workspace_id, category_to_description)
-
 
     def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str):
         old_category_name = self.orchestrator_state.get_workspace(workspace_id).categories[category_id].name
@@ -268,7 +263,7 @@ class OrchestratorApi:
         return self.data_access.get_text_elements_by_uris(workspace_id, dataset_name, uris)
 
     def get_all_labeled_text_elements(self, workspace_id, dataset_name, category_id: int, remove_duplicates=False) -> \
-            List[TextElement]:
+            List[Union[LabeledTextElement, MulticlassLabeledTextElement]]:
         """
         Get all the text elements that were assigned user labels for the given category.
         :param workspace_id:
@@ -343,14 +338,14 @@ class OrchestratorApi:
         of the categories. Since an increase in label change counts can trigger the training of a new model, in some
         specific situations this parameter is set to False and the updating of the counter is performed at a later time.
         """
-        if len(uri_to_label)>0 and type(next(iter(uri_to_label.values()))) == MulticlassLabel: # Multiclass workspace
+        if len(uri_to_label) > 0 and type(next(iter(uri_to_label.values()))) == MulticlassLabel:  # Multiclass workspace
             if update_label_counter:
                 self.orchestrator_state.increase_label_change_count_since_last_train(
                     workspace_id,
                     category_id=None,
                     number_of_new_changes=len(uri_to_label))
 
-        else:  #Multi binary workspace
+        else:  # Multi binary workspace
             if update_label_counter:
                 train_set_selector = self.training_set_selection_factory.\
                     get_training_set_selector(self.config.training_set_selection_strategy)
@@ -469,7 +464,7 @@ class OrchestratorApi:
 
     # Iteration flow
 
-    def run_iteration(self, workspace_id: str, dataset_name: str, category_id: int, model_type: ModelType):
+    def run_iteration(self, workspace_id: str, dataset_name: str, category_id: Union[int, None], model_type: ModelType):
         """
         This method initiates an Iteration, a flow that includes training a model, inferring the full corpus using
         this model, choosing candidate elements for labeling using active learning, as well as calculating various
@@ -502,7 +497,6 @@ class OrchestratorApi:
             train_set_selector = self.training_set_selection_factory.get_training_set_selector(
                 self.config.training_set_selection_strategy)
             category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
-
 
         future = train_set_selector.collect_train_set(workspace_id=workspace_id,
                                                       train_dataset_name=dataset_name,
@@ -574,9 +568,6 @@ class OrchestratorApi:
                     }
                 }
             }
-
-
-
 
         self.orchestrator_state.update_iteration_status(workspace_id=workspace_id, category_id=category_id,
                                                         iteration_index=iteration_index,
@@ -738,7 +729,6 @@ class OrchestratorApi:
                 active_learning_strategy = self.\
                     config.multiclass_active_learning_policy.get_active_learning_strategy(iteration_index)
 
-
         active_learner = self.active_learning_factory.get_active_learner(active_learning_strategy)
         logging.info(f"using active learning {active_learner.__class__.__name__}")
         # Where labels are applied to duplicate texts (the default behavior), we do not want duplicates to appear in
@@ -794,8 +784,8 @@ class OrchestratorApi:
 
         try:
             iterations_without_errors = [iteration for iteration in iterations
-                                         if iteration.status not in  [IterationStatus.ERROR,
-                                                                      IterationStatus.INSUFFICIENT_TRAIN_DATA]]
+                                         if iteration.status not in [IterationStatus.ERROR,
+                                                                     IterationStatus.INSUFFICIENT_TRAIN_DATA]]
 
             changes_since_last_model = \
                 self.orchestrator_state.get_label_change_count_since_last_train(workspace_id, category_id)
@@ -806,23 +796,25 @@ class OrchestratorApi:
 
             category_ids = self.get_all_category_ids(workspace_id)
 
-
             if category_id is not None:
-                to_log_message = (f"workspace '{workspace_id}' category id '{category_id}', " +
-                        f"{label_counts[LABEL_POSITIVE] if LABEL_POSITIVE in label_counts else 0} positive elements " +
-                        f"(threshold >= {self.config.first_model_positive_threshold}), " +
-                        (f"{label_counts[LABEL_NEGATIVE] if LABEL_NEGATIVE in label_counts else 0} negative elements " if self.config.first_model_negative_threshold > 0 else "") +
-                        (f"(threshold >= {self.config.first_model_negative_threshold})" if self.config.first_model_negative_threshold > 0 else "") +
-                        f", {changes_since_last_model} elements changed since last model " +
-                        f"(threshold >= {self.config.changed_element_threshold}). ")
-            else: # multiclass
+                to_log_message = f"workspace '{workspace_id}' category id '{category_id}', " \
+                                 f"{label_counts.get(LABEL_POSITIVE, 0)} positive elements " \
+                                 f"(threshold >= {self.config.first_model_positive_threshold}), " \
+                                 + (f"{label_counts.get(LABEL_NEGATIVE, 0)} negative elements "
+                                    f"(threshold >= {self.config.first_model_negative_threshold}), "
+                                    if self.config.first_model_negative_threshold > 0 else "") \
+                                 + f"{changes_since_last_model} elements changed since last model " \
+                                   f"(threshold >= {self.config.changed_element_threshold}). "
+            else:  # multiclass
                 to_log_message = (f"workspace '{workspace_id}' (multiclass) " +
                                   f"label counts {label_counts}. min change threshold is {self.config.multiclass_changed_element_threshold} "
                                   f"number of changes {changes_since_last_model}. min examples per class threshold is {self.config.multiclass_per_class_threshold} "
                                   f"number of classes {len(category_ids)}.")
 
-            if force or (category_id is not None and self._should_train_multilabel_condition(changes_since_last_model, label_counts))\
-                    or (category_id is None and self._should_train_multiclass_condition(changes_since_last_model, label_counts, len(category_ids))):
+            if force or (category_id is not None and self._should_train_multilabel_condition(changes_since_last_model,
+                                                                                             label_counts)) or \
+                    (category_id is None and self._should_train_multiclass_condition(changes_since_last_model,
+                                                                                     label_counts, len(category_ids))):
                 if len(iterations_without_errors) > 0 and iterations_without_errors[-1].status != IterationStatus.READY:
                     logging.info(f"workspace '{workspace_id}' category id '{category_id}' new elements criterion was "
                                  f"met but previous AL not yet ready, not initiating a new training")
@@ -872,9 +864,11 @@ class OrchestratorApi:
                 changes_since_last_model >= self.config.changed_element_threshold)
 
     def _should_train_multiclass_condition(self, changes_since_last_model, label_counts, num_classes):
-        return (self.config.first_model_positive_threshold == 0 and changes_since_last_model >= self.config.multiclass_changed_element_threshold) or \
-                (len(label_counts) == num_classes and all(count >= self.config.multiclass_per_class_threshold for count in label_counts.values()) and
-                changes_since_last_model >= self.config.multiclass_changed_element_threshold)
+        return (self.config.first_model_positive_threshold == 0
+                and changes_since_last_model >= self.config.multiclass_changed_element_threshold) \
+               or (len(label_counts) == num_classes
+                   and all(count >= self.config.multiclass_per_class_threshold for count in label_counts.values())
+                   and changes_since_last_model >= self.config.multiclass_changed_element_threshold)
 
     def infer(self, workspace_id: str, category_id: int, elements_to_infer: Sequence[TextElement],
               iteration_index: int = None, use_cache: bool = True) -> Sequence[Prediction]:
@@ -939,7 +933,7 @@ class OrchestratorApi:
                                                remove_duplicates=self.config.apply_labels_to_duplicate_texts)
         predictions = self.infer(workspace_id, category_id, labeled_elements)
         suspicious_elements = [text_element for text_element, prediction in zip(labeled_elements, predictions)
-                         if text_element.category_to_label[category_id].label != prediction.label]
+                               if text_element.category_to_label[category_id].label != prediction.label]
 
         cross_validation_disagreements = get_disagreements_using_cross_validation(workspace_id, category_id,
                                                                                   labeled_elements,
@@ -947,8 +941,8 @@ class OrchestratorApi:
                                                                                   self.config.language,
                                                                                   model_type)
         disagreement_uris = {text_element.uri for text_element in suspicious_elements}
-        suspicious_elements.extend([text_element for text_element in cross_validation_disagreements if
-                              text_element.uri not in disagreement_uris])
+        suspicious_elements.extend([text_element for text_element in cross_validation_disagreements
+                                    if text_element.uri not in disagreement_uris])
         logging.info(f"workspace '{workspace_id}' category id {category_id} done generating suspicious elements report"
                      f" using model type {model_type.name}")
         return suspicious_elements
@@ -1000,8 +994,8 @@ class OrchestratorApi:
         :param random_state: provide an int seed to define a random state. Default is zero.
         :param remove_duplicates: if True, do not include elements that are duplicates of each other.
         """
-        logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {sample_size} {required_prediction}"
-                     f" predictions (start index: {start_idx})")
+        logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {sample_size} "
+                     f"{required_prediction} predictions (start index: {start_idx})")
 
         def batched(iterable, batch_size=100):
             it = iter(iterable)
@@ -1026,9 +1020,9 @@ class OrchestratorApi:
             f" predictions (start index: {start_idx})")
         return elements_with_required_prediction[start_idx:start_idx + sample_size]
 
-    def get_progress(self, workspace_id: str, dataset_name: str, category_id: Union[int,None]):
+    def get_progress(self, workspace_id: str, dataset_name: str, category_id: Union[int, None]):
         label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, remove_duplicates=True,
-                                                      counts_for_training=True)
+                                             counts_for_training=True)
 
         if category_id is not None:
             if label_counts[LABEL_POSITIVE] or label_counts[LABEL_NEGATIVE]:
@@ -1045,12 +1039,12 @@ class OrchestratorApi:
                                 min(label_counts[LABEL_POSITIVE] if LABEL_POSITIVE in label_counts else 0, self.config.first_model_positive_threshold) +
                                 min(label_counts[LABEL_NEGATIVE] if LABEL_NEGATIVE in label_counts else 0, self.config.first_model_negative_threshold)) /
                                 (self.config.first_model_positive_threshold + self.config.first_model_negative_threshold))) * 100)
+                            )
                         )
-                    )
                 )}
             else:
                 return {"all": 0}
-        else: # Multiclass
+        else:  # Multiclass
             label_counts = defaultdict(int, label_counts)
             category_ids = self.orchestrator_state.get_all_category_ids(workspace_id)
             changed_since_last_model_count = \
@@ -1059,8 +1053,8 @@ class OrchestratorApi:
                 # for a new training to start both the number of labels changed and the number of labeled elements must
                 # be above their respective thresholds; thus, we determine the status as the minimum of the two ratios
                 max(0, min(round(changed_since_last_model_count / self.config.changed_element_threshold * 100), 100)),
-                max(0, min(100,round(100*mean([min(label_counts[cat_id], self.config.multiclass_per_class_threshold) / self.config.multiclass_per_class_threshold for cat_id in category_ids])))
-            )
+                max(0, min(100, round(100*mean([min(label_counts[cat_id], self.config.multiclass_per_class_threshold) / self.config.multiclass_per_class_threshold for cat_id in category_ids])))
+                    )
             )}
 
     # Import/Export
@@ -1224,7 +1218,7 @@ class OrchestratorApi:
                     if len(category.iterations) > 0:
                         all_iterations_and_indices = self. \
                             get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)
-                        if len(all_iterations_and_indices)>0:
+                        if len(all_iterations_and_indices) > 0:
                             iteration_index = all_iterations_and_indices[-1][1]
                             new_data_infer_thread_pool.submit(self._infer_missing_elements, workspace_id, category_id,
                                                               dataset_name, iteration_index)

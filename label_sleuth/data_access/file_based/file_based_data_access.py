@@ -60,7 +60,7 @@ def _validate_document_names(documents: Sequence[Document], max_document_name_le
     bad_names = [get_document_id(document.uri) for i, document in enumerate(documents)
                  if len(matches_per_document[i]) > 0]
     unpermitted_characters_found = set([char for matches_per_document in matches_per_document
-                                    for char in matches_per_document])
+                                        for char in matches_per_document])
 
     if len(bad_names) > 0:
         dataset_name = get_dataset_name_from_uri(documents[0].uri)
@@ -139,7 +139,7 @@ class FileBasedDataAccess(DataAccessApi):
         return DocumentStatistics(len(documents), num_of_text_elements)
 
     def set_labels(self, workspace_id: str, uris_to_labels: Union[Mapping[str, Mapping[int, Label]],
-                                                                Mapping[str, MulticlassLabel]],
+                                                                  Mapping[str, MulticlassLabel]],
                    apply_to_duplicate_texts=False):
         """
         Set labels to TextElements in dataset for a given workspace_id.
@@ -180,7 +180,6 @@ class FileBasedDataAccess(DataAccessApi):
         else:
             existing_labels[uri] = existing_labels.get(uri, {})
             existing_labels[uri].update(labels_info)
-
 
     def unset_labels(self, workspace_id: str, category_id: int, uris: Sequence[str], apply_to_duplicate_texts=False):
         """
@@ -384,7 +383,8 @@ class FileBasedDataAccess(DataAccessApi):
                                                    remove_duplicates=remove_duplicates, random_state=random_state)
         return results_dict
 
-    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False,
+    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: Union[int, None],
+                         remove_duplicates=False,
                          label_types: Set[LabelType] = frozenset(LabelType._member_map_.values()),
                          fine_grained_counts=True) -> Mapping[Union[str, bool], int]:
         """
@@ -461,9 +461,7 @@ class FileBasedDataAccess(DataAccessApi):
         corpus_df = corpus_df.loc[corpus_df['uri'].isin(uris)]
         text_elements_by_uri = {te.uri: te for te
                                 in utils.build_text_elements_from_dataframe_and_labels(
-                corpus_df,
-                labels_dict={},
-                is_multiclass=self.is_multiclass(workspace_id))}
+                                    corpus_df, labels_dict={}, is_multiclass=self.is_multiclass(workspace_id))}
         text_elements = [text_elements_by_uri.get(uri) for uri in uris]
 
         with self._get_lock_object_for_workspace(workspace_id):
@@ -558,14 +556,13 @@ class FileBasedDataAccess(DataAccessApi):
 
             if self.is_multiclass(workspace_id):
                 for uri, label_dict in simplified_dict.items():
-                   self.labels_in_memory[workspace_id][dataset_name][uri] = MulticlassLabel(**label_dict)
+                    self.labels_in_memory[workspace_id][dataset_name][uri] = MulticlassLabel(**label_dict)
             else:
                 for uri, category_to_label in simplified_dict.items():
                     for category_id, label_dict in category_to_label.items():
-                        self.labels_in_memory[workspace_id][dataset_name][uri] = self.labels_in_memory[workspace_id][dataset_name].get(uri, {})
+                        self.labels_in_memory[workspace_id][dataset_name][uri] = \
+                            self.labels_in_memory[workspace_id][dataset_name].get(uri, {})
                         self.labels_in_memory[workspace_id][dataset_name][uri][int(category_id)] = Label(**label_dict)
-
-
 
         return self.labels_in_memory[workspace_id][dataset_name]
 
@@ -587,7 +584,7 @@ class FileBasedDataAccess(DataAccessApi):
                                            label_types):
         labels_info_for_workspace = self._get_labels(workspace_id, dataset_name)
         text_elements[:] = [MulticlassLabeledTextElement(**vars(text_element)) if self.is_multiclass(workspace_id)
-                         else LabeledTextElement(**vars(text_element)) for text_element in text_elements]
+                            else LabeledTextElement(**vars(text_element)) for text_element in text_elements]
         for elem in text_elements:
             if elem.uri in labels_info_for_workspace:
                 if label_types is None:
@@ -597,7 +594,8 @@ class FileBasedDataAccess(DataAccessApi):
                         if labels_info_for_workspace[elem.uri].label_type in label_types:
                             elem.label = labels_info_for_workspace[elem.uri]
                     else:
-                        elem.category_to_label = {cat: label for cat, label in labels_info_for_workspace[elem.uri].items()
+                        elem.category_to_label = {cat: label
+                                                  for cat, label in labels_info_for_workspace[elem.uri].items()
                                                   if label.label_type in label_types}
         return text_elements
 
@@ -648,7 +646,7 @@ class FileBasedDataAccess(DataAccessApi):
         os.makedirs(Path(file_path).parent, exist_ok=True)
         labels = self.labels_in_memory[workspace_id][dataset_name]
         if self.is_multiclass(workspace_id):
-            simplified_labels = {uri:label.to_dict() for uri, label in labels.items()}
+            simplified_labels = {uri: label.to_dict() for uri, label in labels.items()}
         else:
             simplified_labels = {uri: {str(category_id): label.to_dict() for category_id, label in uri_labels.items()}
                                  for uri, uri_labels in labels.items()}
@@ -704,7 +702,7 @@ class FileBasedDataAccess(DataAccessApi):
     def preload_dataset(self, dataset_name):
         self._get_ds_in_memory(dataset_name)
 
-    def initialize_user_labels(self, workspace_id:str, dataset_name:str, workspace_type:WorkspaceModelType):
+    def initialize_user_labels(self, workspace_id: str, dataset_name: str, workspace_type: WorkspaceModelType):
         """
         Save user labels object when creating a workspace
         :param workspace_id:

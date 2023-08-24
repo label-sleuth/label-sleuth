@@ -29,6 +29,6 @@ class EntropyMulticlassLearner(ActiveLearner):
     decision threshold of 0.5.
     """
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
-                              candidate_text_element_predictions: Union[Sequence[Prediction], Sequence[MulticlassPrediction]], workspace_id: str,
-                              dataset_name: str, category_id: int) -> Sequence[float]:
+                              candidate_text_element_predictions: Sequence[MulticlassPrediction],
+                              workspace_id: str, dataset_name: str, category_id: int) -> Sequence[float]:
         return [entropy(pred.scores) for pred in candidate_text_element_predictions]

@@ -79,6 +79,7 @@ class Workspace:
     dataset_name: str
     categories: Dict[int, Category] = field(default_factory=dict)
 
+
 @dataclass
 class MulticlassCategory:
     name: str
@@ -114,7 +115,7 @@ class OrchestratorStateApi:
     # Workspace-related methods
 
     def create_workspace(self, workspace_id: str, dataset_name: str,
-                         workspace_type:WorkspaceModelType=WorkspaceModelType.Binary):
+                         workspace_type: WorkspaceModelType = WorkspaceModelType.Binary):
         with self.workspaces_lock[workspace_id]:
             illegal_chars = "".join(x for x in workspace_id if not x.isalnum() and x not in "_-")
             assert len(illegal_chars) == 0, \
@@ -122,7 +123,7 @@ class OrchestratorStateApi:
             if workspace_type == WorkspaceModelType.Binary:
                 workspace = Workspace(workspace_id=workspace_id, dataset_name=dataset_name)
             elif workspace_type == WorkspaceModelType.MultiClass:
-                workspace = MulticlassWorkspace(workspace_id,dataset_name)
+                workspace = MulticlassWorkspace(workspace_id, dataset_name)
             else:
                 raise Exception(f"Workspace type {workspace_type} is not supported")
 
@@ -157,7 +158,7 @@ class OrchestratorStateApi:
         elif type(workspace) == MulticlassWorkspace:
             return workspace.categories
         else:
-            raise Exception (f"workspace id '{workspace_id}' type ({type(workspace)}) is not supported")
+            raise Exception(f"workspace id '{workspace_id}' type ({type(workspace)}) is not supported")
 
     def workspace_exists(self, workspace_id: str) -> bool:
         with self.workspaces_lock[workspace_id]:
@@ -265,7 +266,8 @@ class OrchestratorStateApi:
             else:
                 return workspace.label_change_count_since_last_train
 
-    def set_label_change_count_since_last_train(self, workspace_id: str, category_id: int, number_of_changes: int):
+    def set_label_change_count_since_last_train(self, workspace_id: str, category_id: Union[int, None],
+                                                number_of_changes: int):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
             if type(workspace) == Workspace:
@@ -291,25 +293,24 @@ class OrchestratorStateApi:
                 if category_id is not None:
                     raise Exception(f"Workspace type is {type(workspace)}, and category_id was provided when "
                                     f"increasing change count in workspace {workspace_id}")
-                workspace.label_change_count_since_last_train  = workspace.label_change_count_since_last_train + \
-                                                                 number_of_new_changes
+                workspace.label_change_count_since_last_train = \
+                    workspace.label_change_count_since_last_train + number_of_new_changes
             else:
                 raise Exception(f"Workspace type {type} is not supported")
             self._save_workspace(workspace)
 
     # multiclass-related category methods
-    def set_category_list(self, workspace_id: str, category_to_description:Mapping):
+    def set_category_list(self, workspace_id: str, category_to_description: Mapping):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
             if len(workspace.categories) > 0:
                 raise Exception(f"workspace {workspace} already has a category list")
             workspace.categories = \
-                {id: MulticlassCategory(category_name, id, category_desc) for id, (category_name, category_desc)
-                                    in enumerate(category_to_description.items())}
+                {cat_id: MulticlassCategory(category_name, cat_id, category_desc)
+                 for cat_id, (category_name, category_desc) in enumerate(category_to_description.items())}
 
             self._save_workspace(workspace)
             return workspace.categories
-
 
     # Iteration-related methods
 
