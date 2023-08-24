@@ -471,6 +471,11 @@ class TestAppIntegration(unittest.TestCase):
                            'workspace_id': 'multiclass_workspace'}}, res.get_json(),
             msg="diff in create workspace response")
 
+        # /status endpoint has to work when there are no categories
+        res = self.client.get(f"/workspace/{workspace_name}/status?",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
+
         category_name1 = "cat1"
         category_name2 = "cat2"
         category_name3 = "cat3"
