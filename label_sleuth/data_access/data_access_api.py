@@ -20,7 +20,7 @@ from enum import Enum
 
 from typing import Iterable, Sequence, Mapping, List, Union, Set
 from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, URI_SEP, LabelType, \
-    MulticlassLabel, WorkspaceModelType
+    MulticlassLabel, WorkspaceModelType, LabeledTextElement, MulticlassLabeledTextElement
 
 
 class AlreadyExistsException(Exception):
@@ -103,7 +103,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def set_labels(self, workspace_id: str, uris_to_labels: Union[Mapping[str, Mapping[int, Label]],
-                                                                Mapping[str, MulticlassLabel]],
+                                                                  Mapping[str, MulticlassLabel]],
                    apply_to_duplicate_texts=False):
         """
         Set labels to TextElements in dataset for a given workspace_id.
@@ -287,7 +287,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Iterable[str],
-                                  label_types: Set[LabelType] = frozenset({LabelType.Standard})) -> List[TextElement]:
+                                  label_types: Set[LabelType] = frozenset({LabelType.Standard})) \
+            -> Union[List[LabeledTextElement], List[MulticlassLabeledTextElement]]:
         """
         Return a List of TextElement objects from the given dataset_name, matching the uris provided, and add the label
         information for the workspace to these TextElements, if available.
@@ -344,7 +345,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def initialize_user_labels(self, workspace_id:str, dataset_name:str, workspace_type:WorkspaceModelType):
+    def initialize_user_labels(self, workspace_id: str, dataset_name: str, workspace_type: WorkspaceModelType):
         """
         Save user labels object when creating a workspace
         :param workspace_id:

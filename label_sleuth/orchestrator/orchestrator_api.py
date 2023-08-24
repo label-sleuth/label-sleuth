@@ -252,7 +252,8 @@ class OrchestratorApi:
         """
         return self.data_access.get_all_text_elements(dataset_name=dataset_name)
 
-    def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Sequence[str]) -> List[TextElement]:
+    def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Sequence[str]) \
+            -> Union[List[LabeledTextElement], List[MulticlassLabeledTextElement]]:
         """
         Get a list of TextElements by their URIs
         :param workspace_id:

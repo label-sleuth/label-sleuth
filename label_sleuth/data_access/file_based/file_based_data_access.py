@@ -444,8 +444,8 @@ class FileBasedDataAccess(DataAccessApi):
             self.unset_labels(workspace_id, category_id, [e.uri for e in labeled_elements])
 
     def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Iterable[str],
-                                  label_types: Set[LabelType] = frozenset({LabelType.Standard}))\
-            -> List[TextElement]:
+                                  label_types: Set[LabelType] = frozenset({LabelType.Standard})) \
+            -> Union[List[LabeledTextElement], List[MulticlassLabeledTextElement]]:
         """
         Return a List of TextElement objects from the given dataset_name, matching the uris provided, and add the label
         information for the workspace to these TextElements, if available.
@@ -579,9 +579,9 @@ class FileBasedDataAccess(DataAccessApi):
         self.ds_in_memory[dataset_name] = self._add_text_unique_ids(self.ds_in_memory[dataset_name])
         self.ds_in_memory[dataset_name].to_csv(self._get_dataset_dump_filename(dataset_name), index=False)
 
-    def _add_labels_info_for_text_elements(self, workspace_id, dataset_name,
-                                           text_elements: List[Union[LabeledTextElement, MulticlassLabeledTextElement]],
-                                           label_types):
+    def _add_labels_info_for_text_elements(self, workspace_id, dataset_name, text_elements: List[TextElement],
+                                           label_types) -> Union[List[LabeledTextElement],
+                                                                 List[MulticlassLabeledTextElement]]:
         labels_info_for_workspace = self._get_labels(workspace_id, dataset_name)
         text_elements[:] = [MulticlassLabeledTextElement(**vars(text_element)) if self.is_multiclass(workspace_id)
                             else LabeledTextElement(**vars(text_element)) for text_element in text_elements]

@@ -15,13 +15,13 @@
 
 from typing import Mapping, Sequence
 
-from label_sleuth.data_access.core.data_structs import TextElement, LabeledTextElement, MulticlassLabeledTextElement
+from label_sleuth.data_access.core.data_structs import LabeledTextElement, MulticlassLabeledTextElement
 
 
 def convert_text_elements_to_train_data(elements: Sequence[LabeledTextElement], category_id) -> Sequence[Mapping]:
     """
     Convert a list of text elements to the expected format for training a model.
-    :param elements: a list of TextElement objects
+    :param elements: a list of LabeledTextElement objects
     :param category_id:
     :return: a list of dictionaries with at least the "text" and "label" fields, e.g. [{'text': 'text1', 'label': True,
     'additional_field': 'value1'}, {'text': 'text2', 'label': False,  'additional_field': 'value2'}]
@@ -38,8 +38,7 @@ def convert_text_elements_to_multiclass_train_data(elements: Sequence[Multiclass
         Sequence[Mapping]:
     """
     Convert a list of text elements to the expected format for training a model.
-    :param elements: a list of TextElement objects
-    :param category_id:
+    :param elements: a list of MulticlassLabeledTextElement objects
     :return: a list of dictionaries with at least the "text" and "label" fields, e.g. [{'text': 'text1', 'label': 1,
     'additional_field': 'value1'}, {'text': 'text2', 'label': 0,  'additional_field': 'value2'}]
     """

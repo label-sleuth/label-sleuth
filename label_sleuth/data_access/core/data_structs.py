@@ -16,12 +16,13 @@
 from dataclasses import dataclass, field
 from enum import Enum
 
-from typing import List, Tuple, Mapping
+from typing import List, Tuple, Mapping, Union
 
 LABEL_POSITIVE = True
 LABEL_NEGATIVE = False
 BINARY_LABELS = frozenset({LABEL_NEGATIVE, LABEL_POSITIVE})
 URI_SEP = "-"
+
 
 class WorkspaceModelType(Enum):
     Binary = 0
@@ -82,7 +83,7 @@ class TextElement:
 
 @dataclass
 class LabeledTextElement(TextElement):
-    category_to_label: Mapping[int, Label]=field(default_factory=dict)
+    category_to_label: Mapping[int, Label] = field(default_factory=dict)
 
 
 @dataclass
@@ -93,7 +94,7 @@ class MulticlassLabeledTextElement(TextElement):
 @dataclass
 class Document:
     uri: str
-    text_elements: List[TextElement]
+    text_elements: Union[List[TextElement], List[LabeledTextElement], List[MulticlassLabeledTextElement]]
     metadata: Mapping
 
 
