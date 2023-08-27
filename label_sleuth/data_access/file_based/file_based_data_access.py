@@ -224,8 +224,8 @@ class FileBasedDataAccess(DataAccessApi):
         label information
         :param dataset_name: the name of the dataset from which the documents should be retrieved.
         :param uris: an Iterable of uris of Documents, represented as string.
-        :param label_types:  If workspace_id is provided, select which label_types to retrieve
-                     by default, only the LabelType.Standard (strong labels) are retrieved.
+        :param label_types:  If workspace_id is provided, select which label_types to retrieve; by default, only
+        the LabelType.Standard (strong labels) are retrieved.
         :return: a List of Document objects, from the given dataset_name, matching the uris provided, containing label
         information for the TextElements of these Documents, if available.
         """
@@ -286,7 +286,7 @@ class FileBasedDataAccess(DataAccessApi):
         """
         return utils.build_text_elements_from_dataframe_and_labels(
             self._get_ds_in_memory(dataset_name),
-            labels_dict={})
+            labels_dict=None)
 
     def get_text_elements(self, workspace_id: str, dataset_name: str, sample_size: int = sys.maxsize,
                           sample_start_idx: int = 0, query: str = None, is_regex: bool = False, document_uri=None,
@@ -454,21 +454,19 @@ class FileBasedDataAccess(DataAccessApi):
         :param uris:
         :param label_types:  by default, only the LabelType.Standard (strong labels) are retrieved.
         """
-
-        #TODO can we use self._get_text_elements(workspace_id,dataset_name,filter_func=func,...) for this purpose?
-        corpus_df = self._get_ds_in_memory(dataset_name)
-        uris = list(uris)
-        corpus_df = corpus_df.loc[corpus_df['uri'].isin(uris)]
-        text_elements_by_uri = {te.uri: te for te
-                                in utils.build_text_elements_from_dataframe_and_labels(
-                                    corpus_df, labels_dict={}, is_multiclass=self.is_multiclass(workspace_id))}
-        text_elements = [text_elements_by_uri.get(uri) for uri in uris]
-
         with self._get_lock_object_for_workspace(workspace_id):
-            text_elements = self._add_labels_info_for_text_elements(workspace_id,
-                                                                    dataset_name, text_elements, label_types)
+            results_dict = self._get_text_elements(
+                workspace_id=workspace_id, dataset_name=dataset_name,
+                filter_func=lambda df, _: utils.filter_by_uris(df, uris),
+                sample_size=sys.maxsize)
 
-        return text_elements
+        elements = []
+        # return elements in the same order as the list of uris, and filter by label types
+        uri_to_element = {e.uri: e for e in results_dict['results']}
+        for uri in uris:
+            elements.append(uri_to_element[uri].filter_label_types(label_types))
+        elements = [uri_to_element[uri] for uri in uris]
+        return elements
 
     def get_text_element_iterator(self, workspace_id, dataset_name, shuffle=False, random_state: int = 0,
                                   remove_duplicates=False) -> Iterable[TextElement]:
@@ -585,18 +583,12 @@ class FileBasedDataAccess(DataAccessApi):
         labels_info_for_workspace = self._get_labels(workspace_id, dataset_name)
         text_elements[:] = [MulticlassLabeledTextElement(**vars(text_element)) if self.is_multiclass(workspace_id)
                             else LabeledTextElement(**vars(text_element)) for text_element in text_elements]
-        for elem in text_elements:
-            if elem.uri in labels_info_for_workspace:
-                if label_types is None:
-                    elem.category_to_label = labels_info_for_workspace[elem.uri].copy()
-                else:
-                    if self.is_multiclass(workspace_id):
-                        if labels_info_for_workspace[elem.uri].label_type in label_types:
-                            elem.label = labels_info_for_workspace[elem.uri]
-                    else:
-                        elem.category_to_label = {cat: label
-                                                  for cat, label in labels_info_for_workspace[elem.uri].items()
-                                                  if label.label_type in label_types}
+
+        for e in text_elements:
+            if e.uri in labels_info_for_workspace:
+                e.set_element_labels(labels_info_for_workspace[e.uri])
+                if label_types is not None:
+                    e.filter_label_types(label_types)
         return text_elements
 
     def _get_text_elements(self, workspace_id: str, dataset_name: str, filter_func, sample_size: int,

@@ -12,9 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import dataclasses
 import re
-from typing import Set, Union
+from typing import Set, Union, Iterable, Optional, Dict
 
 import pandas as pd
 from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, LabelType, LabeledTextElement, \
@@ -45,18 +44,19 @@ def filename_to_uri(filename):
     return uri
 
 
-def build_text_elements_from_dataframe_and_labels(df, labels_dict, is_multiclass:Union[bool, None] = None):
+def build_text_elements_from_dataframe_and_labels(df, labels_dict: Optional[Dict], is_multiclass: Optional[bool] = None):
     element_data_columns = list(TextElement.get_field_names())
     element_dicts = map(lambda row: dict(zip(element_data_columns, row)), df[element_data_columns].values)
-    if len(labels_dict) == 0:
+    if labels_dict is None:
         return [TextElement(**d) for d in element_dicts]
     else:
         if not is_multiclass:
             return [LabeledTextElement(**d, category_to_label=labels_dict.get(d['uri'], {}).copy())
-                             for d in element_dicts]
+                    for d in element_dicts]
         else:
-            return [MulticlassLabeledTextElement(**d, label=dataclasses.replace(labels_dict[d['uri']]) if d['uri'] in labels_dict else None)
-                             for d in element_dicts]
+            return [MulticlassLabeledTextElement(
+                        **d, label=labels_dict[d['uri']].copy() if d['uri'] in labels_dict else None)
+                    for d in element_dicts]
 
 
 def filter_by_labeled_status(df: pd.DataFrame, labels_series: pd.Series, category_id: Union[int, None],
@@ -82,11 +82,15 @@ def filter_by_labeled_status(df: pd.DataFrame, labels_series: pd.Series, categor
             return df[labels_series.apply(lambda x: category_id not in x)]
     elif labeled_status == LabeledStatus.LABELED:
         if category_id is None:
-            return df[labels_series.apply(lambda x:x is not None and x.label_type in label_types)]
+            return df[labels_series.apply(lambda x: x is not None and x.label_type in label_types)]
         else:
             return df[labels_series.apply(lambda x: category_id in x and x[category_id].label_type in label_types)]
 
     return df
+
+
+def filter_by_uris(df: pd.DataFrame, uris: Iterable[str]):
+    return df.loc[df['uri'].isin(uris)]
 
 
 def filter_by_query_and_document_uri(df: pd.DataFrame, query, is_regex: bool = False, document_id=None):

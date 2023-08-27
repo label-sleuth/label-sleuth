@@ -487,6 +487,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
         category_id = 0
         all_elements = sorted(self.data_access.get_all_text_elements(dataset_name),
                               key=lambda te: te.uri)
+        all_elements = [LabeledTextElement(**vars(te)) for te in all_elements]
         all_elements2 = sorted(
             self.data_access.get_text_elements(workspace_id, dataset_name, 10 ** 6, remove_duplicates=False)['results'],
             key=lambda te: te.uri)
@@ -537,6 +538,7 @@ class TestFileBasedDataAccess(unittest.TestCase):
         self.data_access.delete_all_labels(workspace_id, dataset_name)
         self.data_access.delete_dataset(dataset_name)
 
+# TODO add test for label types
 
 if __name__ == "__main__":
     unittest.main()

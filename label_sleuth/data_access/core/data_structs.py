@@ -12,11 +12,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
+import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum
 
-from typing import List, Tuple, Mapping, Union
+from typing import List, Tuple, Mapping, Union, Set, Optional, Dict
 
 LABEL_POSITIVE = True
 LABEL_NEGATIVE = False
@@ -48,6 +48,9 @@ class MulticlassLabel:
     def to_dict(self):
         dict_for_json = {'label': self.label, 'metadata': self.metadata, 'label_type': self.label_type.value}
         return dict_for_json
+
+    def copy(self):
+        return dataclasses.replace(self)
 
 
 @dataclass
@@ -83,12 +86,28 @@ class TextElement:
 
 @dataclass
 class LabeledTextElement(TextElement):
-    category_to_label: Mapping[int, Label] = field(default_factory=dict)
+    category_to_label: Dict[int, Label] = field(default_factory=dict)
+
+    def set_element_labels(self, labels_info: Dict[int, Label]):
+        self.category_to_label = labels_info.copy()
+
+    def filter_label_types(self, label_types: Set[LabelType]):
+        self.category_to_label = {category: label for category, label in self.category_to_label.items()
+                                  if label.label_type in label_types}
+        return self
 
 
 @dataclass
 class MulticlassLabeledTextElement(TextElement):
-    label: MulticlassLabel = None
+    label: Optional[MulticlassLabel] = None
+
+    def set_element_labels(self, labels_info: MulticlassLabel):
+        self.label = labels_info.copy()
+
+    def filter_label_types(self, label_types: Set[LabelType]):
+        if self.label is not None and self.label.label_type not in label_types:
+            self.label = None
+        return self
 
 
 @dataclass
