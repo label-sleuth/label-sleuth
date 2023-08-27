@@ -101,13 +101,16 @@ class OrchestratorApi:
         Delete a given workspace
         :param workspace_id:
         """
-        # TODO handle labels deletion in multiclass workspace
         logging.info(f"deleting workspace '{workspace_id}'")
         if self.workspace_exists(workspace_id):
             workspace = self.orchestrator_state.get_workspace(workspace_id)
             try:
-                for category_id in workspace.categories.keys():
-                    self._delete_category_models(workspace_id, category_id)
+                if type(workspace) == MulticlassWorkspace:
+                    self._delete_category_models(workspace_id, None)
+                else:
+                    for category_id, category in workspace.categories.items():
+                        if category is not None:
+                            self._delete_category_models(workspace_id, category_id)
                 self.orchestrator_state.delete_workspace_state(workspace_id)
             except Exception as e:
                 logging.exception(f"error deleting workspace '{workspace_id}'")
@@ -398,7 +401,7 @@ class OrchestratorApi:
 
     # Iteration-related methods
 
-    def get_all_iterations_for_category(self, workspace_id, category_id: int) -> List[Iteration]:
+    def get_all_iterations_for_category(self, workspace_id, category_id: Union[int, None]) -> List[Iteration]:
         """
         :param workspace_id:
         :param category_id:
@@ -417,7 +420,7 @@ class OrchestratorApi:
     def get_iteration_status(self, workspace_id, category_id, iteration_index) -> IterationStatus:
         return self.orchestrator_state.get_iteration_status(workspace_id, category_id, iteration_index)
 
-    def delete_iteration_model(self, workspace_id, category_id, iteration_index):
+    def delete_iteration_model(self, workspace_id, category_id: Union[int, None], iteration_index):
         """
         Delete the model files for *iteration_index* of the given category, and mark the model as deleted.
         :param workspace_id:
@@ -436,13 +439,11 @@ class OrchestratorApi:
         self.orchestrator_state.mark_iteration_model_as_deleted(workspace_id, category_id, iteration_index)
         model_api.delete_model(model_info.model_id)
 
-    def _delete_category_models(self, workspace_id, category_id):
-        workspace = self.orchestrator_state.get_workspace(workspace_id)
-        if workspace.categories[category_id] is not None:
-            for idx in range(len(workspace.categories[category_id].iterations)):
-                if workspace.categories[category_id].iterations[idx].model is not None \
-                        and workspace.categories[category_id].iterations[idx].model.model_status != ModelStatus.DELETED:
-                    self.delete_iteration_model(workspace_id, category_id, idx)
+    def _delete_category_models(self, workspace_id, category_id: Union[int, None]):
+        iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_id)
+        for idx, iteration in enumerate(iterations):
+            if iteration.model is not None and iteration.model.model_status != ModelStatus.DELETED:
+                self.delete_iteration_model(workspace_id, category_id, idx)
 
     def get_elements_to_label(self, workspace_id: str, category_id: int, count: int, start_index: int = 0) \
             -> Tuple[List[TextElement], int]:
@@ -810,7 +811,7 @@ class OrchestratorApi:
                 to_log_message = (f"workspace '{workspace_id}' (multiclass) " +
                                   f"label counts {label_counts}. min change threshold is {self.config.multiclass_changed_element_threshold} "
                                   f"number of changes {changes_since_last_model}. min examples per class threshold is {self.config.multiclass_per_class_threshold} "
-                                  f"number of classes {len(category_ids)}.")
+                                  f"number of classes {len(category_ids)}. ")
 
             if force or (category_id is not None and self._should_train_multilabel_condition(changes_since_last_model,
                                                                                              label_counts)) or \
@@ -949,6 +950,7 @@ class OrchestratorApi:
         return suspicious_elements
 
     def estimate_precision(self, workspace_id, category_id, uris, changed_elements_count, iteration_index):
+        #TODO multiclass
         logging.info(f"workspace '{workspace_id}' category id {category_id} estimating model precision for iteration "
                      f"{iteration_index} using {len(uris)} elements")
         dataset_name = self.get_dataset_name(workspace_id)

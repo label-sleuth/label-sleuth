@@ -131,7 +131,7 @@ class OrchestratorStateApi:
                 raise Exception(f"workspace name '{workspace_id}' already exists")
             self._save_workspace(workspace)
 
-    def get_workspace(self, workspace_id) -> Workspace:
+    def get_workspace(self, workspace_id) -> Union[Workspace, MulticlassWorkspace]:
         with self.workspaces_lock[workspace_id]:
             try:
                 return self._load_workspace(workspace_id)
