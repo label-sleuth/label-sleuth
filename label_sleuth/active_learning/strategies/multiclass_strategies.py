@@ -13,13 +13,13 @@
 #  limitations under the License.
 #
 
-from typing import Sequence, Union
+from typing import Sequence
 
-from scipy.stats._entropy import entropy
+from scipy.stats import entropy
 
 from label_sleuth.active_learning.core.active_learning_api import ActiveLearner
 from label_sleuth.data_access.core.data_structs import TextElement
-from label_sleuth.models.core.prediction import Prediction, MulticlassPrediction
+from label_sleuth.models.core.prediction import MulticlassPrediction
 
 
 class EntropyMulticlassLearner(ActiveLearner):

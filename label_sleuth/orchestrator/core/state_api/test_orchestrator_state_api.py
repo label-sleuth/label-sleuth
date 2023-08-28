@@ -19,28 +19,11 @@ import shutil
 import tempfile
 from datetime import datetime
 
-from label_sleuth.data_access.core.data_structs import TextElement, URI_SEP, Document, WorkspaceModelType
+from label_sleuth.data_access.core.data_structs import WorkspaceModelType
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, ModelInfo, \
     IterationStatus, Iteration, Category, Workspace, MulticlassWorkspace
-
-
-def generate_simple_doc(dataset_name, num_sentences, doc_id=0):
-    sentence_template = 'This is sentence number :{}'
-    sentences = [sentence_template.format(idx) for idx in range(num_sentences)]
-
-    text_elements = []
-    start_span = 0
-    for idx, sentence in enumerate(sentences):
-        end_span = start_span + len(sentence)
-
-        text_elements.append(TextElement(uri=URI_SEP.join([dataset_name, str(doc_id), str(idx)]), text=sentence,
-                                         span=[(start_span, end_span)], metadata={}, category_to_label={}))
-        start_span = end_span + 1
-
-    doc = Document(uri=dataset_name + URI_SEP + str(doc_id), text_elements=text_elements, metadata={})
-    return doc
 
 
 class TestOrchestratorStateAPI(unittest.TestCase):
@@ -195,7 +178,6 @@ class TestOrchestratorStateAPI(unittest.TestCase):
                 self.assertEqual(iteration.model.__dict__.keys(), ModelInfo.__annotations__.keys(),
                                  "ModelInfo fields have changed, this may break existing user files")
 
-
     def test_create_and_load_multiclass_workspace(self):
         workspace_id = "workspace_1"
 
@@ -203,7 +185,7 @@ class TestOrchestratorStateAPI(unittest.TestCase):
 
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name,
                                                      workspace_type=WorkspaceModelType.MultiClass)
-        categories = self.orchestrator_state_api.set_category_list(workspace_id,{"cat1":"desc1", "cat2":"desc2"})
+        categories = self.orchestrator_state_api.set_category_list(workspace_id, {"cat1": "desc1", "cat2": "desc2"})
 
         loaded = self.orchestrator_state_api.get_workspace(workspace_id)
         self.assertEqual(workspace_id, loaded.workspace_id)

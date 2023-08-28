@@ -53,14 +53,12 @@ class SVM(ModelAPI):
         if self.representation_type == RepresentationType.WORD_EMBEDDING:
             self.sentence_embedding_service = sentence_embedding_service
 
-
     def get_prediction_class(self):
         """
         Returns the prediction dataclass used by the model. This class is used for storing and loading model
         predictions from the disk.
         """
         return MulticlassPrediction if self.is_multiclass else Prediction
-
 
     def _train(self, model_id, train_data, model_params):
         if self.kernel == "linear":
@@ -110,7 +108,8 @@ class SVM(ModelAPI):
     def infer(self, model_components: SVMModelComponents, items_to_infer):
         if 'spacy_version' in model_components.additional_fields:
             self.sentence_embedding_service.get_spacy_model(model_components.language.spacy_model_name)
-            if self.sentence_embedding_service.get_spacy_model_version(model_components.language) != model_components.additional_fields['spacy_version']:
+            if self.sentence_embedding_service.get_spacy_model_version(model_components.language) \
+                    != model_components.additional_fields['spacy_version']:
                 raise Exception("This model is incompatible with the current version of Label Sleuth. To perform "
                                 "inference using this model, please downgrade to version 0.14.0 or earlier.")
 
@@ -119,7 +118,7 @@ class SVM(ModelAPI):
                                                        vectorizer=model_components.vectorizer)
         labels = model_components.model.predict(features_all_texts).tolist()
         if self.is_multiclass:
-            return [MulticlassPrediction(label=label,scores=scores.tolist()) for label, scores in
+            return [MulticlassPrediction(label=label, scores=scores.tolist()) for label, scores in
                     zip(labels, self.get_probs(model_components.model, features_all_texts))]
         else:
             # The True label is in the second position as sorted([True, False]) is [False, True]
@@ -162,6 +161,7 @@ class SVM_BOW(SVM):
     def get_supported_languages(self):
         return Languages.all_languages()
 
+
 class MulticlassSVM_BOW(SVM):
     def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
         super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
@@ -183,7 +183,7 @@ class SVM_WordEmbeddings(SVM):
 
 
 if __name__ == '__main__':
-    api = MulticlassSVM_BOW("/tmp", BackgroundJobsManager(),SentenceEmbeddingService("/tmp"))
+    api = MulticlassSVM_BOW("/tmp", BackgroundJobsManager(), SentenceEmbeddingService("/tmp"))
     model_id = api.train(
         [
             {

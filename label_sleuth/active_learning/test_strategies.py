@@ -23,7 +23,7 @@ from label_sleuth.active_learning.strategies.random_sampling import RandomSampli
 from label_sleuth.active_learning.strategies.retrospective import RetrospectiveLearner
 
 from label_sleuth.data_access.file_based.utils import URI_SEP
-from label_sleuth.data_access.core.data_structs import Document, TextElement, Label, LABEL_NEGATIVE, LabeledTextElement
+from label_sleuth.data_access.core.data_structs import Document, Label, LABEL_NEGATIVE, LabeledTextElement
 from label_sleuth.models.core.prediction import Prediction
 
 
@@ -37,7 +37,8 @@ def generate_simple_doc(dataset_name, category_id, num_sentences, doc_id=0):
         end_span = start_span + len(sentence)
         mock_label = {category_id: Label(LABEL_NEGATIVE)}
         text_elements.append(LabeledTextElement(uri=URI_SEP.join([dataset_name, str(doc_id), str(idx)]), text=sentence,
-                                         span=[(start_span, end_span)], metadata={}, category_to_label=mock_label))
+                                                span=[(start_span, end_span)], metadata={},
+                                                category_to_label=mock_label))
         start_span = end_span + 1
 
     doc = Document(uri=dataset_name + URI_SEP + str(doc_id), text_elements=text_elements, metadata={})

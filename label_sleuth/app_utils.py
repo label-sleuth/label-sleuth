@@ -40,7 +40,7 @@ def validate_workspace_id(function):
     return wrapper
 
 
-def validate_category_id(function): # TODO enable, ask frontend to pass multiclass for each multilass request
+def validate_category_id(function):  #TODO enable, ask frontend to pass multiclass for each multilass request
     @functools.wraps(function)
     def wrapper(workspace_id, *args, **kwargs):
         category_id = request.args.get('category_id')
@@ -56,13 +56,14 @@ def validate_category_id(function): # TODO enable, ask frontend to pass multicla
     return wrapper
 
 
-def _text_element_to_user_labels(text_element:Union[TextElement, LabeledTextElement, MulticlassLabeledTextElement]):
+def _text_element_to_user_labels(text_element: Union[TextElement, LabeledTextElement, MulticlassLabeledTextElement]):
     if type(text_element) == TextElement:
         return {}
     elif type(text_element) == LabeledTextElement:
-        return {} if text_element.category_to_label is None else {k: str(v.label).lower() for k, v in text_element.category_to_label.items()}
+        return {} if text_element.category_to_label is None else {k: str(v.label).lower()
+                                                                  for k, v in text_element.category_to_label.items()}
     elif type(text_element) == MulticlassLabeledTextElement:
-        return {} if text_element.label is None or text_element.label.label is None else {0:text_element.label.label} #TODO do we want a dict here for compatability with the TextElement labels dict? confusing!
+        return {} if text_element.label is None or text_element.label.label is None else {0: text_element.label.label} #TODO do we want a dict here for compatability with the TextElement labels dict? confusing!
 
 
 def elements_back_to_front(workspace_id: str, elements: List[Union[TextElement, LabeledTextElement]], category_id: int,

@@ -37,7 +37,6 @@ class Prediction:
             raise Exception(f'Model score {self.score} is outside the range [0-1]')
 
 
-
 @dataclass
 class MulticlassPrediction:
     """

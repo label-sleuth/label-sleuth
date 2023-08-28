@@ -44,7 +44,8 @@ def filename_to_uri(filename):
     return uri
 
 
-def build_text_elements_from_dataframe_and_labels(df, labels_dict: Optional[Dict], is_multiclass: Optional[bool] = None):
+def build_text_elements_from_dataframe_and_labels(df, labels_dict: Optional[Dict],
+                                                  is_multiclass: Optional[bool] = None):
     element_data_columns = list(TextElement.get_field_names())
     element_dicts = map(lambda row: dict(zip(element_data_columns, row)), df[element_data_columns].values)
     if labels_dict is None:

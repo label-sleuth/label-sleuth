@@ -19,7 +19,7 @@ from collections import defaultdict
 from unittest.mock import MagicMock
 
 from label_sleuth.analysis_utils.labeling_reports import get_suspected_labeling_contradictions_by_distance
-from label_sleuth.data_access.core.data_structs import TextElement, Label, LabelType, LabeledTextElement
+from label_sleuth.data_access.core.data_structs import Label, LabelType, LabeledTextElement
 from label_sleuth.models.core.languages import Languages
 
 

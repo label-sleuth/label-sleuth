@@ -15,7 +15,6 @@
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum
-
 from typing import List, Tuple, Mapping, Union, Set, Optional, Dict
 
 LABEL_POSITIVE = True

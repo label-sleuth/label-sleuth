@@ -31,16 +31,17 @@ from flask_cors import CORS, cross_origin
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 from label_sleuth.app_utils import elements_back_to_front, extract_iteration_information_list, \
-    extract_enriched_ngrams_and_weights_list, get_customizable_UI_text, get_element, get_natural_sort_key, validate_category_id, \
-    validate_workspace_id
+    extract_enriched_ngrams_and_weights_list, get_customizable_UI_text, get_element, get_natural_sort_key, \
+    validate_category_id, validate_workspace_id
 from label_sleuth.authentication import authenticate_response, login_if_required, verify_password
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.config import Configuration
 from label_sleuth.configurations.users import User
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE, DisplayFields, Label, \
     WorkspaceModelType, MulticlassLabel
-from label_sleuth.data_access.data_access_api import AlreadyExistsException, BadDocumentNamesException, DatasetRowCountLimitExceededException, \
-    DocumentNameTooLongException, DocumentNameEmptyException, NoTextColumnException
+from label_sleuth.data_access.data_access_api import AlreadyExistsException, BadDocumentNamesException, \
+    DatasetRowCountLimitExceededException, DocumentNameTooLongException, DocumentNameEmptyException, \
+    NoTextColumnException
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.core.tools import SentenceEmbeddingService
@@ -240,9 +241,9 @@ def add_documents(dataset_name):
             }
         })
     except DocumentNameEmptyException:
-        return make_error({"type": "bad_characters", "title":
-                                                f'Some rows have an empty string in the "document_id" column. '
-                                                f'Please correct your CSV file and try again.'}, 400)
+        return make_error({"type": "bad_characters",
+                           "title": f'Some rows have an empty string in the "document_id" column. '
+                                    f'Please correct your CSV file and try again.'}, 400)
     except DocumentNameTooLongException as e:
         return make_error({
             "type": "name_too_long", 
@@ -260,7 +261,8 @@ def add_documents(dataset_name):
     except DatasetRowCountLimitExceededException as e:
         return make_error({
                 "type": "max_dataset_row_number",
-                "title": f"The uploaded csv file exceeds the row count limit of {curr_app.config['CONFIGURATION'].max_dataset_length} by {e.exceeded_by} rows."
+                "title": f"The uploaded csv file exceeds the row count limit "
+                         f"of {curr_app.config['CONFIGURATION'].max_dataset_length} by {e.exceeded_by} rows."
             }, 409)
     except Exception:
         logging.exception(f"Failed to load documents to dataset '{dataset_name}'")
@@ -285,8 +287,8 @@ def get_workspaces_by_dataset_name(dataset_name):
 @login_if_required
 def delete_dataset(dataset_name):
     """
-    This call permanently deletes the given dataset. If the dataset is used by one or more workspaces, those will be deleted too, along with all the categories, user
-    labels and models.
+    This call permanently deletes the given dataset. If the dataset is used by one or more workspaces,
+    those will be deleted too, along with all the categories, user labels and models.
 
     :param dataset_name:
     """
@@ -438,7 +440,7 @@ def set_category_list(workspace_id):
     return jsonify(categories)
 
 
-def update_category_list(workspace_id:str):
+def update_category_list(workspace_id: str):
     raise Exception("Not implemented yet")
 
 
@@ -452,8 +454,8 @@ def get_all_categories(workspace_id):
     :param workspace_id:
     """
     categories = curr_app.orchestrator_api.get_all_categories(workspace_id)
-    category_dicts = [{'category_id': id, 'category_name': category.name, 'category_description': category.description}
-                      for id, category in categories.items()]
+    category_dicts = [{'category_id': cat_id, 'category_name': category.name,
+                       'category_description': category.description} for cat_id, category in categories.items()]
 
     res = {'categories': category_dicts}
 
@@ -700,7 +702,8 @@ def query(workspace_id):
                                            unlabeled_only=False, sample_size=sample_size,
                                            sample_start_idx=sample_start_idx, remove_duplicates=True)
     sorted_elements = sorted(resp["results"], key=lambda te: get_natural_sort_key(te.uri))
-    elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id, query_string=query_string, is_regex=False)
+    elements_transformed = elements_back_to_front(workspace_id, sorted_elements, category_id, query_string=query_string,
+                                                  is_regex=False)
     res = {'elements': elements_transformed,
            'hit_count': resp["hit_count"],
            'hit_count_unique': resp["hit_count_unique"]}
@@ -730,7 +733,7 @@ def set_element_label(workspace_id, element_id):
     specific situations this parameter is set to False and the updating of the counter is performed at a later time.
     """
     post_data = request.get_json(force=True)
-
+    # TODO the behavior of category_id here is inconsistent with the other endpoints
     if "category_id" not in post_data:
         return jsonify({"type": "missing_category_id", "title": "category_id was not provided in post data"}), 422
 
@@ -740,15 +743,15 @@ def set_element_label(workspace_id, element_id):
     iteration = int(post_data.get("iteration", -1))
     source = post_data.get("source", "n/a")
     update_counter = post_data.get('update_counter', True)
-    if multiclass and (value not in  ['true', "True", "TRUE", "none", True]):
+    if multiclass and (value not in ['true', "True", "TRUE", "none", True]):
         make_error(f"in multiclass value can only be {['true', 'True', 'TRUE', True]} or none")
+
     if value == 'none':
         if multiclass: # TODO implement
             raise Exception("TODO unset label for multiclass is not implemented yet")
         curr_app.orchestrator_api. \
             unset_labels(workspace_id, category_id, [element_id],
                          apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
-
     else:
         if value in ['true', "True", "TRUE", True]:
             value = True
@@ -763,7 +766,7 @@ def set_element_label(workspace_id, element_id):
         else:
             uri_with_updated_label = {element_id: {category_id: Label(value,
                                                                       metadata={"iteration": iteration,
-                                                                                "source" :source})}}
+                                                                                "source": source})}}
         curr_app.orchestrator_api. \
             set_labels(workspace_id, uri_with_updated_label,
                        apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts,
@@ -1082,11 +1085,12 @@ def prepare_model(workspace_id):
         iteration_index = int(iteration_index)
 
     zipped_path = os.path.join(curr_app.orchestrator_api.get_model_path(workspace_id, category_id, iteration_index),
-                 'model.zip')
+                               'model.zip')
 
     if not os.path.exists(zipped_path):
         logging.info(f"copying model for export in {workspace_id} category id {category_id}")
-        temp_model_dir = curr_app.orchestrator_api.prepare_model_dir_for_export(workspace_id, category_id, iteration_index)
+        temp_model_dir = curr_app.orchestrator_api.prepare_model_dir_for_export(workspace_id, category_id,
+                                                                                iteration_index)
         logging.info(f"compressing model for export in {workspace_id} category id {category_id}")
         try:
             memory_file = BytesIO()

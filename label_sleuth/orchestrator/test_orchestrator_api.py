@@ -66,7 +66,8 @@ class TestOrchestratorAPI(unittest.TestCase):
         cls.orchestrator_state = OrchestratorStateApi(os.path.join(cls.temp_dir.name, "output", "workspaces"))
         cls.training_set_selection_factory = TrainingSetSelectionFactory(cls.data_access, background_jobs_manager)
         cls.orchestrator_api = OrchestratorApi(cls.orchestrator_state, cls.data_access, cls.active_learning_factory,
-                                               cls.model_factory, cls.training_set_selection_factory, background_jobs_manager,
+                                               cls.model_factory, cls.training_set_selection_factory,
+                                               background_jobs_manager,
                                                None,  # no need to use sentence embedding,
                                                config)
 
@@ -220,7 +221,8 @@ class TestOrchestratorAPI(unittest.TestCase):
     @patch.object(OrchestratorApi, 'run_iteration')
     @patch.object(OrchestratorStateApi, 'get_label_change_count_since_last_train')
     @patch.object(FileBasedDataAccess, 'get_label_counts')
-    def test_get_train_if_recommended_multiclass(self, mock_get_label_counts, mock_get_label_change_count, mock_run_iteration):
+    def test_get_train_if_recommended_multiclass(self, mock_get_label_counts, mock_get_label_change_count,
+                                                 mock_run_iteration):
         workspace_id = self.test_get_train_if_recommended_multiclass.__name__
         dataset_name = f'{workspace_id}_dump'
         category_name = f'{workspace_id}_cat'
@@ -251,7 +253,6 @@ class TestOrchestratorAPI(unittest.TestCase):
         progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
         self.assertEqual(progress['all'], 100)
 
-
         train_set_selector = \
             self.orchestrator_api.training_set_selection_factory.get_training_set_selector(
                 self.orchestrator_api.config.training_set_selection_strategy).__class__
@@ -267,14 +268,14 @@ class TestOrchestratorAPI(unittest.TestCase):
         category_name = f'{workspace_id}_cat'
         generate_corpus(self.data_access, dataset_name)
         self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
-        self.orchestrator_api.set_category_list(workspace_id,{"cat1":"desc1", "cat2":"desc2", "cat3":"desc3"})
+        self.orchestrator_api.set_category_list(workspace_id, {"cat1": "desc1", "cat2": "desc2", "cat3": "desc3"})
 
         change_threshold = self.orchestrator_api.config.multiclass_changed_element_threshold
         per_class_threshold = self.orchestrator_api.config.multiclass_per_class_threshold
 
         # do not trigger training
 
-        label_counts = {0:1, 1:1, 2:0}
+        label_counts = {0: 1, 1: 1, 2: 0}
         mock_get_label_counts.return_value = label_counts
         mock_get_label_change_count.return_value = sum(label_counts.values())
 
@@ -312,7 +313,6 @@ class TestOrchestratorAPI(unittest.TestCase):
         mock_get_label_change_count.return_value = sum(label_counts.values())
         progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
         self.assertEqual(progress['all'], 100)
-
 
     def test_set_label_increases_change_count(self):
         workspace_id = self.test_set_label_increases_change_count.__name__

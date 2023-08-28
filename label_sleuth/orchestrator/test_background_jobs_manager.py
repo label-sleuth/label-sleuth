@@ -30,6 +30,7 @@ config = load_config(os.path.abspath(os.path.join(
         "config_for_tests.json"))
     )
 
+
 def successful_train(mid, dummy_data):
     return mid
 
