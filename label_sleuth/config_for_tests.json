@@ -3,7 +3,7 @@
     "first_model_negative_threshold": 1,
     "changed_element_threshold": 3,
     "multiclass_per_class_threshold": 1,
-    "multiclass_changed_element_threshold": 3,
+    "multiclass_changed_element_threshold": 2,
     "training_set_selection_strategy": "ALL_LABELED",
     "model_policy": "STATIC_SVM_BOW",
     "multiclass_model_policy": "STATIC_MULTICLASS_SVM_BOW",

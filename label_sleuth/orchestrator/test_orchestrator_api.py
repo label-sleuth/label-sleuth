@@ -314,6 +314,12 @@ class TestOrchestratorAPI(unittest.TestCase):
         progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
         self.assertEqual(progress['all'], 100)
 
+        label_counts = {0: 2, 1: 3, 2: 3}
+        mock_get_label_counts.return_value = label_counts
+        mock_get_label_change_count.return_value = 1
+        progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(progress['all'], 50)
+
     def test_set_label_increases_change_count(self):
         workspace_id = self.test_set_label_increases_change_count.__name__
         dataset_name = f'{workspace_id}_dump'
