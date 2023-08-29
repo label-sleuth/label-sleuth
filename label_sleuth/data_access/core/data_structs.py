@@ -51,6 +51,10 @@ class MulticlassLabel:
     def copy(self):
         return dataclasses.replace(self)
 
+    def __post_init__(self):
+        if type(self.label_type) == int:
+            self.label_type = LabelType(self.label_type)
+
 
 @dataclass
 class Label:
