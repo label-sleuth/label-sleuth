@@ -1055,7 +1055,7 @@ class OrchestratorApi:
             return {"all": min(
                 # for a new training to start both the number of labels changed and the number of labeled elements must
                 # be above their respective thresholds; thus, we determine the status as the minimum of the two ratios
-                max(0, min(round(changed_since_last_model_count / self.config.changed_element_threshold * 100), 100)),
+                max(0, min(round(changed_since_last_model_count / self.config.multiclass_changed_element_threshold * 100), 100)),
                 max(0, min(100, round(100*mean([min(label_counts[cat_id], self.config.multiclass_per_class_threshold) / self.config.multiclass_per_class_threshold for cat_id in category_ids])))
                     )
             )}
