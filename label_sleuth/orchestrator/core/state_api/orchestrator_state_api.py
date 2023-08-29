@@ -240,9 +240,14 @@ class OrchestratorStateApi:
     def get_current_category_recommendations(self, workspace_id: str, category_id: int) -> Sequence[str]:
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            category = workspace.categories[category_id]
+            if type(workspace) == Workspace:
+                iterations = workspace.categories[category_id].iterations
+            elif type(workspace) == MulticlassWorkspace:
+                iterations = workspace.iterations
+            else:
+                raise Exception(f"workspace id '{workspace_id}' type ({type(workspace)}) is not supported")
 
-            for iteration in reversed(category.iterations):
+            for iteration in reversed(iterations):
                 if iteration.status == IterationStatus.READY:
                     return iteration.active_learning_recommendations
             return []

@@ -21,7 +21,7 @@ import unittest
 from label_sleuth import app, config, app_utils
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus
 from unittest import mock
-import json
+
 
 HEADERS = {'Content-Type': 'application/json'}
 
@@ -244,8 +244,7 @@ class TestAppIntegration(unittest.TestCase):
             {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94, 'id': 'my_test_dataset-document1-1',
              'model_predictions': {str(category_id): 'true'}, 'text': 'this is the second text element of document one',
              'user_labels': {}},
-             {
-             "begin": 196, "docid": "my_test_dataset-document3", "end": 317, "id": "my_test_dataset-document3-3",
+            {"begin": 196, "docid": "my_test_dataset-document3", "end": 317, "id": "my_test_dataset-document3-3",
              "model_predictions": {"0": "true"}, "snippet": text_with_parenthesis_snippet, "text": text_with_parenthesis,
              "user_labels": {}},
             {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0',
@@ -328,7 +327,7 @@ class TestAppIntegration(unittest.TestCase):
                             'model_predictions': {'0': 'true'},
                             'text': 'document 3 has three text elements, this is '
                                     'the third',
-                            'user_labels': {'0': 'true'}}], 
+                            'user_labels': {'0': 'true'}}],
                         'hit_count': 3},
                         res.get_json(), msg="diffs in positively labeled elements")
 
@@ -363,10 +362,10 @@ class TestAppIntegration(unittest.TestCase):
                               data='{{"category_id":"{}","value":"{}"}}'.format(category_id, True), headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to set the label for the first element recommended by the active learning")
-        self.assertEqual({'category_id': '0', 
+        self.assertEqual({'category_id': '0',
                           'element': {
-                              'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0', 
-                              'model_predictions': {'0': 'true'}, 'text': 'this is the only text element in document two', 
+                              'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0',
+                              'model_predictions': {'0': 'true'}, 'text': 'this is the only text element in document two',
                               'user_labels': {'0': 'true'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json())
 
@@ -457,11 +456,11 @@ class TestAppIntegration(unittest.TestCase):
             waiting_count += 1
         return res
 
-
     def test_full_flow_multiclass(self):
         workspace_name = "multiclass_workspace"
         dataset_name = "multiclass_dataset"
-        data, text_with_parenthesis, text_with_parenthesis_snippet, text_with_parenthesis_snippet_in_query = self.create_dataset(dataset_name)
+        data, text_with_parenthesis, text_with_parenthesis_snippet, text_with_parenthesis_snippet_in_query = \
+            self.create_dataset(dataset_name)
         res = self.client.post("/workspace",
                                data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"MultiClass"}}'.format(workspace_name, dataset_name),
                                headers=HEADERS)
@@ -472,9 +471,8 @@ class TestAppIntegration(unittest.TestCase):
             msg="diff in create workspace response")
 
         # /status endpoint has to work when there are no categories
-        res = self.client.get(f"/workspace/{workspace_name}/status?",
-                              headers=HEADERS)
-        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
+        res = self.client.get(f"/workspace/{workspace_name}/status", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get status for a newly-created workspace")
 
         category_name1 = "cat1"
         category_name2 = "cat2"
@@ -487,9 +485,9 @@ class TestAppIntegration(unittest.TestCase):
                                data=f'{{"category_to_description":{{"{category_name1}":"{category_desc1}","{category_name2}":"{category_desc2}", "{category_name3}":"{category_desc3}"}}}}',
                                headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to set category list")
-        self.assertEqual(res.get_json(),{'0': {'description': 'desc1', 'id': 0, 'name': 'cat1'},
-                                         '1': {'description': 'desc2', 'id': 1, 'name': 'cat2'},
-                                         '2': {'description': 'desc3', 'id': 2, 'name': 'cat3'}},
+        self.assertEqual(res.get_json(), {'0': {'description': 'desc1', 'id': 0, 'name': 'cat1'},
+                                          '1': {'description': 'desc2', 'id': 1, 'name': 'cat2'},
+                                          '2': {'description': 'desc3', 'id': 2, 'name': 'cat3'}},
                          msg="diff in set category list response")
 
         res = self.client.get(f"/workspace/{workspace_name}/documents", headers=HEADERS)
@@ -522,67 +520,66 @@ class TestAppIntegration(unittest.TestCase):
                 "user_labels": {}}],
             document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
 
-
         # set first element and get status
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}',
-                              data='{"category_id":"0","value":"True", "multiclass":true}', headers=HEADERS)
+                              data='{"category_id":"0", "value":"True", "mode":"MultiClass"}', headers=HEADERS)
 
-        self.assertEqual({"category_id":"0","element":{
-          "begin":0,
-          "docid":"multiclass_dataset-document3",
-          "end":53,
-          "id":"multiclass_dataset-document3-0",
-          "model_predictions":{},
-          "text":"document 3 has three text elements, this is the first",
-          "user_labels":{"0":0}},
-          "workspace_id":"multiclass_workspace"}, res.get_json())
+        self.assertEqual({"category_id": "0", "workspace_id": "multiclass_workspace",
+                          "element": {
+                            "begin": 0,
+                            "docid": "multiclass_dataset-document3",
+                            "end": 53,
+                            "id": "multiclass_dataset-document3-0",
+                            "model_predictions": {},
+                            "text": "document 3 has three text elements, this is the first",
+                            "user_labels": {"0": 0}}
+                          }, res.get_json())
 
-        res = self.client.get(f"/workspace/{workspace_name}/status?",
-                              headers=HEADERS)
+        res = self.client.get(f"/workspace/{workspace_name}/status", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
         self.assertEqual({'labeling_counts': {'0': 1}, 'progress': {'all': 33}},
                          res.get_json(), msg="diffs in get status response after setting a label")
 
         # set second element and get status
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[1]["id"]}',
-                              data='{"category_id":"1","value":"True", "multiclass":true}', headers=HEADERS)
+                              data='{"category_id":"1", "value":"True", "mode":"MultiClass"}', headers=HEADERS)
 
-        self.assertEqual({"category_id": "1", "element": {
-            "begin": 54,
-            "docid": "multiclass_dataset-document3",
-            "end": 141,
-            "id": "multiclass_dataset-document3-1",
-            "model_predictions": {},
-            "text": "document 3 has three text elements, this is the second that will be labeled as negative",
-            "user_labels": {"0": 1}},
-                          "workspace_id": "multiclass_workspace"}, res.get_json())
+        self.assertEqual({"category_id": "1", "workspace_id": "multiclass_workspace",
+                          "element": {
+                            "begin": 54,
+                            "docid": "multiclass_dataset-document3",
+                            "end": 141,
+                            "id": "multiclass_dataset-document3-1",
+                            "model_predictions": {},
+                            "text": "document 3 has three text elements, this is the second that will be labeled as negative",
+                            "user_labels": {"0": 1}}
+                          }, res.get_json())
 
-        res = self.client.get(f"/workspace/{workspace_name}/status?",
-                              headers=HEADERS)
+        res = self.client.get(f"/workspace/{workspace_name}/status", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the second label")
         self.assertEqual({'labeling_counts': {'0': 1, '1': 1}, 'progress': {'all': 67}},
                          res.get_json(), msg="diffs in get status response after setting the second label")
 
         # set third element and get status
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[2]["id"]}',
-                              data='{"category_id":"2","value":"True", "multiclass":true}', headers=HEADERS)
+                              data='{"category_id":"2", "value":"True", "mode":"MultiClass"}', headers=HEADERS)
 
-        self.assertEqual({"category_id": "2", "element": {
-            "begin": 142,
-            "docid": "multiclass_dataset-document3",
-            "end": 195,
-            "id": "multiclass_dataset-document3-2",
-            "model_predictions": {},
-            "text": "document 3 has three text elements, this is the third",
-            "user_labels": {"0": 2}},
-                          "workspace_id": "multiclass_workspace"}, res.get_json())
+        self.assertEqual({"category_id": "2", "workspace_id": "multiclass_workspace",
+                          "element": {
+                            "begin": 142,
+                            "docid": "multiclass_dataset-document3",
+                            "end": 195,
+                            "id": "multiclass_dataset-document3-2",
+                            "model_predictions": {},
+                            "text": "document 3 has three text elements, this is the third",
+                            "user_labels": {"0": 2}}
+                          }, res.get_json())
 
-        res = self.client.get(f"/workspace/{workspace_name}/status?",
-                              headers=HEADERS)
+        res = self.client.get(f"/workspace/{workspace_name}/status", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
         self.assertEqual({'0': 1, '1': 1, '2': 1},
                          res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
-        
+
         res = self.client.get(f"/workspace/{workspace_name}/query?qry_string=second%20text",
                               headers=HEADERS)
         self.assertEqual(
@@ -600,8 +597,8 @@ class TestAppIntegration(unittest.TestCase):
             ],
                 "hit_count": 1,
                 "hit_count_unique": 1
-            }, 
-            res.get_json(), 
+            },
+            res.get_json(),
             msg="The searched text differs from the response"
         )
 
@@ -610,24 +607,55 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code, msg="Failed to get iterations list")
         self.assertEqual(1, len(res.get_json()["iterations"]), msg="first model was not added to the models list")
 
-        #TODO get active learning recommendations
-        # res = self.client.get(f"/workspace/{workspace_name}/active_learning?",
-        #                       headers=HEADERS)
-        # self.assertEqual(200, res.status_code, msg="Failed to get active learning recommendations")
-        # active_learning_response = res.get_json()
-        # self.assertEqual({'elements': [
-        #     {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94, 'id': 'my_test_dataset-document1-1',
-        #      'model_predictions': {str(category_id): 'true'}, 'text': 'this is the second text element of document one',
-        #      'user_labels': {}},
-        #     {
-        #         "begin": 196, "docid": "my_test_dataset-document3", "end": 317, "id": "my_test_dataset-document3-3",
-        #         "model_predictions": {"0": "true"}, "snippet": text_with_parenthesis_snippet,
-        #         "text": text_with_parenthesis,
-        #         "user_labels": {}},
-        #     {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0',
-        #      'model_predictions': {str(category_id): 'true'}, 'text': 'this is the only text element in document two',
-        #      'user_labels': {}},
-        #     {'begin': 0, 'docid': 'my_test_dataset-document1', 'end': 46, 'id': 'my_test_dataset-document1-0',
-        #      'model_predictions': {str(category_id): 'true'}, 'text': 'this is the first text element of document one',
-        #      'user_labels': {}}], 'hit_count': 4},
-        #     active_learning_response)
+        # get active learning recommendations
+        res = self.client.get(f"/workspace/{workspace_name}/active_learning", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get active learning recommendations")
+        active_learning_response = res.get_json()
+
+        # classifier behavior is non-deterministic, so we change the predictions for the test
+        for d in active_learning_response['elements']:
+            d['model_predictions'] = 2
+
+        self.assertEqual({'elements': [
+            {'begin': 47, 'docid': 'multiclass_dataset-document1', 'end': 94, 'id': 'multiclass_dataset-document1-1',
+             'model_predictions': 2, 'text': 'this is the second text element of document one',
+             'user_labels': {}},
+            {
+                "begin": 196, "docid": "multiclass_dataset-document3", "end": 317, "id": "multiclass_dataset-document3-3",
+                "model_predictions": 2, "snippet": text_with_parenthesis_snippet,
+                "text": text_with_parenthesis,
+                "user_labels": {}},
+            {'begin': 0, 'docid': 'multiclass_dataset-document2', 'end': 45, 'id': 'multiclass_dataset-document2-0',
+             'model_predictions': 2, 'text': 'this is the only text element in document two',
+             'user_labels': {}},
+            {'begin': 0, 'docid': 'multiclass_dataset-document1', 'end': 46, 'id': 'multiclass_dataset-document1-0',
+             'model_predictions': 2, 'text': 'this is the first text element of document one',
+             'user_labels': {}}], 'hit_count': 4},
+            active_learning_response)
+
+        # set the first label according to the active learning recommendations
+        res = self.client.put(f'/workspace/{workspace_name}/element/{active_learning_response["elements"][0]["id"]}',
+                              data='{"category_id":"2", "value":"True", "mode":"MultiClass"}', headers=HEADERS)
+
+        self.assertEqual(200, res.status_code,
+                         msg="Failed to set the label for the first element recommended by the active learning")
+
+        #TODO continue flow
+        # self.assertEqual({'category_id': str(category_id),
+        #                   'element': {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94,
+        #                               'id': 'my_test_dataset-document1-1',
+        #                               'model_predictions': {str(category_id): 'true'},
+        #                               'text': 'this is the second text element of document one',
+        #                               'user_labels': {str(category_id): 'true'}}, 'workspace_id': 'my_test_workspace'},
+        #                  res.get_json())
+
+        # delete workspace
+        res = self.client.delete(f"/workspace/{workspace_name}",
+                               data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"MultiClass"}}'.format(workspace_name, dataset_name),
+                               headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to delete the multiclass workspace")
+
+        res = self.client.post("/workspace",
+                               data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"MultiClass"}}'.format(workspace_name, dataset_name),
+                               headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to create a new workspace after deleting the old one")
