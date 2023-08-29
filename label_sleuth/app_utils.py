@@ -66,7 +66,9 @@ def _text_element_to_user_labels(text_element: Union[TextElement, LabeledTextEle
         return {} if text_element.label is None or text_element.label.label is None else {0: text_element.label.label} #TODO do we want a dict here for compatability with the TextElement labels dict? confusing!
 
 
-def elements_back_to_front(workspace_id: str, elements: List[Union[TextElement, LabeledTextElement]], category_id: int,
+def elements_back_to_front(workspace_id: str,
+                           elements: List[Union[TextElement, LabeledTextElement, MulticlassLabeledTextElement]],
+                           category_id: Union[int, None],
                            need_snippet: bool = True,
                            query_string: str = None, is_regex: bool = False) -> List[Mapping]:
     """
@@ -97,14 +99,18 @@ def elements_back_to_front(workspace_id: str, elements: List[Union[TextElement, 
             if snippet != element_uri_to_info[text_element.uri]['text']:
                 element_uri_to_info[text_element.uri]['snippet'] = snippet
 
-    if category_id is not None and len(elements) > 0 \
+    if len(elements) > 0 \
             and len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
                                                                               IterationStatus.READY)) > 0:
+        is_multiclass = category_id is None
         predicted_labels = [pred.label
                             for pred in current_app.orchestrator_api.infer(workspace_id, category_id, elements)]
         for text_element, prediction in zip(elements, predicted_labels):
-            # the frontend expects string labels and not boolean
-            element_uri_to_info[text_element.uri]['model_predictions'][category_id] = str(prediction).lower()
+            if is_multiclass:
+                element_uri_to_info[text_element.uri]['model_predictions'] = prediction
+            else:
+                # the frontend expects string labels and not boolean
+                element_uri_to_info[text_element.uri]['model_predictions'][category_id] = str(prediction).lower()
 
     return [element_info for element_info in element_uri_to_info.values()]
 

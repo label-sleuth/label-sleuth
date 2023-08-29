@@ -739,15 +739,15 @@ def set_element_label(workspace_id, element_id):
 
     category_id = int(post_data["category_id"])
     value = post_data["value"]
-    multiclass = post_data.get("multiclass", False)
+    is_multiclass = post_data.get('mode') == WorkspaceModelType.MultiClass.name
     iteration = int(post_data.get("iteration", -1))
     source = post_data.get("source", "n/a")
     update_counter = post_data.get('update_counter', True)
-    if multiclass and (value not in ['true', "True", "TRUE", "none", True]):
+    if is_multiclass and (value not in ['true', "True", "TRUE", "none", True]):
         make_error(f"in multiclass value can only be {['true', 'True', 'TRUE', True]} or none")
 
     if value == 'none':
-        if multiclass: # TODO implement
+        if is_multiclass: # TODO implement
             raise Exception("TODO unset label for multiclass is not implemented yet")
         curr_app.orchestrator_api. \
             unset_labels(workspace_id, category_id, [element_id],
@@ -759,7 +759,7 @@ def set_element_label(workspace_id, element_id):
             value = False
         else:
             raise Exception(f"cannot convert label to boolean. Input label = {value}")
-        if multiclass:
+        if is_multiclass:
             uri_with_updated_label = {element_id: MulticlassLabel(category_id,
                                                                   metadata={"iteration": iteration,
                                                                             "source": source})}
@@ -772,8 +772,9 @@ def set_element_label(workspace_id, element_id):
                        apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts,
                        update_label_counter=update_counter)
 
-    res = {'element': get_element(workspace_id, category_id, element_id), 'workspace_id': workspace_id,
-           'category_id': str(category_id)}
+    res = {'element': get_element(workspace_id, category_id=None if is_multiclass else category_id,
+                                  element_id=element_id),
+           'workspace_id': workspace_id, 'category_id': str(category_id)}
     return jsonify(res)
 
 
@@ -986,7 +987,9 @@ def get_elements_to_label(workspace_id):
     :request_arg size: the number of elements to return
     :request_arg start_idx: get elements starting from this index (for pagination)
     """
-    category_id = int(request.args['category_id'])
+    category_id = request.args.get('category_id')
+    if category_id is not None:
+        category_id = int(category_id)
     size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
 

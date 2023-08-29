@@ -377,8 +377,11 @@ class OrchestratorStateApi:
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
             if type(workspace) == Workspace:
-                return [(iteration, idx) for idx, iteration in enumerate(workspace.categories[category_id].iterations)
-                        if iteration.status == status]
+                if category_id in workspace.categories:
+                    return [(iteration, idx) for idx, iteration in enumerate(workspace.categories[category_id].iterations)
+                            if iteration.status == status]
+                else:
+                    return []
             elif type(workspace) == MulticlassWorkspace:
                 return [(iteration, idx) for idx, iteration in enumerate(workspace.iterations)
                         if iteration.status == status]
