@@ -739,7 +739,7 @@ def set_element_label(workspace_id, element_id):
 
     category_id = int(post_data["category_id"])
     value = post_data["value"]
-    is_multiclass = post_data.get('mode') == WorkspaceModelType.MultiClass.name
+    is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
     iteration = int(post_data.get("iteration", -1))
     source = post_data.get("source", "n/a")
     update_counter = post_data.get('update_counter', True)
