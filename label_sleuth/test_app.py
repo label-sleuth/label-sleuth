@@ -521,8 +521,8 @@ class TestAppIntegration(unittest.TestCase):
             document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
 
         # set first element and get status
-        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}',
-                              data='{"category_id":"0", "value":"True", "mode":"MultiClass"}', headers=HEADERS)
+        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}?mode=MultiClass',
+                              data='{"category_id":"0", "value":"True"}', headers=HEADERS)
 
         self.assertEqual({"category_id": "0", "workspace_id": "multiclass_workspace",
                           "element": {
@@ -541,8 +541,8 @@ class TestAppIntegration(unittest.TestCase):
                          res.get_json(), msg="diffs in get status response after setting a label")
 
         # set second element and get status
-        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[1]["id"]}',
-                              data='{"category_id":"1", "value":"True", "mode":"MultiClass"}', headers=HEADERS)
+        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[1]["id"]}?mode=MultiClass',
+                              data='{"category_id":"1", "value":"True"}', headers=HEADERS)
 
         self.assertEqual({"category_id": "1", "workspace_id": "multiclass_workspace",
                           "element": {
@@ -561,8 +561,8 @@ class TestAppIntegration(unittest.TestCase):
                          res.get_json(), msg="diffs in get status response after setting the second label")
 
         # set third element and get status
-        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[2]["id"]}',
-                              data='{"category_id":"2", "value":"True", "mode":"MultiClass"}', headers=HEADERS)
+        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[2]["id"]}?mode=MultiClass',
+                              data='{"category_id":"2", "value":"True"}', headers=HEADERS)
 
         self.assertEqual({"category_id": "2", "workspace_id": "multiclass_workspace",
                           "element": {
@@ -634,8 +634,8 @@ class TestAppIntegration(unittest.TestCase):
             active_learning_response)
 
         # set the first label according to the active learning recommendations
-        res = self.client.put(f'/workspace/{workspace_name}/element/{active_learning_response["elements"][0]["id"]}',
-                              data='{"category_id":"2", "value":"True", "mode":"MultiClass"}', headers=HEADERS)
+        res = self.client.put(f'/workspace/{workspace_name}/element/{active_learning_response["elements"][0]["id"]}?mode=MultiClass',
+                              data='{"category_id":"2", "value":"True"}', headers=HEADERS)
 
         self.assertEqual(200, res.status_code,
                          msg="Failed to set the label for the first element recommended by the active learning")
