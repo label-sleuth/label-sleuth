@@ -19,6 +19,7 @@ import time
 import tempfile
 import unittest
 from label_sleuth import app, config, app_utils
+from label_sleuth.data_access.core.data_structs import WorkspaceModelType
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus
 from unittest import mock
 
@@ -230,7 +231,7 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual({'true': 2, 'false': 1},
                          res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
 
-        res = self.wait_for_new_iteration(category_id, res, workspace_name, 1)
+        res = self.wait_for_new_iteration(category_id, res, workspace_name, 1, workspace_mode=WorkspaceModelType.Binary)
 
         self.assertEqual(200, res.status_code, msg="Failed to get iterations list")
         self.assertEqual(1, len(res.get_json()["iterations"]), msg="first model was not added to the models list")
@@ -376,9 +377,8 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual({'true': 4, 'false': 1},
                          res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
 
-
         # wait for the second models
-        res = self.wait_for_new_iteration(category_id, res, workspace_name, 2)
+        res = self.wait_for_new_iteration(category_id, res, workspace_name, 2, workspace_mode=WorkspaceModelType.Binary)
         self.assertEqual(200, res.status_code, msg="Failed to get models list")
         self.assertEqual(2, len(res.get_json()["iterations"]), msg="second model was not added to the models list")
 
@@ -436,7 +436,7 @@ class TestAppIntegration(unittest.TestCase):
             res.get_json(), msg="diff in upload dataset response")
         return data, text_with_parenthesis, text_with_parenthesis_snippet, text_with_parenthesis_snippet_in_query
 
-    def wait_for_new_iteration(self, category_id, res, workspace_name, num_models):
+    def wait_for_new_iteration(self, category_id, res, workspace_name, num_models, workspace_mode):
         waiting_count = 0
         MAX_WAITING_FOR_TRAINING = 100
         # wait maximum 10 seconds (100*0.1) for the training
@@ -444,7 +444,9 @@ class TestAppIntegration(unittest.TestCase):
         while waiting_count < MAX_WAITING_FOR_TRAINING:
             # since get_status is asynchronously starting a new training, we need to wait until it added to the
             # iterations list and finishes successfully
-            res = self.client.get(f"/workspace/{workspace_name}/iterations?{'category_id='+str(category_id) if category_id is not None else ''}",
+            res = self.client.get(f"/workspace/{workspace_name}/"
+                                  f"iterations?{f'category_id={category_id}&' if category_id is not None else ''}"
+                                  f"mode={workspace_mode.name}",
                                   headers=HEADERS)
             response = res.get_json()
 
@@ -471,7 +473,7 @@ class TestAppIntegration(unittest.TestCase):
             msg="diff in create workspace response")
 
         # /status endpoint has to work when there are no categories
-        res = self.client.get(f"/workspace/{workspace_name}/status", headers=HEADERS)
+        res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status for a newly-created workspace")
 
         category_name1 = "cat1"
@@ -535,7 +537,7 @@ class TestAppIntegration(unittest.TestCase):
                             "user_labels": {"0": 0}}
                           }, res.get_json())
 
-        res = self.client.get(f"/workspace/{workspace_name}/status", headers=HEADERS)
+        res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
         self.assertEqual({'labeling_counts': {'0': 1}, 'progress': {'all': 33}},
                          res.get_json(), msg="diffs in get status response after setting a label")
@@ -555,7 +557,7 @@ class TestAppIntegration(unittest.TestCase):
                             "user_labels": {"0": 1}}
                           }, res.get_json())
 
-        res = self.client.get(f"/workspace/{workspace_name}/status", headers=HEADERS)
+        res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the second label")
         self.assertEqual({'labeling_counts': {'0': 1, '1': 1}, 'progress': {'all': 67}},
                          res.get_json(), msg="diffs in get status response after setting the second label")
@@ -575,8 +577,8 @@ class TestAppIntegration(unittest.TestCase):
                             "user_labels": {"0": 2}}
                           }, res.get_json())
 
-        res = self.client.get(f"/workspace/{workspace_name}/status", headers=HEADERS)
-        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
+        res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the third label")
         self.assertEqual({'0': 1, '1': 1, '2': 1},
                          res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
 
@@ -602,7 +604,7 @@ class TestAppIntegration(unittest.TestCase):
             msg="The searched text differs from the response"
         )
 
-        res = self.wait_for_new_iteration(None, res, workspace_name, 1)
+        res = self.wait_for_new_iteration(None, res, workspace_name, 1, workspace_mode=WorkspaceModelType.MultiClass)
 
         self.assertEqual(200, res.status_code, msg="Failed to get iterations list")
         self.assertEqual(1, len(res.get_json()["iterations"]), msg="first model was not added to the models list")

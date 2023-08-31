@@ -21,7 +21,8 @@ import os
 from flask import current_app, request, jsonify
 
 from label_sleuth.analysis_utils.analyze_tokens import ngrams_by_info_gain
-from label_sleuth.data_access.core.data_structs import TextElement, LabeledTextElement, MulticlassLabeledTextElement
+from label_sleuth.data_access.core.data_structs import TextElement, LabeledTextElement, MulticlassLabeledTextElement, \
+    WorkspaceModelType
 from label_sleuth.data_access.data_access_api import get_document_uri
 from label_sleuth.models.core.languages import Languages
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Iteration, IterationStatus
@@ -43,14 +44,22 @@ def validate_workspace_id(function):
 def validate_category_id(function):  #TODO enable, ask frontend to pass multiclass for each multilass request
     @functools.wraps(function)
     def wrapper(workspace_id, *args, **kwargs):
+        is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
         category_id = request.args.get('category_id')
-        if category_id is None:
-            return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
 
-        category_id = int(category_id)
-        if category_id not in current_app.orchestrator_api.get_all_categories(workspace_id):
-            return jsonify({"type": "category_id_does_not_exist",
-                            "title": f"category_id {category_id} does not exist in workspace {workspace_id}"}), 404
+        if not is_multiclass:
+            if category_id is None:
+                return jsonify({"type": "missing_category_id", "title": "category_id was not provided"}), 422
+
+            category_id = int(category_id)
+            if category_id not in current_app.orchestrator_api.get_all_categories(workspace_id):
+                return jsonify({"type": "category_id_does_not_exist",
+                                "title": f"category_id {category_id} does not exist in workspace {workspace_id}"}), 404
+        else:
+            if category_id is not None:
+                return jsonify({"type": "invalid_category_id",
+                                "title": f"category_id {category_id} is invalid for a multiclass workspace"}), 404
+
         return function(workspace_id, *args, **kwargs)
 
     return wrapper
@@ -90,7 +99,7 @@ def elements_back_to_front(workspace_id: str,
               'end': text_element.span[0][1],
               'text': text_element.text,
               'user_labels': _text_element_to_user_labels(text_element),
-              'model_predictions': {}
+              'model_predictions': {} # TODO None for multiclass?
               }
          for text_element in elements}
     if need_snippet:
