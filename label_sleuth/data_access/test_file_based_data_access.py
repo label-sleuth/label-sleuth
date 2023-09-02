@@ -173,6 +173,26 @@ class TestFileBasedDataAccess(unittest.TestCase):
         self.assertEqual(0, labels_count_after_unset['true'])
         self.data_access.delete_dataset(dataset_name)
 
+    def test_unset_labels_multiclass(self):
+        workspace_id = 'test_unset_labels_multiclass'
+        dataset_name = self.test_set_labels_and_get_documents.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name,
+                                                workspace_type=WorkspaceModelType.MultiClass)
+        category_ids = list(range(3))
+        doc = generate_corpus(self.data_access, dataset_name)[0]
+        uri_to_label = add_random_multiclass_labels_to_document(doc, 2, category_ids)
+        self.data_access.set_labels(workspace_id, uri_to_label)
+
+        labels_count = self.data_access.get_label_counts(workspace_id, dataset_name, category_id=None)
+        self.assertGreater(sum(labels_count.values()), 1)
+        self.data_access.unset_labels(workspace_id, None, list(uri_to_label.keys())[:-1])
+        labels_count_after_first_unset = self.data_access.get_label_counts(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(1, sum(labels_count_after_first_unset.values()))
+        self.data_access.unset_labels(workspace_id, None, list(uri_to_label.keys()))
+        labels_count_after_second_unset = self.data_access.get_label_counts(workspace_id, dataset_name, category_id=None)
+        self.assertEqual(0, sum(labels_count_after_second_unset.values()))
+        self.data_access.delete_dataset(dataset_name)
+
     def test_get_all_document_uris(self):
         dataset_name = self.test_get_all_document_uris.__name__ + '_dump'
         docs = generate_corpus(self.data_access, dataset_name, random.randint(1, 10))

@@ -747,10 +747,8 @@ def set_element_label(workspace_id, element_id):
         make_error(f"in multiclass value can only be {['true', 'True', 'TRUE', True]} or none")
 
     if value == 'none':
-        if is_multiclass: # TODO implement
-            raise Exception("TODO unset label for multiclass is not implemented yet")
         curr_app.orchestrator_api. \
-            unset_labels(workspace_id, category_id, [element_id],
+            unset_labels(workspace_id, category_id=None if is_multiclass else category_id, uris=[element_id],
                          apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
     else:
         if value in ['true', "True", "TRUE", True]:

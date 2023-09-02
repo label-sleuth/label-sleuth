@@ -118,7 +118,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def unset_labels(self, workspace_id: str, category_id: int, uris: Sequence[str], apply_to_duplicate_texts=False):
+    def unset_labels(self, workspace_id: str, category_id: Union[int, None], uris: Sequence[str],
+                     apply_to_duplicate_texts=False):
         """
         Remove workspace labels for a certain category from a specified list of uris.
 

@@ -181,7 +181,18 @@ class FileBasedDataAccess(DataAccessApi):
             existing_labels[uri] = existing_labels.get(uri, {})
             existing_labels[uri].update(labels_info)
 
-    def unset_labels(self, workspace_id: str, category_id: int, uris: Sequence[str], apply_to_duplicate_texts=False):
+    @staticmethod
+    def _unset_single_uri_label(uri, existing_labels, category_id: Union[int, None]):
+        if category_id is None:  # multiclass
+            existing_labels.pop(uri, None)
+        else:
+            existing_labels[uri] = existing_labels.get(uri, {})
+            existing_labels[uri].pop(category_id)
+            if len(existing_labels[uri]) == 0:
+                existing_labels.pop(uri)
+
+    def unset_labels(self, workspace_id: str, category_id: Union[int, None], uris: Sequence[str],
+                     apply_to_duplicate_texts=False):
         """
         Remove workspace labels for a certain category from a specified list of uris.
 
@@ -202,14 +213,10 @@ class FileBasedDataAccess(DataAccessApi):
                 if apply_to_duplicate_texts:  # unset the given label for all elements with the same text
                     same_text_uris = self._get_uris_with_the_same_text(dataset_name, uri)
                     for same_text_uri in same_text_uris:
-                        ds_labels[same_text_uri] = ds_labels.get(same_text_uri, {})
-                        ds_labels[same_text_uri].pop(category_id)
-                        if len(ds_labels[same_text_uri]) == 0:
-                            ds_labels.pop(same_text_uri)
+                        self._unset_single_uri_label(same_text_uri, ds_labels, category_id)
                 else:
-                    ds_labels[uri].pop(category_id)
-                    if len(ds_labels[uri]) == 0:
-                        ds_labels.pop(uri)
+                    self._unset_single_uri_label(uri, ds_labels, category_id)
+
             # Save updated labels dict to disk
             self._save_labels_data(dataset_name, workspace_id)
 
