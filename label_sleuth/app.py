@@ -1044,8 +1044,11 @@ def export_predictions(workspace_id):
     :request_arg category_id:
     :request_arg iteration_index: optional. if not provided, the model from the latest iteration will be exported.
     """
-    category_id = int(request.args['category_id'])
-    iteration_index = request.args.get('iteration_index', None)
+    is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
+    category_id = request.args.get('category_id')
+    if category_id is not None:
+        category_id = int(category_id)
+    iteration_index = request.args.get('iteration_index')
     if iteration_index is None:
         _, iteration_index = curr_app.orchestrator_api. \
             get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
@@ -1055,8 +1058,12 @@ def export_predictions(workspace_id):
     elements = curr_app.orchestrator_api.get_all_text_elements(dataset_name)
     infer_results = curr_app.orchestrator_api.infer(workspace_id, category_id, elements,
                                                     iteration_index=iteration_index)
-    return pd.DataFrame([{**te.__dict__, "score": pred.score, 'predicted_label': pred.label} for te, pred
-                         in zip(elements, infer_results)]).to_csv(index=False)
+    if is_multiclass:
+        return pd.DataFrame([{**te.__dict__, "scores": mc_pred.scores, 'predicted_label': mc_pred.label} for te, mc_pred
+                             in zip(elements, infer_results)]).to_csv(index=False)
+    else:
+        return pd.DataFrame([{**te.__dict__, "score": pred.score, 'predicted_label': pred.label} for te, pred
+                             in zip(elements, infer_results)]).to_csv(index=False)
 
 
 @main_blueprint.route('/workspace/<workspace_id>/prepare_model', methods=['GET'])
@@ -1080,8 +1087,11 @@ def prepare_model(workspace_id):
                     "predictions = model_api.infer(model, items_to_infer)\n" \
                     "for sentence_dict, pred in zip(items_to_infer, predictions):\n" \
                     "     print(f'sentence: \"{sentence_dict[\"text\"]}\" -> prediction: {pred}')\n"
-    category_id = int(request.args['category_id'])
-    iteration_index = request.args.get('iteration_index', None)
+
+    category_id = request.args.get('category_id')
+    if category_id is not None:
+        category_id = int(category_id)
+    iteration_index = request.args.get('iteration_index')
     logging.info(f"Exporting a model from workspace {workspace_id} category id {category_id}")
     if iteration_index is None:
         _, iteration_index = curr_app.orchestrator_api. \
@@ -1142,8 +1152,10 @@ def export_model(workspace_id):
     :request_arg category_id:
     :request_arg iteration_index: optional. if not provided, the model from the latest iteration will be exported.
     """
-    category_id = int(request.args['category_id'])
-    iteration_index = request.args.get('iteration_index', None)
+    category_id = request.args.get('category_id')
+    if category_id is not None:
+        category_id = int(category_id)
+    iteration_index = request.args.get('iteration_index')
     if iteration_index is None:
         _, iteration_index = curr_app.orchestrator_api. \
             get_all_iterations_by_status(workspace_id, category_id, IterationStatus.READY)[-1]
