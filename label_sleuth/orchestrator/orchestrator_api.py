@@ -780,11 +780,8 @@ class OrchestratorApi:
 
         workspace = self.orchestrator_state.get_workspace(workspace_id)
         dataset_name = workspace.dataset_name
-        if category_id is None:
-            iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_id).copy()
-        else:
-            iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_id).copy()
 
+        iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_id).copy()
         try:
             iterations_without_errors = [iteration for iteration in iterations
                                          if iteration.status not in [IterationStatus.ERROR,
