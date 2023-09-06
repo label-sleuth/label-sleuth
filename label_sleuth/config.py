@@ -55,7 +55,7 @@ class MultiClassFlowConfiguration:
 
 
 @dataclass
-class Configuration: # TODO Split to multiple dataclasses
+class Configuration:
     binary_flow: BinaryFlowConfiguration
     multiclass_flow: MultiClassFlowConfiguration
 

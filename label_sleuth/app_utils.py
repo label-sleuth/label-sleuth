@@ -41,7 +41,7 @@ def validate_workspace_id(function):
     return wrapper
 
 
-def validate_category_id(function):  #TODO enable, ask frontend to pass multiclass for each multilass request
+def validate_category_id(function):
     @functools.wraps(function)
     def wrapper(workspace_id, *args, **kwargs):
         is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
