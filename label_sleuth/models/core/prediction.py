@@ -22,7 +22,7 @@ class Prediction:
     """
     An object containing model predictions for a single element.
     Each model.infer method should return at least the label and score fields. In order for a model to return
-    additional fields (e.g model embeddings), a different dataclass that inherits from this one, and adds the desired
+    additional fields (e.g., model embeddings), a different dataclass that inherits from this one, and adds the desired
     fields, can be used.
     """
     label: bool
@@ -40,7 +40,18 @@ class Prediction:
 @dataclass
 class MulticlassPrediction:
     """
-    TBA
+    An object containing multiclass model predictions for a single element.
+    Each model.infer method should return at least the label and scores fields. In order for a model to return
+    additional fields (e.g., model embeddings), a different dataclass that inherits from this one, and adds the desired
+    fields, can be used.
     """
     label: int
     scores: List[float]
+
+    def __post_init__(self):
+        # Since many models return numpy objects, which are not json-serializable, we convert them here
+        self.label = int(self.label)
+        self.scores = [float(x) for x in self.scores]
+        for score in self.scores:
+            if score < 0 or score > 1:
+                raise Exception(f'Model score {score} is outside the range [0-1]')
