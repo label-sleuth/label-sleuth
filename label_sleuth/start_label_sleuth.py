@@ -83,6 +83,30 @@ class PrefixMiddleware(object):
             return ["This url does not belong to the app.".encode()]
 
 
+def add_all_configuration_args_to_parser(args_group):
+    def process_bool_arg(bool_arg):
+        return ast.literal_eval(bool_arg.title()) if type(bool_arg) == str else bool_arg
+
+    sub_config_names = ['binary_flow', 'multiclass_flow']
+    attr_names_and_types = list(Configuration.__annotations__.items())
+    for sub_config_name in sub_config_names:
+        attr_names_and_types.extend([(f'{sub_config_name}.{name}', typ) for name, typ
+                                     in Configuration.__annotations__[sub_config_name].__annotations__.items()])
+
+    simple_types = [int, str, bool]
+    ignore_list = ["users", *sub_config_names]
+
+    for attr_name, attr_type in attr_names_and_types:
+        if attr_name in ignore_list:
+            continue
+
+        if attr_type in simple_types:
+            args_group.add_argument(f"--{attr_name}",
+                                    type=process_bool_arg if attr_type == bool else attr_type, required=False)
+        else:
+            args_group.add_argument(f"--{attr_name}", type=str, required=False)
+
+
 if __name__ == '__main__':
     parser = ArgumentParser()
 
@@ -111,22 +135,10 @@ if __name__ == '__main__':
     config_args_group = parser.add_argument_group('Specific configuration parameters '
                                                   '(These override the config file specified in --config_path)')
 
+    add_all_configuration_args_to_parser(config_args_group)
+
     parser.add_argument('--url_prefix', type=str,
                         help=f'URL prefix for the service. (Default is None which means no prefix)', default=None)
-
-    def process_bool_arg(bool_arg):
-        return ast.literal_eval(bool_arg.title()) if type(bool_arg) == str else bool_arg
-
-    allowed_types = [int, str, bool]
-    ignore_list = ["users"]
-    for attr_name, attr_type in Configuration.__annotations__.items():
-        if attr_name in ignore_list:
-            continue
-        if attr_type in allowed_types:
-            config_args_group.add_argument(f"--{attr_name}", type=process_bool_arg if attr_type == bool else attr_type,
-                                           required=False)
-        else:
-            config_args_group.add_argument(f"--{attr_name}", type=str, required=False)
 
     args = parser.parse_args()
     os.makedirs(args.output_path, exist_ok=True)

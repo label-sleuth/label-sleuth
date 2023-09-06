@@ -33,30 +33,42 @@ from label_sleuth.training_set_selector.train_set_selectors_catalog import Train
 
 
 @dataclass
-class Configuration: # TODO Split to multiple dataclasses
+class BinaryFlowConfiguration:
     first_model_positive_threshold: int
     first_model_negative_threshold: int
     changed_element_threshold: int
-    multiclass_per_class_threshold: int
-    multiclass_changed_element_threshold: int
-    model_policy: ModelPolicy
-    multiclass_model_policy: ModelPolicy
-    training_set_selection_strategy: Type[TrainSetSelectorAPI]
-    multiclass_training_set_selection_strategy: Type[TrainSetSelectorAPI]
     precision_evaluation_size: int
+    model_policy: ModelPolicy
+    training_set_selection_strategy: Type[TrainSetSelectorAPI]
+    active_learning_policy: ActiveLearningPolicy = None
+    active_learning_strategy: ActiveLearningStrategy = None
+
+
+@dataclass
+class MultiClassFlowConfiguration:
+    per_class_labeling_threshold: int
+    changed_element_threshold: int
+    model_policy: ModelPolicy
+    training_set_selection_strategy: Type[TrainSetSelectorAPI]
+    active_learning_policy: ActiveLearningPolicy = None
+    active_learning_strategy: ActiveLearningStrategy = None
+
+
+@dataclass
+class Configuration: # TODO Split to multiple dataclasses
+    binary_flow: BinaryFlowConfiguration
+    multiclass_flow: MultiClassFlowConfiguration
+
     apply_labels_to_duplicate_texts: bool
     language: Language
     login_required: bool
-    active_learning_strategy: ActiveLearningStrategy = None
-    multiclass_active_learning_strategy: ActiveLearningStrategy = None
-    active_learning_policy: ActiveLearningPolicy = None
-    multiclass_active_learning_policy = ActiveLearningPolicy = None
+    users: List[dict] = field(default_factory=list)
+
     max_document_name_length: int = 60
     main_panel_elements_per_page: int = 500
     sidebar_panel_elements_per_page: int = 50
     snippet_max_token_length: int = 100
     max_dataset_length: int = 3000000
-    users: List[dict] = field(default_factory=list)
     cpu_workers: int = 10
 
 
@@ -76,20 +88,44 @@ def load_config(config_path, command_line_args=None) -> Configuration:
 
     # override config with user specified values
     if command_line_args:
-        for arg in command_line_args:
-            if arg in raw_cfg and command_line_args[arg] is not None:
-                logging.info(f"Overriding config file argument '{arg}' with a command line argument. "
-                             f"Value changed from '{raw_cfg[arg]}' to '{command_line_args[arg]}'")
-                raw_cfg[arg] = command_line_args[arg]
+        for arg, value in command_line_args.items():
+            if value is None:
+                continue
 
-    config = dacite.from_dict(
-        data_class=Configuration, data=raw_cfg,
+            if '.' in arg:
+                cfg_name, arg_name = arg.split('.')
+                cfg_to_modify = raw_cfg[cfg_name]
+            else:
+                cfg_to_modify = raw_cfg
+                arg_name = arg
+
+            if arg_name in cfg_to_modify:
+                logging.info(f"Overriding config file argument '{arg}' with a command line argument. "
+                             f"Value changed from '{cfg_to_modify[arg_name]}' to '{value}'")
+                cfg_to_modify[arg_name] = value
+
+    binary_config = dacite.from_dict(
+        data_class=BinaryFlowConfiguration, data=raw_cfg.pop('binary_flow'),
         config=dacite.Config(type_hooks=converters),
     )
-    if config.active_learning_strategy is None and config.active_learning_policy is None:
-        raise Exception("Either active_learning_strategy or active_learning_policy must be specified")
 
-    if config.active_learning_strategy is not None and config.active_learning_policy is not None:
-        raise Exception("Only one of active_learning_strategy or active_learning_policy can be specified")
+    multiclass_config = dacite.from_dict(
+        data_class=MultiClassFlowConfiguration, data=raw_cfg.pop('multiclass_flow'),
+        config=dacite.Config(type_hooks=converters),
+    )
+
+    for flow_config in [binary_config, multiclass_config]:
+        if flow_config.active_learning_strategy is None and flow_config.active_learning_policy is None:
+            raise Exception("Either active_learning_strategy or active_learning_policy must be specified")
+
+        if flow_config.active_learning_strategy is not None and flow_config.active_learning_policy is not None:
+            raise Exception("Only one of active_learning_strategy or active_learning_policy can be specified")
+
+    config = dacite.from_dict(
+        data_class=Configuration, data={**raw_cfg,
+                                        'binary_flow': binary_config,
+                                        'multiclass_flow': multiclass_config},
+        config=dacite.Config(type_hooks=converters),
+    )
 
     return config

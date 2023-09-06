@@ -184,8 +184,8 @@ class TestOrchestratorAPI(unittest.TestCase):
         self.orchestrator_api.create_workspace(workspace_id, dataset_name)
         category_id = self.orchestrator_api.create_new_category(workspace_id, category_name, 'some_description')
 
-        change_threshold = self.orchestrator_api.config.changed_element_threshold
-        first_model_pos_threshold = self.orchestrator_api.config.first_model_positive_threshold
+        change_threshold = self.orchestrator_api.config.binary_flow.changed_element_threshold
+        first_model_pos_threshold = self.orchestrator_api.config.binary_flow.first_model_positive_threshold
 
         # do not trigger training
         negative_count = 1
@@ -213,7 +213,7 @@ class TestOrchestratorAPI(unittest.TestCase):
 
         train_set_selector = \
             self.orchestrator_api.training_set_selection_factory.get_training_set_selector(
-                                      self.orchestrator_api.config.training_set_selection_strategy).__class__
+                self.orchestrator_api.config.binary_flow.training_set_selection_strategy).__class__
         with patch.object(train_set_selector, 'get_train_set'):
             self.orchestrator_api.train_if_recommended(workspace_id, category_id)
         mock_run_iteration.assert_called()
@@ -230,8 +230,8 @@ class TestOrchestratorAPI(unittest.TestCase):
         self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
         self.orchestrator_api.set_category_list(workspace_id, {"cat1": "desc1", "cat2": "desc2", "cat3": "desc3"})
 
-        change_threshold = self.orchestrator_api.config.multiclass_changed_element_threshold
-        per_class_threshold = self.orchestrator_api.config.multiclass_per_class_threshold
+        change_threshold = self.orchestrator_api.config.multiclass_flow.changed_element_threshold
+        per_class_threshold = self.orchestrator_api.config.multiclass_flow.per_class_labeling_threshold
 
         # do not trigger training
 
@@ -239,7 +239,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         mock_get_label_counts.return_value = label_counts
         mock_get_label_change_count.return_value = sum(label_counts.values())
 
-        self.orchestrator_api.config.multiclass_per_class_threshold = 1
+        self.orchestrator_api.config.multiclass_flow.per_class_labeling_threshold = 1
         progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
         self.assertEqual(progress['all'], 67)
 
@@ -255,7 +255,7 @@ class TestOrchestratorAPI(unittest.TestCase):
 
         train_set_selector = \
             self.orchestrator_api.training_set_selection_factory.get_training_set_selector(
-                self.orchestrator_api.config.training_set_selection_strategy).__class__
+                self.orchestrator_api.config.multiclass_flow.training_set_selection_strategy).__class__
         with patch.object(train_set_selector, 'get_train_set'):
             self.orchestrator_api.train_if_recommended(workspace_id, None)
         mock_run_iteration.assert_called()
@@ -270,8 +270,8 @@ class TestOrchestratorAPI(unittest.TestCase):
         self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
         self.orchestrator_api.set_category_list(workspace_id, {"cat1": "desc1", "cat2": "desc2", "cat3": "desc3"})
 
-        change_threshold = self.orchestrator_api.config.multiclass_changed_element_threshold
-        per_class_threshold = self.orchestrator_api.config.multiclass_per_class_threshold
+        change_threshold = self.orchestrator_api.config.multiclass_flow.changed_element_threshold
+        per_class_threshold = self.orchestrator_api.config.multiclass_flow.per_class_labeling_threshold
 
         # do not trigger training
 
@@ -286,7 +286,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         mock_get_label_counts.return_value = label_counts
         mock_get_label_change_count.return_value = sum(label_counts.values())
 
-        self.orchestrator_api.config.multiclass_per_class_threshold = 2
+        self.orchestrator_api.config.multiclass_flow.per_class_labeling_threshold = 2
         progress = self.orchestrator_api.get_progress(workspace_id, dataset_name, category_id=None)
         self.assertEqual(progress['all'], 33)
 

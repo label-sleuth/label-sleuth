@@ -1302,7 +1302,7 @@ def get_elements_for_precision_evaluation(workspace_id):
     :param workspace_id:
     :request_arg category_id:.
     """
-    size = curr_app.config["CONFIGURATION"].precision_evaluation_size
+    size = curr_app.config["CONFIGURATION"].binary_flow.precision_evaluation_size
     category_id = int(request.args['category_id'])
     random_state = len(curr_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id))
     positive_predicted_elements = curr_app.orchestrator_api.\

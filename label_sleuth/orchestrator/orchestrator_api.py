@@ -153,6 +153,7 @@ class OrchestratorApi:
         return self.orchestrator_state.workspace_exists(workspace_id)
 
     def list_workspaces(self, include_mode=False):
+        #TODO consistency
         if include_mode:
             return sorted(
                 [{"id": w.workspace_id,
@@ -344,15 +345,16 @@ class OrchestratorApi:
         """
         if len(uri_to_label) > 0 and type(next(iter(uri_to_label.values()))) == MulticlassLabel:  # Multiclass workspace
             if update_label_counter:
+                # TODO consistent behavior
                 self.orchestrator_state.increase_label_change_count_since_last_train(
                     workspace_id,
                     category_id=None,
                     number_of_new_changes=len(uri_to_label))
 
-        else:  # Multi binary workspace
+        else:  # Binary workspace
             if update_label_counter:
                 train_set_selector = self.training_set_selection_factory.\
-                    get_training_set_selector(self.config.training_set_selection_strategy)
+                    get_training_set_selector(self.config.binary_flow.training_set_selection_strategy)
 
                 used_label_types = train_set_selector.get_label_types()
                 # count the number of labels for each category
@@ -389,8 +391,9 @@ class OrchestratorApi:
         :return:
         """
         if counts_for_training:
+            flow_config = self.config.binary_flow if category_id is not None else self.config.multiclass_flow
             train_set_selector = self.training_set_selection_factory.get_training_set_selector(
-                                                           self.config.training_set_selection_strategy)
+                                                           flow_config.training_set_selection_strategy)
             used_label_types = train_set_selector.get_label_types()
             return self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
                                                      remove_duplicates=remove_duplicates,
@@ -492,13 +495,13 @@ class OrchestratorApi:
             logging.info(f"starting iteration {new_iteration_index} in background for workspace '{workspace_id}' "
                          f"(multiclass workspace)")
             train_set_selector = self.training_set_selection_factory.get_training_set_selector(
-                self.config.multiclass_training_set_selection_strategy)
+                self.config.multiclass_flow.training_set_selection_strategy)
             category = None
         else:
             logging.info(f"starting iteration {new_iteration_index} in background for workspace '{workspace_id}' "
                          f"category id '{category_id}'")
             train_set_selector = self.training_set_selection_factory.get_training_set_selector(
-                self.config.training_set_selection_strategy)
+                self.config.binary_flow.training_set_selection_strategy)
             category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
 
         future = train_set_selector.collect_train_set(workspace_id=workspace_id,
@@ -718,19 +721,12 @@ class OrchestratorApi:
         :param count:
         :param iteration_index: iteration to use
         """
+        flow_config = self.config.binary_flow if category_id is not None else self.config.multiclass_flow
 
-        if category_id is not None:
-            if self.config.active_learning_strategy is not None:
-                active_learning_strategy = self.config.active_learning_strategy
-            else:
-                active_learning_strategy = self.config.\
-                    active_learning_policy.get_active_learning_strategy(iteration_index)
+        if flow_config.active_learning_strategy is not None:
+            active_learning_strategy = flow_config.active_learning_strategy
         else:
-            if self.config.multiclass_active_learning_strategy is not None:
-                active_learning_strategy = self.config.multiclass_active_learning_strategy
-            else:
-                active_learning_strategy = self.\
-                    config.multiclass_active_learning_policy.get_active_learning_strategy(iteration_index)
+            active_learning_strategy = flow_config.active_learning_policy.get_active_learning_strategy(iteration_index)
 
         active_learner = self.active_learning_factory.get_active_learner(active_learning_strategy)
         logging.info(f"using active learning {active_learner.__class__.__name__}")
@@ -795,26 +791,29 @@ class OrchestratorApi:
                                                  counts_for_training=True)
 
             category_ids = self.get_all_category_ids(workspace_id)
+            is_multiclass = category_id is None
 
-            if category_id is not None:
+            if not is_multiclass:
+                config = self.config.binary_flow
                 to_log_message = f"workspace '{workspace_id}' category id '{category_id}', " \
                                  f"{label_counts.get(LABEL_POSITIVE, 0)} positive elements " \
-                                 f"(threshold >= {self.config.first_model_positive_threshold}), " \
+                                 f"(threshold >= {config.first_model_positive_threshold}), " \
                                  + (f"{label_counts.get(LABEL_NEGATIVE, 0)} negative elements "
-                                    f"(threshold >= {self.config.first_model_negative_threshold}), "
-                                    if self.config.first_model_negative_threshold > 0 else "") \
+                                    f"(threshold >= {config.first_model_negative_threshold}), "
+                                    if config.first_model_negative_threshold > 0 else "") \
                                  + f"{changes_since_last_model} elements changed since last model " \
-                                   f"(threshold >= {self.config.changed_element_threshold}). "
-            else:  # multiclass
+                                   f"(threshold >= {config.changed_element_threshold}). "
+            else:
+                config = self.config.multiclass_flow
                 to_log_message = (f"workspace '{workspace_id}' (multiclass) " +
-                                  f"label counts {label_counts}. min change threshold is {self.config.multiclass_changed_element_threshold} "
-                                  f"number of changes {changes_since_last_model}. min examples per class threshold is {self.config.multiclass_per_class_threshold} "
+                                  f"label counts {label_counts}. min change threshold is {config.changed_element_threshold} "
+                                  f"number of changes {changes_since_last_model}. min examples per class threshold is {config.per_class_labeling_threshold} "
                                   f"number of classes {len(category_ids)}. ")
 
-            if force or (category_id is not None and self._should_train_multilabel_condition(changes_since_last_model,
-                                                                                             label_counts)) or \
-                    (category_id is None and self._should_train_multiclass_condition(changes_since_last_model,
-                                                                                     label_counts, len(category_ids))):
+            if force or (not is_multiclass and self._should_train_multilabel_condition(changes_since_last_model,
+                                                                                       label_counts)) or \
+                    (is_multiclass and self._should_train_multiclass_condition(changes_since_last_model,
+                                                                               label_counts, len(category_ids))):
                 if len(iterations_without_errors) > 0 and iterations_without_errors[-1].status != IterationStatus.READY:
                     logging.info(f"workspace '{workspace_id}' category id '{category_id}' new elements criterion was "
                                  f"met but previous AL not yet ready, not initiating a new training")
@@ -824,10 +823,10 @@ class OrchestratorApi:
                 to_log_message += "Training a new model"
 
                 iteration_num = len(iterations_without_errors)
-                if category_id is not None:
-                    model_type = self.config.model_policy.get_model_type(iteration_num)
+                if not is_multiclass:
+                    model_type = self.config.binary_flow.model_policy.get_model_type(iteration_num)
                 else:
-                    model_type = self.config.multiclass_model_policy.get_model_type(iteration_num)
+                    model_type = self.config.multiclass_flow.model_policy.get_model_type(iteration_num)
                 self.run_iteration(workspace_id=workspace_id, dataset_name=dataset_name, category_id=category_id,
                                    model_type=model_type)
             else:
@@ -857,18 +856,16 @@ class OrchestratorApi:
 
     def _should_train_multilabel_condition(self, changes_since_last_model, label_counts):
         return (LABEL_POSITIVE in label_counts and
-                label_counts[LABEL_POSITIVE] >= self.config.first_model_positive_threshold and
-                (self.config.first_model_negative_threshold == 0 or
+                label_counts[LABEL_POSITIVE] >= self.config.binary_flow.first_model_positive_threshold and
+                (self.config.binary_flow.first_model_negative_threshold == 0 or
                  (LABEL_NEGATIVE in label_counts and
-                  label_counts[LABEL_NEGATIVE] >= self.config.first_model_negative_threshold)) and
-                changes_since_last_model >= self.config.changed_element_threshold)
+                  label_counts[LABEL_NEGATIVE] >= self.config.binary_flow.first_model_negative_threshold)) and
+                changes_since_last_model >= self.config.binary_flow.changed_element_threshold)
 
     def _should_train_multiclass_condition(self, changes_since_last_model, label_counts, num_classes):
-        return (self.config.first_model_positive_threshold == 0
-                and changes_since_last_model >= self.config.multiclass_changed_element_threshold) \
-               or (len(label_counts) == num_classes
-                   and all(count >= self.config.multiclass_per_class_threshold for count in label_counts.values())
-                   and changes_since_last_model >= self.config.multiclass_changed_element_threshold)
+        return (len(label_counts) == num_classes
+                and all(count >= self.config.multiclass_flow.per_class_labeling_threshold for count in label_counts.values())
+                and changes_since_last_model >= self.config.multiclass_flow.changed_element_threshold)
 
     def infer(self, workspace_id: str, category_id: int, elements_to_infer: Sequence[TextElement],
               iteration_index: int = None, use_cache: bool = True) -> Sequence[Prediction]:
@@ -1032,14 +1029,17 @@ class OrchestratorApi:
                 return {"all": min(
                     # for a new training to start both the number of labels changed and the number of positives must be
                     # above their respective thresholds; thus, we determine the status as the minimum of the two ratios
-                    max(0, min(round(changed_since_last_model_count / self.config.changed_element_threshold * 100), 100)),
+                    max(0,
+                        min(round(changed_since_last_model_count / self.config.binary_flow.changed_element_threshold * 100), 100)),
                     max(0,
                         min(
                             100,
-                            round((((
-                                min(label_counts[LABEL_POSITIVE] if LABEL_POSITIVE in label_counts else 0, self.config.first_model_positive_threshold) +
-                                min(label_counts[LABEL_NEGATIVE] if LABEL_NEGATIVE in label_counts else 0, self.config.first_model_negative_threshold)) /
-                                (self.config.first_model_positive_threshold + self.config.first_model_negative_threshold))) * 100)
+                            round(((min(label_counts[LABEL_POSITIVE] if LABEL_POSITIVE in label_counts else 0,
+                                        self.config.binary_flow.first_model_positive_threshold)
+                                    + min(label_counts[LABEL_NEGATIVE] if LABEL_NEGATIVE in label_counts else 0,
+                                          self.config.binary_flow.first_model_negative_threshold)) /
+                                   (self.config.binary_flow.first_model_positive_threshold
+                                    + self.config.binary_flow.first_model_negative_threshold)) * 100)
                             )
                         )
                 )}
@@ -1053,9 +1053,9 @@ class OrchestratorApi:
             return {"all": min(
                 # for a new training to start both the number of labels changed and the number of labeled elements must
                 # be above their respective thresholds; thus, we determine the status as the minimum of the two ratios
-                max(0, min(round(changed_since_last_model_count / self.config.multiclass_changed_element_threshold * 100), 100)),
+                max(0, min(round(changed_since_last_model_count / self.config.multiclass_flow.changed_element_threshold * 100), 100)),
                 max(0, min(100, round(100 * mean(
-                        [min(label_counts[cat_id], self.config.multiclass_per_class_threshold) / self.config.multiclass_per_class_threshold for cat_id in category_ids])
+                        [min(label_counts[cat_id], self.config.multiclass_flow.per_class_labeling_threshold) / self.config.multiclass_flow.per_class_labeling_threshold for cat_id in category_ids])
                     ) if len(category_ids) > 0 else 0)
                 )
             )}
@@ -1273,12 +1273,13 @@ class OrchestratorApi:
         """
         Check that the model policy is compatible with the system language configuration
         """
-        model_policy = self.config.model_policy
-        for model_type in model_policy.get_all_model_types():
-            model_supported_languages = self.model_factory.get_model_api(model_type).get_supported_languages()
-            if self.config.language not in model_supported_languages:
-                raise Exception(f"{self.config.language.name} is not supported by the model {model_type.name}, "
-                                f"which is used by the configured model policy {model_policy.get_name()}")
+        for flow_config in [self.config.binary_flow, self.config.multiclass_flow]:
+            model_policy = flow_config.model_policy
+            for model_type in model_policy.get_all_model_types():
+                model_supported_languages = self.model_factory.get_model_api(model_type).get_supported_languages()
+                if self.config.language not in model_supported_languages:
+                    raise Exception(f"{self.config.language.name} is not supported by the model {model_type.name}, "
+                                    f"which is used by the configured model policy {model_policy.get_name()}")
 
     def restart_last_iteration(self, workspace_id, category_id):
         """
