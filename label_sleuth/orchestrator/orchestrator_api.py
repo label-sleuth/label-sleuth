@@ -339,20 +339,23 @@ class OrchestratorApi:
         of the categories. Since an increase in label change counts can trigger the training of a new model, in some
         specific situations this parameter is set to False and the updating of the counter is performed at a later time.
         """
-        if len(uri_to_label) > 0 and type(next(iter(uri_to_label.values()))) == MulticlassLabel:  # Multiclass workspace
-            if update_label_counter:
-                # TODO consistent behavior
+        if len(uri_to_label) == 0:
+            logging.info(f"workspace '{workspace_id}' set_labels() invoked without any labels")
+            return
+
+        if update_label_counter:
+            is_multiclass = type(next(iter(uri_to_label.values()))) == MulticlassLabel
+            flow_config = self.config.multiclass_flow if is_multiclass else self.config.binary_flow
+            train_set_selector = self.training_set_selection_factory.get_training_set_selector(
+                flow_config.training_set_selection_strategy)
+            used_label_types = train_set_selector.get_label_types()
+
+            if is_multiclass:
+                num_changes = len([lbl for lbl in uri_to_label.values() if lbl.label_type in used_label_types])
                 self.orchestrator_state.increase_label_change_count_since_last_train(
-                    workspace_id,
-                    category_id=None,
-                    number_of_new_changes=len(uri_to_label))
+                    workspace_id, category_id=None, number_of_new_changes=num_changes)
 
-        else:  # Binary workspace
-            if update_label_counter:
-                train_set_selector = self.training_set_selection_factory.\
-                    get_training_set_selector(self.config.binary_flow.training_set_selection_strategy)
-
-                used_label_types = train_set_selector.get_label_types()
+            else:
                 # count the number of labels for each category
                 changes_per_cat = Counter([cat for uri, labels_dict in uri_to_label.items()
                                            for cat, cat_label in labels_dict.items()
@@ -1102,7 +1105,6 @@ class OrchestratorApi:
             logging.info(f"updated total label count in workspace '{workspace_id}' for category id {category_id} "
                          f"is {sum(label_counts_dict.values())} ({label_counts_dict})")
             categories_counter[category_id] = len(uri_to_label)
-        # TODO return both positive and negative counts
         categories_counter_list = [{'category_id': key, 'counter': value} for key, value in categories_counter.items()]
         total = sum(categories_counter.values())
         
