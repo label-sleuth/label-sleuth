@@ -737,20 +737,19 @@ def set_element_label(workspace_id, element_id):
     category_id = post_data.get("category_id")
     value = post_data["value"]
     is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
+    logging.info(value)
     if not is_multiclass:
         category_id = int(category_id)
-    else:
-        value = int(value)
     iteration = int(post_data.get("iteration", -1))
     source = post_data.get("source", "n/a")
     update_counter = post_data.get('update_counter', True)
-
     if value == 'none':
         curr_app.orchestrator_api. \
             unset_labels(workspace_id, category_id=category_id, uris=[element_id],
                          apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
     else:
         if is_multiclass:
+            value = int(value)
             uri_with_updated_label = {element_id: MulticlassLabel(value,
                                                                   metadata={"iteration": iteration,
                                                                             "source": source})}

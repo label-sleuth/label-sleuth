@@ -575,6 +575,7 @@ class TestAppIntegration(unittest.TestCase):
                             "text": "document 3 has three text elements, this is the third",
                             "user_labels": {"0": 2}}
                           }, res.get_json())
+    
 
         res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the third label")
@@ -660,3 +661,9 @@ class TestAppIntegration(unittest.TestCase):
                                data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"MultiClass"}}'.format(workspace_name, dataset_name),
                                headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to create a new workspace after deleting the old one")
+
+        # test that setting an element's label to none works
+        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[2]["id"]}?mode=MultiClass',
+            data='{"value":"none"}', headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get active learning recommendations")
+        
