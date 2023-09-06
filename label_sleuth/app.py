@@ -733,32 +733,25 @@ def set_element_label(workspace_id, element_id):
     specific situations this parameter is set to False and the updating of the counter is performed at a later time.
     """
     post_data = request.get_json(force=True)
-    # TODO the behavior of category_id here is inconsistent with the other endpoints
-    if "category_id" not in post_data:
-        return jsonify({"type": "missing_category_id", "title": "category_id was not provided in post data"}), 422
 
-    category_id = int(post_data["category_id"])
+    category_id = post_data.get("category_id")
     value = post_data["value"]
     is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
+    if not is_multiclass:
+        category_id = int(category_id)
+    else:
+        value = int(value)
     iteration = int(post_data.get("iteration", -1))
     source = post_data.get("source", "n/a")
     update_counter = post_data.get('update_counter', True)
-    if is_multiclass and (value not in ['true', "True", "TRUE", "none", True]):
-        make_error(f"in multiclass value can only be {['true', 'True', 'TRUE', True]} or none")
 
     if value == 'none':
         curr_app.orchestrator_api. \
-            unset_labels(workspace_id, category_id=None if is_multiclass else category_id, uris=[element_id],
+            unset_labels(workspace_id, category_id=category_id, uris=[element_id],
                          apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
     else:
-        if value in ['true', "True", "TRUE", True]:
-            value = True
-        elif value in ['false', "False", "FALSE", False]:
-            value = False
-        else:
-            raise Exception(f"cannot convert label to boolean. Input label = {value}")
         if is_multiclass:
-            uri_with_updated_label = {element_id: MulticlassLabel(category_id,
+            uri_with_updated_label = {element_id: MulticlassLabel(value,
                                                                   metadata={"iteration": iteration,
                                                                             "source": source})}
         else:
@@ -770,8 +763,7 @@ def set_element_label(workspace_id, element_id):
                        apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts,
                        update_label_counter=update_counter)
 
-    res = {'element': get_element(workspace_id, category_id=None if is_multiclass else category_id,
-                                  element_id=element_id),
+    res = {'element': get_element(workspace_id, category_id=category_id, element_id=element_id),
            'workspace_id': workspace_id, 'category_id': str(category_id)}
     return jsonify(res)
 
