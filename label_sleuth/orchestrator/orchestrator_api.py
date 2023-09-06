@@ -123,9 +123,9 @@ class OrchestratorApi:
     
     def get_workspaces_by_dataset_name(self, dataset_name: str):
         workspaces_ids = []
-        for workspace_id in self.list_workspaces():
-            if self.get_dataset_name(workspace_id) == dataset_name:
-                workspaces_ids.append(workspace_id)
+        for workspace_info in self.list_workspaces():
+            if self.get_dataset_name(workspace_info['id']) == dataset_name:
+                workspaces_ids.append(workspace_info['id'])
         return workspaces_ids
 
     def delete_dataset(self, dataset_name: str):
@@ -152,17 +152,13 @@ class OrchestratorApi:
     def workspace_exists(self, workspace_id: str) -> bool:
         return self.orchestrator_state.workspace_exists(workspace_id)
 
-    def list_workspaces(self, include_mode=False):
-        #TODO consistency
-        if include_mode:
-            return sorted(
-                [{"id": w.workspace_id,
-                  "mode": WorkspaceModelType.MultiClass.name
-                          if (type(w) == MulticlassWorkspace) else WorkspaceModelType.Binary.name
-                  } for w in self.orchestrator_state.get_all_workspaces()],
-                key=lambda w: w['id'])
-        else:
-            return sorted([x.workspace_id for x in self.orchestrator_state.get_all_workspaces()])
+    def list_workspaces(self):
+        return sorted(
+            [{"id": w.workspace_id,
+              "mode": WorkspaceModelType.MultiClass.name
+                      if (type(w) == MulticlassWorkspace) else WorkspaceModelType.Binary.name
+              } for w in self.orchestrator_state.get_all_workspaces()],
+            key=lambda w: w['id'])
 
     def get_dataset_name(self, workspace_id: str) -> str:
         return self.orchestrator_state.get_workspace(workspace_id).dataset_name
@@ -1204,7 +1200,8 @@ class OrchestratorApi:
         document_statistics = self.data_access.add_documents(dataset_name, documents)
         workspaces_to_update = []
         total_infer_jobs = 0
-        for workspace_id in self.list_workspaces():
+        for workspace_info in self.list_workspaces():
+            workspace_id = workspace_info['id']
             if self.get_dataset_name(workspace_id) == dataset_name:
                 workspaces_to_update.append(workspace_id)
 
@@ -1305,7 +1302,8 @@ class OrchestratorApi:
         the middle
         """
         num_iterations_to_recover = 0
-        for workspace_id in self.list_workspaces():
+        for workspace_info in self.list_workspaces():
+            workspace_id = workspace_info['id']
             for category_id, category in self.get_all_categories(workspace_id).items():
                 if len(category.iterations) > 0 \
                         and category.iterations[-1].status not in [IterationStatus.ERROR, IterationStatus.READY
