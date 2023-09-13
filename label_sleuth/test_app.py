@@ -651,6 +651,22 @@ class TestAppIntegration(unittest.TestCase):
         #                               'user_labels': {str(category_id): 'true'}}, 'workspace_id': 'my_test_workspace'},
         #                  res.get_json())
 
+        # evaluate accuracy
+        res = self.client.get(f"/workspace/{workspace_name}/accuracy_evaluation_elements", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get elements for accuracy evaluation")
+        eval_ids = [d["id"] for d in res.get_json()['elements']]
+        for eval_id in eval_ids:
+            self.client.put(
+                f'/workspace/{workspace_name}/element/{eval_id}?mode=MultiClass',
+                data='{"value":1}', headers=HEADERS)
+        res = self.client.post(f'/workspace/{workspace_name}/accuracy_evaluation_elements',
+                               data='{{"ids":[{}],"changed_elements_count":3,"iteration":0}}'.format(
+                                   ','.join(f'"{eval_id}"' for eval_id in eval_ids)),
+                               headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to calculate accuracy evaluation")
+        self.assertGreaterEqual(res.get_json()['score'], 0.0, msg="Calculated accuracy is invalid")
+        self.assertLessEqual(res.get_json()['score'], 1.0, msg="Calculated accuracy is invalid")
+
         # delete workspace
         res = self.client.delete(f"/workspace/{workspace_name}",
                                data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"MultiClass"}}'.format(workspace_name, dataset_name),
@@ -666,4 +682,3 @@ class TestAppIntegration(unittest.TestCase):
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[2]["id"]}?mode=MultiClass',
             data='{"value":"none"}', headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get active learning recommendations")
-        

@@ -48,6 +48,7 @@ class BinaryFlowConfiguration:
 class MultiClassFlowConfiguration:
     per_class_labeling_threshold: int
     changed_element_threshold: int
+    accuracy_evaluation_size: int
     model_policy: ModelPolicy
     training_set_selection_strategy: Type[TrainSetSelectorAPI]
     active_learning_policy: ActiveLearningPolicy = None

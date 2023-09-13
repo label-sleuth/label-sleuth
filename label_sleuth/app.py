@@ -16,6 +16,7 @@
 import getpass
 import logging
 import os
+import random
 import shutil
 import tempfile
 import zipfile
@@ -737,7 +738,6 @@ def set_element_label(workspace_id, element_id):
     category_id = post_data.get("category_id")
     value = post_data["value"]
     is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
-    logging.info(value)
     if not is_multiclass:
         category_id = int(category_id)
     iteration = int(post_data.get("iteration", -1))
@@ -1358,6 +1358,79 @@ def cancel_precision_evaluation(workspace_id):
     changed_elements_count = post_data["changed_elements_count"]
     curr_app.orchestrator_api.increase_label_change_count_since_last_train(workspace_id, category_id,
                                                                            changed_elements_count)
+    res = {'canceled': 'OK'}
+    return jsonify(res)
+
+
+@main_blueprint.route("/workspace/<workspace_id>/accuracy_evaluation_elements", methods=['GET'])
+@login_if_required
+@validate_workspace_id
+def get_elements_for_accuracy_evaluation(workspace_id):
+    """
+    Returns a random sample of elements. This sample is used for evaluating the accuracy of the (multiclass) model
+    predictions:
+    the user is asked to label this sample of elements,
+    and after they are labeled the accuracy_evaluation() call will use these labels to estimate model accuracy.
+
+    :param workspace_id:
+    :request_arg category_id:.
+    """
+    size = curr_app.config["CONFIGURATION"].multiclass_flow.accuracy_evaluation_size
+    random_state = len(curr_app.orchestrator_api.get_all_iterations_for_category(workspace_id, category_id=None))
+    all_uris = curr_app.orchestrator_api.get_all_text_elements_uris(workspace_id)
+    uris_for_eval = random.Random(random_state).sample(all_uris, size)
+    elements_for_eval = curr_app.orchestrator_api.get_text_elements_by_uris(workspace_id, uris_for_eval)
+    elements_transformed = elements_back_to_front(workspace_id, elements_for_eval, category_id=None)
+    logging.info(f"workspace '{workspace_id}' sampled {len(elements_transformed)} elements for accuracy evaluation")
+    res = {'elements': elements_transformed}
+    return jsonify(res)
+
+
+@main_blueprint.route('/workspace/<workspace_id>/accuracy_evaluation_elements', methods=['POST'])
+@login_if_required
+@validate_workspace_id
+@cross_origin()
+def run_accuracy_evaluation(workspace_id):
+    """
+    Return a score estimating the accuracy of *model_id*. This method is triggered manually, and after the
+    elements from get_elements_for_accuracy_evaluation() were labeled by the user.
+
+    :param workspace_id:
+    :post_param iteration:
+    :post_param ids: element ids of the elements labeled for the purpose of accuracy evaluation
+    :post_param changed_elements_count: the number of labels that were added/changed in the labeling of elements
+    for evaluation. In order to avoid triggering a new iteration before evaluation is complete, labels set in the
+    context of accuracy evaluation are not immediately reflected in the label change counter of the category, and the
+    counts are updated only when calling run_accuracy_evaluation() or cancel_accuracy_evaluation()
+    """
+    post_data = request.get_json(force=True)
+    ids = post_data["ids"]
+    changed_elements_count = post_data["changed_elements_count"]
+    iteration_index = post_data["iteration"]
+    score = curr_app.orchestrator_api.estimate_accuracy(workspace_id, None, ids, changed_elements_count,
+                                                        iteration_index)
+    res = {'score': score}
+    return jsonify(res)
+
+
+@main_blueprint.route('/workspace/<workspace_id>/cancel_accuracy_evaluation', methods=['POST'])
+@login_if_required
+@validate_workspace_id
+def cancel_accuracy_evaluation(workspace_id):
+    """
+    Exit the accuracy evaluation, and allow the evaluation elements labeled so far to be reflected in the
+    label change counter
+
+    :param workspace_id:
+    :post_param changed_elements_count: the number of labels that were added/changed in the labeling of elements
+    for evaluation. In order to avoid triggering a new iteration before evaluation is complete, labels set in the
+    context of accuracy evaluation are not immediately reflected in the label change counter of the category, and the
+    counts are updated only when calling run_accuracy_evaluation() or cancel_accuracy_evaluation()
+
+    """
+    post_data = request.get_json(force=True)
+    changed_elements_count = post_data["changed_elements_count"]
+    curr_app.orchestrator_api.increase_label_change_count_since_last_train(workspace_id, None, changed_elements_count)
     res = {'canceled': 'OK'}
     return jsonify(res)
 

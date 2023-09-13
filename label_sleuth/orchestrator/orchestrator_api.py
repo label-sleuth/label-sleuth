@@ -236,6 +236,15 @@ class OrchestratorApi:
         dataset_name = self.get_dataset_name(workspace_id)
         return self.data_access.get_all_document_uris(dataset_name)
 
+    def get_all_text_elements_uris(self, workspace_id) -> List[str]:
+        """
+        Get a list of all text element URIs in the dataset used by the given workspace.
+        :param workspace_id:
+        :return: a list of TextElement URIs
+        """
+        dataset_name = self.get_dataset_name(workspace_id)
+        return self.data_access.get_all_text_elements_uris(dataset_name)
+
     def get_text_element_count(self, workspace_id) -> int:
         """
         Return the number of TextElement objects in the given dataset_name.
@@ -252,15 +261,15 @@ class OrchestratorApi:
         """
         return self.data_access.get_all_text_elements(dataset_name=dataset_name)
 
-    def get_text_elements_by_uris(self, workspace_id: str, dataset_name: str, uris: Sequence[str]) \
+    def get_text_elements_by_uris(self, workspace_id: str, uris: Sequence[str]) \
             -> Union[List[LabeledTextElement], List[MulticlassLabeledTextElement]]:
         """
         Get a list of TextElements by their URIs
         :param workspace_id:
-        :param dataset_name:
         :param uris:
         :return: a list of TextElement objects
         """
+        dataset_name = self.get_dataset_name(workspace_id)
         return self.data_access.get_text_elements_by_uris(workspace_id, dataset_name, uris)
 
     def get_all_labeled_text_elements(self, workspace_id, dataset_name, category_id: int, remove_duplicates=False) -> \
@@ -464,8 +473,7 @@ class OrchestratorApi:
         if start_index > len(recommended_uris):
             raise Exception(f"exceeded max recommended items. last element index is {len(recommended_uris) - 1}")
         recommended_uris = recommended_uris[start_index:start_index + count]
-        dataset_name = self.get_dataset_name(workspace_id)
-        return self.get_text_elements_by_uris(workspace_id, dataset_name, recommended_uris), hit_count
+        return self.get_text_elements_by_uris(workspace_id, recommended_uris), hit_count
 
     # Iteration flow
 
@@ -944,11 +952,9 @@ class OrchestratorApi:
         return suspicious_elements
 
     def estimate_precision(self, workspace_id, category_id, uris, changed_elements_count, iteration_index):
-        #TODO multiclass
         logging.info(f"workspace '{workspace_id}' category id {category_id} estimating model precision for iteration "
                      f"{iteration_index} using {len(uris)} elements")
-        dataset_name = self.get_dataset_name(workspace_id)
-        text_elements = self.get_text_elements_by_uris(workspace_id, dataset_name, uris)
+        text_elements = self.get_text_elements_by_uris(workspace_id, uris)
         positive_elements = [te for te in text_elements if te.category_to_label[category_id].label == LABEL_POSITIVE]
 
         estimated_precision = len(positive_elements) / len(text_elements)
@@ -957,13 +963,38 @@ class OrchestratorApi:
                                                           "estimated_precision_num_elements": len(uris)})
 
         logging.info(f"workspace '{workspace_id}' category id {category_id} estimated model precision for iteration "
-                     f"{iteration_index} is {estimated_precision}%. Updating label change count")
+                     f"{iteration_index} is {estimated_precision}. Updating label change count")
         # since we don't want a new model to train while labeling in precision evaluation mode, we only update the
         # labeling counts after evaluation is finished
         self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, category_id,
                                                                              changed_elements_count)
 
         return estimated_precision
+
+    def estimate_accuracy(self, workspace_id, category_id, uris, changed_elements_count, iteration_index):
+        logging.info(f"workspace '{workspace_id}' category id {category_id} estimating model accuracy for iteration "
+                     f"{iteration_index} using {len(uris)} elements")
+        if category_id is not None:
+            raise Exception(f'accuracy is supported only for multiclass')
+
+        text_elements = self.get_text_elements_by_uris(workspace_id, uris)
+        labels = [te.label.label for te in text_elements]
+        predictions = [p.label for p in self.infer(workspace_id, category_id, elements_to_infer=text_elements,
+                                                   iteration_index=iteration_index)]
+
+        estimated_accuracy = mean(lbl == pred for lbl, pred in zip(labels, predictions))
+        self.orchestrator_state.add_iteration_statistics(workspace_id, category_id, iteration_index,
+                                                         {"estimated_accuracy": estimated_accuracy,
+                                                          "estimated_accuracy_num_elements": len(uris)})
+
+        logging.info(f"workspace '{workspace_id}' category id {category_id} estimated model accuracy for iteration "
+                     f"{iteration_index} is {estimated_accuracy}. Updating label change count")
+        # since we don't want a new model to train while labeling in evaluation mode, we only update the
+        # labeling counts after evaluation is finished
+        self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, category_id,
+                                                                             changed_elements_count)
+
+        return estimated_accuracy
 
     def increase_label_change_count_since_last_train(self, workspace_id, category_id, changed_elements_count):
         """

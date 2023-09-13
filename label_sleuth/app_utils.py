@@ -66,6 +66,7 @@ def validate_category_id(function):
 
 
 def _text_element_to_user_labels(text_element: Union[TextElement, LabeledTextElement, MulticlassLabeledTextElement]):
+    # TODO change to None
     if type(text_element) == TextElement:
         return {}
     elif type(text_element) == LabeledTextElement:
@@ -131,8 +132,7 @@ def get_element(workspace_id, category_id, element_id):
     :param category_id:
     :param element_id:
     """
-    dataset_name = current_app.orchestrator_api.get_dataset_name(workspace_id)
-    element = current_app.orchestrator_api.get_text_elements_by_uris(workspace_id, dataset_name, [element_id])
+    element = current_app.orchestrator_api.get_text_elements_by_uris(workspace_id, [element_id])
     element_transformed = elements_back_to_front(workspace_id, element, category_id)[0]
     return element_transformed
 

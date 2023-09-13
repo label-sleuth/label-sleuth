@@ -14,7 +14,8 @@
         "changed_element_threshold": 2,
         "training_set_selection_strategy": "ALL_LABELED_MULTICLASS",
         "model_policy": "STATIC_MULTICLASS_SVM_BOW",
-        "active_learning_strategy": "MULTICLASS_ENTROPY"
+        "active_learning_strategy": "MULTICLASS_ENTROPY",
+        "accuracy_evaluation_size": 5
     },
 
     "apply_labels_to_duplicate_texts": true,
