@@ -243,6 +243,10 @@ class FileBasedDataAccess(DataAccessApi):
             with open(file_path + '.json') as json_file:
                 doc_encoded = json_file.read()
             doc = jsonpickle.decode(doc_encoded)
+            if len(doc.text_elements) > 0:
+                if hasattr(doc.text_elements[0], "category_to_label"): # for backward compatability remove the empty "category_to_label" field from TextElement objects
+                    for te in doc.text_elements:
+                        delattr(te, "category_to_label")
             return doc
 
         doc_dump_dir = self._get_documents_dump_dir(dataset_name)
