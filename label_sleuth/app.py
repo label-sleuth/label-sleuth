@@ -776,7 +776,8 @@ def get_labeled_elements_by_value(workspace_id):
     Return all elements that were assigned a given label for the given category by the user
 
     :param workspace_id:
-    :request_arg category_id:
+    :request_arg category_id: Optional, for binary workspace only
+    :request_arg value: True/False for binary workspaces, or the class id for multiclass workspace
     :request_arg size: number of elements to return
     :request_arg start_idx: get elements starting from this index (for pagination)
     """
@@ -812,7 +813,7 @@ def get_all_labeled_elements(workspace_id, category_id, label=None, size: int = 
     Return all elements that were assigned the given label, or all labeled elements if label is None
 
     :param workspace_id:
-    :param category_id:
+    :param category_id: for binary workspace
     :param label: return only elements assigned this label; if None, return all labeled elements
     :param size: number of elements to return
     :param start_idx: get elements starting from this index (for pagination)
