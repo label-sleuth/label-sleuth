@@ -113,7 +113,8 @@ const useWorkspaceState = () => {
     // fetched again, as well as the search bar results (in case element labels has to be updated there)
     if (uploadedLabels) {
       const { categories, categoriesCreated } = uploadedLabels;
-      if (categories?.some((cat) => cat.category_id === curCategory)) {
+      // update elements and status only if the workspace is mc mode or if the current category was affected
+      if (categories?.some((cat) => cat.category_id === curCategory) || mode === WorkspaceMode.MULTICLASS) {
         fetchPositiveLabelsElements();
         fetchMainPanelElements();
         dispatch(checkStatus());
