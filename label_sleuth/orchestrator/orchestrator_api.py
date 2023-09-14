@@ -516,7 +516,10 @@ class OrchestratorApi:
                          f"(multiclass workspace)")
             train_set_selector = self.training_set_selection_factory.get_training_set_selector(
                 self.config.multiclass_flow.training_set_selection_strategy)
-            category = None
+
+            cat_id_to_name_and_desc = {id: (cat.name, cat.description)
+                                          for id, cat in
+                                          self.orchestrator_state.get_all_categories(workspace_id).items()}
         else:
             logging.info(f"starting iteration {new_iteration_index} in background for workspace '{workspace_id}' "
                          f"category id '{category_id}'")
@@ -524,11 +527,13 @@ class OrchestratorApi:
                 self.config.binary_flow.training_set_selection_strategy)
             category = self.orchestrator_state.get_workspace(workspace_id).categories[category_id]
 
+            cat_id_to_name_and_desc = {category_id: (category.name, category.description)}
+
         future = train_set_selector.collect_train_set(workspace_id=workspace_id,
                                                       train_dataset_name=dataset_name,
-                                                      category_id=category_id, #TODO decide if we want to change the API (breaking change) that will enable passing more information
-                                                      category_name=category.name if category is not None else None,
-                                                      category_description=category.description if category is not None else None)
+                                                      cat_id_to_name_and_desc=cat_id_to_name_and_desc)
+
+
         future.add_done_callback(functools.partial(self._train, workspace_id, category_id, model_type,
                                                    new_iteration_index))
 
@@ -1231,11 +1236,11 @@ class OrchestratorApi:
                 else:
                     train_set_selector = self.training_set_selection_factory.get_training_set_selector(
                         self.config.binary_flow.training_set_selection_strategy)
-                    text_elements = train_set_selector.get_train_set(workspace_id=workspace_id,
-                                                                     train_dataset_name=dataset_name,
-                                                                     category_id=category_id,
-                                                                     category_name=category.name,
-                                                                     category_description=category.description)
+                    text_elements = train_set_selector.get_train_set(
+                        workspace_id=workspace_id,
+                        train_dataset_name=dataset_name,
+                        cat_id_to_name_and_desc={category_id: (categories[category_id].name,
+                                                               categories[category_id].description)})
 
                 list_of_dicts.extend(
                     [{DisplayFields.workspace_id: workspace_id,
@@ -1259,11 +1264,9 @@ class OrchestratorApi:
             else:
                 train_set_selector = self.training_set_selection_factory.get_training_set_selector(
                     self.config.multiclass_flow.training_set_selection_strategy)
-                text_elements = train_set_selector.get_train_set(workspace_id=workspace_id,
-                                                                 train_dataset_name=dataset_name,
-                                                                 category_id=None, # TODO update after train set selector refactoring
-                                                                 category_name=None,
-                                                                 category_description=None)
+                text_elements = train_set_selector.get_train_set(
+                    workspace_id=workspace_id, train_dataset_name=dataset_name,
+                    cat_id_to_name_and_desc={id:(cat.name, cat.description) for id, cat in categories.items()})
             list_of_dicts.extend(
                 [{DisplayFields.workspace_id: workspace_id,
                   DisplayFields.doc_id: element.uri.split('-')[1],

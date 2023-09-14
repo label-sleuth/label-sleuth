@@ -18,7 +18,7 @@ import random
 import sys
 
 from collections import Counter
-from typing import Sequence, List
+from typing import Sequence, List, Mapping, Tuple
 
 from label_sleuth.data_access.core.data_structs import Label, LabelType, TextElement, BINARY_LABELS, LABEL_POSITIVE, \
     LABEL_NEGATIVE, LabeledTextElement
@@ -36,8 +36,12 @@ class TrainSetSelectorAllLabeled(TrainSetSelectorAPI):
         super().__init__(data_access, background_jobs_manager, label_types=label_types)
         self.should_verify_all_labels_in_train = should_verify_all_labels_in_train
 
-    def get_train_set(self, workspace_id, train_dataset_name, category_id,
-                      category_name: str, category_description: str) -> Sequence[LabeledTextElement]:
+    def get_train_set(self, workspace_id, train_dataset_name, cat_id_to_name_and_desc: Mapping[int, Tuple]) ->\
+            Sequence[LabeledTextElement]:
+        if len(cat_id_to_name_and_desc) != 1:
+            raise Exception(f"workspace '{workspace_id}' {self.__class__.__name__} expects only 1 class, "
+                            f"got {len(cat_id_to_name_and_desc)}")
+        category_id = next(iter(cat_id_to_name_and_desc.keys()))
         train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_id,
                                                                         remove_duplicates=True)
         if self.should_verify_all_labels_in_train:
@@ -98,8 +102,12 @@ class TrainSetSelectorEnforcePositiveNegativeRatio(TrainSetSelectorAllLabeled):
         self.neg_label = LABEL_NEGATIVE
         self.pos_label = LABEL_POSITIVE
 
-    def get_train_set(self, workspace_id, train_dataset_name, category_id,
-                      category_name: str, category_description: str) -> Sequence[TextElement]:
+    def get_train_set(self, workspace_id, train_dataset_name, cat_id_to_name_and_desc: Mapping[int, Tuple]) \
+            -> Sequence[TextElement]:
+        if len(cat_id_to_name_and_desc) != 1:
+            raise Exception(f"workspace '{workspace_id}' {self.__class__.__name__} expects only 1 class, "
+                            f"got {len(cat_id_to_name_and_desc)}")
+        category_id = next(iter(cat_id_to_name_and_desc.keys()))
         train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_id,
                                                                         remove_duplicates=True)
         current_neg_count = train_counts.get(self.neg_label, 0)

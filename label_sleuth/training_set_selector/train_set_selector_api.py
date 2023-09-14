@@ -16,7 +16,7 @@
 import abc
 
 from concurrent.futures import Future
-from typing import Sequence, Set, Union
+from typing import Sequence, Set, Union, Tuple, Mapping
 
 from label_sleuth.data_access.core.data_structs import LabelType, LabeledTextElement, MulticlassLabeledTextElement
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
@@ -32,17 +32,16 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
         self.gpu_support = gpu_support
 
     # TODO consider a breaking change in the input to better support multiclass. Let's do it.
-    def collect_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int, category_name: str,
-                          category_description: str, done_callback=None) -> Future:
+    def collect_train_set(self, workspace_id: str, train_dataset_name: str,
+                          cat_id_to_name_and_desc: Mapping[int, Tuple], done_callback=None) -> Future:
         future = self.background_jobs_manager.add_background_job(
-            self.get_train_set, args=(workspace_id, train_dataset_name, category_id, category_name,
-                                      category_description),
+            self.get_train_set, args=(workspace_id, train_dataset_name, cat_id_to_name_and_desc),
             use_gpu=self.gpu_support, done_callback=done_callback)
         return future
 
     @abc.abstractmethod
-    def get_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int,
-                      category_name: str, category_description: str) -> Union[Sequence[LabeledTextElement],
+    def get_train_set(self, workspace_id: str, train_dataset_name: str,
+                      cat_id_to_name_and_desc: Mapping[int, Tuple]) -> Union[Sequence[LabeledTextElement],
                                                                               Sequence[MulticlassLabeledTextElement]]:
         """
         For a given workspace, dataset and category, prepare and return a train set for training the model.
@@ -53,7 +52,7 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
         :param train_dataset_name:
         :param category_id:
         :param category_name:
-        :param category_description:
+        :param cat_id_to_name_and_desc:
         """
 
     def get_label_types(self) -> Set[LabelType]:

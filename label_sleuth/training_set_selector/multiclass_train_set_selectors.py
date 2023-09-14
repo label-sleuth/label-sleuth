@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Sequence
+from typing import Sequence, Mapping, Tuple
 import logging
 import sys
 
@@ -22,9 +22,12 @@ class TrainSetSelectorMulticlassAllLabeled(TrainSetSelectorAPI):
 
         return labeled_elements, counts
 
-    def get_train_set(self, workspace_id: str, train_dataset_name: str, category_id: int, category_name: str,
-                      category_description: str) -> Sequence[TextElement]:
-        train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, category_id,
+    def get_train_set(self, workspace_id: str, train_dataset_name: str,
+                      cat_id_to_name_and_desc: Mapping[int, Tuple]) -> Sequence[TextElement]:
+        if len(cat_id_to_name_and_desc) <= 1:
+            raise Exception(f"workspace '{workspace_id}' {self.__class__.__name__} expects 2 or more classes, "
+                            f"got {len(cat_id_to_name_and_desc)}")
+        train_data, train_counts = self.get_data_and_counts_for_labeled(workspace_id, train_dataset_name, None,
                                                                         remove_duplicates=True)
         # if self.should_verify_all_labels_in_train:
         #     self.verify_all_labels_are_in_train(train_counts)
