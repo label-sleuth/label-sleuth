@@ -767,13 +767,13 @@ def set_element_label(workspace_id, element_id):
     return jsonify(res)
 
 
-@main_blueprint.route("/workspace/<workspace_id>/positive_elements", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/elements_by_label", methods=['GET'])
 @login_if_required
 @validate_category_id
 @validate_workspace_id
-def get_all_positively_labeled_elements_for_category(workspace_id):
+def get_labeled_elements_by_value(workspace_id):
     """
-    Return all elements that were assigned a positive label for the given category by the user
+    Return all elements that were assigned a given label for the given category by the user
 
     :param workspace_id:
     :request_arg category_id:
@@ -782,10 +782,25 @@ def get_all_positively_labeled_elements_for_category(workspace_id):
     """
     size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
-    category_id = int(request.args['category_id'])
-    logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {size} positively labeled elements "
-                 f"(start index: {start_idx})")
-    elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=LABEL_POSITIVE, size=size,
+    if "value" not in request.args:
+        raise Exception(f"value was not provided for /elements_by_value in workspace {workspace_id}")
+    value = request.args["value"]
+    if curr_app.orchestrator_api.is_binary_workspace(workspace_id):
+        category_id = int(request.args['category_id'])
+        value = value.lower()
+        if value not in ["true", "false"]:
+            raise Exception (f"unknown binary label value {value}")
+        value = True if value == "true" else False
+        logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {size} labeled elements with label {value} "
+                     f"(start index: {start_idx})")
+    else:
+        category_id = None
+        value = int(value)
+        logging.info(
+            f"workspace '{workspace_id}' (multiclass) fetching {size} labeled elements with label {value}"
+            f"(start index: {start_idx})")
+
+    elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=value, size=size,
                                                    start_idx=start_idx)
 
     res = {'elements': elements, "hit_count": hit_count}
@@ -830,8 +845,13 @@ def get_all_labeled_elements(workspace_id, category_id, label=None, size: int = 
     elements = curr_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
                                                                        remove_duplicates=True)
     if label is not None:
-        elements = [element for element in elements
-                    if element.category_to_label[category_id].label == label]
+        if curr_app.orchestrator_api.is_binary_workspace(workspace_id):
+            elements = [element for element in elements
+                        if element.category_to_label[category_id].label == label]
+        else:
+            elements = [element for element in elements
+                        if element.label.label == label]
+
     hit_count = len(elements)
     elements = elements[start_idx: start_idx + size]
     elements_transformed = elements_back_to_front(workspace_id, elements, category_id)

@@ -299,7 +299,7 @@ class TestAppIntegration(unittest.TestCase):
                          res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
 
         # get positively labeled elements
-        res = self.client.get(f"/workspace/{workspace_name}/positive_elements?category_id={category_id}",
+        res = self.client.get(f"/workspace/{workspace_name}/elements_by_label?category_id={category_id}&value=True",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to get positively labeled elements")
@@ -666,6 +666,13 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code, msg="Failed to calculate accuracy evaluation")
         self.assertGreaterEqual(res.get_json()['score'], 0.0, msg="Calculated accuracy is invalid")
         self.assertLessEqual(res.get_json()['score'], 1.0, msg="Calculated accuracy is invalid")
+
+        res = self.client.get(f"/workspace/{workspace_name}/elements_by_label?value=0&mode=MultiClass",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code,
+                         msg="Failed to get labeled elements from category 0")
+        self.assertEqual({'elements': [{'begin': 0, 'docid': 'multiclass_dataset-document3', 'end': 53, 'id': 'multiclass_dataset-document3-0', 'model_predictions': 0, 'text': 'document 3 has three text elements, this is the first', 'user_labels': {'0': 0}}], 'hit_count': 1},
+            res.get_json(), msg="diffs in labeled elements for class 0")
 
         # delete workspace
         res = self.client.delete(f"/workspace/{workspace_name}",
