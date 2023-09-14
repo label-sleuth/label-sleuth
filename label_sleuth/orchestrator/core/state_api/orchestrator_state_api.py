@@ -379,13 +379,16 @@ class OrchestratorStateApi:
             else:
                 return workspace.iterations
 
-    def delete_last_iteration(self, workspace_id, category_id: int):
+    def delete_last_iteration(self, workspace_id, category_id: Union[int, None]):
         """
         Delete the last iteration for a given worksace and category
         """
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            workspace.categories[category_id].iterations.pop()
+            if category_id is not None:
+                workspace.categories[category_id].iterations.pop()
+            else:
+                workspace.iterations.pop()
             self._save_workspace(workspace)
 
     def get_all_iterations_by_status(self, workspace_id: str, category_id: int, status: IterationStatus) -> \

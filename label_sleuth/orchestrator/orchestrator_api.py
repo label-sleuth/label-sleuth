@@ -1192,7 +1192,7 @@ class OrchestratorApi:
             name_to_id = {category.name: id for id, category in self.get_all_categories(workspace_id).items()}
             for uri, label_info in imported_categories_to_labels.items():
                 label_info.label = name_to_id[label_info.label]
-            self.set_labels(workspace_id, imported_categories_to_labels)
+            self.set_labels(workspace_id, imported_categories_to_labels, update_label_counter=True)
             categories_counter = Counter([x.label for x in imported_categories_to_labels.values()])
             categories_counter_list = [{'category_id': key, 'counter': value} for key, value in
                                        categories_counter.items()]
@@ -1409,10 +1409,11 @@ class OrchestratorApi:
         if model_info is not None and model_info.model_id is not None:
             model_api = self.model_factory.get_model_api(model_info.model_type)
             logging.info(f"deleting model {model_info.model_id} of type {model_info.model_type} in workspace "
-                         f"'{workspace_id}', category id {category_id}.")
+                         f"'{workspace_id}', "
+                         f"{'category id '+str(category_id) if category_id is not None else 'multiclass workspace'}.")
             model_api.delete_model(model_info.model_id)
         logging.info(f"restarting iteration {index_to_recover} in workspace '{workspace_id}', "
-                     f"category id {category_id}.")
+                     f"{'category id '+str(category_id) if category_id is not None else 'multiclass workspace'}")
         self.orchestrator_state.delete_last_iteration(workspace_id, category_id)
         self.train_if_recommended(workspace_id, category_id, True)
 
@@ -1425,13 +1426,23 @@ class OrchestratorApi:
         num_iterations_to_recover = 0
         for workspace_info in self.list_workspaces():
             workspace_id = workspace_info['id']
-            for category_id, category in self.get_all_categories(workspace_id).items():
-                if len(category.iterations) > 0 \
-                        and category.iterations[-1].status not in [IterationStatus.ERROR, IterationStatus.READY
-                                                                   , IterationStatus.INSUFFICIENT_TRAIN_DATA]:
-                    logging.info(f"workspace '{workspace_id}', category id {category_id} ('{category.name}') has "
-                                 f"iteration in status {category.iterations[-1]}. Restarting iteration")
-                    self.restart_last_iteration(workspace_id, category_id)
-                    num_iterations_to_recover += 1
+            workspace_type = self.orchestrator_state.get_workspace_type(workspace_id)
+            if workspace_type == Workspace:
+                for category_id, category in self.get_all_categories(workspace_id).items():
+                    if len(category.iterations) > 0 \
+                            and category.iterations[-1].status not in [IterationStatus.ERROR, IterationStatus.READY
+                                                                       , IterationStatus.INSUFFICIENT_TRAIN_DATA]:
+                        logging.info(f"workspace '{workspace_id}', category id {category_id} ('{category.name}') has "
+                                     f"iteration in status {category.iterations[-1]}. Restarting iteration")
+                        self.restart_last_iteration(workspace_id, category_id)
+                        num_iterations_to_recover += 1
+            elif workspace_type == MulticlassWorkspace:
+                iterations = self.orchestrator_state.get_all_iterations(workspace_id, None)
+                if len(iterations) > 0 \
+                        and iterations[-1].status not in [IterationStatus.ERROR, IterationStatus.READY
+                    , IterationStatus.INSUFFICIENT_TRAIN_DATA]:
+                    logging.info(f"workspace '{workspace_id}' (multiclass) has "
+                                 f"iteration in status {iterations[-1]}. Restarting iteration")
+                    self.restart_last_iteration(workspace_id, None)
         if num_iterations_to_recover > 0:
             logging.info(f"recovery process was started for {num_iterations_to_recover} categories")
