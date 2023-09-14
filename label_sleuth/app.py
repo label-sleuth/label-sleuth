@@ -855,7 +855,10 @@ def import_labels(workspace_id):
 
     :param workspace_id:
     """
-    required_columns = [DisplayFields.text, DisplayFields.category_name, DisplayFields.label]
+
+    required_columns = [DisplayFields.text, DisplayFields.label]
+    if curr_app.orchestrator_api.is_binary_workspace(workspace_id):
+        required_columns.append(DisplayFields.category_name)
     csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
     df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
 

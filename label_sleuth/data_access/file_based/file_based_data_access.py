@@ -358,7 +358,7 @@ class FileBasedDataAccess(DataAccessApi):
                                                    remove_duplicates=remove_duplicates, random_state=random_state)
         return results_dict
 
-    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
+    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: Union[int, None],
                                   sample_size: int = sys.maxsize, query: str = None, is_regex: bool = False,
                                   remove_duplicates=False, random_state: int = 0,
                                   label_types: Set[LabelType] = frozenset({LabelType.Standard})) -> Mapping:

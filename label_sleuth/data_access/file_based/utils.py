@@ -103,7 +103,7 @@ def filter_by_query_and_document_uri(df: pd.DataFrame, query, is_regex: bool = F
     return df
 
 
-def filter_by_query_and_label_status(df: pd.DataFrame, labels_series: pd.Series, category_id: int,
+def filter_by_query_and_label_status(df: pd.DataFrame, labels_series: pd.Series, category_id: Union[int, None],
                                      labeled_status: LabeledStatus, query: str, is_regex: bool = False,
                                      label_types: Set[LabelType] = None):
     """

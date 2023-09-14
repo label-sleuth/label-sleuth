@@ -18,6 +18,7 @@ import random
 import tempfile
 import unittest
 from datetime import datetime
+from typing import List
 from unittest.mock import patch
 
 import pandas as pd
@@ -25,7 +26,7 @@ import pandas as pd
 from label_sleuth.active_learning.core.active_learning_factory import ActiveLearningFactory
 from label_sleuth.config import load_config
 from label_sleuth.data_access.core.data_structs import DisplayFields, Document, Label, LABEL_NEGATIVE, LABEL_POSITIVE, \
-    LabeledTextElement, WorkspaceModelType
+    LabeledTextElement, WorkspaceModelType, MulticlassLabel, MulticlassLabeledTextElement
 from label_sleuth.data_access.file_based.file_based_data_access import FileBasedDataAccess
 from label_sleuth.data_access.test_file_based_data_access import generate_corpus
 from label_sleuth.models.core.model_api import ModelStatus
@@ -33,7 +34,7 @@ from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import OrchestratorStateApi, Iteration, \
-    IterationStatus, ModelInfo
+    IterationStatus, ModelInfo, MulticlassCategory
 from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi, NUMBER_OF_MODELS_TO_KEEP
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
 
@@ -46,6 +47,15 @@ def add_random_labels_to_document(doc: Document, min_num_sentences_to_label: int
         categories_to_label = random.sample(categories, random.randint(0, len(categories)))
         elem.category_to_label.update({cat: Label(label=random.sample([LABEL_POSITIVE, LABEL_NEGATIVE], 1)[0])
                                        for cat in categories_to_label})
+    return text_elements_to_label
+
+def add_random_multiclass_labels_to_document(doc: Document, min_num_sentences_to_label: int, categories: List[int],
+                                             seed=0):
+    random.seed(seed)
+    text_elements_to_label = random.sample(doc.text_elements, min(min_num_sentences_to_label, len(doc.text_elements)))
+    text_elements_to_label = [MulticlassLabeledTextElement(**vars(text_element)) for text_element in text_elements_to_label]
+    for elem in text_elements_to_label:
+        elem.label = MulticlassLabel(random.randint(0, len(categories)-1))
     return text_elements_to_label
 
 
@@ -172,6 +182,86 @@ class TestOrchestratorAPI(unittest.TestCase):
 
         self.assertEqual(sorted(labeled_elements_for_export, key=lambda te: te.uri),
                          sorted(labeled_elements_imported, key=lambda te: te.uri))
+
+    def test_multiclass_export_and_import_workspace_labels(self):
+        dataset_name = self.test_multiclass_export_and_import_workspace_labels.__name__ + '_dump'
+        doc = generate_corpus(self.data_access, dataset_name,num_additional_texts_for_each_doc=50)[0]
+        categories = {'cat_' + str(i):f"description of category {str(i)}" for i in range(3)}
+        mock_workspace = "multiclass_workspace"
+        self.orchestrator_api.create_workspace(workspace_id=mock_workspace, dataset_name=dataset_name,
+                                               workspace_type=WorkspaceModelType.MultiClass)
+
+        self.orchestrator_api.set_category_list(mock_workspace,categories)
+        labeled_elements_for_export = add_random_multiclass_labels_to_document(doc, 30, categories.keys())
+        labeled_elements_for_export = [e for e in labeled_elements_for_export if e.label is not None]
+
+        def mock_get_labeled_text_elements(wid, ds, category_id, *args, **kwargs):
+            return {'results': labeled_elements_for_export}
+
+        # use export_workspace_labels() to turn labeled_elements_for_export into a dataframe for export
+        with patch.object(FileBasedDataAccess, 'get_labeled_text_elements', side_effect=mock_get_labeled_text_elements):
+            exported_df = self.orchestrator_api.export_workspace_labels(mock_workspace, True)
+            exported_df = exported_df.astype({'label_metadata': 'str'})
+
+        for column in exported_df.columns:
+            self.assertIn(column, DisplayFields.__dict__.values())
+
+        # import the resulting dataframe using import_category_labels()
+        mock_workspace_2 = 'multiclass_workspace_2'
+        self.orchestrator_api.create_workspace(workspace_id=mock_workspace_2, dataset_name=dataset_name,
+                                               workspace_type=WorkspaceModelType.MultiClass)
+        res = self.orchestrator_api.import_category_labels(mock_workspace_2, exported_df)
+
+        unique = set()
+        labeled_elements_imported = \
+            [element for element
+             in self.orchestrator_api.get_all_labeled_text_elements(mock_workspace_2, dataset_name, None)
+             if element.uri not in unique and not unique.add(element.uri)]
+        categories_ws1 = self.orchestrator_api.get_all_categories(mock_workspace)
+        for text_element in labeled_elements_for_export:
+            text_element.label = categories_ws1[text_element.label.label].name
+
+        categories_ws2 = self.orchestrator_api.get_all_categories(mock_workspace_2)
+        for text_element in labeled_elements_imported:
+            text_element.label = categories_ws2[text_element.label.label].name
+        self.assertEqual(sorted(labeled_elements_for_export, key=lambda te: te.uri),
+                         sorted(labeled_elements_imported, key=lambda te: te.uri))
+
+    def test_multiclass_import_with_existing_categories(self):
+        dataset_name = self.test_multiclass_import_with_existing_categories.__name__ + '_dump'
+        doc = generate_corpus(self.data_access, dataset_name,num_additional_texts_for_each_doc=50)[0]
+        categories = {'cat_' + str(i):f"description of category {str(i)}" for i in range(3)}
+        mock_workspace = "test_multiclass_import_with_existing_categories"
+        self.orchestrator_api.create_workspace(workspace_id=mock_workspace, dataset_name=dataset_name,
+                                               workspace_type=WorkspaceModelType.MultiClass)
+
+        self.orchestrator_api.set_category_list(mock_workspace,categories)
+        self.orchestrator_api.set_labels(mock_workspace,{doc.text_elements[0].uri:MulticlassLabel(0)})
+        self.orchestrator_api.set_labels(mock_workspace, {doc.text_elements[1].uri: MulticlassLabel(1)})
+
+        self.assertEqual({0: MulticlassCategory(name='cat_0', id=0, description='description of category 0'),
+                          1: MulticlassCategory(name='cat_1', id=1, description='description of category 1'),
+                          2: MulticlassCategory(name='cat_2', id=2, description='description of category 2')},
+                         self.orchestrator_api.get_all_categories(mock_workspace))
+        additional_labels_df = pd.DataFrame([{"text":doc.text_elements[2].text,"label":"cat_1"},
+                                             {"text":doc.text_elements[3].text,"label":"new category created by import"}])
+        self.orchestrator_api.import_category_labels(mock_workspace, additional_labels_df)
+
+        self.assertEqual({0: MulticlassCategory(name='cat_0', id=0, description='description of category 0'),
+                          1: MulticlassCategory(name='cat_1', id=1, description='description of category 1'),
+                          2: MulticlassCategory(name='cat_2', id=2, description='description of category 2'),
+                          3: MulticlassCategory(name='new category created by import', id=3, description='')},
+                         self.orchestrator_api.get_all_categories(mock_workspace))
+
+        labeled_text_elements =  self.orchestrator_api.get_all_labeled_text_elements(mock_workspace, dataset_name,
+                                                                                     category_id=None)
+        self.assertEqual(1,len([x.label for x in labeled_text_elements if x.label.label==3]),
+                         msg="imported element was not found")
+        self.assertEqual(1, len([x.label for x in labeled_text_elements if x.label.label == 0]),
+                         msg="existing label disappeared")
+        self.assertEqual(2, len([x.label for x in labeled_text_elements if x.label.label == 1]),
+                         msg="existing label disappeared")
+        self.assertEqual(0, len([x.label for x in labeled_text_elements if x.label.label == 2]), msg="unexpected label")
 
     @patch.object(OrchestratorApi, 'run_iteration')
     @patch.object(OrchestratorStateApi, 'get_label_change_count_since_last_train')

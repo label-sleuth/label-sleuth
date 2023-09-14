@@ -229,7 +229,7 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: int,
+    def get_labeled_text_elements(self, workspace_id: str, dataset_name: str, category_id: Union[int, None],
                                   sample_size: int = sys.maxsize,
                                   query: str = None, is_regex: bool = False,
                                   remove_duplicates=False, random_state: int = 0,

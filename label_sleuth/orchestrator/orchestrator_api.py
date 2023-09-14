@@ -47,7 +47,7 @@ from label_sleuth.models.core.prediction import Prediction
 from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
-    ModelInfo, MulticlassWorkspace, OrchestratorStateApi, MulticlassCategory
+    ModelInfo, MulticlassWorkspace, OrchestratorStateApi, MulticlassCategory, Workspace
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data, \
     convert_text_elements_to_multiclass_train_data
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
@@ -152,6 +152,9 @@ class OrchestratorApi:
     def workspace_exists(self, workspace_id: str) -> bool:
         return self.orchestrator_state.workspace_exists(workspace_id)
 
+    def is_binary_workspace(self, workspace_id):
+        return self.orchestrator_state.get_workspace_type(workspace_id) == Workspace
+
     def list_workspaces(self):
         return sorted(
             [{"id": w.workspace_id,
@@ -183,6 +186,16 @@ class OrchestratorApi:
         """
         logging.info(f"setting the category list of workspace {workspace_id}")
         return self.orchestrator_state.set_category_list(workspace_id, category_to_description)
+
+    def add_categories_to_category_list(self, workspace_id: str, new_category_to_description: Mapping):
+        """
+        TBD
+        """
+        logging.info(f"adding new {len(new_category_to_description)} the category list of workspace {workspace_id}")
+        intersection_with_existing = set(new_category_to_description.keys()).intersection(set(self.orchestrator_state.get_all_categories(workspace_id).keys()))
+        if len(intersection_with_existing) > 0: #TODO raise a dedicated exception and report to the user
+            raise Exception(f"workspace '{workspace_id}' user is trying to add existing categories: {intersection_with_existing}")
+        return self.orchestrator_state.add_categories_to_category_list(workspace_id, new_category_to_description)
 
     def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str):
         old_category_name = self.orchestrator_state.get_workspace(workspace_id).categories[category_id].name
@@ -272,7 +285,7 @@ class OrchestratorApi:
         dataset_name = self.get_dataset_name(workspace_id)
         return self.data_access.get_text_elements_by_uris(workspace_id, dataset_name, uris)
 
-    def get_all_labeled_text_elements(self, workspace_id, dataset_name, category_id: int, remove_duplicates=False) -> \
+    def get_all_labeled_text_elements(self, workspace_id, dataset_name, category_id: Union[int, None], remove_duplicates=False) -> \
             List[Union[LabeledTextElement, MulticlassLabeledTextElement]]:
         """
         Get all the text elements that were assigned user labels for the given category.
@@ -1093,58 +1106,101 @@ class OrchestratorApi:
     # Import/Export
     
     def import_category_labels(self, workspace_id, labels_df_to_import: pd.DataFrame):
-        logging.info(f"importing {len(labels_df_to_import)} labeled elements into workspace '{workspace_id}' "
-                     f"from {len(labels_df_to_import[DisplayFields.category_name].unique())} categories")
         dataset_name = self.get_dataset_name(workspace_id)
         # Only if doc_id are provided or apply_labels_to_duplicate_texts is false the doc_id is
         # taken into account when applying labels
         apply_labels_to_duplicate_texts = self.config.apply_labels_to_duplicate_texts is True \
                                           or DisplayFields.doc_id not in labels_df_to_import.columns
-        imported_categories_to_uris_and_labels, contradicting_labels_info = \
-            process_labels_dataframe(workspace_id, dataset_name, self.data_access, labels_df_to_import,
-                                     apply_labels_to_duplicate_texts=apply_labels_to_duplicate_texts)
-        
-        # name to id mapping for *existing* categories
-        category_name_to_id = {category.name: category_id
-                               for category_id, category in self.get_all_categories(workspace_id).items()}
-        categories_counter = defaultdict(int)
-        categories_created = []
-        lines_skipped = []
-        # if dataframe contained new categories, create them and update name to id mapping
-        for category_name in imported_categories_to_uris_and_labels.keys():
-            if category_name not in category_name_to_id.keys():
-                logging.info(f"import category '{category_name}' is missing in workspace '{workspace_id}', creating it")
-                category_id = self.create_new_category(workspace_id, category_name, '')
-                category_name_to_id[category_name] = category_id
-                categories_created.append(category_name)
 
-        for category_name, uri_to_label in imported_categories_to_uris_and_labels.items():
-            # switch from category_name to the corresponding category_id
-            category_id = category_name_to_id[category_name]
-            uri_to_label = {uri: {category_id: label} for uri, cat_to_label in uri_to_label.items()
-                            for category_name, label in cat_to_label.items()}
-            if len(uri_to_label) == 0:
-                logging.info(f"found 0 elements for category {category_name}")
+        workspace_type = self.orchestrator_state.get_workspace_type(workspace_id)
+        if workspace_type == Workspace:
+            logging.info(f"importing {len(labels_df_to_import)} labeled elements into workspace '{workspace_id}' "
+                         f"from {len(labels_df_to_import[DisplayFields.category_name].unique())} categories")
+
+            imported_categories_to_uris_and_labels, contradicting_labels_info = \
+                process_labels_dataframe(workspace_id, dataset_name, self.data_access, labels_df_to_import,
+                                         apply_labels_to_duplicate_texts=apply_labels_to_duplicate_texts)
+            
+            # name to id mapping for *existing* categories
+            category_name_to_id = {category.name: category_id
+                                   for category_id, category in self.get_all_categories(workspace_id).items()}
+            categories_counter = defaultdict(int)
+            categories_created = []
+            lines_skipped = []
+            # if dataframe contained new categories, create them and update name to id mapping
+            for category_name in imported_categories_to_uris_and_labels.keys():
+                if category_name not in category_name_to_id.keys():
+                    logging.info(f"import category '{category_name}' is missing in workspace '{workspace_id}', creating it")
+                    category_id = self.create_new_category(workspace_id, category_name, '')
+                    category_name_to_id[category_name] = category_id
+                    categories_created.append(category_name)
+    
+            for category_name, uri_to_label in imported_categories_to_uris_and_labels.items():
+                # switch from category_name to the corresponding category_id
+                category_id = category_name_to_id[category_name]
+                uri_to_label = {uri: {category_id: label} for uri, cat_to_label in uri_to_label.items()
+                                for category_name, label in cat_to_label.items()}
+                if len(uri_to_label) == 0:
+                    logging.info(f"found 0 elements for category {category_name}")
+                else:
+                    logging.info(f"workspace '{workspace_id}' category '{category_name}' adding labels for "
+                                 f"{len(uri_to_label)} uris")
+                    self.set_labels(workspace_id, uri_to_label,
+                                    apply_to_duplicate_texts=False,
+                                    update_label_counter=True)
+    
+                label_counts_dict = self.get_label_counts(workspace_id, dataset_name, category_id, remove_duplicates=False)
+                logging.info(f"updated total label count in workspace '{workspace_id}' for category id {category_id} "
+                             f"is {sum(label_counts_dict.values())} ({label_counts_dict})")
+                categories_counter[category_id] = len(uri_to_label)
+            categories_counter_list = [{'category_id': key, 'counter': value} for key, value in categories_counter.items()]
+            total = sum(categories_counter.values())
+            
+            res = {'categories': categories_counter_list,
+                   'categoriesCreated': categories_created,
+                   'linesSkipped': lines_skipped, #TODO remove from UI and then from here
+                   'total': total,
+                   'contracticting_labels_info': contradicting_labels_info}
+            return res
+
+        elif workspace_type == MulticlassWorkspace:
+            logging.info(f"importing {len(labels_df_to_import)} multiclass labeled elements into workspace "
+                         f"'{workspace_id}' from {len(labels_df_to_import[DisplayFields.label].unique())} categories")
+            imported_categories_to_labels, contradicting_labels_info = process_labels_dataframe(
+                workspace_id,dataset_name, self.data_access, labels_df_to_import, is_binary=False,
+                apply_labels_to_duplicate_texts=apply_labels_to_duplicate_texts)
+
+
+            imported_category_names = set([x.label for x in imported_categories_to_labels.values()])
+            existing_category_names = {category.name for category in self.get_all_categories(workspace_id).values()}
+
+            # if not new_category_names.issubset(existing_category_names) and len(existing_category_names) > 0:
+            #     raise Exception( # TODO - make sure
+            #         f"workspace '{workspace_id}' import labels is only supported if there are not classes in the workspace yet, or if the imported classes are subset of the existing categories")
+            if len(existing_category_names) == 0:
+                self.set_category_list(workspace_id,{name: "" for name in imported_category_names})
             else:
-                logging.info(f"workspace '{workspace_id}' category '{category_name}' adding labels for "
-                             f"{len(uri_to_label)} uris")
-                self.set_labels(workspace_id, uri_to_label,
-                                apply_to_duplicate_texts=False,
-                                update_label_counter=True)
-
-            label_counts_dict = self.get_label_counts(workspace_id, dataset_name, category_id, remove_duplicates=False)
-            logging.info(f"updated total label count in workspace '{workspace_id}' for category id {category_id} "
-                         f"is {sum(label_counts_dict.values())} ({label_counts_dict})")
-            categories_counter[category_id] = len(uri_to_label)
-        categories_counter_list = [{'category_id': key, 'counter': value} for key, value in categories_counter.items()]
-        total = sum(categories_counter.values())
-        
-        res = {'categories': categories_counter_list,
-               'categoriesCreated': categories_created,
-               'linesSkipped': lines_skipped,
-               'total': total,
-               'contracticting_labels_info': contradicting_labels_info}
-        return res
+                self.add_categories_to_category_list(workspace_id,{name: "" for name in
+                                                                   imported_category_names if name not in
+                                                                   existing_category_names})
+            # replace category name with generated category ids
+            name_to_id = {category.name: id for id, category in self.get_all_categories(workspace_id).items()}
+            for uri, label_info in imported_categories_to_labels.items():
+                label_info.label = name_to_id[label_info.label]
+            self.set_labels(workspace_id, imported_categories_to_labels)
+            categories_counter = Counter([x.label for x in imported_categories_to_labels.values()])
+            categories_counter_list = [{'category_id': key, 'counter': value} for key, value in
+                                       categories_counter.items()]
+            total = sum(categories_counter.values())
+            res = {'categories': categories_counter_list,
+                   'categoriesCreated': list(name for name in imported_category_names
+                                             if name not in existing_category_names),
+                   'linesSkipped': [], #TODO remove from UI and then from here
+                   'total': total,
+                   'contracticting_labels_info': contradicting_labels_info}
+            return res
+        else:
+            raise Exception(f"workspace type {workspace_type} import is not implemented yet")
 
     def export_workspace_labels(self, workspace_id, labeled_only) -> pd.DataFrame:
         """
@@ -1160,28 +1216,56 @@ class OrchestratorApi:
         list_of_dicts = []
         logging.info(
             f"Preparing for export elements from workspace '{workspace_id}' (labeled_only mode is {labeled_only})")
-        for category_id, category in categories.items():
-            label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, False,
-                                                 counts_for_training=True)
-            total_count = sum(label_counts.values())
-            logging.info(f"labeled elements size for category {category.name} ({category_id}) in workspace "
-                         f"'{workspace_id}' is {total_count}")
-            if labeled_only or label_counts[LABEL_POSITIVE] == 0:  # if there are no positive elements,
-                # training set selector cannot be used, so we only use the labeled elements
-                text_elements = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
+        workspace_type = self.orchestrator_state.get_workspace_type(workspace_id)
+        if workspace_type == Workspace:
+            for category_id, category in categories.items():
+                label_counts = self.get_label_counts(workspace_id, dataset_name, category_id, False,
+                                                     counts_for_training=True)
+                total_count = sum(label_counts.values())
+                logging.info(f"labeled elements size for category {category.name} ({category_id}) in workspace "
+                             f"'{workspace_id}' is {total_count}")
+                if labeled_only or label_counts[LABEL_POSITIVE] == 0:  # if there are no positive elements,
+                    # training set selector cannot be used, so we only use the labeled elements
+                    text_elements = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, category_id,
+                                                                               remove_duplicates=False)['results']
+                else:
+                    train_set_selector = self.training_set_selection_factory.get_training_set_selector(
+                        self.config.binary_flow.training_set_selection_strategy)
+                    text_elements = train_set_selector.get_train_set(workspace_id=workspace_id,
+                                                                     train_dataset_name=dataset_name,
+                                                                     category_id=category_id,
+                                                                     category_name=category.name,
+                                                                     category_description=category.description)
+
+                list_of_dicts.extend(
+                    [{DisplayFields.workspace_id: workspace_id,
+                      DisplayFields.category_name: category.name,
+                      DisplayFields.doc_id: element.uri.split('-')[1],
+                      # TODO handle when handling uri/doc_id/element_id
+                      DisplayFields.dataset: dataset_name,
+                      DisplayFields.text: element.text,
+                      DisplayFields.uri: element.uri,
+                      # column for each metadata field, using the same format as in document upload
+                      **{DisplayFields.csv_metadata_column_prefix + k: v for k, v in element.metadata.items()},
+                      DisplayFields.label: element.category_to_label[category_id].label,
+                      DisplayFields.label_metadata: element.category_to_label[category_id].metadata,
+                      DisplayFields.label_type: element.category_to_label[category_id].label_type.name
+                      }
+                     for element in text_elements])
+        elif workspace_type == MulticlassWorkspace:
+            if labeled_only:
+                text_elements = self.data_access.get_labeled_text_elements(workspace_id, dataset_name, None,
                                                                            remove_duplicates=False)['results']
             else:
                 train_set_selector = self.training_set_selection_factory.get_training_set_selector(
-                    self.config.training_set_selection_strategy)
+                    self.config.multiclass_flow.training_set_selection_strategy)
                 text_elements = train_set_selector.get_train_set(workspace_id=workspace_id,
                                                                  train_dataset_name=dataset_name,
-                                                                 category_id=category_id,
-                                                                 category_name=category.name,
-                                                                 category_description=category.description)
-
+                                                                 category_id=None, # TODO update after train set selector refactoring
+                                                                 category_name=None,
+                                                                 category_description=None)
             list_of_dicts.extend(
                 [{DisplayFields.workspace_id: workspace_id,
-                  DisplayFields.category_name: category.name,
                   DisplayFields.doc_id: element.uri.split('-')[1],
                   # TODO handle when handling uri/doc_id/element_id
                   DisplayFields.dataset: dataset_name,
@@ -1189,12 +1273,13 @@ class OrchestratorApi:
                   DisplayFields.uri: element.uri,
                   # column for each metadata field, using the same format as in document upload
                   **{DisplayFields.csv_metadata_column_prefix + k: v for k, v in element.metadata.items()},
-                  DisplayFields.label: element.category_to_label[category_id].label,
-                  DisplayFields.label_metadata: element.category_to_label[category_id].metadata,
-                  DisplayFields.label_type: element.category_to_label[category_id].label_type.name
+                  DisplayFields.label: categories[element.label.label].name,
+                  DisplayFields.label_metadata: element.label.metadata,
+                  DisplayFields.label_type: element.label.label_type.name
                   }
                  for element in text_elements])
-
+        else:
+            raise Exception(f"export for workspace '{workspace_id}' of type {workspace_type} is not supported yet")
         logging.info(
             f"done exporting a total of {len(list_of_dicts)} elements from workspace '{workspace_id}'")
 

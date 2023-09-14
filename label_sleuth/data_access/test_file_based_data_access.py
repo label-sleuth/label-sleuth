@@ -26,10 +26,12 @@ from label_sleuth.data_access.file_based.file_based_data_access import FileBased
 from label_sleuth.data_access.core.data_structs import LABEL_POSITIVE, LABEL_NEGATIVE
 
 
-def generate_simple_doc(dataset_name, doc_id=0, add_duplicate=False):
+def generate_simple_doc(dataset_name, doc_id=0, num_additional_texts_above_simple_doc=0, add_duplicate=False):
     sentences = [f'Document Title is Super Interesting {doc_id}', f'First sentence is not that attractive. {doc_id}',
                  f'The second one is a bit better. {doc_id}',
                  f'Last sentence offers a promising view for the future! {doc_id}']
+    for x in range(num_additional_texts_above_simple_doc):
+        sentences.append(f"additional text number {x} in doc {doc_id}")
     if add_duplicate:
         sentences.append(sentences[0])
     text_elements = []
@@ -44,9 +46,12 @@ def generate_simple_doc(dataset_name, doc_id=0, add_duplicate=False):
     return doc
 
 
-def generate_corpus(data_access, dataset_name, num_of_documents=1, add_duplicate=False):
+def generate_corpus(data_access, dataset_name, num_of_documents=1, num_additional_texts_for_each_doc=0,
+                    add_duplicate=False):
     data_access.delete_dataset(dataset_name)
-    docs = [generate_simple_doc(dataset_name, doc_id, add_duplicate) for doc_id in range(0, num_of_documents)]
+    docs = [generate_simple_doc(dataset_name, doc_id, add_duplicate=add_duplicate,
+                                num_additional_texts_above_simple_doc=num_additional_texts_for_each_doc)
+            for doc_id in range(0, num_of_documents)]
     data_access.add_documents(dataset_name=dataset_name, documents=docs)
     return docs
 

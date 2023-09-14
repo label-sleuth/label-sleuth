@@ -317,6 +317,17 @@ class OrchestratorStateApi:
             self._save_workspace(workspace)
             return workspace.categories
 
+    def add_categories_to_category_list(self, workspace_id: str, category_to_description: Mapping):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            max_category_id = max(workspace.categories.keys())
+            workspace.categories.update({
+                max_category_id+index+1: MulticlassCategory(category_name, max_category_id+index+1, category_desc)
+                for index, (category_name, category_desc) in enumerate(category_to_description.items())})
+
+            self._save_workspace(workspace)
+            return workspace.categories
+
     # Iteration-related methods
 
     def add_iteration(self, workspace_id: str, category_id: Union[int, None]):
@@ -424,3 +435,8 @@ class OrchestratorStateApi:
             iteration.model.model_status = ModelStatus.DELETED
             iteration.status = IterationStatus.MODEL_DELETED
             self._save_workspace(workspace)
+
+    def get_workspace_type(self, workspace_id):
+        with self.workspaces_lock[workspace_id]:
+            workspace = self._load_workspace(workspace_id)
+            return type(workspace)
