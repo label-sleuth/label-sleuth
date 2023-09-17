@@ -23,7 +23,7 @@ import {
 } from "../../const";
 import MainPanel from "./main/MainPanel";
 import { useAppSelector } from "../../customHooks/useRedux";
-import AllPositiveLabelsPanel from "./sidebar/AllPositiveLabelsPanel";
+import { UserLabelsPanel } from "./sidebar/UserLabelsPanel";
 import SuspiciousLabelsPanel from "./sidebar/SuspiciousLabelsPanel";
 import ContradictingLabelsPanel from "./sidebar/ContradictingLabelsPanel";
 import EvaluationPanel from "./sidebar/EvaluationPanel";
@@ -128,9 +128,7 @@ export const PanelManager = ({
         {activePanelId === PanelIdsEnum.POSITIVE_PREDICTIONS && (
           <PosPredictionsPanel />
         )}
-        {activePanelId === PanelIdsEnum.POSITIVE_LABELS && (
-          <AllPositiveLabelsPanel />
-        )}
+        {activePanelId === PanelIdsEnum.POSITIVE_LABELS && <UserLabelsPanel />}
         {activePanelId === PanelIdsEnum.SUSPICIOUS_LABELS && (
           <SuspiciousLabelsPanel />
         )}

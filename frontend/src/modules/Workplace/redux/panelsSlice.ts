@@ -137,6 +137,7 @@ const getPanelElements = async (
   extraQueryParams: Array<string> = [],
   pagination: PaginationParam = { startIndex: 0, elementsPerPage: null }
 ): Promise<{ elements: UnparsedElement[]; hit_count: number }> => {
+
   pagination.startIndex !== null &&
     extraQueryParams.push(`start_idx=${pagination.startIndex}`);
   pagination.elementsPerPage !== null &&
@@ -154,7 +155,6 @@ const getPanelElements = async (
   const url = `${getWorkspace_url}/${encodeURIComponent(
     getWorkspaceId()
   )}/${endpoint}${queryParams}`;
-
   const { data } = await client.get(url);
   return data;
 };
@@ -173,12 +173,12 @@ export const getUserLabels = createAsyncThunk<
   FetchPanelElementsParams,
   { state: RootState }
 >(
-  "workspace/getPositiveElements",
+  "workspace/getUserLabels",
   async ({ pagination, value }, { getState }) => {
     const state = getState();
     return await getPanelElements(
       state,
-      "positive_elements",
+      "elements_by_label",
       value ? [`value=${value}`] : [],
       pagination
     );

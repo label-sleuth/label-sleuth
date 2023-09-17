@@ -75,7 +75,7 @@ export const UPLOAD_DOC_WAIT_MESSAGE = `Please wait while your documents are upl
 export const UPLOAD_LABELS_WAIT_MESSAGE = `Please wait while your labels are uploaded...`;
 export const NEW_WORKSPACE_NAME_MSG = "Name your new workspace";
 export const NEW_WORKSPACE_NAME_PLACEHOLER_MSG = "e.g., my_new_workspace";
-export const ALL_POSITIVE_LABELS_TOOLTIP_MSG = "All positive labels";
+export const USER_LABELS_TOOLTIP_MSG = 'User labels';
 export const DOC_ALREADY_EXISTS = "Document already exists";
 export const SERVER_ERROR_500 =
   "An error occurred and your request could not be completed. Please try again.";

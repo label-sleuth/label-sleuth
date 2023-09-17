@@ -34,7 +34,7 @@ import contradictive_elem_icon from "../../assets/contradicting.svg";
 import {
   SEARCH_ALL_DOCS_TOOLTIP_MSG,
   NEXT_TO_LABEL_TOOLTIP_MSG,
-  ALL_POSITIVE_LABELS_TOOLTIP_MSG,
+  USER_LABELS_TOOLTIP_MSG,
   SUSPICIOUS_LABELS_TOOLTIP_MSG,
   CONTRADICTING_LABELS_TOOLTIP_MSG,
   POSITIVE_PRED_TOOLTIP_MSG,
@@ -232,14 +232,13 @@ export const Workplace = () => {
               </Stack>
               <Stack>
                 <SidebarButton
-                  tooltipMessage={ALL_POSITIVE_LABELS_TOOLTIP_MSG}
+                  tooltipMessage={USER_LABELS_TOOLTIP_MSG}
                   componentId={"sidebar-pos-elem-button"}
                   imgSource={pos_elem_icon}
                   disabled={
                     evaluationIsInProgress ||
                     evaluationLoading ||
-                    (!isMulticlass && noCategory) ||
-                    isMulticlass
+                    (!isMulticlass && noCategory)
                   }
                   panelId={PanelIdsEnum.POSITIVE_LABELS}
                 />

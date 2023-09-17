@@ -21,14 +21,22 @@ interface ClientConfig extends RequestInit {
 
 export const client = async (
   endpoint: string,
-  { body, method, headers, stringifyBody = true, parseResponseBodyAs = "json", omitContentType = false, ...customConfig}: ClientConfig = {}
+  {
+    body,
+    method,
+    headers,
+    stringifyBody = true,
+    parseResponseBodyAs = "json",
+    omitContentType = false,
+    ...customConfig
+  }: ClientConfig = {}
 ) => {
   // { ...headers } is used here in case headers is undefined, which will convert it to an empty object { }
   const customHeaders = { ...headers } as Record<string, string>;
 
   if (!omitContentType) {
-    const defaultContentType = "application/json"
-    customHeaders["Content-Type"] = defaultContentType
+    const defaultContentType = "application/json";
+    customHeaders["Content-Type"] = defaultContentType;
   }
 
   if (localStorage.token) {
@@ -47,47 +55,57 @@ export const client = async (
 
   return await fetch(endpoint, config).then(async (response) => {
     if (response.ok) {
-      let data
+      let data;
       if (parseResponseBodyAs === "json") {
         data = await response.json();
-      }
-      else if (parseResponseBodyAs === "text") {
+      } else if (parseResponseBodyAs === "text") {
         data = await response.text();
-      }
-      else if (parseResponseBodyAs === "blob") {
+      } else if (parseResponseBodyAs === "blob") {
         data = await response.blob();
-      }
-      else if (parseResponseBodyAs === "none") {
+      } else if (parseResponseBodyAs === "none") {
         data = response;
+      } else {
+        throw new Error("parseResponseBodyAs should be 'json' or 'text'");
       }
-      else {
-        throw new Error("parseResponseBodyAs should be 'json' or 'text'")
-      }
-      return ({
+      return {
         status: response.status,
         data,
         headers: response.headers,
         url: response.url,
-      });
+      };
     } else {
       const text = await response.text();
       throw new Error(text);
     }
-  });
+  }).catch(e => {
+    console.log(e)
+    throw new Error(e);});
 };
 
 client.get = (endpoint: string, customConfig: ClientConfig = {}) => {
   return client(endpoint, { ...customConfig, method: "GET" });
 };
 
-client.post = (endpoint: string, body?: any, customConfig: ClientConfig = {}) => {
+client.post = (
+  endpoint: string,
+  body?: any,
+  customConfig: ClientConfig = {}
+) => {
   return client(endpoint, { ...customConfig, method: "POST", body });
 };
 
-client.delete = (endpoint: string, body?: any, customConfig: ClientConfig = {}) => {
+client.delete = (
+  endpoint: string,
+  body?: any,
+  customConfig: ClientConfig = {}
+) => {
   return client(endpoint, { ...customConfig, method: "DELETE", body });
 };
 
-client.put = (endpoint: string, body?: any, customConfig: ClientConfig = {}) => {
+client.put = (
+  endpoint: string,
+  body?: any,
+  customConfig: ClientConfig = {}
+) => {
   return client(endpoint, { ...customConfig, method: "PUT", body });
 };

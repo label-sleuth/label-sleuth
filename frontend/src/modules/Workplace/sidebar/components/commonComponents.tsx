@@ -107,7 +107,7 @@ export const ElementList = ({
       {Filters !== undefined && <Filters/>}
       <Box
         className={`${classes["element-list"]} ${isPaginationRequired ? classes.pagination_margin : ""}`}
-        sx={elementsTopPadding ? { mt: elementsTopPadding } : {mt: 2}}
+        sx={elementsTopPadding ? { mt: elementsTopPadding } : {mt: 1}}
       >
         {loading ? (
           <Loading />
