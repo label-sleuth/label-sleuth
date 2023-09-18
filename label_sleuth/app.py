@@ -798,7 +798,7 @@ def get_labeled_elements_by_value(workspace_id):
         category_id = None
         value = int(value)
         logging.info(
-            f"workspace '{workspace_id}' (multiclass) fetching {size} labeled elements with label {value}"
+            f"workspace '{workspace_id}' (multiclass) fetching {size} labeled elements with label {value} "
             f"(start index: {start_idx})")
 
     elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=value, size=size,
