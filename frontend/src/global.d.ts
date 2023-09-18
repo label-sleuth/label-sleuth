@@ -274,6 +274,7 @@ interface FetchPanelElementsParams {
   docId?: string;
   useLastSearchString?: boolean;
   // value is used to filter user label and model prediction by category in mcmode and by true or neg label en bmode
+  // in bmode, value is 'true' or 'false'
   value?: string
 }
 

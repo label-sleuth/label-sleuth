@@ -17,7 +17,7 @@ import { screen } from "@testing-library/react";
 import { renderWithProviderAndRouter } from "../../../utils/test-utils";
 import { initialState as initialWorkspaceState } from "../redux";
 import { WorkspaceInfo } from "../information";
-import { IterationStatusEnum } from "../../../const";
+import { IterationStatusEnum, WorkspaceMode } from "../../../const";
 
 test("workspace information is displayed correctly", async () => {
   renderWithProviderAndRouter(<WorkspaceInfo shouldFireConfetti={false} />, {
@@ -27,6 +27,7 @@ test("workspace information is displayed correctly", async () => {
         curCategory: "cat1",
         modelVersion: 4,
         workspaceId: "workspace_id",
+        mode: WorkspaceMode.BINARY,
       },
     },
   });
@@ -54,6 +55,7 @@ test("model version is updated if model changes", async () => {
           modelVersion: 4,
           workspaceId: "workspace_id",
           nextModelShouldBeTraining: true,
+          mode: WorkspaceMode.BINARY,
         },
         authenticate: {
           token: "token",
@@ -78,6 +80,7 @@ test("model related information is not displayed if there is no category selecte
         curCategory: null,
         modelVersion: 4,
         workspaceId: "workspace_id",
+        mode: WorkspaceMode.BINARY,
       },
     },
   });
@@ -95,6 +98,7 @@ test("model version ordinal: st", async () => {
         curCategory: 0,
         modelVersion: 1,
         workspaceId: "workspace_id",
+        mode: WorkspaceMode.BINARY,
       },
     },
   });
@@ -108,6 +112,7 @@ test("model version ordinal: nd", async () => {
         ...initialWorkspaceState,
         curCategory: 0,
         modelVersion: 102,
+        mode: WorkspaceMode.BINARY,
       },
     },
   });
@@ -121,6 +126,7 @@ test("model version ordinal: rd", async () => {
         ...initialWorkspaceState,
         curCategory: 0,
         modelVersion: 1123,
+        mode: WorkspaceMode.BINARY,
       },
     },
   });
@@ -134,6 +140,7 @@ test("model version ordinal: th", async () => {
         ...initialWorkspaceState,
         curCategory: 0,
         modelVersion: 12,
+        mode: WorkspaceMode.BINARY,
       },
     },
   });
@@ -148,7 +155,8 @@ test("model error is shown if model creation failed", async () => {
         curCategory: 0,
         modelVersion: 12,
         lastModelFailed: true,
-        modelFailureReason: IterationStatusEnum.ERROR
+        modelFailureReason: IterationStatusEnum.ERROR,
+        mode: WorkspaceMode.BINARY,
       },
     },
   });

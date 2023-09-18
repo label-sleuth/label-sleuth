@@ -24,6 +24,7 @@ import { categoriesExample } from "../../../utils/test-utils";
 import {
   CATEGORY_NAME_MAX_CHARS,
   RIGHT_DRAWER_INITIAL_WIDTH,
+  WorkspaceMode,
 } from "../../../const";
 
 test("category action butttons are present", async () => {
@@ -38,6 +39,7 @@ test("category action butttons are present", async () => {
           ...initialWorkspaceState,
           curCategory: categoriesExample.categories[0].category_id,
           categories: categoriesExample.categories,
+          mode: WorkspaceMode.BINARY,
         },
       },
     }
@@ -60,6 +62,7 @@ test("delete and edit category buttons are not present if no category is selecte
           ...initialWorkspaceState,
           curCategory: null,
           categories: categoriesExample.categories,
+          mode: WorkspaceMode.BINARY,
         },
       },
     }
@@ -86,6 +89,7 @@ test("create new category validation", async () => {
           curCategory: categoriesExample.categories[0].category_id,
           categories: categoriesExample.categories,
           workspaceId: "workspace_id",
+          mode: WorkspaceMode.BINARY,
         },
       },
     }
@@ -126,6 +130,7 @@ test("create new category flow", async () => {
           curCategory: categoriesExample.categories[0].category_id,
           categories: categoriesExample.categories,
           workspaceId: "workspace_id",
+          mode: WorkspaceMode.BINARY,
         },
       },
     }
@@ -157,6 +162,7 @@ test("delete category flow", async () => {
           curCategory: null,
           categories: categoriesExample.categories,
           workspaceId: "workspace_id",
+          mode: WorkspaceMode.BINARY,
         },
       },
     }
@@ -200,6 +206,7 @@ test("edit category flow", async () => {
           curCategory: null,
           categories: categoriesExample.categories,
           workspaceId: "workspace_id",
+          mode: WorkspaceMode.BINARY,
         },
       },
     }

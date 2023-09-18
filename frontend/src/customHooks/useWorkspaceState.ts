@@ -75,7 +75,7 @@ const useWorkspaceState = () => {
       dispatch(clearMainPanelFocusedElement());
       dispatch(resetModelStatusCheckAttempts());
     }
-  }, [curCategory, dispatch]);
+  }, [mode, curCategory, dispatch]);
 
   React.useEffect(() => {
     // category changes or modelVersion changes means
@@ -91,7 +91,7 @@ const useWorkspaceState = () => {
   }, [mode, curCategory, modelVersion, dispatch]);
 
   React.useEffect(() => {
-    if (mode === WorkspaceMode.NOT_SET) {
+  if (mode === WorkspaceMode.NOT_SET) {
       dispatch(getWorkspaces()).then((action) => {
         const workspaceMode = action.payload.workspaces.find(
           (w: Workspace) => w.id === workspaceId
@@ -114,8 +114,11 @@ const useWorkspaceState = () => {
     if (uploadedLabels) {
       const { categories, categoriesCreated } = uploadedLabels;
       // update elements and status only if the workspace is mc mode or if the current category was affected
-      if (categories?.some((cat) => cat.category_id === curCategory) || mode === WorkspaceMode.MULTICLASS) {
-        fetchPositiveLabelsElements();
+      if (
+        categories?.some((cat) => cat.category_id === curCategory) ||
+        mode === WorkspaceMode.MULTICLASS
+      ) {
+        fetchPositiveLabelsElements({ value: "positive" });
         fetchMainPanelElements();
         dispatch(checkStatus());
       }
@@ -125,6 +128,7 @@ const useWorkspaceState = () => {
       dispatch(cleanUploadedLabels());
     }
   }, [
+    mode,
     uploadedLabels,
     curCategory,
     fetchPositiveLabelsElements,
