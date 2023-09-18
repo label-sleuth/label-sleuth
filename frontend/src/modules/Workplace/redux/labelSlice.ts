@@ -156,6 +156,18 @@ export const reducers = {
       state.mode
     );
 
+    // // add the element to the user labels panel if it is required
+    // if (state.panels.activePanelId === PanelIdsEnum.POSITIVE_LABELS) {
+    //   if (
+    //     newLabel ===
+    //     state.panels.panels[PanelIdsEnum.POSITIVE_LABELS].filters?.value
+    //   ) {
+    //     const positiveElements =
+    //       panelsState.panels.panels[PanelIdsEnum.SUSPICIOUS_LABELS].elements;
+    //     if (positiveElements !== null) positiveElements[element.id] = element;
+    //   }
+    // }
+
     state.panels.panels = panelsState.panels.panels;
   },
   reverseOptimisticUpdate(

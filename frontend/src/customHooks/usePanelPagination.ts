@@ -30,7 +30,7 @@ interface UsePanelPaginationProps {
   fakePagination?: boolean;
   fetchOnFirstRender?: boolean;
   modelAvailableRequired?: boolean;
-  value?: string;
+  value?: string | null;
 }
 
 const usePanelPagination = ({
@@ -60,7 +60,6 @@ const usePanelPagination = ({
 
   const dispatch = useAppDispatch();
 
-  const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
 
   const pageCount = React.useMemo(() => {

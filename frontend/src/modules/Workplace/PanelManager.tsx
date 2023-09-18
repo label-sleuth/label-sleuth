@@ -29,7 +29,7 @@ import ContradictingLabelsPanel from "./sidebar/ContradictingLabelsPanel";
 import EvaluationPanel from "./sidebar/EvaluationPanel";
 import SearchPanel from "./sidebar/SearchPanel";
 import LabelNextPanel from "./sidebar/LabelNextPanel";
-import PosPredictionsPanel from "./sidebar/PosPredictionsPanel";
+import PosPredictionsPanel from "./sidebar/ModelPredictionsPanel";
 
 import useTogglePanel from "../../customHooks/useTogglePanel";
 import useResize from "../../customHooks/useResize";

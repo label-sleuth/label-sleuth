@@ -211,17 +211,17 @@ export const getContradictingLabels = createAsyncThunk<
   }
 );
 
-export const getPositivePredictions = createAsyncThunk<
+export const getModelPredictions = createAsyncThunk<
   ReturnType<typeof getPanelElements>,
   FetchPanelElementsParams,
   { state: RootState }
 >(
-  "workspace/getPositivePredictions",
+  "workspace/getModelPredictions",
   async ({ pagination, value }, { getState }) => {
     const state = getState();
     return await getPanelElements(
       state,
-      "positive_predictions",
+      "elements_by_prediction",
       value ? [`value=${value}`] : [],
       pagination
     );
@@ -441,6 +441,15 @@ export const reducers = {
       state.panels.panels[panelId].page = newPage;
     }
   },
+  setPanelFilters(
+    state: WorkspaceState,
+    action: PayloadAction<{ panelId: PanelIdsEnum, filters: {[key: string]: string | null};}>
+  ) {
+    const {panelId, filters} = action.payload;
+    // not possible to be true but typescript wants it
+    if (panelId === PanelIdsEnum.NOT_SET) return;
+    (state.panels.panels[panelId] as PanelState).filters = filters;
+  },
 };
 
 const getUpdatedFocusedElementState = (
@@ -473,15 +482,15 @@ const getUpdatedFocusedElementState = (
 export const extraReducers: Array<ReducerObj> = [
   // Positive predictions panel extra reducers
   {
-    action: getPositivePredictions.pending,
+    action: getModelPredictions.pending,
     reducer: (state: WorkspaceState, action) => {
       state.panels.loading[PanelIdsEnum.POSITIVE_PREDICTIONS] = true;
     },
   },
   {
-    action: getPositivePredictions.fulfilled,
+    action: getModelPredictions.fulfilled,
     reducer: (state: WorkspaceState, action) => {
-      const { elements: unparsedElements, total_count: hitCount } =
+      const { elements: unparsedElements, count: hitCount } =
         action.payload;
       const { elements } = parseElements(
         unparsedElements,

@@ -34,10 +34,7 @@ import React, {
 } from "react";
 import { setfocusedSidebarElementByIndex } from "../../modules/Workplace/redux";
 import { useFocusMainPanelElement } from "../../customHooks/useFocusMainPanelElement";
-import useLabelState from "../../customHooks/useLabelState";
 import { LabelingButtons } from "./LabelingButtons";
-import { TooltipTitleWithShortcut } from "./TooltipTitleWithShortcut";
-import { Keyboard } from "../Keyboard";
 import { LabelCategoriesMenu } from "./LabelCategoryMCMode";
 import { SidebarElementProps } from "./SidebarElement";
 import { CategoryBadge } from "../categoryBadge/CategoryBadge";
@@ -49,7 +46,7 @@ import { CategoryBadge } from "../categoryBadge/CategoryBadge";
  */
 // this function is not returned by a custom hook as it is the case of the main panel equivalent
 const handleTextElemStyle = (modelPrediction: LabelTypesEnum) =>
-  modelPrediction === "pos" ? classes["text_predict"] : classes["text_normal"];
+  modelPrediction === LabelTypesEnum.POS ? classes["text_predict"] : classes["text_normal"];
 
 export const SidebarElementMCMode = ({
   element,
@@ -101,10 +98,6 @@ export const SidebarElementMCMode = ({
     [id, activePanelId, index]
   );
 
-  const { handlePosLabelAction, handleNegLabelAction } = useLabelState(
-    updateCounterOnLabeling
-  );
-
   const { focusMainPanelElement } = useFocusMainPanelElement();
 
   const [labelMenuOpenAnchorEl, setLabelMenuOpenAnchorEl] = React.useState<
@@ -126,7 +119,7 @@ export const SidebarElementMCMode = ({
     return multiclassModelPrediction !== null
       ? getCategoryNameFromId(multiclassModelPrediction, categories)
       : null;
-  }, [multiclassModelPrediction]);
+  }, [multiclassModelPrediction, categories]);
 
   const handleElementClick = useCallback(
     (e) => {
@@ -139,7 +132,7 @@ export const SidebarElementMCMode = ({
       focusMainPanelElement({ element, docId });
       // focus this element on the sidebar when clicked
     },
-    [element, docId, focusMainPanelElement, index, dispatch]
+    [element, docId, focusMainPanelElement, index,dispatch]
   );
 
   return (

@@ -14,17 +14,18 @@
 */
 
 import { Box } from "@mui/material";
-import { useAppSelector } from "../../../customHooks/useRedux";
+import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
 import { PanelIdsEnum, WorkspaceMode } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
 import { Element } from "../../../global";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import ControlledSelect, {
   DropdownOption,
 } from "../../../components/dropdown/Dropdown";
-import { getCategoryNameFromId, returnByMode } from "../../../utils/utils";
+import { returnByMode } from "../../../utils/utils";
+import { setPanelFilters } from "../redux";
 
 export const UserLabelsPanel = () => {
   const { hitCount } = useAppSelector(
@@ -42,13 +43,35 @@ export const UserLabelsPanel = () => {
   const categories = useAppSelector((state) => state.workspace.categories);
   const mode = useAppSelector((state) => state.workspace.mode);
 
-  const [filteredValue, setFilteredValue] = useState<string | undefined>(
-    mode === WorkspaceMode.BINARY
-      ? "true"
-      : mode === WorkspaceMode.MULTICLASS
-      ? categories[0].category_id.toString()
-      : undefined
-  );
+  const dispatch = useAppDispatch();
+
+  const filteredValue =
+    useAppSelector(
+      (state) =>
+        state.workspace.panels.panels[PanelIdsEnum.POSITIVE_LABELS].filters
+          ?.value
+    ) || null;
+
+  const setFilteredValue = useCallback((value: string | null) => {
+    dispatch(
+      setPanelFilters({
+        panelId: PanelIdsEnum.POSITIVE_LABELS,
+        filters: {
+          value,
+        },
+      })
+    );
+  }, [dispatch]);
+
+  useEffect(() => {
+    setFilteredValue(
+      mode === WorkspaceMode.BINARY
+        ? "true"
+        : mode === WorkspaceMode.MULTICLASS
+        ? categories[0].category_id.toString()
+        : null
+    );
+  }, [mode, categories, setFilteredValue]);
 
   const options: DropdownOption[] = useMemo(() => {
     if (mode === WorkspaceMode.BINARY) {
@@ -67,8 +90,9 @@ export const UserLabelsPanel = () => {
   }, [mode, categories]);
 
   const filteredTitle = useMemo(
+    // es
     () => options.find((option) => option.value == filteredValue)?.title,
-    [filteredValue]
+    [filteredValue, options]
   );
 
   const handleSelect = (value: string) => {
@@ -85,15 +109,6 @@ export const UserLabelsPanel = () => {
     );
   };
 
-  const Filters: React.FC = () => (
-    <ControlledSelect
-      sx={{ m: 2, width: "30%", height: "50px" }}
-      value={filteredValue !== undefined ? filteredValue : ""}
-      label={""}
-      options={options}
-      onChange={handleSelect}
-    />
-  );
 
   const {
     currentContentData,
@@ -106,7 +121,18 @@ export const UserLabelsPanel = () => {
     modelAvailableRequired: false,
     otherDependencies: [curCategory],
     value: filteredValue,
+    shouldFetch: filteredValue !== null,
   });
+
+  const Filters: React.FC = () => (
+    <ControlledSelect
+      sx={{ m: 2, width: "30%", height: "50px" }}
+      value={filteredValue !== null ? filteredValue : ""}
+      label={""}
+      options={options}
+      onChange={handleSelect}
+    />
+  );
 
   return (
     <Box>

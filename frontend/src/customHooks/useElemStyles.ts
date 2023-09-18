@@ -77,7 +77,7 @@ export const useElemStyles = ({ elementDOMId, prediction, userLabel }: UseElemSt
       style.animation = hackyToggle ? `${style.animation}2` : style.animation;
     }
 
-    style.prediction = prediction === "pos" ? ElemStyleClassesEnum.PREDICT : ElemStyleClassesEnum.NON_PREDICT;
+    style.prediction = prediction === LabelTypesEnum.POS ? ElemStyleClassesEnum.PREDICT : ElemStyleClassesEnum.NON_PREDICT;
 
     style.userLabel =
       userLabel === LabelTypesEnum.POS

@@ -53,7 +53,7 @@ const text_colors = {
  */
 // this function is not returned by a custom hook as it is the case of the main panel equivalent
 const handleTextElemStyle = (modelPrediction: LabelTypesEnum) =>
-  modelPrediction === "pos" ? classes["text_predict"] : classes["text_normal"];
+  modelPrediction === LabelTypesEnum.POS ? classes["text_predict"] : classes["text_normal"];
 
 export const SidebarElementBMode = ({
   element,

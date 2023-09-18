@@ -138,8 +138,8 @@ export const KeyboardKeysEnum = {
 };
 
 export enum LabelTypesEnum {
-  POS = "pos",
-  NEG = "neg",
+  POS = "true",
+  NEG = "false",
   NONE = "none",
 }
 

@@ -41,7 +41,7 @@ interface UnparsedIteration {
   };
   model_status: string;
   model_type: string;
-  positive_fraction: number;
+  fraction: number;
   total_positive_count?: number;
   estimated_precision: number;
 }
@@ -75,6 +75,7 @@ interface PanelState {
   elements: ElementsDict | null;
   hitCount: number | null;
   page: number;
+  filters?: {[key: string]: string | null}
 }
 
 interface MainPanelState extends PanelState {

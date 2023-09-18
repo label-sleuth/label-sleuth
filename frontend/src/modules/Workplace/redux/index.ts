@@ -67,7 +67,7 @@ import { PanelIdsEnum, WorkspaceMode } from "../../../const";
 
 export { fetchDocumentsMetadata, preloadDataset } from "./documentSlice";
 export {
-  getPositivePredictions,
+  getModelPredictions,
   getUserLabels as getAllPositiveLabels,
   getSuspiciousLabels,
   getContradictingLabels,
@@ -279,4 +279,5 @@ export const {
   setModelIsLoading,
   switchMode,
   changeMode,
+  setPanelFilters,
 } = workspaceSlice.actions;
