@@ -235,6 +235,49 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code, msg="Failed to get iterations list")
         self.assertEqual(1, len(res.get_json()["iterations"]), msg="first model was not added to the models list")
 
+        # elements by positive prediction
+        res = self.client.get(f"/workspace/{workspace_name}/elements_by_prediction?value=True&category_id=0",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code,
+                         msg="Failed to get elements by positive prediction for category 0")
+
+        self.assertEqual({'count': 6, 'elements':
+            [{'begin': 0, 'docid': 'my_test_dataset-document1', 'end': 46, 'id': 'my_test_dataset-document1-0',
+              'model_predictions': {'0': 'true'}, 'text': 'this is the first text element of document one',
+              'user_labels': {}},
+             {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94, 'id': 'my_test_dataset-document1-1',
+              'model_predictions': {'0': 'true'}, 'text': 'this is the second text element of document one',
+              'user_labels': {}},
+             {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0',
+              'model_predictions': {'0': 'true'}, 'text': 'this is the only text element in document two',
+              'user_labels': {}},
+             {'begin': 0, 'docid': 'my_test_dataset-document3', 'end': 53, 'id': 'my_test_dataset-document3-0',
+              'model_predictions': {'0': 'true'}, 'text': 'document 3 has three text elements, this is the first',
+              'user_labels': {'0': 'true'}},
+             {'begin': 142, 'docid': 'my_test_dataset-document3', 'end': 195, 'id': 'my_test_dataset-document3-2',
+              'model_predictions': {'0': 'true'}, 'text': 'document 3 has three text elements, this is the third',
+              'user_labels': {'0': 'true'}},
+             {'begin': 196, 'docid': 'my_test_dataset-document3', 'end': 317, 'id': 'my_test_dataset-document3-3',
+              'model_predictions': {'0': 'true'},
+          'snippet': 'this text contains a parenthesis a a a a a ... x and some more text to force creating a snippet',
+              'text': 'this text contains a parenthesis a a a a a a(b b b b b b c c c c ( x x x x and some more '
+                      'text to force creating a snippet', 'user_labels': {}}], 'fraction': 0.8571428571428571},
+                         res.get_json(), msg="Failed to get elements by positive prediction")
+
+        # elements by negative prediction
+        res = self.client.get(f"/workspace/{workspace_name}/elements_by_prediction?value=False&category_id=0",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code,
+                         msg="Failed to get elements by positive prediction for category 0")
+
+        self.assertEqual({'count': 1,
+                  'elements': [{'begin': 54, 'docid': 'my_test_dataset-document3',
+                    'end': 141, 'id': 'my_test_dataset-document3-1',
+                    'model_predictions': {'0': 'false'},
+                    'text': 'document 3 has three text elements, this is the second that will be labeled as negative',
+                                'user_labels': {'0': 'false'}}], 'fraction': 0.14285714285714285},
+                         res.get_json(), msg="Failed to get elements by positive prediction")
+
         # get active learning recommendations
         res = self.client.get(f"/workspace/{workspace_name}/active_learning?category_id={category_id}",
                               headers=HEADERS)
@@ -333,7 +376,7 @@ class TestAppIntegration(unittest.TestCase):
 
 
         # get negatively labeled elements
-        res = self.client.get(f"/workspace/{workspace_name}/negative_elements?category_id={category_id}",
+        res = self.client.get(f"/workspace/{workspace_name}/elements_by_label?category_id={category_id}&value=False",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to get negatively labeled elements")
@@ -642,14 +685,6 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code,
                          msg="Failed to set the label for the first element recommended by the active learning")
 
-        #TODO continue flow
-        # self.assertEqual({'category_id': str(category_id),
-        #                   'element': {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94,
-        #                               'id': 'my_test_dataset-document1-1',
-        #                               'model_predictions': {str(category_id): 'true'},
-        #                               'text': 'this is the second text element of document one',
-        #                               'user_labels': {str(category_id): 'true'}}, 'workspace_id': 'my_test_workspace'},
-        #                  res.get_json())
 
         # evaluate accuracy
         res = self.client.get(f"/workspace/{workspace_name}/accuracy_evaluation_elements", headers=HEADERS)
@@ -667,12 +702,23 @@ class TestAppIntegration(unittest.TestCase):
         self.assertGreaterEqual(res.get_json()['score'], 0.0, msg="Calculated accuracy is invalid")
         self.assertLessEqual(res.get_json()['score'], 1.0, msg="Calculated accuracy is invalid")
 
+        # elements by label
         res = self.client.get(f"/workspace/{workspace_name}/elements_by_label?value=0&mode=MultiClass",
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to get labeled elements from category 0")
         self.assertEqual({'elements': [{'begin': 0, 'docid': 'multiclass_dataset-document3', 'end': 53, 'id': 'multiclass_dataset-document3-0', 'model_predictions': 0, 'text': 'document 3 has three text elements, this is the first', 'user_labels': {'0': 0}}], 'hit_count': 1},
             res.get_json(), msg="diffs in labeled elements for class 0")
+
+        # elements by prediction
+        res = self.client.get(f"/workspace/{workspace_name}/elements_by_prediction?value=0&mode=MultiClass",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code,
+                         msg="Failed to get elements by prediction of category 0")
+        for element in res.get_json()["elements"]:
+            self.assertEqual(0, element["model_predictions"], msg=f"element {element} expected prediction is 0 but got {element['model_predictions']}")
+
+
 
         # delete workspace
         res = self.client.delete(f"/workspace/{workspace_name}",

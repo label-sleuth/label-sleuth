@@ -715,10 +715,19 @@ class OrchestratorApi:
         elements = self.get_all_text_elements(dataset_name)
         dataset_size = len(predictions)
 
-        # calculate the fraction of examples that receive a positive prediction from the current model
-        positive_count = sum([pred.label is True for pred in predictions])
-        positive_fraction = positive_count / dataset_size
-        post_train_statistics = {"positive_fraction": positive_fraction, "total_positive_count": positive_count}
+        # calculate the fraction of examples per prediction from the current model
+        if category_id is None: # multiclass
+            labels = self.get_all_category_ids(workspace_id)
+        else:
+            labels = [LABEL_POSITIVE, LABEL_NEGATIVE]
+
+        post_train_statistics = {"prediction_stats": {}}
+        for label_value in labels:
+            post_train_statistics["prediction_stats"][label_value] = {}
+            count = sum([pred.label == label_value for pred in predictions])
+            fraction = count / dataset_size
+            post_train_statistics["prediction_stats"][label_value]["count"] = count
+            post_train_statistics["prediction_stats"][label_value]["fraction"] = fraction
 
         # calculate the fraction of predictions that changed between the previous model and the current model
         previous_iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_id)[:iteration_index]

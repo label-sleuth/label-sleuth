@@ -620,11 +620,11 @@ def get_document_positive_predictions(workspace_id, document_uri):
     return jsonify(res)
 
 
-@main_blueprint.route("/workspace/<workspace_id>/positive_predictions", methods=['GET'])
+@main_blueprint.route("/workspace/<workspace_id>/elements_by_prediction", methods=['GET'])
 @login_if_required
 @validate_category_id
 @validate_workspace_id
-def get_positive_predictions(workspace_id):
+def elements_by_prediction(workspace_id):
     """
     Get elements in the given workspace that received a positive prediction from the relevant classification model,
     i.e. the latest trained model for the category specified in the request.
@@ -636,9 +636,25 @@ def get_positive_predictions(workspace_id):
     :request_arg size: number of elements to return
     :request_arg start_idx: get elements starting from this index (for pagination)
     """
-    category_id = int(request.args['category_id'])
     size = int(request.args.get('size', curr_app.config["CONFIGURATION"].sidebar_panel_elements_per_page))
     start_idx = int(request.args.get('start_idx', 0))
+
+    value = request.args["value"]
+
+    if curr_app.orchestrator_api.is_binary_workspace(workspace_id):
+        category_id = int(request.args['category_id'])
+        value = value.lower()
+        if value not in ["true", "false"]:
+            raise Exception (f"unknown binary label value {value}")
+        value = True if value == "true" else False
+        logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {size} elements with "
+                     f"prediction {value} (start index: {start_idx})")
+    else:
+        category_id = None
+        value = int(value)
+        logging.info(
+            f"workspace '{workspace_id}' (multiclass) fetching {size} predictions with value {value} "
+            f"(start index: {start_idx})")
 
     all_ready_iterations = curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
                                                                                   IterationStatus.READY)
@@ -646,17 +662,15 @@ def get_positive_predictions(workspace_id):
         return jsonify({'elements': [], 'positive_fraction': None, 'total_count': None})
     else:
         positive_predicted_elements = curr_app.orchestrator_api.get_elements_by_prediction(
-            workspace_id, category_id, LABEL_POSITIVE, sample_size=size, start_idx=start_idx, shuffle=False,
+            workspace_id, category_id, value, sample_size=size, start_idx=start_idx, shuffle=False,
             remove_duplicates=False)  # For better performance in large datasets, we do not remove duplicates
         iteration, _ = all_ready_iterations[-1]
 
         elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_id)
 
-        positive_fraction = iteration.iteration_statistics["positive_fraction"]
-        total_positive_count = iteration.iteration_statistics.get(
-            'total_positive_count', int(positive_fraction * curr_app.orchestrator_api.get_text_element_count(workspace_id)))
+
         res = {'elements': elements_transformed,
-               'positive_fraction': positive_fraction, 'total_count': total_positive_count}
+               **iteration.iteration_statistics["prediction_stats"][value]}
         return jsonify(res)
 
 
