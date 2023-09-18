@@ -192,9 +192,8 @@ class OrchestratorStateApi:
             workspace = json_file.read()
         workspace = jsonpickle.decode(workspace)
         # int dictionary keys are converted to string when writing to json, see https://bugs.python.org/issue34972
-        if type(workspace) == Workspace:
-            workspace.categories = {int(category_id_str): category
-                                    for category_id_str, category in workspace.categories.items()}
+        workspace.categories = {int(category_id_str): category
+                                for category_id_str, category in workspace.categories.items()}
         self.workspaces[workspace_id] = workspace
         return workspace
 
