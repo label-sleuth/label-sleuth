@@ -52,16 +52,19 @@ export const UserLabelsPanel = () => {
           ?.value
     ) || null;
 
-  const setFilteredValue = useCallback((value: string | null) => {
-    dispatch(
-      setPanelFilters({
-        panelId: PanelIdsEnum.POSITIVE_LABELS,
-        filters: {
-          value,
-        },
-      })
-    );
-  }, [dispatch]);
+  const setFilteredValue = useCallback(
+    (value: string | null) => {
+      dispatch(
+        setPanelFilters({
+          panelId: PanelIdsEnum.POSITIVE_LABELS,
+          filters: {
+            value,
+          },
+        })
+      );
+    },
+    [dispatch]
+  );
 
   useEffect(() => {
     setFilteredValue(
@@ -108,7 +111,6 @@ export const UserLabelsPanel = () => {
       )
     );
   };
-
 
   const {
     currentContentData,

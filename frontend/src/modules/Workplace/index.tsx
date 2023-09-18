@@ -76,6 +76,7 @@ export const Workplace = () => {
   const evaluationLoading = useAppSelector(
     (state) => state.workspace.panels.loading[PanelIdsEnum.EVALUATION]
   );
+  const categories = useAppSelector((state) => state.workspace.categories);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const workspaceVisited = useWorkspaceVisited();
@@ -238,7 +239,8 @@ export const Workplace = () => {
                   disabled={
                     evaluationIsInProgress ||
                     evaluationLoading ||
-                    (!isMulticlass && noCategory)
+                    (!isMulticlass && noCategory) ||
+                    (isMulticlass && categories.length === 0)
                   }
                   panelId={PanelIdsEnum.POSITIVE_LABELS}
                 />
@@ -250,8 +252,7 @@ export const Workplace = () => {
                     evaluationIsInProgress ||
                     evaluationLoading ||
                     (!isMulticlass && noCategoryAndNoModel) ||
-                    (isMulticlass && noModel) ||
-                    isMulticlass
+                    (isMulticlass && noModel)
                   }
                   panelId={PanelIdsEnum.SUSPICIOUS_LABELS}
                 />

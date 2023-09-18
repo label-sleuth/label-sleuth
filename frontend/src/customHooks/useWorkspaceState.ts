@@ -28,10 +28,13 @@ import * as React from "react";
 import { useAppDispatch, useAppSelector } from "./useRedux";
 
 import { PanelIdsEnum, WorkspaceMode } from "../const";
-import { useFetchPanelElements } from "./useFetchPanelElements";
+import {
+  useFetchPanelElements,
+  useUpdateActivePanelElements,
+} from "./useFetchPanelElements";
 import { getWorkspaces } from "../modules/Workspace-config/workspaceConfigSlice";
 import { useWorkspaceId } from "./useWorkspaceId";
-import { Workspace } from "../global";
+import { PanelState, Workspace } from "../global";
 
 /**
  * Custom hook for dispatching workspace related actions
@@ -41,10 +44,16 @@ const useWorkspaceState = () => {
 
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+  const activePanelId = useAppSelector(
+    (state) => state.workspace.panels.activePanelId
+  );
+  const panels = useAppSelector((state) => state.workspace.panels.panels);
   const uploadedLabels = useAppSelector(
     (state) => state.workspace.uploadedLabels
   );
   const mode = useAppSelector((state) => state.workspace.mode);
+
+  const { updateActivePanelElements } = useUpdateActivePanelElements();
 
   const { workspaceId } = useWorkspaceId();
 
@@ -91,7 +100,7 @@ const useWorkspaceState = () => {
   }, [mode, curCategory, modelVersion, dispatch]);
 
   React.useEffect(() => {
-  if (mode === WorkspaceMode.NOT_SET) {
+    if (mode === WorkspaceMode.NOT_SET) {
       dispatch(getWorkspaces()).then((action) => {
         const workspaceMode = action.payload.workspaces.find(
           (w: Workspace) => w.id === workspaceId
@@ -118,8 +127,21 @@ const useWorkspaceState = () => {
         categories?.some((cat) => cat.category_id === curCategory) ||
         mode === WorkspaceMode.MULTICLASS
       ) {
-        fetchPositiveLabelsElements({ value: "positive" });
+        // we update the elements because the user labels changed!
         fetchMainPanelElements();
+
+        if (
+          [
+            PanelIdsEnum.POSITIVE_LABELS,
+            PanelIdsEnum.POSITIVE_PREDICTIONS,
+          ].includes(activePanelId)
+        ) {
+          if (activePanelId === PanelIdsEnum.NOT_SET) return;
+          updateActivePanelElements(panels[activePanelId].filters?.value || undefined);
+        } else {
+          updateActivePanelElements();
+        }
+
         dispatch(checkStatus());
       }
       if (categoriesCreated) {

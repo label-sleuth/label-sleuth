@@ -49,11 +49,18 @@ const getFetchActionByPanelId = (panelId: PanelIdsEnum) => {
   }
 };
 
-export const useFetchPanelElements = ({ panelId }: { panelId: PanelIdsEnum }) => {
+export const useFetchPanelElements = ({
+  panelId,
+}: {
+  panelId: PanelIdsEnum;
+}) => {
   const dispatch = useAppDispatch();
-  const { mainPanelElementsPerPage, sidebarPanelElementsPerPage } = useAppSelector((state) => state.featureFlags);
+  const { mainPanelElementsPerPage, sidebarPanelElementsPerPage } =
+    useAppSelector((state) => state.featureFlags);
   const panel = useAppSelector((state) =>
-    panelId !== PanelIdsEnum.NOT_SET ? state.workspace.panels.panels[panelId] : null
+    panelId !== PanelIdsEnum.NOT_SET
+      ? state.workspace.panels.panels[panelId]
+      : null
   );
   const page = useMemo(() => (panel ? panel.page : -1), [panel]);
 
@@ -61,7 +68,9 @@ export const useFetchPanelElements = ({ panelId }: { panelId: PanelIdsEnum }) =>
     (params: FetchPanelElementsParams = {}) => {
       if (panelId !== PanelIdsEnum.NOT_SET) {
         const elementsPerPage =
-          panelId === PanelIdsEnum.MAIN_PANEL ? mainPanelElementsPerPage : sidebarPanelElementsPerPage;
+          panelId === PanelIdsEnum.MAIN_PANEL
+            ? mainPanelElementsPerPage
+            : sidebarPanelElementsPerPage;
         const startIndex = (page - 1) * elementsPerPage;
         const pagination = {
           startIndex,
@@ -73,7 +82,13 @@ export const useFetchPanelElements = ({ panelId }: { panelId: PanelIdsEnum }) =>
         }
       }
     },
-    [panelId, mainPanelElementsPerPage, sidebarPanelElementsPerPage, page, dispatch]
+    [
+      panelId,
+      mainPanelElementsPerPage,
+      sidebarPanelElementsPerPage,
+      page,
+      dispatch,
+    ]
   );
 
   return fetchPanelElements;
@@ -81,17 +96,25 @@ export const useFetchPanelElements = ({ panelId }: { panelId: PanelIdsEnum }) =>
 
 export const useUpdateActivePanelElements = () => {
   const lastSearchString = useAppSelector(
-    (state) => state.workspace.panels.panels[PanelIdsEnum.SEARCH].lastSearchString
+    (state) =>
+      state.workspace.panels.panels[PanelIdsEnum.SEARCH].lastSearchString
   );
-  const activePanelId = useAppSelector((state) => state.workspace.panels.activePanelId);
+  const activePanelId = useAppSelector(
+    (state) => state.workspace.panels.activePanelId
+  );
 
-  const fetchActivePanelElements = useFetchPanelElements({ panelId: activePanelId });
+  const fetchActivePanelElements = useFetchPanelElements({
+    panelId: activePanelId,
+  });
 
-  const updateActivePanelElements = useCallback(() => {
-    if (activePanelId !== PanelIdsEnum.SEARCH || lastSearchString) {
-      fetchActivePanelElements();
-    }
-  }, [activePanelId, lastSearchString, fetchActivePanelElements]);
+  const updateActivePanelElements = useCallback(
+    (value?: string) => {
+      if (activePanelId !== PanelIdsEnum.SEARCH || lastSearchString) {
+        fetchActivePanelElements({ value });
+      }
+    },
+    [activePanelId, lastSearchString, fetchActivePanelElements]
+  );
 
   return { updateActivePanelElements };
 };
