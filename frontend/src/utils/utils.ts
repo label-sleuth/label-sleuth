@@ -197,7 +197,9 @@ export const parseElement = (
         : LabelTypesEnum.NONE,
     userLabel:
       workspaceMode === WorkspaceMode.BINARY && curCategoryId !== null
-        ? getStringLabel(`${user_labels[curCategoryId]}`)
+        ? getStringLabel(
+            `${(user_labels as { [key: string]: boolean })[curCategoryId]}`
+          )
         : LabelTypesEnum.NONE,
     text,
     snippet: snippet !== undefined ? snippet : null,
@@ -208,7 +210,11 @@ export const parseElement = (
             ...Object.keys(user_labels).map((categoryId) =>
               +categoryId !== curCategoryId
                 ? {
-                    [categoryId]: getStringLabel(`${user_labels[+categoryId]}`),
+                    [categoryId]: getStringLabel(
+                      `${
+                        (user_labels as { [key: string]: boolean })[+categoryId]
+                      }`
+                    ),
                   }
                 : {}
             )
@@ -216,14 +222,12 @@ export const parseElement = (
         : {},
     multiclassUserLabel:
       // check whether mode is multiclass and there is a label in key=0 (current implementation, this may change)
-      workspaceMode === WorkspaceMode.MULTICLASS &&
-      Object.keys(user_labels).length > 0
-        ? user_labels[0]
+      workspaceMode === WorkspaceMode.MULTICLASS && user_labels !== null
+        ? (user_labels as number)
         : null,
     // for model predictions, the backend sends a number when there is a prediction and an empty object when there are no models
     multiclassModelPrediction:
-      workspaceMode === WorkspaceMode.MULTICLASS &&
-      typeof model_predictions === "number"
+      workspaceMode === WorkspaceMode.MULTICLASS && model_predictions !== null
         ? (model_predictions as number)
         : null,
   };
@@ -277,7 +281,8 @@ export const synchronizeElement = (
           };
         }
       } else if (mode === WorkspaceMode.MULTICLASS) {
-        element.multiclassUserLabel = userLabel === null ? null : +(userLabel as number);
+        element.multiclassUserLabel =
+          userLabel === null ? null : +(userLabel as number);
       }
       elements[elementId] = element;
     }

@@ -47,7 +47,7 @@ interface UnparsedIteration {
 }
 
 interface UnparsedElement {
-  user_labels: { [key: number]: boolean | int };
+  user_labels: { [key: number]: boolean } | number;
   model_predictions: { [key: string]: boolean } | number;
   docid: string;
   id: string;
