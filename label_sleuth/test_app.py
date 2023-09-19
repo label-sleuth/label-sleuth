@@ -402,7 +402,7 @@ class TestAppIntegration(unittest.TestCase):
 
         # continue labeling from AL suggestions to get a new model (removing a negative label -> false count decrease)
         res = self.client.put(f'/workspace/{workspace_name}/element/{active_learning_response["elements"][2]["id"]}',
-                              data='{{"category_id":"{}","value":"{}"}}'.format(category_id, True), headers=HEADERS)
+                              data='{{"category_id":"{}","value":{}}}'.format(category_id, "true"), headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to set the label for the first element recommended by the active learning")
         self.assertEqual({'category_id': '0',
