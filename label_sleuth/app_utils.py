@@ -66,14 +66,13 @@ def validate_category_id(function):
 
 
 def _text_element_to_user_labels(text_element: Union[TextElement, LabeledTextElement, MulticlassLabeledTextElement]):
-    # TODO change to None
     if type(text_element) == TextElement:
-        return {}
+        return None
     elif type(text_element) == LabeledTextElement:
-        return {} if text_element.category_to_label is None else {k: str(v.label).lower()
+        return None if text_element.category_to_label is None else {k: str(v.label).lower()
                                                                   for k, v in text_element.category_to_label.items()}
     elif type(text_element) == MulticlassLabeledTextElement:
-        return {} if text_element.label is None or text_element.label.label is None else {0: text_element.label.label} #TODO do we want a dict here for compatability with the TextElement labels dict? confusing!
+        return None if text_element.label is None else text_element.label.label
 
 
 def elements_back_to_front(workspace_id: str,
