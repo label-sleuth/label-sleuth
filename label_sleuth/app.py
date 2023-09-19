@@ -763,11 +763,11 @@ def set_element_label(workspace_id, element_id):
     post_data = request.get_json(force=True)
 
     category_id = post_data.get("category_id")
-    value = post_data["value"]
+    value = post_data.get("value", None)
     is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
     if not is_multiclass:
         category_id = int(category_id)
-        if value not in [LABEL_POSITIVE, LABEL_NEGATIVE]:
+        if value not in [LABEL_POSITIVE, LABEL_NEGATIVE, None]:
             return make_error({
                 "type": "bad_label_value",
                 "title": f"Expected a boolean label in binary workspace, got {type(value)} with value '{value}'"
@@ -776,7 +776,7 @@ def set_element_label(workspace_id, element_id):
     iteration = int(post_data.get("iteration", -1))
     source = post_data.get("source", "n/a")
     update_counter = post_data.get('update_counter', True)
-    if value == 'none':
+    if value is None:
         curr_app.orchestrator_api. \
             unset_labels(workspace_id, category_id=category_id, uris=[element_id],
                          apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)

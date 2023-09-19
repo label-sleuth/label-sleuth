@@ -744,5 +744,5 @@ class TestAppIntegration(unittest.TestCase):
 
         # test that setting an element's label to none works
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[2]["id"]}?mode=MultiClass',
-            data='{"value":"none"}', headers=HEADERS)
+            data='{}', headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get active learning recommendations")
