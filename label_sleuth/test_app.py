@@ -550,18 +550,18 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual([
             {'begin': 0, 'docid': 'multiclass_dataset-document3', 'end': 53, 'id': 'multiclass_dataset-document3-0',
              'model_predictions': {}, 'text': 'document 3 has three text elements, this is the first',
-             'user_labels': {}},
+             'user_labels': None},
             {'begin': 54, 'docid': 'multiclass_dataset-document3', 'end': 141, 'id': 'multiclass_dataset-document3-1',
              'model_predictions': {},
              'text': 'document 3 has three text elements, this is the second that will be labeled as negative',
-             'user_labels': {}},
+             'user_labels': None},
             {'begin': 142, 'docid': 'multiclass_dataset-document3', 'end': 195, 'id': 'multiclass_dataset-document3-2',
              'model_predictions': {}, 'text': 'document 3 has three text elements, this is the third',
-             'user_labels': {}},
+             'user_labels': None},
             {
                 "begin": 196, "docid": "multiclass_dataset-document3", "end": 317, "id": "multiclass_dataset-document3-3",
                 "model_predictions": {}, "text": text_with_parenthesis,
-                "user_labels": {}}],
+                "user_labels": None}],
             document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
 
         # set first element and get status
@@ -576,7 +576,7 @@ class TestAppIntegration(unittest.TestCase):
                             "id": "multiclass_dataset-document3-0",
                             "model_predictions": {},
                             "text": "document 3 has three text elements, this is the first",
-                            "user_labels": {"0": 0}}
+                            "user_labels": 0}
                           }, res.get_json())
 
         res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
@@ -596,7 +596,7 @@ class TestAppIntegration(unittest.TestCase):
                             "id": "multiclass_dataset-document3-1",
                             "model_predictions": {},
                             "text": "document 3 has three text elements, this is the second that will be labeled as negative",
-                            "user_labels": {"0": 1}}
+                            "user_labels": 1}
                           }, res.get_json())
 
         res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
@@ -616,7 +616,7 @@ class TestAppIntegration(unittest.TestCase):
                             "id": "multiclass_dataset-document3-2",
                             "model_predictions": {},
                             "text": "document 3 has three text elements, this is the third",
-                            "user_labels": {"0": 2}}
+                            "user_labels": 2}
                           }, res.get_json())
     
 
@@ -637,7 +637,7 @@ class TestAppIntegration(unittest.TestCase):
                         "id": "multiclass_dataset-document1-1",
                         "model_predictions": {},
                         "text": "this is the second text element of document one",
-                        "user_labels": {}
+                        "user_labels": None
                     }
             ],
                 "hit_count": 1,
@@ -664,18 +664,18 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual({'elements': [
             {'begin': 47, 'docid': 'multiclass_dataset-document1', 'end': 94, 'id': 'multiclass_dataset-document1-1',
              'model_predictions': 2, 'text': 'this is the second text element of document one',
-             'user_labels': {}},
+             'user_labels': None},
             {
                 "begin": 196, "docid": "multiclass_dataset-document3", "end": 317, "id": "multiclass_dataset-document3-3",
                 "model_predictions": 2, "snippet": text_with_parenthesis_snippet,
                 "text": text_with_parenthesis,
-                "user_labels": {}},
+                "user_labels": None},
             {'begin': 0, 'docid': 'multiclass_dataset-document2', 'end': 45, 'id': 'multiclass_dataset-document2-0',
              'model_predictions': 2, 'text': 'this is the only text element in document two',
-             'user_labels': {}},
+             'user_labels': None},
             {'begin': 0, 'docid': 'multiclass_dataset-document1', 'end': 46, 'id': 'multiclass_dataset-document1-0',
              'model_predictions': 2, 'text': 'this is the first text element of document one',
-             'user_labels': {}}], 'hit_count': 4},
+             'user_labels': None}], 'hit_count': 4},
             active_learning_response)
 
         # set the first label according to the active learning recommendations
@@ -707,7 +707,7 @@ class TestAppIntegration(unittest.TestCase):
                               headers=HEADERS)
         self.assertEqual(200, res.status_code,
                          msg="Failed to get labeled elements from category 0")
-        self.assertEqual({'elements': [{'begin': 0, 'docid': 'multiclass_dataset-document3', 'end': 53, 'id': 'multiclass_dataset-document3-0', 'model_predictions': 0, 'text': 'document 3 has three text elements, this is the first', 'user_labels': {'0': 0}}], 'hit_count': 1},
+        self.assertEqual({'elements': [{'begin': 0, 'docid': 'multiclass_dataset-document3', 'end': 53, 'id': 'multiclass_dataset-document3-0', 'model_predictions': 0, 'text': 'document 3 has three text elements, this is the first', 'user_labels': 0}], 'hit_count': 1},
             res.get_json(), msg="diffs in labeled elements for class 0")
 
         # elements by prediction
