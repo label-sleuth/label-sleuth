@@ -69,7 +69,7 @@ def _text_element_to_user_labels(text_element: Union[TextElement, LabeledTextEle
     if type(text_element) == TextElement:
         return None
     elif type(text_element) == LabeledTextElement:
-        return None if text_element.category_to_label is None else {k: str(v.label).lower()
+        return None if len(text_element.category_to_label) == 0 else {k: str(v.label).lower()
                                                                   for k, v in text_element.category_to_label.items()}
     elif type(text_element) == MulticlassLabeledTextElement:
         return None if text_element.label is None else text_element.label.label
@@ -99,7 +99,7 @@ def elements_back_to_front(workspace_id: str,
               'end': text_element.span[0][1],
               'text': text_element.text,
               'user_labels': _text_element_to_user_labels(text_element),
-              'model_predictions': {} # TODO None for multiclass?
+              'model_predictions': None
               }
          for text_element in elements}
     if need_snippet:
@@ -119,7 +119,7 @@ def elements_back_to_front(workspace_id: str,
                 element_uri_to_info[text_element.uri]['model_predictions'] = prediction
             else:
                 # the frontend expects string labels and not boolean
-                element_uri_to_info[text_element.uri]['model_predictions'][category_id] = str(prediction).lower()
+                element_uri_to_info[text_element.uri]['model_predictions'] = {category_id: str(prediction).lower()}
 
     return [element_info for element_info in element_uri_to_info.values()]
 

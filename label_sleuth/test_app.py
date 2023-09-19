@@ -152,26 +152,26 @@ class TestAppIntegration(unittest.TestCase):
 
         self.assertEqual([
             {'begin': 0, 'docid': 'my_test_dataset-document3', 'end': 53, 'id': 'my_test_dataset-document3-0',
-             'model_predictions': {}, 'text': 'document 3 has three text elements, this is the first',
-             'user_labels': {}},
+             'model_predictions': None, 'text': 'document 3 has three text elements, this is the first',
+             'user_labels': None},
             {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 141, 'id': 'my_test_dataset-document3-1',
-             'model_predictions': {},
+             'model_predictions': None,
              'text': 'document 3 has three text elements, this is the second that will be labeled as negative',
-             'user_labels': {}},
+             'user_labels': None},
             {'begin': 142, 'docid': 'my_test_dataset-document3', 'end': 195, 'id': 'my_test_dataset-document3-2',
-             'model_predictions': {}, 'text': 'document 3 has three text elements, this is the third',
-             'user_labels': {}},
+             'model_predictions': None, 'text': 'document 3 has three text elements, this is the third',
+             'user_labels': None},
             {
             "begin": 196, "docid": "my_test_dataset-document3", "end": 317, "id": "my_test_dataset-document3-3",
-            "model_predictions": {}, "text": text_with_parenthesis,
-            "user_labels": {}}], 
+            "model_predictions": None, "text": text_with_parenthesis,
+            "user_labels": None}],
             document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
         res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[0]["id"]}',
                               data='{{"category_id":"{}","value":{}}}'.format(category_id, 'true'), headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to set the first label for a category")
         self.assertEqual({'category_id': str(category_id),
                           'element': {'begin': 0, 'docid': 'my_test_dataset-document3', 'end': 53,
-                                      'id': 'my_test_dataset-document3-0', 'model_predictions': {},
+                                      'id': 'my_test_dataset-document3-0', 'model_predictions': None,
                                       'text': 'document 3 has three text elements, this is the first',
                                       'user_labels': {str(category_id): 'true'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json(), msg="diff in setting element's label response")
@@ -187,7 +187,7 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code, msg="Failed to set the third label for category")
         self.assertEqual({'category_id': str(category_id),
                           'element': {'begin': 142, 'docid': 'my_test_dataset-document3', 'end': 195,
-                                      'id': 'my_test_dataset-document3-2', 'model_predictions': {},
+                                      'id': 'my_test_dataset-document3-2', 'model_predictions': None,
                                       'text': 'document 3 has three text elements, this is the third',
                                       'user_labels': {str(category_id): 'true'}}, 'workspace_id': 'my_test_workspace'},
                          res.get_json())
@@ -197,10 +197,10 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(
             {"elements": [
                 {
-                    "begin": 196,"docid": "my_test_dataset-document3","end": 317,"id": "my_test_dataset-document3-3","model_predictions": {},
+                    "begin": 196,"docid": "my_test_dataset-document3","end": 317,"id": "my_test_dataset-document3-3","model_predictions": None,
                     "snippet": text_with_parenthesis_snippet_in_query,
                     "text": text_with_parenthesis,
-                    "user_labels": {}
+                    "user_labels": None
                 }
             ], "hit_count": 1,  "hit_count_unique": 1}, 
             res.get_json(), 
@@ -219,7 +219,7 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code, msg="Failed to set the second label for a category")
         self.assertEqual({'category_id': str(category_id),
                           'element': {'begin': 54, 'docid': 'my_test_dataset-document3', 'end': 141,
-                                      'id': 'my_test_dataset-document3-1', 'model_predictions': {},
+                                      'id': 'my_test_dataset-document3-1', 'model_predictions': None,
                                       'text': 'document 3 has three text elements, '
                                               'this is the second that will be labeled as negative',
                                       'user_labels': {str(category_id): 'false'}}, 'workspace_id': 'my_test_workspace'},
@@ -244,13 +244,13 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual({'count': 6, 'elements':
             [{'begin': 0, 'docid': 'my_test_dataset-document1', 'end': 46, 'id': 'my_test_dataset-document1-0',
               'model_predictions': {'0': 'true'}, 'text': 'this is the first text element of document one',
-              'user_labels': {}},
+              'user_labels': None},
              {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94, 'id': 'my_test_dataset-document1-1',
               'model_predictions': {'0': 'true'}, 'text': 'this is the second text element of document one',
-              'user_labels': {}},
+              'user_labels': None},
              {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0',
               'model_predictions': {'0': 'true'}, 'text': 'this is the only text element in document two',
-              'user_labels': {}},
+              'user_labels': None},
              {'begin': 0, 'docid': 'my_test_dataset-document3', 'end': 53, 'id': 'my_test_dataset-document3-0',
               'model_predictions': {'0': 'true'}, 'text': 'document 3 has three text elements, this is the first',
               'user_labels': {'0': 'true'}},
@@ -261,7 +261,7 @@ class TestAppIntegration(unittest.TestCase):
               'model_predictions': {'0': 'true'},
           'snippet': 'this text contains a parenthesis a a a a a ... x and some more text to force creating a snippet',
               'text': 'this text contains a parenthesis a a a a a a(b b b b b b c c c c ( x x x x and some more '
-                      'text to force creating a snippet', 'user_labels': {}}], 'fraction': 0.8571428571428571},
+                      'text to force creating a snippet', 'user_labels': None}], 'fraction': 0.8571428571428571},
                          res.get_json(), msg="Failed to get elements by positive prediction")
 
         # elements by negative prediction
@@ -286,16 +286,16 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual({'elements': [
             {'begin': 47, 'docid': 'my_test_dataset-document1', 'end': 94, 'id': 'my_test_dataset-document1-1',
              'model_predictions': {str(category_id): 'true'}, 'text': 'this is the second text element of document one',
-             'user_labels': {}},
+             'user_labels': None},
             {"begin": 196, "docid": "my_test_dataset-document3", "end": 317, "id": "my_test_dataset-document3-3",
              "model_predictions": {"0": "true"}, "snippet": text_with_parenthesis_snippet, "text": text_with_parenthesis,
-             "user_labels": {}},
+             "user_labels": None},
             {'begin': 0, 'docid': 'my_test_dataset-document2', 'end': 45, 'id': 'my_test_dataset-document2-0',
              'model_predictions': {str(category_id): 'true'}, 'text': 'this is the only text element in document two',
-             'user_labels': {}},
+             'user_labels': None},
             {'begin': 0, 'docid': 'my_test_dataset-document1', 'end': 46, 'id': 'my_test_dataset-document1-0',
              'model_predictions': {str(category_id): 'true'}, 'text': 'this is the first text element of document one',
-             'user_labels': {}}], 'hit_count': 4},
+             'user_labels': None}], 'hit_count': 4},
             active_learning_response)
 
         # set the first label according to the active learning recommendations
@@ -549,18 +549,18 @@ class TestAppIntegration(unittest.TestCase):
 
         self.assertEqual([
             {'begin': 0, 'docid': 'multiclass_dataset-document3', 'end': 53, 'id': 'multiclass_dataset-document3-0',
-             'model_predictions': {}, 'text': 'document 3 has three text elements, this is the first',
+             'model_predictions': None, 'text': 'document 3 has three text elements, this is the first',
              'user_labels': None},
             {'begin': 54, 'docid': 'multiclass_dataset-document3', 'end': 141, 'id': 'multiclass_dataset-document3-1',
-             'model_predictions': {},
+             'model_predictions': None,
              'text': 'document 3 has three text elements, this is the second that will be labeled as negative',
              'user_labels': None},
             {'begin': 142, 'docid': 'multiclass_dataset-document3', 'end': 195, 'id': 'multiclass_dataset-document3-2',
-             'model_predictions': {}, 'text': 'document 3 has three text elements, this is the third',
+             'model_predictions': None, 'text': 'document 3 has three text elements, this is the third',
              'user_labels': None},
             {
                 "begin": 196, "docid": "multiclass_dataset-document3", "end": 317, "id": "multiclass_dataset-document3-3",
-                "model_predictions": {}, "text": text_with_parenthesis,
+                "model_predictions": None, "text": text_with_parenthesis,
                 "user_labels": None}],
             document3_elements, msg=f"diff in {documents[-1]['document_id']} content")
 
@@ -574,7 +574,7 @@ class TestAppIntegration(unittest.TestCase):
                             "docid": "multiclass_dataset-document3",
                             "end": 53,
                             "id": "multiclass_dataset-document3-0",
-                            "model_predictions": {},
+                            "model_predictions": None,
                             "text": "document 3 has three text elements, this is the first",
                             "user_labels": 0}
                           }, res.get_json())
@@ -594,7 +594,7 @@ class TestAppIntegration(unittest.TestCase):
                             "docid": "multiclass_dataset-document3",
                             "end": 141,
                             "id": "multiclass_dataset-document3-1",
-                            "model_predictions": {},
+                            "model_predictions": None,
                             "text": "document 3 has three text elements, this is the second that will be labeled as negative",
                             "user_labels": 1}
                           }, res.get_json())
@@ -614,7 +614,7 @@ class TestAppIntegration(unittest.TestCase):
                             "docid": "multiclass_dataset-document3",
                             "end": 195,
                             "id": "multiclass_dataset-document3-2",
-                            "model_predictions": {},
+                            "model_predictions": None,
                             "text": "document 3 has three text elements, this is the third",
                             "user_labels": 2}
                           }, res.get_json())
@@ -635,7 +635,7 @@ class TestAppIntegration(unittest.TestCase):
                         "docid": "multiclass_dataset-document1",
                         "end": 94,
                         "id": "multiclass_dataset-document1-1",
-                        "model_predictions": {},
+                        "model_predictions": None,
                         "text": "this is the second text element of document one",
                         "user_labels": None
                     }
