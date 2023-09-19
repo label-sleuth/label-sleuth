@@ -31,7 +31,6 @@ class TrainSetSelectorAPI(object, metaclass=abc.ABCMeta):
         self.background_jobs_manager = background_jobs_manager
         self.gpu_support = gpu_support
 
-    # TODO consider a breaking change in the input to better support multiclass. Let's do it.
     def collect_train_set(self, workspace_id: str, train_dataset_name: str,
                           cat_id_to_name_and_desc: Mapping[int, Tuple], done_callback=None) -> Future:
         future = self.background_jobs_manager.add_background_job(

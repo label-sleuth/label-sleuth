@@ -75,7 +75,6 @@ class SVM(ModelAPI):
         labels = np.array([x['label'] for x in train_data])
 
         model.fit(train_data_features, labels)
-        # TODO assert that _classes is ordered 0, 1, 2....
         with open(os.path.join(self.get_model_dir_by_id(model_id), "vectorizer"), "wb") as fl:
             pickle.dump(vectorizer, fl)
         with open(os.path.join(self.get_model_dir_by_id(model_id), "model"), "wb") as fl:
