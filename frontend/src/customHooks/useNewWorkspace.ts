@@ -44,7 +44,7 @@ const useNewWorkspace = (toastId: string) => {
   const [textValue, setTextValue] = useState("");
   const [newWorkspaceNameError, setNewWorkspaceNameError] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
-  const [mode, setMode] = React.useState<WorkspaceMode>(WorkspaceMode.BINARY);
+  const [mode, setMode] = React.useState<WorkspaceMode>(WorkspaceMode.NOT_SET);
   const { setWorkspaceId } = useWorkspaceId();
   const { notify } = useNotification();
 
@@ -79,13 +79,23 @@ const useNewWorkspace = (toastId: string) => {
   const handleNewWorkspace = () => {
     const workspaceNameProvided = !!textValue;
     const datasetOptionProvided = !!selectedValue;
+    const modeProvided = mode !== WorkspaceMode.NOT_SET;
 
-    if (!datasetOptionProvided || !workspaceNameProvided) {
+    if (!datasetOptionProvided || !workspaceNameProvided || !modeProvided) {
       let nonProvidedFields: string;
-      if (!datasetOptionProvided && !workspaceNameProvided) {
-        nonProvidedFields = "Workspace name and dataset were not provided.";
+      if (!datasetOptionProvided && !workspaceNameProvided && !modeProvided) {
+        nonProvidedFields =
+          "Workspace name, dataset and mode were not provided.";
+      } else if (!datasetOptionProvided && !workspaceNameProvided) {
+        nonProvidedFields = "Dataset and workspace name were not selected.";
+      } else if (!datasetOptionProvided && !modeProvided) {
+        nonProvidedFields = "Dataset and mode were not selected.";
+      } else if (!workspaceNameProvided && !modeProvided) {
+        nonProvidedFields = "Workspace name and mode were not selected.";
       } else if (!datasetOptionProvided) {
         nonProvidedFields = "Dataset was not selected.";
+      } else if (!modeProvided) {
+        nonProvidedFields = "Mode was not selected.";
       } else {
         nonProvidedFields = "Workspace name was not provided.";
       }
