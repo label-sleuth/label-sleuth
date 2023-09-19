@@ -122,7 +122,13 @@ export const setElementLabel = createAsyncThunk<
           : null
         : undefined,
     // in multiclass mode the new category is specified in the 'value' attribute, while it is true, false or none in binary mode
-    value: mode === WorkspaceMode.BINARY ? label : categoryId,
+    value:
+      mode === WorkspaceMode.BINARY
+        // label === "true" because the backend expects an actual boolean
+        ? label === "none"
+          ? label
+          : label === "true"
+        : categoryId,
     update_counter: update_counter,
     source: panelId,
     iteration:

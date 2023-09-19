@@ -78,7 +78,6 @@ export const client = async (
       throw new Error(text);
     }
   }).catch(e => {
-    console.log(e)
     throw new Error(e);});
 };
 

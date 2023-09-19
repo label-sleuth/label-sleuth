@@ -54,12 +54,13 @@ export const EVALUATION_IN_PROGRESS_MSG =
   "Label all the elements. Once its done, click on Submit to get the precision score.";
 export const WAIT_NEW_MODEL_MSG =
   "Please wait till the next model is available to start the evaluation.";
-export const PRECISION_RESULT_MSG = (
+export const EVALUATION_RESULT_MSG = (
   precision: number,
-  scoreModelVersion: number | null
+  scoreModelVersion: number | null,
+  metric: string
 ) =>
   scoreModelVersion !== null
-    ? `The precision of the ${scoreModelVersion}${getOrdinalSuffix(
+    ? `The ${metric} of the ${scoreModelVersion}${getOrdinalSuffix(
         scoreModelVersion
       )} model is ${precision}%. `
     : "";
@@ -144,8 +145,8 @@ export enum LabelTypesEnum {
 }
 
 export enum LabelActionsEnum {
-  POS = "pos",
-  NEG = "neg",
+  POS = "true",
+  NEG = "false",
   NONE = "none",
 }
 

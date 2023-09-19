@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Box, Button, Stack, Divider } from "@mui/material";
 import classes from "./index.module.css";
 import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
@@ -23,7 +23,7 @@ import { ButtonGroup } from "@mui/material";
 import {
   START_EVALUATION_MSG,
   EVALUATION_IN_PROGRESS_MSG,
-  PRECISION_RESULT_MSG,
+  EVALUATION_RESULT_MSG,
   WAIT_NEW_MODEL_MSG,
   PanelIdsEnum,
   LabelTypesEnum,
@@ -36,10 +36,13 @@ import {
 import { useFetchPanelElements } from "../../../customHooks/useFetchPanelElements";
 import { Element } from "../../../global";
 import { returnByMode } from "../../../utils/utils";
+import { useNotification } from "../../../utils/notification";
+import { Toast } from "react-toastify/dist/components";
+import { toast } from "react-toastify";
 
 const EvaluationPanel = () => {
   const dispatch = useAppDispatch();
-
+  const { notify } = useNotification();
   const loading = useAppSelector(
     (state) => state.workspace.panels.loading[PanelIdsEnum.EVALUATION]
   );
@@ -70,6 +73,11 @@ const EvaluationPanel = () => {
   const fetchEvaluationElements = useFetchPanelElements({
     panelId: PanelIdsEnum.EVALUATION,
   });
+
+  const metric = useMemo(
+    () => returnByMode("precision", "accuracy", mode),
+    [mode]
+  );
 
   const evaluationElementsCount = React.useMemo(
     () =>
@@ -131,9 +139,17 @@ const EvaluationPanel = () => {
 
   const submitEvaluation = useCallback(() => {
     const changedElementsCount = getChangedElementsCount();
-    dispatch(getEvaluationResults(changedElementsCount)).then(() =>
-      dispatch(checkStatus())
-    );
+    dispatch(getEvaluationResults(changedElementsCount)).then((a) => {
+      notify(
+        EVALUATION_RESULT_MSG(
+          Math.round((a.payload as { score: number }).score * 100),
+          scoreModelVersion,
+          metric
+        ),
+        { type: toast.TYPE.SUCCESS, toastId: "evaluation_result_toast" }
+      );
+      dispatch(checkStatus());
+    });
   }, [dispatch, getChangedElementsCount]);
 
   const onCancelEvaluation = useCallback(() => {
@@ -161,9 +177,10 @@ const EvaluationPanel = () => {
     } else if (!isInProgress) {
       let report = "";
       if (lastScore !== null) {
-        report += PRECISION_RESULT_MSG(
+        report += EVALUATION_RESULT_MSG(
           Math.round(lastScore * 100),
-          scoreModelVersion
+          scoreModelVersion,
+          metric
         );
       }
       report += START_EVALUATION_MSG(modelVersion, scoreModelVersion);
@@ -190,7 +207,7 @@ const EvaluationPanel = () => {
   return (
     <Box>
       <Header
-        message={`${returnByMode("Precision", "Accuracy", mode)} evaluation`}
+        message={`${metric[0].toUpperCase() + metric.slice(1)} evaluation`}
       />
       <Box
         sx={{
@@ -239,9 +256,7 @@ const EvaluationPanel = () => {
       {currentContentData?.length === 0 ? (
         <Box>
           <PanelTypography sx={{ fontSize: "1rem" }}>
-            {
-              "Currently it's not possible to evaluate the precision of the model because there are no positive predictions."
-            }
+            {`Currently it's not possible to evaluate the ${metric} of the model because there are no positive predictions.`}
           </PanelTypography>
         </Box>
       ) : (

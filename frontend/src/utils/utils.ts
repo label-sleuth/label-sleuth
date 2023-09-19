@@ -188,7 +188,9 @@ export const parseElement = (
     docId: docid,
     id: id,
     modelPrediction:
-      workspaceMode === WorkspaceMode.BINARY && curCategoryId !== null
+      workspaceMode === WorkspaceMode.BINARY &&
+      curCategoryId !== null &&
+      model_predictions !== null
         ? getStringLabel(
             `${
               (model_predictions as { [key: string]: boolean })[curCategoryId]
@@ -196,7 +198,9 @@ export const parseElement = (
           )
         : LabelTypesEnum.NONE,
     userLabel:
-      workspaceMode === WorkspaceMode.BINARY && curCategoryId !== null
+      workspaceMode === WorkspaceMode.BINARY &&
+      curCategoryId !== null &&
+      user_labels !== null
         ? getStringLabel(
             `${(user_labels as { [key: string]: boolean })[curCategoryId]}`
           )
@@ -204,7 +208,9 @@ export const parseElement = (
     text,
     snippet: snippet !== undefined ? snippet : null,
     otherUserLabels:
-      workspaceMode === WorkspaceMode.BINARY && curCategoryId !== null
+      workspaceMode === WorkspaceMode.BINARY &&
+      curCategoryId !== null &&
+      user_labels !== null
         ? Object.assign(
             {},
             ...Object.keys(user_labels).map((categoryId) =>
