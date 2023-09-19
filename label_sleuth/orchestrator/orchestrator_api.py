@@ -1145,7 +1145,6 @@ class OrchestratorApi:
                                    for category_id, category in self.get_all_categories(workspace_id).items()}
             categories_counter = defaultdict(int)
             categories_created = []
-            lines_skipped = []
             # if dataframe contained new categories, create them and update name to id mapping
             for category_name in imported_categories_to_uris_and_labels.keys():
                 if category_name not in category_name_to_id.keys():
@@ -1177,7 +1176,6 @@ class OrchestratorApi:
             
             res = {'categories': categories_counter_list,
                    'categoriesCreated': categories_created,
-                   'linesSkipped': lines_skipped, #TODO remove from UI and then from here
                    'total': total,
                    'contracticting_labels_info': contradicting_labels_info}
             return res
@@ -1193,9 +1191,6 @@ class OrchestratorApi:
             imported_category_names = set([x.label for x in imported_categories_to_labels.values()])
             existing_category_names = {category.name for category in self.get_all_categories(workspace_id).values()}
 
-            # if not new_category_names.issubset(existing_category_names) and len(existing_category_names) > 0:
-            #     raise Exception( # TODO - make sure
-            #         f"workspace '{workspace_id}' import labels is only supported if there are not classes in the workspace yet, or if the imported classes are subset of the existing categories")
             if len(existing_category_names) == 0:
                 self.set_category_list(workspace_id,{name: "" for name in imported_category_names})
             else:
@@ -1214,7 +1209,6 @@ class OrchestratorApi:
             res = {'categories': categories_counter_list,
                    'categoriesCreated': list(name for name in imported_category_names
                                              if name not in existing_category_names),
-                   'linesSkipped': [], #TODO remove from UI and then from here
                    'total': total,
                    'contracticting_labels_info': contradicting_labels_info}
             return res
@@ -1260,7 +1254,6 @@ class OrchestratorApi:
                     [{DisplayFields.workspace_id: workspace_id,
                       DisplayFields.category_name: category.name,
                       DisplayFields.doc_id: element.uri.split('-')[1],
-                      # TODO handle when handling uri/doc_id/element_id
                       DisplayFields.dataset: dataset_name,
                       DisplayFields.text: element.text,
                       DisplayFields.uri: element.uri,
@@ -1284,7 +1277,6 @@ class OrchestratorApi:
             list_of_dicts.extend(
                 [{DisplayFields.workspace_id: workspace_id,
                   DisplayFields.doc_id: element.uri.split('-')[1],
-                  # TODO handle when handling uri/doc_id/element_id
                   DisplayFields.dataset: dataset_name,
                   DisplayFields.text: element.text,
                   DisplayFields.uri: element.uri,
