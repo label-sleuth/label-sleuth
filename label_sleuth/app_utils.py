@@ -137,7 +137,6 @@ def get_element(workspace_id, category_id, element_id):
 
 
 def _extract_model_info(iteration):
-    # TODO reorganize model information
     placeholder = 'Unknown'
     model_info_dict = {'model_status': placeholder, 'creation_epoch': placeholder, 'model_type': placeholder,
                        'model_metadata': placeholder}

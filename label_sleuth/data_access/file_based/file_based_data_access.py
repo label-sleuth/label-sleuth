@@ -149,7 +149,6 @@ class FileBasedDataAccess(DataAccessApi):
         The dict keys are category ids and values are Labels. For example: [(uri_1, {0: Label_cat_1}),
                                                                             (uri_2, {0: Label_cat_1,
                                                                                      1: Label_cat_2})]
-         TODO update docs for MulticlassLabel
         :param apply_to_duplicate_texts: if True, also set the same labels for additional URIs that are duplicates
         of the URIs provided.
         """
@@ -633,7 +632,6 @@ class FileBasedDataAccess(DataAccessApi):
             results_dict['hit_count_unique'] = len(corpus_df)
 
         if sample_size is not None:
-            # TODO UNKNOWN BUG fix
             corpus_df = corpus_df.sample(n=min(sample_size + sample_start_idx, len(corpus_df)),
                                          random_state=random_state
                                          )[sample_start_idx:sample_start_idx + sample_size]

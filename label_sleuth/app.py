@@ -47,7 +47,7 @@ from label_sleuth.data_access.file_based.file_based_data_access import FileBased
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus, OrchestratorStateApi
-from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi
+from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi, CategoryNameAlreadyExistsException
 from label_sleuth.utils import make_error
 
 print("user:")
@@ -441,8 +441,21 @@ def set_category_list(workspace_id):
     return jsonify(categories)
 
 
-def update_category_list(workspace_id: str):
-    raise Exception("Not implemented yet")
+@main_blueprint.route("/workspace/<workspace_id>/category_list", methods=['PUT'])
+@login_if_required
+@validate_workspace_id
+def add_categories_to_category_list(workspace_id: str):
+    post_data = request.get_json(force=True)
+    category_to_description = post_data["category_to_description"]
+
+    try:
+        categories = curr_app.orchestrator_api.add_categories_to_category_list(workspace_id, category_to_description)
+        return jsonify(categories)
+    except CategoryNameAlreadyExistsException as e:
+        return make_error({
+            "type": "category_name_already_exists",
+            "title": f"The following categories: {e.existing_category_names} already exists in workspace"
+        }, 409)
 
 
 @main_blueprint.route("/workspace/<workspace_id>/categories", methods=['GET'])

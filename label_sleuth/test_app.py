@@ -525,14 +525,25 @@ class TestAppIntegration(unittest.TestCase):
         category_desc2 = "desc2"
         category_desc3 = "desc3"
 
+        # add initial category list
         res = self.client.post(f"/workspace/{workspace_name}/category_list",
-                               data=f'{{"category_to_description":{{"{category_name1}":"{category_desc1}","{category_name2}":"{category_desc2}", "{category_name3}":"{category_desc3}"}}}}',
+                               data=f'{{"category_to_description":{{"{category_name1}":"{category_desc1}","{category_name2}":"{category_desc2}"}}}}',
                                headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to set category list")
         self.assertEqual(res.get_json(), {'0': {'description': 'desc1', 'id': 0, 'name': 'cat1'},
+                                          '1': {'description': 'desc2', 'id': 1, 'name': 'cat2'}},
+                         msg="diff in set category list response")
+
+        # add more category name to an existing category list
+        res = self.client.put(f"/workspace/{workspace_name}/category_list",
+                               data=f'{{"category_to_description":{{"{category_name3}":"{category_desc3}"}}}}',
+                               headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to add categories to  category list")
+        self.assertEqual(res.get_json(), {'0': {'description': 'desc1', 'id': 0, 'name': 'cat1'},
                                           '1': {'description': 'desc2', 'id': 1, 'name': 'cat2'},
                                           '2': {'description': 'desc3', 'id': 2, 'name': 'cat3'}},
-                         msg="diff in set category list response")
+                         msg="diff in add new category names to existing category list response")
+
 
         res = self.client.get(f"/workspace/{workspace_name}/documents", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get all documents uris")

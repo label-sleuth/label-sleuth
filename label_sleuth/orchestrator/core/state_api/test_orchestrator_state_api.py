@@ -66,7 +66,7 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         dataset_name = 'non_existing_dump'
         self.orchestrator_state_api.create_workspace(workspace_id="workspace_1", dataset_name=dataset_name)
         self.orchestrator_state_api.create_workspace(workspace_id="workspace_2", dataset_name=dataset_name)
-        self.orchestrator_state_api.delete_workspace_state("workspace_1")  # TODO rename
+        self.orchestrator_state_api.delete_workspace_state("workspace_1")
         self.assertEqual({"workspace_2"},
                          {ws.workspace_id for ws in self.orchestrator_state_api.get_all_workspaces()})
 

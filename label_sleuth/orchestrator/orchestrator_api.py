@@ -59,6 +59,10 @@ TRAIN_COUNTS_STR_KEY = "train_counts"
 # members
 new_data_infer_thread_pool = ThreadPoolExecutor(1)
 
+class CategoryNameAlreadyExistsException(Exception):
+    def __init__(self, message, existing_category_names):
+        self.message = message
+        self.existing_category_names = existing_category_names
 
 class OrchestratorApi:
     def __init__(self, orchestrator_state: OrchestratorStateApi, data_access: DataAccessApi,
@@ -193,8 +197,9 @@ class OrchestratorApi:
         """
         logging.info(f"adding new {len(new_category_to_description)} the category list of workspace {workspace_id}")
         intersection_with_existing = set(new_category_to_description.keys()).intersection(set(self.orchestrator_state.get_all_categories(workspace_id).keys()))
-        if len(intersection_with_existing) > 0: #TODO raise a dedicated exception and report to the user
-            raise Exception(f"workspace '{workspace_id}' user is trying to add existing categories: {intersection_with_existing}")
+        if len(intersection_with_existing) > 0:
+            raise CategoryNameAlreadyExistsException(f"Some category names are already exist in "
+                                                     f"workspace {workspace_id}", intersection_with_existing)
         return self.orchestrator_state.add_categories_to_category_list(workspace_id, new_category_to_description)
 
     def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str):
