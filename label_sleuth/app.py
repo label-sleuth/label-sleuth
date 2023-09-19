@@ -754,6 +754,12 @@ def set_element_label(workspace_id, element_id):
     is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
     if not is_multiclass:
         category_id = int(category_id)
+        if value not in [LABEL_POSITIVE, LABEL_NEGATIVE]:
+            return make_error({
+                "type": "bad_label_value",
+                "title": f"Expected a boolean label in binary workspace, got {type(value)} with value '{value}'"
+            }, 422)
+
     iteration = int(post_data.get("iteration", -1))
     source = post_data.get("source", "n/a")
     update_counter = post_data.get('update_counter', True)
