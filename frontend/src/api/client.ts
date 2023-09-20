@@ -53,32 +53,35 @@ export const client = async (
     config.body = stringifyBody ? JSON.stringify(body) : body;
   }
 
-  return await fetch(endpoint, config).then(async (response) => {
-    if (response.ok) {
-      let data;
-      if (parseResponseBodyAs === "json") {
-        data = await response.json();
-      } else if (parseResponseBodyAs === "text") {
-        data = await response.text();
-      } else if (parseResponseBodyAs === "blob") {
-        data = await response.blob();
-      } else if (parseResponseBodyAs === "none") {
-        data = response;
+  return await fetch(endpoint, config)
+    .then(async (response) => {
+      if (response.ok) {
+        let data;
+        if (parseResponseBodyAs === "json") {
+          data = await response.json();
+        } else if (parseResponseBodyAs === "text") {
+          data = await response.text();
+        } else if (parseResponseBodyAs === "blob") {
+          data = await response.blob();
+        } else if (parseResponseBodyAs === "none") {
+          data = response;
+        } else {
+          throw new Error("parseResponseBodyAs should be 'json' or 'text'");
+        }
+        return {
+          status: response.status,
+          data,
+          headers: response.headers,
+          url: response.url,
+        };
       } else {
-        throw new Error("parseResponseBodyAs should be 'json' or 'text'");
+        const text = await response.text();
+        throw new Error(text);
       }
-      return {
-        status: response.status,
-        data,
-        headers: response.headers,
-        url: response.url,
-      };
-    } else {
-      const text = await response.text();
-      throw new Error(text);
-    }
-  }).catch(e => {
-    throw new Error(e);});
+    })
+    .catch((e) => {
+      throw e;
+    });
 };
 
 client.get = (endpoint: string, customConfig: ClientConfig = {}) => {

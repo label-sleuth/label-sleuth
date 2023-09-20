@@ -144,7 +144,7 @@ export const UserLabelsPanel = () => {
         loading={loading}
         nonEmptyResultsMessage={`These are all the examples labeled by you as '${filteredTitle}'.`}
         emptyResultsMessage={
-          "You didn't label any elements as positive so far."
+          `You didn't label any elements as ${filteredTitle} so far.`
         }
         isPaginationRequired={isPaginationRequired}
         Filters={Filters}
