@@ -656,10 +656,9 @@ def elements_by_prediction(workspace_id):
 
     if curr_app.orchestrator_api.is_binary_workspace(workspace_id):
         category_id = int(request.args['category_id'])
-        value = value.lower()
-        if value not in ["true", "false"]:
+        if value.lower() not in ["true", "false"]:
             raise Exception (f"unknown binary label value {value}")
-        value = True if value == "true" else False
+        value = (value.lower() == "true")
         logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {size} elements with "
                      f"prediction {value} (start index: {start_idx})")
     else:
@@ -672,7 +671,7 @@ def elements_by_prediction(workspace_id):
     all_ready_iterations = curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
                                                                                   IterationStatus.READY)
     if len(all_ready_iterations) == 0:
-        return jsonify({'elements': [], 'positive_fraction': None, 'total_count': None})
+        return jsonify({'elements': [], 'count': None, 'fraction': None})
     else:
         positive_predicted_elements = curr_app.orchestrator_api.get_elements_by_prediction(
             workspace_id, category_id, value, sample_size=size, start_idx=start_idx, shuffle=False,
@@ -681,6 +680,13 @@ def elements_by_prediction(workspace_id):
 
         elements_transformed = elements_back_to_front(workspace_id, positive_predicted_elements, category_id)
 
+        # backward compatibility for prediction counts in existing binary workspaces
+        if curr_app.orchestrator_api.is_binary_workspace(workspace_id) \
+                and 'total_positive_count' in iteration.iteration_statistics:
+            pos_count = iteration.iteration_statistics['total_positive_count']
+            total = len(curr_app.orchestrator_api.get_all_text_elements_uris(workspace_id))
+            count = pos_count if value is True else total-pos_count
+            iteration.iteration_statistics['prediction_stats'] = {value: {'count': count, 'fraction': count/total}}
 
         res = {'elements': elements_transformed,
                **iteration.iteration_statistics["prediction_stats"][value]}
