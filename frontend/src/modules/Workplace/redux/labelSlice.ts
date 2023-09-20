@@ -126,9 +126,9 @@ export const setElementLabel = createAsyncThunk<
       mode === WorkspaceMode.BINARY
         // label === "true" because the backend expects an actual boolean
         ? label === "none"
-          ? label
+          ? undefined
           : label === "true"
-        : categoryId,
+        : categoryId === "none" ? undefined : categoryId,
     update_counter: update_counter,
     source: panelId,
     iteration:
