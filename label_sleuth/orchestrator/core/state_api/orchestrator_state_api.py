@@ -190,15 +190,15 @@ class OrchestratorStateApi:
             return cached_workspace
         with open(os.path.join(self.workspace_dir, self._filename_from_workspace_id(workspace_id))) as json_file:
             workspace = json_file.read()
-        workspace = jsonpickle.decode(workspace)
-        # int dictionary keys are converted to string when writing to json, see https://bugs.python.org/issue34972
+        workspace = jsonpickle.decode(workspace, keys=True)
+        # for backward compatibility with jsonpickle formatting of old workspaces
         workspace.categories = {int(category_id_str): category
                                 for category_id_str, category in workspace.categories.items()}
         self.workspaces[workspace_id] = workspace
         return workspace
 
     def _save_workspace(self, workspace: Workspace):
-        workspace_encoded = jsonpickle.encode(workspace)
+        workspace_encoded = jsonpickle.encode(workspace, keys=True)
         with open(os.path.join(self.workspace_dir, self._filename_from_workspace_id(workspace.workspace_id)), 'w') as f:
             f.write(workspace_encoded)
 
