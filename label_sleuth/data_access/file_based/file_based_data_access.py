@@ -434,6 +434,7 @@ class FileBasedDataAccess(DataAccessApi):
         :param workspace_id:
         :param dataset_name:
         """
+        self.labels_in_memory.pop(workspace_id)
         labels_file = self._get_workspace_labels_dump_filename(workspace_id, dataset_name)
         if os.path.isfile(labels_file):
             os.remove(labels_file)
