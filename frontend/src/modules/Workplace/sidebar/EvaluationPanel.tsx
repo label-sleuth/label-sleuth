@@ -37,7 +37,6 @@ import { useFetchPanelElements } from "../../../customHooks/useFetchPanelElement
 import { Element } from "../../../global";
 import { returnByMode } from "../../../utils/utils";
 import { useNotification } from "../../../utils/notification";
-import { Toast } from "react-toastify/dist/components";
 import { toast } from "react-toastify";
 
 const EvaluationPanel = () => {
@@ -150,7 +149,7 @@ const EvaluationPanel = () => {
       );
       dispatch(checkStatus());
     });
-  }, [dispatch, getChangedElementsCount]);
+  }, [dispatch, getChangedElementsCount, metric, notify, scoreModelVersion]);
 
   const onCancelEvaluation = useCallback(() => {
     const changedElementsCount = getChangedElementsCount();
@@ -202,6 +201,7 @@ const EvaluationPanel = () => {
     scoreModelVersion,
     modelVersion,
     isLoading,
+    metric,
   ]);
 
   return (
