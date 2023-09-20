@@ -252,7 +252,7 @@ export const Workplace = () => {
                     evaluationIsInProgress ||
                     evaluationLoading ||
                     (!isMulticlass && noCategoryAndNoModel) ||
-                    (isMulticlass && noModel)
+                    isMulticlass
                   }
                   panelId={PanelIdsEnum.SUSPICIOUS_LABELS}
                 />
