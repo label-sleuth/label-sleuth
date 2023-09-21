@@ -34,8 +34,11 @@ import {
   Radio,
   RadioGroup,
   Stack,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import info_icon from "../../assets/workspace/help.svg";
+import { positions } from "@mui/system";
 
 interface NewWorkspaceFormProps {
   handleDatasetChange: (value: string) => void;
@@ -50,6 +53,49 @@ interface NewWorkspaceFormProps {
     event: React.ChangeEvent<HTMLInputElement>
   ) => void;
 }
+
+const BinaryModeText = () => {
+  return (
+    <Typography>
+      {`Use this mode if the question you are asking is whether or not a given
+      text belongs to one specific category, where the category represents a
+      property exhibited by the text. For example, does the text mention privacy
+      risk. In binary mode, `}
+      <strong>
+        {`you can build multiple independent classifiers each dealing with a
+        different property`}
+      </strong>
+    </Typography>
+  );
+};
+
+const MulticlassModeText = () => {
+  return (
+    <Typography>
+      {`Use this mode if each text in your data belongs to exactly one category
+      from a closed set of categories, each representing a single property
+      exhibited by a given text. For example, for which department a certain
+      customer support email should be directed to. In multi class mode, `}
+      <strong>{` you
+      build a single classifier for all the categories.`}</strong>
+    </Typography>
+  );
+};
+
+const MultilabelModeText = () => {
+  return (
+    <Typography>
+      {`Use this mode if you have a set of categories you are interested in, and
+      the question you are asking is which of these properties are exhibited by
+      a given text. Each text belongs to zero or more categories . For example,
+      does the text mention privacy risk, safety risk, financial risk etc. In
+      multi label mode, `}
+      <strong>
+        {"you can build a single classifier for all the categories."}
+      </strong>
+    </Typography>
+  );
+};
 
 const NewWorkspaceForm = ({
   handleDatasetChange,
@@ -147,12 +193,24 @@ const NewWorkspaceForm = ({
                 }
                 label="Binary"
               />
-              <Box
-                component="img"
-                src={info_icon}
-                className={classes.moreinfo}
-                sx={{ width: "14px", height: "14px" }}
-              />
+              <Tooltip
+                title={<BinaryModeText />}
+                placement={"right"}
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      bgcolor: "rgb(97 97 97)",
+                    },
+                  },
+                }}
+              >
+                <Box
+                  component="img"
+                  src={info_icon}
+                  className={classes.moreinfo}
+                  sx={{ width: "14px", height: "14px" }}
+                />
+              </Tooltip>
             </Stack>
             <Stack direction={"row"} alignItems="center">
               <FormControlLabel
@@ -171,12 +229,24 @@ const NewWorkspaceForm = ({
                 }
                 label="Multi class (beta)"
               />
-              <Box
-                component="img"
-                src={info_icon}
-                className={classes.moreinfo}
-                sx={{ width: "14px", height: "14px" }}
-              />
+              <Tooltip
+                title={<MulticlassModeText />}
+                placement={"right"}
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      bgcolor: "rgb(97 97 97)",
+                    },
+                  },
+                }}
+              >
+                <Box
+                  component="img"
+                  src={info_icon}
+                  className={classes.moreinfo}
+                  sx={{ width: "14px", height: "14px" }}
+                />
+              </Tooltip>
             </Stack>
             <Stack direction={"row"} alignItems="center">
               <FormControlLabel
@@ -196,12 +266,24 @@ const NewWorkspaceForm = ({
                 }
                 label="Multi label (coming soon)"
               />
-              <Box
-                component="img"
-                src={info_icon}
-                className={classes.moreinfo}
-                sx={{ width: "14px", height: "14px" }}
-              />
+              <Tooltip
+                title={<MultilabelModeText />}
+                placement={"right"}
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      bgcolor: "rgb(97 97 97)",
+                    },
+                  },
+                }}
+              >
+                <Box
+                  component="img"
+                  src={info_icon}
+                  className={classes.moreinfo}
+                  sx={{ width: "14px", height: "14px" }}
+                />
+              </Tooltip>
             </Stack>
           </RadioGroup>
         </FormControl>
