@@ -53,7 +53,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
     This base class provides general methods for training in the background, caching model predictions etc.,
     while the _train(), load_model() and infer() methods are specific to each model implementation.
     """
-    def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager, gpu_support=False):
+    def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager, gpu_support=False, is_multiclass=False):
         """
         Model implementations can require some or all of the parameters in models_factory.ModelDependencies
         in their __init__ method, as these will be passed to the model by the ModelFactory.
@@ -67,6 +67,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         self.model_locks = defaultdict(lambda: threading.Lock())
         self.cache = LRUCache(definitions.INFER_CACHE_SIZE)
         self.cache_lock = threading.Lock()
+        self.is_multiclass = is_multiclass
 
     @abc.abstractmethod
     def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
@@ -116,7 +117,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         Returns the prediction dataclass used by the model. This class is used for storing and loading model
         predictions from the disk.
         """
-        return Prediction
+        return MulticlassPrediction if self.is_multiclass else Prediction
 
     def train(self, train_data: Sequence[Mapping], language: Language,
               model_params=None, done_callback=None) -> Tuple[str, Future]:

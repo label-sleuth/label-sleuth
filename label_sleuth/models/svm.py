@@ -46,19 +46,11 @@ class SVM(ModelAPI):
     def __init__(self, output_dir, representation_type: RepresentationType,
                  background_jobs_manager: BackgroundJobsManager, sentence_embedding_service: SentenceEmbeddingService,
                  kernel="linear", multiclass=False):
-        super().__init__(output_dir, background_jobs_manager)
+        super().__init__(output_dir, background_jobs_manager, is_multiclass=multiclass)
         self.kernel = kernel
-        self.is_multiclass = multiclass
         self.representation_type = representation_type
         if self.representation_type == RepresentationType.WORD_EMBEDDING:
             self.sentence_embedding_service = sentence_embedding_service
-
-    def get_prediction_class(self):
-        """
-        Returns the prediction dataclass used by the model. This class is used for storing and loading model
-        predictions from the disk.
-        """
-        return MulticlassPrediction if self.is_multiclass else Prediction
 
     def _train(self, model_id, train_data, model_params):
         if self.kernel == "linear":
