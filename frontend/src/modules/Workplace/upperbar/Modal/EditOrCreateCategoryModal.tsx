@@ -23,7 +23,6 @@ import {
   WRONG_INPUT_NAME_LENGTH,
   CATEGORY_NAME_MAX_CHARS,
   CustomizableUITextEnum,
-  WorkspaceMode,
 } from "../../../../const";
 import {
   DialogContentText,
@@ -33,7 +32,6 @@ import {
   Grid,
   InputAdornment,
   Menu,
-  Tooltip,
 } from "@mui/material";
 import { ChangeEvent } from "react";
 import { useAppSelector } from "../../../../customHooks/useRedux";

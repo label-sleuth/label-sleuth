@@ -17,12 +17,12 @@ import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import classes from "./UpperBar.module.css";
 import { useAppSelector } from "../../../customHooks/useRedux";
-import { CategoryBadge } from "../../../components/categoryBadge/CategoryBadge";
-import { IconButton, Stack, Tooltip } from "@mui/material";
+import { IconButton, Stack, Typography } from "@mui/material";
 import { AppBarLS, UpperBarProps } from ".";
 import AddIcon from "@mui/icons-material/Add";
 import { CreateCategoryModal } from "./Modal/CreateCategoryModal";
-import { getCategoryColorFromId } from "../../../utils/utils";
+import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
+import { CategoriesMenu } from "./Modal/CategoriesMenu";
 
 export const UpperBarMCMode = ({
   rightDrawerWidth,
@@ -33,10 +33,16 @@ export const UpperBarMCMode = ({
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
   const [cardOpen, setCardOpen] = React.useState(true);
   const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false);
+  const [createCategoryModalOpen2, setCreateCategoryModalOpen2] = useState(false);
 
   const handleAddCategory = () => {
     setCreateCategoryModalOpen(true);
   };
+
+  const handleAddCategory2 = () => {
+    setCreateCategoryModalOpen2(true);
+  };
+
 
   React.useEffect(() => {
     if (curCategory !== null && cardOpen) {
@@ -50,40 +56,35 @@ export const UpperBarMCMode = ({
       rightPanelOpen={rightPanelOpen}
     >
       <Box className={classes["app-bar-container"]}>
-        <p className={classes["dropdown-label"]}>Categories: </p>
         <Stack direction="row" alignItems={"center"}>
-          {categories.map((c, i) => (
-            <Box sx={{ pr: 1 }} key={i}>
-              <CategoryBadge
-                categoryName={c.category_name}
-                color={getCategoryColorFromId(c.category_id, categories) || undefined}
-              />
-            </Box>
-          ))}
-          <Tooltip
-            title={
-              modelVersion !== null && modelVersion > 0
-                ? "Adding categories after a model is trained is not yet supported"
-                : "Add a category"
-            }
-          >
-            <span>
+          <Typography variant="subtitle1">{`${categories.length} categories`}</Typography>
+          <IconButton
+            size="small"
+            sx={(palette) => ({ color: palette.palette.primary.main, ml: 2 })}
+            onClick={handleAddCategory}
+            >
+            <ModeEditOutlineOutlinedIcon fontSize="inherit" />
+          </IconButton>
+          
+          <span>
               <IconButton
-                sx={{}}
                 aria-label="add category"
                 size="medium"
-                onClick={handleAddCategory}
+                onClick={handleAddCategory2}
                 //adding categories after a model is trained is not yet supported
                 disabled={modelVersion !== null && modelVersion > 0}
               >
                 <AddIcon fontSize="medium" />
               </IconButton>
             </span>
-          </Tooltip>
         </Stack>
-        <CreateCategoryModal
+        <CategoriesMenu
           open={createCategoryModalOpen}
           setOpen={setCreateCategoryModalOpen}
+        />
+        <CreateCategoryModal
+          open={createCategoryModalOpen2}
+          setOpen={setCreateCategoryModalOpen2}
         />
       </Box>
     </AppBarLS>

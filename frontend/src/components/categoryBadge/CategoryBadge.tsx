@@ -43,9 +43,8 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
   selected,
   isUserLabel,
   isModelPrediction,
-  onClick
+  onClick,
 }) => {
-
   const onClickAll = (e: React.UIEvent) => {
     if (selectable) {
       if (selected) {
@@ -63,11 +62,11 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
 
   const colorDesign: ILabelColor | null = useMemo(() => {
     // setting green as default but that should never happen
-    const palette = color?.palette || badgePalettes['green']; 
+    const palette = color?.palette || badgePalettes["green"];
     return {
       textColor: palette[700],
       iconColor: palette[600],
-      borderColor: palette[300],
+      borderColor: palette[100],
       backgroundColor: palette[100],
       lighterBackgroundColor: palette[50],
       hoverColor: palette[200],
@@ -83,22 +82,14 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
           alignItems: "center",
           color: colorDesign.textColor,
           borderColor: colorDesign.borderColor,
-          backgroundColor:
-            selectable && selected
-              ? colorDesign.backgroundColor
-              : selectable
-              ? "white"
-              : colorDesign.backgroundColor,
-            // eslint complaints about &:hover having no effect but it actually has
-            // eslint-disable-next-line
+          backgroundColor: colorDesign.backgroundColor,
+          // eslint complaints about &:hover having no effect but it actually has
+          // eslint-disable-next-line
           ["&:hover"]: {
-            backgroundColor:
-              selectable && selected
-                ? colorDesign.hoverColor
-                : colorDesign.lighterBackgroundColor,
+            backgroundColor: colorDesign.hoverColor,
           },
           cursor: "pointer",
-          borderRadius: "4px",
+          borderRadius: "14px",
           borderStyle: selectable ? "dashed" : "solid",
           borderWidth: "1px",
           px: 0.5,
@@ -106,6 +97,7 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
           maxHeight: APPBAR_HEIGHT - 20,
           maxWidth: "150px",
           fontSize: "0.75rem",
+          fontWeight: 425,
           ...sx,
         }}
         onClick={onClickAll}

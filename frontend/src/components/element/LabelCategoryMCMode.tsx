@@ -1,18 +1,16 @@
-import { useState } from "react";
 import {
   Menu,
-  MenuItem,
-  MenuList,
   Divider,
   Tooltip,
   Button,
+  Stack,
+  Box,
 } from "@mui/material";
 import { LabelTypesEnum, PanelIdsEnum } from "../../const";
 import { useAppSelector } from "../../customHooks/useRedux";
 import { Category, Element } from "../../global";
 import useLabelState from "../../customHooks/useLabelState";
 import { TooltipProps } from "../labelButtons/LabelButtons";
-import classes from "./Element.module.css";
 import React from "react";
 import AddIcon from "@mui/icons-material/Add";
 import labelButtonClasses from "../labelButtons/index.module.css";
@@ -35,7 +33,6 @@ const CategoryMenuItem = ({
   panelId,
   handleClose,
 }: CategoryMenuItemProps) => {
-  const [isHovered, setIsHovered] = useState(false);
   const evaluationIsInProgress = useAppSelector(
     (state) =>
       state.workspace.panels.panels[PanelIdsEnum.EVALUATION].isInProgress
@@ -46,18 +43,8 @@ const CategoryMenuItem = ({
   const categories = useAppSelector((state) => state.workspace.categories);
 
   return (
-    <MenuItem
-      onMouseEnter={(e) => {
-        setIsHovered(true);
-      }}
-      onMouseLeave={(e) => {
-        setIsHovered(false);
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-      }}
-      sx={{ height: ITEM_HEIGHT }}
-      disableRipple
+    <Box
+      sx={{ height: ITEM_HEIGHT, ml: 2 }}
     >
       <CategoryBadge
         categoryName={category.category_name}
@@ -76,7 +63,7 @@ const CategoryMenuItem = ({
           chageMultiClassLabel(element, panelId, null);
         }}
       />
-    </MenuItem>
+    </Box>
   );
 };
 
@@ -128,9 +115,7 @@ export const LabelCategoriesMenu = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <MenuList>
-        <p className={classes["menu-title"]}>Assign text to a category:</p>
-        <Divider sx={{ marginBottom: "10px" }} />
+      <Stack sx={{mt: 1}} >
         {categoriesSorted.map((category, i) => (
           <CategoryMenuItem
             key={i}
@@ -141,7 +126,11 @@ export const LabelCategoriesMenu = ({
             handleClose={handleClose}
           />
         ))}
-      </MenuList>
+        <Divider variant="middle" />
+        <Button variant="text" sx={{textTransform: "none", fontSize: "0.75rem"}} endIcon={<AddIcon fontSize="inherit" />}>
+          Create new category
+        </Button>
+      </Stack>
     </Menu>
   );
 };
@@ -177,11 +166,11 @@ export const LabelCategoriesMenuButton = ({
       onClick={handleClickHack}
     >
       <Button
-        aria-label="add"
+        aria-label="add category"
         onClick={handleClick}
-        sx={{ marginLeft: 1 }}
-        className={labelButtonClasses.label_button}
-        variant="outlined"
+        sx={{ textTransform: "none" }}
+        variant="text"
+        endIcon={<AddIcon />}
       >
         {"Label"}
       </Button>

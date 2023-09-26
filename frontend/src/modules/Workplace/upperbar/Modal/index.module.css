@@ -50,3 +50,7 @@
     margin-bottom: 0.5rem;
     color: #d32f2f;
 }
+
+.category-entry:not(:hover) .hide-on-hover {
+    display: none !important;
+  }
