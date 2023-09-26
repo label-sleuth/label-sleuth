@@ -4,11 +4,17 @@ interface TabPanelProps {
   children: React.ReactElement;
   value: number;
   index: number;
-  className: string;
+  className?: string;
   sx?: SxProps;
 }
 
-export const TabPanel = ({ children, value, index, sx, ...other }: TabPanelProps) => {
+export const TabPanel = ({
+  children,
+  value,
+  index,
+  sx,
+  ...other
+}: TabPanelProps) => {
   return (
     <Box
       role="tabpanel"
@@ -20,7 +26,7 @@ export const TabPanel = ({ children, value, index, sx, ...other }: TabPanelProps
       }}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box>{children}</Box>}
     </Box>
   );
 };

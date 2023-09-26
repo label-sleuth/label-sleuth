@@ -123,14 +123,14 @@ export const WorkspaceInfo = ({
             <Box sx={{ ml: 2, mr: 1.5, mt: 2 }}>
               <LabelCountPanel />
               <Divider
-                sx={{ borderTop: "1px solid rgb(57, 57, 57)", ml: -2, mr: -1.5 }}
+                sx={{ borderTop: "1px solid rgb(57, 57, 57)", ml: -2, mr: -1.5, mt: 3 }}
               />
               <Stack
                 direction="row"
                 alignItems="flex-end"
                 sx={{
                   paddingBottom: 1.5,
-                  paddingTop: 4,
+                  paddingTop: 3,
                 }}
               >
                 <ModelVersion />
