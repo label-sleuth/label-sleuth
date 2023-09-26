@@ -22,7 +22,7 @@ import {
   PanelIdsEnum,
 } from "../../const";
 import MainPanel from "./main/MainPanel";
-import { useAppSelector } from "../../customHooks/useRedux";
+import { useAppDispatch, useAppSelector } from "../../customHooks/useRedux";
 import { UserLabelsPanel } from "./sidebar/UserLabelsPanel";
 import SuspiciousLabelsPanel from "./sidebar/SuspiciousLabelsPanel";
 import ContradictingLabelsPanel from "./sidebar/ContradictingLabelsPanel";

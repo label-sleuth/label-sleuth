@@ -6,7 +6,6 @@ import { TabPanel } from "./TabPanel";
 import { StatsContainer } from "./StatsContainer";
 import { LabelCountTabs } from "./LabelCountTabs";
 import classes from "./WorkspaceInfo.module.css";
-import { LabelActionsEnum } from "../../../const";
 
 export const LabelCountPanelBMode = () => {
   const [tabValue, setTabValue] = React.useState(0);

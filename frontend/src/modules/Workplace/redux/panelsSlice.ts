@@ -445,7 +445,9 @@ export const reducers = {
     state: WorkspaceState,
     action: PayloadAction<{ panelId: PanelIdsEnum, filters: {[key: string]: string | null};}>
   ) {
+    // currently, filter has the form of {value: categoryId | (true | false)}
     const {panelId, filters} = action.payload;
+    
     // not possible to be true but typescript wants it
     if (panelId === PanelIdsEnum.NOT_SET) return;
     (state.panels.panels[panelId] as PanelState).filters = filters;

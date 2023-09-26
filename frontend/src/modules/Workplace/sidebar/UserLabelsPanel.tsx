@@ -67,14 +67,15 @@ export const UserLabelsPanel = () => {
   );
 
   useEffect(() => {
-    setFilteredValue(
-      mode === WorkspaceMode.BINARY
-        ? "true"
-        : mode === WorkspaceMode.MULTICLASS
-        ? categories[0].category_id.toString()
-        : null
-    );
-  }, [mode, categories, setFilteredValue]);
+    filteredValue === null &&
+      setFilteredValue(
+        mode === WorkspaceMode.BINARY
+          ? "true"
+          : mode === WorkspaceMode.MULTICLASS
+          ? categories[0].category_id.toString()
+          : null
+      );
+  }, [mode, categories, setFilteredValue, filteredValue]);
 
   const options: DropdownOption[] = useMemo(() => {
     if (mode === WorkspaceMode.BINARY) {
@@ -143,9 +144,7 @@ export const UserLabelsPanel = () => {
         elements={currentContentData as Element[]}
         loading={loading}
         nonEmptyResultsMessage={`These are all the examples labeled by you as '${filteredTitle}'.`}
-        emptyResultsMessage={
-          `You didn't label any elements as ${filteredTitle} so far.`
-        }
+        emptyResultsMessage={`You didn't label any elements as ${filteredTitle} so far.`}
         isPaginationRequired={isPaginationRequired}
         Filters={Filters}
       />

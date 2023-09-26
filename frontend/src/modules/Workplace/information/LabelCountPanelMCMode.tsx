@@ -1,18 +1,73 @@
-import React from "react";
-import { useAppSelector } from "../../../customHooks/useRedux";
-import { Box, Divider, Stack, Typography } from "@mui/material";
+import React, { useCallback, useMemo, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
+import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { TabPanel } from "./TabPanel";
 import { StatsContainer } from "./StatsContainer";
 import { LabelCountTabs } from "./LabelCountTabs";
-import classes from "./WorkspaceInfo.module.css";
+import { Category } from "../../../global";
+import { PanelIdsEnum } from "../../../const";
+import { setActivePanel, setPanelFilters } from "../redux";
 
 export const LabelCountPanelMCMode = () => {
   const [tabValue, setTabValue] = React.useState(0);
   const labelCount = useAppSelector((state) => state.workspace.labelCount);
+  const [sortingAscendingOrder, setSortingAscendingOrder] = useState(false);
   const categories = useAppSelector((state) => state.workspace.categories);
+  const activePanelId = useAppSelector(
+    (state) => state.workspace.panels.activePanelId
+  );
+
+  const categoriesSorted = useMemo(() => {
+    const sorted = [...categories];
+    sorted.sort((a, b) => {
+      const aLabelCount =
+        (labelCount as { [key: string]: number })[a.category_id.toString()] ||
+        0;
+      const bLabelCount =
+        (labelCount as { [key: string]: number })[b.category_id.toString()] ||
+        0;
+      return sortingAscendingOrder
+        ? aLabelCount === bLabelCount
+          ? 0
+          : aLabelCount > bLabelCount
+          ? 1
+          : -1
+        : aLabelCount === bLabelCount
+        ? 0
+        : aLabelCount > bLabelCount
+        ? -1
+        : 1;
+    });
+    return sorted;
+  }, [categories, sortingAscendingOrder, labelCount]);
+
+
+  const dispatch = useAppDispatch();
+
+  // sidebar user label panels link
+  const onCategoryClick = useCallback(
+    (category: Category) => {
+      if (activePanelId !== PanelIdsEnum.POSITIVE_LABELS) {
+        dispatch(setActivePanel(PanelIdsEnum.POSITIVE_LABELS));
+      }
+      dispatch(
+        setPanelFilters({
+          panelId: PanelIdsEnum.POSITIVE_LABELS,
+          filters: { value: category.category_id.toString() },
+        })
+      );
+    },
+    [activePanelId, dispatch]
+  );
+
   return (
     <Box>
-      <LabelCountTabs tabValue={tabValue} setTabValue={setTabValue} />
+      <LabelCountTabs
+        sortingAscendingOrder={sortingAscendingOrder}
+        setSortingAscendingOrder={setSortingAscendingOrder}
+        tabValue={tabValue}
+        setTabValue={setTabValue}
+      />
       <Box sx={{ width: "100%" }}>
         <TabPanel
           value={tabValue}
@@ -25,7 +80,7 @@ export const LabelCountPanelMCMode = () => {
                 pt: 1.5,
                 px: 2,
                 pb: 2,
-                maxHeight: "200px",
+                maxHeight: "150px",
                 overflowY: "scroll",
                 scrollbarWidth: "thin",
                 scrollbarColor: "#6b6b6b #2b2b2b",
@@ -55,9 +110,18 @@ export const LabelCountPanelMCMode = () => {
                 },
               }}
             >
-              {categories.map((c, i) => (
+              {categoriesSorted.map((c, i) => (
                 <StatsContainer key={i}>
-                  <Typography>{c.category_name}</Typography>
+                  <Typography
+                    onClick={() => onCategoryClick(c)}
+                    component={"div"}
+                    sx={{
+                      cursor: "pointer",
+                    }}
+                  >
+                    {c.category_name}
+                  </Typography>
+
                   <Typography
                     sx={{
                       color: "#fff",
@@ -72,7 +136,7 @@ export const LabelCountPanelMCMode = () => {
                 </StatsContainer>
               ))}
             </Stack>
-            <Divider sx={{ borderTop: "1px solid #5f5d5d"}} />
+            <Divider sx={{ borderTop: "1px solid #5f5d5d" }} />
             <StatsContainer sx={{ mr: 4, ml: 2, py: 1.5 }}>
               <Typography>
                 <strong>Total</strong>
