@@ -20,7 +20,7 @@ import Drawer from "@mui/material/Drawer";
 
 import { SystemVersion } from "../../../components/version/SystemVersion";
 import classes from "./WorkspaceInfo.module.css";
-import { LEFT_DRAWER_WIDTH } from "../../../const";
+import { LEFT_DRAWER_WIDTH, WorkspaceMode } from "../../../const";
 
 import {
   UploadLabelsDialog,
@@ -38,6 +38,13 @@ import { fetchVersion } from "../redux";
 import { useNotifyUploadedLabels } from "../../../customHooks/useNotifyUploadedLabels";
 import { Header } from "./Header";
 import { WorkspaceInfoAndActions } from "./WorkspaceInfoAndActions";
+import { LabelCountPanel } from "./LabelCountPanel";
+import { Button, Divider, Stack, Tooltip, Typography } from "@mui/material";
+import { LinearWithValueLabel } from "./ModelProgressBar";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import { LabeledDataActions } from "./LabeledDataActions";
+import { ModelVersion } from "./ModelVersion";
+import { ModelTrainingMessage } from "./ModelTrainingMessage";
 
 interface WorkspaceInfoProps {
   setTutorialOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -59,6 +66,7 @@ export const WorkspaceInfo = ({
 }: WorkspaceInfoProps) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+  const mode = useAppSelector((state) => state.workspace.mode);
 
   const dispatch = useAppDispatch();
   const { getInstance, fire } = useConfetti();
@@ -70,11 +78,12 @@ export const WorkspaceInfo = ({
     shouldFireConfetti,
     fire,
   });
-  
+
   useNotifyUploadedLabels();
 
   const [uploadLabelsDialogOpen, setUploadLabelsDialogOpen] = useState(false);
-  const [downloadLabelsDialogOpen, setDownloadLabelsDialogOpen] = useState(false);
+  const [downloadLabelsDialogOpen, setDownloadLabelsDialogOpen] =
+    useState(false);
   const [downloadModelDialogOpen, setDownloadModelDialogOpen] = useState(false);
 
   const modelVersionSuffix = useMemo(
@@ -88,22 +97,13 @@ export const WorkspaceInfo = ({
 
   return (
     <>
-      <UploadLabelsDialog open={uploadLabelsDialogOpen} setOpen={setUploadLabelsDialogOpen} />
-      <DownloadLabelsDialog open={downloadLabelsDialogOpen} setOpen={setDownloadLabelsDialogOpen} />
-      <DownloadModelDialog
-        open={downloadModelDialogOpen}
-        setOpen={setDownloadModelDialogOpen}
-        modelVersion={modelVersion}
-        modelVersionSuffix={modelVersionSuffix}
-      />
       <Box
-        style={{
+        sx={{
           backgroundColor: "#161616",
           width: LEFT_DRAWER_WIDTH,
           height: "100vh",
         }}
       >
-        <ReactCanvasConfetti refConfetti={getInstance} className={classes.confetti_canvas} />
         <Drawer
           sx={{
             width: LEFT_DRAWER_WIDTH,
@@ -119,9 +119,48 @@ export const WorkspaceInfo = ({
           anchor="left"
         >
           <Header setTutorialOpen={setTutorialOpen} />
-          <WorkspaceInfoAndActions
-            modelVersionSuffix={modelVersionSuffix}
-            setDownloadModelDialogOpen={setDownloadModelDialogOpen}
+          {curCategory !== null || mode === WorkspaceMode.MULTICLASS ? (
+            <Box sx={{ ml: 2, mr: 1.5, mt: 2 }}>
+              <LabelCountPanel />
+              <Divider
+                sx={{ borderTop: "1px solid rgb(57, 57, 57)", ml: -2, mr: -1.5 }}
+              />
+              <Stack
+                direction="row"
+                alignItems="flex-end"
+                sx={{
+                  paddingBottom: 1.5,
+                  paddingTop: 4,
+                }}
+              >
+                <ModelVersion />
+                {modelVersion && modelVersion > -1 ? (
+                  <Tooltip title={"Download model"} placement="top">
+                    <Button
+                      onClick={() => setDownloadModelDialogOpen(true)}
+                      startIcon={<FileDownloadOutlinedIcon />}
+                      sx={{
+                        textTransform: "none",
+                        padding: "0 0 0 20px",
+                      }}
+                    />
+                  </Tooltip>
+                ) : null}
+              </Stack>
+              <LinearWithValueLabel />
+              <ModelTrainingMessage />
+              <Divider
+                sx={{
+                  mt: 3,
+                  mb: 3,
+                  borderTop: "1px solid rgb(57, 57, 57)",
+                  ml: -2,
+                  mr: -1.5,
+                }}
+              />
+            </Box>
+          ) : null}
+          <LabeledDataActions
             setDownloadLabelsDialogOpen={setDownloadLabelsDialogOpen}
             setUploadLabelsDialogOpen={setUploadLabelsDialogOpen}
           />
@@ -129,7 +168,25 @@ export const WorkspaceInfo = ({
           <SupportIconsBar sx={{ marginBottom: 3 }} />
           <SystemVersion />
         </Drawer>
+        <ReactCanvasConfetti
+          refConfetti={getInstance}
+          className={classes.confetti_canvas}
+        />
       </Box>
+      <UploadLabelsDialog
+        open={uploadLabelsDialogOpen}
+        setOpen={setUploadLabelsDialogOpen}
+      />
+      <DownloadLabelsDialog
+        open={downloadLabelsDialogOpen}
+        setOpen={setDownloadLabelsDialogOpen}
+      />
+      <DownloadModelDialog
+        open={downloadModelDialogOpen}
+        setOpen={setDownloadModelDialogOpen}
+        modelVersion={modelVersion}
+        modelVersionSuffix={modelVersionSuffix}
+      />
     </>
   );
 };

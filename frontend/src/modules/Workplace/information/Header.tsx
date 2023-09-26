@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-import { Divider, Tooltip, Stack } from "@mui/material";
+import { Divider, Tooltip, Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAuthentication } from "../../../customHooks/useAuthentication";
 import { useLogOut } from "../../../customHooks/useLogOut";
@@ -54,7 +54,7 @@ export const Header = ({ setTutorialOpen }: HeaderProps) => {
   return (
     <>
       <DrawerHeader>
-        <h2 className={classes.sleuth_title}>
+        <Stack direction={"row"}>
           <img
             src={appLogoURL}
             className={classes.sleuthlogo}
@@ -67,7 +67,7 @@ export const Header = ({ setTutorialOpen }: HeaderProps) => {
             className={classes.moreinfo}
             alt="Open Tutorial"
           />
-        </h2>
+        </Stack>
         {/* <Switch value={mode} onChange={() => dispatch(switchMode()) }/> */}
         {authenticationEnabled ? (
           <Tooltip title={LOGOUT_TOOLTIP_MSG} placement="right">
@@ -80,12 +80,20 @@ export const Header = ({ setTutorialOpen }: HeaderProps) => {
           </Tooltip>
         ) : null}
       </DrawerHeader>
-
-      <p className={classes.sleuth_desc}>{lsBriefDescription}</p>
+      <Typography
+        sx={{
+          fontSize: "14px",
+          lineHeight: "18px",
+          pl: 3,
+          pb: 4,
+        }}
+      >
+        {lsBriefDescription}
+      </Typography>
 
       <Divider />
 
-      <DrawerHeader style={{ padding: "12px 16px" }}>
+      <DrawerHeader>
         <Stack direction="column" className={classes.account_info} flexGrow={1}>
           {authenticationEnabled ? (
             <div>

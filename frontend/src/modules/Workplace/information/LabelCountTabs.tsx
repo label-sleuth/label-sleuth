@@ -7,11 +7,17 @@ interface LabelCountTabsProps {
   setTabValue: (value: number) => void;
 }
 
-export const LabelCountTabs = ({ tabValue, setTabValue }: LabelCountTabsProps) => {
+export const LabelCountTabs = ({
+  tabValue,
+  setTabValue,
+}: LabelCountTabsProps) => {
   const labelCount = useAppSelector((state) => state.workspace.labelCount);
   const theme = useTheme();
 
-  const handleChange = (event: React.SyntheticEvent<Element, Event>, newValue: number) => {
+  const handleChange = (
+    event: React.SyntheticEvent<Element, Event>,
+    newValue: number
+  ) => {
     setTabValue(newValue);
   };
 
@@ -28,9 +34,13 @@ export const LabelCountTabs = ({ tabValue, setTabValue }: LabelCountTabsProps) =
         onChange={handleChange}
         aria-label="workspace toggle tab"
         variant="fullWidth"
-        sx={{ padding: theme.spacing(0, 2) }}
       >
-        <Tab label="User labels" {...a11yProps(0)} className={classes.tabs} sx={{ textTransform: "none" }} />
+        <Tab
+          label="User labels"
+          {...a11yProps(0)}
+          className={classes.tabs}
+          sx={{ textTransform: "none", pl: 0, alignItems: "flex-start" }}
+        />
         {labelCount.weakPos > 0 || labelCount.weakNeg > 0 ? (
           <Tab
             label="System-generated labels"

@@ -46,6 +46,7 @@
 .sleuth_desc {
   margin-top: -10px;
   margin-bottom: 20px;
+  padding-left: 0px !important;
   padding: 0 16px;
   font-size: 14px;
   line-height: 18px;

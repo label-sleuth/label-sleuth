@@ -11,11 +11,10 @@ export const LabelCountPanelMCMode = () => {
   const [tabValue, setTabValue] = React.useState(0);
   const labelCount = useAppSelector((state) => state.workspace.labelCount);
   const categories = useAppSelector((state) => state.workspace.categories);
-  const theme = useTheme();
   return (
     <Box>
       <LabelCountTabs tabValue={tabValue} setTabValue={setTabValue} />
-      <Box sx={{ width: "100%", padding: theme.spacing(0, 2) }}>
+      <Box sx={{ width: "100%" }}>
         <TabPanel
           className={classes.entries_tab}
           value={tabValue}
