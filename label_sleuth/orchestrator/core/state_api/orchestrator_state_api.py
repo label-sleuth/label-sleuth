@@ -85,6 +85,7 @@ class MulticlassCategory:
     name: str
     id: int
     description: str
+    color_code: str
 
     def __copy__(self):
         return dataclasses.replace(self)
@@ -304,14 +305,15 @@ class OrchestratorStateApi:
             self._save_workspace(workspace)
 
     # multiclass-related category methods
-    def set_category_list(self, workspace_id: str, category_to_description: Mapping):
+    def set_category_list(self, workspace_id: str, category_to_description_and_color: Mapping):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
             if len(workspace.categories) > 0:
                 raise Exception(f"workspace {workspace} already has a category list")
             workspace.categories = \
-                {cat_id: MulticlassCategory(category_name, cat_id, category_desc)
-                 for cat_id, (category_name, category_desc) in enumerate(category_to_description.items())}
+                {cat_id: MulticlassCategory(category_name, cat_id, category_desc, category_color)
+                 for cat_id, (category_name, (category_desc, category_color))
+                              in enumerate(category_to_description_and_color.items())}
 
             self._save_workspace(workspace)
             return workspace.categories
@@ -321,8 +323,10 @@ class OrchestratorStateApi:
             workspace = self._load_workspace(workspace_id)
             max_category_id = max(workspace.categories.keys())
             workspace.categories.update({
-                max_category_id+index+1: MulticlassCategory(category_name, max_category_id+index+1, category_desc)
-                for index, (category_name, category_desc) in enumerate(category_to_description.items())})
+                max_category_id+index+1: MulticlassCategory(category_name, max_category_id+index+1, category_desc,
+                                                            category_color)
+                for index, (category_name, (category_desc, category_color))
+                in enumerate(category_to_description.items())})
 
             self._save_workspace(workspace)
             return workspace.categories

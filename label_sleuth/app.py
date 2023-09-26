@@ -436,8 +436,8 @@ def create_category(workspace_id):
 @validate_workspace_id
 def set_category_list(workspace_id):
     post_data = request.get_json(force=True)
-    category_to_description = post_data["category_to_description"]
-    categories = curr_app.orchestrator_api.set_category_list(workspace_id, category_to_description)
+    category_to_description_and_color = post_data["category_to_description_and_color"]
+    categories = curr_app.orchestrator_api.set_category_list(workspace_id, category_to_description_and_color)
     return jsonify(categories)
 
 
@@ -446,10 +446,11 @@ def set_category_list(workspace_id):
 @validate_workspace_id
 def add_categories_to_category_list(workspace_id: str):
     post_data = request.get_json(force=True)
-    category_to_description = post_data["category_to_description"]
+    category_to_description_and_color = post_data["category_to_description_and_color"]
 
     try:
-        categories = curr_app.orchestrator_api.add_categories_to_category_list(workspace_id, category_to_description)
+        categories = curr_app.orchestrator_api.add_categories_to_category_list(workspace_id,
+                                                                               category_to_description_and_color)
         return jsonify(categories)
     except CategoryNameAlreadyExistsException as e:
         return make_error({

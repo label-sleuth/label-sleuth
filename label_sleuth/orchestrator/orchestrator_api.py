@@ -19,6 +19,8 @@ import logging
 import os
 import sys
 import time
+import numpy as np
+import colorsys
 
 from collections import Counter, defaultdict
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -184,23 +186,23 @@ class OrchestratorApi:
         logging.info(f"Creating a new category '{category_name}' in workspace '{workspace_id}'")
         return self.orchestrator_state.add_category_to_workspace(workspace_id, category_name, category_description)
 
-    def set_category_list(self, workspace_id: str, category_to_description: Mapping):
+    def set_category_list(self, workspace_id: str, category_to_description_and_color: Mapping):
         """
         TBD
         """
         logging.info(f"setting the category list of workspace {workspace_id}")
-        return self.orchestrator_state.set_category_list(workspace_id, category_to_description)
+        return self.orchestrator_state.set_category_list(workspace_id, category_to_description_and_color)
 
-    def add_categories_to_category_list(self, workspace_id: str, new_category_to_description: Mapping):
+    def add_categories_to_category_list(self, workspace_id: str, category_to_description_and_color: Mapping):
         """
         TBD
         """
-        logging.info(f"adding new {len(new_category_to_description)} the category list of workspace {workspace_id}")
-        intersection_with_existing = set(new_category_to_description.keys()).intersection(set(self.orchestrator_state.get_all_categories(workspace_id).keys()))
+        logging.info(f"adding new {len(category_to_description_and_color)} the category list of workspace {workspace_id}")
+        intersection_with_existing = set(category_to_description_and_color.keys()).intersection(set(self.orchestrator_state.get_all_categories(workspace_id).keys()))
         if len(intersection_with_existing) > 0:
             raise CategoryNameAlreadyExistsException(f"Some category names are already exist in "
                                                      f"workspace {workspace_id}", intersection_with_existing)
-        return self.orchestrator_state.add_categories_to_category_list(workspace_id, new_category_to_description)
+        return self.orchestrator_state.add_categories_to_category_list(workspace_id, category_to_description_and_color)
 
     def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str):
         old_category_name = self.orchestrator_state.get_workspace(workspace_id).categories[category_id].name
@@ -1123,8 +1125,16 @@ class OrchestratorApi:
             )}
 
     # Import/Export
-    
+
     def import_category_labels(self, workspace_id, labels_df_to_import: pd.DataFrame):
+        def _get_colors(num_colors):
+            colors = []
+            for i in np.arange(0., 360., 360. / num_colors):
+                hue = i / 360.
+                lightness = (50 + np.random.rand() * 10) / 100.
+                saturation = (90 + np.random.rand() * 10) / 100.
+                colors.append(colorsys.hls_to_rgb(hue, lightness, saturation))
+            return colors
         dataset_name = self.get_dataset_name(workspace_id)
         # Only if doc_id are provided or apply_labels_to_duplicate_texts is false the doc_id is
         # taken into account when applying labels
@@ -1192,9 +1202,11 @@ class OrchestratorApi:
             existing_category_names = {category.name for category in self.get_all_categories(workspace_id).values()}
 
             if len(existing_category_names) == 0:
-                self.set_category_list(workspace_id,{name: "" for name in imported_category_names})
+                colors = _get_colors(len(imported_category_names))
+                self.set_category_list(workspace_id,{name: ["", color_code]
+                                                     for name, color_code in zip(imported_category_names, colors)})
             else:
-                self.add_categories_to_category_list(workspace_id,{name: "" for name in
+                self.add_categories_to_category_list(workspace_id,{name: ["", "#000000"] for name in
                                                                    imported_category_names if name not in
                                                                    existing_category_names})
             # replace category name with generated category ids

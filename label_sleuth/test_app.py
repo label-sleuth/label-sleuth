@@ -527,21 +527,21 @@ class TestAppIntegration(unittest.TestCase):
 
         # add initial category list
         res = self.client.post(f"/workspace/{workspace_name}/category_list",
-                               data=f'{{"category_to_description":{{"{category_name1}":"{category_desc1}","{category_name2}":"{category_desc2}"}}}}',
+                               data=f'{{"category_to_description_and_color":{{"{category_name1}":["{category_desc1}", "#000000"],"{category_name2}":["{category_desc2}", "#000000"]}}}}',
                                headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to set category list")
-        self.assertEqual(res.get_json(), {'0': {'description': 'desc1', 'id': 0, 'name': 'cat1'},
-                                          '1': {'description': 'desc2', 'id': 1, 'name': 'cat2'}},
+        self.assertEqual(res.get_json(), {'0': {'description': 'desc1', 'id': 0, 'name': 'cat1', 'color_code': '#000000'},
+                                          '1': {'description': 'desc2', 'id': 1, 'name': 'cat2', 'color_code': '#000000'}},
                          msg="diff in set category list response")
 
         # add more category name to an existing category list
         res = self.client.put(f"/workspace/{workspace_name}/category_list",
-                               data=f'{{"category_to_description":{{"{category_name3}":"{category_desc3}"}}}}',
+                               data=f'{{"category_to_description_and_color":{{"{category_name3}":["{category_desc3}", "#000000"]}}}}',
                                headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to add categories to  category list")
-        self.assertEqual(res.get_json(), {'0': {'description': 'desc1', 'id': 0, 'name': 'cat1'},
-                                          '1': {'description': 'desc2', 'id': 1, 'name': 'cat2'},
-                                          '2': {'description': 'desc3', 'id': 2, 'name': 'cat3'}},
+        self.assertEqual(res.get_json(), {'0': {'description': 'desc1', 'id': 0, 'name': 'cat1', 'color_code': '#000000'},
+                                          '1': {'description': 'desc2', 'id': 1, 'name': 'cat2', 'color_code': '#000000'},
+                                          '2': {'description': 'desc3', 'id': 2, 'name': 'cat3', 'color_code': '#000000'}},
                          msg="diff in add new category names to existing category list response")
 
 
