@@ -29,85 +29,11 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  Grid,
-  InputAdornment,
-  Menu,
 } from "@mui/material";
 import { ChangeEvent } from "react";
 import { useAppSelector } from "../../../../customHooks/useRedux";
-import { badgePalettes, onEnter, returnByMode } from "../../../../utils/utils";
-import { CategoryBadge } from "../../../../components/categoryBadge/CategoryBadge";
+import { onEnter } from "../../../../utils/utils";
 import { BadgeColor } from "../../../../global";
-
-interface ColorPickerMenuProps {
-  anchorEl: (EventTarget & globalThis.Element) | null;
-  open: boolean;
-  setColorPickerMenuOpenAnchorEl: any;
-  categoryColor?: BadgeColor;
-  setCategoryColor: React.Dispatch<
-    React.SetStateAction<BadgeColor | undefined>
-  >;
-}
-
-const ColorPickerMenu = ({
-  anchorEl,
-  open,
-  setColorPickerMenuOpenAnchorEl,
-  categoryColor,
-  setCategoryColor,
-}: ColorPickerMenuProps) => {
-  const handleClose = (e: any) => {
-    e.stopPropagation();
-    setColorPickerMenuOpenAnchorEl(null);
-  };
-
-  return (
-    <Menu
-      anchorEl={anchorEl}
-      open={open}
-      onClose={handleClose}
-      anchorOrigin={{
-        vertical: "bottom",
-        horizontal: "right",
-      }}
-      transformOrigin={{
-        vertical: "top",
-        horizontal: "left",
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <DialogContentText sx={{ fontSize: "0.9rem", pl: 2 }}>
-        {"Select the category color: "}
-      </DialogContentText>
-      <Box sx={{ width: "250px", p: 2 }}>
-        {/* <TwitterPicker
-              colors={Object.values(badgePalettes).map((bp) => bp[500])}
-            /> */}
-        <Grid container spacing={1}>
-          {Object.entries(badgePalettes).map(([k, v], i) => (
-            <Grid item xs={2} key={i}>
-              <Box
-                onClick={() => {
-                  setCategoryColor({ name: k, palette: v });
-                }}
-                sx={{
-                  width: "30px",
-                  height: "30px",
-                  float: "left",
-                  borderRadius: "4px",
-                  backgroundColor: categoryColor?.name === k ? v[500] : v[200],
-                  boxShadow:
-                    categoryColor?.name === k ? `0 0 4px ${v[500]}` : "none",
-                  cursor: "pointer",
-                }}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-    </Menu>
-  );
-};
 
 interface EditOrCreateCategoryModalProps {
   categoryName: string;
@@ -142,14 +68,6 @@ export const EditOrCreateCategoryModal = ({
   onSubmit,
   submitButtonLabel,
 }: EditOrCreateCategoryModalProps) => {
-  const [colorPickerMenuOpenAnchorEl, setColorPickerMenuOpenAnchorEl] =
-    React.useState<(EventTarget & globalThis.Element) | null>(null);
-
-  const colorPickerMenuOpen = React.useMemo(
-    () => Boolean(colorPickerMenuOpenAnchorEl),
-    [colorPickerMenuOpenAnchorEl]
-  );
-
   const categoryDescriptionPlaceholder = useAppSelector(
     (state) =>
       state.customizableUIText.texts[
@@ -227,50 +145,8 @@ export const EditOrCreateCategoryModal = ({
             onKeyDown={(e) => {
               onEnter(e, onSubmit);
             }}
-            InputProps={{
-              endAdornment: returnByMode(
-                null,
-                <InputAdornment position="end">
-                  <Box
-                    sx={{
-                      width: "25px",
-                      height: "25px",
-                      float: "left",
-                      borderRadius: "4px",
-                      backgroundColor: categoryColor?.palette[500],
-                      cursor: "pointer",
-                    }}
-                    onClick={(event: React.UIEvent) => {
-                      event.stopPropagation();
-                      setColorPickerMenuOpenAnchorEl(event.currentTarget);
-                    }}
-                  />
-                </InputAdornment>,
-                mode
-              ),
-            }}
           />
-
           <p className={classes["error"]}>{categoryNameError}</p>
-          {returnByMode(
-            null,
-            categoryName && categoryColor && (
-              <CategoryBadge
-                sx={{ mb: 2 }}
-                categoryName={categoryName}
-                color={{
-                  name: Object.keys(badgePalettes).find(
-                    (k) => categoryColor.name === k
-                  ) as string,
-                  palette: Object.values(badgePalettes).find(
-                    (bp) => bp === categoryColor.palette
-                  ) as BadgeColor["palette"],
-                }}
-              />
-            ),
-            mode
-          )}
-
           <TextField
             label="Category description"
             placeholder={categoryDescriptionPlaceholder}
@@ -302,13 +178,6 @@ export const EditOrCreateCategoryModal = ({
           </Button>
         </Box>
       </DialogContent>
-      <ColorPickerMenu
-        open={colorPickerMenuOpen}
-        anchorEl={colorPickerMenuOpenAnchorEl}
-        setColorPickerMenuOpenAnchorEl={setColorPickerMenuOpenAnchorEl}
-        setCategoryColor={setCategoryColor}
-        categoryColor={categoryColor}
-      />
     </Dialog>
   );
 };

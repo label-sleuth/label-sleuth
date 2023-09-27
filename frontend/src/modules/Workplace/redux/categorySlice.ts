@@ -74,15 +74,20 @@ interface DeleteCategoryResponse {
 
 export const deleteCategory = createAsyncThunk<
   DeleteCategoryResponse,
-  void,
+  { categoryId: number } | undefined,
   { state: RootState }
->("workspace/deleteCategory", async (_, { getState }) => {
+>("workspace/deleteCategory", async (param, { getState }) => {
   const state = getState();
-
-  var url = `${getWorkspace_url}/${encodeURIComponent(
+  const mode = state.workspace.mode;
+  const toDeleteCategoryId =
+    mode === WorkspaceMode.BINARY
+      ? state.workspace.curCategory
+      : param !== undefined && mode === WorkspaceMode.MULTICLASS
+      ? param.categoryId
+      : null;
+  const url = `${getWorkspace_url}/${encodeURIComponent(
     getWorkspaceId()
-  )}/category/${state.workspace.curCategory}`;
-
+  )}/category/${toDeleteCategoryId}`;
   const response = await client.delete(url);
   return response.data;
 });

@@ -35,12 +35,12 @@ import {
   blue,
   blueGrey,
   brown,
-  // common,
+  //common,
   cyan,
   deepOrange,
   deepPurple,
   green,
-  // grey,
+  grey,
   indigo,
   lightBlue,
   lightGreen,
@@ -430,7 +430,7 @@ export const badgePalettes: { [key: string]: { [key: string]: string } } = {
   deepOrange,
   deepPurple,
   green,
-  //grey,
+  grey,
   indigo,
   lightBlue,
   lightGreen,
@@ -441,6 +441,7 @@ export const badgePalettes: { [key: string]: { [key: string]: string } } = {
   red,
   teal,
   //yellow,
+  white: { 500: "#ffffff" },
 };
 
 export const getRandomColor = (): string => {

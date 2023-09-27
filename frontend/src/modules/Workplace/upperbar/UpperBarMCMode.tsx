@@ -65,26 +65,10 @@ export const UpperBarMCMode = ({
             >
             <ModeEditOutlineOutlinedIcon fontSize="inherit" />
           </IconButton>
-          
-          <span>
-              <IconButton
-                aria-label="add category"
-                size="medium"
-                onClick={handleAddCategory2}
-                //adding categories after a model is trained is not yet supported
-                disabled={modelVersion !== null && modelVersion > 0}
-              >
-                <AddIcon fontSize="medium" />
-              </IconButton>
-            </span>
         </Stack>
         <CategoriesMenu
           open={createCategoryModalOpen}
           setOpen={setCreateCategoryModalOpen}
-        />
-        <CreateCategoryModal
-          open={createCategoryModalOpen2}
-          setOpen={setCreateCategoryModalOpen2}
         />
       </Box>
     </AppBarLS>
