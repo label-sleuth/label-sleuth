@@ -47,7 +47,7 @@ from label_sleuth.data_access.file_based.file_based_data_access import FileBased
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import IterationStatus, OrchestratorStateApi
-from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi, CategoryNameAlreadyExistsException
+from label_sleuth.orchestrator.orchestrator_api import OrchestratorApi
 from label_sleuth.utils import make_error
 
 print("user:")
@@ -418,45 +418,19 @@ def create_category(workspace_id):
     post_data = request.get_json(force=True)
     category_name = post_data["category_name"]
     category_description = post_data["category_description"]
+    category_color = post_data.get("category_color")
     existing_category_names = [category.name for category
                                in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
     if category_name in existing_category_names:
         return jsonify({"type": "category_name_conflict", 
                         "title": f"A category with this name already exists: {category_name}"}), 409
 
-    category_id = curr_app.orchestrator_api.create_new_category(workspace_id, category_name, category_description)
+    category_id = curr_app.orchestrator_api.create_new_category(workspace_id, category_name, category_description,
+                                                                category_color)
 
     post_data['category_id'] = str(category_id)
 
     return jsonify(post_data)
-
-
-@main_blueprint.route("/workspace/<workspace_id>/category_list", methods=['POST'])
-@login_if_required
-@validate_workspace_id
-def set_category_list(workspace_id):
-    post_data = request.get_json(force=True)
-    category_to_description_and_color = post_data["category_to_description_and_color"]
-    categories = curr_app.orchestrator_api.set_category_list(workspace_id, category_to_description_and_color)
-    return jsonify(categories)
-
-
-@main_blueprint.route("/workspace/<workspace_id>/category_list", methods=['PUT'])
-@login_if_required
-@validate_workspace_id
-def add_categories_to_category_list(workspace_id: str):
-    post_data = request.get_json(force=True)
-    category_to_description_and_color = post_data["category_to_description_and_color"]
-
-    try:
-        categories = curr_app.orchestrator_api.add_categories_to_category_list(workspace_id,
-                                                                               category_to_description_and_color)
-        return jsonify(categories)
-    except CategoryNameAlreadyExistsException as e:
-        return make_error({
-            "type": "category_name_already_exists",
-            "title": f"The following categories: {e.existing_category_names} already exists in workspace"
-        }, 409)
 
 
 @main_blueprint.route("/workspace/<workspace_id>/categories", methods=['GET'])
@@ -507,7 +481,9 @@ def update_category(workspace_id, category_id):
     post_data = request.get_json(force=True)
     new_category_name = post_data["category_name"]
     new_category_description = post_data["category_description"]
-    curr_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description)
+    new_category_color = post_data.get("category_color")
+    curr_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description,
+                                            new_category_color)
 
     return jsonify({
         "workspace_id": workspace_id, 

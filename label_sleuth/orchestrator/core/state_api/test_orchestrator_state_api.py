@@ -185,7 +185,9 @@ class TestOrchestratorStateAPI(unittest.TestCase):
 
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name,
                                                      workspace_type=WorkspaceModelType.MultiClass)
-        categories = self.orchestrator_state_api.set_category_list(workspace_id, {"cat1": "desc1", "cat2": "desc2"})
+
+        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "cat1", "desc1", None)
+        self.orchestrator_state_api.add_category_to_workspace(workspace_id, "cat2", "desc2", None)
 
         loaded = self.orchestrator_state_api.get_workspace(workspace_id)
         self.assertEqual(workspace_id, loaded.workspace_id)

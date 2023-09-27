@@ -21,7 +21,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Sequence, Tuple, Mapping, Union
+from typing import Dict, List, Sequence, Tuple, Mapping, Union, Optional
 
 import jsonpickle
 
@@ -85,7 +85,7 @@ class MulticlassCategory:
     name: str
     id: int
     description: str
-    color_code: str
+    color: Optional[str]
 
     def __copy__(self):
         return dataclasses.replace(self)
@@ -103,6 +103,12 @@ class MulticlassWorkspace:
 class WorkspaceSchemeChangedException(Exception):
     def __init__(self, message):
         self.message = message
+
+
+class CategoryNameAlreadyExistsException(Exception):
+    def __init__(self, message, existing_category_name):
+        self.message = message
+        self.existing_category_name = existing_category_name
 
 
 class OrchestratorStateApi:
@@ -209,24 +215,41 @@ class OrchestratorStateApi:
 
     # Category-related methods
 
-    def add_category_to_workspace(self, workspace_id: str, category_name: str, category_description: str):
+    def add_category_to_workspace(self, workspace_id: str, category_name: str, category_description: str, 
+                                  category_color:str = None):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
             existing_category_names = [category.name for category in workspace.categories.values()
                                        if category is not None]
             if category_name in existing_category_names:
-                raise Exception(f"Category '{category_name}' already exists in workspace '{workspace_id}'")
-            category_id = len(workspace.categories)
-            workspace.categories[category_id] = Category(name=category_name, description=category_description,
-                                                         id=category_id)
+                raise CategoryNameAlreadyExistsException(f"Category name {category_name} already exist in "
+                                                         f"workspace {workspace_id}", category_name)
+            if type(workspace) == Workspace:   
+                category_id = len(workspace.categories)
+                workspace.categories[category_id] = Category(name=category_name, description=category_description,
+                                                             id=category_id)
+            elif type(workspace) == MulticlassWorkspace:
+                if len(workspace.categories) == 0:
+                    category_id = 0
+                else:
+                    category_id = max(workspace.categories.keys()) + 1
+                workspace.categories[category_id] = MulticlassCategory(name=category_name,
+                                                                       description=category_description,
+                                                                       id=category_id, color=category_color)
+            else:
+                raise Exception(f"workspace type {type(workspace)} is not supported yet")
+            
             self._save_workspace(workspace)
             return category_id
 
-    def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str):
+    def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str,
+                      category_color:str = None):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
             workspace.categories[category_id].name = new_category_name
             workspace.categories[category_id].description = new_category_description
+            if type(workspace) == MulticlassWorkspace:
+                workspace.categories[category_id].color = category_color
 
             self._save_workspace(workspace)
         return category_id
@@ -304,32 +327,6 @@ class OrchestratorStateApi:
                 raise Exception(f"Workspace type {type} is not supported")
             self._save_workspace(workspace)
 
-    # multiclass-related category methods
-    def set_category_list(self, workspace_id: str, category_to_description_and_color: Mapping):
-        with self.workspaces_lock[workspace_id]:
-            workspace = self._load_workspace(workspace_id)
-            if len(workspace.categories) > 0:
-                raise Exception(f"workspace {workspace} already has a category list")
-            workspace.categories = \
-                {cat_id: MulticlassCategory(category_name, cat_id, category_desc, category_color)
-                 for cat_id, (category_name, (category_desc, category_color))
-                              in enumerate(category_to_description_and_color.items())}
-
-            self._save_workspace(workspace)
-            return workspace.categories
-
-    def add_categories_to_category_list(self, workspace_id: str, category_to_description: Mapping):
-        with self.workspaces_lock[workspace_id]:
-            workspace = self._load_workspace(workspace_id)
-            max_category_id = max(workspace.categories.keys())
-            workspace.categories.update({
-                max_category_id+index+1: MulticlassCategory(category_name, max_category_id+index+1, category_desc,
-                                                            category_color)
-                for index, (category_name, (category_desc, category_color))
-                in enumerate(category_to_description.items())})
-
-            self._save_workspace(workspace)
-            return workspace.categories
 
     # Iteration-related methods
 

@@ -19,8 +19,6 @@ import logging
 import os
 import sys
 import time
-import numpy as np
-import colorsys
 
 from collections import Counter, defaultdict
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -60,11 +58,6 @@ TRAIN_COUNTS_STR_KEY = "train_counts"
 
 # members
 new_data_infer_thread_pool = ThreadPoolExecutor(1)
-
-class CategoryNameAlreadyExistsException(Exception):
-    def __init__(self, message, existing_category_names):
-        self.message = message
-        self.existing_category_names = existing_category_names
 
 class OrchestratorApi:
     def __init__(self, orchestrator_state: OrchestratorStateApi, data_access: DataAccessApi,
@@ -174,7 +167,8 @@ class OrchestratorApi:
 
     # Category-related methods
 
-    def create_new_category(self, workspace_id: str, category_name: str, category_description: str):
+    def create_new_category(self, workspace_id: str, category_name: str, category_description: str,
+                            category_color:str = None):
         """
         Declare a new category in the given workspace
         :param workspace_id:
@@ -184,27 +178,11 @@ class OrchestratorApi:
         :return: The new category's id
         """
         logging.info(f"Creating a new category '{category_name}' in workspace '{workspace_id}'")
-        return self.orchestrator_state.add_category_to_workspace(workspace_id, category_name, category_description)
+        return self.orchestrator_state.add_category_to_workspace(workspace_id, category_name, category_description,
+                                                                 category_color)
 
-    def set_category_list(self, workspace_id: str, category_to_description_and_color: Mapping):
-        """
-        TBD
-        """
-        logging.info(f"setting the category list of workspace {workspace_id}")
-        return self.orchestrator_state.set_category_list(workspace_id, category_to_description_and_color)
-
-    def add_categories_to_category_list(self, workspace_id: str, category_to_description_and_color: Mapping):
-        """
-        TBD
-        """
-        logging.info(f"adding new {len(category_to_description_and_color)} the category list of workspace {workspace_id}")
-        intersection_with_existing = set(category_to_description_and_color.keys()).intersection(set(self.orchestrator_state.get_all_categories(workspace_id).keys()))
-        if len(intersection_with_existing) > 0:
-            raise CategoryNameAlreadyExistsException(f"Some category names are already exist in "
-                                                     f"workspace {workspace_id}", intersection_with_existing)
-        return self.orchestrator_state.add_categories_to_category_list(workspace_id, category_to_description_and_color)
-
-    def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str):
+    def edit_category(self, workspace_id: str, category_id: int, new_category_name: str, new_category_description: str,
+                      new_category_color: str = None):
         old_category_name = self.orchestrator_state.get_workspace(workspace_id).categories[category_id].name
         old_category_description = \
             self.orchestrator_state.get_workspace(workspace_id).categories[category_id].description
@@ -213,8 +191,9 @@ class OrchestratorApi:
             logging.info(
                 f"Updating category id {category_id} description from '{old_category_description}' to "
                 f"'{new_category_description}'")
+
         return self.orchestrator_state.edit_category(workspace_id, category_id, new_category_name,
-                                                     new_category_description)
+                                                     new_category_description, new_category_color)
 
     def delete_category(self, workspace_id: str, category_id: int):
         """
@@ -1127,14 +1106,6 @@ class OrchestratorApi:
     # Import/Export
 
     def import_category_labels(self, workspace_id, labels_df_to_import: pd.DataFrame):
-        def _get_colors(num_colors):
-            colors = []
-            for i in np.arange(0., 360., 360. / num_colors):
-                hue = i / 360.
-                lightness = (50 + np.random.rand() * 10) / 100.
-                saturation = (90 + np.random.rand() * 10) / 100.
-                colors.append(colorsys.hls_to_rgb(hue, lightness, saturation))
-            return colors
         dataset_name = self.get_dataset_name(workspace_id)
         # Only if doc_id are provided or apply_labels_to_duplicate_texts is false the doc_id is
         # taken into account when applying labels
@@ -1200,15 +1171,10 @@ class OrchestratorApi:
 
             imported_category_names = set([x.label for x in imported_categories_to_labels.values()])
             existing_category_names = {category.name for category in self.get_all_categories(workspace_id).values()}
+            new_category_names = imported_category_names.difference(existing_category_names)
+            for new_cat_name in new_category_names:
+                self.create_new_category(workspace_id, new_cat_name, "", None)
 
-            if len(existing_category_names) == 0:
-                colors = _get_colors(len(imported_category_names))
-                self.set_category_list(workspace_id,{name: ["", color_code]
-                                                     for name, color_code in zip(imported_category_names, colors)})
-            else:
-                self.add_categories_to_category_list(workspace_id,{name: ["", "#000000"] for name in
-                                                                   imported_category_names if name not in
-                                                                   existing_category_names})
             # replace category name with generated category ids
             name_to_id = {category.name: id for id, category in self.get_all_categories(workspace_id).items()}
             for uri, label_info in imported_categories_to_labels.items():

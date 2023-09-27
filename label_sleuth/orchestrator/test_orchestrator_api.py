@@ -191,9 +191,12 @@ class TestOrchestratorAPI(unittest.TestCase):
         self.orchestrator_api.create_workspace(workspace_id=mock_workspace, dataset_name=dataset_name,
                                                workspace_type=WorkspaceModelType.MultiClass)
 
-        self.orchestrator_api.set_category_list(mock_workspace,categories)
+        for cat_name, cat_info in categories.items():
+            self.orchestrator_api.create_new_category(mock_workspace, cat_name, cat_info[0], cat_info[1])
         labeled_elements_for_export = add_random_multiclass_labels_to_document(doc, 30, categories.keys())
         labeled_elements_for_export = [e for e in labeled_elements_for_export if e.label is not None]
+
+
 
         def mock_get_labeled_text_elements(wid, ds, category_id, *args, **kwargs):
             return {'results': labeled_elements_for_export}
@@ -235,29 +238,30 @@ class TestOrchestratorAPI(unittest.TestCase):
         self.orchestrator_api.create_workspace(workspace_id=mock_workspace, dataset_name=dataset_name,
                                                workspace_type=WorkspaceModelType.MultiClass)
 
-        self.orchestrator_api.set_category_list(mock_workspace,categories)
+        for cat_name, cat_info in categories.items():
+            self.orchestrator_api.create_new_category(mock_workspace, cat_name, cat_info[0], cat_info[1])
         self.orchestrator_api.set_labels(mock_workspace,{doc.text_elements[0].uri:MulticlassLabel(0)})
         self.orchestrator_api.set_labels(mock_workspace, {doc.text_elements[1].uri: MulticlassLabel(1)})
 
         self.assertEqual({0: MulticlassCategory(name='cat_0', id=0, description='description of category 0',
-                                                color_code="#000000"),
+                                                color="#000000"),
                           1: MulticlassCategory(name='cat_1', id=1, description='description of category 1'
-                                                ,color_code="#000000"),
+                                                ,color="#000000"),
                           2: MulticlassCategory(name='cat_2', id=2, description='description of category 2'
-                                                ,color_code="#000000")},
+                                                ,color="#000000")},
                          self.orchestrator_api.get_all_categories(mock_workspace))
         additional_labels_df = pd.DataFrame([{"text":doc.text_elements[2].text,"label":"cat_1"},
                                              {"text":doc.text_elements[3].text,"label":"new category created by import"}])
         self.orchestrator_api.import_category_labels(mock_workspace, additional_labels_df)
 
         self.assertEqual({0: MulticlassCategory(name='cat_0', id=0, description='description of category 0',
-                                                color_code="#000000"),
+                                                color="#000000"),
                           1: MulticlassCategory(name='cat_1', id=1, description='description of category 1',
-                                                color_code="#000000"),
+                                                color="#000000"),
                           2: MulticlassCategory(name='cat_2', id=2, description='description of category 2',
-                                                color_code="#000000"),
+                                                color="#000000"),
                           3: MulticlassCategory(name='new category created by import', id=3, description='',
-                                                color_code="#000000")},
+                                                color=None)},
                          self.orchestrator_api.get_all_categories(mock_workspace))
 
         labeled_text_elements =  self.orchestrator_api.get_all_labeled_text_elements(mock_workspace, dataset_name,
@@ -322,11 +326,12 @@ class TestOrchestratorAPI(unittest.TestCase):
                                                  mock_run_iteration):
         workspace_id = self.test_get_train_if_recommended_multiclass.__name__
         dataset_name = f'{workspace_id}_dump'
-        category_name = f'{workspace_id}_cat'
         generate_corpus(self.data_access, dataset_name)
         self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
-        self.orchestrator_api.set_category_list(workspace_id, {"cat1": ["desc1", "#000000"], "cat2": ["desc2", "#000000"],
-                                                               "cat3": ["desc3", "#000000"]})
+        self.orchestrator_api.create_new_category(workspace_id, "cat1", "desc1", None)
+        self.orchestrator_api.create_new_category(workspace_id, "cat2", "desc2", None)
+        self.orchestrator_api.create_new_category(workspace_id, "cat3", "desc3", None)
+
 
         change_threshold = self.orchestrator_api.config.multiclass_flow.changed_element_threshold
         per_class_threshold = self.orchestrator_api.config.multiclass_flow.per_class_labeling_threshold
@@ -366,8 +371,9 @@ class TestOrchestratorAPI(unittest.TestCase):
         category_name = f'{workspace_id}_cat'
         generate_corpus(self.data_access, dataset_name)
         self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
-        self.orchestrator_api.set_category_list(workspace_id, {"cat1": ["desc1", "#000000"], "cat2": ["desc2", "#000000"],
-                                                               "cat3": ["desc3", "#000000"]})
+        self.orchestrator_api.create_new_category(workspace_id, "cat1", "desc1", None)
+        self.orchestrator_api.create_new_category(workspace_id, "cat2", "desc2", None)
+        self.orchestrator_api.create_new_category(workspace_id, "cat3", "desc3", None)
 
         change_threshold = self.orchestrator_api.config.multiclass_flow.changed_element_threshold
         per_class_threshold = self.orchestrator_api.config.multiclass_flow.per_class_labeling_threshold
