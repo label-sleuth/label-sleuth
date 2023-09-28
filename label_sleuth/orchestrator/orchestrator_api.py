@@ -794,6 +794,9 @@ class OrchestratorApi:
         :return: None if no training was launched, else the model_id for the training job submitted in the background
         """
 
+        # Lena TODO add to _should_train_multilabel_condition
+        #  TODO and _should_train_binary_condition if the new force iteration 0 train flag is True for this workspace type, submit with force=True
+
         workspace = self.orchestrator_state.get_workspace(workspace_id)
         dataset_name = workspace.dataset_name
 
@@ -830,8 +833,8 @@ class OrchestratorApi:
                                   f"number of changes {changes_since_last_model}. min examples per class threshold is {config.per_class_labeling_threshold} "
                                   f"number of classes {len(category_ids)}. ")
 
-            if force or (not is_multiclass and self._should_train_multilabel_condition(changes_since_last_model,
-                                                                                       label_counts)) or \
+            if force or (not is_multiclass and self._should_train_binary_condition(changes_since_last_model,
+                                                                                   label_counts)) or \
                     (is_multiclass and self._should_train_multiclass_condition(changes_since_last_model,
                                                                                label_counts, len(category_ids))):
                 if len(iterations_without_errors) > 0 and iterations_without_errors[-1].status != IterationStatus.READY:
@@ -874,7 +877,7 @@ class OrchestratorApi:
 
             logging.exception(f"train_if_recommended failed in iteration {iteration_index}. Model will not be trained")
 
-    def _should_train_multilabel_condition(self, changes_since_last_model, label_counts):
+    def _should_train_binary_condition(self, changes_since_last_model, label_counts):
         return (LABEL_POSITIVE in label_counts and
                 label_counts[LABEL_POSITIVE] >= self.config.binary_flow.first_model_positive_threshold and
                 (self.config.binary_flow.first_model_negative_threshold == 0 or
