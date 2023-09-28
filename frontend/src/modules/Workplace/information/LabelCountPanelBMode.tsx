@@ -36,8 +36,12 @@ export const LabelCountPanelBMode = () => {
   return (
     <Box>
       <LabelCountTabs tabValue={tabValue} setTabValue={setTabValue} />
-      <Box sx={{ width: "100%", padding: theme.spacing(0, 2) }}>
-        <TabPanel className={classes.entries_tab} value={tabValue} index={0}>
+      <Box sx={{ width: "100%" }}>
+        <TabPanel
+          value={tabValue}
+          index={0}
+          sx={{ backgroundColor: "#393939", borderRadius: "0 0 2px 2px;", p: 2 }}
+        >
           <Stack spacing={0}>
             <StatsContainer>
               <Typography>
