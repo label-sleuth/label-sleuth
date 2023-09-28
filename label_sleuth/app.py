@@ -610,6 +610,37 @@ def get_document_positive_predictions(workspace_id, document_uri):
     return jsonify(res)
 
 
+@main_blueprint.route("/workspace/<workspace_id>/prediction_stats", methods=['GET'])
+@login_if_required
+@validate_category_id
+@validate_workspace_id
+def prediction_stats(workspace_id):
+    """
+    """
+
+    if curr_app.orchestrator_api.is_binary_workspace(workspace_id):
+        category_id = int(request.args['category_id'])
+    else:
+        category_id = None
+    all_ready_iterations = curr_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
+                                                                                  IterationStatus.READY)
+
+    if len(all_ready_iterations) == 0:
+        return jsonify({})
+
+    iteration, _ = all_ready_iterations[-1]
+
+    # backward compatibility for prediction counts in existing binary workspaces
+    if curr_app.orchestrator_api.is_binary_workspace(workspace_id) \
+            and 'total_positive_count' in iteration.iteration_statistics:
+        pos_count = iteration.iteration_statistics['total_positive_count']
+        total = len(curr_app.orchestrator_api.get_all_text_elements_uris(workspace_id))
+        neg_count = total - pos_count
+        iteration.iteration_statistics['prediction_stats'] = {True: {'count': pos_count, 'fraction': pos_count / total},
+                                                              False: {"count": neg_count, 'fraction': neg_count/total}}
+
+    return jsonify(iteration.iteration_statistics["prediction_stats"])
+
 @main_blueprint.route("/workspace/<workspace_id>/elements_by_prediction", methods=['GET'])
 @login_if_required
 @validate_category_id

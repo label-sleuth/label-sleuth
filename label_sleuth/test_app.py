@@ -235,6 +235,18 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual(200, res.status_code, msg="Failed to get iterations list")
         self.assertEqual(1, len(res.get_json()["iterations"]), msg="first model was not added to the models list")
 
+        # get predictions stats
+        res = self.client.get(f"/workspace/{workspace_name}/prediction_stats?category_id={category_id}",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get prediction stats in the third label")
+        prediction_stats = res.get_json()
+        self.assertEqual({'true','false'}, set(prediction_stats.keys()), msg = "not all labels in prediction stats")
+        self.assertEqual(7, sum([x['count'] for x in prediction_stats.values()]),msg="prediction counts does not sum to the number of elements in the dataset")
+        self.assertEqual(1, round(sum([x['fraction'] for x in prediction_stats.values()])),
+                         msg="prediction fraction does not sum to 1")
+
+
+
         # elements by positive prediction
         res = self.client.get(f"/workspace/{workspace_name}/elements_by_prediction?value=True&category_id=0",
                               headers=HEADERS)
@@ -726,6 +738,18 @@ class TestAppIntegration(unittest.TestCase):
                          msg="Failed to get labeled elements from category 0")
         self.assertEqual({'elements': [{'begin': 0, 'docid': 'multiclass_dataset-document3', 'end': 53, 'id': 'multiclass_dataset-document3-0', 'model_predictions': 0, 'text': 'document 3 has three text elements, this is the first', 'user_labels': 0}], 'hit_count': 1},
             res.get_json(), msg="diffs in labeled elements for class 0")
+
+        # get predictions stats
+        res = self.client.get(f"/workspace/{workspace_name}/prediction_stats?mode=MultiClass",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get prediction stats ")
+        prediction_stats = res.get_json()
+        self.assertEqual({'0', '1', '2'}, set(prediction_stats.keys()), msg="not all labels in prediction stats")
+        self.assertEqual(7, sum([x['count'] for x in prediction_stats.values()]),
+                         msg="prediction counts does not sum to the number of elements in the dataset")
+        self.assertEqual(1, round(sum([x['fraction'] for x in prediction_stats.values()])),
+                         msg="prediction fraction does not sum to 1")
+
 
         # elements by prediction
         res = self.client.get(f"/workspace/{workspace_name}/elements_by_prediction?value=0&mode=MultiClass",
