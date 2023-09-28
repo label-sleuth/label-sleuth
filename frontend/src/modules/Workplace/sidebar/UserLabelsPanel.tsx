@@ -137,6 +137,11 @@ export const UserLabelsPanel = () => {
     />
   );
 
+  const emptyResultsMessage = useMemo(() => {
+    return mode === WorkspaceMode.BINARY
+      ? `No elements are currently labeled as ${filteredTitle} for this category.`
+      : `No elements are currently labeled as ${filteredTitle}.`;
+  }, [mode]);
   return (
     <Box>
       <Header message={"User labels"} />
@@ -144,7 +149,7 @@ export const UserLabelsPanel = () => {
         elements={currentContentData as Element[]}
         loading={loading}
         nonEmptyResultsMessage={`These are all the examples labeled by you as '${filteredTitle}'.`}
-        emptyResultsMessage={`You didn't label any elements as ${filteredTitle} so far.`}
+        emptyResultsMessage={emptyResultsMessage }
         isPaginationRequired={isPaginationRequired}
         Filters={Filters}
       />
