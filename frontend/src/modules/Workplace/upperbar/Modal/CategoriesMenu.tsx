@@ -389,7 +389,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
         )
       )
     ).then((actionResults) => {
-      if (actionResults.every((actionResults) => isFulfilled(actionResults))) {
+      if (actionResults.length > 0 && actionResults.every((actionResults) => isFulfilled(actionResults))) {
         setNewCategories([]);
         dispatch(checkStatus());
         notify(`The categories has been created`, {
@@ -406,21 +406,22 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
             newCategoryName: c.category_name,
             newCategoryDescription: c.category_description,
             newCategoryColor: c.color || defaultColor,
+            categoryId: c.category_id
           })
         )
       )
     ).then((actionResults) => {
-      if (actionResults.every((actionResults) => isFulfilled(actionResults))) {
-        setNewCategories([]);
+      if (actionResults.length > 0 && actionResults.every((actionResults) => isFulfilled(actionResults))) {
+        setEditedCategories([]);
         dispatch(checkStatus());
-        notify(`The categories has been created`, {
+        notify(`The categories has been edited`, {
           type: toast.TYPE.SUCCESS,
           autoClose: 5000,
-          toastId: "category_created_toast",
+          toastId: "category_edited_toast",
         });
       }
     });
-  }, [newCategories, setNewCategories, defaultColor, dispatch, notify]);
+  }, [newCategories, setNewCategories, defaultColor, editedCategories, editedCategories, dispatch, notify]);
 
   const setCategoryEdited = useCallback(
     (category: Category) => {

@@ -185,6 +185,7 @@ interface EditCategoryResponse {
   category_name: string;
   category_description: string;
   workspace_id: string;
+  category_color: string;
 }
 
 interface BadgeColor {

@@ -22,6 +22,7 @@ import {
   defaultColor,
   getRandomColor,
   getWorkspaceId,
+  returnByMode,
 } from "../../../utils/utils";
 import { RootState } from "../../../store/configureStore";
 import {
@@ -100,6 +101,7 @@ export const editCategory = createAsyncThunk<
     newCategoryName: string;
     newCategoryDescription: string;
     newCategoryColor?: BadgeColor;
+    categoryId?: number;
   },
   {
     state: RootState;
@@ -107,14 +109,18 @@ export const editCategory = createAsyncThunk<
 >(
   "workspace/editCategory",
   async (
-    { newCategoryName, newCategoryDescription, newCategoryColor },
+    { newCategoryName, newCategoryDescription, newCategoryColor, categoryId },
     { getState }
   ) => {
     const state = getState();
 
     var url = `${getWorkspace_url}/${encodeURIComponent(
       getWorkspaceId()
-    )}/category/${state.workspace.curCategory}`;
+    )}/category/${returnByMode(
+      state.workspace.curCategory,
+      categoryId,
+      state.workspace.mode
+    )}`;
 
     const body = {
       category_name: newCategoryName,
@@ -137,10 +143,12 @@ export const fetchCategories = createAsyncThunk(
     const response = await client.get(url);
     const categories = response.data["categories"];
     categories.forEach((c: any) => {
-      c["color"] = c["category_color"] ? {
-        name: c["category_color"],
-        palette: badgePalettes[c["category_color"]],
-      } : defaultColor;
+      c["color"] = c["category_color"]
+        ? {
+            name: c["category_color"],
+            palette: badgePalettes[c["category_color"]],
+          }
+        : defaultColor;
     });
     return categories;
   }
@@ -178,8 +186,6 @@ export const extraReducers: Array<ReducerObj> = [
             state.mode === WorkspaceMode.MULTICLASS ? badgeColor : undefined,
         };
       });
-      console.log(state.categories)
-
     },
   },
   {
@@ -219,9 +225,9 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: editCategory.fulfilled,
     reducer: (state: WorkspaceState, action) => {
-      const { category_name, category_description } = action.payload;
+      const { category_name, category_description, category_id } = action.payload;
       state.categories = state.categories.map((c: Category) =>
-        c.category_id === state.curCategory
+        c.category_id == category_id
           ? {
               ...c,
               category_name,
