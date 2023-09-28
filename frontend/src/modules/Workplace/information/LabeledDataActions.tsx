@@ -20,6 +20,7 @@ export const LabeledDataActions = ({
         alignItems: "start",
         flexGrow: "1",
         ml: 2,
+        mt: 3
       }}
     >
       <Typography>Workspace labeled data:</Typography>

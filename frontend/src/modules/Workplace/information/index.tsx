@@ -67,6 +67,7 @@ export const WorkspaceInfo = ({
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
   const mode = useAppSelector((state) => state.workspace.mode);
+  const categories = useAppSelector((state) => state.workspace.categories);
 
   const dispatch = useAppDispatch();
   const { getInstance, fire } = useConfetti();
@@ -119,7 +120,7 @@ export const WorkspaceInfo = ({
           anchor="left"
         >
           <Header setTutorialOpen={setTutorialOpen} />
-          {curCategory !== null || mode === WorkspaceMode.MULTICLASS ? (
+          {curCategory !== null || (mode === WorkspaceMode.MULTICLASS && categories.length > 0) ? (
             <Box sx={{ ml: 2, mr: 1.5, mt: 2 }}>
               <LabelCountPanel />
               <Divider
@@ -152,7 +153,6 @@ export const WorkspaceInfo = ({
               <Divider
                 sx={{
                   mt: 3,
-                  mb: 3,
                   borderTop: "1px solid rgb(57, 57, 57)",
                   ml: -2,
                   mr: -1.5,
