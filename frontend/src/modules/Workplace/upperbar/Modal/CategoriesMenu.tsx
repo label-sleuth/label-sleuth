@@ -231,7 +231,6 @@ const CategoryEntry = ({
             float: "left",
             borderRadius: "8px",
             backgroundColor: category.color?.palette[200],
-            cursor: "pointer",
             mr: 2,
           }}
         />
@@ -374,6 +373,8 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
   );
 
   const onClose = () => {
+    setEditedCategories([]);
+    setNewCategories([]);
     setOpen(false);
   };
 
