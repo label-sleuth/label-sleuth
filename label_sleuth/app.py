@@ -444,7 +444,7 @@ def get_all_categories(workspace_id):
     """
     categories = curr_app.orchestrator_api.get_all_categories(workspace_id)
     category_dicts = [{'category_id': cat_id, 'category_name': category.name,
-                       'category_description': category.description} for cat_id, category in categories.items()]
+                       'category_description': category.description, 'category_color': category.color} for cat_id, category in categories.items()]
 
     res = {'categories': category_dicts}
 
