@@ -77,7 +77,7 @@ export {
 export { downloadLabels, uploadLabels, setElementLabel } from "./labelSlice";
 export {
   fetchCategories,
-  createCategoryOnServer,
+  createCategory,
   deleteCategory,
   editCategory,
 } from "./categorySlice";

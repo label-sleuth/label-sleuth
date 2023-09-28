@@ -19,6 +19,7 @@ import { PanelIdsEnum, WorkspaceMode } from "../../../const";
 import { client } from "../../../api/client";
 import {
   badgePalettes,
+  defaultColor,
   getRandomColor,
   getWorkspaceId,
 } from "../../../utils/utils";
@@ -40,8 +41,8 @@ export const initialCategorySliceState: CategorySliceState = {
   deletingCategory: false,
 };
 
-export const createCategoryOnServer = createAsyncThunk(
-  "workspace/createCategoryOnServer",
+export const createCategory = createAsyncThunk(
+  "workspace/createCategory",
   async ({
     categoryName,
     categoryDescription,
@@ -58,12 +59,13 @@ export const createCategoryOnServer = createAsyncThunk(
       category_name: categoryName,
       category_description: categoryDescription,
       update_counter: true,
+      category_color: categoryColor?.name,
     });
     return {
       category_name: response.data.category_name,
       category_description: response.data.category_description,
       category_id: response.data.category_id,
-      color: categoryColor,
+      category_color: categoryColor,
     };
   }
 );
@@ -94,13 +96,20 @@ export const deleteCategory = createAsyncThunk<
 
 export const editCategory = createAsyncThunk<
   EditCategoryResponse,
-  { newCategoryName: string; newCategoryDescription: string },
+  {
+    newCategoryName: string;
+    newCategoryDescription: string;
+    newCategoryColor?: BadgeColor;
+  },
   {
     state: RootState;
   }
 >(
   "workspace/editCategory",
-  async ({ newCategoryName, newCategoryDescription }, { getState }) => {
+  async (
+    { newCategoryName, newCategoryDescription, newCategoryColor },
+    { getState }
+  ) => {
     const state = getState();
 
     var url = `${getWorkspace_url}/${encodeURIComponent(
@@ -110,6 +119,7 @@ export const editCategory = createAsyncThunk<
     const body = {
       category_name: newCategoryName,
       category_description: newCategoryDescription,
+      category_color: newCategoryColor?.name,
     };
 
     const response = await client.put(url, body);
@@ -125,7 +135,14 @@ export const fetchCategories = createAsyncThunk(
     )}/categories`;
 
     const response = await client.get(url);
-    return response.data;
+    const categories = response.data["categories"];
+    categories.forEach((c: any) => {
+      c["color"] = c["category_color"] ? {
+        name: c["category_color"],
+        palette: badgePalettes[c["category_color"]],
+      } : defaultColor;
+    });
+    return categories;
   }
 );
 
@@ -145,28 +162,28 @@ export const reducers = {
 export const extraReducers: Array<ReducerObj> = [
   {
     action: fetchCategories.fulfilled,
-    reducer: (
-      state: WorkspaceState,
-      action: PayloadAction<{ categories: Category[] }>
-    ) => {
-      const data = action.payload;
+    reducer: (state: WorkspaceState, action: PayloadAction<Category[]>) => {
+      const categories = action.payload;
 
-      state.categories = data["categories"].map((c) => {
-        const randomColorName = getRandomColor();
-        const badgeColor: BadgeColor = {
-          name: randomColorName,
-          palette: badgePalettes[randomColorName],
-        };
+      state.categories = categories.map((c) => {
+        const badgeColor: BadgeColor = c.color
+          ? {
+              name: c.color?.name,
+              palette: badgePalettes[c.color?.name],
+            }
+          : defaultColor;
         return {
           ...c,
           color:
             state.mode === WorkspaceMode.MULTICLASS ? badgeColor : undefined,
         };
       });
+      console.log(state.categories)
+
     },
   },
   {
-    action: createCategoryOnServer.fulfilled,
+    action: createCategory.fulfilled,
     reducer: (state: WorkspaceState, action: PayloadAction<Category>) => {
       const newCategory: Category = action.payload;
 

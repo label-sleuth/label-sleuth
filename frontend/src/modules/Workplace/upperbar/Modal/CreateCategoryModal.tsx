@@ -16,7 +16,7 @@
 import * as React from "react";
 import { useAppDispatch } from "../../../../customHooks/useRedux";
 import { isFulfilled } from "@reduxjs/toolkit";
-import { createCategoryOnServer } from "../../redux";
+import { createCategory } from "../../redux";
 import { CREATE_NEW_CATEGORY_MODAL_MSG } from "../../../../const";
 import { useNotification } from "../../../../utils/notification";
 import { toast } from "react-toastify";
@@ -51,7 +51,7 @@ export const CreateCategoryModal = ({
 
   const onSubmit = async () => {
     dispatch(
-      createCategoryOnServer({
+      createCategory({
         categoryName: categoryName.trim(),
         categoryDescription: categoryDescription.trim(),
         categoryColor,

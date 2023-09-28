@@ -444,6 +444,11 @@ export const badgePalettes: { [key: string]: { [key: string]: string } } = {
   white: { 500: "#ffffff" },
 };
 
+export const defaultColor: BadgeColor = {
+  name: "grey",
+  palette: badgePalettes.grey,
+};
+
 export const getRandomColor = (): string => {
   return Object.keys(badgePalettes)[
     Math.floor(Math.random() * Object.keys(badgePalettes).length)

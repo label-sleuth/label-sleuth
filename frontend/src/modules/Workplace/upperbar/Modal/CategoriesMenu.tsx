@@ -45,19 +45,14 @@ import {
   ColorPickerButton,
   ColorPickerMenu,
 } from "../../../../components/colorPicker/ColorPicker";
-import {
-  ChangeEvent,
-  SetStateAction,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import { badgePalettes } from "../../../../utils/utils";
-import { PrimaryButton, SecondaryButton } from "../../../../components/dialog";
+import { PrimaryButton } from "../../../../components/dialog";
 import {
   checkStatus,
-  createCategoryOnServer,
+  createCategory,
   deleteCategory,
+  editCategory,
 } from "../../redux";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
@@ -68,12 +63,9 @@ interface NewCategoryFormProps {
   categoryDescription: string;
   color: BadgeColor | undefined;
   id: string;
-  setCategoryAttribute: (
-    id: string,
-    key: "categoryName" | "categoryDescription" | "color",
-    newValue: any
-  ) => void;
+  setCategoryAttribute: (id: string, key: string, newValue: any) => void;
   removeNewCategory: (id: string) => void;
+  isEditing: boolean;
 }
 
 const NewCategoryForm = ({
@@ -83,6 +75,7 @@ const NewCategoryForm = ({
   id,
   setCategoryAttribute,
   removeNewCategory,
+  isEditing = false,
 }: NewCategoryFormProps) => {
   const {
     colorPickerMenuOpenAnchorEl,
@@ -117,7 +110,11 @@ const NewCategoryForm = ({
     // } else {
     //   setCategoryNameError("");
     // }
-    setCategoryAttribute(id, "categoryName", text);
+    setCategoryAttribute(
+      id,
+      isEditing ? "category_name" : "categoryName",
+      text
+    );
   };
 
   const handleCategoryDescriptionFieldChange = (
@@ -125,7 +122,11 @@ const NewCategoryForm = ({
   ) => {
     e.preventDefault();
     let text = e.target.value;
-    setCategoryAttribute(id, "categoryDescription", text);
+    setCategoryAttribute(
+      id,
+      isEditing ? "category_description" : "categoryDescription",
+      text
+    );
   };
 
   return (
@@ -172,20 +173,22 @@ const NewCategoryForm = ({
             value={categoryDescription}
           />
         </Stack>
-        <Stack
-          direction={"row"}
-          alignItems={"flex-start"}
-          className={classes["hide-on-hover"]}
-          sx={{ ml: 4 }}
-        >
-          <IconButton
-            size="small"
-            sx={(palette) => ({ color: palette.palette.primary.main })}
-            onClick={() => removeNewCategory(id)}
+        {!!!isEditing && (
+          <Stack
+            direction={"row"}
+            alignItems={"flex-start"}
+            className={classes["hide-on-hover"]}
+            sx={{ ml: 4 }}
           >
-            <DeleteOutlineOutlinedIcon fontSize="inherit" />
-          </IconButton>
-        </Stack>
+            <IconButton
+              size="small"
+              sx={(palette) => ({ color: palette.palette.primary.main })}
+              onClick={() => removeNewCategory(id)}
+            >
+              <DeleteOutlineOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          </Stack>
+        )}
       </Stack>
       <Divider sx={{ mt: 1 }} />
       <ColorPickerMenu
@@ -204,9 +207,14 @@ const NewCategoryForm = ({
 interface CategoryEntryProps {
   category: Category;
   onRemoveCategory: (category: Category) => void;
+  setCategoryEdited: (category: Category) => void;
 }
 
-const CategoryEntry = ({ category, onRemoveCategory }: CategoryEntryProps) => {
+const CategoryEntry = ({
+  category,
+  onRemoveCategory,
+  setCategoryEdited,
+}: CategoryEntryProps) => {
   return (
     <Box
       sx={{
@@ -227,20 +235,20 @@ const CategoryEntry = ({ category, onRemoveCategory }: CategoryEntryProps) => {
             mr: 2,
           }}
         />
-        <Stack direction={"column"} sx={{ maxWidth: "250px" }}>
+        <Stack direction={"column"} sx={{ width: "250px" }}>
           <Typography sx={{ mt: "-5px" }}>{category.category_name}</Typography>
           <Typography variant={"caption"} sx={{ color: "grey" }}>
-            {category.category_description ||
-              "Lorem inpsum descriptsion descriptum il arbre"}
+            {category.category_description || "No description"}
           </Typography>
         </Stack>
         <Stack
           direction={"row"}
           alignItems={"flex-start"}
           className={classes["hide-on-hover"]}
-          sx={{ ml: 4 }}
+          sx={{ ml: 3 }}
         >
           <IconButton
+            onClick={() => setCategoryEdited(category)}
             size="small"
             sx={(palette) => ({ color: palette.palette.primary.main })}
           >
@@ -279,6 +287,8 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     }[]
   >([]);
 
+  const [editedCategories, setEditedCategories] = useState<Category[]>([]);
+
   const { notify } = useNotification();
 
   const defaultColor = useMemo(
@@ -301,18 +311,16 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     ]);
   }, [newCategories, setNewCategories]);
 
-  const setCategoryAttribute = useCallback(
-    (
-      id: string,
-      key: "categoryName" | "categoryDescription" | "color",
-      newValue: any
-    ) => {
+  const setNewCategoryAttribute = useCallback(
+    (id: string, key: string, newValue: any) => {
       const changedCategory = newCategories.find((nc) => nc.id === id);
       const changedCategoryIndex = newCategories.findIndex(
         (nc) => nc.id === id
       );
       if (changedCategory) {
-        changedCategory[key] = newValue;
+        changedCategory[
+          key as "categoryName" | "categoryDescription" | "color"
+        ] = newValue;
         setNewCategories([
           ...newCategories.slice(0, changedCategoryIndex),
           changedCategory,
@@ -321,6 +329,24 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
       }
     },
     [newCategories, setNewCategories]
+  );
+
+  const setCategoryAttribute = useCallback(
+    (id: string, key: string, newValue: any) => {
+      const changedCategory = editedCategories.find(
+        (c) => `${c.category_id}` == id
+      );
+      if (changedCategory) {
+        changedCategory[
+          key as "category_name" | "category_description" | "color"
+        ] = newValue;
+        setEditedCategories([
+          ...editedCategories.filter((ec) => `${ec.category_id}` != id),
+          changedCategory,
+        ]);
+      }
+    },
+    [editedCategories, setEditedCategories]
   );
 
   const onRemoveNewCategory = useCallback(
@@ -344,7 +370,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
         }
       );
     },
-    [newCategories, setNewCategories]
+    [dispatch, notify]
   );
 
   const onClose = () => {
@@ -355,7 +381,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     Promise.all(
       newCategories.map((nc) =>
         dispatch(
-          createCategoryOnServer({
+          createCategory({
             categoryName: nc.categoryName,
             categoryDescription: nc.categoryDescription,
             categoryColor: nc.color || defaultColor,
@@ -373,8 +399,35 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
         });
       }
     });
-  }, [newCategories, setNewCategories]);
+    Promise.all(
+      editedCategories.map((c) =>
+        dispatch(
+          editCategory({
+            newCategoryName: c.category_name,
+            newCategoryDescription: c.category_description,
+            newCategoryColor: c.color || defaultColor,
+          })
+        )
+      )
+    ).then((actionResults) => {
+      if (actionResults.every((actionResults) => isFulfilled(actionResults))) {
+        setNewCategories([]);
+        dispatch(checkStatus());
+        notify(`The categories has been created`, {
+          type: toast.TYPE.SUCCESS,
+          autoClose: 5000,
+          toastId: "category_created_toast",
+        });
+      }
+    });
+  }, [newCategories, setNewCategories, defaultColor, dispatch, notify]);
 
+  const setCategoryEdited = useCallback(
+    (category: Category) => {
+      setEditedCategories([...editedCategories, structuredClone(category)]);
+    },
+    [editedCategories, setEditedCategories]
+  );
   return (
     <Dialog
       open={open}
@@ -384,6 +437,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
       disableRestoreFocus
       fullWidth
       maxWidth={"xs"}
+      sx={{ overflowY: "scroll" }}
     >
       <DialogTitle sx={{ p: 0, mx: 4, mt: 2, mb: 1 }}>
         <Stack direction={"row"} alignItems={"center"}>
@@ -417,14 +471,55 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
           <DialogContent
             sx={{
               p: 0,
-              mx: 4,
+              px: 2,
+              mx: 2,
               mt: 0,
               mb: 3,
               maxHeight: "40vh",
               minHeight: "40vh",
-              overflowY: "scroll",
             }}
           >
+            {categories.map((category) =>
+              editedCategories.find(
+                (c) => c.category_id == category.category_id
+              ) !== undefined ? (
+                <NewCategoryForm
+                  key={category.category_id}
+                  categoryName={
+                    (
+                      editedCategories.find(
+                        (c) => c.category_id == category.category_id
+                      ) as Category
+                    ).category_name
+                  }
+                  categoryDescription={
+                    (
+                      editedCategories.find(
+                        (c) => c.category_id == category.category_id
+                      ) as Category
+                    ).category_description
+                  }
+                  color={
+                    (
+                      editedCategories.find(
+                        (c) => c.category_id == category.category_id
+                      ) as Category
+                    ).color
+                  }
+                  id={`${category.category_id}`}
+                  setCategoryAttribute={setCategoryAttribute}
+                  removeNewCategory={onRemoveNewCategory}
+                  isEditing={true}
+                />
+              ) : (
+                <CategoryEntry
+                  onRemoveCategory={onRemoveCategory}
+                  key={category.category_id}
+                  category={category}
+                  setCategoryEdited={setCategoryEdited}
+                />
+              )
+            )}
             {newCategories.map((newCategory) => (
               <NewCategoryForm
                 key={newCategory.id}
@@ -432,15 +527,9 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                 categoryDescription={newCategory.categoryDescription}
                 color={newCategory.color}
                 id={newCategory.id}
-                setCategoryAttribute={setCategoryAttribute}
+                setCategoryAttribute={setNewCategoryAttribute}
                 removeNewCategory={onRemoveNewCategory}
-              />
-            ))}
-            {categories.map((category) => (
-              <CategoryEntry
-                onRemoveCategory={onRemoveCategory}
-                key={category.category_id}
-                category={category}
+                isEditing={false}
               />
             ))}
           </DialogContent>
@@ -462,7 +551,9 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                   color: "rgb(216, 212, 212)",
                 },
               }}
-              disabled={newCategories.length === 0}
+              disabled={
+                newCategories.length === 0 && editedCategories.length === 0
+              }
             >
               Save changes
             </PrimaryButton>
