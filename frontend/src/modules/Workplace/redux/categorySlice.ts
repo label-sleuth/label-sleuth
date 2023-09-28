@@ -66,7 +66,7 @@ export const createCategory = createAsyncThunk(
       category_name: response.data.category_name,
       category_description: response.data.category_description,
       category_id: response.data.category_id,
-      category_color: categoryColor,
+      color: categoryColor,
     };
   }
 );
@@ -192,7 +192,6 @@ export const extraReducers: Array<ReducerObj> = [
     action: createCategory.fulfilled,
     reducer: (state: WorkspaceState, action: PayloadAction<Category>) => {
       const newCategory: Category = action.payload;
-
       return {
         ...state,
         curCategory:
