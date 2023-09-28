@@ -16,7 +16,11 @@
 import { Box } from "@mui/material";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
-import { curCategoryNameSelector, setPanelFilters } from "../redux";
+import {
+  curCategoryNameSelector,
+  getModelPredictions,
+  setPanelFilters,
+} from "../redux";
 import { PanelIdsEnum, WorkspaceMode } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
@@ -26,27 +30,31 @@ import ControlledSelect, {
   DropdownOption,
 } from "../../../components/dropdown/Dropdown";
 import { returnByMode } from "../../../utils/utils";
+import { getPredictionsStats } from "../redux/panelsSlice";
 
 const PosPredictionsPanel = () => {
   const curCategoryName = useAppSelector(curCategoryNameSelector);
   const { hitCount } = useAppSelector(
-    (state) => state.workspace.panels.panels[PanelIdsEnum.POSITIVE_PREDICTIONS]
+    (state) => state.workspace.panels.panels[PanelIdsEnum.MODEL_PREDICTIONS]
   );
   const loading = useAppSelector(
-    (state) => state.workspace.panels.loading[PanelIdsEnum.POSITIVE_PREDICTIONS]
+    (state) => state.workspace.panels.loading[PanelIdsEnum.MODEL_PREDICTIONS]
   );
   const sidebarPanelElementsPerPage = useAppSelector(
     (state) => state.featureFlags.sidebarPanelElementsPerPage
   );
   const categories = useAppSelector((state) => state.workspace.categories);
   const mode = useAppSelector((state) => state.workspace.mode);
-
+  const modelPredictionStats = useAppSelector(
+    (state) =>
+      state.workspace.panels.panels[PanelIdsEnum.MODEL_PREDICTIONS].stats
+  );
   const dispatch = useAppDispatch();
 
   const filteredValue =
     useAppSelector(
       (state) =>
-        state.workspace.panels.panels[PanelIdsEnum.POSITIVE_PREDICTIONS].filters
+        state.workspace.panels.panels[PanelIdsEnum.MODEL_PREDICTIONS].filters
           ?.value
     ) || null;
 
@@ -54,7 +62,7 @@ const PosPredictionsPanel = () => {
     (value: string | null) => {
       dispatch(
         setPanelFilters({
-          panelId: PanelIdsEnum.POSITIVE_PREDICTIONS,
+          panelId: PanelIdsEnum.MODEL_PREDICTIONS,
           filters: {
             value,
           },
@@ -72,23 +80,44 @@ const PosPredictionsPanel = () => {
         ? categories[0].category_id.toString()
         : null
     );
+    dispatch(getPredictionsStats());
   }, [mode, categories, setFilteredValue]);
 
   const options: DropdownOption[] = useMemo(() => {
     if (mode === WorkspaceMode.BINARY) {
       return [
-        { value: "true", title: "Positive" },
-        { value: "false", title: "Negative" },
+        {
+          value: "true",
+          title: "Positive",
+          chip:
+            Object.keys(modelPredictionStats).length > 0
+              ? modelPredictionStats["true"].count.toString()
+              : undefined,
+        },
+        {
+          value: "false",
+          title: "Negative",
+          chip:
+            Object.keys(modelPredictionStats).length > 0
+              ? modelPredictionStats["false"].count.toString()
+              : undefined,
+        },
       ];
     } else if (mode === WorkspaceMode.MULTICLASS) {
       return categories
         .map((item) => ({
           value: item.category_id.toString(),
           title: item.category_name,
+          chip:
+            Object.keys(modelPredictionStats).length > 0
+              ? (
+                  modelPredictionStats[item.category_id]["count"] as number
+                ).toString()
+              : undefined,
         }))
         .sort((a, b) => a.title.localeCompare(b.title));
     } else return [];
-  }, [mode, categories]);
+  }, [mode, categories, modelPredictionStats]);
 
   const filteredTitle = useMemo(
     // es
@@ -105,7 +134,7 @@ const PosPredictionsPanel = () => {
     pageCount,
   } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
-    panelId: PanelIdsEnum.POSITIVE_PREDICTIONS,
+    panelId: PanelIdsEnum.MODEL_PREDICTIONS,
     modelAvailableRequired: true,
     value: filteredValue,
     shouldFetch: filteredValue !== null,
@@ -149,6 +178,7 @@ const PosPredictionsPanel = () => {
       label={""}
       options={options}
       onChange={handleSelect}
+      itemMinHeight={40}
     />
   );
 

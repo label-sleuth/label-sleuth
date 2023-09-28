@@ -163,10 +163,10 @@ export const reducers = {
     );
 
     // // add the element to the user labels panel if it is required
-    // if (state.panels.activePanelId === PanelIdsEnum.POSITIVE_LABELS) {
+    // if (state.panels.activePanelId === PanelIdsEnum.USER_LABELS) {
     //   if (
     //     newLabel ===
-    //     state.panels.panels[PanelIdsEnum.POSITIVE_LABELS].filters?.value
+    //     state.panels.panels[PanelIdsEnum.USER_LABELS].filters?.value
     //   ) {
     //     const positiveElements =
     //       panelsState.panels.panels[PanelIdsEnum.SUSPICIOUS_LABELS].elements;

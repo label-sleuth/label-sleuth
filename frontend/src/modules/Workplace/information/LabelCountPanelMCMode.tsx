@@ -47,12 +47,12 @@ export const LabelCountPanelMCMode = () => {
   // sidebar user label panels link
   const onCategoryClick = useCallback(
     (category: Category) => {
-      if (activePanelId !== PanelIdsEnum.POSITIVE_LABELS) {
-        dispatch(setActivePanel(PanelIdsEnum.POSITIVE_LABELS));
+      if (activePanelId !== PanelIdsEnum.USER_LABELS) {
+        dispatch(setActivePanel(PanelIdsEnum.USER_LABELS));
       }
       dispatch(
         setPanelFilters({
-          panelId: PanelIdsEnum.POSITIVE_LABELS,
+          panelId: PanelIdsEnum.USER_LABELS,
           filters: { value: category.category_id.toString() },
         })
       );

@@ -101,10 +101,11 @@ export const initialState: PanelsSliceState = {
       [PanelIdsEnum.LABEL_NEXT]: {
         ...elementsInitialState,
       },
-      [PanelIdsEnum.POSITIVE_PREDICTIONS]: {
+      [PanelIdsEnum.MODEL_PREDICTIONS]: {
         ...elementsInitialState,
+        stats: {},
       },
-      [PanelIdsEnum.POSITIVE_LABELS]: {
+      [PanelIdsEnum.USER_LABELS]: {
         ...elementsInitialState,
       },
       [PanelIdsEnum.SUSPICIOUS_LABELS]: {
@@ -137,7 +138,6 @@ const getPanelElements = async (
   extraQueryParams: Array<string> = [],
   pagination: PaginationParam = { startIndex: 0, elementsPerPage: null }
 ): Promise<{ elements: UnparsedElement[]; hit_count: number }> => {
-
   pagination.startIndex !== null &&
     extraQueryParams.push(`start_idx=${pagination.startIndex}`);
   pagination.elementsPerPage !== null &&
@@ -172,18 +172,15 @@ export const getUserLabels = createAsyncThunk<
   ReturnType<typeof getPanelElements>,
   FetchPanelElementsParams,
   { state: RootState }
->(
-  "workspace/getUserLabels",
-  async ({ pagination, value }, { getState }) => {
-    const state = getState();
-    return await getPanelElements(
-      state,
-      "elements_by_label",
-      value ? [`value=${value}`] : [],
-      pagination
-    );
-  }
-);
+>("workspace/getUserLabels", async ({ pagination, value }, { getState }) => {
+  const state = getState();
+  return await getPanelElements(
+    state,
+    "elements_by_label",
+    value ? [`value=${value}`] : [],
+    pagination
+  );
+});
 
 export const getSuspiciousLabels = createAsyncThunk<
   ReturnType<typeof getPanelElements>,
@@ -294,6 +291,23 @@ export const searchKeywords = createAsyncThunk<
     return res;
   }
 );
+
+export const getPredictionsStats = createAsyncThunk<
+  { [key: string]: number },
+  void,
+  { state: RootState }
+>("workspace/getPredictionsStats", async (_, { getState }) => {
+  const state = getState();
+  const queryParamsList = [getModeQueryParam(state.workspace.mode)];
+  state.workspace.mode === WorkspaceMode.BINARY &&
+    queryParamsList.push(getCategoryQueryString(state.workspace.curCategory));
+  const queryParams = getQueryParamsString(queryParamsList);
+  const url = `${getWorkspace_url}/${encodeURIComponent(
+    getWorkspaceId()
+  )}/prediction_stats${queryParams}`;
+  const { data } = await client.get(url);
+  return data;
+});
 
 export const reducers = {
   setActivePanel(state: WorkspaceState, action: PayloadAction<PanelIdsEnum>) {
@@ -443,11 +457,14 @@ export const reducers = {
   },
   setPanelFilters(
     state: WorkspaceState,
-    action: PayloadAction<{ panelId: PanelIdsEnum, filters: {[key: string]: string | null};}>
+    action: PayloadAction<{
+      panelId: PanelIdsEnum;
+      filters: { [key: string]: string | null };
+    }>
   ) {
     // currently, filter has the form of {value: categoryId | (true | false)}
-    const {panelId, filters} = action.payload;
-    
+    const { panelId, filters } = action.payload;
+
     // not possible to be true but typescript wants it
     if (panelId === PanelIdsEnum.NOT_SET) return;
     (state.panels.panels[panelId] as PanelState).filters = filters;
@@ -486,30 +503,27 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: getModelPredictions.pending,
     reducer: (state: WorkspaceState, action) => {
-      state.panels.loading[PanelIdsEnum.POSITIVE_PREDICTIONS] = true;
+      state.panels.loading[PanelIdsEnum.MODEL_PREDICTIONS] = true;
     },
   },
   {
     action: getModelPredictions.fulfilled,
     reducer: (state: WorkspaceState, action) => {
-      const { elements: unparsedElements, count: hitCount } =
-        action.payload;
+      const { elements: unparsedElements, count: hitCount } = action.payload;
       const { elements } = parseElements(
         unparsedElements,
         state.curCategory,
         state.mode
       );
-      state.panels.loading[PanelIdsEnum.POSITIVE_PREDICTIONS] = false;
-      state.panels.panels[PanelIdsEnum.POSITIVE_PREDICTIONS].elements =
-        elements;
-      state.panels.panels[PanelIdsEnum.POSITIVE_PREDICTIONS].hitCount =
-        hitCount;
+      state.panels.loading[PanelIdsEnum.MODEL_PREDICTIONS] = false;
+      state.panels.panels[PanelIdsEnum.MODEL_PREDICTIONS].elements = elements;
+      state.panels.panels[PanelIdsEnum.MODEL_PREDICTIONS].hitCount = hitCount;
     },
   },
   {
     action: getUserLabels.pending,
     reducer: (state: WorkspaceState, action) => {
-      state.panels.loading[PanelIdsEnum.POSITIVE_LABELS] = true;
+      state.panels.loading[PanelIdsEnum.USER_LABELS] = true;
     },
   },
   {
@@ -522,9 +536,9 @@ export const extraReducers: Array<ReducerObj> = [
         state.curCategory,
         state.mode
       );
-      state.panels.loading[PanelIdsEnum.POSITIVE_LABELS] = false;
-      state.panels.panels[PanelIdsEnum.POSITIVE_LABELS].elements = elements;
-      state.panels.panels[PanelIdsEnum.POSITIVE_LABELS].hitCount = hitCount;
+      state.panels.loading[PanelIdsEnum.USER_LABELS] = false;
+      state.panels.panels[PanelIdsEnum.USER_LABELS].elements = elements;
+      state.panels.panels[PanelIdsEnum.USER_LABELS].hitCount = hitCount;
     },
   },
   {
@@ -704,6 +718,13 @@ export const extraReducers: Array<ReducerObj> = [
       state.panels.panels[
         PanelIdsEnum.MAIN_PANEL
       ].documentPositivePredictionIds = Object.keys(elements);
+    },
+  },
+  {
+    action: getPredictionsStats.fulfilled,
+    reducer: (state: WorkspaceState, action) => {
+      const stats = action.payload;
+      state.panels.panels[PanelIdsEnum.MODEL_PREDICTIONS].stats = stats;
     },
   },
 ];

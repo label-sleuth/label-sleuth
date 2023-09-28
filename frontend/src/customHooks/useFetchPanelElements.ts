@@ -34,9 +34,9 @@ const getFetchActionByPanelId = (panelId: PanelIdsEnum) => {
       return searchKeywords;
     case PanelIdsEnum.LABEL_NEXT:
       return getElementToLabel;
-    case PanelIdsEnum.POSITIVE_PREDICTIONS:
+    case PanelIdsEnum.MODEL_PREDICTIONS:
       return getModelPredictions;
-    case PanelIdsEnum.POSITIVE_LABELS:
+    case PanelIdsEnum.USER_LABELS:
       return getUserLabels;
     case PanelIdsEnum.SUSPICIOUS_LABELS:
       return getSuspiciousLabels;

@@ -61,7 +61,7 @@ const useWorkspaceState = () => {
     panelId: PanelIdsEnum.MAIN_PANEL,
   });
   const fetchPositiveLabelsElements = useFetchPanelElements({
-    panelId: PanelIdsEnum.POSITIVE_LABELS,
+    panelId: PanelIdsEnum.USER_LABELS,
   });
 
   React.useEffect(() => {
@@ -132,8 +132,8 @@ const useWorkspaceState = () => {
 
         if (
           [
-            PanelIdsEnum.POSITIVE_LABELS,
-            PanelIdsEnum.POSITIVE_PREDICTIONS,
+            PanelIdsEnum.USER_LABELS,
+            PanelIdsEnum.MODEL_PREDICTIONS,
           ].includes(activePanelId)
         ) {
           if (activePanelId === PanelIdsEnum.NOT_SET) return;

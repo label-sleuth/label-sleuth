@@ -228,7 +228,7 @@ export const Workplace = () => {
                     (!isMulticlass && noCategoryAndNoModel) ||
                     (isMulticlass && noModel)
                   }
-                  panelId={PanelIdsEnum.POSITIVE_PREDICTIONS}
+                  panelId={PanelIdsEnum.MODEL_PREDICTIONS}
                 />
               </Stack>
               <Stack>
@@ -242,7 +242,7 @@ export const Workplace = () => {
                     (!isMulticlass && noCategory) ||
                     (isMulticlass && categories.length === 0)
                   }
-                  panelId={PanelIdsEnum.POSITIVE_LABELS}
+                  panelId={PanelIdsEnum.USER_LABELS}
                 />
                 <SidebarButton
                   tooltipMessage={SUSPICIOUS_LABELS_TOOLTIP_MSG}

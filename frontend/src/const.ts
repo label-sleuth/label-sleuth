@@ -116,10 +116,10 @@ export enum PanelIdsEnum {
   MAIN_PANEL = "doc_view",
   LABEL_NEXT = "label_next",
   SEARCH = "search",
-  POSITIVE_LABELS = "positive_labels",
+  USER_LABELS = "positive_labels",
   CONTRADICTING_LABELS = "contradicting_labels",
   SUSPICIOUS_LABELS = "suspicious_labels",
-  POSITIVE_PREDICTIONS = "positive_predictions",
+  MODEL_PREDICTIONS = "positive_predictions",
   EVALUATION = "evaluation",
   NOT_SET = "",
 }

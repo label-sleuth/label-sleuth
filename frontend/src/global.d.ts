@@ -86,7 +86,9 @@ interface ContractingLabelsPanelState extends PanelState {
   pairs: [string, string][];
 }
 
-interface PositivePredictionsPanelState extends PanelState {}
+interface PositivePredictionsPanelState extends PanelState {
+  stats: {[key:string]: {count: number, fraction: number}}
+}
 
 interface EvaluationPanelState extends PanelState {
   isInProgress: boolean;
@@ -147,8 +149,8 @@ interface PanelsSliceState {
       [PanelIdsEnum.MAIN_PANEL]: MainPanelState;
       [PanelIdsEnum.SEARCH]: SearchPanelState;
       [PanelIdsEnum.LABEL_NEXT]: PanelState;
-      [PanelIdsEnum.POSITIVE_PREDICTIONS]: PositivePredictionsPanelState;
-      [PanelIdsEnum.POSITIVE_LABELS]: PanelState;
+      [PanelIdsEnum.MODEL_PREDICTIONS]: PositivePredictionsPanelState;
+      [PanelIdsEnum.USER_LABELS]: PanelState;
       [PanelIdsEnum.SUSPICIOUS_LABELS]: PanelState;
       [PanelIdsEnum.CONTRADICTING_LABELS]: ContractingLabelsPanelState;
       [PanelIdsEnum.EVALUATION]: EvaluationPanelState;

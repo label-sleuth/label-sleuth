@@ -249,7 +249,7 @@ export const extraReducers = [
       ) {
         const panelsToResetPagination: PanelIdsEnum[] = [
           PanelIdsEnum.LABEL_NEXT,
-          PanelIdsEnum.POSITIVE_PREDICTIONS,
+          PanelIdsEnum.MODEL_PREDICTIONS,
           PanelIdsEnum.SUSPICIOUS_LABELS,
           PanelIdsEnum.CONTRADICTING_LABELS,
         ];

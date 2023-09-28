@@ -29,12 +29,14 @@ import { setPanelFilters } from "../redux";
 
 export const UserLabelsPanel = () => {
   const { hitCount } = useAppSelector(
-    (state) => state.workspace.panels.panels[PanelIdsEnum.POSITIVE_LABELS]
+    (state) => state.workspace.panels.panels[PanelIdsEnum.USER_LABELS]
   );
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
 
+  const labelCount = useAppSelector((state) => state.workspace.labelCount);
+
   const loading = useAppSelector(
-    (state) => state.workspace.panels.loading[PanelIdsEnum.POSITIVE_LABELS]
+    (state) => state.workspace.panels.loading[PanelIdsEnum.USER_LABELS]
   );
 
   const sidebarPanelElementsPerPage = useAppSelector(
@@ -48,15 +50,14 @@ export const UserLabelsPanel = () => {
   const filteredValue =
     useAppSelector(
       (state) =>
-        state.workspace.panels.panels[PanelIdsEnum.POSITIVE_LABELS].filters
-          ?.value
+        state.workspace.panels.panels[PanelIdsEnum.USER_LABELS].filters?.value
     ) || null;
 
   const setFilteredValue = useCallback(
     (value: string | null) => {
       dispatch(
         setPanelFilters({
-          panelId: PanelIdsEnum.POSITIVE_LABELS,
+          panelId: PanelIdsEnum.USER_LABELS,
           filters: {
             value,
           },
@@ -80,18 +81,29 @@ export const UserLabelsPanel = () => {
   const options: DropdownOption[] = useMemo(() => {
     if (mode === WorkspaceMode.BINARY) {
       return [
-        { value: "true", title: "Positive" },
-        { value: "false", title: "Negative" },
+        {
+          value: "true",
+          title: "Positive",
+          chip: labelCount["pos"].toString(),
+        },
+        {
+          value: "false",
+          title: "Negative",
+          chip: labelCount["neg"].toString(),
+        },
       ];
     } else if (mode === WorkspaceMode.MULTICLASS) {
       return categories
         .map((item) => ({
           value: item.category_id.toString(),
           title: item.category_name,
+          chip: (labelCount as { [key: string]: number })[
+            item.category_id.toString()
+          ].toString(),
         }))
         .sort((a, b) => a.title.localeCompare(b.title));
     } else return [];
-  }, [mode, categories]);
+  }, [mode, categories, labelCount]);
 
   const filteredTitle = useMemo(
     // es
@@ -120,7 +132,7 @@ export const UserLabelsPanel = () => {
     isPaginationRequired,
   } = usePanelPagination({
     elementsPerPage: sidebarPanelElementsPerPage,
-    panelId: PanelIdsEnum.POSITIVE_LABELS,
+    panelId: PanelIdsEnum.USER_LABELS,
     modelAvailableRequired: false,
     otherDependencies: [curCategory],
     value: filteredValue,
@@ -134,6 +146,7 @@ export const UserLabelsPanel = () => {
       label={""}
       options={options}
       onChange={handleSelect}
+      itemMinHeight={40}
     />
   );
 
@@ -149,7 +162,7 @@ export const UserLabelsPanel = () => {
         elements={currentContentData as Element[]}
         loading={loading}
         nonEmptyResultsMessage={`These are all the examples labeled by you as '${filteredTitle}'.`}
-        emptyResultsMessage={emptyResultsMessage }
+        emptyResultsMessage={emptyResultsMessage}
         isPaginationRequired={isPaginationRequired}
         Filters={Filters}
       />

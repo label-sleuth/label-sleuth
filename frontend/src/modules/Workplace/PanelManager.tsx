@@ -125,10 +125,10 @@ export const PanelManager = ({
           <SearchPanel clearSearchInput={clearSearchInput} ref={textInputRef} />
         )}
         {activePanelId === PanelIdsEnum.LABEL_NEXT && <LabelNextPanel />}
-        {activePanelId === PanelIdsEnum.POSITIVE_PREDICTIONS && (
+        {activePanelId === PanelIdsEnum.MODEL_PREDICTIONS && (
           <PosPredictionsPanel />
         )}
-        {activePanelId === PanelIdsEnum.POSITIVE_LABELS && <UserLabelsPanel />}
+        {activePanelId === PanelIdsEnum.USER_LABELS && <UserLabelsPanel />}
         {activePanelId === PanelIdsEnum.SUSPICIOUS_LABELS && (
           <SuspiciousLabelsPanel />
         )}
