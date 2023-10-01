@@ -393,6 +393,21 @@ class FileBasedDataAccess(DataAccessApi):
                                                    remove_duplicates=remove_duplicates, random_state=random_state)
         return results_dict
 
+    def get_labeled_elements_by_value(self, workspace_id: str, dataset_name: str, category_id: Union[int, None],
+                                      value: Union[bool, int],
+                                      sample_size: int = sys.maxsize,
+                                      sample_start_idx: int = 0,
+                                      remove_duplicates=False, random_state: int = 0):
+        filter_func = lambda df, labels: \
+            utils.filter_by_label_value(df, labels, category_id, value)
+
+        with self._get_lock_object_for_workspace(workspace_id):
+            results_dict = self._get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
+                                                   filter_func=filter_func, sample_size=sample_size,
+                                                   sample_start_idx=sample_start_idx,
+                                                   remove_duplicates=remove_duplicates, random_state=random_state)
+        return results_dict
+
     def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: Union[int, None],
                          remove_duplicates=False,
                          label_types: Set[LabelType] = frozenset(LabelType._member_map_.values()),
@@ -449,8 +464,12 @@ class FileBasedDataAccess(DataAccessApi):
         :param dataset_name:
         :param category_id:
         """
-        labeled_elements = self.get_labeled_text_elements(workspace_id, dataset_name, category_id,
-                                                          sample_size=sys.maxsize)['results']
+        if self.is_multiclass(workspace_id):
+            labeled_elements = self.get_labeled_text_elements(workspace_id, dataset_name, category_id=None,
+                                                              sample_size=sys.maxsize)['results']
+        else:
+            labeled_elements = self.get_labeled_text_elements(workspace_id, dataset_name, category_id,
+                                                              sample_size=sys.maxsize)['results']
         if len(labeled_elements) > 0:
             self.unset_labels(workspace_id, category_id, [e.uri for e in labeled_elements])
 

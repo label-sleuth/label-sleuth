@@ -118,3 +118,11 @@ def filter_by_query_and_label_status(df: pd.DataFrame, labels_series: pd.Series,
     """
     df = filter_by_labeled_status(df, labels_series, category_id, labeled_status, label_types=label_types)
     return filter_by_query_and_document_uri(df, query, is_regex)
+
+
+def filter_by_label_value(df: pd.DataFrame, labels_series: pd.Series, category_id: Union[int, None],
+                                     value: Union[bool, int]):
+    if category_id is None:
+        return df[labels_series.apply(lambda x: x is not None and x.label == value)]
+    else:
+        return df[labels_series.apply(lambda x: category_id in x and x[category_id].label == value)]

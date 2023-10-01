@@ -254,6 +254,16 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
+    def get_labeled_elements_by_value(self, workspace_id: str, dataset_name: str, category_id: Union[int, None],
+                                  value: Union[bool, int],
+                                  sample_size: int = sys.maxsize,
+                                  sample_start_idx: int = 0,
+                                  remove_duplicates=False, random_state: int = 0):
+        """
+        TODO
+        """
+
+    @abc.abstractmethod
     def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False,
                          label_types: Set[LabelType] = frozenset(LabelType._member_map_.values()),
                          fine_grained_counts=True) -> Mapping[Union[str, bool], int]:

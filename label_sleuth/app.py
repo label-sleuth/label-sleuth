@@ -854,38 +854,14 @@ def get_labeled_elements_by_value(workspace_id):
             f"workspace '{workspace_id}' (multiclass) fetching {size} labeled elements with label {value} "
             f"(start index: {start_idx})")
 
-    elements, hit_count = get_all_labeled_elements(workspace_id, category_id, label=value, size=size,
-                                                   start_idx=start_idx)
+    text_elements, hit_count = curr_app.orchestrator_api.get_labeled_elements_by_value(workspace_id, category_id, value,
+                                                                                  size, start_idx,
+                                                                                  remove_duplicates=False)
+    elements = elements_back_to_front(workspace_id, text_elements, category_id, need_snippet=True)
 
     res = {'elements': elements, "hit_count": hit_count}
     return jsonify(res)
 
-
-def get_all_labeled_elements(workspace_id, category_id, label=None, size: int = 100, start_idx: int = 0):
-    """
-    Return all elements that were assigned the given label, or all labeled elements if label is None
-
-    :param workspace_id:
-    :param category_id: for binary workspace
-    :param label: return only elements assigned this label; if None, return all labeled elements
-    :param size: number of elements to return
-    :param start_idx: get elements starting from this index (for pagination)
-    """
-    dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
-    elements = curr_app.orchestrator_api.get_all_labeled_text_elements(workspace_id, dataset_name, category_id,
-                                                                       remove_duplicates=True)
-    if label is not None:
-        if curr_app.orchestrator_api.is_binary_workspace(workspace_id):
-            elements = [element for element in elements
-                        if element.category_to_label[category_id].label == label]
-        else:
-            elements = [element for element in elements
-                        if element.label.label == label]
-
-    hit_count = len(elements)
-    elements = elements[start_idx: start_idx + size]
-    elements_transformed = elements_back_to_front(workspace_id, elements, category_id)
-    return elements_transformed, hit_count
 
 
 @main_blueprint.route('/workspace/<workspace_id>/import_labels', methods=['POST'])

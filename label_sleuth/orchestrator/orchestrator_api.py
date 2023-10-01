@@ -1021,6 +1021,17 @@ class OrchestratorApi:
         self.orchestrator_state.increase_label_change_count_since_last_train(workspace_id, category_id,
                                                                              changed_elements_count)
 
+    def get_labeled_elements_by_value(self, workspace_id: str, category_id: Union[int, None],
+                                      value: Union[bool, int],
+                                      sample_size: int = sys.maxsize,
+                                      sample_start_idx: int = 0,
+                                      remove_duplicates=False, random_state: int = 0):
+
+        dataset_name = self.get_dataset_name(workspace_id)
+        results_dict = self.data_access.get_labeled_elements_by_value(workspace_id, dataset_name, category_id, value,
+                                                      sample_size, sample_start_idx, remove_duplicates, random_state)
+        return results_dict["results"], results_dict["hit_count"]
+
     def get_elements_by_prediction(self, workspace_id, category_id, required_prediction, sample_size, start_idx=0,
                                    shuffle=False, random_state=0, remove_duplicates=True) -> List[TextElement]:
         """
