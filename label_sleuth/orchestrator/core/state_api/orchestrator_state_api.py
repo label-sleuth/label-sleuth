@@ -86,6 +86,7 @@ class MulticlassCategory:
     id: int
     description: str
     color: Optional[str]
+    deleted:bool = False
 
     def __copy__(self):
         return dataclasses.replace(self)
@@ -257,7 +258,14 @@ class OrchestratorStateApi:
     def delete_category_from_workspace(self, workspace_id: str, category_id: int):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            workspace.categories[category_id] = None
+            if type(workspace) == Workspace:
+                workspace.categories[category_id] = None
+            elif type(workspace) == MulticlassWorkspace:
+                workspace.categories[category_id].deleted = True
+            else:
+                raise Exception(f"delete category in workspace id '{workspace_id}' "
+                                f"type ({type(workspace)}) is not supported")
+
             self._save_workspace(workspace)
 
     def get_current_category_recommendations(self, workspace_id: str, category_id: int) -> Sequence[str]:

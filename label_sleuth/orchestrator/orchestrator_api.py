@@ -205,8 +205,11 @@ class OrchestratorApi:
         logging.info(f"deleting category id {category_id} from workspace '{workspace_id}'")
         dataset_name = self.get_dataset_name(workspace_id)
         self.data_access.delete_labels_for_category(workspace_id, dataset_name, category_id)
-        self._delete_category_models(workspace_id, category_id)
+        if self.is_binary_workspace(workspace_id):
+            self._delete_category_models(workspace_id, category_id)
+
         self.orchestrator_state.delete_category_from_workspace(workspace_id, category_id)
+
 
     def get_all_categories(self, workspace_id: str) -> Mapping[int, Union[Category, MulticlassCategory]]:
         return self.orchestrator_state.get_all_categories(workspace_id)

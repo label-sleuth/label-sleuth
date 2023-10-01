@@ -449,7 +449,8 @@ def get_all_categories(workspace_id):
                           for cat_id, category in categories.items()]
     else:
         category_dicts = [{'category_id': cat_id, 'category_name': category.name,
-                           'category_description': category.description, 'category_color': category.color}
+                           'category_description': category.description, 'category_color': category.color,
+                           'deleted': category.deleted}
                           for cat_id, category in categories.items()]
 
     res = {'categories': category_dicts}

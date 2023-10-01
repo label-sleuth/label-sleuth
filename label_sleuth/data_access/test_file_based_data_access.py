@@ -231,6 +231,27 @@ class TestFileBasedDataAccess(unittest.TestCase):
         self.assertListEqual(text_elements_expected, text_elements_found)
         self.data_access.delete_dataset(dataset_name)
 
+    def test_delete_category_labels_multiclass(self):
+        workspace_id = 'test_delete_category_labels_multiclass'
+        dataset_name = self.test_delete_category_labels_multiclass.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name,
+                                                workspace_type=WorkspaceModelType.MultiClass)
+        category_ids = list(range(3))
+        doc = generate_corpus(self.data_access, dataset_name)[0]
+        uri_to_label = add_random_multiclass_labels_to_document(doc, 2, category_ids)
+        self.data_access.set_labels(workspace_id, uri_to_label)
+        class_0_size = sum([x.label == 0 for x in uri_to_label.values()])
+        self.assertEqual(class_0_size,
+                         self.data_access.get_labeled_elements_by_value(workspace_id,
+                                                                        dataset_name,
+                                                                        category_id=None, value=0)['hit_count'])
+        self.data_access.delete_labels_for_category(workspace_id, dataset_name, category_id=0)
+        self.assertEqual(0,
+                         self.data_access.get_labeled_elements_by_value(workspace_id,
+                                                                        dataset_name,
+                                                                        category_id=None, value=0)['hit_count'])
+
+
     # def test_get_text_elements(self):
     #     dataset_name = self.test_sample_text_elements.__name__ + '_dump'
     #     sample_size = 5
@@ -295,6 +316,24 @@ class TestFileBasedDataAccess(unittest.TestCase):
         for sampled_text in sampled_texts_res['results']:
             self.assertDictEqual(sampled_text.category_to_label, {})
         self.data_access.delete_dataset(dataset_name)
+
+    def test_delete_binary_category(self):
+        workspace_id = 'test_delete_binary_category'
+        dataset_name = self.test_delete_binary_category.__name__ + '_dump'
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type=WorkspaceModelType.Binary)
+        category_id = 0
+        sample_all = 10 ** 100  # a huge sample_size to sample all elements
+        docs = generate_corpus(self.data_access, dataset_name, 2)
+        # add labels info for a single doc
+        selected_doc = docs[0]
+        texts_and_labels_list = add_random_labels_to_document(selected_doc, 5, [category_id])
+        self.data_access.set_labels(workspace_id, texts_and_labels_list)
+        self.assertEqual(len(texts_and_labels_list),
+                         self.data_access.get_labeled_text_elements(
+                             workspace_id, dataset_name, category_id)['hit_count'])
+        self.data_access.delete_labels_for_category(workspace_id, dataset_name, 0)
+        self.assertEqual(0, self.data_access.get_labeled_text_elements(
+                             workspace_id, dataset_name, category_id)['hit_count'])
 
     def test_get_labeled_text_elements(self):
         workspace_id = 'test_sample_labeled_text_elements'

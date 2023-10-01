@@ -755,6 +755,23 @@ class TestAppIntegration(unittest.TestCase):
             self.assertEqual(0, element["model_predictions"], msg=f"element {element} expected prediction is 0 but got {element['model_predictions']}")
 
 
+        # delete category 0
+        res = self.client.delete(f"/workspace/{workspace_name}/category/0?mode=MultiClass", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to delete category 0 in multiclass workspace")
+
+        res = self.client.get(f"/workspace/{workspace_name}/categories", headers=HEADERS)
+        self.assertEqual(res.get_json()['categories'][0]['deleted'], True, msg='category 0 was not deleted')
+
+
+        # make sure there are no elements labeled for category 0
+        # elements by label
+        res = self.client.get(f"/workspace/{workspace_name}/elements_by_label?value=0&mode=MultiClass",
+                              headers=HEADERS)
+        self.assertEqual(200, res.status_code,
+                         msg="Failed to get labeled elements from category 0")
+        self.assertEqual({'elements': [], 'hit_count': 0},
+                         res.get_json(), msg="labeled elements for category 0 were deleted should not exist in this workspace")
+
 
         # delete workspace
         res = self.client.delete(f"/workspace/{workspace_name}",

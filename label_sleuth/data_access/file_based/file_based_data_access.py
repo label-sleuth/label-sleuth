@@ -465,8 +465,9 @@ class FileBasedDataAccess(DataAccessApi):
         :param category_id:
         """
         if self.is_multiclass(workspace_id):
-            labeled_elements = self.get_labeled_text_elements(workspace_id, dataset_name, category_id=None,
-                                                              sample_size=sys.maxsize)['results']
+            labeled_elements = self.get_labeled_elements_by_value(workspace_id, dataset_name, category_id=None,
+                                                                  value=category_id)['results']
+            category_id = None
         else:
             labeled_elements = self.get_labeled_text_elements(workspace_id, dataset_name, category_id,
                                                               sample_size=sys.maxsize)['results']
