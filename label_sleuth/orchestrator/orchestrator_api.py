@@ -889,8 +889,9 @@ class OrchestratorApi:
                 changes_since_last_model >= self.config.binary_flow.changed_element_threshold)
 
     def _should_train_multiclass_condition(self, changes_since_last_model, label_counts, num_classes):
-        return (len(label_counts) == num_classes
-                and all(count >= self.config.multiclass_flow.per_class_labeling_threshold for count in label_counts.values())
+
+        return (len(label_counts) == num_classes and len(label_counts) >= 2 and
+                all(count >= self.config.multiclass_flow.per_class_labeling_threshold for count in label_counts.values())
                 and changes_since_last_model >= self.config.multiclass_flow.changed_element_threshold)
 
     def infer(self, workspace_id: str, category_id: int, elements_to_infer: Sequence[TextElement],
