@@ -557,7 +557,6 @@ class TestAppIntegration(unittest.TestCase):
                           'category_name': category_name3, 'category_id': str(category_id)}, res.get_json(),
                          msg="diff in create category response")
 
-
         res = self.client.get(f"/workspace/{workspace_name}/documents", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get all documents uris")
         documents = res.get_json()['documents']
@@ -605,7 +604,7 @@ class TestAppIntegration(unittest.TestCase):
 
         res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
-        self.assertEqual({'labeling_counts': {'0': 1}, 'progress': {'all': 33}},
+        self.assertEqual({'labeling_counts': {'0': 1, '1': 0, '2': 0}, 'progress': {'all': 33}},
                          res.get_json(), msg="diffs in get status response after setting a label")
 
         # set second element and get status
@@ -625,7 +624,7 @@ class TestAppIntegration(unittest.TestCase):
 
         res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the second label")
-        self.assertEqual({'labeling_counts': {'0': 1, '1': 1}, 'progress': {'all': 67}},
+        self.assertEqual({'labeling_counts': {'0': 1, '1': 1, '2': 0}, 'progress': {'all': 67}},
                          res.get_json(), msg="diffs in get status response after setting the second label")
 
         # set third element and get status

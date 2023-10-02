@@ -405,13 +405,17 @@ class OrchestratorApi:
             train_set_selector = self.training_set_selection_factory.get_training_set_selector(
                                                            flow_config.training_set_selection_strategy)
             used_label_types = train_set_selector.get_label_types()
-            return self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
-                                                     remove_duplicates=remove_duplicates,
-                                                     fine_grained_counts=False,
-                                                     label_types=used_label_types)
+            label_counts = self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
+                                                             remove_duplicates=remove_duplicates,
+                                                             fine_grained_counts=False,
+                                                             label_types=used_label_types)
         else:
-            return self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
-                                                     remove_duplicates=remove_duplicates, fine_grained_counts=True)
+            label_counts = self.data_access.get_label_counts(workspace_id, dataset_name, category_id,
+                                                             remove_duplicates=remove_duplicates,
+                                                             fine_grained_counts=True)
+            if not self.is_binary_workspace(workspace_id):
+                label_counts = {str(c): label_counts.get(str(c), 0) for c in self.get_all_categories(workspace_id)}
+        return label_counts
 
     # Iteration-related methods
 

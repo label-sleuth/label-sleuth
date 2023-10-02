@@ -264,7 +264,8 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: int, remove_duplicates=False,
+    def get_label_counts(self, workspace_id: str, dataset_name: str, category_id: Union[int, None],
+                         remove_duplicates=False,
                          label_types: Set[LabelType] = frozenset(LabelType._member_map_.values()),
                          fine_grained_counts=True) -> Mapping[Union[str, bool], int]:
         """
