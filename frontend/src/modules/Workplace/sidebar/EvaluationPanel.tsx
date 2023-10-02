@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { Box, Button, Stack, Divider } from "@mui/material";
 import classes from "./index.module.css";
 import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
@@ -38,7 +38,6 @@ import { Element } from "../../../global";
 import { returnByMode } from "../../../utils/utils";
 import { useNotification } from "../../../utils/notification";
 import { toast } from "react-toastify";
-import { PayloadAction } from "@reduxjs/toolkit";
 
 const EvaluationPanel = () => {
   const dispatch = useAppDispatch();
@@ -139,19 +138,10 @@ const EvaluationPanel = () => {
 
   const submitEvaluation = useCallback(() => {
     const changedElementsCount = getChangedElementsCount();
-    dispatch(getEvaluationResults(changedElementsCount)).then((a) => {
-      const score = (a.payload as { score: number }).score;
-      notify(
-        EVALUATION_RESULT_MSG(
-          Math.round(score * 100),
-          score,
-          metric
-        ),
-        { type: toast.TYPE.SUCCESS, toastId: "evaluation_result_toast" }
-      );
+    dispatch(getEvaluationResults(changedElementsCount)).then(() => {
       dispatch(checkStatus());
     });
-  }, [dispatch, getChangedElementsCount, metric, notify, scoreModelVersion]);
+  }, [dispatch, getChangedElementsCount]);
 
   const onCancelEvaluation = useCallback(() => {
     const changedElementsCount = getChangedElementsCount();
@@ -205,6 +195,18 @@ const EvaluationPanel = () => {
     isLoading,
     metric,
   ]);
+
+  useEffect(() => {
+    lastScore &&
+      notify(
+        EVALUATION_RESULT_MSG(
+          Math.round(lastScore * 100),
+          scoreModelVersion,
+          metric
+        ),
+        { type: toast.TYPE.SUCCESS, toastId: "evaluation_result_toast" }
+      );
+  }, [lastScore, scoreModelVersion, metric, notify]);
 
   return (
     <Box>
