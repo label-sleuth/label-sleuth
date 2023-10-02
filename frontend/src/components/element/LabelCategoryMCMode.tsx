@@ -126,10 +126,6 @@ export const LabelCategoriesMenu = ({
             handleClose={handleClose}
           />
         ))}
-        <Divider variant="middle" />
-        <Button variant="text" sx={{textTransform: "none", fontSize: "0.75rem"}} endIcon={<AddIcon fontSize="inherit" />}>
-          Create new category
-        </Button>
       </Stack>
     </Menu>
   );
