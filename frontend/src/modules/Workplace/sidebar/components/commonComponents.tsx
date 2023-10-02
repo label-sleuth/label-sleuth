@@ -31,15 +31,16 @@ export const Header = ({ message }: HeaderProps) => {
         display: "flex",
         flexDirection: "row",
         alignItem: "center",
-        marginTop: "11px",
         borderBottom: "1px solid #e2e2e2",
-        pb: "12px",
+        pt: 3,
+        pb: 3,
         justifyContent: "center",
+        pl: 3,
       }}
     >
-      <p style={{ width: "100%", textAlign: "center" }}>
+      <Typography style={{ height: "31px", lineHeight: "31px"}}>
         <strong>{message}</strong>
-      </p>
+      </Typography>
     </Box>
   );
 };
