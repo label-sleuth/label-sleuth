@@ -170,7 +170,7 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: fetchCategories.fulfilled,
     reducer: (state: WorkspaceState, action: PayloadAction<Category[]>) => {
-      const categories = action.payload;
+      const categories = action.payload.filter(c => !c.deleted);
 
       state.categories = categories.map((c) => {
         const badgeColor: BadgeColor = c.color
@@ -216,10 +216,11 @@ export const extraReducers: Array<ReducerObj> = [
   },
   {
     action: deleteCategory.fulfilled,
-    reducer: (state: WorkspaceState) => {
+    reducer: (state: WorkspaceState, action: PayloadAction<{category_id: string}>) => {
       state.deletingCategory = false;
       state.categories = state.categories.filter(
-        (c: Category) => c.category_id !== state.curCategory
+        // eslint-disable-next-line
+        (c: Category) => c.category_id.toString() != action.payload.category_id
       );
       state.curCategory = null;
       state.modelVersion = null;
