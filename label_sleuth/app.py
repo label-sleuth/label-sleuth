@@ -492,12 +492,11 @@ def update_category(workspace_id, category_id):
     curr_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description,
                                             new_category_color)
 
-    return jsonify({
-        "workspace_id": workspace_id, 
-        "category_id": str(category_id), 
-        "category_name": new_category_name,
-        "category_description": new_category_description
-    })
+    post_data['workspace_id'] = workspace_id
+    post_data["category_id"] = str(category_id)
+
+    return jsonify(post_data)
+
 
 
 @main_blueprint.route("/workspace/<workspace_id>/category/<category_id>", methods=['DELETE'])
