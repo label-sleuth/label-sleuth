@@ -17,8 +17,6 @@ import { Box } from "@mui/material";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
 import {
-  curCategoryNameSelector,
-  getModelPredictions,
   setPanelFilters,
 } from "../redux";
 import { PanelIdsEnum, WorkspaceMode } from "../../../const";
@@ -32,8 +30,7 @@ import ControlledSelect, {
 import { returnByMode } from "../../../utils/utils";
 import { getPredictionsStats } from "../redux/panelsSlice";
 
-const PosPredictionsPanel = () => {
-  const curCategoryName = useAppSelector(curCategoryNameSelector);
+const ModelPredictionsPanel = () => {
   const { hitCount } = useAppSelector(
     (state) => state.workspace.panels.panels[PanelIdsEnum.MODEL_PREDICTIONS]
   );
@@ -81,7 +78,7 @@ const PosPredictionsPanel = () => {
         : null
     );
     dispatch(getPredictionsStats());
-  }, [mode, categories, setFilteredValue]);
+  }, [mode, categories, setFilteredValue, dispatch]);
 
   const options: DropdownOption[] = useMemo(() => {
     if (mode === WorkspaceMode.BINARY) {
@@ -121,7 +118,7 @@ const PosPredictionsPanel = () => {
   }, [mode, categories, modelPredictionStats]);
 
   const filteredTitle = useMemo(
-    // es
+    // eslint-disable-next-line
     () => options.find((option) => option.value == filteredValue)?.title,
     [filteredValue, options]
   );
@@ -151,11 +148,11 @@ const PosPredictionsPanel = () => {
     } out of ${hitCount}.`;
     return startingMessage + finalMessage;
   }, [
-    curCategoryName,
     hitCount,
     sidebarPanelElementsPerPage,
     currentPage,
     pageCount,
+    filteredTitle,
   ]);
 
   const handleSelect = (value: string) => {
@@ -164,6 +161,7 @@ const PosPredictionsPanel = () => {
         value,
         categories
           .find((c) => {
+            // eslint-disable-next-line
             return c.category_id == Number(value);
           })
           ?.category_id.toString(),
@@ -210,4 +208,4 @@ const PosPredictionsPanel = () => {
   );
 };
 
-export default PosPredictionsPanel;
+export default ModelPredictionsPanel;

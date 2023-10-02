@@ -107,7 +107,7 @@ export const UserLabelsPanel = () => {
   }, [mode, categories, labelCount]);
 
   const filteredTitle = useMemo(
-    // es
+    // eslint-disable-next-line
     () => options.find((option) => option.value == filteredValue)?.title,
     [filteredValue, options]
   );
@@ -118,6 +118,7 @@ export const UserLabelsPanel = () => {
         value,
         categories
           .find((c) => {
+            // eslint-disable-next-line
             return c.category_id == Number(value);
           })
           ?.category_id.toString(),
@@ -155,7 +156,7 @@ export const UserLabelsPanel = () => {
     return mode === WorkspaceMode.BINARY
       ? `No elements are currently labeled as ${filteredTitle} for this category.`
       : `No elements are currently labeled as ${filteredTitle}.`;
-  }, [mode]);
+  }, [mode, filteredTitle]);
   return (
     <Box>
       <Header message={"User labels"} />

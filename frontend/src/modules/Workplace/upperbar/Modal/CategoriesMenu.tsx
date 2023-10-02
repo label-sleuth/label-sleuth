@@ -332,11 +332,14 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     }),
     []
   );
+
   const onCreateNewCategoryClick = useCallback(() => {
     setNewCategories([
       ...newCategories,
       {
-        id: crypto.randomUUID(),
+        // id is just a number. To avoid problems with deleting categories that are being created
+        // we just set the id as 1 + the maximum current id. 
+        id: newCategories.length ? (Math.max(...newCategories.map(nc => parseInt(nc.id))) + 1).toString() : "1",
         categoryName: "",
         categoryDescription: "",
         color: undefined,

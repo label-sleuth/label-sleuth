@@ -82,8 +82,6 @@ export const EditOrCreateCategoryModal = ({
       ]
   );
 
-  const mode = useAppSelector((state) => state.workspace.mode);
-
   const handleCategoryNameFieldChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {

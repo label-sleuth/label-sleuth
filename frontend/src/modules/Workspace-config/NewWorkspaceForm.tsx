@@ -38,7 +38,6 @@ import {
   Typography,
 } from "@mui/material";
 import info_icon from "../../assets/workspace/help.svg";
-import { positions } from "@mui/system";
 
 interface NewWorkspaceFormProps {
   handleDatasetChange: (value: string) => void;

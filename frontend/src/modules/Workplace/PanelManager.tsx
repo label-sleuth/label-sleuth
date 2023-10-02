@@ -22,14 +22,14 @@ import {
   PanelIdsEnum,
 } from "../../const";
 import MainPanel from "./main/MainPanel";
-import { useAppDispatch, useAppSelector } from "../../customHooks/useRedux";
+import { useAppSelector } from "../../customHooks/useRedux";
 import { UserLabelsPanel } from "./sidebar/UserLabelsPanel";
 import SuspiciousLabelsPanel from "./sidebar/SuspiciousLabelsPanel";
 import ContradictingLabelsPanel from "./sidebar/ContradictingLabelsPanel";
 import EvaluationPanel from "./sidebar/EvaluationPanel";
 import SearchPanel from "./sidebar/SearchPanel";
 import LabelNextPanel from "./sidebar/LabelNextPanel";
-import PosPredictionsPanel from "./sidebar/ModelPredictionsPanel";
+import ModelPredictionsPanel from "./sidebar/ModelPredictionsPanel";
 
 import useTogglePanel from "../../customHooks/useTogglePanel";
 import useResize from "../../customHooks/useResize";
@@ -126,7 +126,7 @@ export const PanelManager = ({
         )}
         {activePanelId === PanelIdsEnum.LABEL_NEXT && <LabelNextPanel />}
         {activePanelId === PanelIdsEnum.MODEL_PREDICTIONS && (
-          <PosPredictionsPanel />
+          <ModelPredictionsPanel />
         )}
         {activePanelId === PanelIdsEnum.USER_LABELS && <UserLabelsPanel />}
         {activePanelId === PanelIdsEnum.SUSPICIOUS_LABELS && (
