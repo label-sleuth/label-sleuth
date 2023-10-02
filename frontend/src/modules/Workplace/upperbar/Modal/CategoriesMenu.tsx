@@ -45,7 +45,7 @@ import {
   ColorPickerButton,
   ColorPickerMenu,
 } from "../../../../components/colorPicker/ColorPicker";
-import { ChangeEvent, useCallback, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { badgePalettes } from "../../../../utils/utils";
 import { PrimaryButton } from "../../../../components/dialog";
 import {
@@ -66,6 +66,12 @@ interface NewCategoryFormProps {
   setCategoryAttribute: (id: string, key: string, newValue: any) => void;
   removeNewCategory: (id: string) => void;
   isEditing: boolean;
+  inCreationCategories?: {
+    id: string;
+    categoryName: string;
+    categoryDescription: string;
+    color: BadgeColor | undefined;
+  }[];
 }
 
 const NewCategoryForm = ({
@@ -76,6 +82,7 @@ const NewCategoryForm = ({
   setCategoryAttribute,
   removeNewCategory,
   isEditing = false,
+  inCreationCategories,
 }: NewCategoryFormProps) => {
   const {
     colorPickerMenuOpenAnchorEl,
@@ -90,13 +97,43 @@ const NewCategoryForm = ({
       ]
   );
 
-  const emptyColor = useMemo(
+  const categories = useAppSelector((state) => state.workspace.categories);
+
+  const greyColor = useMemo(
     () => ({
-      name: "white",
-      palette: badgePalettes["white"],
+      name: "grey",
+      palette: badgePalettes["grey"],
     }),
     []
   );
+
+  const defaultColor: BadgeColor = useMemo(() => {
+    const usedColors = new Set<string>();
+    categories.forEach((c) => c.color && usedColors.add(c.color.name));
+    inCreationCategories?.forEach(
+      (c) => c.color && usedColors.add(c.color.name)
+    );
+    const unusedColors = new Set<string>();
+    Object.keys(badgePalettes).forEach(
+      (k) => !!!usedColors.has(k) && unusedColors.add(k)
+    );
+    unusedColors.delete('white');
+    if (unusedColors.size > 0) {
+      const colorName = Array.from(unusedColors)[0];
+      return {
+        name: colorName,
+        palette: badgePalettes[colorName],
+      };
+    } else {
+      return greyColor;
+    }
+  }, [categories, greyColor, inCreationCategories]);
+
+  useEffect(() => {
+    if (!color) {
+      setCategoryAttribute(id, "color", defaultColor);
+    }
+  }, [color, defaultColor, id, setCategoryAttribute]);
 
   const handleCategoryNameFieldChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -142,11 +179,9 @@ const NewCategoryForm = ({
           sx={{
             mr: 2,
             mt: 2.5,
-            borderColor: color ? "none" : "gray",
-            borderStyle: color ? "none" : "dashed",
           }}
           setColorPickerMenuOpenAnchorEl={setColorPickerMenuOpenAnchorEl}
-          categoryColor={color ? color.palette : emptyColor.palette}
+          categoryColor={color ? color.palette : defaultColor.palette}
         />
         <Stack direction={"column"} sx={{ maxWidth: "250px" }}>
           <TextField
@@ -230,7 +265,7 @@ const CategoryEntry = ({
             height: "25px",
             float: "left",
             borderRadius: "8px",
-            backgroundColor: category.color?.palette[200],
+            backgroundColor: category.color?.palette[300],
             mr: 2,
           }}
         />
@@ -290,14 +325,13 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
 
   const { notify } = useNotification();
 
-  const defaultColor = useMemo(
+  const greyColor = useMemo(
     () => ({
       name: "grey",
       palette: badgePalettes["grey"],
     }),
     []
   );
-
   const onCreateNewCategoryClick = useCallback(() => {
     setNewCategories([
       ...newCategories,
@@ -333,6 +367,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
   const setCategoryAttribute = useCallback(
     (id: string, key: string, newValue: any) => {
       const changedCategory = editedCategories.find(
+        // eslint-disable-next-line
         (c) => `${c.category_id}` == id
       );
       if (changedCategory) {
@@ -340,6 +375,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
           key as "category_name" | "category_description" | "color"
         ] = newValue;
         setEditedCategories([
+          // eslint-disable-next-line
           ...editedCategories.filter((ec) => `${ec.category_id}` != id),
           changedCategory,
         ]);
@@ -372,11 +408,11 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     [dispatch, notify]
   );
 
-  const onClose = () => {
+  const onClose = useCallback(() => {
     setEditedCategories([]);
     setNewCategories([]);
     setOpen(false);
-  };
+  }, [setEditedCategories, setNewCategories, setOpen]);
 
   const onSubmit = useCallback(() => {
     Promise.all(
@@ -385,12 +421,15 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
           createCategory({
             categoryName: nc.categoryName,
             categoryDescription: nc.categoryDescription,
-            categoryColor: nc.color || defaultColor,
+            categoryColor: nc.color || greyColor,
           })
         )
       )
     ).then((actionResults) => {
-      if (actionResults.length > 0 && actionResults.every((actionResults) => isFulfilled(actionResults))) {
+      if (
+        actionResults.length > 0 &&
+        actionResults.every((actionResults) => isFulfilled(actionResults))
+      ) {
         setNewCategories([]);
         dispatch(checkStatus());
         notify(`The categories has been created`, {
@@ -400,19 +439,23 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
         });
       }
     });
+
     Promise.all(
       editedCategories.map((c) =>
         dispatch(
           editCategory({
             newCategoryName: c.category_name,
             newCategoryDescription: c.category_description,
-            newCategoryColor: c.color || defaultColor,
-            categoryId: c.category_id
+            newCategoryColor: c.color || greyColor,
+            categoryId: c.category_id,
           })
         )
       )
     ).then((actionResults) => {
-      if (actionResults.length > 0 && actionResults.every((actionResults) => isFulfilled(actionResults))) {
+      if (
+        actionResults.length > 0 &&
+        actionResults.every((actionResults) => isFulfilled(actionResults))
+      ) {
         setEditedCategories([]);
         dispatch(checkStatus());
         notify(`The categories has been edited`, {
@@ -421,8 +464,17 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
           toastId: "category_edited_toast",
         });
       }
+      onClose();
     });
-  }, [newCategories, setNewCategories, defaultColor, editedCategories, editedCategories, dispatch, notify]);
+  }, [
+    newCategories,
+    setNewCategories,
+    greyColor,
+    editedCategories,
+    dispatch,
+    notify,
+    onClose,
+  ]);
 
   const setCategoryEdited = useCallback(
     (category: Category) => {
@@ -483,6 +535,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
           >
             {categories.map((category) =>
               editedCategories.find(
+                // eslint-disable-next-line
                 (c) => c.category_id == category.category_id
               ) !== undefined ? (
                 <NewCategoryForm
@@ -490,6 +543,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                   categoryName={
                     (
                       editedCategories.find(
+                        // eslint-disable-next-line
                         (c) => c.category_id == category.category_id
                       ) as Category
                     ).category_name
@@ -497,6 +551,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                   categoryDescription={
                     (
                       editedCategories.find(
+                        // eslint-disable-next-line
                         (c) => c.category_id == category.category_id
                       ) as Category
                     ).category_description
@@ -504,6 +559,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                   color={
                     (
                       editedCategories.find(
+                        // eslint-disable-next-line
                         (c) => c.category_id == category.category_id
                       ) as Category
                     ).color
@@ -532,6 +588,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                 setCategoryAttribute={setNewCategoryAttribute}
                 removeNewCategory={onRemoveNewCategory}
                 isEditing={false}
+                inCreationCategories={newCategories}
               />
             ))}
           </DialogContent>

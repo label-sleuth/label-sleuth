@@ -20,7 +20,6 @@ import { client } from "../../../api/client";
 import {
   badgePalettes,
   defaultColor,
-  getRandomColor,
   getWorkspaceId,
   returnByMode,
 } from "../../../utils/utils";
@@ -204,6 +203,12 @@ export const extraReducers: Array<ReducerObj> = [
     },
   },
   {
+    action: deleteCategory.rejected,
+    reducer: (state: WorkspaceState) => {
+      state.deletingCategory = false;
+    },
+  },
+  {
     action: deleteCategory.pending,
     reducer: (state: WorkspaceState) => {
       state.deletingCategory = true;
@@ -224,8 +229,10 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: editCategory.fulfilled,
     reducer: (state: WorkspaceState, action) => {
-      const { category_name, category_description, category_id } = action.payload;
+      const { category_name, category_description, category_id } =
+        action.payload;
       state.categories = state.categories.map((c: Category) =>
+        // eslint-disable-next-line
         c.category_id == category_id
           ? {
               ...c,

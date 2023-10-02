@@ -14,13 +14,9 @@
 */
 
 import React, { useState } from "react";
-import Box from "@mui/material/Box";
-import classes from "./UpperBar.module.css";
 import { useAppSelector } from "../../../customHooks/useRedux";
 import { IconButton, Stack, Typography } from "@mui/material";
 import { AppBarLS, UpperBarProps } from ".";
-import AddIcon from "@mui/icons-material/Add";
-import { CreateCategoryModal } from "./Modal/CreateCategoryModal";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import { CategoriesMenu } from "./Modal/CategoriesMenu";
 
@@ -30,19 +26,12 @@ export const UpperBarMCMode = ({
 }: UpperBarProps) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const categories = useAppSelector((state) => state.workspace.categories);
-  const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
   const [cardOpen, setCardOpen] = React.useState(true);
   const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false);
-  const [createCategoryModalOpen2, setCreateCategoryModalOpen2] = useState(false);
 
   const handleAddCategory = () => {
     setCreateCategoryModalOpen(true);
   };
-
-  const handleAddCategory2 = () => {
-    setCreateCategoryModalOpen2(true);
-  };
-
 
   React.useEffect(() => {
     if (curCategory !== null && cardOpen) {
@@ -55,22 +44,34 @@ export const UpperBarMCMode = ({
       rightDrawerWidth={rightDrawerWidth}
       rightPanelOpen={rightPanelOpen}
     >
-      <Box className={classes["app-bar-container"]}>
+      <Stack
+        direction="row"
+        justifyContent={"space-between"}
+        alignItems={"center"}
+        flexGrow={1}
+      >
+        <Typography variant="h6">{"Categories"}</Typography>
         <Stack direction="row" alignItems={"center"}>
-          <Typography variant="subtitle1">{`${categories.length} categories`}</Typography>
+          <Typography sx={{ flexGrow: 1 }} variant="subtitle1">
+            {categories.length > 0
+              ? `${categories.length} ${
+                  categories.length === 1 ? "category" : "categories"
+                }`
+              : "No categories created yet"}
+          </Typography>
           <IconButton
             size="small"
             sx={(palette) => ({ color: palette.palette.primary.main, ml: 2 })}
             onClick={handleAddCategory}
-            >
+          >
             <ModeEditOutlineOutlinedIcon fontSize="inherit" />
           </IconButton>
         </Stack>
-        <CategoriesMenu
-          open={createCategoryModalOpen}
-          setOpen={setCreateCategoryModalOpen}
-        />
-      </Box>
+      </Stack>
+      <CategoriesMenu
+        open={createCategoryModalOpen}
+        setOpen={setCreateCategoryModalOpen}
+      />
     </AppBarLS>
   );
 };

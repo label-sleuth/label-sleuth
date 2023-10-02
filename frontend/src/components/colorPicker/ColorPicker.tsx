@@ -8,7 +8,7 @@ interface ColorPickerMenuProps {
   open: boolean;
   setColorPickerMenuOpenAnchorEl: any;
   categoryColor?: BadgeColor;
-  setCategoryColor: (newColor: BadgeColor) => void
+  setCategoryColor: (newColor: BadgeColor) => void;
 }
 
 export const ColorPickerMenu = ({
@@ -43,26 +43,32 @@ export const ColorPickerMenu = ({
       </DialogContentText>
       <Box sx={{ width: "250px", p: 2 }}>
         <Grid container spacing={1}>
-          {Object.entries(badgePalettes).map(([k, v], i) => (
-            <Grid item xs={2} key={i}>
-              <Box
-                onClick={() => {
-                  setColorPickerMenuOpenAnchorEl(null);
-                  setCategoryColor({ name: k, palette: v });
-                }}
-                sx={{
-                  width: "30px",
-                  height: "30px",
-                  float: "left",
-                  borderRadius: "4px",
-                  backgroundColor: categoryColor?.name === k ? v[400] : v[100],
-                  boxShadow:
-                    categoryColor?.name === k ? `0 0 4px ${v[300]}` : "none",
-                  cursor: "pointer",
-                }}
-              />
-            </Grid>
-          ))}
+          {Object.entries(badgePalettes).map(
+            ([k, v], i) =>
+              k !== "white" && (
+                <Grid item xs={2} key={i}>
+                  <Box
+                    onClick={() => {
+                      setColorPickerMenuOpenAnchorEl(null);
+                      setCategoryColor({ name: k, palette: v });
+                    }}
+                    sx={{
+                      width: "30px",
+                      height: "30px",
+                      float: "left",
+                      borderRadius: "4px",
+                      backgroundColor:
+                        categoryColor?.name === k ? v[400] : v[200],
+                      boxShadow:
+                        categoryColor?.name === k
+                          ? `0 0 8px ${v[300]}`
+                          : "none",
+                      cursor: "pointer",
+                    }}
+                  />
+                </Grid>
+              )
+          )}
         </Grid>
       </Box>
     </Menu>
@@ -90,7 +96,7 @@ export const ColorPickerButton = ({
         height: "25px",
         float: "left",
         borderRadius: "8px",
-        backgroundColor: categoryColor[400],
+        backgroundColor: categoryColor[300],
         cursor: "pointer",
         ...sx,
       }}
