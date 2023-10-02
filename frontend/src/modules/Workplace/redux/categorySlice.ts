@@ -112,7 +112,6 @@ export const editCategory = createAsyncThunk<
     { getState }
   ) => {
     const state = getState();
-
     var url = `${getWorkspace_url}/${encodeURIComponent(
       getWorkspaceId()
     )}/category/${returnByMode(
@@ -121,6 +120,7 @@ export const editCategory = createAsyncThunk<
       state.workspace.mode
     )}`;
 
+    console.log(newCategoryColor);
     const body = {
       category_name: newCategoryName,
       category_description: newCategoryDescription,
@@ -229,8 +229,12 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: editCategory.fulfilled,
     reducer: (state: WorkspaceState, action) => {
-      const { category_name, category_description, category_id } =
-        action.payload;
+      const {
+        category_name,
+        category_description,
+        category_id,
+        category_color,
+      } = action.payload;
       state.categories = state.categories.map((c: Category) =>
         // eslint-disable-next-line
         c.category_id == category_id
@@ -238,6 +242,10 @@ export const extraReducers: Array<ReducerObj> = [
               ...c,
               category_name,
               category_description,
+              color: {
+                name: category_color,
+                palette: badgePalettes[category_color],
+              },
             }
           : c
       );
