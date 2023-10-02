@@ -643,10 +643,14 @@ def prediction_stats(workspace_id):
         pos_count = iteration.iteration_statistics['total_positive_count']
         total = len(curr_app.orchestrator_api.get_all_text_elements_uris(workspace_id))
         neg_count = total - pos_count
-        iteration.iteration_statistics['prediction_stats'] = {True: {'count': pos_count, 'fraction': pos_count / total},
+        iteration.iteration_statistics['prediction_stats'] = {True: {'count': pos_count, 'fraction': pos_count/total},
                                                               False: {"count": neg_count, 'fraction': neg_count/total}}
 
-    return jsonify(iteration.iteration_statistics["prediction_stats"])
+    prediction_stats = iteration.iteration_statistics['prediction_stats']
+    if not curr_app.orchestrator_api.is_binary_workspace(workspace_id):
+        prediction_stats = {c: prediction_stats.get(c, {'count': 0, 'fraction': 0.0})  # add new categories
+                            for c in curr_app.orchestrator_api.get_all_categories(workspace_id)}
+    return jsonify(prediction_stats)
 
 @main_blueprint.route("/workspace/<workspace_id>/elements_by_prediction", methods=['GET'])
 @login_if_required
@@ -703,8 +707,11 @@ def elements_by_prediction(workspace_id):
             count = pos_count if value is True else total-pos_count
             iteration.iteration_statistics['prediction_stats'] = {value: {'count': count, 'fraction': count/total}}
 
-        res = {'elements': elements_transformed,
-               **iteration.iteration_statistics["prediction_stats"][value]}
+        prediction_stats = iteration.iteration_statistics['prediction_stats']
+        if not curr_app.orchestrator_api.is_binary_workspace(workspace_id):
+            prediction_stats = {c: prediction_stats.get(c, {'count': 0, 'fraction': 0.0})  # add new categories
+                                for c in curr_app.orchestrator_api.get_all_categories(workspace_id)}
+        res = {'elements': elements_transformed, **prediction_stats[value]}
         return jsonify(res)
 
 
