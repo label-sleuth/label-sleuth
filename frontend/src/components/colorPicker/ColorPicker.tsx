@@ -42,9 +42,6 @@ export const ColorPickerMenu = ({
         {"Select the category color: "}
       </DialogContentText>
       <Box sx={{ width: "250px", p: 2 }}>
-        {/* <TwitterPicker
-                colors={Object.values(badgePalettes).map((bp) => bp[500])}
-              /> */}
         <Grid container spacing={1}>
           {Object.entries(badgePalettes).map(([k, v], i) => (
             <Grid item xs={2} key={i}>

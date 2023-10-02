@@ -38,6 +38,7 @@ import { Element } from "../../../global";
 import { returnByMode } from "../../../utils/utils";
 import { useNotification } from "../../../utils/notification";
 import { toast } from "react-toastify";
+import { PayloadAction } from "@reduxjs/toolkit";
 
 const EvaluationPanel = () => {
   const dispatch = useAppDispatch();
@@ -139,10 +140,11 @@ const EvaluationPanel = () => {
   const submitEvaluation = useCallback(() => {
     const changedElementsCount = getChangedElementsCount();
     dispatch(getEvaluationResults(changedElementsCount)).then((a) => {
+      const score = (a.payload as { score: number }).score;
       notify(
         EVALUATION_RESULT_MSG(
-          Math.round((a.payload as { score: number }).score * 100),
-          scoreModelVersion,
+          Math.round(score * 100),
+          score,
           metric
         ),
         { type: toast.TYPE.SUCCESS, toastId: "evaluation_result_toast" }
