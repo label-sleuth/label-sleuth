@@ -37,7 +37,6 @@ import { useAppSelector, useAppDispatch } from "../../../customHooks/useRedux";
 import { fetchVersion } from "../redux";
 import { useNotifyUploadedLabels } from "../../../customHooks/useNotifyUploadedLabels";
 import { Header } from "./Header";
-import { WorkspaceInfoAndActions } from "./WorkspaceInfoAndActions";
 import { LabelCountPanel } from "./LabelCountPanel";
 import { Button, Divider, Stack, Tooltip, Typography } from "@mui/material";
 import { LinearWithValueLabel } from "./ModelProgressBar";
@@ -45,6 +44,7 @@ import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import { LabeledDataActions } from "./LabeledDataActions";
 import { ModelVersion } from "./ModelVersion";
 import { ModelTrainingMessage } from "./ModelTrainingMessage";
+import { ModelErrorAlert } from "./ModelErrorAlert";
 
 interface WorkspaceInfoProps {
   setTutorialOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -68,7 +68,10 @@ export const WorkspaceInfo = ({
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
   const mode = useAppSelector((state) => state.workspace.mode);
   const categories = useAppSelector((state) => state.workspace.categories);
-
+  const lastModelFailed = useAppSelector(
+    (state) => state.workspace.lastModelFailed
+  ); 
+  
   const dispatch = useAppDispatch();
   const { getInstance, fire } = useConfetti();
 
@@ -150,6 +153,7 @@ export const WorkspaceInfo = ({
               </Stack>
               <LinearWithValueLabel />
               <ModelTrainingMessage />
+              {lastModelFailed && <ModelErrorAlert />}
               <Divider
                 sx={{
                   mt: 3,
