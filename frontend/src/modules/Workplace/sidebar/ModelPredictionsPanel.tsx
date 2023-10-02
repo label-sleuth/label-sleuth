@@ -112,7 +112,7 @@ const PosPredictionsPanel = () => {
             Object.keys(modelPredictionStats).length > 0
               ? (
                   modelPredictionStats[item.category_id]["count"] as number
-                ).toString()
+                ).toLocaleString()
               : undefined,
           chipColor: item.color?.palette[100],
         }))

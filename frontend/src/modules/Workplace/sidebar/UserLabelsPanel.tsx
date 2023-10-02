@@ -99,7 +99,7 @@ export const UserLabelsPanel = () => {
           title: item.category_name,
           chip: (labelCount as { [key: string]: number })[
             item.category_id.toString()
-          ].toString(),
+          ].toLocaleString(),
           chipColor: item.color?.palette[100],
         }))
         .sort((a, b) => a.title.localeCompare(b.title));
