@@ -114,6 +114,7 @@ const PosPredictionsPanel = () => {
                   modelPredictionStats[item.category_id]["count"] as number
                 ).toString()
               : undefined,
+          chipColor: item.color?.palette[100],
         }))
         .sort((a, b) => a.title.localeCompare(b.title));
     } else return [];

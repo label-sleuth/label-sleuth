@@ -25,6 +25,7 @@ export interface DropdownOption {
   title: string;
   caption?: string;
   chip?: string;
+  chipColor?: string;
 }
 
 interface ControlledSelectProps {
@@ -164,7 +165,11 @@ const ControlledSelect = ({
                         <Typography sx={{ ...itemTextSx }}>
                           {option.title ?? option.value}
                         </Typography>
-                        <Chip label={option.chip} size={"small"} />
+                        <Chip
+                          label={option.chip}
+                          size={"small"}
+                          sx={{ backgroundColor: option.chipColor }}
+                        />
                       </Stack>
                     </Box>
                   ) : (
