@@ -149,11 +149,14 @@ class OrchestratorStateApi:
                     f"workspace scheme upgrade. Please open an issue on "
                     f"https://github.com/label-sleuth/label-sleuth/issues/new/choose for additional support") from e
 
-    def get_all_category_ids(self, workspace_id):
+    def get_all_category_ids(self, workspace_id, include_deleted=False):
         with self.workspaces_lock[workspace_id]:
             try:
-                return self._load_workspace(workspace_id).categories.keys()
-
+                categories = self._load_workspace(workspace_id).categories
+                if not include_deleted:
+                    categories = {cat_id: cat for cat_id, cat in categories.items()
+                                  if not hasattr(cat, 'deleted') or cat.deleted is False}
+                return categories.keys()
             except Exception as e:
                 raise Exception(
                     f"Failed to get all category ids in workspace {workspace_id}") from e
