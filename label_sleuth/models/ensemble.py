@@ -106,6 +106,12 @@ class Ensemble(ModelAPI):
         pass
 
     def load_model(self, model_path: Union[str, List]) -> EnsembleComponents:
+        model_paths = self._get_model_paths(model_path)
+
+        models = [model_api.load_model(model_path) for model_api, model_path in zip(self.model_apis, model_paths)]
+        return EnsembleComponents(models=models)
+
+    def _get_model_paths(self, model_path):
         if isinstance(model_path, list):
             # for internal use by the system, where paths for the constituting models are passed
             # from Ensemble._infer_by_id()
@@ -124,9 +130,7 @@ class Ensemble(ModelAPI):
                 dir_prefix = replace_model_prefix(dir_prefix)
                 api_name_to_path[dir_prefix] = os.path.join(model_path, model_dir_name)
             model_paths = [api_name_to_path[model_api.__class__.__name__] for model_api in self.model_apis]
-
-        models = [model_api.load_model(model_path) for model_api, model_path in zip(self.model_apis, model_paths)]
-        return EnsembleComponents(models=models)
+        return model_paths
 
     def _infer_by_id(self, model_id, items_to_infer):
         """
@@ -172,6 +176,11 @@ class Ensemble(ModelAPI):
 
     def get_supported_languages(self):
         return set.intersection(*[model_api.get_supported_languages() for model_api in self.model_apis])
+
+    def get_metadata(self, model_path: str):
+        model_paths = self._get_model_paths(model_path)
+        metadata_dicts = [model_api.get_metadata(path) for model_api, path in zip(self.model_apis, model_paths)]
+        return {k: v for d in metadata_dicts for k, v in d.items()}
 
 
 class SVM_Ensemble(Ensemble):
