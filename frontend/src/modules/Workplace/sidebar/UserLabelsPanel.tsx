@@ -68,7 +68,12 @@ export const UserLabelsPanel = () => {
   );
 
   useEffect(() => {
-    filteredValue === null &&
+    if (
+      filteredValue === null ||
+      !nonDeletedCategories
+        .map((c) => c.category_id)
+        .find((c) => c.toString() === filteredValue)
+    ) {
       setFilteredValue(
         mode === WorkspaceMode.BINARY
           ? "true"
@@ -76,6 +81,7 @@ export const UserLabelsPanel = () => {
           ? nonDeletedCategories[0].category_id.toString()
           : null
       );
+    }
   }, [mode, nonDeletedCategories, setFilteredValue, filteredValue]);
 
   const options: DropdownOption[] = useMemo(() => {
