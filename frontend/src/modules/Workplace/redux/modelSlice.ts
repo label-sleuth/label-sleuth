@@ -18,7 +18,7 @@ import { downloadFile, getModeQueryParam } from "../../../utils/utils";
 import { BASE_URL, WORKSPACE_API } from "../../../config";
 import { IterationStatusEnum, PanelIdsEnum } from "../../../const";
 import { client } from "../../../api/client";
-import { curCategoryNameSelector } from ".";
+import { curCategoryNameSelector, nonDeletedCategoriesSelector } from ".";
 import {
   getWorkspaceId,
   getCategoryQueryString,
@@ -62,7 +62,7 @@ export const checkModelUpdate = createAsyncThunk<
 
   const queryParams = getQueryParamsString([
     getCategoryQueryString(state.workspace.curCategory),
-    getModeQueryParam(state.workspace.mode)
+    getModeQueryParam(state.workspace.mode),
   ]);
 
   var url = `${getWorkspace_url}/${encodeURIComponent(
@@ -86,7 +86,7 @@ export const downloadModel = createAsyncThunk<
 
   const queryParams = getQueryParamsString([
     getCategoryQueryString(state.workspace.curCategory),
-    getModeQueryParam(state.workspace.mode)
+    getModeQueryParam(state.workspace.mode),
   ]);
 
   const prepareUrl = `${getWorkspace_url}/${encodeURIComponent(
@@ -241,7 +241,7 @@ export const extraReducers = [
         }
       }
 
-      // reset pagination if a new model has been found
+      // reset pagination and remove deleted categories (mc mode) if a new model has been found
       if (
         (state.modelVersion === null && latestReadyModelVersion > 0) ||
         (state.modelVersion !== null &&
@@ -259,6 +259,14 @@ export const extraReducers = [
             state.panels.panels[pId].page = 1;
           }
         });
+
+        // we are working with the workspace state at this point
+        // lie to tsc in order to reuse the selector
+        if (state.modelVersion !== null) {
+          state.categories = nonDeletedCategoriesSelector({
+            workspace: state,
+          } as RootState);
+        }
       }
 
       state.modelVersion = latestReadyModelVersion;

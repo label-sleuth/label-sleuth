@@ -34,7 +34,7 @@ import {
 } from "./useFetchPanelElements";
 import { getWorkspaces } from "../modules/Workspace-config/workspaceConfigSlice";
 import { useWorkspaceId } from "./useWorkspaceId";
-import { PanelState, Workspace } from "../global";
+import { Workspace } from "../global";
 
 /**
  * Custom hook for dispatching workspace related actions
@@ -131,13 +131,14 @@ const useWorkspaceState = () => {
         fetchMainPanelElements();
 
         if (
-          [
-            PanelIdsEnum.USER_LABELS,
-            PanelIdsEnum.MODEL_PREDICTIONS,
-          ].includes(activePanelId)
+          [PanelIdsEnum.USER_LABELS, PanelIdsEnum.MODEL_PREDICTIONS].includes(
+            activePanelId
+          )
         ) {
           if (activePanelId === PanelIdsEnum.NOT_SET) return;
-          updateActivePanelElements(panels[activePanelId].filters?.value || undefined);
+          updateActivePanelElements(
+            panels[activePanelId].filters?.value || undefined
+          );
         } else {
           updateActivePanelElements();
         }
@@ -155,6 +156,9 @@ const useWorkspaceState = () => {
     curCategory,
     fetchPositiveLabelsElements,
     fetchMainPanelElements,
+    activePanelId,
+    panels,
+    updateActivePanelElements,
     dispatch,
   ]);
 };

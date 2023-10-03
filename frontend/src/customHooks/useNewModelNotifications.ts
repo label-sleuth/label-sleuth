@@ -76,5 +76,6 @@ export const useNewModelNotifications = ({
     fire,
     dispatch,
     shouldFireConfetti,
+    mode,
   ]);
 };

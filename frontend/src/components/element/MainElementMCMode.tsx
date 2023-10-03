@@ -17,11 +17,7 @@ import React, { useMemo } from "react";
 import { useAppSelector } from "../../customHooks/useRedux";
 import classes from "./Element.module.css";
 import labelButtonClasses from "../labelButtons/index.module.css";
-import {
-  getCategoryColorFromId,
-  getCategoryNameFromId,
-  getPanelDOMKey,
-} from "../../utils/utils";
+import { getCategoryFromId, getPanelDOMKey } from "../../utils/utils";
 import { LabelTypesEnum, PanelIdsEnum } from "../../const";
 import useLabelState from "../../customHooks/useLabelState";
 import { useElemStyles } from "../../customHooks/useElemStyles";
@@ -30,10 +26,12 @@ import { LabelCategoriesMenu } from "./LabelCategoryMCMode";
 import { Stack, Typography } from "@mui/material";
 import { CategoryBadge } from "../categoryBadge/CategoryBadge";
 import { ElementProps } from "./MainElement";
+import { Category } from "../../global";
 
 export const MainElementMCMode = ({ element }: ElementProps) => {
   const { id, text, multiclassUserLabel, snippet, multiclassModelPrediction } =
     element;
+
   const rightToLeft = useAppSelector((state) => state.featureFlags.rightToLeft);
   const categories = useAppSelector((state) => state.workspace.categories);
   const { handlePosLabelAction, handleNegLabelAction } = useLabelState();
@@ -43,15 +41,15 @@ export const MainElementMCMode = ({ element }: ElementProps) => {
     [id]
   );
 
-  const labeledCategoryName = useMemo(() => {
-    if (multiclassUserLabel !== null) {
-      return getCategoryNameFromId(+multiclassUserLabel, categories);
-    } else return null;
+  const labeledCategory: Category | null = useMemo(() => {
+    return multiclassUserLabel !== null
+      ? getCategoryFromId(+multiclassUserLabel, categories)
+      : null;
   }, [multiclassUserLabel, categories]);
 
-  const modelPredictionCategoryName = useMemo(() => {
+  const predictionCategory: Category | null = useMemo(() => {
     return multiclassModelPrediction !== null
-      ? getCategoryNameFromId(multiclassModelPrediction, categories)
+      ? getCategoryFromId(+multiclassModelPrediction, categories)
       : null;
   }, [multiclassModelPrediction, categories]);
 
@@ -120,29 +118,21 @@ export const MainElementMCMode = ({ element }: ElementProps) => {
               multiclassModelPrediction !== null ? "row" : "row-reverse",
           }}
         >
-          {modelPredictionCategoryName && (
+          {predictionCategory && (
             <CategoryBadge
-              categoryName={modelPredictionCategoryName}
-              color={
-                getCategoryColorFromId(multiclassModelPrediction, categories) ||
-                undefined
-              }
+              category={predictionCategory}
               isModelPrediction
               sx={{ mr: 1 }}
               hideTooltip
             />
           )}
-          {labeledCategoryName && (
+          {labeledCategory && !labeledCategory.deleted && (
             <CategoryBadge
               sx={{
                 mr: 1,
               }}
-              color={
-                getCategoryColorFromId(multiclassUserLabel, categories) ||
-                undefined
-              }
+              category={labeledCategory}
               isUserLabel
-              categoryName={labeledCategoryName}
               hideTooltip
             />
           )}

@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
-import { useTheme } from "@mui/material/styles";
 import { Box, Stack, Typography } from "@mui/material";
 import { TabPanel } from "./TabPanel";
 import { StatsContainer } from "./StatsContainer";

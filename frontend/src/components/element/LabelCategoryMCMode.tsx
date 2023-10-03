@@ -1,10 +1,4 @@
-import {
-  Menu,
-  Tooltip,
-  Button,
-  Stack,
-  Box,
-} from "@mui/material";
+import { Menu, Tooltip, Button, Stack, Box } from "@mui/material";
 import { LabelTypesEnum, PanelIdsEnum } from "../../const";
 import { useAppSelector } from "../../customHooks/useRedux";
 import { Category, Element } from "../../global";
@@ -14,7 +8,7 @@ import React from "react";
 import AddIcon from "@mui/icons-material/Add";
 import labelButtonClasses from "../labelButtons/index.module.css";
 import { CategoryBadge } from "../categoryBadge/CategoryBadge";
-import { getCategoryColorFromId } from "../../utils/utils";
+import { nonDeletedCategoriesSelector } from "../../modules/Workplace/redux";
 
 interface CategoryMenuItemProps {
   category: Category;
@@ -39,20 +33,14 @@ const CategoryMenuItem = ({
 
   // don't update counter is an evaluation is in progress
   const { chageMultiClassLabel } = useLabelState(!evaluationIsInProgress);
-  const categories = useAppSelector((state) => state.workspace.categories);
 
   return (
-    <Box
-      sx={{ height: ITEM_HEIGHT, ml: 2 }}
-    >
+    <Box sx={{ height: ITEM_HEIGHT, ml: 2 }}>
       <CategoryBadge
-        categoryName={category.category_name}
+        category={category}
         selectable
         hideTooltip
         onClick={handleClose}
-        color={
-          getCategoryColorFromId(category.category_id, categories) || undefined
-        }
         // eslint-disable-next-line
         selected={category.category_id == element.multiclassUserLabel}
         onSelect={() => {
@@ -81,10 +69,9 @@ export const LabelCategoriesMenu = ({
   setLabelMenuOpenAnchorEl,
   panelId,
 }: LabelCategoriesMenuProps) => {
-  const categories = useAppSelector((state) => state.workspace.categories);
-
+  const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
   // copy the array categories because sort is inplace
-  const categoriesSorted = [...categories].sort((a, b) =>
+  const categoriesSorted = [...nonDeletedCategories].sort((a, b) =>
     a.category_name.localeCompare(b.category_name)
   );
 
@@ -114,7 +101,7 @@ export const LabelCategoriesMenu = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <Stack sx={{mt: 1}} >
+      <Stack sx={{ mt: 1 }}>
         {categoriesSorted.map((category, i) => (
           <CategoryMenuItem
             key={i}

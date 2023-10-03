@@ -53,6 +53,7 @@ import {
   createCategory,
   deleteCategory,
   editCategory,
+  nonDeletedCategoriesSelector,
 } from "../../redux";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
@@ -97,7 +98,7 @@ const NewCategoryForm = ({
       ]
   );
 
-  const categories = useAppSelector((state) => state.workspace.categories);
+  const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
 
   const greyColor = useMemo(
     () => ({
@@ -109,7 +110,9 @@ const NewCategoryForm = ({
 
   const defaultColor: BadgeColor = useMemo(() => {
     const usedColors = new Set<string>();
-    categories.forEach((c) => c.color && usedColors.add(c.color.name));
+    nonDeletedCategories.forEach(
+      (c) => c.color && usedColors.add(c.color.name)
+    );
     inCreationCategories?.forEach(
       (c) => c.color && usedColors.add(c.color.name)
     );
@@ -117,7 +120,7 @@ const NewCategoryForm = ({
     Object.keys(badgePalettes).forEach(
       (k) => !!!usedColors.has(k) && unusedColors.add(k)
     );
-    unusedColors.delete('white');
+    unusedColors.delete("white");
     if (unusedColors.size > 0) {
       const colorName = Array.from(unusedColors)[0];
       return {
@@ -127,7 +130,7 @@ const NewCategoryForm = ({
     } else {
       return greyColor;
     }
-  }, [categories, greyColor, inCreationCategories]);
+  }, [nonDeletedCategories, greyColor, inCreationCategories]);
 
   useEffect(() => {
     if (!color) {
@@ -250,6 +253,9 @@ const CategoryEntry = ({
   onRemoveCategory,
   setCategoryEdited,
 }: CategoryEntryProps) => {
+  const [inDeleteConfirmationStep, setInDeleteConfirmationStep] =
+    useState(false);
+
   return (
     <Box
       sx={{
@@ -259,43 +265,65 @@ const CategoryEntry = ({
       className={classes["category-entry"]}
     >
       <Stack direction={"row"}>
-        <Box
-          sx={{
-            width: "25px",
-            height: "25px",
-            float: "left",
-            borderRadius: "8px",
-            backgroundColor: category.color?.palette[300],
-            mr: 2,
-          }}
-        />
-        <Stack direction={"column"} sx={{ width: "250px" }}>
-          <Typography sx={{ mt: "-5px" }}>{category.category_name}</Typography>
-          <Typography variant={"caption"} sx={{ color: "grey" }}>
-            {category.category_description || "No description"}
-          </Typography>
-        </Stack>
         <Stack
           direction={"row"}
-          alignItems={"flex-start"}
-          className={classes["hide-on-hover"]}
-          sx={{ ml: 3 }}
         >
-          <IconButton
-            onClick={() => setCategoryEdited(category)}
-            size="small"
-            sx={(palette) => ({ color: palette.palette.primary.main })}
-          >
-            <ModeEditOutlineOutlinedIcon fontSize="inherit" />
-          </IconButton>
-          <IconButton
-            size="small"
-            sx={(palette) => ({ color: palette.palette.primary.main })}
-            onClick={() => onRemoveCategory(category)}
-          >
-            <DeleteOutlineOutlinedIcon fontSize="inherit" />
-          </IconButton>
+          <Box
+            sx={{
+              width: "25px",
+              height: "25px",
+              float: "left",
+              borderRadius: "8px",
+              backgroundColor: category.color?.palette[300],
+              mr: 2,
+            }}
+          />
+          <Stack direction={"column"} sx={{ width: "250px" }}>
+            <Typography sx={{ mt: "-5px" }}>
+              {category.category_name}
+            </Typography>
+            <Typography variant={"caption"} sx={{ color: "grey" }}>
+              {category.category_description || "No description"}
+            </Typography>
+          </Stack>
+          {!inDeleteConfirmationStep && (
+            <Stack
+              direction={"row"}
+              alignItems={"flex-start"}
+              className={classes["hide-on-hover"]}
+              sx={{ ml: 3 }}
+            >
+              <IconButton
+                onClick={() => setCategoryEdited(category)}
+                size="small"
+                sx={(palette) => ({ color: palette.palette.primary.main })}
+              >
+                <ModeEditOutlineOutlinedIcon fontSize="inherit" />
+              </IconButton>
+              <IconButton
+                size="small"
+                sx={(palette) => ({ color: palette.palette.primary.main })}
+                onClick={() => setInDeleteConfirmationStep(true)}
+              >
+                <DeleteOutlineOutlinedIcon fontSize="inherit" />
+              </IconButton>
+            </Stack>
+          )}
         </Stack>
+        {inDeleteConfirmationStep && (
+          <>
+            <Button
+              onClick={() => onRemoveCategory(category)}
+              sx={{ ml: -5 }}
+              color="error"
+            >
+              {"Delete"}
+            </Button>
+            <Button onClick={() => setInDeleteConfirmationStep(false)}>
+              {"Cancel"}
+            </Button>
+          </>
+        )}
       </Stack>
       <Divider sx={{ mt: 1 }} />
     </Box>
@@ -310,7 +338,7 @@ interface CategoriesMenuProps {
 export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
   const dispatch = useAppDispatch();
 
-  const categories = useAppSelector((state) => state.workspace.categories);
+  const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
 
   const [newCategories, setNewCategories] = useState<
     {
@@ -338,8 +366,12 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
       ...newCategories,
       {
         // id is just a number. To avoid problems with deleting categories that are being created
-        // we just set the id as 1 + the maximum current id. 
-        id: newCategories.length ? (Math.max(...newCategories.map(nc => parseInt(nc.id))) + 1).toString() : "1",
+        // we just set the id as 1 + the maximum current id.
+        id: newCategories.length
+          ? (
+              Math.max(...newCategories.map((nc) => parseInt(nc.id))) + 1
+            ).toString()
+          : "1",
         categoryName: "",
         categoryDescription: "",
         color: undefined,
@@ -523,7 +555,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
       >
         <CloseIcon />
       </IconButton>
-      {categories.length || newCategories.length ? (
+      {nonDeletedCategories.length || newCategories.length ? (
         <>
           <DialogContent
             sx={{
@@ -536,7 +568,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
               minHeight: "40vh",
             }}
           >
-            {categories.map((category) =>
+            {nonDeletedCategories.map((category) =>
               editedCategories.find(
                 // eslint-disable-next-line
                 (c) => c.category_id == category.category_id

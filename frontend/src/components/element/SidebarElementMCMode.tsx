@@ -20,8 +20,7 @@ import { Box, Stack, Typography } from "@mui/material";
 import { useAppSelector, useAppDispatch } from "../../customHooks/useRedux";
 import { PanelIdsEnum, LabelTypesEnum } from "../../const";
 import {
-  getCategoryColorFromId,
-  getCategoryNameFromId,
+  getCategoryFromId,
   getDocumentNameFromDocumentId,
   getPanelDOMKey,
 } from "../../utils/utils";
@@ -38,6 +37,7 @@ import { LabelingButtons } from "./LabelingButtons";
 import { LabelCategoriesMenu } from "./LabelCategoryMCMode";
 import { SidebarElementProps } from "./SidebarElement";
 import { CategoryBadge } from "../categoryBadge/CategoryBadge";
+import { Category } from "../../global";
 
 /**
  * Handle the style of the text of the sidebar element based on the models prediction
@@ -46,11 +46,12 @@ import { CategoryBadge } from "../categoryBadge/CategoryBadge";
  */
 // this function is not returned by a custom hook as it is the case of the main panel equivalent
 const handleTextElemStyle = (modelPrediction: LabelTypesEnum) =>
-  modelPrediction === LabelTypesEnum.POS ? classes["text_predict"] : classes["text_normal"];
+  modelPrediction === LabelTypesEnum.POS
+    ? classes["text_predict"]
+    : classes["text_normal"];
 
 export const SidebarElementMCMode = ({
   element,
-  updateCounterOnLabeling = true,
   index,
 }: SidebarElementProps) => {
   const {
@@ -65,6 +66,18 @@ export const SidebarElementMCMode = ({
   const dispatch = useAppDispatch();
   const rightToLeft = useAppSelector((state) => state.featureFlags.rightToLeft);
   const categories = useAppSelector((state) => state.workspace.categories);
+
+  const labeledCategory: Category | null = useMemo(() => {
+    return multiclassUserLabel !== null
+      ? getCategoryFromId(+multiclassUserLabel, categories)
+      : null;
+  }, [multiclassUserLabel, categories]);
+
+  const predictionCategory: Category | null = useMemo(() => {
+    return multiclassModelPrediction !== null
+      ? getCategoryFromId(+multiclassModelPrediction, categories)
+      : null;
+  }, [multiclassModelPrediction, categories]);
 
   const activePanelId = useAppSelector(
     (state) => state.workspace.panels.activePanelId
@@ -109,18 +122,6 @@ export const SidebarElementMCMode = ({
     [labelMenuOpenAnchorEl]
   );
 
-  const labeledCategoryName = useMemo(() => {
-    if (multiclassUserLabel !== null) {
-      return getCategoryNameFromId(+multiclassUserLabel, categories);
-    } else return null;
-  }, [multiclassUserLabel, categories]);
-
-  const modelPredictionCategoryName = useMemo(() => {
-    return multiclassModelPrediction !== null
-      ? getCategoryNameFromId(multiclassModelPrediction, categories)
-      : null;
-  }, [multiclassModelPrediction, categories]);
-
   const handleElementClick = useCallback(
     (e) => {
       dispatch(
@@ -132,7 +133,7 @@ export const SidebarElementMCMode = ({
       focusMainPanelElement({ element, docId });
       // focus this element on the sidebar when clicked
     },
-    [element, docId, focusMainPanelElement, index,dispatch]
+    [element, docId, focusMainPanelElement, index, dispatch]
   );
 
   return (
@@ -229,28 +230,20 @@ export const SidebarElementMCMode = ({
               multiclassModelPrediction !== null ? "row" : "row-reverse",
           }}
         >
-          {modelPredictionCategoryName && (
+          {predictionCategory && (
             <CategoryBadge
-              categoryName={modelPredictionCategoryName}
-              color={
-                getCategoryColorFromId(multiclassModelPrediction, categories) ||
-                undefined
-              }
+              category={predictionCategory}
               isModelPrediction
               sx={{ mr: 1 }}
               hideTooltip
             />
           )}
-          {labeledCategoryName && (
+          {labeledCategory && !labeledCategory.deleted && (
             <CategoryBadge
               sx={{ mr: 1 }}
-              color={
-                getCategoryColorFromId(multiclassUserLabel, categories) ||
-                undefined
-              }
-              isUserLabel
-              categoryName={labeledCategoryName}
+              category={labeledCategory}
               hideTooltip
+              isUserLabel
             />
           )}
         </Stack>

@@ -11,7 +11,6 @@ export const LabeledDataActions = ({
   setDownloadLabelsDialogOpen,
   setUploadLabelsDialogOpen,
 }: LabeledDataActionsProps) => {
-  const theme = useTheme();
   return (
     <Stack
       sx={{

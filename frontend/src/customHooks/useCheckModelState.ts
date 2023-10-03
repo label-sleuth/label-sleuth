@@ -62,5 +62,6 @@ export const useCheckModelState = ({
     nextModelShouldBeTraining,
     modelStatusCheckAttempts,
     dispatch,
+    mode,
   ]);
 };

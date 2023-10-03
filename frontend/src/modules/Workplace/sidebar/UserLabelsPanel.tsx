@@ -25,13 +25,14 @@ import ControlledSelect, {
   DropdownOption,
 } from "../../../components/dropdown/Dropdown";
 import { returnByMode } from "../../../utils/utils";
-import { setPanelFilters } from "../redux";
+import { nonDeletedCategoriesSelector, setPanelFilters } from "../redux";
 
 export const UserLabelsPanel = () => {
   const { hitCount } = useAppSelector(
     (state) => state.workspace.panels.panels[PanelIdsEnum.USER_LABELS]
   );
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
+  const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
 
   const labelCount = useAppSelector((state) => state.workspace.labelCount);
 
@@ -42,7 +43,6 @@ export const UserLabelsPanel = () => {
   const sidebarPanelElementsPerPage = useAppSelector(
     (state) => state.featureFlags.sidebarPanelElementsPerPage
   );
-  const categories = useAppSelector((state) => state.workspace.categories);
   const mode = useAppSelector((state) => state.workspace.mode);
 
   const dispatch = useAppDispatch();
@@ -73,10 +73,10 @@ export const UserLabelsPanel = () => {
         mode === WorkspaceMode.BINARY
           ? "true"
           : mode === WorkspaceMode.MULTICLASS
-          ? categories[0].category_id.toString()
+          ? nonDeletedCategories[0].category_id.toString()
           : null
       );
-  }, [mode, categories, setFilteredValue, filteredValue]);
+  }, [mode, nonDeletedCategories, setFilteredValue, filteredValue]);
 
   const options: DropdownOption[] = useMemo(() => {
     if (mode === WorkspaceMode.BINARY) {
@@ -93,18 +93,16 @@ export const UserLabelsPanel = () => {
         },
       ];
     } else if (mode === WorkspaceMode.MULTICLASS) {
-      return categories
-        .map((item) => ({
-          value: item.category_id.toString(),
-          title: item.category_name,
-          chip: (labelCount as { [key: string]: number })[
-            item.category_id.toString()
-          ].toLocaleString(),
-          chipColor: item.color?.palette[100],
-        }))
-        .sort((a, b) => a.title.localeCompare(b.title));
+      return nonDeletedCategories.map((item) => ({
+        value: item.category_id.toString(),
+        title: item.category_name,
+        chip: (labelCount as { [key: string]: number })[
+          item.category_id.toString()
+        ].toLocaleString(),
+        chipColor: item.color?.palette[100],
+      }));
     } else return [];
-  }, [mode, categories, labelCount]);
+  }, [mode, nonDeletedCategories, labelCount]);
 
   const filteredTitle = useMemo(
     // eslint-disable-next-line
@@ -116,7 +114,7 @@ export const UserLabelsPanel = () => {
     setFilteredValue(
       returnByMode(
         value,
-        categories
+        nonDeletedCategories
           .find((c) => {
             // eslint-disable-next-line
             return c.category_id == Number(value);

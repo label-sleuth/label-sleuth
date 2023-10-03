@@ -4,8 +4,8 @@ import { APPBAR_HEIGHT } from "../../const";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PersonIcon from "@mui/icons-material/Person";
 import { ReactComponent as Logo } from "../../assets/sleuth_black.svg";
-import { badgePalettes, getRandomColor } from "../../utils/utils";
-import { BadgeColor } from "../../global";
+import { badgePalettes } from "../../utils/utils";
+import { Category } from "../../global";
 
 interface ILabelColor {
   textColor: string;
@@ -17,8 +17,6 @@ interface ILabelColor {
 }
 
 interface CategoryBadgeProps {
-  color?: BadgeColor;
-  categoryName?: string;
   sx?: SxProps;
   onRemoveClick?: (categoryName: string) => void;
   hideTooltip?: boolean;
@@ -29,11 +27,11 @@ interface CategoryBadgeProps {
   isModelPrediction?: boolean;
   selected?: boolean;
   onClick?: (e: React.UIEvent) => void;
+  category: Category;
 }
 
 export const CategoryBadge: FC<CategoryBadgeProps> = ({
-  color,
-  categoryName,
+  category,
   sx,
   onRemoveClick,
   hideTooltip,
@@ -56,13 +54,9 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
     onClick && onClick(e);
   };
 
-  const finalColor = useMemo(() => {
-    return color?.name || getRandomColor();
-  }, [color]);
-
   const colorDesign: ILabelColor | null = useMemo(() => {
     // setting green as default but that should never happen
-    const palette = color?.palette || badgePalettes["green"];
+    const palette = category.color?.palette || badgePalettes["green"];
     return {
       textColor: palette[700],
       iconColor: palette[600],
@@ -71,10 +65,10 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
       lighterBackgroundColor: palette[50],
       hoverColor: palette[200],
     };
-  }, [color]);
+  }, [category]);
 
   return (
-    <Tooltip title={hideTooltip ? "" : finalColor}>
+    <Tooltip title={hideTooltip ? "" : category.category_name}>
       <Box
         sx={{
           display: "inline-flex",
@@ -130,13 +124,17 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
             inheritViewBox
           />
         ) : null}
-        <span>{categoryName || finalColor}</span>
+        <span>{`${category.category_name} ${
+          category.deleted ? "(deleted)" : ""
+        }`}</span>
         {onRemoveClick ? (
           <Tooltip title={"Remove"}>
             <IconButton
               aria-label="delete"
               onClick={() =>
-                onRemoveClick && categoryName && onRemoveClick(categoryName)
+                onRemoveClick &&
+                category.category_name &&
+                onRemoveClick(category.category_name)
               }
               sx={{ pl: 0.5, py: 0, pr: 0 }}
             >

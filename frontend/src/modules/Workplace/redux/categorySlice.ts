@@ -170,7 +170,7 @@ export const extraReducers: Array<ReducerObj> = [
   {
     action: fetchCategories.fulfilled,
     reducer: (state: WorkspaceState, action: PayloadAction<Category[]>) => {
-      const categories = action.payload.filter(c => !c.deleted);
+      const categories = action.payload;
 
       state.categories = categories.map((c) => {
         const badgeColor: BadgeColor = c.color
@@ -216,15 +216,35 @@ export const extraReducers: Array<ReducerObj> = [
   },
   {
     action: deleteCategory.fulfilled,
-    reducer: (state: WorkspaceState, action: PayloadAction<{category_id: string}>) => {
+    reducer: (
+      state: WorkspaceState,
+      action: PayloadAction<{ category_id: string }>
+    ) => {
       state.deletingCategory = false;
-      state.categories = state.categories.filter(
-        // eslint-disable-next-line
-        (c: Category) => c.category_id.toString() != action.payload.category_id
-      );
-      state.curCategory = null;
-      state.modelVersion = null;
-      state.panels.activePanelId = PanelIdsEnum.SEARCH;
+
+      if (state.mode === WorkspaceMode.BINARY) {
+        state.categories = state.categories.filter(
+          (c: Category) =>
+            // eslint-disable-next-line
+            c.category_id.toString() != action.payload.category_id
+        );
+        state.curCategory = null;
+        state.modelVersion = null;
+        state.panels.activePanelId = PanelIdsEnum.SEARCH;
+      } else if (state.mode === WorkspaceMode.MULTICLASS) {
+        const deletedCategory = state.categories.find(
+          // eslint-disable-next-line
+          (c) => c.category_id.toString() == action.payload.category_id
+        ) as Category;
+        deletedCategory.deleted = true;
+        state.categories = [
+          ...state.categories.filter(
+            // eslint-disable-next-line
+            (c) => c.category_id.toString() != action.payload.category_id
+          ),
+          deletedCategory,
+        ];
+      }
     },
   },
   {

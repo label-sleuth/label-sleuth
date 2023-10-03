@@ -369,16 +369,23 @@ export const stringifyList = (list: string[]): string => {
 };
 
 /**
+ * Gets the category  from the id
+ */
+export const getCategoryFromId = (
+  categoryId: number,
+  categories: Category[]
+): Category =>
+  // eslint-disable-next-line
+  categories.find((cat) => cat.category_id == categoryId) as Category;
+
+/**
  * Gets the category name from the id
  */
 export const getCategoryNameFromId = (
   categoryId: number,
   categories: Category[]
 ): string => {
-  return (
-    // eslint-disable-next-line
-    categories.find((cat) => cat.category_id == categoryId)?.category_name || ""
-  );
+  return getCategoryFromId(categoryId, categories).category_name;
 };
 
 export const getDocumentNameFromDocumentId = (documentId: string | null) => {
@@ -453,20 +460,6 @@ export const getRandomColor = (): string => {
   return Object.keys(badgePalettes)[
     Math.floor(Math.random() * Object.keys(badgePalettes).length)
   ];
-};
-
-export const getCategoryColorFromId = (
-  categoryId: number | null,
-  categories: Category[]
-): BadgeColor | null => {
-  if (categoryId === null) return null;
-
-  const categoryColor = categories.find(
-    // eslint-disable-next-line
-    (cat: Category) => cat.category_id == categoryId
-  )?.color;
-
-  return categoryColor ? categoryColor : null;
 };
 
 export const getModeQueryParam = (mode: WorkspaceMode) => {

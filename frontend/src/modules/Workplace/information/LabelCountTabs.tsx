@@ -1,5 +1,5 @@
 import { useAppSelector } from "../../../customHooks/useRedux";
-import { Box, Tabs, Tab, useTheme, Typography, Stack } from "@mui/material";
+import { Box, Tabs, Tab, Typography, Stack } from "@mui/material";
 import classes from "./WorkspaceInfo.module.css";
 import NorthIcon from "@mui/icons-material/North";
 import SouthIcon from "@mui/icons-material/South";

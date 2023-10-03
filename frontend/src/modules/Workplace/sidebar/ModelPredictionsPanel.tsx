@@ -16,9 +16,7 @@
 import { Box } from "@mui/material";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
-import {
-  setPanelFilters,
-} from "../redux";
+import { nonDeletedCategoriesSelector, setPanelFilters } from "../redux";
 import { PanelIdsEnum, WorkspaceMode } from "../../../const";
 import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
@@ -40,7 +38,13 @@ const ModelPredictionsPanel = () => {
   const sidebarPanelElementsPerPage = useAppSelector(
     (state) => state.featureFlags.sidebarPanelElementsPerPage
   );
-  const categories = useAppSelector((state) => state.workspace.categories);
+  const nonDeletedCategories = useAppSelector(
+    nonDeletedCategoriesSelector,
+    (a, b) => {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+  );
+
   const mode = useAppSelector((state) => state.workspace.mode);
   const modelPredictionStats = useAppSelector(
     (state) =>
@@ -74,11 +78,14 @@ const ModelPredictionsPanel = () => {
       mode === WorkspaceMode.BINARY
         ? "true"
         : mode === WorkspaceMode.MULTICLASS
-        ? categories[0].category_id.toString()
+        ? nonDeletedCategories[0].category_id.toString()
         : null
     );
+  }, [mode, nonDeletedCategories, setFilteredValue]);
+
+  useEffect(() => {
     dispatch(getPredictionsStats());
-  }, [mode, categories, setFilteredValue, dispatch]);
+  }, [dispatch]);
 
   const options: DropdownOption[] = useMemo(() => {
     if (mode === WorkspaceMode.BINARY) {
@@ -101,21 +108,19 @@ const ModelPredictionsPanel = () => {
         },
       ];
     } else if (mode === WorkspaceMode.MULTICLASS) {
-      return categories
-        .map((item) => ({
-          value: item.category_id.toString(),
-          title: item.category_name,
-          chip:
-            Object.keys(modelPredictionStats).length > 0
-              ? (
-                  modelPredictionStats[item.category_id]["count"] as number
-                ).toLocaleString()
-              : undefined,
-          chipColor: item.color?.palette[100],
-        }))
-        .sort((a, b) => a.title.localeCompare(b.title));
+      return nonDeletedCategories.map((item) => ({
+        value: item.category_id.toString(),
+        title: item.category_name,
+        chip:
+          Object.keys(modelPredictionStats).length > 0
+            ? (
+                modelPredictionStats[item.category_id]["count"] as number
+              ).toLocaleString()
+            : undefined,
+        chipColor: item.color?.palette[100],
+      }));
     } else return [];
-  }, [mode, categories, modelPredictionStats]);
+  }, [mode, nonDeletedCategories, modelPredictionStats]);
 
   const filteredTitle = useMemo(
     // eslint-disable-next-line
@@ -159,7 +164,7 @@ const ModelPredictionsPanel = () => {
     setFilteredValue(
       returnByMode(
         value,
-        categories
+        nonDeletedCategories
           .find((c) => {
             // eslint-disable-next-line
             return c.category_id == Number(value);

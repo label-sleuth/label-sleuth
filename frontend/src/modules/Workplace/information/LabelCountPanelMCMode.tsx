@@ -1,24 +1,24 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../customHooks/useRedux";
-import { Box, Button, Divider, Stack, Typography } from "@mui/material";
+import { Box, Divider, Stack, Typography } from "@mui/material";
 import { TabPanel } from "./TabPanel";
 import { StatsContainer } from "./StatsContainer";
 import { LabelCountTabs } from "./LabelCountTabs";
 import { Category } from "../../../global";
 import { PanelIdsEnum } from "../../../const";
-import { setActivePanel, setPanelFilters } from "../redux";
+import { nonDeletedCategoriesSelector, setActivePanel, setPanelFilters } from "../redux";
 
 export const LabelCountPanelMCMode = () => {
   const [tabValue, setTabValue] = React.useState(0);
   const labelCount = useAppSelector((state) => state.workspace.labelCount);
   const [sortingAscendingOrder, setSortingAscendingOrder] = useState(false);
-  const categories = useAppSelector((state) => state.workspace.categories);
+  const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
   const activePanelId = useAppSelector(
     (state) => state.workspace.panels.activePanelId
   );
 
   const categoriesSorted = useMemo(() => {
-    const sorted = [...categories];
+    const sorted = [...nonDeletedCategories];
     sorted.sort((a, b) => {
       const aLabelCount =
         (labelCount as { [key: string]: number })[a.category_id.toString()] ||
@@ -39,7 +39,7 @@ export const LabelCountPanelMCMode = () => {
         : 1;
     });
     return sorted;
-  }, [categories, sortingAscendingOrder, labelCount]);
+  }, [nonDeletedCategories, sortingAscendingOrder, labelCount]);
 
 
   const dispatch = useAppDispatch();

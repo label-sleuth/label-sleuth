@@ -19,13 +19,14 @@ import { IconButton, Stack, Typography } from "@mui/material";
 import { AppBarLS, UpperBarProps } from ".";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import { CategoriesMenu } from "./Modal/CategoriesMenu";
+import { nonDeletedCategoriesSelector } from "../redux";
 
 export const UpperBarMCMode = ({
   rightDrawerWidth,
   rightPanelOpen,
 }: UpperBarProps) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
-  const categories = useAppSelector((state) => state.workspace.categories);
+  const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
   const [cardOpen, setCardOpen] = React.useState(true);
   const [createCategoryModalOpen, setCreateCategoryModalOpen] = useState(false);
 
@@ -53,9 +54,9 @@ export const UpperBarMCMode = ({
         <Typography variant="h6">{"Categories"}</Typography>
         <Stack direction="row" alignItems={"center"}>
           <Typography sx={{ flexGrow: 1 }} variant="subtitle1">
-            {categories.length > 0
-              ? `${categories.length} ${
-                  categories.length === 1 ? "category" : "categories"
+            {nonDeletedCategories.length > 0
+              ? `${nonDeletedCategories.length} ${
+                  nonDeletedCategories.length === 1 ? "category" : "categories"
                 }`
               : "No categories created yet"}
           </Typography>

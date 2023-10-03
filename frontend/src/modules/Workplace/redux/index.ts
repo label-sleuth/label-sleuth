@@ -250,6 +250,14 @@ export const activePanelSelector = (state: RootState) => {
     : null;
 };
 
+// selector for getting the categories that are not deleted
+// currently only applicable in a mc workspace
+export const nonDeletedCategoriesSelector = (state: RootState): Category[] => {
+  return state.workspace.categories
+    .filter((c) => !c.deleted)
+    .sort((a, b) => a.category_name.localeCompare(b.category_name));
+};
+
 export const workspaceReducer = workspaceSlice.reducer;
 export default workspaceSlice.reducer;
 

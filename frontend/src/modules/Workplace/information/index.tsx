@@ -38,7 +38,7 @@ import { fetchVersion } from "../redux";
 import { useNotifyUploadedLabels } from "../../../customHooks/useNotifyUploadedLabels";
 import { Header } from "./Header";
 import { LabelCountPanel } from "./LabelCountPanel";
-import { Button, Divider, Stack, Tooltip, Typography } from "@mui/material";
+import { Button, Divider, Stack, Tooltip } from "@mui/material";
 import { LinearWithValueLabel } from "./ModelProgressBar";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import { LabeledDataActions } from "./LabeledDataActions";
