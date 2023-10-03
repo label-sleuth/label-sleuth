@@ -206,7 +206,7 @@ def add_documents(dataset_name):
         text_column = DisplayFields.text
 
         csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
-        df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
+        df = pd.read_csv(csv_data, escapechar='\\').rename(columns=lambda x: x.strip())
 
         if text_column not in df.columns:
             raise NoTextColumnException("The csv file doesn't have a text column")
@@ -651,6 +651,7 @@ def prediction_stats(workspace_id):
                             for c in curr_app.orchestrator_api.get_all_categories(workspace_id)}
     return jsonify(prediction_stats)
 
+
 @main_blueprint.route("/workspace/<workspace_id>/elements_by_prediction", methods=['GET'])
 @login_if_required
 @validate_category_id
@@ -675,7 +676,7 @@ def elements_by_prediction(workspace_id):
     if curr_app.orchestrator_api.is_binary_workspace(workspace_id):
         category_id = int(request.args['category_id'])
         if value.lower() not in ["true", "false"]:
-            raise Exception (f"unknown binary label value {value}")
+            raise Exception(f"unknown binary label value {value}")
         value = (value.lower() == "true")
         logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {size} elements with "
                      f"prediction {value} (start index: {start_idx})")
@@ -850,7 +851,7 @@ def get_labeled_elements_by_value(workspace_id):
         category_id = int(request.args['category_id'])
         value = value.lower()
         if value not in ["true", "false"]:
-            raise Exception (f"unknown binary label value {value}")
+            raise Exception(f"unknown binary label value {value}")
         value = True if value == "true" else False
         logging.info(f"workspace '{workspace_id}' category id {category_id} fetching {size} labeled elements with label {value} "
                      f"(start index: {start_idx})")
@@ -1108,10 +1109,16 @@ def prepare_model(workspace_id):
                     "model_path = \"<replace_with_the_exported_model_path>\"\n" \
                     "items_to_infer = [{\"text\": \"I love dogs\"}, {\"text\": \"I love cats\"}]\n" \
                     "model_api = get_model_api(model_path)\n" \
+                    "category_id_to_info = model_api.get_metadata(model_path)['category_id_to_info']\n" \
                     "model = model_api.load_model(model_path)\n" \
                     "predictions = model_api.infer(model, items_to_infer)\n" \
                     "for sentence_dict, pred in zip(items_to_infer, predictions):\n" \
-                    "     print(f'sentence: \"{sentence_dict[\"text\"]}\" -> prediction: {pred}')\n"
+                    "    if type(pred.label) == bool:\n" \
+                    "        category_name = category_id_to_info['0']['category_name']\n" \
+                    "    else:\n" \
+                    "        category_name = category_id_to_info[str(pred.label)]['category_name']\n" \
+                    "    print(f'sentence: \"{sentence_dict[\"text\"]}\" -> prediction: {pred.label} " \
+                    "(category name: \"{category_name}\")')\n"
 
     category_id = request.args.get('category_id')
     if category_id is not None:
