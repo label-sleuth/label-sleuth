@@ -48,7 +48,12 @@ import {
   ColorPickerMenu,
 } from "../../../../components/colorPicker/ColorPicker";
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { badgePalettes, onEnter, stringifyList } from "../../../../utils/utils";
+import {
+  badgePalettes,
+  getCategoryFromId,
+  onEnter,
+  stringifyList,
+} from "../../../../utils/utils";
 import { PrimaryButton } from "../../../../components/dialog";
 import {
   checkStatus,
@@ -202,6 +207,9 @@ const NewCategoryForm = ({
             onChange={handleCategoryNameFieldChange}
             value={categoryName}
             error={categoryNameError ? true : false}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+            }}
           />
           <p className={classes["error"]}>{categoryNameError}</p>
           <TextField
@@ -216,6 +224,9 @@ const NewCategoryForm = ({
             variant="standard"
             onChange={handleCategoryDescriptionFieldChange}
             value={categoryDescription}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+            }}
           />
         </Stack>
         {!!!isEditing && (
@@ -604,20 +615,12 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                 <NewCategoryForm
                   key={category.category_id}
                   categoryName={
-                    (
-                      editedCategories.find(
-                        // eslint-disable-next-line
-                        (c) => c.category_id == category.category_id
-                      ) as Category
-                    ).category_name
+                    getCategoryFromId(category.category_id, editedCategories)
+                      .category_name
                   }
                   categoryDescription={
-                    (
-                      editedCategories.find(
-                        // eslint-disable-next-line
-                        (c) => c.category_id == category.category_id
-                      ) as Category
-                    ).category_description
+                    getCategoryFromId(category.category_id, editedCategories)
+                      .category_description
                   }
                   color={
                     (
