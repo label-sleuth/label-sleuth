@@ -120,7 +120,6 @@ export const editCategory = createAsyncThunk<
       state.workspace.mode
     )}`;
 
-    console.log(newCategoryColor);
     const body = {
       category_name: newCategoryName,
       category_description: newCategoryDescription,

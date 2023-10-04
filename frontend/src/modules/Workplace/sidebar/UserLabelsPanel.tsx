@@ -32,7 +32,12 @@ export const UserLabelsPanel = () => {
     (state) => state.workspace.panels.panels[PanelIdsEnum.USER_LABELS]
   );
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
-  const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
+  const nonDeletedCategories = useAppSelector(
+    nonDeletedCategoriesSelector,
+    (a, b) => {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+  );
 
   const labelCount = useAppSelector((state) => state.workspace.labelCount);
 
@@ -70,9 +75,11 @@ export const UserLabelsPanel = () => {
   useEffect(() => {
     if (
       filteredValue === null ||
-      !nonDeletedCategories
-        .map((c) => c.category_id)
-        .find((c) => c.toString() === filteredValue)
+      // update filter value if current value corresponds to a deleted category
+      (mode === WorkspaceMode.MULTICLASS &&
+        !nonDeletedCategories.find(
+          (c) => c.category_id.toString() === filteredValue
+        ))
     ) {
       setFilteredValue(
         mode === WorkspaceMode.BINARY
@@ -161,6 +168,7 @@ export const UserLabelsPanel = () => {
       ? `No elements are currently labeled as ${filteredTitle} for this category.`
       : `No elements are currently labeled as ${filteredTitle}.`;
   }, [mode, filteredTitle]);
+  
   return (
     <Box>
       <Header message={"User labels"} />

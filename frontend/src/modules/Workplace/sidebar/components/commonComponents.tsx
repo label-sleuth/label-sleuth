@@ -38,7 +38,7 @@ export const Header = ({ message }: HeaderProps) => {
         pl: 3,
       }}
     >
-      <Typography style={{ height: "31px", lineHeight: "31px"}}>
+      <Typography style={{ height: "31px", lineHeight: "31px" }}>
         <strong>{message}</strong>
       </Typography>
     </Box>
@@ -95,7 +95,7 @@ export const ElementList = ({
         direction: "column",
         mt: 1,
         height: isPaginationRequired ? "88vh" : "90.5vh",
-        flexDirection: "column"
+        flexDirection: "column",
       }}
     >
       {elements === null ? (
@@ -105,10 +105,16 @@ export const ElementList = ({
       ) : (
         <PanelTypography>{nonEmptyResultsMessage}</PanelTypography>
       )}
-      {Filters !== undefined && <Filters/>}
+      {Filters !== undefined && <Filters />}
       <Box
-        className={`${classes["element-list"]} ${isPaginationRequired ? classes.pagination_margin : ""}`}
-        sx={elementsTopPadding ? { mt: elementsTopPadding } : {mt: 1}}
+        className={`${isPaginationRequired ? classes.pagination_margin : ""}`}
+        sx={{
+          mt: elementsTopPadding ? elementsTopPadding : 1,
+          display: "flex",
+          flexDirection: "column",
+          overflowY: loading ? "none" : "auto",
+          mb: 5,
+        }}
       >
         {loading ? (
           <Loading />

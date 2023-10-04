@@ -40,10 +40,6 @@ interface EditOrCreateCategoryModalProps {
   setCategoryName: React.Dispatch<React.SetStateAction<string>>;
   categoryDescription: string;
   setCategoryDescription: React.Dispatch<React.SetStateAction<string>>;
-  categoryColor?: BadgeColor;
-  setCategoryColor: React.Dispatch<
-    React.SetStateAction<BadgeColor | undefined>
-  >;
   categoryNameError: string;
   setCategoryNameError: React.Dispatch<React.SetStateAction<string>>;
   onSubmit: () => void;
@@ -58,8 +54,6 @@ export const EditOrCreateCategoryModal = ({
   setCategoryName,
   categoryDescription,
   setCategoryDescription,
-  categoryColor,
-  setCategoryColor,
   categoryNameError,
   setCategoryNameError,
   open,

@@ -37,8 +37,10 @@ import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutl
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import classes from "./index.module.css";
 import {
+  CATEGORY_NAME_MAX_CHARS,
   CREATE_NEW_CATEGORY_PLACEHOLDER_MSG,
   CustomizableUITextEnum,
+  WRONG_INPUT_NAME_LENGTH,
 } from "../../../../const";
 import { useColorPicker } from "../../../../customHooks/useColorPicker";
 import {
@@ -46,7 +48,7 @@ import {
   ColorPickerMenu,
 } from "../../../../components/colorPicker/ColorPicker";
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { badgePalettes } from "../../../../utils/utils";
+import { badgePalettes, onEnter, stringifyList } from "../../../../utils/utils";
 import { PrimaryButton } from "../../../../components/dialog";
 import {
   checkStatus,
@@ -58,6 +60,7 @@ import {
 import { isFulfilled } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import { useNotification } from "../../../../utils/notification";
+import React from "react";
 
 interface NewCategoryFormProps {
   categoryName: string;
@@ -90,6 +93,8 @@ const NewCategoryForm = ({
     setColorPickerMenuOpenAnchorEl,
     colorPickerMenuOpen,
   } = useColorPicker();
+
+  const [categoryNameError, setCategoryNameError] = React.useState("");
 
   const categoryDescriptionPlaceholder = useAppSelector(
     (state) =>
@@ -143,13 +148,13 @@ const NewCategoryForm = ({
   ) => {
     e.preventDefault();
     let text = e.target.value;
-    // if (text) {
-    //   if (text.length > CATEGORY_NAME_MAX_CHARS) {
-    //     setCategoryNameError(WRONG_INPUT_NAME_LENGTH(CATEGORY_NAME_MAX_CHARS));
-    //   } else setCategoryNameError("");
-    // } else {
-    //   setCategoryNameError("");
-    // }
+    if (text) {
+      if (text.length > CATEGORY_NAME_MAX_CHARS) {
+        setCategoryNameError(WRONG_INPUT_NAME_LENGTH(CATEGORY_NAME_MAX_CHARS));
+      } else setCategoryNameError("");
+    } else {
+      setCategoryNameError("");
+    }
     setCategoryAttribute(
       id,
       isEditing ? "category_name" : "categoryName",
@@ -196,7 +201,9 @@ const NewCategoryForm = ({
             variant="standard"
             onChange={handleCategoryNameFieldChange}
             value={categoryName}
+            error={categoryNameError ? true : false}
           />
+          <p className={classes["error"]}>{categoryNameError}</p>
           <TextField
             label="Category description"
             placeholder={categoryDescriptionPlaceholder}
@@ -265,9 +272,7 @@ const CategoryEntry = ({
       className={classes["category-entry"]}
     >
       <Stack direction={"row"}>
-        <Stack
-          direction={"row"}
-        >
+        <Stack direction={"row"}>
           <Box
             sx={{
               width: "25px",
@@ -449,58 +454,78 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     setOpen(false);
   }, [setEditedCategories, setNewCategories, setOpen]);
 
-  const onSubmit = useCallback(() => {
-    Promise.all(
-      newCategories.map((nc) =>
-        dispatch(
-          createCategory({
-            categoryName: nc.categoryName,
-            categoryDescription: nc.categoryDescription,
-            categoryColor: nc.color || greyColor,
-          })
-        )
-      )
-    ).then((actionResults) => {
-      if (
-        actionResults.length > 0 &&
-        actionResults.every((actionResults) => isFulfilled(actionResults))
-      ) {
-        setNewCategories([]);
-        dispatch(checkStatus());
-        notify(`The categories has been created`, {
-          type: toast.TYPE.SUCCESS,
-          autoClose: 5000,
-          toastId: "category_created_toast",
-        });
-      }
-    });
+  const saveChangesEnabled = useMemo(() => {
+    return newCategories.length > 0 || editedCategories.length > 0;
+  }, [newCategories, editedCategories]);
 
-    Promise.all(
-      editedCategories.map((c) =>
-        dispatch(
-          editCategory({
-            newCategoryName: c.category_name,
-            newCategoryDescription: c.category_description,
-            newCategoryColor: c.color || greyColor,
-            categoryId: c.category_id,
-          })
+  const onSubmit = useCallback(() => {
+    if (saveChangesEnabled) {
+      Promise.all(
+        newCategories.map((nc) =>
+          dispatch(
+            createCategory({
+              categoryName: nc.categoryName,
+              categoryDescription: nc.categoryDescription,
+              categoryColor: nc.color || greyColor,
+            })
+          )
         )
-      )
-    ).then((actionResults) => {
-      if (
-        actionResults.length > 0 &&
-        actionResults.every((actionResults) => isFulfilled(actionResults))
-      ) {
-        setEditedCategories([]);
-        dispatch(checkStatus());
-        notify(`The categories has been edited`, {
-          type: toast.TYPE.SUCCESS,
-          autoClose: 5000,
-          toastId: "category_edited_toast",
-        });
-      }
-      onClose();
-    });
+      ).then((actionResults) => {
+        if (
+          actionResults.length > 0 &&
+          actionResults.every((actionResults) => isFulfilled(actionResults))
+        ) {
+          notify(
+            `The ${
+              newCategories.length > 1 ? "categories" : "category"
+            } ${stringifyList(newCategories.map((nc) => nc.categoryName))} ${
+              newCategories.length > 1 ? "have" : "has"
+            } been created`,
+            {
+              type: toast.TYPE.SUCCESS,
+              autoClose: 5000,
+              toastId: "category_created_toast",
+            }
+          );
+          setNewCategories([]);
+          dispatch(checkStatus());
+        }
+      });
+
+      Promise.all(
+        editedCategories.map((c) =>
+          dispatch(
+            editCategory({
+              newCategoryName: c.category_name,
+              newCategoryDescription: c.category_description,
+              newCategoryColor: c.color || greyColor,
+              categoryId: c.category_id,
+            })
+          )
+        )
+      ).then((actionResults) => {
+        if (
+          actionResults.length > 0 &&
+          actionResults.every((actionResults) => isFulfilled(actionResults))
+        ) {
+          notify(
+            `The ${
+              editedCategories.length > 1 ? "categories" : "category"
+            } ${stringifyList(
+              editedCategories.map((ec) => ec.category_name)
+            )} ${editedCategories.length > 1 ? "have" : "has"} been edited`,
+            {
+              type: toast.TYPE.SUCCESS,
+              autoClose: 5000,
+              toastId: "category_edited_toast",
+            }
+          );
+          setEditedCategories([]);
+          dispatch(checkStatus());
+        }
+        onClose();
+      });
+    }
   }, [
     newCategories,
     setNewCategories,
@@ -509,6 +534,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     dispatch,
     notify,
     onClose,
+    saveChangesEnabled,
   ]);
 
   const setCategoryEdited = useCallback(
@@ -517,6 +543,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     },
     [editedCategories, setEditedCategories]
   );
+
   return (
     <Dialog
       open={open}
@@ -527,6 +554,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
       fullWidth
       maxWidth={"xs"}
       sx={{ overflowY: "scroll" }}
+      onKeyDown={(e) => onEnter(e, onSubmit)}
     >
       <DialogTitle sx={{ p: 0, mx: 4, mt: 2, mb: 1 }}>
         <Stack direction={"row"} alignItems={"center"}>
@@ -645,9 +673,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                   color: "rgb(216, 212, 212)",
                 },
               }}
-              disabled={
-                newCategories.length === 0 && editedCategories.length === 0
-              }
+              disabled={!saveChangesEnabled}
             >
               Save changes
             </PrimaryButton>

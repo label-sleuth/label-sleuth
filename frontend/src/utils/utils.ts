@@ -359,7 +359,7 @@ export const addBOMCharacter = (text: string): string => {
  * Given a list, return a string with the list elements separated by commas and an 'and' character before the last one
  */
 export const stringifyList = (list: string[]): string => {
-  if (list.length === 1) return list[0];
+  if (list.length === 1) return `'${list[0]}'`;
   else {
     let res = "";
     if (list.length > 2) list.slice(0, -2).forEach((c) => (res += `'${c}', `));

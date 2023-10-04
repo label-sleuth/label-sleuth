@@ -48,7 +48,6 @@ export const EditCategoryModal = ({
 
   const [newCategoryName, setNewCategoryName] = React.useState("");
   const [categoryDescription, setCategoryDescription] = React.useState("");
-  const [categoryColor, setCategoryColor] = React.useState<BadgeColor | undefined>(undefined);
 
   React.useEffect(() => {
     setNewCategoryName(initialCategoryName);
@@ -89,8 +88,6 @@ export const EditCategoryModal = ({
       setCategoryName={setNewCategoryName}
       categoryDescription={categoryDescription}
       setCategoryDescription={setCategoryDescription}
-      categoryColor={categoryColor}
-      setCategoryColor={setCategoryColor}
       categoryNameError={categoryNameError}
       setCategoryNameError={setCategoryNameError}
       open={open}

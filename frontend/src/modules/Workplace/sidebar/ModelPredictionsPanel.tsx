@@ -177,7 +177,7 @@ const ModelPredictionsPanel = () => {
 
   const Filters: React.FC = () => (
     <ControlledSelect
-      sx={{ m: 2, width: "30%", height: "50px" }}
+      sx={{ m: 2, width: "160px", height: "40px !important" }}
       value={filteredValue !== null ? filteredValue : ""}
       label={""}
       options={options}
@@ -189,18 +189,15 @@ const ModelPredictionsPanel = () => {
   return (
     <Box>
       <Header message={"Predictions"} />
-      {currentContentData !== null && (
-        <ElementList
-          // we are casting because currentContentData can be string[] in the Contradiction panel
-          elements={currentContentData as Element[]}
-          loading={loading}
-          nonEmptyResultsMessage={nonEmptyResultsMessage}
-          emptyResultsMessage={""}
-          isPaginationRequired={isPaginationRequired}
-          Filters={Filters}
-        />
-      )}
-
+      <ElementList
+        // we are casting because currentContentData can be string[] in the Contradiction panel
+        elements={currentContentData as Element[]}
+        loading={loading}
+        nonEmptyResultsMessage={nonEmptyResultsMessage}
+        emptyResultsMessage={""}
+        isPaginationRequired={isPaginationRequired}
+        Filters={Filters}
+      />
       <ArrowsOnlyPagination
         hitCount={hitCount}
         sidebarPanelElementsPerPage={sidebarPanelElementsPerPage}
