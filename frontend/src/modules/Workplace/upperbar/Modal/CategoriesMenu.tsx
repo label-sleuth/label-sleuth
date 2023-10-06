@@ -120,18 +120,26 @@ const NewCategoryForm = ({
     return nonDeletedCategories.map((c) => c.color?.name);
   }, [nonDeletedCategories]);
 
-  const defaultColor: BadgeColor = useMemo(() => {
-    const leastUsedColors = getLeastUsedColors(
-      [...inCreationCategoriesColorNames, ...nonDeletedCategoriesColorNames]
-        // tsc is not understanding that I am filtering undefined values
-        // (which BTW can happen only in Binary mode) so I am casting
-        .filter((c) => c !== undefined) as string[]
-    );
-    return leastUsedColors[0];
-  }, [
-    JSON.stringify(inCreationCategoriesColorNames),
-    JSON.stringify(nonDeletedCategoriesColorNames),
-  ]);
+  const defaultColor: BadgeColor = useMemo(
+    () => {
+      const leastUsedColors = getLeastUsedColors(
+        [...inCreationCategoriesColorNames, ...nonDeletedCategoriesColorNames]
+          // tsc is not understanding that I am filtering undefined values
+          // (which BTW can happen only in Binary mode) so I am casting
+          .filter((c) => c !== undefined) as string[]
+      );
+      return leastUsedColors[0];
+    },
+    // eslint-disable-next-line
+    [
+      //using this ugly hack because js compares arrays by reference
+      // and I don't know which is the correct way to proceed :(
+      // eslint-disable-next-line
+      JSON.stringify(inCreationCategoriesColorNames),
+      // eslint-disable-next-line
+      JSON.stringify(nonDeletedCategoriesColorNames),
+    ]
+  );
 
   useEffect(() => {
     if (!category.color) {

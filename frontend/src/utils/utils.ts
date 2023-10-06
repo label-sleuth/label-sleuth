@@ -429,25 +429,25 @@ export const returnByMode = (ifB: any, ifMC: any, mode: WorkspaceMode): any =>
 
 export const badgePalettes: { [key: string]: { [key: string]: string } } = {
   amber,
-  blue,
-  blueGrey,
-  brown,
   //common,
   cyan,
   deepOrange,
   deepPurple,
   green,
-  grey,
   indigo,
   lightBlue,
   lightGreen,
   lime,
+  blue,
   orange,
   pink,
   purple,
   red,
   teal,
   //yellow,
+  brown,
+  blueGrey,
+  grey,
 };
 
 export const defaultColor: BadgeColor = {

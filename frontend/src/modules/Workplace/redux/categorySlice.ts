@@ -28,7 +28,7 @@ import {
   BadgeColor,
   Category,
   CategorySliceState,
-  EditCategoryResponse,
+  CategoryUnparsed,
   ReducerObj,
   WorkspaceState,
 } from "../../../global";
@@ -95,7 +95,7 @@ export const deleteCategory = createAsyncThunk<
 });
 
 export const editCategory = createAsyncThunk<
-  EditCategoryResponse,
+  CategoryUnparsed,
   {
     newCategoryName: string;
     newCategoryDescription: string;
@@ -131,7 +131,7 @@ export const editCategory = createAsyncThunk<
   }
 );
 
-export const fetchCategories = createAsyncThunk(
+export const fetchCategories = createAsyncThunk<Category[], void>(
   "workspace/get_all_categories",
   async () => {
     var url = `${getWorkspace_url}/${encodeURIComponent(
@@ -139,14 +139,22 @@ export const fetchCategories = createAsyncThunk(
     )}/categories`;
 
     const response = await client.get(url);
-    const categories = response.data["categories"];
-    categories.forEach((c: any) => {
-      c["color"] = c["category_color"]
-        ? {
-            name: c["category_color"],
-            palette: badgePalettes[c["category_color"]],
-          }
-        : defaultColor;
+    const categoriesUnparsed = response.data[
+      "categories"
+    ] as CategoryUnparsed[];
+    const categories = categoriesUnparsed.map((cu) => {
+      const aux: any = { ...cu };
+      delete aux.category_color;
+      aux["category_id"] = parseInt(aux["category_id"] as string);
+      return {
+        ...aux,
+        color: cu.category_color
+          ? {
+              name: cu["category_color"],
+              palette: badgePalettes[cu["category_color"]],
+            }
+          : undefined,
+      } as Category;
     });
     return categories;
   }

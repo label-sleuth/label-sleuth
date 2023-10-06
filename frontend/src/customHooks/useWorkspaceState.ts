@@ -23,6 +23,7 @@ import {
   clearMainPanelFocusedElement,
   resetModelStatusCheckAttempts,
   changeMode,
+  editCategory,
 } from "../modules/Workplace/redux";
 import * as React from "react";
 import { useAppDispatch, useAppSelector } from "./useRedux";
@@ -34,7 +35,8 @@ import {
 } from "./useFetchPanelElements";
 import { getWorkspaces } from "../modules/Workspace-config/workspaceConfigSlice";
 import { useWorkspaceId } from "./useWorkspaceId";
-import { Workspace } from "../global";
+import { BadgeColor, Category, Workspace } from "../global";
+import { getLeastUsedColors } from "../utils/utils";
 
 /**
  * Custom hook for dispatching workspace related actions
@@ -43,6 +45,7 @@ const useWorkspaceState = () => {
   const dispatch = useAppDispatch();
 
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
+  const categories = useAppSelector((state) => state.workspace.categories);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
   const activePanelId = useAppSelector(
     (state) => state.workspace.panels.activePanelId
@@ -116,20 +119,19 @@ const useWorkspaceState = () => {
   }, [mode, workspaceId, dispatch]);
 
   React.useEffect(() => {
-    // this useEffect manages the actions to be carried out when new labels have been imported
+    // this useEffect manages the actions to be carried on when new labels have been imported
     // if new categories where added the category list is fetched again
     // if the user is currently in a category where labels have been added then the document is
     // fetched again, as well as the search bar results (in case element labels has to be updated there)
     if (uploadedLabels) {
-      const { categories, categoriesCreated } = uploadedLabels;
+      const { categories: categoriesStats, categoriesCreated } = uploadedLabels;
       // update elements and status only if the workspace is mc mode or if the current category was affected
       if (
-        categories?.some((cat) => cat.category_id === curCategory) ||
+        categoriesStats?.some((cat) => cat.category_id === curCategory) ||
         mode === WorkspaceMode.MULTICLASS
       ) {
         // we update the elements because the user labels changed!
         fetchMainPanelElements();
-
         if (
           [PanelIdsEnum.USER_LABELS, PanelIdsEnum.MODEL_PREDICTIONS].includes(
             activePanelId
@@ -146,11 +148,44 @@ const useWorkspaceState = () => {
         dispatch(checkStatus());
       }
       if (categoriesCreated) {
-        dispatch(fetchCategories());
+        if (mode === WorkspaceMode.BINARY) {
+          dispatch(fetchCategories());
+        } else if (mode === WorkspaceMode.MULTICLASS) {
+          dispatch(fetchCategories()).then((a) => {
+            // get only the categories that where added when uploading labels
+            console.log(a.payload)
+            const toUpdateCategories = (a.payload as Category[]).filter((c) =>
+              categoriesCreated.includes(c.category_name)
+            );
+
+            let leastUsedColors: BadgeColor[] = [];
+            toUpdateCategories.forEach((c, i) => {
+              if (leastUsedColors.length === 0) {
+                leastUsedColors = getLeastUsedColors(
+                  categories
+                    .map((c) => c.color?.name)
+                    .filter((cn) => cn !== undefined) as string[]
+                );
+              }
+              const chosenColor = leastUsedColors[0];
+              leastUsedColors = leastUsedColors.slice(1);
+              dispatch(
+                editCategory({
+                  newCategoryName: c.category_name,
+                  newCategoryDescription: "",
+                  newCategoryColor: chosenColor,
+                  categoryId: categoriesStats[i].category_id,
+                })
+              );
+            });
+          });
+        }
       }
+
       dispatch(cleanUploadedLabels());
     }
   }, [
+    categories,
     mode,
     uploadedLabels,
     curCategory,

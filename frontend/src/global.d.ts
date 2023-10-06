@@ -184,12 +184,12 @@ interface PaginationParam {
   elementsPerPage: number | null;
 }
 
-interface EditCategoryResponse {
+interface CategoryUnparsed {
   category_id: string;
   category_name: string;
   category_description: string;
   workspace_id: string;
-  category_color: string;
+  category_color: string | null;
 }
 
 interface BadgeColor {

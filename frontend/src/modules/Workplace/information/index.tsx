@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import ReactCanvasConfetti from "react-canvas-confetti";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
@@ -33,8 +33,7 @@ import { SupportIconsBar } from "../../../components/SupportIconsBar";
 import { useCheckModelState } from "../../../customHooks/useCheckModelState";
 import { useConfetti } from "../../../customHooks/useConfetti";
 import { useNewModelNotifications } from "../../../customHooks/useNewModelNotifications";
-import { useAppSelector, useAppDispatch } from "../../../customHooks/useRedux";
-import { fetchVersion } from "../redux";
+import { useAppSelector } from "../../../customHooks/useRedux";
 import { useNotifyUploadedLabels } from "../../../customHooks/useNotifyUploadedLabels";
 import { Header } from "./Header";
 import { LabelCountPanel } from "./LabelCountPanel";
@@ -73,7 +72,6 @@ export const WorkspaceInfo = ({
     (state) => state.workspace.lastModelFailed
   );
 
-  const dispatch = useAppDispatch();
   const { getInstance, fire } = useConfetti();
 
   useCheckModelState({ checkModelInterval });
