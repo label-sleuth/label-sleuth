@@ -6,7 +6,12 @@ import { StatsContainer } from "./StatsContainer";
 import { LabelCountTabs } from "./LabelCountTabs";
 import { Category } from "../../../global";
 import { PanelIdsEnum } from "../../../const";
-import { nonDeletedCategoriesSelector, setActivePanel, setPanelFilters } from "../redux";
+import {
+  nonDeletedCategoriesSelector,
+  setActivePanel,
+  setPanelFilters,
+} from "../redux";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 export const LabelCountPanelMCMode = () => {
   const [tabValue, setTabValue] = React.useState(0);
@@ -15,6 +20,9 @@ export const LabelCountPanelMCMode = () => {
   const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
   const activePanelId = useAppSelector(
     (state) => state.workspace.panels.activePanelId
+  );
+  const multiclassPerClassLabelingThreshold = useAppSelector(
+    (state) => state.featureFlags.multiclassPerClassLabelingThreshold
   );
 
   const categoriesSorted = useMemo(() => {
@@ -40,7 +48,6 @@ export const LabelCountPanelMCMode = () => {
     });
     return sorted;
   }, [nonDeletedCategories, sortingAscendingOrder, labelCount]);
-
 
   const dispatch = useAppDispatch();
 
@@ -121,18 +128,29 @@ export const LabelCountPanelMCMode = () => {
                   >
                     {c.category_name}
                   </Typography>
+                  <Stack direction={"row"} alignItems={"center"}>
+                    {(labelCount as { [key: string]: number })[c.category_id.toString()] <
+                    multiclassPerClassLabelingThreshold ? (
+                      <WarningAmberIcon
+                        sx={{
+                          color: "gray",
+                          width: "15px",
+                          height: "20px",
+                          mr: 1,
+                        }}
+                      />
+                    ) : null}
 
-                  <Typography
-                    sx={{
-                      color: "#fff",
-                    }}
-                  >
-                    {/* <strong>{labelCount[c.category_id.toString()]}</strong> */}
-
-                    {(labelCount as { [key: string]: number })[
-                      c.category_id.toString()
-                    ] || 0}
-                  </Typography>
+                    <Typography
+                      sx={{
+                        color: "#fff",
+                      }}
+                    >
+                      {(labelCount as { [key: string]: number })[
+                        c.category_id.toString()
+                      ] || 0}
+                    </Typography>
+                  </Stack>
                 </StatsContainer>
               ))}
             </Stack>

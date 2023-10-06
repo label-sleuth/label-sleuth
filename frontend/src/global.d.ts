@@ -166,6 +166,8 @@ interface FeatureFlagsSliceState {
   mainPanelElementsPerPage: number;
   rightToLeft: boolean;
   maxDatasetLength: number;
+  multiclassPerClassLabelingThreshold: number;
+  binaryFirstModelPositiveThreshold: number;
 }
 
 interface CustomizableUITextSliceState {

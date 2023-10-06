@@ -1555,7 +1555,10 @@ def get_feature_flags():
         "main_panel_elements_per_page": curr_app.config['CONFIGURATION'].main_panel_elements_per_page,
         "sidebar_panel_elements_per_page": curr_app.config['CONFIGURATION'].sidebar_panel_elements_per_page,
         "right_to_left": curr_app.config['CONFIGURATION'].language.right_to_left,
-        "max_dataset_length": curr_app.config['CONFIGURATION'].max_dataset_length
+        "max_dataset_length": curr_app.config['CONFIGURATION'].max_dataset_length,
+        "multiclass_per_class_labeling_threshold": curr_app.config['CONFIGURATION'].multiclass_flow.per_class_labeling_threshold,
+        "binary_first_model_positive_threshold": curr_app.config['CONFIGURATION'].binary_flow.first_model_positive_threshold
+
     }
     logging.debug(f'Feature flags are: {res}')
     return jsonify(res) 

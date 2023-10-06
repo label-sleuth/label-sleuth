@@ -45,6 +45,7 @@ import { LabeledDataActions } from "./LabeledDataActions";
 import { ModelVersion } from "./ModelVersion";
 import { ModelTrainingMessage } from "./ModelTrainingMessage";
 import { ModelErrorAlert } from "./ModelErrorAlert";
+import { LabelingStatusMessage } from "./LabelingStatusMessage";
 
 interface WorkspaceInfoProps {
   setTutorialOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -70,8 +71,8 @@ export const WorkspaceInfo = ({
   const categories = useAppSelector((state) => state.workspace.categories);
   const lastModelFailed = useAppSelector(
     (state) => state.workspace.lastModelFailed
-  ); 
-  
+  );
+
   const dispatch = useAppDispatch();
   const { getInstance, fire } = useConfetti();
 
@@ -94,10 +95,6 @@ export const WorkspaceInfo = ({
     () => (modelVersion !== null ? getOrdinalSuffix(modelVersion) : null),
     [modelVersion]
   );
-
-  useEffect(() => {
-    dispatch(fetchVersion());
-  }, [dispatch]);
 
   return (
     <>
@@ -123,11 +120,18 @@ export const WorkspaceInfo = ({
           anchor="left"
         >
           <Header setTutorialOpen={setTutorialOpen} />
-          {curCategory !== null || (mode === WorkspaceMode.MULTICLASS && categories.length > 0) ? (
+          {curCategory !== null ||
+          (mode === WorkspaceMode.MULTICLASS && categories.length > 0) ? (
             <Box sx={{ ml: 2, mr: 1.5, mt: 2 }}>
               <LabelCountPanel />
+              <LabelingStatusMessage />
               <Divider
-                sx={{ borderTop: "1px solid rgb(57, 57, 57)", ml: -2, mr: -1.5, mt: 3 }}
+                sx={{
+                  borderTop: "1px solid rgb(57, 57, 57)",
+                  ml: -2,
+                  mr: -1.5,
+                  mt: 3,
+                }}
               />
               <Stack
                 direction="row"
