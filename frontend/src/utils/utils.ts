@@ -448,7 +448,6 @@ export const badgePalettes: { [key: string]: { [key: string]: string } } = {
   red,
   teal,
   //yellow,
-  white: { 500: "#ffffff" },
 };
 
 export const defaultColor: BadgeColor = {
@@ -464,4 +463,25 @@ export const getRandomColor = (): string => {
 
 export const getModeQueryParam = (mode: WorkspaceMode) => {
   return `mode=${mode}`;
+};
+
+export const getCounterFromArray = (a: string[]): { [key: string]: number } => {
+  const c: { [key: string]: number } = {};
+  Object.keys(badgePalettes).forEach((k) => (c[k] = 0));
+  a.forEach((i) => {
+    c[i] += 1;
+  });
+  return c;
+};
+
+export const getLeastUsedColors = (colors: string[]): BadgeColor[] => {
+  const colorCounter = getCounterFromArray(colors);
+  const leastUsedColorCount = Math.min(...Object.values(colorCounter));
+  // this are the colors that are least used
+  return Object.keys(colorCounter)
+    .filter((c) => colorCounter[c] === leastUsedColorCount)
+    .map((colorName) => ({
+      name: colorName,
+      palette: badgePalettes[colorName],
+    }));
 };

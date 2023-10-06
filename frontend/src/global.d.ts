@@ -202,7 +202,7 @@ interface Category {
   category_name: string; // Rename to name
   category_description: string;
   color?: BadgeColor;
-  deleted: boolean;
+  deleted?: boolean;
 }
 
 interface CategorySliceState {

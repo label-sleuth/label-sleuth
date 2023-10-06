@@ -47,10 +47,19 @@ import {
   ColorPickerButton,
   ColorPickerMenu,
 } from "../../../../components/colorPicker/ColorPicker";
-import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ChangeEvent,
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   badgePalettes,
   getCategoryFromId,
+  getLeastUsedColors,
   onEnter,
   stringifyList,
 } from "../../../../utils/utils";
@@ -68,26 +77,19 @@ import { useNotification } from "../../../../utils/notification";
 import React from "react";
 
 interface NewCategoryFormProps {
-  categoryName: string;
-  categoryDescription: string;
-  color: BadgeColor | undefined;
-  id: string;
-  setCategoryAttribute: (id: string, key: string, newValue: any) => void;
-  removeNewCategory: (id: string) => void;
+  category: Category;
+  setCategoryAttribute: (
+    id: number,
+    key: "category_name" | "category_description" | "color",
+    newValue: any
+  ) => void;
+  removeNewCategory: (id: number) => void;
   isEditing: boolean;
-  inCreationCategories?: {
-    id: string;
-    categoryName: string;
-    categoryDescription: string;
-    color: BadgeColor | undefined;
-  }[];
+  inCreationCategories: Category[];
 }
 
 const NewCategoryForm = ({
-  categoryName,
-  categoryDescription,
-  color,
-  id,
+  category,
   setCategoryAttribute,
   removeNewCategory,
   isEditing = false,
@@ -110,43 +112,37 @@ const NewCategoryForm = ({
 
   const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
 
-  const greyColor = useMemo(
-    () => ({
-      name: "grey",
-      palette: badgePalettes["grey"],
-    }),
-    []
-  );
+  const inCreationCategoriesColorNames = useMemo(() => {
+    return inCreationCategories.map((c) => c.color?.name);
+  }, [inCreationCategories]);
+
+  const nonDeletedCategoriesColorNames = useMemo(() => {
+    return nonDeletedCategories.map((c) => c.color?.name);
+  }, [nonDeletedCategories]);
 
   const defaultColor: BadgeColor = useMemo(() => {
-    const usedColors = new Set<string>();
-    nonDeletedCategories.forEach(
-      (c) => c.color && usedColors.add(c.color.name)
+    const leastUsedColors = getLeastUsedColors(
+      [...inCreationCategoriesColorNames, ...nonDeletedCategoriesColorNames]
+        // tsc is not understanding that I am filtering undefined values
+        // (which BTW can happen only in Binary mode) so I am casting
+        .filter((c) => c !== undefined) as string[]
     );
-    inCreationCategories?.forEach(
-      (c) => c.color && usedColors.add(c.color.name)
-    );
-    const unusedColors = new Set<string>();
-    Object.keys(badgePalettes).forEach(
-      (k) => !!!usedColors.has(k) && unusedColors.add(k)
-    );
-    unusedColors.delete("white");
-    if (unusedColors.size > 0) {
-      const colorName = Array.from(unusedColors)[0];
-      return {
-        name: colorName,
-        palette: badgePalettes[colorName],
-      };
-    } else {
-      return greyColor;
-    }
-  }, [nonDeletedCategories, greyColor, inCreationCategories]);
+    return leastUsedColors[0];
+  }, [
+    JSON.stringify(inCreationCategoriesColorNames),
+    JSON.stringify(nonDeletedCategoriesColorNames),
+  ]);
 
   useEffect(() => {
-    if (!color) {
-      setCategoryAttribute(id, "color", defaultColor);
+    if (!category.color) {
+      setCategoryAttribute(category.category_id, "color", defaultColor);
     }
-  }, [color, defaultColor, id, setCategoryAttribute]);
+  }, [
+    category.color,
+    category.category_id,
+    defaultColor,
+    setCategoryAttribute,
+  ]);
 
   const handleCategoryNameFieldChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -161,8 +157,8 @@ const NewCategoryForm = ({
       setCategoryNameError("");
     }
     setCategoryAttribute(
-      id,
-      isEditing ? "category_name" : "categoryName",
+      category.category_id,
+      isEditing ? "category_name" : "category_name",
       text
     );
   };
@@ -173,8 +169,8 @@ const NewCategoryForm = ({
     e.preventDefault();
     let text = e.target.value;
     setCategoryAttribute(
-      id,
-      isEditing ? "category_description" : "categoryDescription",
+      category.category_id,
+      isEditing ? "category_description" : "category_description",
       text
     );
   };
@@ -194,7 +190,9 @@ const NewCategoryForm = ({
             mt: 2.5,
           }}
           setColorPickerMenuOpenAnchorEl={setColorPickerMenuOpenAnchorEl}
-          categoryColor={color ? color.palette : defaultColor.palette}
+          categoryColor={
+            category.color ? category.color.palette : defaultColor.palette
+          }
         />
         <Stack direction={"column"} sx={{ maxWidth: "250px" }}>
           <TextField
@@ -205,7 +203,7 @@ const NewCategoryForm = ({
             size="small"
             variant="standard"
             onChange={handleCategoryNameFieldChange}
-            value={categoryName}
+            value={category.category_name}
             error={categoryNameError ? true : false}
             onKeyDown={(e) => {
               e.stopPropagation();
@@ -223,7 +221,7 @@ const NewCategoryForm = ({
             size="small"
             variant="standard"
             onChange={handleCategoryDescriptionFieldChange}
-            value={categoryDescription}
+            value={category.category_description}
             onKeyDown={(e) => {
               e.stopPropagation();
             }}
@@ -239,7 +237,7 @@ const NewCategoryForm = ({
             <IconButton
               size="small"
               sx={(palette) => ({ color: palette.palette.primary.main })}
-              onClick={() => removeNewCategory(id)}
+              onClick={() => removeNewCategory(category.category_id)}
             >
               <DeleteOutlineOutlinedIcon fontSize="inherit" />
             </IconButton>
@@ -252,9 +250,9 @@ const NewCategoryForm = ({
         open={colorPickerMenuOpen}
         setColorPickerMenuOpenAnchorEl={setColorPickerMenuOpenAnchorEl}
         setCategoryColor={(color) => {
-          setCategoryAttribute(id, "color", color);
+          setCategoryAttribute(category.category_id, "color", color);
         }}
-        categoryColor={color}
+        categoryColor={category.color}
       />
     </Box>
   );
@@ -356,14 +354,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
 
   const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
 
-  const [newCategories, setNewCategories] = useState<
-    {
-      id: string;
-      categoryName: string;
-      categoryDescription: string;
-      color: BadgeColor | undefined;
-    }[]
-  >([]);
+  const [newCategories, setNewCategories] = useState<Category[]>([]);
 
   const [editedCategories, setEditedCategories] = useState<Category[]>([]);
 
@@ -383,61 +374,50 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
       {
         // id is just a number. To avoid problems with deleting categories that are being created
         // we just set the id as 1 + the maximum current id.
-        id: newCategories.length
-          ? (
-              Math.max(...newCategories.map((nc) => parseInt(nc.id))) + 1
-            ).toString()
-          : "1",
-        categoryName: "",
-        categoryDescription: "",
+        category_id: newCategories.length
+          ? Math.max(...newCategories.map((nc) => nc.category_id)) + 1
+          : 1,
+        category_name: "",
+        category_description: "",
         color: undefined,
       },
     ]);
   }, [newCategories, setNewCategories]);
 
-  const setNewCategoryAttribute = useCallback(
-    (id: string, key: string, newValue: any) => {
-      const changedCategory = newCategories.find((nc) => nc.id === id);
-      const changedCategoryIndex = newCategories.findIndex(
-        (nc) => nc.id === id
-      );
-      if (changedCategory) {
-        changedCategory[
-          key as "categoryName" | "categoryDescription" | "color"
-        ] = newValue;
-        setNewCategories([
-          ...newCategories.slice(0, changedCategoryIndex),
-          changedCategory,
-          ...newCategories.slice(changedCategoryIndex + 1),
-        ]);
-      }
-    },
-    [newCategories, setNewCategories]
-  );
-
   const setCategoryAttribute = useCallback(
-    (id: string, key: string, newValue: any) => {
-      const changedCategory = editedCategories.find(
-        // eslint-disable-next-line
-        (c) => `${c.category_id}` == id
-      );
-      if (changedCategory) {
-        changedCategory[
-          key as "category_name" | "category_description" | "color"
-        ] = newValue;
-        setEditedCategories([
+    (
+        categories: Category[],
+        setCategories: Dispatch<SetStateAction<Category[]>>
+      ) =>
+      (
+        id: number,
+        key: "category_name" | "category_description" | "color",
+        newValue: any
+      ) => {
+        const changedCategory = categories.find(
           // eslint-disable-next-line
-          ...editedCategories.filter((ec) => `${ec.category_id}` != id),
-          changedCategory,
-        ]);
-      }
-    },
-    [editedCategories, setEditedCategories]
+          (c) => c.category_id == id
+        );
+        const changedCategoryIndex = categories.findIndex(
+          (nc) => nc.category_id === id
+        );
+        if (changedCategory) {
+          changedCategory[key] = newValue;
+          setCategories([
+            ...categories.slice(0, changedCategoryIndex),
+            changedCategory,
+            ...categories.slice(changedCategoryIndex + 1),
+          ]);
+        }
+      },
+    []
   );
 
   const onRemoveNewCategory = useCallback(
-    (id: string) => {
-      setNewCategories([...newCategories.filter((nc) => nc.id !== id)]);
+    (id: number) => {
+      setNewCategories([
+        ...newCategories.filter((nc) => nc.category_id !== id),
+      ]);
     },
     [newCategories, setNewCategories]
   );
@@ -466,7 +446,11 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
   }, [setEditedCategories, setNewCategories, setOpen]);
 
   const saveChangesEnabled = useMemo(() => {
-    return newCategories.length > 0 || editedCategories.length > 0;
+    return (
+      (newCategories.length > 0 || editedCategories.length > 0) &&
+      !newCategories.some((c) => c.category_name === "") &&
+      !editedCategories.some((c) => c.category_name === "")
+    );
   }, [newCategories, editedCategories]);
 
   const onSubmit = useCallback(() => {
@@ -475,8 +459,8 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
         newCategories.map((nc) =>
           dispatch(
             createCategory({
-              categoryName: nc.categoryName,
-              categoryDescription: nc.categoryDescription,
+              categoryName: nc.category_name,
+              categoryDescription: nc.category_description,
               categoryColor: nc.color || greyColor,
             })
           )
@@ -489,7 +473,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
           notify(
             `The ${
               newCategories.length > 1 ? "categories" : "category"
-            } ${stringifyList(newCategories.map((nc) => nc.categoryName))} ${
+            } ${stringifyList(newCategories.map((nc) => nc.category_name))} ${
               newCategories.length > 1 ? "have" : "has"
             } been created`,
             {
@@ -614,26 +598,17 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
               ) !== undefined ? (
                 <NewCategoryForm
                   key={category.category_id}
-                  categoryName={
-                    getCategoryFromId(category.category_id, editedCategories)
-                      .category_name
-                  }
-                  categoryDescription={
-                    getCategoryFromId(category.category_id, editedCategories)
-                      .category_description
-                  }
-                  color={
-                    (
-                      editedCategories.find(
-                        // eslint-disable-next-line
-                        (c) => c.category_id == category.category_id
-                      ) as Category
-                    ).color
-                  }
-                  id={`${category.category_id}`}
-                  setCategoryAttribute={setCategoryAttribute}
+                  category={getCategoryFromId(
+                    category.category_id,
+                    editedCategories
+                  )}
+                  setCategoryAttribute={setCategoryAttribute(
+                    editedCategories,
+                    setEditedCategories
+                  )}
                   removeNewCategory={onRemoveNewCategory}
                   isEditing={true}
+                  inCreationCategories={[]}
                 />
               ) : (
                 <CategoryEntry
@@ -646,12 +621,12 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
             )}
             {newCategories.map((newCategory) => (
               <NewCategoryForm
-                key={newCategory.id}
-                categoryName={newCategory.categoryName}
-                categoryDescription={newCategory.categoryDescription}
-                color={newCategory.color}
-                id={newCategory.id}
-                setCategoryAttribute={setNewCategoryAttribute}
+                key={newCategory.category_id}
+                category={newCategory}
+                setCategoryAttribute={setCategoryAttribute(
+                  newCategories,
+                  setNewCategories
+                )}
                 removeNewCategory={onRemoveNewCategory}
                 isEditing={false}
                 inCreationCategories={newCategories}
