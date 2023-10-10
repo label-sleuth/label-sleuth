@@ -21,7 +21,8 @@ import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { CustomPagination } from "../../../components/pagination/CustomPagination";
 import { Element } from "../../../global";
 import { useCallback, useEffect, useMemo } from "react";
-import ControlledSelect, {
+import {
+  ControlledSelect,
   DropdownOption,
 } from "../../../components/dropdown/Dropdown";
 import { returnByMode } from "../../../utils/utils";
@@ -154,7 +155,11 @@ export const UserLabelsPanel = () => {
 
   const Filters: React.FC = () => (
     <ControlledSelect
-      sx={{ m: 2, width: "30%", height: "50px" }}
+      sx={{
+        m: 2,
+        width: "250px",
+        height: "50px",
+      }}
       value={filteredValue !== null ? filteredValue : ""}
       label={""}
       options={options}
@@ -168,7 +173,7 @@ export const UserLabelsPanel = () => {
       ? `No elements are currently labeled as ${filteredTitle} for this category.`
       : `No elements are currently labeled as ${filteredTitle}.`;
   }, [mode, filteredTitle]);
-  
+
   return (
     <Box>
       <Header message={"User labels"} />

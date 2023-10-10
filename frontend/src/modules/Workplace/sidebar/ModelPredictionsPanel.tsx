@@ -22,7 +22,8 @@ import { ElementList, Header } from "./components/commonComponents";
 import usePanelPagination from "../../../customHooks/usePanelPagination";
 import { ArrowsOnlyPagination } from "../../../components/pagination/ArrowsOnlyPagination";
 import { Element } from "../../../global";
-import ControlledSelect, {
+import {
+  ControlledSelect,
   DropdownOption,
 } from "../../../components/dropdown/Dropdown";
 import { returnByMode } from "../../../utils/utils";
@@ -177,7 +178,7 @@ const ModelPredictionsPanel = () => {
 
   const Filters: React.FC = () => (
     <ControlledSelect
-      sx={{ m: 2, width: "160px", height: "40px !important" }}
+      sx={{ m: 2, width: "250px", height: "40px !important" }}
       value={filteredValue !== null ? filteredValue : ""}
       label={""}
       options={options}

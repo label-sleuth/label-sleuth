@@ -36,10 +36,13 @@ export const ModelTrainingMessage = () => {
         display: "flex",
         flexDirection: "row",
         alignItems: "flex-end",
+        mt: 2,
       }}
     >
-      <div className={classes.modelStatus}>{toDisplayMessage}</div>
-      <div className={classes["dot-pulse"]}></div>
+      <Box className={classes.modelStatus} sx={{ mr: 3 }}>
+        {toDisplayMessage}
+      </Box>
+      <Box className={classes["dot-pulse"]}></Box>
     </Box>
   ) : null;
 };

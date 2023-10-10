@@ -124,6 +124,10 @@ export const LabelCountPanelMCMode = () => {
                     component={"div"}
                     sx={{
                       cursor: "pointer",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                      maxWidth: "80%"
                     }}
                   >
                     {c.category_name}

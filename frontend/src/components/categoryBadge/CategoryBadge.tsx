@@ -76,7 +76,10 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
           alignItems: "center",
           color: colorDesign.textColor,
           borderColor: colorDesign.borderColor,
-          backgroundColor: colorDesign.backgroundColor,
+          backgroundColor:
+            (selectable && selected) || !selectable
+              ? colorDesign.backgroundColor
+              : "transparent",
           // eslint complaints about &:hover having no effect but it actually has
           // eslint-disable-next-line
           ["&:hover"]: {
@@ -124,7 +127,14 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
             inheritViewBox
           />
         ) : null}
-        <span>{`${category.category_name} ${
+        <span
+          style={{
+            maxWidth: isUserLabel || isModelPrediction ? "130px" : "150px",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+          }}
+        >{`${category.category_name} ${
           category.deleted ? "(deleted)" : ""
         }`}</span>
         {onRemoveClick ? (

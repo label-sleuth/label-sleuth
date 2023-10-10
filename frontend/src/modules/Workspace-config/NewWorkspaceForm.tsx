@@ -16,7 +16,8 @@
 import React from "react";
 import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
-import ControlledSelect, {
+import {
+  ControlledSelect,
   DropdownOption,
 } from "../../components/dropdown/Dropdown";
 import Box from "@mui/material/Box";

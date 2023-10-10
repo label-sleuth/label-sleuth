@@ -17,7 +17,14 @@ import MenuItem from "@mui/material/MenuItem/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import classes from "./Dropdown.module.css";
-import { Box, Chip, Stack, SxProps, Theme, Typography } from "@mui/material";
+import {
+  Box,
+  Chip,
+  Stack,
+  SxProps,
+  Theme,
+  Typography,
+} from "@mui/material";
 import { ReactNode, useMemo } from "react";
 
 export interface DropdownOption {
@@ -44,7 +51,7 @@ interface ControlledSelectProps {
   itemTextSx?: SxProps<Theme>;
 }
 
-const ControlledSelect = ({
+export const ControlledSelect = ({
   value,
   label,
   options,
@@ -162,7 +169,14 @@ const ControlledSelect = ({
                       }}
                     >
                       <Stack direction={"row"} justifyContent={"space-between"}>
-                        <Typography sx={{ ...itemTextSx }}>
+                        <Typography
+                          sx={{
+                            overflow: "hidden",
+                            whiteSpace: "nowrap",
+                            textOverflow: "ellipsis",
+                            ...itemTextSx,
+                          }}
+                        >
                           {option.title ?? option.value}
                         </Typography>
                         <Chip
@@ -205,5 +219,3 @@ const ControlledSelect = ({
     </>
   );
 };
-
-export default ControlledSelect;

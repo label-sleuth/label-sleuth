@@ -15,19 +15,22 @@
 
 import React from "react";
 import { Box, FormControl } from "@mui/material";
-import ControlledSelect, { DropdownOption } from "../../components/dropdown/Dropdown";
+import {
+  DropdownOption,
+  ControlledSelect,
+} from "../../components/dropdown/Dropdown";
 import ButtonIBM from "../../components/buttons/ButtonIBM";
 import buttonIBMClasses from "../../components/buttons/Buttons.module.css";
 import classes from "./workspace-config.module.css";
 import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
 
 interface ExistingWorkspaceFormProps {
-	handleChange: (value: string) => void;
-	handleClick: () => void;
-	handleDeleteWorkspace: () => void;
-	value: string;
-	options: DropdownOption[];
-	deleteButtonEnabled: boolean;
+  handleChange: (value: string) => void;
+  handleClick: () => void;
+  handleDeleteWorkspace: () => void;
+  value: string;
+  options: DropdownOption[];
+  deleteButtonEnabled: boolean;
 }
 const ExistingWorkspaceForm = ({
   handleChange,
@@ -36,11 +39,15 @@ const ExistingWorkspaceForm = ({
   value,
   options,
   deleteButtonEnabled,
-}: ExistingWorkspaceFormProps ) => {
-  const [deleteWorkspaceModalOpen, setDeleteWorkspaceModalOpen] = React.useState(false);
+}: ExistingWorkspaceFormProps) => {
+  const [deleteWorkspaceModalOpen, setDeleteWorkspaceModalOpen] =
+    React.useState(false);
 
   return (
-    <Box className={classes.wrapper} style={{ borderBottom: "solid 1px #8d8d8d" }}>
+    <Box
+      className={classes.wrapper}
+      style={{ borderBottom: "solid 1px #8d8d8d" }}
+    >
       <DeleteWorkspaceModal
         open={deleteWorkspaceModalOpen}
         setOpen={setDeleteWorkspaceModalOpen}
@@ -49,7 +56,10 @@ const ExistingWorkspaceForm = ({
       />
       <h2 style={{ padding: "25px", margin: 0 }}>Continue</h2>
       <FormControl variant="standard">
-        <FormControl variant="standard" sx={{ minWidth: 300, ml: "25px", mr: "25px" }}>
+        <FormControl
+          variant="standard"
+          sx={{ minWidth: 300, ml: "25px", mr: "25px" }}
+        >
           <ControlledSelect
             label="Continue with existing workspace"
             value={value}
@@ -60,7 +70,14 @@ const ExistingWorkspaceForm = ({
             itemMinHeight={35}
           />
         </FormControl>
-        <div style={{ width: "100%", display: "flex", justifyContent: "right", marginTop: "20px" }}>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "right",
+            marginTop: "20px",
+          }}
+        >
           <ButtonIBM
             disabled={!deleteButtonEnabled}
             style={{ marginRight: "1px" }}
@@ -68,7 +85,11 @@ const ExistingWorkspaceForm = ({
             className={buttonIBMClasses["button-ibm"]}
             text="Delete"
           />
-          <ButtonIBM handleClick={handleClick} className={buttonIBMClasses["button-ibm"]} text="Go" />
+          <ButtonIBM
+            handleClick={handleClick}
+            className={buttonIBMClasses["button-ibm"]}
+            text="Go"
+          />
         </div>
       </FormControl>
     </Box>

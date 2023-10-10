@@ -1,5 +1,5 @@
 import { Menu, Tooltip, Button, Stack, Box } from "@mui/material";
-import { LabelTypesEnum, PanelIdsEnum } from "../../const";
+import { PanelIdsEnum } from "../../const";
 import { useAppSelector } from "../../customHooks/useRedux";
 import { Category, Element } from "../../global";
 import useLabelState from "../../customHooks/useLabelState";
@@ -12,7 +12,6 @@ import { nonDeletedCategoriesSelector } from "../../modules/Workplace/redux";
 
 interface CategoryMenuItemProps {
   category: Category;
-  userLabel: LabelTypesEnum;
   element: Element;
   panelId: PanelIdsEnum;
   handleClose: (e: React.UIEvent) => void;
@@ -106,7 +105,6 @@ export const LabelCategoriesMenu = ({
           <CategoryMenuItem
             key={i}
             category={category}
-            userLabel={element.otherUserLabels[category.category_id]}
             element={element}
             panelId={panelId}
             handleClose={handleClose}
