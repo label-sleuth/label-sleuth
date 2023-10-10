@@ -4,8 +4,9 @@ import { useAppSelector } from "../../customHooks/useRedux";
 import { Category, Element } from "../../global";
 import useLabelState from "../../customHooks/useLabelState";
 import { TooltipProps } from "../labelButtons/LabelButtons";
-import React from "react";
+import React, { useMemo } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import labelButtonClasses from "../labelButtons/index.module.css";
 import { CategoryBadge } from "../categoryBadge/CategoryBadge";
 import { nonDeletedCategoriesSelector } from "../../modules/Workplace/redux";
@@ -119,12 +120,14 @@ interface LabelCategoriesMenuButtonProps {
   labelMenuOpen: boolean;
   setAnchorEl: any;
   tooltipProps?: TooltipProps;
+  element: Element;
 }
 
 export const LabelCategoriesMenuButton = ({
   setAnchorEl,
   labelMenuOpen,
   tooltipProps,
+  element,
 }: LabelCategoriesMenuButtonProps) => {
   const handleClick = (event: React.UIEvent) => {
     event.stopPropagation();
@@ -139,20 +142,27 @@ export const LabelCategoriesMenuButton = ({
     event.stopPropagation();
   };
 
+  const isLabeled = useMemo(() => {
+    return element.multiclassUserLabel !== null;
+  }, [element]);
+
   return (
     <Tooltip
-      {...{ title: "Label element", ...tooltipProps }}
+      {...{
+        title: !isLabeled ? "Label element" : "Change element label",
+        ...tooltipProps,
+      }}
       className={` ${!labelMenuOpen ? labelButtonClasses.visibility : ""}`}
       onClick={handleClickHack}
     >
       <Button
-        aria-label="add category"
+        aria-label="Label element"
         onClick={handleClick}
         sx={{ textTransform: "none" }}
         variant="text"
-        endIcon={<AddIcon />}
+        endIcon={!isLabeled ? <AddIcon /> : <ModeEditOutlineOutlinedIcon />}
       >
-        {"Label"}
+        {!isLabeled ? "Label" : "Change label"}
       </Button>
     </Tooltip>
   );

@@ -1,4 +1,11 @@
-import { Box, IconButton, SvgIcon, SxProps, Tooltip } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  SvgIcon,
+  SxProps,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import React, { FC, useMemo } from "react";
 import { APPBAR_HEIGHT } from "../../const";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -79,22 +86,21 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
           backgroundColor:
             (selectable && selected) || !selectable
               ? colorDesign.backgroundColor
-              : "transparent",
+              : colorDesign.lighterBackgroundColor,
+          boxShadow: selectable && selected ? `0 0 8px ${colorDesign.textColor}` : "none",
           // eslint complaints about &:hover having no effect but it actually has
           // eslint-disable-next-line
           ["&:hover"]: {
-            backgroundColor: colorDesign.hoverColor,
+            backgroundColor: selectable ? colorDesign.hoverColor : "none",
           },
-          cursor: "pointer",
+          cursor: selectable ? "pointer" : "default",
           borderRadius: "14px",
-          borderStyle: selectable ? "dashed" : "solid",
+          borderStyle: selectable && !selected ? "dashed" : "solid",
           borderWidth: "1px",
           px: 0.5,
           py: 0.2,
           maxHeight: APPBAR_HEIGHT - 20,
           maxWidth: "150px",
-          fontSize: "0.75rem",
-          fontWeight: 425,
           ...sx,
         }}
         onClick={onClickAll}
@@ -113,30 +119,36 @@ export const CategoryBadge: FC<CategoryBadgeProps> = ({
             />
           </Tooltip>
         ) : isModelPrediction ? (
-          <SvgIcon
-            sx={{
-              fontSize: "12px",
-              fill: colorDesign.iconColor,
-              my: 0,
-              mr: 0.5,
-              mt: 0.2,
-            }}
-            component={Logo}
-            htmlColor={colorDesign.iconColor}
-            //color={colorDesign.iconColor}
-            inheritViewBox
-          />
+          <Tooltip title={"Model prediction"}>
+            <SvgIcon
+              sx={{
+                fontSize: "12px",
+                fill: colorDesign.iconColor,
+                my: 0,
+                mr: 0.5,
+                mt: 0.2,
+              }}
+              component={Logo}
+              htmlColor={colorDesign.iconColor}
+              //color={colorDesign.iconColor}
+              inheritViewBox
+            />
+          </Tooltip>
         ) : null}
-        <span
-          style={{
+        <Typography
+          component={"span"}
+          sx={{
             maxWidth: isUserLabel || isModelPrediction ? "130px" : "150px",
             overflow: "hidden",
             whiteSpace: "nowrap",
             textOverflow: "ellipsis",
+            cursor: selectable ? "pointer" : "default",
+            fontSize: "0.75rem",
+            fontWeight: 425,
           }}
         >{`${category.category_name} ${
           category.deleted ? "(deleted)" : ""
-        }`}</span>
+        }`}</Typography>
         {onRemoveClick ? (
           <Tooltip title={"Remove"}>
             <IconButton

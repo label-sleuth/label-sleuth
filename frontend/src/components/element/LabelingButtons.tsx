@@ -60,6 +60,7 @@ export const LabelingButtons = ({
           setAnchorEl={setLabelMenuOpenAnchorEl}
           tooltipProps={otherCatsTooltipProps}
           labelMenuOpen={labelMenuOpen}
+          element={element}
         />,
         mode
       )}
