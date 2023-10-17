@@ -35,13 +35,13 @@ import info_icon from "../../../assets/workspace/help.svg";
 import { Fade } from "@mui/material";
 import { IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import media1 from "./assets/v3/stage_1.webp";
-import media2 from "./assets/v3/stage_2.webp";
-import media3 from "./assets/v3/stage_3.webp";
-import media4 from "./assets/v3/stage_4.webp";
-import media5 from "./assets/v3/stage_5.webp";
-import media6 from "./assets/v3/stage_6.webp";
-import media7 from "./assets/v3/stage_7.webp";
+import media1 from "./assets/v4/stage_1.webp";
+import media2 from "./assets/v4/stage_2.webp";
+import media3 from "./assets/v4/stage_3.webp";
+import media4 from "./assets/v4/stage_4.webp";
+import media5 from "./assets/v4/stage_5.webp";
+import media6 from "./assets/v4/stage_6.webp";
+import media7 from "./assets/v4/stage_7.webp";
 
 const media = [media1, media2, media3, media4, media5, media6, media7];
 
@@ -220,14 +220,15 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
     Array(stages.length)
       .fill(0)
       .forEach((_, i) => {
-        new Image().src = `./assets/v3/stage_${i + 1}`;
+        new Image().src = `./assets/v4/stage_${i + 1}`;
       });
   }, [stages.length]);
 
   const currentStage = stages[stageIndex];
 
   const handleKeyPress = useCallback(
-    (event) => {
+    (event: KeyboardEvent) => {
+      event.stopPropagation();
       if (event.key === "ArrowRight") {
         onPrimaryButtonClickDefault();
       } else if (event.key === "ArrowLeft") {
@@ -238,11 +239,13 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
   );
 
   useEffect(() => {
-    document.addEventListener("keydown", handleKeyPress);
-    return () => {
-      document.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [handleKeyPress]);
+    if (tutorialOpen) {
+      document.addEventListener("keydown", handleKeyPress);
+      return () => {
+        document.removeEventListener("keydown", handleKeyPress);
+      };
+    }
+  }, [handleKeyPress, tutorialOpen]);
 
   return (
     <OuterModal open={tutorialOpen} onClose={() => setTutorialOpen(false)}>

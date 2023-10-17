@@ -16,11 +16,12 @@ export const LabelingStatusMessage = () => {
     (state) => state.featureFlags.multiclassPerClassLabelingThreshold
   );
   const labelingStatusMessage = useMemo(() => {
+    const yetToLabelCount = binaryFirstModelPositiveThreshold - labelCount.pos;
     if (mode === WorkspaceMode.BINARY) {
-      if (labelCount.pos < binaryFirstModelPositiveThreshold) {
+      if (yetToLabelCount > 0) {
         return `Please label ${
           binaryFirstModelPositiveThreshold - labelCount.pos
-        } more elements as positive`;
+        } more ${yetToLabelCount > 1 ? "elements" : "element"} as positive`;
       } else return null;
     }
     if (mode === WorkspaceMode.MULTICLASS) {
