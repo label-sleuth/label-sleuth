@@ -10,8 +10,8 @@
     },
 
     "multiclass_flow": {
-        "per_class_labeling_threshold": 1,
-        "changed_element_threshold": 3,
+        "per_class_labeling_threshold": 5,
+        "changed_element_threshold": 20,
         "training_set_selection_strategy": "ALL_LABELED_MULTICLASS",
         "model_policy": "STATIC_MULTICLASS_SVM_BOW",
         "active_learning_strategy": "MULTICLASS_ENTROPY",
