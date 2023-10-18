@@ -227,7 +227,8 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
   const currentStage = stages[stageIndex];
 
   const handleKeyPress = useCallback(
-    (event) => {
+    (event: KeyboardEvent) => {
+      event.stopPropagation();
       if (event.key === "ArrowRight") {
         onPrimaryButtonClickDefault();
       } else if (event.key === "ArrowLeft") {
@@ -238,11 +239,13 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
   );
 
   useEffect(() => {
-    document.addEventListener("keydown", handleKeyPress);
-    return () => {
-      document.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [handleKeyPress]);
+    if (tutorialOpen) {
+      document.addEventListener("keydown", handleKeyPress);
+      return () => {
+        document.removeEventListener("keydown", handleKeyPress);
+      };
+    }
+  }, [handleKeyPress, tutorialOpen]);
 
   return (
     <OuterModal open={tutorialOpen} onClose={() => setTutorialOpen(false)}>

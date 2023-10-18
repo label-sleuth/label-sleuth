@@ -27,7 +27,7 @@ import { HashRouter } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import { useAppSelector, useAppDispatch } from "./customHooks/useRedux";
 import { theme } from "./theme";
-import { Backdrop } from "@mui/material";
+import { Backdrop, Box } from "@mui/material";
 import { CircularProgress } from "@mui/material";
 import { useAuthentication } from "./customHooks/useAuthentication";
 import { fetchFeatureFlags } from "./featureFlags/featureFlagsSlice";
@@ -38,6 +38,7 @@ import { useCheckSystemHealth } from "./customHooks/useCheckSystemHealth";
 import { ErrorDetailsDialog } from "./error/ErrorDetailsDialog";
 import { useNotification } from "./utils/notification";
 import { fetchCustomizableUIElements } from "./customizableUIText/customizableUITextSlice";
+import { Arrow } from "./modules/Workplace/tutorial/Arrow";
 
 const AppRoutes = () => {
   const { authenticated, authenticationEnabled } = useAuthentication();
@@ -105,7 +106,9 @@ const App = () => {
   const [errorDetailsDialogOpen, setErrorDetailsDialogOpen] = useState(false);
 
   const featureFlags = useAppSelector((state) => state.featureFlags);
-  const customizableUIText = useAppSelector((state) => state.customizableUIText);
+  const customizableUIText = useAppSelector(
+    (state) => state.customizableUIText
+  );
 
   useNotifyError({
     open: errorDetailsDialogOpen,
@@ -124,7 +127,7 @@ const App = () => {
   }, [dispatch]);
 
   return (
-    <div>
+    <Box>
       {featureFlags.fetched && customizableUIText.fetched ? (
         <ThemeProvider theme={theme}>
           <HashRouter>
@@ -147,7 +150,8 @@ const App = () => {
         sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={!systemOk}
       ></Backdrop>
-    </div>
+      {/* <Arrow tutorialStageIndex={2}/> */}
+    </Box>
   );
 };
 

@@ -15,6 +15,7 @@
 
 import React from "react";
 import ReactDOM from "react-dom";
+import { useAppSelector } from "../../../customHooks/useRedux";
 
 interface Coordinate {
   x: number;
@@ -51,14 +52,14 @@ const configs: ArrowConfig[] = [
     hide: true,
     // direction: "right",
     // componentId: "sidebar-search-button",
-    // adjust: { x: -140, y: -10}
+    // adjust: { x: -140, y: -10}a
   },
   {
     direction: "left",
     componentId: "model-version",
     backupComponentId: "model-version-unavailable",
     xEnd: true,
-    adjust: { x: 30, y: 15 },
+    adjust: { x: 50, y: 15 },
   },
   {
     hide: true,
@@ -70,7 +71,7 @@ const configs: ArrowConfig[] = [
     direction: "left",
     componentId: "workspace-tutorial-image",
     xEnd: true,
-    adjust: { x: 70, y: -5 },
+    adjust: { x: 85, y: -5 },
   },
 ];
 
@@ -78,7 +79,8 @@ interface ArrowProps {
   tutorialStageIndex: number;
 }
 
-const Arrow = ({ tutorialStageIndex }: ArrowProps) => {
+export const Arrow = ({ tutorialStageIndex }: ArrowProps) => {
+  const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const [arrowPos, setArrowPos] = React.useState<{
     x: number;
     y: number;
@@ -140,7 +142,15 @@ const Arrow = ({ tutorialStageIndex }: ArrowProps) => {
       }
       setArrowPos(pos);
     }
-  }, [tutorialStageIndex]);
+  }, [
+    tutorialStageIndex,
+    adjust,
+    backupComponentId,
+    componentId,
+    direction,
+    firstChild,
+    xEnd,
+  ]);
 
   return !hide
     ? ReactDOM.createPortal(
@@ -152,7 +162,8 @@ const Arrow = ({ tutorialStageIndex }: ArrowProps) => {
             borderRight: "30px solid transparent",
             borderBottom: "60px solid blue",
             position: "fixed",
-            transform: direction !== undefined ? rotation[direction] : rotation.top,
+            transform:
+              direction !== undefined ? rotation[direction] : rotation.top,
             zIndex: 10100,
             top: arrowPos ? arrowPos.y : 400,
             left: arrowPos ? arrowPos.x : 400,
@@ -163,5 +174,4 @@ const Arrow = ({ tutorialStageIndex }: ArrowProps) => {
     : null;
 };
 
-export default Arrow;
 export { configs };

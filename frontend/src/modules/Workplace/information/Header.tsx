@@ -54,7 +54,7 @@ export const Header = ({ setTutorialOpen }: HeaderProps) => {
   return (
     <>
       <DrawerHeader>
-        <Stack direction={"row"}>
+        <Stack direction={"row"} alignItems={"center"}>
           <img
             src={appLogoURL}
             className={classes.sleuthlogo}
