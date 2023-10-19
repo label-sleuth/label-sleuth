@@ -52,10 +52,9 @@ export const DeleteDatasetModal = ({
   };
 
   const onSubmit = () => {
-    setOpen(false);
+    handleClose();
     handleDeleteDataset();
     clearFields();
-
   };
 
   React.useEffect(() => {

@@ -49,7 +49,7 @@ interface LoadDocumentFormProps {
   file: File | null;
 }
 
-const LoadDocumentForm = ({
+export const LoadDocumentForm = ({
   handleLoadDoc,
   handleFileChange,
   datasets,
@@ -182,5 +182,3 @@ const LoadDocumentForm = ({
     </Box>
   );
 };
-
-export default LoadDocumentForm;
