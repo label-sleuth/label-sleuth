@@ -19,7 +19,7 @@ import { cleanWorkplaceState } from "../Workplace/redux";
 import classes from "./workspace-config.module.css";
 import ExistingWorkspace from "./ExistingWorkspaceForm";
 import NewWorkspace from "./NewWorkspaceForm";
-import LoadDocument from "./LoadDocumentForm";
+import { LoadDocumentForm } from "./LoadDocumentForm";
 import { ButtonAppBar } from "../../components/bars/upperBar/ButtonAppBar";
 import { useDispatch } from "react-redux";
 import { useLoadDoc } from "../../customHooks/useLoadDoc";
@@ -57,7 +57,11 @@ export const WorkspaceConfig = () => {
         <div />
         <div style={{ maxWidth: "362px" }}>
           <h2 style={{ display: "flex", alignItems: "center", marginTop: 0 }}>
-            <img alt="" src={workspace_logo} style={{ height: "28px", marginLeft: "3px", marginRight: "5px" }} />
+            <img
+              alt=""
+              src={workspace_logo}
+              style={{ height: "28px", marginLeft: "3px", marginRight: "5px" }}
+            />
             Workspace
           </h2>
           <ExistingWorkspace {...existingWorkProps} />
@@ -74,9 +78,11 @@ export const WorkspaceConfig = () => {
           <NewWorkspace {...newWorkProps} options={options} />
         </div>
         <div className={classes.newdata}>
-          <LoadDocument {...loadDocProps} backdropOpen={backdropOpen} />
+          <LoadDocumentForm {...loadDocProps} backdropOpen={backdropOpen} />
         </div>
-        <SystemVersion style={{ position: "absolute", right: 10, bottom: -20 }} />
+        <SystemVersion
+          style={{ position: "absolute", right: 10, bottom: -20 }}
+        />
       </div>
     </>
   );
