@@ -15,7 +15,7 @@
 
 import React, { useState } from "react";
 import { useAppSelector } from "../../../customHooks/useRedux";
-import { IconButton, Stack, Typography } from "@mui/material";
+import { IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { AppBarLS, UpperBarProps } from ".";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import { CategoriesMenu } from "./Modal/CategoriesMenu";
@@ -60,13 +60,17 @@ export const UpperBarMCMode = ({
                 }`
               : "No categories created yet"}
           </Typography>
+          <Tooltip title={"Create, edit or delete categories"}>
           <IconButton
+            id="upperbar-add-category"
             size="small"
             sx={(palette) => ({ color: palette.palette.primary.main, ml: 2 })}
             onClick={handleAddCategory}
           >
             <ModeEditOutlineOutlinedIcon fontSize="inherit" />
           </IconButton>
+          </Tooltip>
+          
         </Stack>
       </Stack>
       <CategoriesMenu
