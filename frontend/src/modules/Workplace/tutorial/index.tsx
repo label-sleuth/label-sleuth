@@ -42,6 +42,7 @@ import media4 from "./assets/v3/stage_4.gif";
 import media5 from "./assets/v3/stage_5.gif";
 import media6 from "./assets/v3/stage_6.gif";
 import media7 from "./assets/v3/stage_7.webp";
+import { usePrealoadMedia } from "../../../customHooks/usePrealoadMedia";
 
 const media = [media1, media2, media3, media4, media5, media6, media7];
 
@@ -52,7 +53,11 @@ interface TutorialProps {
 
 const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
   const [stageIndex, setStageIndex] = useState(0);
-
+  
+  // preload tutorial media files
+  // so they are fetched before opening the tutorial
+  usePrealoadMedia(media);
+  
   useEffect(() => {
     if (tutorialOpen) {
       setStageIndex(0);
@@ -215,14 +220,6 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
       onSecondaryButtonClick: () => setStageIndex(0),
     },
   ];
-
-  useEffect(() => {
-    Array(stages.length)
-      .fill(0)
-      .forEach((_, i) => {
-        new Image().src = `./assets/v3/stage_${i + 1}`;
-      });
-  }, [stages.length]);
 
   const currentStage = stages[stageIndex];
 
