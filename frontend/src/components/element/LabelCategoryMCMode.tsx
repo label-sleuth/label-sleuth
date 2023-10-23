@@ -129,6 +129,7 @@ export const LabelCategoriesMenuButton = ({
   tooltipProps,
   element,
 }: LabelCategoriesMenuButtonProps) => {
+  const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
   const handleClick = (event: React.UIEvent) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
@@ -146,7 +147,7 @@ export const LabelCategoriesMenuButton = ({
     return element.multiclassUserLabel !== null;
   }, [element]);
 
-  return (
+  return nonDeletedCategories.length ? (
     <Tooltip
       {...{
         title: !isLabeled ? "Label element" : "Change element label",
@@ -165,5 +166,5 @@ export const LabelCategoriesMenuButton = ({
         {!isLabeled ? "Label" : "Change label"}
       </Button>
     </Tooltip>
-  );
+  ) : null;
 };
