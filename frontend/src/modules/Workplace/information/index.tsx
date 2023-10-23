@@ -45,6 +45,7 @@ import { ModelVersion } from "./ModelVersion";
 import { ModelTrainingMessage } from "./ModelTrainingMessage";
 import { ModelErrorAlert } from "./ModelErrorAlert";
 import { LabelingStatusMessage } from "./LabelingStatusMessage";
+import { nonDeletedCategoriesSelector } from "../redux";
 
 interface WorkspaceInfoProps {
   setTutorialOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -67,7 +68,7 @@ export const WorkspaceInfo = ({
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
   const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
   const mode = useAppSelector((state) => state.workspace.mode);
-  const categories = useAppSelector((state) => state.workspace.categories);
+  const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
   const lastModelFailed = useAppSelector(
     (state) => state.workspace.lastModelFailed
   );
@@ -119,7 +120,7 @@ export const WorkspaceInfo = ({
         >
           <Header setTutorialOpen={setTutorialOpen} />
           {curCategory !== null ||
-          (mode === WorkspaceMode.MULTICLASS && categories.length > 0) ? (
+          (mode === WorkspaceMode.MULTICLASS && nonDeletedCategories.length > 0) ? (
             <Box sx={{ ml: 2, mr: 1.5, mt: 2 }}>
               <LabelCountPanel />
               <LabelingStatusMessage />
