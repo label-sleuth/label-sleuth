@@ -16,6 +16,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { useAppSelector } from "../../../customHooks/useRedux";
+import { returnByMode } from "../../../utils/utils";
 
 interface Coordinate {
   x: number;
@@ -33,14 +34,14 @@ interface ArrowConfig {
   firstChild?: boolean;
 }
 
-const configs: ArrowConfig[] = [
+const bconfigs: ArrowConfig[] = [
   {
     hide: true,
   },
   {
     direction: "top",
     componentId: "upperbar-add-category",
-    adjust: { x: 0, y: 15 },
+    adjust: { x: -20, y: 0 },
   },
   {
     direction: "bottom",
@@ -64,7 +65,49 @@ const configs: ArrowConfig[] = [
   {
     hide: true,
     // direction: "right",
-    // componentId: "sidebar-recommended-button",
+    // componentId: "sidebar-recommended-buttona",
+    // adjust: { x: -140, y: -10}
+  },
+  {
+    direction: "left",
+    componentId: "workspace-tutorial-image",
+    xEnd: true,
+    adjust: { x: 85, y: -5 },
+  },
+];
+
+const mcconfigs: ArrowConfig[] = [
+  {
+    hide: true,
+  },
+  {
+    direction: "top",
+    componentId: "upperbar-add-category",
+    adjust: { x: -20, y: 0 },
+  },
+  {
+    direction: "bottom",
+    componentId: "main-element-view",
+    xEnd: true,
+    firstChild: true,
+  },
+  {
+    hide: true,
+    // direction: "right",
+    // componentId: "sidebar-search-button",
+    // adjust: { x: -140, y: -10}a
+  },
+  {
+    direction: "left",
+    componentId: "model-version",
+    backupComponentId: "model-version-unavailable",
+    xEnd: true,
+    adjust: { x: 50, y: 15 },
+  },
+  {
+    hide: true,
+    // direction: "right",
+    // componentId: "sidebar-recommended-buttona",
     // adjust: { x: -140, y: -10}
   },
   {
@@ -80,7 +123,8 @@ interface ArrowProps {
 }
 
 export const Arrow = ({ tutorialStageIndex }: ArrowProps) => {
-  const curCategory = useAppSelector((state) => state.workspace.curCategory);
+  const mode = useAppSelector(state => state.workspace.mode)
+  
   const [arrowPos, setArrowPos] = React.useState<{
     x: number;
     y: number;
@@ -93,6 +137,8 @@ export const Arrow = ({ tutorialStageIndex }: ArrowProps) => {
     bottom: "rotate(180deg)",
     none: "none",
   };
+
+  const configs = returnByMode(bconfigs, mcconfigs, mode) as ArrowConfig[]
 
   const {
     direction,
@@ -174,4 +220,4 @@ export const Arrow = ({ tutorialStageIndex }: ArrowProps) => {
     : null;
 };
 
-export { configs };
+export { bconfigs, mcconfigs };
