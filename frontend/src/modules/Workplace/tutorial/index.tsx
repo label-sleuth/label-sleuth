@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Stack } from "@mui/material";
 import {
   SmallTitle,
@@ -35,16 +35,35 @@ import info_icon from "../../../assets/workspace/help.svg";
 import { Fade } from "@mui/material";
 import { IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import media1 from "./assets/v3/stage_1.webp";
-import media2 from "./assets/v3/stage_2.webp";
-import media3 from "./assets/v3/stage_3.webp";
-import media4 from "./assets/v3/stage_4.gif";
-import media5 from "./assets/v3/stage_5.gif";
-import media6 from "./assets/v3/stage_6.gif";
-import media7 from "./assets/v3/stage_7.webp";
+import bmedia1 from "./assets/binary/stage_1.webp";
+import bmedia2 from "./assets/binary/stage_2.webp";
+import bmedia3 from "./assets/binary/stage_3.webp";
+import bmedia4 from "./assets/binary/stage_4.gif";
+import bmedia5 from "./assets/binary/stage_5.gif";
+import bmedia6 from "./assets/binary/stage_6.gif";
+import bmedia7 from "./assets/binary/stage_7.webp";
+import mcmedia1 from "./assets/multiclass/stage_1.webp";
+import mcmedia2 from "./assets/multiclass/stage_2.webp";
+import mcmedia3 from "./assets/multiclass/stage_3.gif";
+import mcmedia4 from "./assets/multiclass/stage_4.gif";
+import mcmedia5 from "./assets/multiclass/stage_5.gif";
+import mcmedia6 from "./assets/multiclass/stage_6.gif";
+import mcmedia7 from "./assets/multiclass/stage_7.webp";
 import { usePrealoadMedia } from "../../../customHooks/usePrealoadMedia";
+import { useAppSelector } from "../../../customHooks/useRedux";
+import { WorkspaceMode } from "../../../const";
+import { returnByMode } from "../../../utils/utils";
 
-const media = [media1, media2, media3, media4, media5, media6, media7];
+const bmedia = [bmedia1, bmedia2, bmedia3, bmedia4, bmedia5, bmedia6, bmedia7];
+const mcmedia = [
+  mcmedia1,
+  mcmedia2,
+  mcmedia3,
+  mcmedia4,
+  mcmedia5,
+  mcmedia6,
+  mcmedia7,
+];
 
 interface TutorialProps {
   tutorialOpen: boolean;
@@ -53,11 +72,14 @@ interface TutorialProps {
 
 const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
   const [stageIndex, setStageIndex] = useState(0);
-  
+  const mode = useAppSelector((state) => state.workspace.mode);
+
   // preload tutorial media files
   // so they are fetched before opening the tutorial
-  usePrealoadMedia(media);
-  
+  usePrealoadMedia(mode === WorkspaceMode.BINARY ? bmedia : mcmedia);
+
+  const media = useMemo(() => returnByMode(bmedia, mcmedia, mode), [mode]);
+
   useEffect(() => {
     if (tutorialOpen) {
       setStageIndex(0);
