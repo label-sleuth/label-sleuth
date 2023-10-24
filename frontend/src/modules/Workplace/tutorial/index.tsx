@@ -14,7 +14,7 @@ limitations under the License.
 */
 
 import { useCallback, useMemo } from "react";
-import { Stack } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import {
   SmallTitle,
   LargeTitle,
@@ -51,8 +51,9 @@ import mcmedia6 from "./assets/multiclass/stage_6.gif";
 import mcmedia7 from "./assets/multiclass/stage_7.webp";
 import { usePrealoadMedia } from "../../../customHooks/usePrealoadMedia";
 import { useAppSelector } from "../../../customHooks/useRedux";
-import { WorkspaceMode } from "../../../const";
+import { LabelTypesEnum, WorkspaceMode } from "../../../const";
 import { returnByMode } from "../../../utils/utils";
+import { MainElement } from "../../../components/element/MainElement";
 
 const bmedia = [bmedia1, bmedia2, bmedia3, bmedia4, bmedia5, bmedia6, bmedia7];
 const mcmedia = [
@@ -98,11 +99,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
     }
   }, [stageIndex]);
 
-  const stages = [
+  const binaryStages = [
     {
       largeTitle: "Welcome to the Label Sleuth Tutorial",
       content: (
-        <div>
+        <Box>
           Label Sleuth is a no-code system for quickly creating custom text
           classifiers; no technical expertise required! Label Sleuth guides you
           through the data annotation process, while automatically creating an
@@ -110,30 +111,30 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
           automatically improving the model as you annotate more examples. The
           goal is to get a high-performance text classification model for your
           use case after just a few hours of interacting with Label Sleuth.
-        </div>
+        </Box>
       ),
     },
     {
       largeTitle: "Category",
       content: (
-        <div className="stage-content">
+        <Box className="stage-content">
           <p>
             Start by creating a category describing the aspect of the dataset
             that you want to identify. Make sure that the category is
             well-defined (i.e., it is clear to you whether a given text belongs
-            to the category or not). In Label Sleuth you will be working one
+            to the category or not). In the binary mode, you will be working one
             category at a time; a design decision that has been made to make the
             data annotation and model building process more efficient. However,
             you may create several categories within a workspace and switch
             between them as needed.
           </p>
-        </div>
+        </Box>
       ),
     },
     {
       largeTitle: "Data",
       content: (
-        <div>
+        <Box>
           <p>
             Once you have created a category, you can start annotating the data.
             Annotation is a process that helps the AI model understand how to
@@ -162,13 +163,13 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
             <img src={cross} alt="negative element example" />
             Negative example - text does not match category
           </span>
-        </div>
+        </Box>
       ),
     },
     {
       largeTitle: "Search",
       content: (
-        <div>
+        <Box>
           <p>
             You can try to find good examples to annotate by skimming through
             your documents. However, a faster way to find positive examples is
@@ -178,13 +179,13 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
             annotate text elements either in the search results or in the
             document view.
           </p>
-        </div>
+        </Box>
       ),
     },
     {
       largeTitle: "Model Update & Prediction",
       content: (
-        <div>
+        <Box>
           <p>
             Initially, there is no AI model yet. Keep annotating until Label
             Sleuth prepares a first version of the model for you. The progress
@@ -199,30 +200,30 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
             of these positive predictions to provide feedback to the model on
             where it is correct and where it is wrong.
           </p>
-          <div style={{ marginTop: "20px" }}>
+          <Box style={{ marginTop: "20px" }}>
             <span className="prediction">
               Positive prediction example:
-              <div className="element-example" style={{ marginLeft: "15px" }}>
-                <div className="predicted-element">
+              <Box className="element-example" style={{ marginLeft: "15px" }}>
+                <Box className="predicted-element">
                   <p> I am a text entry that was predicted as positive! </p>
-                </div>
-              </div>
+                </Box>
+              </Box>
             </span>
-          </div>
-        </div>
+          </Box>
+        </Box>
       ),
     },
     {
       largeTitle: "Label next",
       content: (
-        <div>
+        <Box>
           <p>
             Once a first version of the model is available, Label Sleuth will
             start guiding you by suggesting which elements to annotate next.
             Prioritize on annotating the suggested elements, to help improve the
             AI model the most.
           </p>
-        </div>
+        </Box>
       ),
     },
     {
@@ -243,7 +244,119 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
     },
   ];
 
-  const currentStage = stages[stageIndex];
+  const multiclassStages = [
+    {
+      largeTitle: "Welcome to the Label Sleuth Tutorial",
+      content: (
+        <Box>
+          Label Sleuth is a no-code system for quickly creating custom text
+          classifiers; no technical expertise required! Label Sleuth guides you
+          through the data annotation process, while automatically creating an
+          AI model in the background. This process is iterative, with the system
+          automatically improving the model as you annotate more examples. The
+          goal is to get a high-performance text classification model for your
+          use case after just a few hours of interacting with Label Sleuth.
+        </Box>
+      ),
+    },
+    {
+      largeTitle: "Category",
+      content: (
+        <Box className="stage-content">
+          <p>
+            Start by creating a set of categories describing the aspects of the
+            dataset that you want to identify. Make sure that the categories are
+            well-defined (i.e., it is clear to you whether a given text belongs
+            to the category or not).
+          </p>
+        </Box>
+      ),
+    },
+    {
+      largeTitle: "Data",
+      content: (
+        <Box>
+          <p>
+            Once you have created a category, you can start annotating the data.
+            Annotation is a process that helps the AI model understand how to
+            identify your categories.
+          </p>
+          <p>
+            Annotate elements as belonging to one of the categories by clicking
+            on the 'Label' button. Note that annotations are not final; if you
+            made a mistake, you can go back and edit your annotations as many
+            times as you like.
+          </p>
+        </Box>
+      ),
+    },
+    {
+      largeTitle: "Search",
+      content: (
+        <Box>
+          <p>
+            You can try to find good examples to annotate by skimming through
+            your documents. While looking at the search results, clicking on a
+            text element will bring up the element in the document view,
+            allowing you to inspect its surrounding text. You can annotate text
+            elements either in the search results or in the document view.
+          </p>
+        </Box>
+      ),
+    },
+    {
+      largeTitle: "Model Update & Prediction",
+      content: (
+        <Box>
+          <p>
+            Initially, there is no AI model yet. Keep annotating until Label
+            Sleuth prepares a first version of the model for you. The progress
+            bar on the left shows how many annotations are missing until Label
+            Sleuth starts training a model. Whenever a new version of the model
+            is available, a confetti animation will notify you of the new model.
+          </p>
+          <p>
+            The model makes predictions on your entire dataset. Try to annotate
+            some of these positive predictions to provide feedback to the model
+            on where it is correct and where it is wrong.
+          </p>
+        </Box>
+      ),
+    },
+    {
+      largeTitle: "Label next",
+      content: (
+        <Box>
+          <p>
+            Once a first version of the model is available, Label Sleuth will
+            start guiding you by suggesting which elements to annotate next.
+            Prioritize on annotating the suggested elements, to help improve the
+            AI model the most.
+          </p>
+        </Box>
+      ),
+    },
+    {
+      smallTitle: "Tutorial completed",
+      largeTitle: "That’s all!",
+      content: (
+        <p>
+          You are now ready to start annotating to create your own model! If you
+          need to revisit the tutorial, go to the top left of the screen and
+          click on
+          <img src={info_icon} className="tutorial-icon" alt="Open Tutorial" />
+        </p>
+      ),
+      primaryButtonTitle: "Start labeling",
+      onPrimaryButtonClick: () => setTutorialOpen(false),
+      secondaryButtonTitle: "Restart from beginning",
+      onSecondaryButtonClick: () => setStageIndex(0),
+    },
+  ];
+
+  const currentStage = returnByMode(binaryStages, multiclassStages, mode)[
+    stageIndex
+  ];
 
   const handleKeyPress = useCallback(
     (event: KeyboardEvent) => {
@@ -281,14 +394,14 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
             hideBackdrop
           >
             <InnerModalContent>
-              <div
+              <Box
                 style={{
                   marginTop: "5px",
                   marginLeft: "25px",
                   display: "block",
                 }}
               >
-                <div
+                <Box
                   style={{
                     display: "flex",
                     flexDirection: "row-reverse",
@@ -304,9 +417,9 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
                   >
                     <CloseIcon fontSize="inherit" />
                   </IconButton>
-                </div>
+                </Box>
                 <SmallTitle>{currentStage.smallTitle || "Tutorial"}</SmallTitle>
-                <div
+                <Box
                   style={{
                     display: "flex",
                     flexDirection: "row",
@@ -314,11 +427,11 @@ const Tutorial = ({ tutorialOpen, setTutorialOpen }: TutorialProps) => {
                 >
                   <LargeTitle>{currentStage.largeTitle}</LargeTitle>
                   <StageCounter>{`(${stageIndex + 1} of ${
-                    stages.length
+                    returnByMode(binaryStages, multiclassStages, mode).length
                   })`}</StageCounter>
-                </div>
+                </Box>
                 <MainContent>{currentStage.content}</MainContent>
-              </div>
+              </Box>
               <Stack
                 direction="row"
                 justifyContent="flex-end"
