@@ -189,7 +189,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         categories = {'cat_' + str(i):[f"description of category {str(i)}", "#000000"] for i in range(3)}
         mock_workspace = "multiclass_workspace"
         self.orchestrator_api.create_workspace(workspace_id=mock_workspace, dataset_name=dataset_name,
-                                               workspace_type=WorkspaceModelType.MultiClass)
+                                               workspace_model_type=WorkspaceModelType.MultiClass)
 
         for cat_name, cat_info in categories.items():
             self.orchestrator_api.create_new_category(mock_workspace, cat_name, cat_info[0], cat_info[1])
@@ -212,7 +212,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         # import the resulting dataframe using import_category_labels()
         mock_workspace_2 = 'multiclass_workspace_2'
         self.orchestrator_api.create_workspace(workspace_id=mock_workspace_2, dataset_name=dataset_name,
-                                               workspace_type=WorkspaceModelType.MultiClass)
+                                               workspace_model_type=WorkspaceModelType.MultiClass)
         res = self.orchestrator_api.import_category_labels(mock_workspace_2, exported_df)
 
         unique = set()
@@ -236,7 +236,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         categories = {'cat_' + str(i):[f"description of category {str(i)}","#000000"] for i in range(3)}
         mock_workspace = "test_multiclass_import_with_existing_categories"
         self.orchestrator_api.create_workspace(workspace_id=mock_workspace, dataset_name=dataset_name,
-                                               workspace_type=WorkspaceModelType.MultiClass)
+                                               workspace_model_type=WorkspaceModelType.MultiClass)
 
         for cat_name, cat_info in categories.items():
             self.orchestrator_api.create_new_category(mock_workspace, cat_name, cat_info[0], cat_info[1])
@@ -327,7 +327,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         workspace_id = self.test_get_train_if_recommended_multiclass.__name__
         dataset_name = f'{workspace_id}_dump'
         generate_corpus(self.data_access, dataset_name)
-        self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
+        self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_model_type=WorkspaceModelType.MultiClass)
         self.orchestrator_api.create_new_category(workspace_id, "cat1", "desc1", None)
         self.orchestrator_api.create_new_category(workspace_id, "cat2", "desc2", None)
         self.orchestrator_api.create_new_category(workspace_id, "cat3", "desc3", None)
@@ -370,7 +370,7 @@ class TestOrchestratorAPI(unittest.TestCase):
         dataset_name = f'{workspace_id}_dump'
         category_name = f'{workspace_id}_cat'
         generate_corpus(self.data_access, dataset_name)
-        self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_type=WorkspaceModelType.MultiClass)
+        self.orchestrator_api.create_workspace(workspace_id, dataset_name, workspace_model_type=WorkspaceModelType.MultiClass)
         self.orchestrator_api.create_new_category(workspace_id, "cat1", "desc1", None)
         self.orchestrator_api.create_new_category(workspace_id, "cat2", "desc2", None)
         self.orchestrator_api.create_new_category(workspace_id, "cat3", "desc3", None)

@@ -23,7 +23,7 @@ interface CreatedWorkspace {
 interface CreateWorkspaceBody {
   dataset_id: string;
   workspace_id: string;
-  workspace_type: WorkspaceMode;
+  mode: WorkspaceMode;
 }
 
 interface CheckStatusResponse {

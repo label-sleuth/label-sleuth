@@ -81,7 +81,7 @@ class OrchestratorApi:
     # Workspace-related methods
 
     def create_workspace(self, workspace_id: str, dataset_name: str,
-                         workspace_type: WorkspaceModelType = WorkspaceModelType.Binary):
+                         workspace_model_type: WorkspaceModelType = WorkspaceModelType.Binary):
         """
         Create a new workspace
         :param workspace_id:
@@ -92,8 +92,8 @@ class OrchestratorApi:
             message = f"{dataset_name} does not exist. Cannot create workspace {workspace_id}"
             logging.error(message)
             raise Exception(message)
-        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_type)
-        self.orchestrator_state.create_workspace(workspace_id, dataset_name, workspace_type)
+        self.data_access.initialize_user_labels(workspace_id, dataset_name, workspace_model_type)
+        self.orchestrator_state.create_workspace(workspace_id, dataset_name, workspace_model_type)
 
     def delete_workspace(self, workspace_id: str):
         """

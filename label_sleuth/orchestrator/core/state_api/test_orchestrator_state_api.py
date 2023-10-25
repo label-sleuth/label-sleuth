@@ -184,7 +184,7 @@ class TestOrchestratorStateAPI(unittest.TestCase):
         dataset_name = 'non_existing_dump'
 
         self.orchestrator_state_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name,
-                                                     workspace_type=WorkspaceModelType.MultiClass)
+                                                     workspace_model_type=WorkspaceModelType.MultiClass)
 
         self.orchestrator_state_api.add_category_to_workspace(workspace_id, "cat1", "desc1", None)
         self.orchestrator_state_api.add_category_to_workspace(workspace_id, "cat2", "desc2", None)

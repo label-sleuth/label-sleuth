@@ -123,17 +123,17 @@ class OrchestratorStateApi:
     # Workspace-related methods
 
     def create_workspace(self, workspace_id: str, dataset_name: str,
-                         workspace_type: WorkspaceModelType = WorkspaceModelType.Binary):
+                         workspace_model_type: WorkspaceModelType = WorkspaceModelType.Binary):
         with self.workspaces_lock[workspace_id]:
             illegal_chars = "".join(x for x in workspace_id if not x.isalnum() and x not in "_-")
             assert len(illegal_chars) == 0, \
                 f"Workspace id '{workspace_id}' contains illegal characters: '{illegal_chars}'"
-            if workspace_type == WorkspaceModelType.Binary:
+            if workspace_model_type == WorkspaceModelType.Binary:
                 workspace = Workspace(workspace_id=workspace_id, dataset_name=dataset_name)
-            elif workspace_type == WorkspaceModelType.MultiClass:
+            elif workspace_model_type == WorkspaceModelType.MultiClass:
                 workspace = MulticlassWorkspace(workspace_id, dataset_name)
             else:
-                raise Exception(f"Workspace type {workspace_type} is not supported")
+                raise Exception(f"Workspace type {workspace_model_type} is not supported")
 
             if self._filename_from_workspace_id(workspace_id) in os.listdir(self.workspace_dir):
                 raise Exception(f"workspace name '{workspace_id}' already exists")

@@ -357,11 +357,11 @@ class DataAccessApi(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def initialize_user_labels(self, workspace_id: str, dataset_name: str, workspace_type: WorkspaceModelType):
+    def initialize_user_labels(self, workspace_id: str, dataset_name: str, workspace_model_type: WorkspaceModelType):
         """
         Save user labels object when creating a workspace
         :param workspace_id:
         :param dataset_name:
-        :param workspace_type:
+        :param workspace_model_type:
         """
         # Save empty dict to disk

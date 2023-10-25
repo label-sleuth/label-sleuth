@@ -513,7 +513,7 @@ class TestAppIntegration(unittest.TestCase):
         data, text_with_parenthesis, text_with_parenthesis_snippet, text_with_parenthesis_snippet_in_query = \
             self.create_dataset(dataset_name)
         res = self.client.post("/workspace",
-                               data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"MultiClass"}}'.format(workspace_name, dataset_name),
+                               data='{{"workspace_id":"{}","dataset_id":"{}","mode":"MultiClass"}}'.format(workspace_name, dataset_name),
                                headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to create a workspace")
         self.assertEqual(
@@ -774,12 +774,12 @@ class TestAppIntegration(unittest.TestCase):
 
         # delete workspace
         res = self.client.delete(f"/workspace/{workspace_name}",
-                               data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"MultiClass"}}'.format(workspace_name, dataset_name),
+                               data='{{"workspace_id":"{}","dataset_id":"{}","mode":"MultiClass"}}'.format(workspace_name, dataset_name),
                                headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to delete the multiclass workspace")
 
         res = self.client.post("/workspace",
-                               data='{{"workspace_id":"{}","dataset_id":"{}","workspace_type":"MultiClass"}}'.format(workspace_name, dataset_name),
+                               data='{{"workspace_id":"{}","dataset_id":"{}","mode":"MultiClass"}}'.format(workspace_name, dataset_name),
                                headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to create a new workspace after deleting the old one")
 
