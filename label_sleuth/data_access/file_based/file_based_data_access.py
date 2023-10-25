@@ -724,17 +724,17 @@ class FileBasedDataAccess(DataAccessApi):
     def preload_dataset(self, dataset_name):
         self._get_ds_in_memory(dataset_name)
 
-    def initialize_user_labels(self, workspace_id: str, dataset_name: str, workspace_type: WorkspaceModelType):
+    def initialize_user_labels(self, workspace_id: str, dataset_name: str, workspace_model_type: WorkspaceModelType):
         """
         Save user labels object when creating a workspace
         :param workspace_id:
         :param dataset_name:
-        :param workspace_type:
+        :param workspace_model_type:
         """
         # Save empty dict to disk
         file_path = self._get_workspace_labels_dump_filename(workspace_id, dataset_name)
         os.makedirs(Path(file_path).parent, exist_ok=True)
         empty_dict_encoded = json.dumps({})
-        open(os.path.join(self._get_workspace_labels_dir(workspace_id), workspace_type.name), 'w').close()
+        open(os.path.join(self._get_workspace_labels_dir(workspace_id), workspace_model_type.name), 'w').close()
         with open(file_path, 'w') as f:
             f.write(empty_dict_encoded)

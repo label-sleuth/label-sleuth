@@ -108,7 +108,7 @@ const useNewWorkspace = (toastId: string) => {
         createWorkspace({
           workspace_id: textValue,
           dataset_id: selectedValue,
-          workspace_type: mode,
+          mode,
         })
       );
     }

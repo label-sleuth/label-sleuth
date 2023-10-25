@@ -65,8 +65,8 @@ export const createWorkspace = createAsyncThunk<
   CreateWorkspaceBody
 >(`workspaces/createWorkspace`, async (body, { dispatch }) => {
   const { data } = await client.post(createWorkset_url, body);
-  dispatch(changeMode(body.workspace_type));
-  return { ...data.workspace, workspaceMode: body.workspace_type };
+  dispatch(changeMode(body.mode));
+  return { ...data.workspace, workspaceMode: body.mode };
 });
 
 export const deleteWorkspace = createAsyncThunk<

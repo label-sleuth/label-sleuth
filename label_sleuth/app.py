@@ -314,13 +314,13 @@ def create_workspace():
     post_data = request.get_json(force=True)
     workspace_id = post_data["workspace_id"]
     dataset_name = post_data["dataset_id"]
-    workspace_type = WorkspaceModelType[post_data.get("workspace_type", WorkspaceModelType.Binary.name)]
+    mode = WorkspaceModelType[post_data.get("mode", WorkspaceModelType.Binary.name)]
 
     if curr_app.orchestrator_api.workspace_exists(workspace_id):
         logging.info(f"Trying to create workspace '{workspace_id}' which already exists")
         return jsonify({"type": "workspace_id_conflict", "title": f"Workspace: {workspace_id} already exists"}), 409
     curr_app.orchestrator_api.create_workspace(workspace_id=workspace_id, dataset_name=dataset_name,
-                                               workspace_type=workspace_type)
+                                               workspace_model_type=mode)
 
     all_document_ids = curr_app.orchestrator_api.get_all_document_uris(workspace_id)
     first_document_id = all_document_ids[0]
@@ -414,6 +414,7 @@ def create_category(workspace_id):
     :param workspace_id:
     :post_param category_name:
     :post_param category_description:
+    :post_param category_color:
     """
     post_data = request.get_json(force=True)
     category_name = post_data["category_name"]
@@ -504,7 +505,7 @@ def update_category(workspace_id, category_id):
 @validate_workspace_id
 def delete_category(workspace_id, category_id):
     """
-    This call permanently deletes all data associated with the given category, including user labels and models.
+    This call permanently deletes all data associated with the given category, including user labels and models (if it belongs to a binary workspace).
 
     :param workspace_id:
     :param category_id:
