@@ -181,7 +181,7 @@ class Ensemble(ModelAPI):
             model_api.delete_model(m_id)
 
     def get_prediction_class(self):
-        return EnsemblePrediction
+        return MulticlassEnsemblePrediction if self.is_multiclass else EnsemblePrediction
 
     def copy_model_dir_for_export(self, ensemble_model_id):
         temp_path = str(tempfile.mkdtemp())
