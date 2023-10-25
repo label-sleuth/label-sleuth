@@ -45,8 +45,8 @@ class SVMModelComponents:
 class SVM(ModelAPI):
     def __init__(self, output_dir, representation_type: RepresentationType,
                  background_jobs_manager: BackgroundJobsManager, sentence_embedding_service: SentenceEmbeddingService,
-                 kernel="linear", multiclass=False):
-        super().__init__(output_dir, background_jobs_manager, is_multiclass=multiclass)
+                 kernel="linear", is_multiclass=False):
+        super().__init__(output_dir, background_jobs_manager, is_multiclass=is_multiclass)
         self.kernel = kernel
         self.representation_type = representation_type
         if self.representation_type == RepresentationType.WORD_EMBEDDING:
@@ -157,7 +157,7 @@ class MulticlassSVM_BOW(SVM):
     def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
         super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
                          representation_type=RepresentationType.BOW,
-                         sentence_embedding_service=sentence_embedding_service, multiclass=True)
+                         sentence_embedding_service=sentence_embedding_service, is_multiclass=True)
 
     def get_supported_languages(self):
         return Languages.all_languages()
@@ -173,8 +173,19 @@ class SVM_WordEmbeddings(SVM):
         return Languages.all_languages()
 
 
+class MulticlassSVM_WordEmbeddings(SVM):
+    def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
+        super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
+                         representation_type=RepresentationType.WORD_EMBEDDING,
+                         sentence_embedding_service=sentence_embedding_service,
+                         is_multiclass=True)
+
+    def get_supported_languages(self):
+        return Languages.all_languages()
+
+
 if __name__ == '__main__':
-    api = MulticlassSVM_BOW("/tmp", BackgroundJobsManager(), SentenceEmbeddingService("/tmp"))
+    api = MulticlassSVM_WordEmbeddings("/tmp", BackgroundJobsManager(), SentenceEmbeddingService("../output"))
     model_id = api.train(
         [
             {

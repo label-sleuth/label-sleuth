@@ -26,7 +26,7 @@ import numpy as np
 
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.model_type import ModelType
-from label_sleuth.models.core.prediction import Prediction
+from label_sleuth.models.core.prediction import Prediction, MulticlassPrediction
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
@@ -34,6 +34,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s [%(f
 
 @dataclass
 class EnsemblePrediction(Prediction):
+    model_type_to_prediction: dict
+
+
+@dataclass
+class MulticlassEnsemblePrediction(MulticlassPrediction):
     model_type_to_prediction: dict
 
 
@@ -46,7 +51,8 @@ class Ensemble(ModelAPI):
     def __init__(self, output_dir, model_types: Iterable[ModelType],
                  background_jobs_manager: BackgroundJobsManager,
                  model_factory,
-                 aggregation_func=lambda x: np.mean(x, axis=0)):
+                 aggregation_func=lambda x: np.mean(x, axis=0),
+                 is_multiclass=False):
         """
         Create an ensemble model aggregating different model types
 
@@ -58,7 +64,7 @@ class Ensemble(ModelAPI):
         array of scores (where dimension 0 is the model types and dimension 1 is the list of elements), and returns a
         vector of aggregated scores. Defaults to mean score aggregation.
         """
-        super().__init__(output_dir, background_jobs_manager)
+        super().__init__(output_dir, background_jobs_manager, is_multiclass=is_multiclass)
         self.aggregation_func = aggregation_func
         self.model_types = model_types
         self.model_apis = [model_factory.get_model_api(model_type) for model_type in model_types]
@@ -141,7 +147,8 @@ class Ensemble(ModelAPI):
         model = self.load_model(model_path=model_paths)
         return self.infer(model, items_to_infer)
 
-    def infer(self, ensemble: EnsembleComponents, items_to_infer) -> Sequence[EnsemblePrediction]:
+    def infer(self, ensemble: EnsembleComponents, items_to_infer) -> Union[Sequence[EnsemblePrediction],
+                                                                           Sequence[MulticlassEnsemblePrediction]]:
         """
         Aggregate the predictions returned by the different models using self.aggregation_func
         """
@@ -150,12 +157,23 @@ class Ensemble(ModelAPI):
         for model_api, model, model_type in zip(self.model_apis, ensemble.models, self.model_types):
             predictions = model_api.infer(model, items_to_infer)
             type_to_all_predictions[model_type.name] = predictions
-            all_scores.append([pred.score for pred in predictions])
+            if self.is_multiclass:
+                all_scores.append([pred.scores for pred in predictions])
+            else:
+                all_scores.append([pred.score for pred in predictions])
+
         aggregated_scores = np.apply_along_axis(self.aggregation_func, arr=np.array(all_scores), axis=0)
-        labels = [score > 0.5 for score in aggregated_scores]
         type_to_prediction_per_element = [{model_type: model_preds[i] for model_type, model_preds
                                            in type_to_all_predictions.items()} for i in range(len(items_to_infer))]
-        return [EnsemblePrediction(label=label, score=score, model_type_to_prediction=type_to_prediction)
+        if self.is_multiclass:
+            labels = np.argmax(aggregated_scores, axis=1)
+            return [
+                MulticlassEnsemblePrediction(label=label, scores=scores, model_type_to_prediction=type_to_prediction)
+                for label, scores, type_to_prediction in zip(labels, aggregated_scores, type_to_prediction_per_element)]
+        else:
+            labels = [score > 0.5 for score in aggregated_scores]
+            return [
+                EnsemblePrediction(label=label, score=score, model_type_to_prediction=type_to_prediction)
                 for label, score, type_to_prediction in zip(labels, aggregated_scores, type_to_prediction_per_element)]
 
     def delete_model(self, model_id):
@@ -189,3 +207,12 @@ class SVM_Ensemble(Ensemble):
         super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
                          model_types=[ModelsCatalog.SVM_OVER_BOW, ModelsCatalog.SVM_OVER_WORD_EMBEDDINGS],
                          model_factory=model_factory)
+
+
+class MulticlassSVM_Ensemble(Ensemble):
+    def __init__(self, output_dir, background_jobs_manager, model_factory):
+        from label_sleuth.models.core.catalog import ModelsCatalog
+        super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
+                         model_types=[ModelsCatalog.MULTICLASS_SVM_BOW, ModelsCatalog.MULTICLASS_SVM_WORD_EMBEDDINGS],
+                         model_factory=model_factory,
+                         is_multiclass=True)
