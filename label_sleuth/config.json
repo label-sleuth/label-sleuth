@@ -13,7 +13,7 @@
         "per_class_labeling_threshold": 5,
         "changed_element_threshold": 20,
         "training_set_selection_strategy": "ALL_LABELED_MULTICLASS",
-        "model_policy": "STATIC_MULTICLASS_SVM_BOW",
+        "model_policy": "STATIC_MULTICLASS_SVM_ENSEMBLE",
         "active_learning_strategy": "MULTICLASS_ENTROPY",
         "accuracy_evaluation_size": 30
     },
