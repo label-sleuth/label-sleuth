@@ -53,7 +53,8 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
     This base class provides general methods for training in the background, caching model predictions etc.,
     while the _train(), load_model() and infer() methods are specific to each model implementation.
     """
-    def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager, gpu_support=False, is_multiclass=False):
+    def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager, gpu_support=False,
+                 is_multiclass=False):
         """
         Model implementations can require some or all of the parameters in models_factory.ModelDependencies
         in their __init__ method, as these will be passed to the model by the ModelFactory.
