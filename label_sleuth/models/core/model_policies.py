@@ -30,7 +30,7 @@ class ModelPolicies:
     STATIC_NB_BOW = StaticModelPolicy(ModelsCatalog.NB_OVER_BOW)
     STATIC_HF_BERT = StaticModelPolicy(ModelsCatalog.HF_BERT)
     STATIC_HF_XLM_ROBERTA = StaticModelPolicy(ModelsCatalog.HF_XLM_ROBERTA)
-
     STATIC_MULTICLASS_SVM_BOW = StaticModelPolicy(ModelsCatalog.MULTICLASS_SVM_BOW)
     STATIC_MULTICLASS_SVM_WORD_EMBEDDINGS = StaticModelPolicy(ModelsCatalog.MULTICLASS_SVM_WORD_EMBEDDINGS)
     STATIC_MULTICLASS_SVM_ENSEMBLE = StaticModelPolicy(ModelsCatalog.MULTICLASS_SVM_ENSEMBLE)
+    STATIC_MULTICLASS_MPT = StaticModelPolicy(ModelsCatalog.MULTICLASS_MPT)
