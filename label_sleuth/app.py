@@ -478,7 +478,8 @@ def update_category(workspace_id, category_id):
             "title": f"category_id should be an integer (got {category_id})"
         })
 
-    if category_id not in curr_app.orchestrator_api.get_all_categories(workspace_id):
+    all_categories = curr_app.orchestrator_api.get_all_categories(workspace_id)
+    if category_id not in all_categories:
         logging.error(f"failed to update category in workspace {workspace_id}, category id '{category_id}' "
                       f"does not exist")
         return make_error({
@@ -490,6 +491,14 @@ def update_category(workspace_id, category_id):
     new_category_name = post_data["category_name"]
     new_category_description = post_data["category_description"]
     new_category_color = post_data.get("category_color")
+
+    existing_category_names = {category.name for category in all_categories.values()}
+    if new_category_name in existing_category_names:
+        return make_error({
+            "type": "category_name_conflict",
+            "title": f"A category with this name already exists: {new_category_name}"
+        }, 409)
+
     curr_app.orchestrator_api.edit_category(workspace_id, category_id, new_category_name, new_category_description,
                                             new_category_color)
 
