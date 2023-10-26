@@ -55,6 +55,7 @@ from label_sleuth.training_set_selector.training_set_selector_factory import Tra
 # constants
 NUMBER_OF_MODELS_TO_KEEP = 2
 TRAIN_COUNTS_STR_KEY = "train_counts"
+MODEL_CATEGORIES_STR_KEY = "categories"
 
 # members
 new_data_infer_thread_pool = ThreadPoolExecutor(1)
@@ -568,6 +569,7 @@ class OrchestratorApi:
         train_statistics = {TRAIN_COUNTS_STR_KEY: train_counts}
 
         if is_multiclass:
+            train_statistics[MODEL_CATEGORIES_STR_KEY] = self.orchestrator_state.get_workspace(workspace_id).categories.copy()
             train_data = convert_text_elements_to_multiclass_train_data(train_data)
             logging.info(f"workspace '{workspace_id}' (multiclass) training a model."
                          f"train_statistics: {train_statistics}")
@@ -839,11 +841,17 @@ class OrchestratorApi:
                                   f"label counts {label_counts}. min change threshold is {config.changed_element_threshold} "
                                   f"number of changes {changes_since_last_model}. min examples per class threshold is {config.per_class_labeling_threshold} "
                                   f"number of classes {len(category_ids)}. ")
+            iteration_num = len(iterations_without_errors)
+            if not is_multiclass:
+                model_type = self.config.binary_flow.model_policy.get_model_type(iteration_num)
+            else:
+                model_type = self.config.multiclass_flow.model_policy.get_model_type(iteration_num)
 
             if force or (not is_multiclass and self._should_train_binary_condition(changes_since_last_model,
-                                                                                   label_counts)) or \
+                                                                                   label_counts, workspace_id, config, category_id)) or \
                     (is_multiclass and self._should_train_multiclass_condition(changes_since_last_model,
-                                                                               label_counts, len(category_ids))):
+                                                                               label_counts, len(category_ids),workspace_id,
+                                                                               config, category_id)):
                 if len(iterations_without_errors) > 0 and iterations_without_errors[-1].status != IterationStatus.READY:
                     logging.info(f"workspace '{workspace_id}' category id '{category_id}' new elements criterion was "
                                  f"met but previous AL not yet ready, not initiating a new training")
@@ -852,11 +860,6 @@ class OrchestratorApi:
 
                 to_log_message += "Training a new model"
 
-                iteration_num = len(iterations_without_errors)
-                if not is_multiclass:
-                    model_type = self.config.binary_flow.model_policy.get_model_type(iteration_num)
-                else:
-                    model_type = self.config.multiclass_flow.model_policy.get_model_type(iteration_num)
                 self.run_iteration(workspace_id=workspace_id, dataset_name=dataset_name, category_id=category_id,
                                    model_type=model_type)
             else:
@@ -884,7 +887,7 @@ class OrchestratorApi:
 
             logging.exception(f"train_if_recommended failed in iteration {iteration_index}. Model will not be trained")
 
-    def _should_train_binary_condition(self, changes_since_last_model, label_counts):
+    def _should_train_binary_condition(self, changes_since_last_model, label_counts, workspace_id, config, category_id):
         return (LABEL_POSITIVE in label_counts and
                 label_counts[LABEL_POSITIVE] >= self.config.binary_flow.first_model_positive_threshold and
                 (self.config.binary_flow.first_model_negative_threshold == 0 or
@@ -892,11 +895,31 @@ class OrchestratorApi:
                   label_counts[LABEL_NEGATIVE] >= self.config.binary_flow.first_model_negative_threshold)) and
                 changes_since_last_model >= self.config.binary_flow.changed_element_threshold)
 
-    def _should_train_multiclass_condition(self, changes_since_last_model, label_counts, num_classes):
+    def _should_train_multiclass_condition(self, changes_since_last_model, label_counts, num_classes, workspace_id, config, category_id):
+        # more then 0 classes, no labeled data at all + zero shot flag
+        workspace = self.orchestrator_state.get_workspace(workspace_id)
 
-        return (len(label_counts) == num_classes and len(label_counts) >= 2 and
+        iterations = self.orchestrator_state.get_all_iterations(workspace_id=workspace_id, category_id=category_id)   #pass this param
+        # get last iteration where the status is not ERROR
+        # check the model info and compare the class list to the current class list.
+
+        previous_not_failed_iterations = [iteration for iteration in iterations
+                                         if iteration.status not in [IterationStatus.ERROR]]
+
+        # first iteration is zero shot + no labeled data + no model was trained yet
+        zero_shot_training_condition = len(previous_not_failed_iterations) == 0 and \
+                                       config.zero_shot_first_model and sum(label_counts.values()) == 0 and len(workspace.categories) > 0
+
+        # a change in the categories list:
+        changed_categories = False
+        if len(previous_not_failed_iterations) > 0:
+            prev_categories = set([x.name for x in previous_not_failed_iterations[-1].model.train_statistics[MODEL_CATEGORIES_STR_KEY].values()])
+            changed_categories = len(prev_categories.intersection([x.name for x in workspace.categories.values()])) != len(workspace.categories)
+
+        enough_training_data = (len(label_counts) == num_classes and len(label_counts) >= 2 and
                 all(count >= self.config.multiclass_flow.per_class_labeling_threshold for count in label_counts.values())
                 and changes_since_last_model >= self.config.multiclass_flow.changed_element_threshold)
+        return zero_shot_training_condition or changed_categories or enough_training_data
 
     def infer(self, workspace_id: str, category_id: int, elements_to_infer: Sequence[TextElement],
               iteration_index: int = None, use_cache: bool = True) -> Union[Sequence[Prediction],
