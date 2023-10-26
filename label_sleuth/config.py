@@ -42,7 +42,7 @@ class BinaryFlowConfiguration:
     training_set_selection_strategy: Type[TrainSetSelectorAPI]
     active_learning_policy: ActiveLearningPolicy = None
     active_learning_strategy: ActiveLearningStrategy = None
-
+    zero_shot_first_model: bool = False
 
 @dataclass
 class MultiClassFlowConfiguration:
@@ -53,6 +53,8 @@ class MultiClassFlowConfiguration:
     training_set_selection_strategy: Type[TrainSetSelectorAPI]
     active_learning_policy: ActiveLearningPolicy = None
     active_learning_strategy: ActiveLearningStrategy = None
+    zero_shot_first_model: bool = False
+
 
 
 @dataclass

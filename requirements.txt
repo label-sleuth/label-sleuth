@@ -76,3 +76,5 @@ werkzeug==2.3.4
 xxhash==3.2.0
 yarl==1.9.2
 zipp==3.15.0
+ibm-watson-machine-learning==1.0.312
+ibm-generative-ai==0.1.19
