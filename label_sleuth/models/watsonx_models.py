@@ -610,6 +610,7 @@ class FewShotsWatsonXModelBinary(FewShotsWatsonXModel):
     def __init__(self, output_dir, background_jobs_manager):
         super(FewShotsWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.YES_NO)
 
+
 class TunableWatsonXModel(WatsonXBaseModel):
     def __init__(self, output_dir, background_jobs_manager, prompt_type: PromptType):
         super(TunableWatsonXModel, self).__init__(output_dir, background_jobs_manager, gpu_support=False,
@@ -628,6 +629,7 @@ class TunableWatsonXModel(WatsonXBaseModel):
 
         model_out_dir = self.get_model_dir_by_id(model_id)
         self.is_zero_shot = len(train_data) == 0
+        model_name = ""
         if len(train_data) > 0:
             # prepare and upload the train data
             tokenizer = self._get_tokenizer()
@@ -643,8 +645,9 @@ class TunableWatsonXModel(WatsonXBaseModel):
             api_key = self.model.service.key
             URL = self.model.service.service_url
             headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+            model_name =  f'Label Sleuth tune model for {len(category_names)} categories on {len(train_data)} examples'
             data = {
-                'name': f'Tune model for {str(category_names)} on {len(train_data)} examples',
+                'name': model_name,
                 'model_id': self.base_model,
                 'task_id': 'classification',
                 'method_id': "mpt",
@@ -680,7 +683,7 @@ class TunableWatsonXModel(WatsonXBaseModel):
         # save the tune result
         category_name_to_id = {y["category_name"]: x for x, y in model_params['category_id_to_info'].items()}
         with open(os.path.join(model_out_dir, 'tune_res.json'), 'w') as f:
-            json.dump({'category': category_names, 'tune_id': tune_id, 'category_name_to_id': category_name_to_id},f)
+            json.dump({'category': category_names, 'tune_id': tune_id, 'category_name_to_id': category_name_to_id, "model_name": model_name },f)
 
 
     @abstractmethod
@@ -725,7 +728,6 @@ class TunableWatsonXModel(WatsonXBaseModel):
             return [self.get_instruction(category_name).replace("{{input}}", text) for text in texts]
         return texts
 
-
 class TunableWatsonXModelBinary(TunableWatsonXModel):
     def __init__(self, output_dir, background_jobs_manager):
         super(TunableWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.CLS_NO_CLS)
@@ -735,6 +737,7 @@ class TunableWatsonXModelBinary(TunableWatsonXModel):
         return (Prediction(True, score) if response.generated_text.lower().strip() == self.get_pos_label(
             category_name) else Prediction(
             False, 1 - score))
+
     def prepare_training_data(self, model_params, train_data):
         category_name = list(model_params['category_id_to_info'].values())[0]["category_name"]
         pos_label = category_name
