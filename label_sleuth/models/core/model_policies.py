@@ -34,3 +34,4 @@ class ModelPolicies:
     STATIC_MULTICLASS_SVM_WORD_EMBEDDINGS = StaticModelPolicy(ModelsCatalog.MULTICLASS_SVM_WORD_EMBEDDINGS)
     STATIC_MULTICLASS_SVM_ENSEMBLE = StaticModelPolicy(ModelsCatalog.MULTICLASS_SVM_ENSEMBLE)
     STATIC_MULTICLASS_MPT = StaticModelPolicy(ModelsCatalog.MULTICLASS_MPT)
+    STATIC_BINARY_MPT = StaticModelPolicy(ModelsCatalog.BINARY_MPT)
