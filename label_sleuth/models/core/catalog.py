@@ -20,7 +20,7 @@ from label_sleuth.models.naive_bayes import NaiveBayes_BOW, NaiveBayes_WordEmbed
 from label_sleuth.models.random_model import RandomModel
 from label_sleuth.models.svm import SVM_BOW, SVM_WordEmbeddings, MulticlassSVM_BOW, MulticlassSVM_WordEmbeddings
 from label_sleuth.models.svm import SVM_BOW, SVM_WordEmbeddings, MulticlassSVM_BOW
-from label_sleuth.models.watsonx_models import TunableWatsonXModelMC
+from label_sleuth.models.watsonx_models import TunableWatsonXModelMC, TunableWatsonXModelBinary
 
 
 class ModelsCatalog:
@@ -36,4 +36,5 @@ class ModelsCatalog:
     MULTICLASS_SVM_WORD_EMBEDDINGS = ModelType(MulticlassSVM_WordEmbeddings)
     MULTICLASS_SVM_ENSEMBLE = ModelType(MulticlassSVM_Ensemble)
     MULTICLASS_MPT = ModelType(TunableWatsonXModelMC)
+    BINARY_MPT = ModelType(TunableWatsonXModelBinary)
 
