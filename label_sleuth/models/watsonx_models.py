@@ -35,15 +35,13 @@ from ibm_watson_machine_learning.foundation_models.utils.enums import ModelTypes
 @dataclass
 class WatsonXModelComponents:
     category_name: str
-    positive_texts: List[str]
-    negative_texts: List[str]
+    labeled_texts: dict
     available_tokens: int
 
 @dataclass
 class WatsonXMultiClassModelComponent:
     category_name: str
-    positive_texts: List[str]
-    negative_texts: List[str]
+    labeled_texts: dict
     available_tokens: int
     category_name_to_id: dict
 
@@ -73,9 +71,6 @@ cash_api_name_to_endpoint = {
     "WATSON-AI-PREVIEW": "https://us-south.ml.cloud.ibm.com",
     "WATSON-AI-PROD": "https://us-south.ml.cloud.ibm.com"
 }
-
-
-
 class Multiclass_Verbalizer():
     @staticmethod
     def get_class_names_verbalizer(class_names):
@@ -104,164 +99,9 @@ class Multiclass_Verbalizer():
             verbalizer = Multiclass_Verbalizer.get_no_class_names_verbalizer()
         return verbalizer
 
-class PromptTuningAPI(object, metaclass=ABCMeta):
-
-    def __init__(self, watsonx_model):
-        self.watsonx_model = watsonx_model
-
-    @abstractmethod
-    def train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
-        raise NotImplementedError
-
-
-class PromptEngineering(PromptTuningAPI):
-    def __init__(self, watsonx_model):
-        super(PromptEngineering, self).__init__(watsonx_model)
-
-    def train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
-        if len(train_data) > 0:
-            train_data_index = 0
-            positive_pool = [sample["text"] for sample in train_data if sample["label"] == 1]
-            negative_pool = [sample["text"] for sample in train_data if sample["label"] == 0]
-
-            positives = []
-            negatives = []
-
-            tokenizer = self.watsonx_model._get_tokenizer()
-
-            max_tokens = max([len(tokenizer.tokenize(item["text"])) for item in train_data])
-            max_tokens_in_test = 3 * max_tokens
-
-            num_tokens_in_prompt = 0
-
-            while train_data_index < max(len(positive_pool), len(negative_pool)) and max(len(positives), len(negatives)) < self.watsonx_model.NUM_SHOTS:
-                positive_example_len = len(tokenizer.tokenize(positive_pool[train_data_index])) if train_data_index < len(positive_pool) else 0
-                negative_example_len = len(tokenizer.tokenize(negative_pool[train_data_index])) if train_data_index < len(negative_pool) else 0
-                remaining_tokens = self.watsonx_model._get_max_seq_length() - (num_tokens_in_prompt + sum(
-                    [positive_example_len, negative_example_len]) + 30)  # 30 is estimation for instruction and labels
-                if remaining_tokens > max_tokens_in_test:
-                    num_tokens_in_prompt += sum([positive_example_len, negative_example_len])
-                    if train_data_index < len(positive_pool):
-                        positives.append(positive_pool[train_data_index])
-                    if train_data_index < len(negative_pool):
-                        negatives.append(negative_pool[train_data_index])
-                train_data_index += 1
-        else:
-            positives = []
-            negatives = []
-
-        model_dir = self.watsonx_model.get_model_dir_by_id(model_id)
-        train_path = os.path.join(model_dir, "train_data.json")
-
-        if self.watsonx_model.is_multiclass:
-            category_name = [x["category_name"] for x in model_params['category_id_to_info'].values()]
-        else:
-            category_name = list(model_params['category_id_to_info'].values())[0]["category_name"]
-        labeled_texts = {"pos": positives, "neg": negatives}
-        available_tokens = self.watsonx_model._get_number_of_available_tokens(category_name, labeled_texts)
-        category_name_to_id = {y["category_name"]: x for x, y in model_params['category_id_to_info'].items()}
-        with open(train_path, "w") as train_file:
-            train_file.write(json.dumps({"positive_labels": positives,
-                                         "negative_labels": negatives,
-                                         "available_tokens": available_tokens,
-                                         'category_name_to_id': category_name_to_id}
-                                        ))
-
-        # generate curl for model download
-        prompt_for_curl = self.watsonx_model.build_prompt(["<Replace with your text>"], category_name,
-                                                          labeled_texts)[0]
-        escaped_input_text = json.dumps(prompt_for_curl).replace("'", "'\\''")
-        curl = self.watsonx_model._get_curl(escaped_input_text)
-
-        with open(os.path.join(model_dir, "curl.txt"), "w") as text_file:
-            text_file.write(curl)
-
-
-
-class PromptTuningWithMPT(PromptTuningAPI):
-
-    def __init__(self, watsonx_model):
-        super(PromptTuningWithMPT, self).__init__(watsonx_model)
-
-    def train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
-        if self.watsonx_model.is_multiclass:
-            category_names = [x["category_name"] for x in model_params['category_id_to_info'].values()]
-            verbalizer = Multiclass_Verbalizer.get_instruction(self.watsonx_model._get_tokenizer(), self.watsonx_model.train_seq_len, category_names)
-            labels = [model_params['category_id_to_info'].get(ex['label'])["category_name"] for ex in train_data]
-            categories_str_for_model_name =  str({", ".join(category_names)})
-        else:
-            category_name = list(model_params['category_id_to_info'].values())[0]["category_name"]
-            pos_label = category_name
-            neg_label = f'not {category_name}'
-            verbalizer = 'classify { "' + pos_label + '", "' + neg_label + '" } Input: {{input}} Output:'
-            labels = [pos_label if ex['label'] else neg_label for ex in train_data]
-            categories_str_for_model_name = category_name
-
-        model_out_dir = self.watsonx_model.get_model_dir_by_id(model_id)
-        if len(train_data) > 0:
-            # prepare and upload the train data
-            tokenizer = self.watsonx_model._get_tokenizer()
-            verbalizer_len = len(tokenizer(verbalizer)["input_ids"])
-            orig_texts = [ex['text'] for ex in train_data]
-            texts = [self.watsonx_model._cut_text(t, self.watsonx_model.train_seq_len - verbalizer_len, tokenizer) for t in orig_texts]
-            logging.info(self.watsonx_model._get_cut_stat(orig_texts, texts))
-
-            train_file_id = self.watsonx_model.upload_train_data(texts, labels, model_out_dir)
-
-            # submit multi prompt tuning
-            api_key = self.watsonx_model.model.service.key
-            URL = self.watsonx_model.model.service.service_url
-            headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
-            data = {
-                'name': f'Tune model for {categories_str_for_model_name} on {len(train_data)} examples',
-                'model_id': self.watsonx_model.base_model,
-                'task_id': 'classification',
-                'method_id': "mpt",
-                'training_file_ids': [train_file_id],
-                'parameters': {
-                    'accumulate_steps': self.watsonx_model.accumulate_steps,
-                    'batch_size': self.watsonx_model.train_batch_size,
-                    'learning_rate': self.watsonx_model.learning_rate,
-                    'num_epochs': self.watsonx_model.num_epochs,
-                    'verbalizer': verbalizer
-                }
-            }
-            response = requests.post(f'{URL}/tunes', headers=headers, data=json.dumps(data))
-            if response.status_code != 200:
-                raise ValueError(f'Tune request failed with status {response.status_code}:\n{response.text}')
-            tune_id = response.json()["results"]["id"]
-
-            # poll the tune status
-            while True:
-                headers = {"Authorization": f"Bearer {api_key}"}
-                response = requests.get(f'{URL}/tunes/{tune_id}', headers=headers)
-                if response.status_code != 200:
-                    raise ValueError(f'Poll request failed with status {response.status_code}:\n{response.text}')
-                tune_status = response.json()["results"]["status"]
-                if tune_status == 'COMPLETED':
-                    break
-                elif tune_status == 'RUNNING':
-                    time.sleep(2)
-                elif tune_status not in ['INITIALIZING', 'PENDING']:
-                    raise ValueError(f'Unexpected tune status: {tune_status}\n{response.text}')
-        else:
-            tune_id = self.watsonx_model.base_model
-        # save the tune result
-        category_name_to_id = {y["category_name"]: x for x, y in model_params['category_id_to_info'].items()}
-        with open(os.path.join(model_out_dir, 'tune_res.json'), 'w') as f:
-            json.dump({'category': category_names, 'tune_id': tune_id, 'category_name_to_id': category_name_to_id}, f)
-
-
-few_shots_types = {"prompt_engineering" : PromptEngineering, "prompt_tuning_with_mpt" : PromptTuningWithMPT}
-
-
-
-
-# WatsonX model
-
 class WatsonXBaseModel(ModelAPI, ABC):
     def __init__(self, output_dir, background_jobs_manager, gpu_support,
-                 prompt_type: PromptType, watsonx_model_type: ModelType, few_shots_type: str, ):
+                 prompt_type: PromptType, watsonx_model_type: ModelType, api_endpoint:str):
         super(WatsonXBaseModel, self).__init__(output_dir, background_jobs_manager, gpu_support, is_multiclass=prompt_type == PromptType.MULTICLASS)
         load_dotenv()
         self.MAX_RETRIES = 3
@@ -271,12 +111,113 @@ class WatsonXBaseModel(ModelAPI, ABC):
         self.platform_model_type = watsonx_model_type
         self.str_model_name = bam_model_type_to_str_model_name[watsonx_model_type]
         self.prompt_type = prompt_type
-        self.few_shots_type = few_shots_types[few_shots_type](self)
+        self.is_zero_shot=False
+        self.is_bam=False
+
         if watsonx_model_type not in watsonx_model_type_to_max_seq_length:
             raise Exception(f"could not find max sequence length for watsonx model type {watsonx_model_type}")
         else:
             self.max_seq_length = watsonx_model_type_to_max_seq_length[watsonx_model_type]
 
+
+        self.API_ENDPOINT = api_endpoint
+        logging.info(f"using {self.API_ENDPOINT} for watsonx.ai models using the provided api key")
+
+        api_key = os.getenv("GENAI_KEY")
+
+        if "bam-api" in self.API_ENDPOINT:
+            self.is_bam = True
+            self.platform_model_type = watsonx_model_type
+            creds = Credentials(api_endpoint=self.API_ENDPOINT,
+                                api_key=api_key)  # credentials object to access GENAI
+
+            # Instantiate parameters for text generation
+            params = GenerateParams(decoding_method="greedy", max_new_tokens=self.MAX_NEW_TOKENS, return_options={
+                "token_logprobs": True,
+                "generated_tokens": True
+                })
+
+            # Instantiate a model proxy object to send your requests
+            self.model = Model(self.platform_model_type, params=params, credentials=creds)
+        else: #watsonx https://ibm.github.io/watson-machine-learning-sdk/foundation_models.html
+            if watsonx_model_type not in bam_model_type_to_watsonx_model_type.keys():
+                raise Exception(f"Bam model {watsonx_model_type} is not supported by watsonx")
+            self.platform_model_type = bam_model_type_to_watsonx_model_type[watsonx_model_type]
+            self.is_bam = False
+            project_id = os.getenv("PROJECT_ID")
+            if project_id is None:
+                raise Exception("watsonx API was provided without providing project id in the 'PROJECT_ID' environment variable")
+            GenParams().get_example_values()
+
+            generate_params = {GenParams.MAX_NEW_TOKENS: self.MAX_NEW_TOKENS, GenParams.RETURN_OPTIONS:{
+                "token_logprobs": True,
+                "generated_tokens": True}
+            }
+
+            self.model = wxModel(
+                model_id=self.platform_model_type,
+                params=generate_params,
+                credentials={
+                    "apikey": api_key,
+                    "url": self.API_ENDPOINT
+                },
+                project_id=project_id
+            )
+        try:
+            logging.info(f"testing inference on startup")
+            response = list(self._generate(["working?"],watsonx_max_workers=1))[0]
+            if response is None:
+                raise Exception(f"empty response from self._generate")
+        except:
+            logging.exception(f"Could not initiate {WatsonXBaseModel.__name__} instance")
+            raise
+
+
+
+
+    def _get_curl(self, escaped_input_text):
+        if self.is_bam:
+            return f'curl {self.API_ENDPOINT}/generate \\\n' \
+                   '  -H \'Content-Type: application/json\' \\\n' \
+                   '  -H \'Authorization: Bearer YOUR_API_KEY\' \\\n' \
+                   '  -d \'{\n' \
+                   f'  "model_id": "{self.str_model_name}",\n' \
+                   '  "inputs": [\n' \
+                   f'    {escaped_input_text}\n' \
+                   '  ],\n' \
+                   '  "parameters": {\n' \
+                   '    "decoding_method": "greedy",\n' \
+                   '    "min_new_tokens": 1,\n' \
+                   f'    "max_new_tokens": {self.MAX_NEW_TOKENS},\n' \
+                   '    "beam_width": 1\n' \
+                   '  }\n' \
+                   '}\''
+        else: #watsonx
+            return f'curl "{self.API_ENDPOINT}/ml/v1-beta/generation/text?version=2022-08-01" \\\n' \
+                   '  -H \'Content-Type: application/json\' \\\n' \
+                   ' -H \'Accept: application/json\' \\\n' \
+                   '  -H \'Authorization: Bearer YOUR_ACCESS_TOKEN\' \\\n' \
+                   '  -d \'{\n' \
+                   f'  "model_id": "{self.str_model_name}",\n' \
+                   '  "input": ' \
+                   f'    {escaped_input_text},\n' \
+                   '  "parameters": {\n' \
+                   '    "decoding_method": "greedy",\n' \
+                   '    "min_new_tokens": 1,\n' \
+                   f'    "max_new_tokens": {self.MAX_NEW_TOKENS},\n' \
+                   '    "beam_width": 1\n' \
+                   '  }\n' \
+                   f', "project_id": "{os.getenv("PROJECT_ID")}" ' \
+                   '}\''
+
+    def _process_infer_response(self, response):
+        return GenerateResponse(**response).results[0]
+
+    def extract_predictions(self, response, category_name):
+        score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
+        return (Prediction(True, score) if response.generated_text.lower().strip() == self.get_pos_label(
+            category_name) else Prediction(
+            False, 1 - score))
 
 
     def _test_inference_on_startup(self):
@@ -368,38 +309,36 @@ class WatsonXBaseModel(ModelAPI, ABC):
         name = genai_model_type_to_huggingface.get(model_name, model_name)
         return AutoTokenizer.from_pretrained(name, model_max_length=self._get_max_seq_length())
 
-    def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
-        return self.few_shots_type.train(model_id, train_data, model_params)
-
-    @abstractmethod
-    def _get_curl(self, escaped_input_text):
-        raise NotImplementedError
-
-
     def load_model(self, model_path: str):
-        train_path = os.path.join(model_path, "train_data.json")
-        metadata = ModelAPI.get_metadata(model_path)
-        #TODO Lena: wrap this with a method
-        if self.is_multiclass:
-            category_name = [x["category_name"] for x in metadata['category_id_to_info'].values()]
+        if self.is_bam:
+            with open(os.path.join(model_path, 'tune_res.json')) as f:
+                tune_res = json.load(f)
+            if self.is_multiclass:
+                tune_res["category"] = tune_res["category"]
+            return tune_res
         else:
-            category_name = list(metadata["category_id_to_info"].values())[0]["category_name"]
+            train_path = os.path.join(model_path, "train_data.json")
+            metadata = ModelAPI.get_metadata(model_path)
+            #TODO Lena: wrap this with a method
+            if self.is_multiclass:
+                category_name = [x["category_name"] for x in metadata['category_id_to_info'].values()]
+            else:
+                category_name = list(metadata["category_id_to_info"].values())[0]["category_name"]
 
-        import time
-        time.sleep(1)
+            import time
+            time.sleep(1)
 
-        with open(train_path, 'r') as train_file:
-            train_data = json.load(train_file)
-        if self.is_multiclass:
-            return WatsonXMultiClassModelComponent(category_name,
-            train_data["positive_labels"],
-            train_data["negative_labels"],
-            train_data["available_tokens"],
-              train_data["category_name_to_id"])
+            with open(train_path, 'r') as train_file:
+                train_data = json.load(train_file)
+            if self.is_multiclass:
+                return WatsonXMultiClassModelComponent(category_name,
+                train_data["labeled_texts"],
+                train_data["available_tokens"],
+                  train_data["category_name_to_id"])
 
-        else:
-            return WatsonXModelComponents(category_name, train_data["positive_labels"], train_data["negative_labels"],
-                                          train_data["available_tokens"])
+            else:
+                return WatsonXModelComponents(category_name, train_data["labeled_texts"],
+                                              train_data["available_tokens"])
 
     def _get_prediction_class(self):
         return super().get_prediction_class()
@@ -417,7 +356,7 @@ class WatsonXBaseModel(ModelAPI, ABC):
 
     def infer(self, model_components, items_to_infer) -> Sequence[Prediction]:
         return self.infer_with_category_and_few_shot(model_components.category_name,
-                                                     {"pos": model_components.positive_texts, "neg": model_components.negative_texts},
+                                                     model_components.labeled_texts,
                                                      items_to_infer)
 
     def infer_with_category_and_few_shot(self, category, labeled_texts, items_to_infer):
@@ -457,6 +396,10 @@ class WatsonXBaseModel(ModelAPI, ABC):
 
     @abstractmethod
     def build_prompt(self, texts, category_name, labeled_texts):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
         raise NotImplementedError
 
     @abstractmethod
@@ -531,150 +474,98 @@ class WatsonXBaseModel(ModelAPI, ABC):
     def _get_max_seq_length(self):
         return self.max_seq_length
 
-class WatsonXModel(WatsonXBaseModel):
-    def __init__(self, output_dir, background_jobs_manager, gpu_support, prompt_type: PromptType, watsonx_model_type: ModelType,
-                 few_shots_type: str):
-        super(WatsonXModel, self).__init__(output_dir, background_jobs_manager, gpu_support, prompt_type,
-                                           watsonx_model_type, few_shots_type)
-        if watsonx_model_type not in bam_model_type_to_watsonx_model_type.keys():
-            raise Exception(f"Model {watsonx_model_type} is not supported by watsonx")
-
-        self.API_ENDPOINT = self._cash_api_name_to_endpoint(os.getenv("GENAI_API", "https://us-south.ml.cloud.ibm.com"))
-        logging.info(f"using {self.API_ENDPOINT} for watsonx.ai models using the provided api key")
-
-        api_key = os.getenv("GENAI_KEY")
-        self.is_bam = False # TODO: remove this later
-
-        self.platform_model_type = bam_model_type_to_watsonx_model_type[watsonx_model_type]
-        project_id = os.getenv("PROJECT_ID")
-        if project_id is None:
-            raise Exception("watsonx API was provided without providing project id in the 'PROJECT_ID' environment variable")
-        GenParams().get_example_values()
-
-        generate_params = {GenParams.MAX_NEW_TOKENS: self.MAX_NEW_TOKENS, GenParams.RETURN_OPTIONS:{
-            "token_logprobs": True,
-            "generated_tokens": True}
-                           }
-
-        self.model = wxModel(
-            model_id=self.platform_model_type,
-            params=generate_params,
-            credentials={
-                "apikey": api_key,
-                "url": self.API_ENDPOINT
-            },
-            project_id=project_id
-        )
-        self._test_inference_on_startup()
-
     def _generate(self, prompts, watsonx_max_workers):
-        start_time = time.time()
-        with ThreadPoolExecutor(max_workers=watsonx_max_workers) as executor:
-            futures = [executor.submit(self.model.generate, prompt) for prompt in prompts]
+        if self.is_bam:
+            return self.model.generate_async(prompts, ordered=True)
+        else:
+            start_time = time.time()
+            with ThreadPoolExecutor(max_workers=watsonx_max_workers) as executor:
+                futures = [executor.submit(self.model.generate, prompt) for prompt in prompts]
 
-        results = []
-        for future in futures:
-            errors = 0
-            try:
-                results.append(future.result(7200))
-            except:
-                logging.exception(f"Failed to get watsonx prediction. Will try again")
-                results.append(None)
-                errors += 1
-        logging.info(f"Finished running inference using watsonx.ai. {len(prompts)} prompts in {time.time()-start_time} seconds")
-        return results
-
-    def _get_curl(self, escaped_input_text):
-        return f'curl "{self.API_ENDPOINT}/ml/v1-beta/generation/text?version=2022-08-01" \\\n' \
-                   '  -H \'Content-Type: application/json\' \\\n' \
-                   ' -H \'Accept: application/json\' \\\n' \
-                   '  -H \'Authorization: Bearer YOUR_ACCESS_TOKEN\' \\\n' \
-                   '  -d \'{\n' \
-                   f'  "model_id": "{self.str_model_name}",\n' \
-                   '  "input": ' \
-                   f'    {escaped_input_text},\n' \
-                   '  "parameters": {\n' \
-                   '    "decoding_method": "greedy",\n' \
-                   '    "min_new_tokens": 1,\n' \
-                   f'    "max_new_tokens": {self.MAX_NEW_TOKENS},\n' \
-                   '    "beam_width": 1\n' \
-                   '  }\n' \
-                   f', "project_id": "{os.getenv("PROJECT_ID")}" ' \
-                   '}\''
-
-    def _process_infer_response(self, response):
-        return GenerateResponse(**response).results[0]
-
-    def extract_predictions(self, response, category_name):
-        score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
-        return (Prediction(True, score) if response.generated_text.lower().strip() == self.get_pos_label(
-            category_name) else Prediction(
-            False, 1 - score))
+            results = []
+            for future in futures:
+                errors = 0
+                try:
+                    results.append(future.result(7200))
+                except:
+                    logging.exception(f"Failed to get watsonx prediction. Will try again")
+                    results.append(None)
+                    errors += 1
+            logging.info(f"Finished running inference using watsonx.ai. {len(prompts)} prompts in {time.time()-start_time} seconds")
+            return results
 
 
-class InternalBamModel(WatsonXBaseModel):
-    def __init__(self, output_dir, background_jobs_manager, gpu_support, prompt_type : PromptType, watsonx_model_type: ModelType,
-                 few_shots_type: str, ):
-        super(InternalBamModel, self).__init__(output_dir, background_jobs_manager, gpu_support, prompt_type,
-                                               watsonx_model_type, few_shots_type)
-        self.API_ENDPOINT = "https://bam-api.res.ibm.com/v1" #self._cash_api_name_to_endpoint(os.getenv("GENAI_API", "https://us-south.ml.cloud.ibm.com"))
-        logging.info(f"using {self.API_ENDPOINT} for watsonx.ai models using the provided api key")
+class FewShotsWatsonXModel(WatsonXBaseModel):
 
-        if not "bam-api" in self.API_ENDPOINT:
-            raise ValueError("Chosen model uses BAM, but the api endpoint is not a BAM end point")
-
-        api_key = os.getenv("GENAI_KEY")
-        self.is_bam = True #TODO: remove this later
-        self.platform_model_type = watsonx_model_type
-        creds = Credentials(api_endpoint=self.API_ENDPOINT,
-                            api_key=api_key)  # credentials object to access GENAI
-
-        # Instantiate parameters for text generation
-        params = GenerateParams(decoding_method="greedy", max_new_tokens=self.MAX_NEW_TOKENS, return_options={
-            "token_logprobs": True,
-            "generated_tokens": True
-        })
-
-        # Instantiate a model proxy object to send your requests
-        self.model = Model(self.platform_model_type, params=params, credentials=creds)
-        self._test_inference_on_startup()
-
-    def _generate(self, prompts, watsonx_max_workers):
-        return self.model.generate_async(prompts, ordered=True)
-
-    def _get_curl(self, escaped_input_text):
-        return f'curl {self.API_ENDPOINT}/generate \\\n' \
-               '  -H \'Content-Type: application/json\' \\\n' \
-               '  -H \'Authorization: Bearer YOUR_API_KEY\' \\\n' \
-               '  -d \'{\n' \
-               f'  "model_id": "{self.str_model_name}",\n' \
-               '  "inputs": [\n' \
-               f'    {escaped_input_text}\n' \
-               '  ],\n' \
-               '  "parameters": {\n' \
-               '    "decoding_method": "greedy",\n' \
-               '    "min_new_tokens": 1,\n' \
-               f'    "max_new_tokens": {self.MAX_NEW_TOKENS},\n' \
-               '    "beam_width": 1\n' \
-               '  }\n' \
-               '}\''
-
-    def _process_infer_response(self, response):
-        return response
-
-
-    def build_prompt(self, texts, category_name, labeled_texts):
-        # we don't need to concatenate the instruction here
-        return texts
-
-class WatsonXFlanT5XXLFewShots(WatsonXModel, abc.ABC):
     def __init__(self, output_dir, background_jobs_manager, prompt_type: PromptType):
-        super(WatsonXFlanT5XXLFewShots, self).__init__(output_dir, background_jobs_manager, gpu_support=False,
+        super(FewShotsWatsonXModel, self).__init__(output_dir, background_jobs_manager, gpu_support=False,
                                                        prompt_type=prompt_type,
                                                        watsonx_model_type=ModelType.FLAN_T5_11B,
-                                                       few_shots_type="prompt_engineering")
+                                                       api_endpoint=self._cash_api_name_to_endpoint(os.getenv("GENAI_API", "https://us-south.ml.cloud.ibm.com"))
+                                                       )
+    def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
+        self.is_zero_shot = len(train_data) == 0
+        if len(train_data) > 0:
+            train_data_index = 0
+            positive_pool = [sample["text"] for sample in train_data if sample["label"] == 1]
+            negative_pool = [sample["text"] for sample in train_data if sample["label"] == 0]
+
+            positives = []
+            negatives = []
+
+            tokenizer = self._get_tokenizer()
+
+            max_tokens = max([len(tokenizer.tokenize(item["text"])) for item in train_data])
+            max_tokens_in_test = 3 * max_tokens
+
+            num_tokens_in_prompt = 0
+
+            while train_data_index < max(len(positive_pool), len(negative_pool)) and max(len(positives),
+                                                                                         len(negatives)) < self.NUM_SHOTS:
+                positive_example_len = len(
+                    tokenizer.tokenize(positive_pool[train_data_index])) if train_data_index < len(positive_pool) else 0
+                negative_example_len = len(
+                    tokenizer.tokenize(negative_pool[train_data_index])) if train_data_index < len(negative_pool) else 0
+                remaining_tokens = self._get_max_seq_length() - (num_tokens_in_prompt + sum(
+                    [positive_example_len, negative_example_len]) + 30)  # 30 is estimation for instruction and labels
+                if remaining_tokens > max_tokens_in_test:
+                    num_tokens_in_prompt += sum([positive_example_len, negative_example_len])
+                    if train_data_index < len(positive_pool):
+                        positives.append(positive_pool[train_data_index])
+                    if train_data_index < len(negative_pool):
+                        negatives.append(negative_pool[train_data_index])
+                train_data_index += 1
+        else:
+            positives = []
+            negatives = []
+
+        model_dir = self.get_model_dir_by_id(model_id)
+        train_path = os.path.join(model_dir, "train_data.json")
+
+        if self.is_multiclass:
+            category_name = [x["category_name"] for x in model_params['category_id_to_info'].values()]
+        else:
+            category_name = list(model_params['category_id_to_info'].values())[0]["category_name"]
+        labeled_texts = {"pos": positives, "neg": negatives}
+        available_tokens = self._get_number_of_available_tokens(category_name, labeled_texts)
+        category_name_to_id = {y["category_name"]: x for x, y in model_params['category_id_to_info'].items()}
+        with open(train_path, "w") as train_file:
+            train_file.write(json.dumps({"labeled_texts": {"pos": positives, "neg": negatives},
+                                         "available_tokens": available_tokens,
+                                         'category_name_to_id': category_name_to_id}
+                                        ))
+
+        # generate curl for model download
+        prompt_for_curl = self.build_prompt(["<Replace with your text>"], category_name,
+                                                          labeled_texts)[0]
+        escaped_input_text = json.dumps(prompt_for_curl).replace("'", "'\\''")
+        curl = self._get_curl(escaped_input_text)
+
+        with open(os.path.join(model_dir, "curl.txt"), "w") as text_file:
+            text_file.write(curl)
 
     def build_prompt(self, texts, category_name, labeled_texts):
+        #Todo lena: binary scenario
         positive_texts = labeled_texts["pos"]
         negative_texts = labeled_texts["neg"]
 
@@ -701,45 +592,30 @@ class WatsonXFlanT5XXLFewShots(WatsonXModel, abc.ABC):
                                   f"{few_shot_examples}", f"text: {text}", f"{self.get_category_prompt()}: "])
                        for text in texts]
         else:
-            prompts = ["\n".join([f"{self.get_instruction(category_name)} ", f"text: {text}", f"{self.get_category_prompt()}: "])
+            prompts = ["\n".join(
+                [f"{self.get_instruction(category_name)} ", f"text: {text}", f"{self.get_category_prompt()}: "])
                        for text in texts]
         return prompts
 
-
-class WatsonXFlanT5XXLFewShotsBinary(WatsonXFlanT5XXLFewShots):
-    def __init__(self, output_dir, background_jobs_manager):
-        super(WatsonXFlanT5XXLFewShotsBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.YES_NO)
-
-class WatsonXFlanT5XXLZeroShotMulticlass(WatsonXFlanT5XXLFewShots):
-    def __init__(self, output_dir, background_jobs_manager):
-        super(WatsonXFlanT5XXLZeroShotMulticlass, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.MULTICLASS)
-        self.train_seq_len = 256
-
-    def build_prompt(self, texts, category_name, labeled_texts):
-        prompts = ["\n".join([f"{self.get_instruction(category_name)} ", f"text: {text}", f"{self.get_category_prompt()}: "])
-                       for text in texts]
-        return prompts
-
-    def infer(self, model_components, items_to_infer) -> Sequence[Prediction]:
-        self.category_name_to_id = model_components.category_name_to_id
-        return super(WatsonXFlanT5XXLFewShots, self).infer(model_components, items_to_infer)
+    def _process_infer_response(self, response):
+        return GenerateResponse(**response).results[0]
 
     def extract_predictions(self, response, category_name):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
-        # default predicted category is 0
-        predicted_label = self.category_name_to_id.get(response.generated_text.lower().strip(),0)
-        scores = [0]*len(category_name)
-        scores[predicted_label] = score
-        return MulticlassPrediction(label=predicted_label, scores=scores)
+        return (Prediction(True, score) if response.generated_text.lower().strip() == self.get_pos_label(
+            category_name) else Prediction(
+            False, 1 - score))
 
+class FewShotsWatsonXModelBinary(FewShotsWatsonXModel):
+    def __init__(self, output_dir, background_jobs_manager):
+        super(FewShotsWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.YES_NO)
 
-
-
-class WatsonXFlanT5XLMPT(InternalBamModel, abc.ABC):
+class TunableWatsonXModel(WatsonXBaseModel):
     def __init__(self, output_dir, background_jobs_manager, prompt_type: PromptType):
-        super(WatsonXFlanT5XLMPT, self).__init__(output_dir, background_jobs_manager, gpu_support=False, prompt_type=prompt_type,
+        super(TunableWatsonXModel, self).__init__(output_dir, background_jobs_manager, gpu_support=False,
+                                                 prompt_type=prompt_type,
                                                  watsonx_model_type=ModelType.FLAN_T5_3B,
-                                                 few_shots_type="prompt_tuning_with_mpt")
+                                                  api_endpoint=cash_api_name_to_endpoint["BAM"])
         self.base_model = 'google/flan-t5-xl'
         self.train_seq_len = 256
         self.accumulate_steps = 16
@@ -747,12 +623,69 @@ class WatsonXFlanT5XLMPT(InternalBamModel, abc.ABC):
         self.learning_rate = 0.3
         self.num_epochs = 50
 
-    def load_model(self, model_path: str):
-        with open(os.path.join(model_path, 'tune_res.json')) as f:
-            tune_res = json.load(f)
-        if self.is_multiclass:
-            tune_res["category"] = tune_res["category"]
-        return tune_res
+    def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
+        category_names, verbalizer, labels = self.prepare_training_data(model_params, train_data)
+
+        model_out_dir = self.get_model_dir_by_id(model_id)
+        self.is_zero_shot = len(train_data) == 0
+        if len(train_data) > 0:
+            # prepare and upload the train data
+            tokenizer = self._get_tokenizer()
+            verbalizer_len = len(tokenizer(verbalizer)["input_ids"])
+            orig_texts = [ex['text'] for ex in train_data]
+            texts = [self._cut_text(t, self.train_seq_len - verbalizer_len, tokenizer)
+                         for t in orig_texts]
+            logging.info(self._get_cut_stat(orig_texts, texts))
+
+            train_file_id = self.upload_train_data(texts, labels, model_out_dir)
+
+            # submit multi prompt tuning
+            api_key = self.model.service.key
+            URL = self.model.service.service_url
+            headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+            data = {
+                'name': f'Tune model for {str(category_names)} on {len(train_data)} examples',
+                'model_id': self.base_model,
+                'task_id': 'classification',
+                'method_id': "mpt",
+                'training_file_ids': [train_file_id],
+                'parameters': {
+                    'accumulate_steps': self.accumulate_steps,
+                    'batch_size': self.train_batch_size,
+                    'learning_rate': self.learning_rate,
+                    'num_epochs': self.num_epochs,
+                    'verbalizer': verbalizer
+                }
+            }
+            response = requests.post(f'{URL}/tunes', headers=headers, data=json.dumps(data))
+            if response.status_code != 200:
+                 raise ValueError(f'Tune request failed with status {response.status_code}:\n{response.text}')
+            tune_id = response.json()["results"]["id"]
+
+            # poll the tune status
+            while True:
+                headers = {"Authorization": f"Bearer {api_key}"}
+                response = requests.get(f'{URL}/tunes/{tune_id}', headers=headers)
+                if response.status_code != 200:
+                    raise ValueError(f'Poll request failed with status {response.status_code}:\n{response.text}')
+                tune_status = response.json()["results"]["status"]
+                if tune_status == 'COMPLETED':
+                    break
+                elif tune_status == 'RUNNING':
+                    time.sleep(2)
+                elif tune_status not in ['INITIALIZING', 'PENDING']:
+                    raise ValueError(f'Unexpected tune status: {tune_status}\n{response.text}')
+        else:
+            tune_id = self.base_model
+        # save the tune result
+        category_name_to_id = {y["category_name"]: x for x, y in model_params['category_id_to_info'].items()}
+        with open(os.path.join(model_out_dir, 'tune_res.json'), 'w') as f:
+            json.dump({'category': category_names, 'tune_id': tune_id, 'category_name_to_id': category_name_to_id},f)
+
+
+    @abstractmethod
+    def prepare_training_data(self, model_params, train_data):
+        raise NotImplementedError
 
     def upload_train_data(self, inputs, outputs, model_dir):
         res = []
@@ -781,28 +714,42 @@ class WatsonXFlanT5XLMPT(InternalBamModel, abc.ABC):
         category = model_components['category']
         tune_id = model_components['tune_id']
         self.model.model = tune_id
-        return self.infer_with_category_and_few_shot(category, {"pos": [], "neg": []}, items_to_infer)
+        return self.infer_with_category_and_few_shot(category, {}, items_to_infer)
+
+    def _process_infer_response(self, response):
+        return response
 
 
+    def build_prompt(self, texts, category_name, labeled_texts):
+        if self.is_zero_shot:
+            return [self.get_instruction(category_name).replace("{{input}}", text) for text in texts]
+        return texts
 
-class WatsonXFlanT5XLMPTBinary(WatsonXFlanT5XLMPT):
+
+class TunableWatsonXModelBinary(TunableWatsonXModel):
     def __init__(self, output_dir, background_jobs_manager):
-        super(WatsonXFlanT5XLMPTBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.CLS_NO_CLS)
+        super(TunableWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.CLS_NO_CLS)
 
     def extract_predictions(self, response, category_name):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
         return (Prediction(True, score) if response.generated_text.lower().strip() == self.get_pos_label(
             category_name) else Prediction(
             False, 1 - score))
+    def prepare_training_data(self, model_params, train_data):
+        category_name = list(model_params['category_id_to_info'].values())[0]["category_name"]
+        pos_label = category_name
+        neg_label = f'not {category_name}'
+        verbalizer = 'classify { "' + pos_label + '", "' + neg_label + '" } Input: {{input}} Output:'
+        labels = [pos_label if ex['label'] else neg_label for ex in train_data]
+        return category_name, verbalizer, labels
 
-
-class WatsonXFlanT5XLMPTMC(WatsonXFlanT5XLMPT):
+class TunableWatsonXModelMC(TunableWatsonXModel):
     def __init__(self, output_dir, background_jobs_manager):
-        super(WatsonXFlanT5XLMPTMC, self).__init__(output_dir, background_jobs_manager, PromptType.MULTICLASS)
+        super(TunableWatsonXModelMC, self).__init__(output_dir, background_jobs_manager, PromptType.MULTICLASS)
 
     def infer(self, model_components, items_to_infer) -> Sequence[Prediction]:
         self.category_name_to_id = model_components["category_name_to_id"]
-        return super(WatsonXFlanT5XLMPTMC, self).infer(model_components, items_to_infer)
+        return super(TunableWatsonXModelMC, self).infer(model_components, items_to_infer)
 
     def extract_predictions(self, response, category_name):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
@@ -812,215 +759,11 @@ class WatsonXFlanT5XLMPTMC(WatsonXFlanT5XLMPT):
         scores[predicted_label] = score
         return MulticlassPrediction(label=predicted_label, scores=scores)
 
-
-class JointModel(ModelAPI):
-    def __init__(self, output_dir, background_jobs_manager):
-        self.mpt_mc_model = WatsonXFlanT5XLMPTMC(output_dir, background_jobs_manager)
-        self.zero_shot_mc_model = WatsonXFlanT5XXLZeroShotMulticlass(output_dir, background_jobs_manager)
-        self.curr_model = self.zero_shot_mc_model
-
-    def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
-        return self.curr_model._train(model_id, train_data, model_params)
-
-    def train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
-        return self.curr_model.train(model_id, train_data, model_params)
-
-    def load_model(self, model_path: str):
-        return self.curr_model.load_model(model_path)
-
-    def infer(self, model_components, items_to_infer) -> Sequence[Union[Prediction, MulticlassPrediction]]:
-        return self.curr_model.infer(model_components, items_to_infer)
-
-    def get_supported_languages(self) -> Set[Language]:
-        return self.curr_model.get_supported_languages()
-
-    def get_models_dir(self):
-        return self.curr_model.get_models_dir()
-
-def main_few_shots():
-    api = WatsonXFlanT5XXLFewShotsBinary("/tmp", BackgroundJobsManager())
-    train_data = [
-        {"text": "If you choose to decline cookies, some parts of the Airbnb Platform may not work as intended or may not work at all.", "label":1},
-         {"text": "As a condition to using Services, you are required to open an account with 500px and select a password and username, and to provide registration information.The registration information you provide must be accurate, complete, and current at all times.", "label": 0},
-         {"text": "§ You must opt-out separately from each computer or device and browser that you use to access our Sites and if you clear your cookies, you will need to repeat the opt-out process.", "label": 1},
-         {"text": "Please note that if you request the erasure of your personal information: We may retain some of your personal information as necessary for our legitimate business interests, such as fraud detection and prevention and enhancing safety.For example, if we suspend an Airbnb Account for fraud or safety reasons, we may retain certain information from that Airbnb Account to prevent that Member from opening a new Airbnb Account in the future.We may retain and use your personal information to the extent necessary to comply with our legal obligations.For example, Airbnb and Airbnb Payments may keep some of your information for tax, legal reporting and auditing obligations.<", "label": 0},
-         {"text": "Additionally, Microsoft partners with third-party ad companies to help provide some of our advertising services, and we also allow other third-party ad companies to display advertisements on our sites.These third parties may place cookies on your computer and collect data about your online activities across websites or online services.", "label": 1},
-         {"text": "By posting Visual Content to the Site, you grant to 500px a non-exclusive or exclusive, transferable, fully paid, worldwide license to use, sublicense, distribute, reproduce, modify, adapt, publicly perform and publicly display such Visual Content in connection with the Services.This license will exist for the period during which the Visual Content is posted on the Site and will automatically terminate upon the removal of the Visual Content from the Site, subject to the terms of any license granted by an authorized 500px distributor;The license granted to 500px includes the right to use Visual Content fully or partially for promotional reasons and to distribute and redistribute Visual Content to other parties, websites, authorized agents, applications, and other entities, provided such Visual Content is attributed in accordance with the required credits (i.e.username or collection name, profile picture, photo title, descriptions, tags, and other accompanying information) if any and as appropriate, as submitted to 500px, subject to any credit requirements governing the licensing of Visual Content pursuant to the Contributor Agreement (notwithstanding the foregoing, no inadvertent failure to provide appropriate attribution shall be considered a breach of these Terms);500px and its distributors have the right to modify, alter and amend photo titles, descriptions, tags, metadata and other accompanying information for any Visual Content and the right to submit Visual Content to other parties and authorized agents for the purpose of creating tags for Visual Content;", "label": 0},
-         {"text": "Other Data Partners use cookies and other tracking technologies to enable the delivery of interest-based advertising to users.", "label": 1},
-         {"text": "500px reserves the right, at its sole discretion, to modify or replace the Terms at any time.If the alterations constitute a material change to the Terms, 500px will notify you by posting an announcement on the Site.What constitutes a material change will be determined at 500px’s sole discretion.You are responsible for reviewing and becoming familiar with any such modifications.Using any Service or viewing any Visual Content constitutes your acceptance of the Terms as modified.", "label": 0},
-         {"text": "Third-parties who provide us with products and services may also place cookies, ad tags and/or beacons that collect the information outlined above in order to provide us with products and services including: Analytics tools (e. g. , Google Analytics) allowing us to analyze the performance of our Services.", "label": 1},
-         {"text": "It also enables us to serve you advertising and other relevant content on and off of the Academia.edu Services.", "label": 0},
-         {"text": "Information about our use of cookies and how you can change your cookie settings can be found here.", "label": 1},
-         {"text": "If Airbnb undertakes or is involved in any merger, acquisition, reorganization, sale of assets, bankruptcy, or insolvency event, then we may sell, transfer or share some or all of our assets, including your information", "label": 0},
-         {"text": "We use cookies and other similar technologies, such as web beacons, pixels, and mobile identifiers.", "label": 1},
-            {"text": "a binding arbitration administered by the American Arbitration Association (“AAA”)", "label": 0},
-         {"text": "We may also use third party cookies for the purposes of web analytics, attribution and error management.", "label": 1},
-         {"text": "YOU AND 500PX AGREE THAT ANY PROCEEDINGS TO RESOLVE OR LITIGATE ANY DISPUTE ARISING HEREUNDER WILL BE CONDUCTED SOLELY ON AN INDIVIDUAL BASIS, AND THAT YOU WILL NOT SEEK TO HAVE ANY DISPUTE HEARD AS A CLASS ACTION, A REPRESENTATIVE ACTION, A COLLECTIVE ACTION, A PRIVATE ATTORNEY-GENERAL ACTION, OR IN ANY PROCEEDING IN WHICH YOU ACT OR PROPOSE TO ACT IN A REPRESENTATIVE CAPACITY.YOU FURTHER AGREE THAT NO PROCEEDING WILL BE JOINED, CONSOLIDATED, OR COMBINED WITH ANOTHER PROCEEDING WITHOUT THE PRIOR WRITTEN CONSENT OF 500PX AND ALL PARTIES TO ANY SUCH PROCEEDING.", "label": 0},
-        ]
-    classes = {"category_id_to_info": {0: {"category_name": "cookies"}}}
-    num_of_rate_limit_test_sentence = 1
-    input_texts = [
-        # 'Like many websites, we use "cookies" and "web beacons" to collect information.',
-        #          "Access to web search results or other general content on our Sites does not require you to provide us any personal (e. g. , name, date of birth), contact (e. g. , email address, phone number) and/or account (username and password) information.",
-        #         "You will continue to see advertisements on our Sites.",
-        "This cookies policy was last updated on [1] June 2018 and is reviewed every 12 months.",
-        "Get In Touch Chat with Sales Akamai will record this transcript.",
-        "These Data Partners will provide us with additional information about you (such as your interests, preferences or demographic information)."
-    ] + [f"Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit  {x}" for x in range(num_of_rate_limit_test_sentence)]
-    run_main(api, train_data, classes, input_texts)
-
-def main_zero_shot_binary():
-    api = WatsonXFlanT5XXLFewShotsBinary("/tmp", BackgroundJobsManager())
-    train_data = [
-        ]
-    classes = {"category_id_to_info": {0: {"category_name": "cookies"}}}
-    num_of_rate_limit_test_sentence = 1
-    input_texts = [
-        # 'Like many websites, we use "cookies" and "web beacons" to collect information.',
-        #          "Access to web search results or other general content on our Sites does not require you to provide us any personal (e. g. , name, date of birth), contact (e. g. , email address, phone number) and/or account (username and password) information.",
-        #         "You will continue to see advertisements on our Sites.",
-        "This cookies policy was last updated on [1] June 2018 and is reviewed every 12 months.",
-        "Get In Touch Chat with Sales Akamai will record this transcript.",
-        "These Data Partners will provide us with additional information about you (such as your interests, preferences or demographic information)."
-    ] + [f"Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit Testing rate limit  {x}" for x in range(num_of_rate_limit_test_sentence)]
-    run_main(api, train_data, classes, input_texts)
-
-
-def main_zero_shot_multiclass_bam():
-    api = WatsonXFlanT5XLMPTMC("/tmp", BackgroundJobsManager())
-    train_data = [
-        ]
-    classes = {"category_id_to_info": {0: {"category_name": "cookies"}, 1: {"category_name": "cars"}, 2: {"category_name": "finance"}}}
-    input_texts = [
-        # 'Like many websites, we use "cookies" and "web beacons" to collect information.',
-        #          "Access to web search results or other general content on our Sites does not require you to provide us any personal (e. g. , name, date of birth), contact (e. g. , email address, phone number) and/or account (username and password) information.",
-        #         "You will continue to see advertisements on our Sites.",
-        "This cookies policy was last updated on [1] June 2018 and is reviewed every 12 months.",
-        "Get In Touch Chat with Sales Akamai will record this transcript.",
-        "These Data Partners will provide us with additional information about you (such as your interests, preferences or demographic information).",
-        "If you choose to decline cookies, some parts of the Airbnb Platform may not work as intended or may not work at all."
-    ]
-    run_main(api, train_data, classes, input_texts)
-
-
-
-def main_mpt():
-    api = WatsonXFlanT5XLMPTBinary("/tmp", BackgroundJobsManager())
-    train_data = [
-            {
-                "text": "If you choose to decline cookies, some parts of the Airbnb Platform may not work as intended or may not work at all.",
-                "label": 1},
-            {
-                "text": "As a condition to using Services, you are required to open an account with 500px and select a password and username, and to provide registration information.The registration information you provide must be accurate, complete, and current at all times.",
-                "label": 0},
-        ]
-    classes = {"category_id_to_info": {0: {"category_name": "cookies"}}}
-
-    input_texts = [
-        # 'Like many websites, we use "cookies" and "web beacons" to collect information.',
-        #          "Access to web search results or other general content on our Sites does not require you to provide us any personal (e. g. , name, date of birth), contact (e. g. , email address, phone number) and/or account (username and password) information.",
-        #         "You will continue to see advertisements on our Sites.",
-        "This cookies policy was last updated on [1] June 2018 and is reviewed every 12 months.",
-        "Get In Touch Chat with Sales Akamai will record this transcript.",
-        "These Data Partners will provide us with additional information about you (such as your interests, preferences or demographic information).",
-        "If you choose to decline cookies, some parts of the Airbnb Platform may not work as intended or may not work at all."
-    ]
-    run_main(api, train_data, classes, input_texts)
-
-
-
-
-def main_mpt_mc():
-    api = WatsonXFlanT5XLMPTMC("/tmp", BackgroundJobsManager())
-    train_data =  [               {
-                    "text": "If you choose to decline cookies, some parts of the Airbnb Platform may not work as intended or may not work at all.",
-                    "label": 2},
-                {
-                    "text": "As a condition to using Services, you are required to open an account with 500px and select a password and username, and to provide registration information.The registration information you provide must be accurate, complete, and current at all times.",
-                    "label": 0},
-                {
-                    "text": "§ You must opt-out separately from each computer or device and browser that you use to access our Sites and if you clear your cookies, you will need to repeat the opt-out process.",
-                    "label": 1},
-                {
-                    "text": "Please note that if you request the erasure of your personal information: We may retain some of your personal information as necessary for our legitimate business interests, such as fraud detection and prevention and enhancing safety.For example, if we suspend an Airbnb Account for fraud or safety reasons, we may retain certain information from that Airbnb Account to prevent that Member from opening a new Airbnb Account in the future.We may retain and use your personal information to the extent necessary to comply with our legal obligations.For example, Airbnb and Airbnb Payments may keep some of your information for tax, legal reporting and auditing obligations.<",
-                    "label": 0},
-                {
-                    "text": "Additionally, Microsoft partners with third-party ad companies to help provide some of our advertising services, and we also allow other third-party ad companies to display advertisements on our sites.These third parties may place cookies on your computer and collect data about your online activities across websites or online services.",
-                    "label": 1},
-                {
-                    "text": "By posting Visual Content to the Site, you grant to 500px a non-exclusive or exclusive, transferable, fully paid, worldwide license to use, sublicense, distribute, reproduce, modify, adapt, publicly perform and publicly display such Visual Content in connection with the Services.This license will exist for the period during which the Visual Content is posted on the Site and will automatically terminate upon the removal of the Visual Content from the Site, subject to the terms of any license granted by an authorized 500px distributor;The license granted to 500px includes the right to use Visual Content fully or partially for promotional reasons and to distribute and redistribute Visual Content to other parties, websites, authorized agents, applications, and other entities, provided such Visual Content is attributed in accordance with the required credits (i.e.username or collection name, profile picture, photo title, descriptions, tags, and other accompanying information) if any and as appropriate, as submitted to 500px, subject to any credit requirements governing the licensing of Visual Content pursuant to the Contributor Agreement (notwithstanding the foregoing, no inadvertent failure to provide appropriate attribution shall be considered a breach of these Terms);500px and its distributors have the right to modify, alter and amend photo titles, descriptions, tags, metadata and other accompanying information for any Visual Content and the right to submit Visual Content to other parties and authorized agents for the purpose of creating tags for Visual Content;",
-                    "label": 0},
-                {
-                    "text": "Other Data Partners use cookies and other tracking technologies to enable the delivery of interest-based advertising to users.",
-                    "label": 1},
-                {
-                    "text": "500px reserves the right, at its sole discretion, to modify or replace the Terms at any time.If the alterations constitute a material change to the Terms, 500px will notify you by posting an announcement on the Site.What constitutes a material change will be determined at 500px’s sole discretion.You are responsible for reviewing and becoming familiar with any such modifications.Using any Service or viewing any Visual Content constitutes your acceptance of the Terms as modified.",
-                    "label": 0},
-                {
-                    "text": "Third-parties who provide us with products and services may also place cookies, ad tags and/or beacons that collect the information outlined above in order to provide us with products and services including: Analytics tools (e. g. , Google Analytics) allowing us to analyze the performance of our Services.",
-                    "label": 1},
-                {
-                    "text": "It also enables us to serve you advertising and other relevant content on and off of the Academia.edu Services.",
-                    "label": 0},
-                {
-                    "text": "Information about our use of cookies and how you can change your cookie settings can be found here.",
-                    "label": 1},
-                {
-                    "text": "If Airbnb undertakes or is involved in any merger, acquisition, reorganization, sale of assets, bankruptcy, or insolvency event, then we may sell, transfer or share some or all of our assets, including your information",
-                    "label": 0},
-                {
-                    "text": "We use cookies and other similar technologies, such as web beacons, pixels, and mobile identifiers.",
-                    "label": 1},
-                {"text": "a binding arbitration administered by the American Arbitration Association (“AAA”)", "label": 0},
-                {
-                    "text": "We may also use third party cookies for the purposes of web analytics, attribution and error management.",
-                    "label": 1},
-                {
-                    "text": "YOU AND 500PX AGREE THAT ANY PROCEEDINGS TO RESOLVE OR LITIGATE ANY DISPUTE ARISING HEREUNDER WILL BE CONDUCTED SOLELY ON AN INDIVIDUAL BASIS, AND THAT YOU WILL NOT SEEK TO HAVE ANY DISPUTE HEARD AS A CLASS ACTION, A REPRESENTATIVE ACTION, A COLLECTIVE ACTION, A PRIVATE ATTORNEY-GENERAL ACTION, OR IN ANY PROCEEDING IN WHICH YOU ACT OR PROPOSE TO ACT IN A REPRESENTATIVE CAPACITY.YOU FURTHER AGREE THAT NO PROCEEDING WILL BE JOINED, CONSOLIDATED, OR COMBINED WITH ANOTHER PROCEEDING WITHOUT THE PRIOR WRITTEN CONSENT OF 500PX AND ALL PARTIES TO ANY SUCH PROCEEDING.",
-                    "label": 0},
-
-        ]
-    classes = {"category_id_to_info": {0: {"category_name": "cookies"}, 1: {"category_name": "cars"}, 2: {"category_name": "finance"}}}
-    input_texts = [
-        # 'Like many websites, we use "cookies" and "web beacons" to collect information.',
-        #          "Access to web search results or other general content on our Sites does not require you to provide us any personal (e. g. , name, date of birth), contact (e. g. , email address, phone number) and/or account (username and password) information.",
-        #         "You will continue to see advertisements on our Sites.",
-        "This cookies policy was last updated on [1] June 2018 and is reviewed every 12 months.",
-        "Get In Touch Chat with Sales Akamai will record this transcript.",
-        "These Data Partners will provide us with additional information about you (such as your interests, preferences or demographic information).",
-        "If you choose to decline cookies, some parts of the Airbnb Platform may not work as intended or may not work at all."
-    ]
-    run_main(api, train_data, classes, input_texts)
-
-def run_main(api_obj, train_data, classes, texts_to_infer):
-    model_id = api_obj.train(
-        train_data, Languages.ENGLISH,
-        classes)[0]
-
-    while api_obj.get_model_status(model_id) != ModelStatus.READY:
-        import time
-        time.sleep(1)
-        #logging.info(f"waiting for model id {model_id}")
-    preds = api_obj.infer_by_id(model_id, [{"text": text} for text in texts_to_infer], use_cache=False)
-    for text, preds in zip(texts_to_infer, preds):
-        logging.info(f"{text}\n{preds}")
-        logging.info("***")
-
-if __name__ == "__main__":
-    #watsonX
-    is_bam = True
-    is_zero_shot = True
-    os.environ["PROJECT_ID"] = ""
-    if not is_bam:
-        #set watsonX key
-        os.environ["GENAI_KEY"] = ""
-        main_zero_shot_binary()
-    else:
-        #set bam key
-        os.environ["GENAI_KEY"] = ""
-        if is_zero_shot:
-            main_zero_shot_multiclass_bam()
-        else:
-            main_mpt_mc()
+    def prepare_training_data(self, model_params, train_data):
+        category_names = [x["category_name"] for x in model_params['category_id_to_info'].values()]
+        verbalizer = Multiclass_Verbalizer.get_instruction(self._get_tokenizer(),
+                                                           self.train_seq_len, category_names)
+        labels = [model_params['category_id_to_info'].get(ex['label'])["category_name"] for ex in train_data]
+        return category_names, verbalizer, labels
 
 
