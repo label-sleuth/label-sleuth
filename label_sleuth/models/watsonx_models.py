@@ -8,7 +8,8 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from abc import ABC, abstractmethod, ABCMeta
 from enum import Enum
-
+import difflib
+from collections import Counter
 import numpy
 import requests
 from genai.schemas.responses import GenerateResponse
@@ -89,15 +90,19 @@ class Multiclass_Verbalizer():
         return verbalizer
 
     @staticmethod
-    def get_instruction(tokenizer, train_seq_len, category_names):
+    def get_instruction(tokenizer, train_seq_len, category_names, is_train=False):
+        category_names = sorted(category_names)
+        class_names_in_verbalizer=True
         tokenizer = tokenizer
         verbalizer = Multiclass_Verbalizer.get_class_names_verbalizer(category_names)
         verbalizer_len = len(tokenizer(verbalizer.replace("{{input}}", ""))["input_ids"])
-        if verbalizer_len > train_seq_len:
+        #only in case of training we may remove the categories due to lenght limitation
+        if verbalizer_len > train_seq_len and is_train:
             logging.info(
                 "The verbalizer itself is longer than the permitted token limit. We fallback to the generic verbalizer.")
             verbalizer = Multiclass_Verbalizer.get_no_class_names_verbalizer()
-        return verbalizer
+            class_names_in_verbalizer=False
+        return verbalizer, class_names_in_verbalizer
 
 class WatsonXBaseModel(ModelAPI, ABC):
     def __init__(self, output_dir, background_jobs_manager, gpu_support,
@@ -111,7 +116,6 @@ class WatsonXBaseModel(ModelAPI, ABC):
         self.platform_model_type = watsonx_model_type
         self.str_model_name = bam_model_type_to_str_model_name[watsonx_model_type]
         self.prompt_type = prompt_type
-        self.is_zero_shot=False
         self.is_bam=False
 
         if watsonx_model_type not in watsonx_model_type_to_max_seq_length:
@@ -138,7 +142,8 @@ class WatsonXBaseModel(ModelAPI, ABC):
                 })
 
             # Instantiate a model proxy object to send your requests
-            self.model = Model(self.platform_model_type, params=params, credentials=creds)
+            self.zero_shot_model = Model(self.platform_model_type, params=params, credentials=creds)
+
         else: #watsonx https://ibm.github.io/watson-machine-learning-sdk/foundation_models.html
             if watsonx_model_type not in bam_model_type_to_watsonx_model_type.keys():
                 raise Exception(f"Bam model {watsonx_model_type} is not supported by watsonx")
@@ -154,7 +159,7 @@ class WatsonXBaseModel(ModelAPI, ABC):
                 "generated_tokens": True}
             }
 
-            self.model = wxModel(
+            self.zero_shot_model = wxModel(
                 model_id=self.platform_model_type,
                 params=generate_params,
                 credentials={
@@ -165,7 +170,7 @@ class WatsonXBaseModel(ModelAPI, ABC):
             )
         try:
             logging.info(f"testing inference on startup")
-            response = list(self._generate(["working?"],watsonx_max_workers=1))[0]
+            response = list(self._generate(["working?"],watsonx_max_workers=1, model=self.zero_shot_model))[0]
             if response is None:
                 raise Exception(f"empty response from self._generate")
         except:
@@ -173,6 +178,15 @@ class WatsonXBaseModel(ModelAPI, ABC):
             raise
 
 
+    def save_curl_instruction_to_file(self, category_name, labeled_texts, model_components, model_dir):
+        # generate curl for model download
+        prompt_for_curl = self.build_prompt(["<Replace with your text>"], category_name,
+                                                          labeled_texts, model_components)[0]
+        escaped_input_text = json.dumps(prompt_for_curl).replace("'", "'\\''")
+        curl = self._get_curl(escaped_input_text)
+
+        with open(os.path.join(model_dir, "curl.txt"), "w") as text_file:
+            text_file.write(curl)
 
 
     def _get_curl(self, escaped_input_text):
@@ -213,22 +227,12 @@ class WatsonXBaseModel(ModelAPI, ABC):
     def _process_infer_response(self, response):
         return GenerateResponse(**response).results[0]
 
-    def extract_predictions(self, response, category_name):
+    def extract_predictions(self, response, category_name, model_components):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
         return (Prediction(True, score) if response.generated_text.lower().strip() == self.get_pos_label(
             category_name) else Prediction(
             False, 1 - score))
 
-
-    def _test_inference_on_startup(self):
-        try:
-            logging.info(f"testing inference on startup")
-            response = list(self._generate(["working?"],watsonx_max_workers=1))[0]
-            if response is None:
-                raise Exception(f"empty response from self._generate")
-        except:
-            logging.exception(f"Could not initiate {WatsonXModelComponents.__name__} instance")
-            raise
 
     @staticmethod
     def _cash_api_name_to_endpoint(name_or_url):
@@ -267,7 +271,7 @@ class WatsonXBaseModel(ModelAPI, ABC):
 
     def get_instruction(self, category_name):
         if self.prompt_type == PromptType.MULTICLASS:
-            return Multiclass_Verbalizer.get_instruction(self._get_tokenizer(), self.train_seq_len, category_name)
+            return Multiclass_Verbalizer.get_instruction(self._get_tokenizer(), self.train_seq_len, category_name)[0]
         elif self.prompt_type == PromptType.YES_NO:
             return f"Classify if the following text belongs to the category {category_name}." \
                        f" Answer {self.get_pos_label()} or {self.get_neg_label()}."
@@ -313,13 +317,10 @@ class WatsonXBaseModel(ModelAPI, ABC):
         if self.is_bam:
             with open(os.path.join(model_path, 'tune_res.json')) as f:
                 tune_res = json.load(f)
-            if self.is_multiclass:
-                tune_res["category"] = tune_res["category"]
             return tune_res
         else:
             train_path = os.path.join(model_path, "train_data.json")
             metadata = ModelAPI.get_metadata(model_path)
-            #TODO Lena: wrap this with a method
             if self.is_multiclass:
                 category_name = [x["category_name"] for x in metadata['category_id_to_info'].values()]
             else:
@@ -343,31 +344,26 @@ class WatsonXBaseModel(ModelAPI, ABC):
     def _get_prediction_class(self):
         return super().get_prediction_class()
 
-    def _get_number_of_available_tokens(self, category, labeled_texts):
+    def _get_number_of_available_tokens(self, category, labeled_texts, model_components):
         tokenizer = self._get_tokenizer()
         empty_texts = ['']
         prompt = self.build_prompt(empty_texts,
                                    category,
-                                   labeled_texts)[0]
+                                   labeled_texts, model_components)[0]
 
         number_of_tokens_in_prompt = len(tokenizer(prompt)['input_ids'])
 
         return self._get_max_seq_length() - number_of_tokens_in_prompt
 
-    def infer(self, model_components, items_to_infer) -> Sequence[Prediction]:
-        return self.infer_with_category_and_few_shot(model_components.category_name,
-                                                     model_components.labeled_texts,
-                                                     items_to_infer)
-
-    def infer_with_category_and_few_shot(self, category, labeled_texts, items_to_infer):
+    def infer_with_category_and_few_shot(self, category, labeled_texts, items_to_infer, model, model_components):
         tokenizer = self._get_tokenizer()
         max_seq_length = self._get_max_seq_length()
-        empty_prompt = self.build_prompt([""], category, labeled_texts)[0]
+        empty_prompt = self.build_prompt([""], category, labeled_texts, model_components)[0]
         empty_prompt_token_len = len(tokenizer(empty_prompt)["input_ids"])
         texts = [e['text'] for e in items_to_infer]
         texts_after_cut = [self._cut_text(t, max_seq_length - empty_prompt_token_len, tokenizer) for t in texts]
         logging.info(self._get_cut_stat(texts, texts_after_cut))
-        prompts = self.build_prompt(texts_after_cut, category, labeled_texts)
+        prompts = self.build_prompt(texts_after_cut, category, labeled_texts, model_components)
         predictions = [None] * len(prompts)
         num_errors = 0
         indices_to_retry = list(range(len(prompts)))
@@ -383,7 +379,8 @@ class WatsonXBaseModel(ModelAPI, ABC):
                 logging.info(f"{self.API_ENDPOINT} try #{try_num + 1} to infer the missing {len(indices_to_retry)} elements. Reducing max_workers to {max_workers}")
 
             predictions, indices_to_retry = self.infer_prompts(indices_to_retry, items_to_infer, category,
-                                                               predictions, prompts, watsonx_max_workers=max_workers)
+                                                               predictions, prompts, watsonx_max_workers=max_workers, model=model,
+                                                               model_components=model_components)
             items_to_infer = list(map(items_to_infer_original.__getitem__, indices_to_retry))
             prompts = list(map(prompts_original.__getitem__, indices_to_retry))
             try_num += 1
@@ -395,7 +392,7 @@ class WatsonXBaseModel(ModelAPI, ABC):
         return predictions
 
     @abstractmethod
-    def build_prompt(self, texts, category_name, labeled_texts):
+    def build_prompt(self, texts, category_name, labeled_texts, model_components):
         raise NotImplementedError
 
     @abstractmethod
@@ -410,19 +407,19 @@ class WatsonXBaseModel(ModelAPI, ABC):
     def extract_predictions(self, response, category_name):
         raise NotImplementedError
 
-    def infer_prompts(self, indices, items_to_infer, category_name, predictions, prompts, watsonx_max_workers):
+    def infer_prompts(self, indices, items_to_infer, category_name, predictions, prompts, watsonx_max_workers, model, model_components):
         indices_to_retry = []
         num_not_in_format = 0
-        for seq_id, (i, response, input) in enumerate(zip(indices, self._generate(prompts, watsonx_max_workers),
+        for seq_id, (i, response, input) in enumerate(zip(indices, self._generate(prompts, watsonx_max_workers, model),
                                                           items_to_infer)):
             if response is None:
                 indices_to_retry.append(i)
                 logging.error(f"None response for {input}")
             else:
                 response = self._process_infer_response(response)
-                predictions[i] = self.extract_predictions(response, category_name)
+                predictions[i] = self.extract_predictions(response, category_name, model_components)
                 if response.generated_text.lower().strip() not in self.get_all_possible_labels(category_name):
-                    logging.warning(f"generated text is {response.generated_text.lower().strip()}, not in the format of the expected output")
+                    logging.debug(f"generated text is {response.generated_text.lower().strip()}, not in the format of the expected output")
                     num_not_in_format += 1
                 if self.is_multiclass:
                     logging.debug(
@@ -474,13 +471,13 @@ class WatsonXBaseModel(ModelAPI, ABC):
     def _get_max_seq_length(self):
         return self.max_seq_length
 
-    def _generate(self, prompts, watsonx_max_workers):
+    def _generate(self, prompts, watsonx_max_workers, model):
         if self.is_bam:
-            return self.model.generate_async(prompts, ordered=True)
+            return model.generate_async(prompts, ordered=True)
         else:
             start_time = time.time()
             with ThreadPoolExecutor(max_workers=watsonx_max_workers) as executor:
-                futures = [executor.submit(self.model.generate, prompt) for prompt in prompts]
+                futures = [executor.submit(model.generate, prompt) for prompt in prompts]
 
             results = []
             for future in futures:
@@ -503,8 +500,24 @@ class FewShotsWatsonXModel(WatsonXBaseModel):
                                                        watsonx_model_type=ModelType.FLAN_T5_11B,
                                                        api_endpoint=self._cash_api_name_to_endpoint(os.getenv("GENAI_API", "https://us-south.ml.cloud.ibm.com"))
                                                        )
+
+    def infer(self, model_components, items_to_infer) -> Sequence[Prediction]:
+        return self.infer_with_category_and_few_shot(model_components.category_name,
+                                                     model_components.labeled_texts,
+                                                     items_to_infer, self.zero_shot_model,
+                                                     model_components)
+
+
+    def _process_infer_response(self, response):
+        return GenerateResponse(**response).results[0]
+
+
+
+class FewShotsWatsonXModelBinary(FewShotsWatsonXModel):
+    def __init__(self, output_dir, background_jobs_manager):
+        super(FewShotsWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.YES_NO)
+
     def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
-        self.is_zero_shot = len(train_data) == 0
         if len(train_data) > 0:
             train_data_index = 0
             positive_pool = [sample["text"] for sample in train_data if sample["label"] == 1]
@@ -542,30 +555,21 @@ class FewShotsWatsonXModel(WatsonXBaseModel):
         model_dir = self.get_model_dir_by_id(model_id)
         train_path = os.path.join(model_dir, "train_data.json")
 
-        if self.is_multiclass:
-            category_name = [x["category_name"] for x in model_params['category_id_to_info'].values()]
-        else:
-            category_name = list(model_params['category_id_to_info'].values())[0]["category_name"]
+        category_name = list(model_params['category_id_to_info'].values())[0]["category_name"]
         labeled_texts = {"pos": positives, "neg": negatives}
-        available_tokens = self._get_number_of_available_tokens(category_name, labeled_texts)
         category_name_to_id = {y["category_name"]: x for x, y in model_params['category_id_to_info'].items()}
+        model_components = {"labeled_texts": {"pos": positives, "neg": negatives},
+                                         "is_zero_shot": len(train_data) == 0,
+                                    'category_name_to_id': category_name_to_id}
+        available_tokens = self._get_number_of_available_tokens(category_name, labeled_texts, model_components)
+        model_components["available_tokens"] = available_tokens
         with open(train_path, "w") as train_file:
-            train_file.write(json.dumps({"labeled_texts": {"pos": positives, "neg": negatives},
-                                         "available_tokens": available_tokens,
-                                         'category_name_to_id': category_name_to_id}
-                                        ))
+            train_file.write(json.dumps(model_components))
 
-        # generate curl for model download
-        prompt_for_curl = self.build_prompt(["<Replace with your text>"], category_name,
-                                                          labeled_texts)[0]
-        escaped_input_text = json.dumps(prompt_for_curl).replace("'", "'\\''")
-        curl = self._get_curl(escaped_input_text)
+        self.save_curl_instruction_to_file(category_name=category_name, labeled_texts=labeled_texts,
+                                           model_components=model_components, model_dir=model_dir)
 
-        with open(os.path.join(model_dir, "curl.txt"), "w") as text_file:
-            text_file.write(curl)
-
-    def build_prompt(self, texts, category_name, labeled_texts):
-        #Todo lena: binary scenario
+    def build_prompt(self, texts, category_name, labeled_texts, model_components):
         positive_texts = labeled_texts["pos"]
         negative_texts = labeled_texts["neg"]
 
@@ -597,18 +601,11 @@ class FewShotsWatsonXModel(WatsonXBaseModel):
                        for text in texts]
         return prompts
 
-    def _process_infer_response(self, response):
-        return GenerateResponse(**response).results[0]
-
-    def extract_predictions(self, response, category_name):
+    def extract_predictions(self, response, category_name, model_components):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
         return (Prediction(True, score) if response.generated_text.lower().strip() == self.get_pos_label(
             category_name) else Prediction(
             False, 1 - score))
-
-class FewShotsWatsonXModelBinary(FewShotsWatsonXModel):
-    def __init__(self, output_dir, background_jobs_manager):
-        super(FewShotsWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.YES_NO)
 
 
 class TunableWatsonXModel(WatsonXBaseModel):
@@ -625,10 +622,11 @@ class TunableWatsonXModel(WatsonXBaseModel):
         self.num_epochs = 50
 
     def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
-        category_names, verbalizer, labels = self.prepare_training_data(model_params, train_data)
-
+        additiona_training_data = self.prepare_training_data(model_params, train_data)
+        verbalizer = additiona_training_data["verbalizer"]
+        labels = additiona_training_data["labels"]
+        category_name = additiona_training_data["category_name"]
         model_out_dir = self.get_model_dir_by_id(model_id)
-        self.is_zero_shot = len(train_data) == 0
         model_name = ""
         if len(train_data) > 0:
             # prepare and upload the train data
@@ -642,10 +640,14 @@ class TunableWatsonXModel(WatsonXBaseModel):
             train_file_id = self.upload_train_data(texts, labels, model_out_dir)
 
             # submit multi prompt tuning
-            api_key = self.model.service.key
-            URL = self.model.service.service_url
+            api_key = self.zero_shot_model.service.key
+            URL = self.zero_shot_model.service.service_url
             headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
-            model_name =  f'Label Sleuth tune model for {len(category_names)} categories on {len(train_data)} examples'
+            if self.is_multiclass:
+                model_name =  f'Label Sleuth tune model for {len(category_name)} categories on {len(train_data)} examples'
+            else:
+                model_name =  f'Label Sleuth tune model for {category_name} on {len(train_data)} examples'
+
             data = {
                 'name': model_name,
                 'model_id': self.base_model,
@@ -683,8 +685,12 @@ class TunableWatsonXModel(WatsonXBaseModel):
         # save the tune result
         category_name_to_id = {y["category_name"]: x for x, y in model_params['category_id_to_info'].items()}
         with open(os.path.join(model_out_dir, 'tune_res.json'), 'w') as f:
-            json.dump({'category': category_names, 'tune_id': tune_id, 'category_name_to_id': category_name_to_id, "model_name": model_name },f)
-
+            json.dump({'category': category_name, 'tune_id': tune_id,
+                       'category_name_to_id': category_name_to_id,
+                       "model_name": model_name,
+                       "class_names_in_verbalizer": additiona_training_data.get("class_names_in_verbalizer", False),
+                       "sorted_classes_by_freq": additiona_training_data.get("sorted_classes_by_freq"),
+                       "is_zero_shot": len(train_data) == 0},f)
 
     @abstractmethod
     def prepare_training_data(self, model_params, train_data):
@@ -698,8 +704,8 @@ class TunableWatsonXModel(WatsonXBaseModel):
         with open(temp_file, "w") as f:
             json.dump(res, f)
 
-        headers = {'Authorization': f'Bearer {self.model.service.key}'}
-        URL = self.model.service.service_url + '/files'
+        headers = {'Authorization': f'Bearer {self.zero_shot_model.service.key}'}
+        URL = self.zero_shot_model.service.service_url + '/files'
         data = {'purpose': "tune"}
         files = {
             'file': open(temp_file, 'rb'),
@@ -716,15 +722,18 @@ class TunableWatsonXModel(WatsonXBaseModel):
     def infer(self, model_components, items_to_infer) -> Sequence[Prediction]:
         category = model_components['category']
         tune_id = model_components['tune_id']
-        self.model.model = tune_id
-        return self.infer_with_category_and_few_shot(category, {}, items_to_infer)
+        tuned_model = Model(self.platform_model_type, params=self.zero_shot_model.params,
+                            credentials=Credentials(api_key=self.zero_shot_model.service.key,
+                                                    api_endpoint=self.zero_shot_model.service.service_url))
+        tuned_model.model = tune_id
+        return self.infer_with_category_and_few_shot(category, {}, items_to_infer, tuned_model, model_components)
 
     def _process_infer_response(self, response):
         return response
 
 
-    def build_prompt(self, texts, category_name, labeled_texts):
-        if self.is_zero_shot:
+    def build_prompt(self, texts, category_name, labeled_texts, model_components):
+        if model_components["is_zero_shot"] or not model_components["class_names_in_verbalizer"]:
             return [self.get_instruction(category_name).replace("{{input}}", text) for text in texts]
         return texts
 
@@ -732,7 +741,7 @@ class TunableWatsonXModelBinary(TunableWatsonXModel):
     def __init__(self, output_dir, background_jobs_manager):
         super(TunableWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.CLS_NO_CLS)
 
-    def extract_predictions(self, response, category_name):
+    def extract_predictions(self, response, category_name, category_name_to_id):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
         return (Prediction(True, score) if response.generated_text.lower().strip() == self.get_pos_label(
             category_name) else Prediction(
@@ -744,29 +753,42 @@ class TunableWatsonXModelBinary(TunableWatsonXModel):
         neg_label = f'not {category_name}'
         verbalizer = 'classify { "' + pos_label + '", "' + neg_label + '" } Input: {{input}} Output:'
         labels = [pos_label if ex['label'] else neg_label for ex in train_data]
-        return category_name, verbalizer, labels
+        return {"category_name": category_name,
+                "verbalizer": verbalizer,
+                "labels": labels}
 
 class TunableWatsonXModelMC(TunableWatsonXModel):
     def __init__(self, output_dir, background_jobs_manager):
         super(TunableWatsonXModelMC, self).__init__(output_dir, background_jobs_manager, PromptType.MULTICLASS)
 
-    def infer(self, model_components, items_to_infer) -> Sequence[Prediction]:
-        self.category_name_to_id = model_components["category_name_to_id"]
-        return super(TunableWatsonXModelMC, self).infer(model_components, items_to_infer)
-
-    def extract_predictions(self, response, category_name):
+    def extract_predictions(self, response, category_name, model_components):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
-        # default predicted category is 0
-        predicted_label = self.category_name_to_id.get(response.generated_text.lower().strip(),0)
+        # in case prediction is not in the classes list:
+        predicted_class = response.generated_text.lower().strip()
+        if predicted_class not in category_name:
+            closest_class = difflib.get_close_matches(response.generated_text, category_name, n=1)
+            if (len(closest_class)) > 0:
+                predicted_class = closest_class[0]
+            else:
+                sorted_classes_by_freq = model_components["sorted_classes_by_freq"]
+                #this is initialized during tuning
+                if (len(sorted_classes_by_freq) > 0):
+                    predicted_class = sorted_classes_by_freq[0][0]
+        predicted_label = model_components['category_name_to_id'].get(predicted_class,0)
         scores = [0]*len(category_name)
         scores[predicted_label] = score
         return MulticlassPrediction(label=predicted_label, scores=scores)
 
     def prepare_training_data(self, model_params, train_data):
         category_names = [x["category_name"] for x in model_params['category_id_to_info'].values()]
-        verbalizer = Multiclass_Verbalizer.get_instruction(self._get_tokenizer(),
-                                                           self.train_seq_len, category_names)
+        verbalizer, class_names_in_verbalizer = Multiclass_Verbalizer.get_instruction(self._get_tokenizer(),
+                                                           self.train_seq_len, category_names, is_train=True)
         labels = [model_params['category_id_to_info'].get(ex['label'])["category_name"] for ex in train_data]
-        return category_names, verbalizer, labels
+        sorted_classes_by_freq = Counter(labels).most_common()
+        return {"category_name": category_names,
+                "verbalizer": verbalizer,
+                "labels": labels,
+                "class_names_in_verbalizer": class_names_in_verbalizer,
+                "sorted_classes_by_freq": sorted_classes_by_freq}
 
 
