@@ -803,9 +803,6 @@ class OrchestratorApi:
         :return: None if no training was launched, else the model_id for the training job submitted in the background
         """
 
-        # Lena TODO add to _should_train_multilabel_condition
-        #  TODO and _should_train_binary_condition if the new force iteration 0 train flag is True for this workspace type, submit with force=True
-
         workspace = self.orchestrator_state.get_workspace(workspace_id)
         dataset_name = workspace.dataset_name
 
