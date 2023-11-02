@@ -3,7 +3,7 @@
         "first_model_positive_threshold": 20,
         "first_model_negative_threshold": 0,
         "changed_element_threshold": 20,
-        "training_set_selection_strategy": "ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO",
+        "training_set_selection_strategy": "ALL_LABELED",
         "model_policy": "STATIC_BINARY_MPT",
         "active_learning_strategy": "RANDOM",
         "precision_evaluation_size": 20
