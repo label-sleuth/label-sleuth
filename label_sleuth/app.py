@@ -1046,25 +1046,29 @@ def get_elements_to_label(workspace_id):
 @login_if_required
 @validate_category_id
 @validate_workspace_id
-def force_train_for_category(workspace_id):
+def force_train(workspace_id):
     """
     This call is used for manually triggering a new Iteration flow.
 
     :param workspace_id:
     :request_arg category_id:
     """
-    category_id = int(request.args['category_id'])
+    is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
+    category_id = request.args.get('category_id')
+    if category_id is not None:
+        category_id = int(category_id)    
+    
     dataset_name = curr_app.orchestrator_api.get_dataset_name(workspace_id)
 
-    model_id = curr_app.orchestrator_api.train_if_recommended(workspace_id, category_id, force=True)
+    curr_app.orchestrator_api.train_if_recommended(workspace_id, category_id, force=True)
 
     labeling_counts = curr_app.orchestrator_api.get_label_counts(workspace_id, dataset_name, category_id)
-    logging.info(f"force training a new model in workspace '{workspace_id}' for category '{category_id}', "
-                 f"model id: {model_id}")
+    to_log_message = f"Force training a new model in workspace '{workspace_id}'"
+    if not is_multiclass: to_log_message += f" for category '{category_id}'"
+    logging.info(to_log_message)
 
     return jsonify({
-        "labeling_counts": labeling_counts,
-        "model_id": model_id
+        "labeling_counts": labeling_counts
     })
 
 
