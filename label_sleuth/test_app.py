@@ -753,7 +753,6 @@ class TestAppIntegration(unittest.TestCase):
         for element in res.get_json()["elements"]:
             self.assertEqual(0, element["model_predictions"], msg=f"element {element} expected prediction is 0 but got {element['model_predictions']}")
 
-
         # delete category 0
         res = self.client.delete(f"/workspace/{workspace_name}/category/0?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to delete category 0 in multiclass workspace")
@@ -771,6 +770,9 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual({'elements': [], 'hit_count': 0},
                          res.get_json(), msg="labeled elements for category 0 were deleted should not exist in this workspace")
 
+        # force model training
+        res = self.client.get(f"/workspace/{workspace_name}/force_train?mode=MultiClass", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to force train in multiclass workspace")
 
         # delete workspace
         res = self.client.delete(f"/workspace/{workspace_name}",
