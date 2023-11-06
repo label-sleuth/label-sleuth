@@ -76,7 +76,7 @@ import { toast } from "react-toastify";
 import { useNotification } from "../../../../utils/notification";
 import React from "react";
 
-interface NewCategoryFormProps {
+interface NewOrEditCategoryFormProps {
   category: Category;
   setCategoryAttribute: (
     id: number,
@@ -86,15 +86,17 @@ interface NewCategoryFormProps {
   removeNewCategory: (id: number) => void;
   isEditing: boolean;
   inCreationCategories: Category[];
+  onRemoveCategory?: (category: Category) => void;
 }
 
-const NewCategoryForm = ({
+const NewOrEditCategoryForm = ({
   category,
   setCategoryAttribute,
   removeNewCategory,
-  isEditing = false,
   inCreationCategories,
-}: NewCategoryFormProps) => {
+  onRemoveCategory,
+  isEditing,
+}: NewOrEditCategoryFormProps) => {
   const {
     colorPickerMenuOpenAnchorEl,
     setColorPickerMenuOpenAnchorEl,
@@ -102,6 +104,9 @@ const NewCategoryForm = ({
   } = useColorPicker();
 
   const [categoryNameError, setCategoryNameError] = React.useState("");
+
+  const [inDeleteConfirmationStep, setInDeleteConfirmationStep] =
+    useState(false);
 
   const categoryDescriptionPlaceholder = useAppSelector(
     (state) =>
@@ -164,11 +169,7 @@ const NewCategoryForm = ({
     } else {
       setCategoryNameError("");
     }
-    setCategoryAttribute(
-      category.category_id,
-      isEditing ? "category_name" : "category_name",
-      text
-    );
+    setCategoryAttribute(category.category_id, "category_name", text);
   };
 
   const handleCategoryDescriptionFieldChange = (
@@ -176,11 +177,7 @@ const NewCategoryForm = ({
   ) => {
     e.preventDefault();
     let text = e.target.value;
-    setCategoryAttribute(
-      category.category_id,
-      isEditing ? "category_description" : "category_description",
-      text
-    );
+    setCategoryAttribute(category.category_id, "category_description", text);
   };
 
   return (
@@ -189,66 +186,93 @@ const NewCategoryForm = ({
         mb: 1,
         pt: 1.5,
       }}
+      // only used for hiding the buttons when
+      // the category entry is not hovered
       className={classes["category-entry"]}
     >
-      <Stack direction={"row"}>
-        <ColorPickerButton
-          sx={{
-            mr: 2,
-            mt: 2.5,
-          }}
-          setColorPickerMenuOpenAnchorEl={setColorPickerMenuOpenAnchorEl}
-          categoryColor={
-            category.color ? category.color.palette : defaultColor.palette
-          }
-        />
-        <Stack direction={"column"} sx={{ maxWidth: "250px" }}>
-          <TextField
-            label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG}
-            autoFocus
-            required
-            sx={{ mb: 2 }}
-            size="small"
-            variant="standard"
-            onChange={handleCategoryNameFieldChange}
-            value={category.category_name}
-            error={categoryNameError ? true : false}
-            onKeyDown={(e) => {
-              e.stopPropagation();
-            }}
-          />
-          <p className={classes["error"]}>{categoryNameError}</p>
-          <TextField
-            label="Category description"
-            placeholder={categoryDescriptionPlaceholder}
+      <Stack
+        direction={"row"}
+        justifyContent="space-between"
+        alignItems={"flex-start"}
+      >
+        <Stack direction={"row"}>
+          <ColorPickerButton
             sx={{
-              mb: 1,
+              mr: 2,
+              mt: 2.5,
             }}
-            multiline
-            rows={2}
-            size="small"
-            variant="standard"
-            onChange={handleCategoryDescriptionFieldChange}
-            value={category.category_description}
-            onKeyDown={(e) => {
-              e.stopPropagation();
-            }}
+            setColorPickerMenuOpenAnchorEl={setColorPickerMenuOpenAnchorEl}
+            categoryColor={
+              category.color ? category.color.palette : defaultColor.palette
+            }
           />
-        </Stack>
-        {!!!isEditing && (
           <Stack
-            direction={"row"}
-            alignItems={"flex-start"}
-            className={classes["hide-on-hover"]}
-            sx={{ ml: 4 }}
+            direction={"column"}
+            sx={{
+              width: inDeleteConfirmationStep ? "350px" : "400px",
+            }}
           >
+            <TextField
+              label={CREATE_NEW_CATEGORY_PLACEHOLDER_MSG}
+              autoFocus
+              required
+              sx={{ mb: 2 }}
+              size="small"
+              variant="standard"
+              onChange={handleCategoryNameFieldChange}
+              value={category.category_name}
+              error={categoryNameError ? true : false}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+              }}
+            />
+            <p className={classes["error"]}>{categoryNameError}</p>
+            <TextField
+              label="Category description"
+              placeholder={categoryDescriptionPlaceholder}
+              sx={{
+                mb: 1,
+              }}
+              multiline
+              rows={2}
+              size="small"
+              variant="standard"
+              onChange={handleCategoryDescriptionFieldChange}
+              value={category.category_description}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+              }}
+            />
+          </Stack>
+        </Stack>
+        {!inDeleteConfirmationStep ? (
+          <Stack direction={"row"} className={classes["hide-on-not-hover"]}>
             <IconButton
               size="small"
               sx={(palette) => ({ color: palette.palette.primary.main })}
-              onClick={() => removeNewCategory(category.category_id)}
+              onClick={() =>
+                isEditing
+                  ? setInDeleteConfirmationStep(true)
+                  : removeNewCategory(category.category_id)
+              }
             >
               <DeleteOutlineOutlinedIcon fontSize="inherit" />
             </IconButton>
+          </Stack>
+        ) : (
+          <Stack direction="row">
+            <Button
+              onClick={() => onRemoveCategory && onRemoveCategory(category)}
+              color="error"
+            >
+              {"Delete"}
+            </Button>
+            <Button
+              sx={{ alignItems: "flex-start" }}
+              onClick={() => setInDeleteConfirmationStep(false)}
+            >
+              {"Cancel"}
+            </Button>
           </Stack>
         )}
       </Stack>
@@ -286,9 +310,15 @@ const CategoryEntry = ({
         mb: 1,
         pt: 1.5,
       }}
+      // only used for hiding the buttons when
+      // the category entry is not hovered
       className={classes["category-entry"]}
     >
-      <Stack direction={"row"}>
+      <Stack
+        direction={"row"}
+        justifyContent="space-between"
+        alignItems={"flex-start"}
+      >
         <Stack direction={"row"}>
           <Box
             sx={{
@@ -300,51 +330,66 @@ const CategoryEntry = ({
               mr: 2,
             }}
           />
-          <Stack direction={"column"} sx={{ width: "250px" }}>
-            <Typography sx={{ mt: "-5px" }}>
+          <Stack
+            direction={"column"}
+            sx={{
+              width: inDeleteConfirmationStep ? "350px" : "400px",
+            }}
+          >
+            <Typography
+              sx={{
+                mt: "-5px",
+                overflow: "hidden",
+                whiteSpace: "normal",
+                textOverflow: "ellipsis",
+                wordWrap: "break-word",
+              }}
+            >
               {category.category_name}
             </Typography>
-            <Typography variant={"caption"} sx={{ color: "grey" }}>
+            <Typography
+              variant={"caption"}
+              sx={{
+                color: "grey",
+                overflow: "hidden",
+                whiteSpace: "normal",
+                textOverflow: "ellipsis",
+                wordWrap: "break-word",
+              }}
+            >
               {category.category_description || "No description"}
             </Typography>
           </Stack>
-          {!inDeleteConfirmationStep && (
-            <Stack
-              direction={"row"}
-              alignItems={"flex-start"}
-              className={classes["hide-on-hover"]}
-              sx={{ ml: 3 }}
-            >
-              <IconButton
-                onClick={() => setCategoryEdited(category)}
-                size="small"
-                sx={(palette) => ({ color: palette.palette.primary.main })}
-              >
-                <ModeEditOutlineOutlinedIcon fontSize="inherit" />
-              </IconButton>
-              <IconButton
-                size="small"
-                sx={(palette) => ({ color: palette.palette.primary.main })}
-                onClick={() => setInDeleteConfirmationStep(true)}
-              >
-                <DeleteOutlineOutlinedIcon fontSize="inherit" />
-              </IconButton>
-            </Stack>
-          )}
         </Stack>
-        {inDeleteConfirmationStep && (
-          <>
-            <Button
-              onClick={() => onRemoveCategory(category)}
-              sx={{ ml: -5 }}
-              color="error"
+        {!inDeleteConfirmationStep ? (
+          <Stack direction={"row"} className={classes["hide-on-not-hover"]}>
+            <IconButton
+              onClick={() => setCategoryEdited(category)}
+              size="small"
+              sx={(palette) => ({ color: palette.palette.primary.main })}
             >
+              <ModeEditOutlineOutlinedIcon fontSize="inherit" />
+            </IconButton>
+            <IconButton
+              size="small"
+              sx={(palette) => ({ color: palette.palette.primary.main })}
+              onClick={() => setInDeleteConfirmationStep(true)}
+            >
+              <DeleteOutlineOutlinedIcon fontSize="inherit" />
+            </IconButton>
+          </Stack>
+        ) : (
+          <Stack direction="row">
+            <Button onClick={() => onRemoveCategory(category)} color="error">
               {"Delete"}
             </Button>
-            <Button onClick={() => setInDeleteConfirmationStep(false)}>
+            <Button
+              sx={{ alignItems: "flex-start" }}
+              onClick={() => setInDeleteConfirmationStep(false)}
+            >
               {"Cancel"}
             </Button>
-          </>
+          </Stack>
         )}
       </Stack>
       <Divider sx={{ mt: 1 }} />
@@ -555,8 +600,8 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
       aria-describedby="Menu for creating, editing, deleting and viewing all the categories"
       disableRestoreFocus
       fullWidth
-      maxWidth={"xs"}
-      sx={{ overflowY: "scroll" }}
+      maxWidth={"sm"}
+      scroll={"body"}
       onKeyDown={(e) => onEnter(e, onSubmit)}
     >
       <DialogTitle sx={{ p: 0, mx: 4, mt: 2, mb: 1 }}>
@@ -604,7 +649,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                 // eslint-disable-next-line
                 (c) => c.category_id == category.category_id
               ) !== undefined ? (
-                <NewCategoryForm
+                <NewOrEditCategoryForm
                   key={category.category_id}
                   category={getCategoryFromId(
                     category.category_id,
@@ -617,6 +662,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                   removeNewCategory={onRemoveNewCategory}
                   isEditing={true}
                   inCreationCategories={[]}
+                  onRemoveCategory={onRemoveCategory}
                 />
               ) : (
                 <CategoryEntry
@@ -628,7 +674,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
               )
             )}
             {newCategories.map((newCategory) => (
-              <NewCategoryForm
+              <NewOrEditCategoryForm
                 key={newCategory.category_id}
                 category={newCategory}
                 setCategoryAttribute={setCategoryAttribute(
@@ -638,6 +684,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                 removeNewCategory={onRemoveNewCategory}
                 isEditing={false}
                 inCreationCategories={newCategories}
+                onRemoveCategory={onRemoveCategory}
               />
             ))}
           </DialogContent>
