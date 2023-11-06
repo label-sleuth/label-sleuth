@@ -17,14 +17,7 @@ import MenuItem from "@mui/material/MenuItem/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import classes from "./Dropdown.module.css";
-import {
-  Box,
-  Chip,
-  Stack,
-  SxProps,
-  Theme,
-  Typography,
-} from "@mui/material";
+import { Box, Chip, Stack, SxProps, Theme, Typography } from "@mui/material";
 import { ReactNode, useMemo } from "react";
 
 export interface DropdownOption {
@@ -141,7 +134,14 @@ export const ControlledSelect = ({
         MenuProps={MenuProps}
         className={value !== "" ? classes.dropdown : classes.dropdown_gray}
         disabled={options.length === 0}
-        sx={sx}
+        sx={{
+          "& .MuiSelect-select .MuiTypography-root": {
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+          },
+          ...sx,
+        }}
       >
         {options?.map((option) => {
           if (option.value !== "") {
