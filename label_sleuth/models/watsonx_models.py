@@ -183,19 +183,20 @@ class WatsonXBaseModel(ModelAPI, ABC):
         prompt_for_curl = self.build_prompt(["<Replace with your text>"], category_name,
                                                           labeled_texts, model_components)[0]
         escaped_input_text = json.dumps(prompt_for_curl).replace("'", "'\\''")
-        curl = self._get_curl(escaped_input_text)
+        curl = self._get_curl(escaped_input_text, model_components)
 
         with open(os.path.join(model_dir, "curl.txt"), "w") as text_file:
             text_file.write(curl)
 
 
-    def _get_curl(self, escaped_input_text):
+    def _get_curl(self, escaped_input_text, model_components):
         if self.is_bam:
+            tune_id = model_components['tune_id']
             return f'curl {self.API_ENDPOINT}/generate \\\n' \
                    '  -H \'Content-Type: application/json\' \\\n' \
                    '  -H \'Authorization: Bearer YOUR_API_KEY\' \\\n' \
                    '  -d \'{\n' \
-                   f'  "model_id": "{self.str_model_name}",\n' \
+                   f'  "model_id": "{tune_id}",\n' \
                    '  "inputs": [\n' \
                    f'    {escaped_input_text}\n' \
                    '  ],\n' \
@@ -682,15 +683,21 @@ class TunableWatsonXModel(WatsonXBaseModel):
                     raise ValueError(f'Unexpected tune status: {tune_status}\n{response.text}')
         else:
             tune_id = self.base_model
+
+
         # save the tune result
         category_name_to_id = {y["category_name"]: x for x, y in model_params['category_id_to_info'].items()}
-        with open(os.path.join(model_out_dir, 'tune_res.json'), 'w') as f:
-            json.dump({'category': category_name, 'tune_id': tune_id,
+        model_components = {'category': category_name, 'tune_id': tune_id,
                        'category_name_to_id': category_name_to_id,
                        "model_name": model_name,
                        "class_names_in_verbalizer": additiona_training_data.get("class_names_in_verbalizer", False),
                        "sorted_classes_by_freq": additiona_training_data.get("sorted_classes_by_freq"),
-                       "is_zero_shot": len(train_data) == 0},f)
+                       "is_zero_shot": len(train_data) == 0}
+        with open(os.path.join(model_out_dir, 'tune_res.json'), 'w') as f:
+            json.dump(model_components,f)
+        self.save_curl_instruction_to_file(category_name=category_name, labeled_texts={},
+                                           model_components=model_components, model_dir=model_out_dir)
+
 
     @abstractmethod
     def prepare_training_data(self, model_params, train_data):
