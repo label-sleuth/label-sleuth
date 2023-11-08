@@ -164,7 +164,7 @@ class WatsonXBaseModel(ModelAPI, ABC):
             }
 
             self.zero_shot_model = wxModel(
-                model_id=self.platform_model_type,
+                model_id=self.str_model_name,
                 params=generate_params,
                 credentials={
                     "apikey": api_key,
@@ -496,13 +496,12 @@ class WatsonXBaseModel(ModelAPI, ABC):
             logging.info(f"Finished running inference using watsonx.ai. {len(prompts)} prompts in {time.time()-start_time} seconds")
             return results
 
-
 class FewShotsWatsonXModel(WatsonXBaseModel):
 
-    def __init__(self, output_dir, background_jobs_manager, prompt_type: PromptType):
+    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type, prompt_type: PromptType):
         super(FewShotsWatsonXModel, self).__init__(output_dir, background_jobs_manager, gpu_support=False,
                                                        prompt_type=prompt_type,
-                                                       watsonx_model_type=ModelType.FLAN_T5_11B,
+                                                       watsonx_model_type=watsonx_model_type,
                                                        api_endpoint=self._cash_api_name_to_endpoint(os.getenv("GENAI_API", "https://us-south.ml.cloud.ibm.com"))
                                                        )
 
@@ -516,11 +515,10 @@ class FewShotsWatsonXModel(WatsonXBaseModel):
     def _process_infer_response(self, response):
         return GenerateResponse(**response).results[0]
 
-
-
 class FewShotsWatsonXModelBinary(FewShotsWatsonXModel):
-    def __init__(self, output_dir, background_jobs_manager):
-        super(FewShotsWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.YES_NO)
+    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type):
+        super(FewShotsWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, watsonx_model_type=watsonx_model_type,
+                                                         prompt_type=PromptType.YES_NO)
 
     def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
         if len(train_data) > 0:
@@ -613,13 +611,16 @@ class FewShotsWatsonXModelBinary(FewShotsWatsonXModel):
             False, 1 - score))
 
 
+class BinaryFewShotFlanT5XXLWatsonx(FewShotsWatsonXModelBinary):
+    def __init__(self, output_dir, background_jobs_manager):
+        super(BinaryFewShotFlanT5XXLWatsonx, self).__init__(output_dir, background_jobs_manager, ModelType.FLAN_T5_11B)
+
 class TunableWatsonXModel(WatsonXBaseModel):
-    def __init__(self, output_dir, background_jobs_manager, prompt_type: PromptType):
+    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type: str, prompt_type: PromptType):
         super(TunableWatsonXModel, self).__init__(output_dir, background_jobs_manager, gpu_support=False,
                                                  prompt_type=prompt_type,
-                                                 watsonx_model_type=ModelType.FLAN_T5_3B,
+                                                 watsonx_model_type=watsonx_model_type,
                                                   api_endpoint=cash_api_name_to_endpoint["BAM"])
-        self.base_model = 'google/flan-t5-xl'
         self.train_seq_len = 256
         self.accumulate_steps = 16
         self.train_batch_size = 16
@@ -627,10 +628,10 @@ class TunableWatsonXModel(WatsonXBaseModel):
         self.num_epochs = 50
 
     def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
-        additiona_training_data = self.prepare_training_data(model_params, train_data)
-        verbalizer = additiona_training_data["verbalizer"]
-        labels = additiona_training_data["labels"]
-        category_name = additiona_training_data["category_name"]
+        additional_training_data = self.prepare_training_data(model_params, train_data)
+        verbalizer = additional_training_data["verbalizer"]
+        labels = additional_training_data["labels"]
+        category_name = additional_training_data["category_name"]
         model_out_dir = self.get_model_dir_by_id(model_id)
         model_name = ""
         if len(train_data) > 0:
@@ -655,7 +656,7 @@ class TunableWatsonXModel(WatsonXBaseModel):
 
             data = {
                 'name': model_name,
-                'model_id': self.base_model,
+                'model_id': self.platform_model_type,
                 'task_id': 'classification',
                 'method_id': "mpt",
                 'training_file_ids': [train_file_id],
@@ -686,7 +687,7 @@ class TunableWatsonXModel(WatsonXBaseModel):
                 elif tune_status not in ['INITIALIZING', 'PENDING']:
                     raise ValueError(f'Unexpected tune status: {tune_status}\n{response.text}')
         else:
-            tune_id = self.base_model
+            tune_id = self.str_model_name
 
 
         # save the tune result
@@ -694,8 +695,8 @@ class TunableWatsonXModel(WatsonXBaseModel):
         model_components = {'category': category_name, 'tune_id': tune_id,
                        'category_name_to_id': category_name_to_id,
                        "model_name": model_name,
-                       "class_names_in_verbalizer": additiona_training_data.get("class_names_in_verbalizer", False),
-                       "sorted_classes_by_freq": additiona_training_data.get("sorted_classes_by_freq"),
+                       "class_names_in_verbalizer": additional_training_data.get("class_names_in_verbalizer", False),
+                       "sorted_classes_by_freq": additional_training_data.get("sorted_classes_by_freq"),
                        "is_zero_shot": len(train_data) == 0}
         with open(os.path.join(model_out_dir, 'tune_res.json'), 'w') as f:
             json.dump(model_components,f)
@@ -749,8 +750,8 @@ class TunableWatsonXModel(WatsonXBaseModel):
         return texts
 
 class TunableWatsonXModelBinary(TunableWatsonXModel):
-    def __init__(self, output_dir, background_jobs_manager):
-        super(TunableWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, prompt_type=PromptType.CLS_NO_CLS)
+    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type):
+        super(TunableWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, watsonx_model_type, prompt_type=PromptType.CLS_NO_CLS)
 
     def extract_predictions(self, response, category_name, category_name_to_id):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
@@ -769,8 +770,8 @@ class TunableWatsonXModelBinary(TunableWatsonXModel):
                 "labels": labels}
 
 class TunableWatsonXModelMC(TunableWatsonXModel):
-    def __init__(self, output_dir, background_jobs_manager):
-        super(TunableWatsonXModelMC, self).__init__(output_dir, background_jobs_manager, PromptType.MULTICLASS)
+    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type):
+        super(TunableWatsonXModelMC, self).__init__(output_dir, background_jobs_manager, watsonx_model_type, PromptType.MULTICLASS)
 
     def extract_predictions(self, response, category_name, model_components):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
@@ -785,7 +786,7 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
                 #this is initialized during tuning
                 if (len(sorted_classes_by_freq) > 0):
                     predicted_class = sorted_classes_by_freq[0][0]
-        predicted_label = model_components['category_name_to_id'].get(predicted_class,0)
+        predicted_label = model_components['category_name_to_id'].get(predicted_class, 0)
         scores = [0]*len(category_name)
         scores[predicted_label] = score
         return MulticlassPrediction(label=predicted_label, scores=scores)
@@ -794,7 +795,7 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
         category_names = [x["category_name"] for x in model_params['category_id_to_info'].values()]
         labels = [model_params['category_id_to_info'].get(ex['label'])["category_name"] for ex in train_data]
         model_components = {}
-        if len(labels) > 0 :
+        if len(labels) > 0:
             sorted_classes_by_freq = Counter(labels)
             all_categories_with_counts = {}
             all_categories_with_counts.update(sorted_classes_by_freq)
@@ -810,4 +811,12 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
 
         return model_components
 
+
+class MulticlassFlanT5XLWatsonx(TunableWatsonXModelMC):
+    def __init__(self, output_dir, background_jobs_manager):
+        super(MulticlassFlanT5XLWatsonx, self).__init__(output_dir, background_jobs_manager, ModelType.FLAN_T5_3B)
+
+class BinaryFlanT5XLWatsonx(TunableWatsonXModelBinary):
+    def __init__(self, output_dir, background_jobs_manager):
+        super(BinaryFlanT5XLWatsonx, self).__init__(output_dir, background_jobs_manager, ModelType.FLAN_T5_3B)
 
