@@ -137,6 +137,16 @@ class TestAppIntegration(unittest.TestCase):
                           'category_name': category_name, 'category_id': str(category_id)}, res.get_json(),
                          msg="diff in create category response")
 
+        # test category name already exists conflict
+        res = self.client.post(f"/workspace/{workspace_name}/category",
+                               data='{{"category_name":"{}","category_description":"{}"}}'.format(category_name,
+                                                                                                  category_description),
+                               headers=HEADERS)
+        self.assertEqual(409, res.status_code, msg="Failed to add a new category to workspace")
+        self.assertEqual(f"A category with this name already exists: {category_name}", res.get_json()["title"],
+                         msg="diff in create category response error")
+
+
         res = self.client.get(f"/workspace/{workspace_name}/documents", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get all documents uris")
         documents = res.get_json()['documents']
