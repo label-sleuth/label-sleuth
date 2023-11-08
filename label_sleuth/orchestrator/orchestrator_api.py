@@ -910,8 +910,10 @@ class OrchestratorApi:
         # a change in the categories list:
         changed_categories = False
         if len(previous_not_failed_iterations) > 0:
-            prev_categories = set([x.name for x in previous_not_failed_iterations[-1].model.train_statistics[MODEL_CATEGORIES_STR_KEY].values()])
-            changed_categories = len(prev_categories.intersection([x.name for x in workspace.categories.values()])) != len(workspace.categories)
+            prev_not_failed = previous_not_failed_iterations[-1]
+            if previous_not_failed_iterations[-1].model:
+                prev_categories = set([x.name for x in prev_not_failed.train_statistics[MODEL_CATEGORIES_STR_KEY].values()])
+                changed_categories = len(prev_categories.intersection([x.name for x in workspace.categories.values()])) != len(workspace.categories)
 
         enough_training_data = (len(label_counts) == num_classes and len(label_counts) >= 2 and
                 all(count >= self.config.multiclass_flow.per_class_labeling_threshold for count in label_counts.values())
