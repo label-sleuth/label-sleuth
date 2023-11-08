@@ -491,9 +491,9 @@ def update_category(workspace_id, category_id):
     new_category_name = post_data["category_name"]
     new_category_description = post_data["category_description"]
     new_category_color = post_data.get("category_color")
-
     existing_category_names = {category.name for category in all_categories.values()}
-    if new_category_name in existing_category_names:
+    # first conditions allows category names to remain unchaged when editing a category 
+    if all_categories[category_id].name != new_category_name and  new_category_name in existing_category_names:
         return make_error({
             "type": "category_name_conflict",
             "title": f"A category with this name already exists: {new_category_name}"
