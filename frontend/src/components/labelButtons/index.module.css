@@ -25,7 +25,17 @@
 }
 
 
-.text_element:not(:hover) .visibility {
-  display: none !important;
+/* 
+  used to hide multiclass labeling button without taking it 
+  out of the DOM to avoid the element changing its height
+  on hover
+*/
+.text_element:not(:hover) .visibility-hidden {
+  visibility: hidden;
+}
+
+/* used to hide binary labeling buttons */
+.text_element:not(:hover) .visibility-none {
+  display: none;
 }
 

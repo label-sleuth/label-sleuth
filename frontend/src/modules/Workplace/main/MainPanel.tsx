@@ -80,6 +80,7 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
   );
   const curDocIndex = useAppSelector((state) => state.workspace.curDocIndex);
   const curDocName = useAppSelector(currentDocNameSelector);
+  const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
 
   const documentPositivePredictionIds = useAppSelector(
     (state) =>
@@ -141,7 +142,7 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
                 Text elements: {hitCount ?? 0}
               </em>
 
-              {documentPositivePredictionIds !== null ? (
+              {modelVersion !== null && modelVersion > 0 && documentPositivePredictionIds !== null ? (
                 <>
                   <h6
                     style={{
@@ -191,7 +192,7 @@ const MainPanel = ({ open, rightDrawerWidth }: MainPanelProps) => {
           sx={(theme) => ({
             paddingLeft: theme.spacing(3),
             paddingRight: theme.spacing(3),
-            paddingTop: theme.spacing(3),
+            paddingTop: theme.spacing(2),
             overflow: "auto",
           })}
         >

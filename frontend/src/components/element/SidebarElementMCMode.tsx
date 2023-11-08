@@ -184,23 +184,69 @@ export const SidebarElementMCMode = ({
             />
           </Typography>
         </Box>
-        <Stack direction={"row"} justifyContent={"space-between"}>
-          <Typography
-            variant={"caption"}
+        <Typography
+          variant={"caption"}
+          sx={{
+            color: "gray",
+            paddingLeft: 1.5,
+            fontStyle: "italic",
+            marginTop: 0.5,
+            maxWidth: maxTextWidth,
+            textOverflow: "ellipsis",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+          }}
+          className={rightToLeft ? classes.right_to_left : ""}
+        >
+          {`From document "${getDocumentNameFromDocumentId(docId)}"`}
+        </Typography>
+        <Stack
+          direction={"row"}
+          sx={{
+            justifyContent: "space-between",
+          }}
+        >
+          <Stack
+            direction={"row"}
             sx={{
-              color: "gray",
-              paddingLeft: 1.5,
-              fontStyle: "italic",
-              marginTop: 0.5,
-              maxWidth: maxTextWidth,
-              textOverflow: "ellipsis",
-              overflow: "hidden",
-              whiteSpace: "nowrap",
+              m: 1.5,
+              justifyContent: "flex-start",
             }}
-            className={rightToLeft ? classes.right_to_left : ""}
           >
-            {`From document "${getDocumentNameFromDocumentId(docId)}"`}
-          </Typography>
+            {predictionCategory &&
+            labeledCategory &&
+            !labeledCategory.deleted &&
+            predictionCategory.category_id == labeledCategory.category_id ? (
+              <CategoryBadge
+                category={predictionCategory}
+                isModelPrediction
+                isUserLabel
+                sx={{ mr: 1 }}
+                hideTooltip
+              />
+            ) : (
+              <>
+                {predictionCategory && (
+                  <CategoryBadge
+                    category={predictionCategory}
+                    isModelPrediction
+                    sx={{ mr: 1 }}
+                    hideTooltip
+                  />
+                )}
+                {labeledCategory && !labeledCategory.deleted && (
+                  <CategoryBadge
+                    sx={{
+                      mr: 1,
+                    }}
+                    category={labeledCategory}
+                    isUserLabel
+                    hideTooltip
+                  />
+                )}
+              </>
+            )}
+          </Stack>
           <LabelingButtons
             isElementFocused={isElementFocused}
             labelMenuOpen={labelMenuOpen}
@@ -220,32 +266,6 @@ export const SidebarElementMCMode = ({
               enterDelay: 500,
             }}
           />
-        </Stack>
-        <Stack
-          direction={"row"}
-          sx={{
-            m: 1.5,
-            justifyContent: "space-between",
-            flexDirection:
-              multiclassModelPrediction !== null ? "row" : "row-reverse",
-          }}
-        >
-          {predictionCategory && (
-            <CategoryBadge
-              category={predictionCategory}
-              isModelPrediction
-              sx={{ mr: 1 }}
-              hideTooltip
-            />
-          )}
-          {labeledCategory && !labeledCategory.deleted && (
-            <CategoryBadge
-              sx={{ mr: 1 }}
-              category={labeledCategory}
-              hideTooltip
-              isUserLabel
-            />
-          )}
         </Stack>
       </Box>
       <LabelCategoriesMenu
