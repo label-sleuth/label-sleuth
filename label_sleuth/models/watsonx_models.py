@@ -90,8 +90,12 @@ class Multiclass_Verbalizer():
         return verbalizer
 
     @staticmethod
-    def get_instruction(tokenizer, train_seq_len, category_names, is_train=False):
-        category_names = sorted(category_names)
+    def get_instruction(tokenizer, train_seq_len, category_names, is_train=False, model_params=None):
+        if model_params and "sorted_classes_by_freq" in model_params and model_params["sorted_classes_by_freq"]:
+            sorted_pairs = reversed(model_params["sorted_classes_by_freq"]) #from the less frequent to the most frequent
+            category_names = [x for x,y in sorted_pairs]
+        else:
+            category_names = sorted(category_names)
         class_names_in_verbalizer=True
         tokenizer = tokenizer
         verbalizer = Multiclass_Verbalizer.get_class_names_verbalizer(category_names)
@@ -270,9 +274,9 @@ class WatsonXBaseModel(ModelAPI, ABC):
             return "Classification"
         raise Exception(f"{self.prompt_type} not supported")
 
-    def get_instruction(self, category_name):
+    def get_instruction(self, category_name, model_components):
         if self.prompt_type == PromptType.MULTICLASS:
-            return Multiclass_Verbalizer.get_instruction(self._get_tokenizer(), self.train_seq_len, category_name)[0]
+            return Multiclass_Verbalizer.get_instruction(self._get_tokenizer(), self.train_seq_len, category_name, model_params=model_components)[0]
         elif self.prompt_type == PromptType.YES_NO:
             return f"Classify if the following text belongs to the category {category_name}." \
                        f" Answer {self.get_pos_label()} or {self.get_neg_label()}."
@@ -593,12 +597,12 @@ class FewShotsWatsonXModelBinary(FewShotsWatsonXModel):
         few_shot_examples = "\n".join(combined)
 
         if len(few_shot_examples) > 0:
-            prompts = ["\n".join([f"{self.get_instruction(category_name)} ",
+            prompts = ["\n".join([f"{self.get_instruction(category_name, model_components)} ",
                                   f"{few_shot_examples}", f"text: {text}", f"{self.get_category_prompt()}: "])
                        for text in texts]
         else:
             prompts = ["\n".join(
-                [f"{self.get_instruction(category_name)} ", f"text: {text}", f"{self.get_category_prompt()}: "])
+                [f"{self.get_instruction(category_name, model_components)} ", f"text: {text}", f"{self.get_category_prompt()}: "])
                        for text in texts]
         return prompts
 
@@ -741,7 +745,7 @@ class TunableWatsonXModel(WatsonXBaseModel):
 
     def build_prompt(self, texts, category_name, labeled_texts, model_components):
         if model_components["is_zero_shot"] or not model_components["class_names_in_verbalizer"]:
-            return [self.get_instruction(category_name).replace("{{input}}", text) for text in texts]
+            return [self.get_instruction(category_name, model_components).replace("{{input}}", text) for text in texts]
         return texts
 
 class TunableWatsonXModelBinary(TunableWatsonXModel):
@@ -788,14 +792,22 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
 
     def prepare_training_data(self, model_params, train_data):
         category_names = [x["category_name"] for x in model_params['category_id_to_info'].values()]
-        verbalizer, class_names_in_verbalizer = Multiclass_Verbalizer.get_instruction(self._get_tokenizer(),
-                                                           self.train_seq_len, category_names, is_train=True)
         labels = [model_params['category_id_to_info'].get(ex['label'])["category_name"] for ex in train_data]
-        sorted_classes_by_freq = Counter(labels).most_common()
-        return {"category_name": category_names,
+        model_components = {}
+        if len(labels) > 0 :
+            sorted_classes_by_freq = Counter(labels)
+            all_categories_with_counts = {}
+            all_categories_with_counts.update(sorted_classes_by_freq)
+            all_categories_with_counts.update({x: 0 for x in category_names if x not in sorted_classes_by_freq})
+            sorted_classes_by_freq = sorted(all_categories_with_counts.items(), key=lambda x: all_categories_with_counts.get(x[0]), reverse=True)
+            model_components["sorted_classes_by_freq"] = sorted_classes_by_freq
+        verbalizer, class_names_in_verbalizer = Multiclass_Verbalizer.get_instruction(self._get_tokenizer(),
+                                                           self.train_seq_len, category_names, is_train=True, model_params=model_components)
+        model_components.update({"category_name": category_names,
                 "verbalizer": verbalizer,
                 "labels": labels,
-                "class_names_in_verbalizer": class_names_in_verbalizer,
-                "sorted_classes_by_freq": sorted_classes_by_freq}
+                "class_names_in_verbalizer": class_names_in_verbalizer})
+
+        return model_components
 
 
