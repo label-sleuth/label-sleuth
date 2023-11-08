@@ -423,8 +423,8 @@ def create_category(workspace_id):
     existing_category_names = [category.name for category
                                in curr_app.orchestrator_api.get_all_categories(workspace_id).values()]
     if category_name in existing_category_names:
-        return jsonify({"type": "category_name_conflict", 
-                        "title": f"A category with this name already exists: {category_name}"}), 409
+        return make_error({"type": "category_name_conflict", 
+                        "title": f"A category with this name already exists: {category_name}"}, 409)
 
     category_id = curr_app.orchestrator_api.create_new_category(workspace_id, category_name, category_description,
                                                                 category_color)
