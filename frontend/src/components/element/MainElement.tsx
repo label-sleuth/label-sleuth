@@ -4,7 +4,7 @@ import { returnByMode } from "../../utils/utils";
 import { MainElementMCMode } from "./MainElementMCMode";
 import { MainElementBMode } from "./MainElementBMode";
 import { Element } from "../../global";
-import { Box, Tooltip } from "@mui/material";
+import { Box, Divider, Tooltip } from "@mui/material";
 import sleuthLogo from "../../assets/sleuth_blue.svg";
 
 export const PosPredIndicator = () => {
@@ -43,9 +43,14 @@ export interface ElementProps {
 export const MainElement: FC<ElementProps> = (props) => {
   const mode = useAppSelector((state) => state.workspace.mode);
 
-  return returnByMode(
-    <MainElementBMode {...props} />,
-    <MainElementMCMode {...props} />,
-    mode
+  return (
+    <Box>
+      {returnByMode(
+        <MainElementBMode {...props} />,
+        <MainElementMCMode {...props} />,
+        mode
+      )}
+      <Divider sx={{ml: "10px"}}/>
+    </Box>
   );
 };

@@ -50,23 +50,13 @@ export const LabelingButtons = ({
       className={classes.checking_buttons}
     >
       {returnByMode(
-        <LabelCategoriesMenuButtonBMode
-          setAnchorEl={setLabelMenuOpenAnchorEl}
-          tooltipProps={otherCatsTooltipProps}
-          labelMenuOpen={labelMenuOpen}
-          element={element}
-        />,
-        <LabelCategoriesMenuButtonMCMode
-          setAnchorEl={setLabelMenuOpenAnchorEl}
-          tooltipProps={otherCatsTooltipProps}
-          labelMenuOpen={labelMenuOpen}
-          element={element}
-        />,
-        mode
-      )}
-
-      {returnByMode(
         <>
+          <LabelCategoriesMenuButtonBMode
+            setAnchorEl={setLabelMenuOpenAnchorEl}
+            tooltipProps={otherCatsTooltipProps}
+            labelMenuOpen={labelMenuOpen}
+            element={element}
+          />
           <NegButton
             onClick={(e) => {
               e.stopPropagation();
@@ -88,7 +78,12 @@ export const LabelingButtons = ({
             tooltipProps={posTooltipProps}
           />
         </>,
-        null,
+        <LabelCategoriesMenuButtonMCMode
+          setAnchorEl={setLabelMenuOpenAnchorEl}
+          tooltipProps={otherCatsTooltipProps}
+          labelMenuOpen={labelMenuOpen}
+          element={element}
+        />,
         mode
       )}
     </Stack>

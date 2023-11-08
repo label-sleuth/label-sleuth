@@ -600,7 +600,9 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
       aria-describedby="Menu for creating, editing, deleting and viewing all the categories"
       disableRestoreFocus
       fullWidth
-      maxWidth={"sm"}
+      maxWidth={
+        nonDeletedCategories.length || newCategories.length ? "sm" : "xs"
+      }
       scroll={"body"}
       onKeyDown={(e) => onEnter(e, onSubmit)}
     >

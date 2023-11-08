@@ -236,7 +236,7 @@ export const LabelCategoriesMenuButton = ({
       {...{ title: tooltipTitle, ...tooltipProps }}
       className={`${
         categories.length === 1 ? classes["button-disabled-pointer"] : ""
-      } ${!labelMenuOpen ? labelButtonClasses.visibility : ""}`}
+      } ${!labelMenuOpen ? labelButtonClasses["visibility-none"] : ""}`}
       onClick={handleClickHack}
     >
       <span>

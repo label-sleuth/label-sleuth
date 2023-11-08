@@ -153,7 +153,7 @@ export const LabelCategoriesMenuButton = ({
         title: !isLabeled ? "Label element" : "Change element label",
         ...tooltipProps,
       }}
-      className={` ${!labelMenuOpen ? labelButtonClasses.visibility : ""}`}
+      className={` ${!labelMenuOpen ? labelButtonClasses["visibility-hidden"] : ""}`}
       onClick={handleClickHack}
     >
       <Button

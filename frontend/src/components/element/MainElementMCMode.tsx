@@ -97,6 +97,55 @@ export const MainElementMCMode = ({ element }: ElementProps) => {
           >
             {snippet || text}
           </Typography>
+        </Stack>
+        <Stack
+          direction={"row"}
+          sx={{
+            justifyContent: "space-between",
+          }}
+        >
+          <Stack
+            direction={"row"}
+            sx={{
+              mt: 1.5,
+              justifyContent: "flex-start",
+            }}
+          >
+            {predictionCategory &&
+            labeledCategory &&
+            !labeledCategory.deleted &&
+            predictionCategory.category_id == labeledCategory.category_id ? (
+              <CategoryBadge
+                category={predictionCategory}
+                isModelPrediction
+                isUserLabel
+                sx={{ mr: 1 }}
+                hideTooltip
+              />
+            ) : (
+              <>
+                {predictionCategory && (
+                  <CategoryBadge
+                    category={predictionCategory}
+                    isModelPrediction
+                    sx={{ mr: 1 }}
+                    hideTooltip
+                  />
+                )}
+                {labeledCategory && !labeledCategory.deleted && (
+                  <CategoryBadge
+                    sx={{
+                      mr: 1,
+                      ml: predictionCategory ? 1 : 0,
+                    }}
+                    category={labeledCategory}
+                    isUserLabel
+                    hideTooltip
+                  />
+                )}
+              </>
+            )}
+          </Stack>
           <LabelingButtons
             labelMenuOpen={labelMenuOpen}
             labelMenuOpenAnchorEl={labelMenuOpenAnchorEl}
@@ -108,34 +157,6 @@ export const MainElementMCMode = ({ element }: ElementProps) => {
             otherCatsTooltipProps={{ placement: "top" }}
             panelId={PanelIdsEnum.MAIN_PANEL}
           />
-        </Stack>
-        <Stack
-          direction={"row"}
-          sx={{
-            mt: 1.5,
-            justifyContent: "space-between",
-            flexDirection:
-              multiclassModelPrediction !== null ? "row" : "row-reverse",
-          }}
-        >
-          {predictionCategory && (
-            <CategoryBadge
-              category={predictionCategory}
-              isModelPrediction
-              sx={{ mr: 1 }}
-              hideTooltip
-            />
-          )}
-          {labeledCategory && !labeledCategory.deleted && (
-            <CategoryBadge
-              sx={{
-                mr: 1,
-              }}
-              category={labeledCategory}
-              isUserLabel
-              hideTooltip
-            />
-          )}
         </Stack>
       </Stack>
       <LabelCategoriesMenu

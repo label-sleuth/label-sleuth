@@ -259,14 +259,6 @@ export const extraReducers = [
             state.panels.panels[pId].page = 1;
           }
         });
-
-        // we are working with the workspace state at this point
-        // lie to tsc in order to reuse the selector
-        if (state.modelVersion !== null) {
-          state.categories = nonDeletedCategoriesSelector({
-            workspace: state,
-          } as RootState);
-        }
       }
 
       state.modelVersion = latestReadyModelVersion;

@@ -55,7 +55,7 @@ export const PosButton = ({
     <Tooltip {...{ title: "", ...tooltipProps }}>
       <IconButton
         onClick={onClick}
-        className={`${classes.label_button} ${!show && showContidionally ? classes.visibility : ""}`}
+        className={`${classes.label_button} ${!show && showContidionally ? classes["visibility-none"] : ""}`}
       >
         <img loading="eager" src={checking} alt="checking" className={classes.label_img} />
       </IconButton>
@@ -86,7 +86,7 @@ export const NegButton = ({
           loading="eager"
           src={crossing}
           alt="checking"
-          className={`${classes.label_img} ${!show && showContidionally ? classes.visibility : ""}`}
+          className={`${classes.label_img} ${!show && showContidionally ? classes["visibility-none"] : ""}`}
         />
       </IconButton>
     </Tooltip>
