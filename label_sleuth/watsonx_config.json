@@ -1,7 +1,7 @@
 {
     "binary_flow": {
         "first_model_positive_threshold": 20,
-        "first_model_negative_threshold": 3,
+        "first_model_negative_threshold": 0,
         "changed_element_threshold": 20,
         "training_set_selection_strategy": "ALL_LABELED",
         "model_policy": "STATIC_BINARY_FLANT5XL_MPT",
@@ -11,7 +11,7 @@
 
     "multiclass_flow": {
         "per_class_labeling_threshold": 2,
-        "changed_element_threshold": 250,
+        "changed_element_threshold": 5,
         "training_set_selection_strategy": "ALL_LABELED_MULTICLASS",
         "model_policy": "STATIC_MULTICLASS_FLANT5XL_MPT",
         "active_learning_strategy": "RANDOM",
