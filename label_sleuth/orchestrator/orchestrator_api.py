@@ -910,15 +910,16 @@ class OrchestratorApi:
         # a change in the categories list:
         changed_categories = False
         if len(previous_not_failed_iterations) > 0:
-            prev_not_failed = previous_not_failed_iterations[-1]
-            if previous_not_failed_iterations[-1].model:
-                prev_categories = set([x.name for x in prev_not_failed.train_statistics[MODEL_CATEGORIES_STR_KEY].values()])
+            prev_model = previous_not_failed_iterations[-1].model
+            if prev_model:
+                prev_categories = set([x.name for x in prev_model.train_statistics[MODEL_CATEGORIES_STR_KEY].values()])
                 changed_categories = len(prev_categories.intersection([x.name for x in workspace.categories.values()])) != len(workspace.categories)
 
         enough_training_data = (len(label_counts) == num_classes and len(label_counts) >= 2 and
                 all(count >= self.config.multiclass_flow.per_class_labeling_threshold for count in label_counts.values())
                 and changes_since_last_model >= self.config.multiclass_flow.changed_element_threshold)
-        return zero_shot_training_condition or changed_categories or enough_training_data
+        should_train = zero_shot_training_condition or changed_categories or enough_training_data
+        return should_train
 
     def infer(self, workspace_id: str, category_id: int, elements_to_infer: Sequence[TextElement],
               iteration_index: int = None, use_cache: bool = True) -> Union[Sequence[Prediction],
