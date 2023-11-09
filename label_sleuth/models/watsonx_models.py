@@ -784,10 +784,10 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
             else:
                 sorted_classes_by_freq = model_components["sorted_classes_by_freq"]
                 #this is initialized during tuning
-                if (len(sorted_classes_by_freq) > 0):
+                if sorted_classes_by_freq and (len(sorted_classes_by_freq) > 0):
                     predicted_class = sorted_classes_by_freq[0][0]
         predicted_label = model_components['category_name_to_id'].get(predicted_class, 0)
-        scores = [0]*len(category_name)
+        scores = {i: 0 for i in range(len(category_name))}
         scores[predicted_label] = score
         return MulticlassPrediction(label=predicted_label, scores=scores)
 
