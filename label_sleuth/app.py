@@ -1099,8 +1099,8 @@ def export_predictions(workspace_id):
     infer_results = curr_app.orchestrator_api.infer(workspace_id, category_id, elements,
                                                     iteration_index=iteration_index)
     if is_multiclass:
-        return pd.DataFrame([{**te.__dict__, "scores": mc_pred.scores, 'predicted_label': mc_pred.label} for te, mc_pred
-                             in zip(elements, infer_results)]).to_csv(index=False)
+        return pd.DataFrame([{**te.__dict__, "scores": list(mc_pred.scores.values()), 'predicted_label': mc_pred.label}
+                             for te, mc_pred in zip(elements, infer_results)]).to_csv(index=False)
     else:
         return pd.DataFrame([{**te.__dict__, "score": pred.score, 'predicted_label': pred.label} for te, pred
                              in zip(elements, infer_results)]).to_csv(index=False)

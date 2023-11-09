@@ -14,7 +14,7 @@
 #
 
 from dataclasses import dataclass
-from typing import List
+from typing import Mapping
 
 
 @dataclass
@@ -46,12 +46,13 @@ class MulticlassPrediction:
     fields, can be used.
     """
     label: int
-    scores: List[float]
+    scores: Mapping[int, float]
 
     def __post_init__(self):
         # Since many models return numpy objects, which are not json-serializable, we convert them here
         self.label = int(self.label)
-        self.scores = [float(x) for x in self.scores]
-        for score in self.scores:
-            if score < 0 or score > 1:
-                raise Exception(f'Model score {score} is outside the range [0-1]')
+        if type(self.scores) == dict: # for backward compatibility, can be removed in future
+            self.scores = {int(k): float(v) for k, v in self.scores.items()}
+            for score in self.scores.values():
+                if score < 0 or score > 1:
+                    raise Exception(f'Model score {score} is outside the range [0-1]')

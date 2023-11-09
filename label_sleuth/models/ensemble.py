@@ -20,7 +20,8 @@ import tempfile
 
 from concurrent.futures import Future
 from dataclasses import dataclass
-from typing import Iterable, Mapping, Sequence, Tuple, List, Union
+from statistics import mean
+from typing import Iterable, Mapping, Sequence, Tuple, List, Union, Callable
 
 import numpy as np
 
@@ -51,7 +52,7 @@ class Ensemble(ModelAPI):
     def __init__(self, output_dir, model_types: Iterable[ModelType],
                  background_jobs_manager: BackgroundJobsManager,
                  model_factory,
-                 aggregation_func=lambda x: np.mean(x, axis=0),
+                 aggregation_func: Callable = mean,
                  is_multiclass=False):
         """
         Create an ensemble model aggregating different model types
@@ -162,15 +163,22 @@ class Ensemble(ModelAPI):
             else:
                 all_scores.append([pred.score for pred in predictions])
 
-        aggregated_scores = np.apply_along_axis(self.aggregation_func, arr=np.array(all_scores), axis=0)
         type_to_prediction_per_element = [{model_type: model_preds[i] for model_type, model_preds
                                            in type_to_all_predictions.items()} for i in range(len(items_to_infer))]
         if self.is_multiclass:
-            labels = np.argmax(aggregated_scores, axis=1)
+            def aggregate_dictionaries(score_dicts: Sequence[Mapping[int, float]],
+                                       agg_func: Callable):
+                aggregated_dict = {key: agg_func(d[key] for d in score_dicts)
+                                   for key in score_dicts[0].keys()}
+                return aggregated_dict
+
+            aggregated_scores = [aggregate_dictionaries(dicts, self.aggregation_func) for dicts in zip(*all_scores)]
+            labels = [max(d, key=d.get) for d in aggregated_scores]
             return [
                 MulticlassEnsemblePrediction(label=label, scores=scores, model_type_to_prediction=type_to_prediction)
                 for label, scores, type_to_prediction in zip(labels, aggregated_scores, type_to_prediction_per_element)]
         else:
+            aggregated_scores = np.apply_along_axis(self.aggregation_func, arr=np.array(all_scores), axis=0)
             labels = [score > 0.5 for score in aggregated_scores]
             return [
                 EnsemblePrediction(label=label, score=score, model_type_to_prediction=type_to_prediction)
