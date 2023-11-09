@@ -94,16 +94,15 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         """
 
     @abc.abstractmethod
-    def infer(self, model_components, items_to_infer) -> Sequence[Union[Prediction, MulticlassPrediction]]:
+    def infer(self, model_components, items_to_infer) -> Union[Sequence[Prediction], Sequence[MulticlassPrediction]]:
         """
         Perform inference using *model_components* on *items_to_infer*, and return the predictions. This method is
         specific to each classification model.
         :param model_components: an object containing all the components that are necessary to perform inference.
         :param items_to_infer: a list of dictionaries with at least the "text" field, additional fields can be passed
         e.g. [{'text': 'text1', 'additional_field': 'value1'}, {'text': 'text2', 'additional_field': 'value2'}]
-        :return: a list of Prediction objects - one for each item in *items_to_infer* - where Prediction.label is a
-        boolean and Prediction.score is a float in the range [0-1].
-        If the model returns a non-standard type of prediction object - i.e. one that inherits from the base Prediction
+        :return: a list of Prediction/MulticlassPrediction objects - one for each item in *items_to_infer*.
+        If the model returns a non-standard type of prediction object - e.g. one that inherits from the base Prediction
         class and adds additional outputs - it must override the get_predictions_class() method.
         """
 
@@ -172,7 +171,8 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         """
         return str(tuple(sorted(item.items())))
 
-    def infer_by_id(self, model_id, items_to_infer: Sequence[Mapping], use_cache=True) -> Sequence[Prediction]:
+    def infer_by_id(self, model_id, items_to_infer: Sequence[Mapping], use_cache=True) \
+            -> Union[Sequence[Prediction], Sequence[MulticlassPrediction]]:
         """
         Infer using *model_id* on *items_to_infer*, and return the predictions. This method wraps the _infer_by_id()
         method which performs the inference itself, adding prediction caching functionality with both an in-memory
@@ -184,7 +184,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         :param items_to_infer: a list of dictionaries with at least the "text" field, additional fields can be passed
         e.g. [{'text': 'text1', 'additional_field': 'value1'}, {'text': 'text2', 'additional_field': 'value2'}]
         :param use_cache: determines whether to use the caching functionality. Default is True
-        :return: a list of Prediction objects, one for each item in *items_to_infer*
+        :return: a list of Prediction/MulticlassPrediction objects, one for each item in *items_to_infer*
         """
         if not use_cache:
             logging.info(f"Running infer without cache for {len(items_to_infer)} values in {self.__class__.__name__} "

@@ -109,8 +109,9 @@ class SVM(ModelAPI):
                                                        vectorizer=model_components.vectorizer)
         labels = model_components.model.predict(features_all_texts).tolist()
         if self.is_multiclass:
-            return [MulticlassPrediction(label=label, scores=scores.tolist()) for label, scores in
-                    zip(labels, self.get_probs(model_components.model, features_all_texts))]
+            all_classes = model_components.model.classes_
+            return [MulticlassPrediction(label=label, scores=dict(zip(all_classes, scores.tolist())))
+                    for label, scores in zip(labels, self.get_probs(model_components.model, features_all_texts))]
         else:
             # The True label is in the second position as sorted([True, False]) is [False, True]
             scores = [probs[1] for probs in self.get_probs(model_components.model, features_all_texts)]

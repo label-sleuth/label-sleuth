@@ -31,4 +31,4 @@ class EntropyMulticlassLearner(ActiveLearner):
     def get_per_element_score(self, candidate_text_elements: Sequence[TextElement],
                               candidate_text_element_predictions: Sequence[MulticlassPrediction],
                               workspace_id: str, dataset_name: str, category_id: int) -> Sequence[float]:
-        return [entropy(pred.scores) for pred in candidate_text_element_predictions]
+        return [entropy(list(pred.scores.values())) for pred in candidate_text_element_predictions]

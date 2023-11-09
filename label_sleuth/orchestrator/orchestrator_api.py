@@ -43,7 +43,7 @@ from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.catalog import ModelsCatalog
 from label_sleuth.models.core.model_type import ModelType
 from label_sleuth.models.core.models_factory import ModelFactory
-from label_sleuth.models.core.prediction import Prediction
+from label_sleuth.models.core.prediction import Prediction, MulticlassPrediction
 from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Category, Iteration, IterationStatus, \
@@ -58,6 +58,7 @@ TRAIN_COUNTS_STR_KEY = "train_counts"
 
 # members
 new_data_infer_thread_pool = ThreadPoolExecutor(1)
+
 
 class OrchestratorApi:
     def __init__(self, orchestrator_state: OrchestratorStateApi, data_access: DataAccessApi,
@@ -526,7 +527,6 @@ class OrchestratorApi:
                                                       train_dataset_name=dataset_name,
                                                       cat_id_to_name_and_desc=cat_id_to_name_and_desc)
 
-
         future.add_done_callback(functools.partial(self._train, workspace_id, category_id, model_type,
                                                    new_iteration_index))
 
@@ -899,7 +899,8 @@ class OrchestratorApi:
                 and changes_since_last_model >= self.config.multiclass_flow.changed_element_threshold)
 
     def infer(self, workspace_id: str, category_id: int, elements_to_infer: Sequence[TextElement],
-              iteration_index: int = None, use_cache: bool = True) -> Sequence[Prediction]:
+              iteration_index: int = None, use_cache: bool = True) -> Union[Sequence[Prediction],
+                                                                            Sequence[MulticlassPrediction]]:
         """
         Get the model predictions for a list of TextElements
         :param workspace_id:
@@ -907,7 +908,7 @@ class OrchestratorApi:
         :param elements_to_infer: list of TextElements
         :param iteration_index: iteration to use. If set to None, the latest model for the category will be used
         :param use_cache: utilize a cache that stores inference results
-        :return: a list of Prediction objects
+        :return: a list of Prediction/MulticlassPrediction objects
         """
         if len(elements_to_infer) == 0:
             return []
