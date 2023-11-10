@@ -135,7 +135,9 @@ export const EditOrCreateCategoryModal = ({
             required
             value={categoryName}
             onKeyDown={(e) => {
-              onEnter(e, onSubmit);
+              if (categoryNameError === "" && categoryName !== "") {
+                onEnter(e, onSubmit);
+              }
             }}
           />
           <p className={classes["error"]}>{categoryNameError}</p>
