@@ -77,7 +77,10 @@ export const LabelCountTabs = ({
           }}
           onClick={onSortClick}
         >
-          <Typography sx={{ color: "gray" }} variant="caption">
+          <Typography
+            sx={{ color: "gray", userSelect: "none !important" }}
+            variant="caption"
+          >
             {"Sort"}
           </Typography>
           {sortingAscendingOrder ? (
