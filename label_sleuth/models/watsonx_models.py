@@ -783,10 +783,11 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
             if (len(closest_class)) > 0:
                 predicted_class = closest_class[0]
             else:
-                sorted_classes_by_freq = model_components["sorted_classes_by_freq"]
-                #this is initialized during tuning
-                if sorted_classes_by_freq and (len(sorted_classes_by_freq) > 0):
-                    predicted_class = sorted_classes_by_freq[0][0]
+                if "sorted_classes_by_freq" in model_components:
+                    sorted_classes_by_freq = model_components["sorted_classes_by_freq"]
+                    #this is initialized during tuning
+                    if sorted_classes_by_freq and (len(sorted_classes_by_freq) > 0):
+                        predicted_class = sorted_classes_by_freq[0][0]
         predicted_label = model_components['category_name_to_id'].get(predicted_class, 0)
         scores = {i: 0 for i in model_components['category_name_to_id'].values()}
         scores[predicted_label] = score
