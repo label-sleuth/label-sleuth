@@ -54,11 +54,7 @@ export const useCheckModelState = ({
       if (
         ((mode === WorkspaceMode.BINARY && curCategory !== null) ||
           (mode === WorkspaceMode.MULTICLASS &&
-            nonDeletedCategories.length > 1 &&
-            ((!multiclassZeroShotFirstModel &&
-              modelVersion !== null &&
-              modelVersion > 0) ||
-              multiclassZeroShotFirstModel))) &&
+            nonDeletedCategories.length > 1)) &&
         (nextModelShouldBeTraining || modelStatusCheckAttempts > 0)
       ) {
         dispatch(checkModelUpdate());
