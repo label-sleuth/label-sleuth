@@ -1571,6 +1571,7 @@ def get_feature_flags():
         "right_to_left": curr_app.config['CONFIGURATION'].language.right_to_left,
         "max_dataset_length": curr_app.config['CONFIGURATION'].max_dataset_length,
         "multiclass_per_class_labeling_threshold": curr_app.config['CONFIGURATION'].multiclass_flow.per_class_labeling_threshold,
+        "multiclass_zero_shot_first_model": curr_app.config['CONFIGURATION'].multiclass_flow.zero_shot_first_model,
         "binary_first_model_positive_threshold": curr_app.config['CONFIGURATION'].binary_flow.first_model_positive_threshold
 
     }

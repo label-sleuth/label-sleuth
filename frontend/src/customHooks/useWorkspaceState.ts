@@ -81,6 +81,9 @@ const useWorkspaceState = () => {
 
   React.useEffect(() => {
     // update the model version when the category changes (if any)
+    // reset the model status chech attemps count so when a category changes
+    // we check several time whether there is a model
+    // (possibly zero shot) is training
     if (mode === WorkspaceMode.BINARY && curCategory !== null) {
       dispatch(checkModelUpdate());
       dispatch(cleanEvaluationState());

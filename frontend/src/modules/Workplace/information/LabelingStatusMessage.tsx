@@ -9,21 +9,26 @@ export const LabelingStatusMessage = () => {
   const labelCount = useAppSelector((state) => state.workspace.labelCount);
   const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
   const mode = useAppSelector((state) => state.workspace.mode);
+  const nextModelShouldBeTraining = useAppSelector(
+    (state) => state.workspace.nextModelShouldBeTraining
+  );
   const binaryFirstModelPositiveThreshold = useAppSelector(
     (state) => state.featureFlags.binaryFirstModelPositiveThreshold
   );
   const multiclassPerClassLabelingThreshold = useAppSelector(
     (state) => state.featureFlags.multiclassPerClassLabelingThreshold
   );
+
   const labelingStatusMessage = useMemo(() => {
     const yetToLabelCount = binaryFirstModelPositiveThreshold - labelCount.pos;
     if (mode === WorkspaceMode.BINARY) {
-      if (yetToLabelCount > 0) {
+      if (yetToLabelCount > 0 && !nextModelShouldBeTraining) {
         return `Please label ${
           binaryFirstModelPositiveThreshold - labelCount.pos
         } more ${yetToLabelCount > 1 ? "elements" : "element"} as positive`;
       } else return null;
     }
+
     if (mode === WorkspaceMode.MULTICLASS) {
       const needToLabelCats: string[] = Object.keys(labelCount)
         .filter((k) =>
@@ -34,7 +39,7 @@ export const LabelingStatusMessage = () => {
             (labelCount as { [key: string]: number })[k] <
             multiclassPerClassLabelingThreshold
         );
-      return needToLabelCats.length
+      return needToLabelCats.length && !nextModelShouldBeTraining
         ? `${needToLabelCats.length} ${
             needToLabelCats.length > 1 ? "categories" : "category"
           } still didn't reach a minimum recommended of ${multiclassPerClassLabelingThreshold} 
@@ -47,6 +52,7 @@ export const LabelingStatusMessage = () => {
     labelCount,
     mode,
     nonDeletedCategories,
+    nextModelShouldBeTraining,
   ]);
   return labelingStatusMessage ? (
     <Stack

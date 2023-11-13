@@ -21,6 +21,9 @@ export const LabelCountPanelMCMode = () => {
   const activePanelId = useAppSelector(
     (state) => state.workspace.panels.activePanelId
   );
+  const nextModelShouldBeTraining = useAppSelector(
+    (state) => state.workspace.nextModelShouldBeTraining
+  );
   const multiclassPerClassLabelingThreshold = useAppSelector(
     (state) => state.featureFlags.multiclassPerClassLabelingThreshold
   );
@@ -127,14 +130,16 @@ export const LabelCountPanelMCMode = () => {
                       overflow: "hidden",
                       whiteSpace: "nowrap",
                       textOverflow: "ellipsis",
-                      maxWidth: "80%"
+                      maxWidth: "80%",
                     }}
                   >
                     {c.category_name}
                   </Typography>
                   <Stack direction={"row"} alignItems={"center"}>
-                    {(labelCount as { [key: string]: number })[c.category_id.toString()] <
-                    multiclassPerClassLabelingThreshold ? (
+                    {(labelCount as { [key: string]: number })[
+                      c.category_id.toString()
+                    ] < multiclassPerClassLabelingThreshold &&
+                    !nextModelShouldBeTraining ? (
                       <WarningAmberIcon
                         sx={{
                           color: "gray",

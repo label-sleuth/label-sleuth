@@ -26,8 +26,9 @@ const initialState: FeatureFlagsSliceState = {
   mainPanelElementsPerPage: -1,
   rightToLeft: false,
   maxDatasetLength: -1,
-  multiclassPerClassLabelingThreshold: -1,
   binaryFirstModelPositiveThreshold: -1,
+  multiclassPerClassLabelingThreshold: -1,
+  multiclassZeroShotFirstModel: false,
 };
 
 export const fetchFeatureFlags = createAsyncThunk("workspaces/fetchFeatureFlags", async () => {
@@ -56,8 +57,9 @@ export const featureFlagsSlice = createSlice({
           sidebarPanelElementsPerPage: featureFlags["sidebar_panel_elements_per_page"],
           rightToLeft: featureFlags["right_to_left"],
           maxDatasetLength: featureFlags["max_dataset_length"],
-          multiclassPerClassLabelingThreshold: featureFlags["multiclass_per_class_labeling_threshold"],
           binaryFirstModelPositiveThreshold: featureFlags["binary_first_model_positive_threshold"],
+          multiclassPerClassLabelingThreshold: featureFlags["multiclass_per_class_labeling_threshold"],
+          multiclassZeroShotFirstModel: featureFlags["multiclass_zero_shot_first_model"],
         };
       })
       .addCase(fetchFeatureFlags.rejected, (state, { error }) => {
