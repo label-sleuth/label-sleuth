@@ -788,7 +788,12 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
                     #this is initialized during tuning
                     if sorted_classes_by_freq and (len(sorted_classes_by_freq) > 0):
                         predicted_class = sorted_classes_by_freq[0][0]
-        predicted_label = model_components['category_name_to_id'].get(predicted_class, 0)
+
+        predicted_label = model_components['category_name_to_id'].get(predicted_class)
+        if not predicted_label:
+            #default label is the first in the categories list
+            predicted_label = model_components['category_name_to_id'].get(category_name[0])
+
         scores = {i: 0 for i in model_components['category_name_to_id'].values()}
         scores[predicted_label] = score
         return MulticlassPrediction(label=predicted_label, scores=scores)
