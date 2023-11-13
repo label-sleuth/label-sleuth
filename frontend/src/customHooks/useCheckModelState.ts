@@ -15,7 +15,10 @@
 
 import { useEffect } from "react";
 import { WorkspaceMode } from "../const";
-import { decreaseModelStatusCheckAttempts } from "../modules/Workplace/redux";
+import {
+  decreaseModelStatusCheckAttempts,
+  nonDeletedCategoriesSelector,
+} from "../modules/Workplace/redux";
 import { checkModelUpdate } from "../modules/Workplace/redux/modelSlice";
 import { useAppDispatch, useAppSelector } from "./useRedux";
 
@@ -33,6 +36,11 @@ export const useCheckModelState = ({
   const dispatch = useAppDispatch();
 
   const curCategory = useAppSelector((state) => state.workspace.curCategory);
+  const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+  const multiclassZeroShotFirstModel = useAppSelector(
+    (state) => state.featureFlags.multiclassZeroShotFirstModel
+  );
+  const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
   const mode = useAppSelector((state) => state.workspace.mode);
   const nextModelShouldBeTraining = useAppSelector(
     (state) => state.workspace.nextModelShouldBeTraining
@@ -45,7 +53,12 @@ export const useCheckModelState = ({
     const interval = setInterval(() => {
       if (
         ((mode === WorkspaceMode.BINARY && curCategory !== null) ||
-          mode === WorkspaceMode.MULTICLASS) &&
+          (mode === WorkspaceMode.MULTICLASS &&
+            nonDeletedCategories.length > 1 &&
+            ((!multiclassZeroShotFirstModel &&
+              modelVersion !== null &&
+              modelVersion > 0) ||
+              multiclassZeroShotFirstModel))) &&
         (nextModelShouldBeTraining || modelStatusCheckAttempts > 0)
       ) {
         dispatch(checkModelUpdate());
@@ -61,7 +74,8 @@ export const useCheckModelState = ({
     checkModelInterval,
     nextModelShouldBeTraining,
     modelStatusCheckAttempts,
-    dispatch,
     mode,
+    nonDeletedCategories.length,
+    dispatch,
   ]);
 };

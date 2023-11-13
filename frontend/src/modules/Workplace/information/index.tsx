@@ -62,7 +62,7 @@ interface WorkspaceInfoProps {
  */
 export const WorkspaceInfo = ({
   setTutorialOpen,
-  checkModelInterval = 5000,
+  checkModelInterval = 3000,
   shouldFireConfetti = true,
 }: WorkspaceInfoProps) => {
   const curCategory = useAppSelector((state) => state.workspace.curCategory);

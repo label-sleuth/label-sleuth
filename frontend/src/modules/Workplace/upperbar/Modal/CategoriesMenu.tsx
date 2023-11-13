@@ -70,6 +70,7 @@ import {
   deleteCategory,
   editCategory,
   nonDeletedCategoriesSelector,
+  resetModelStatusCheckAttempts,
 } from "../../redux";
 import { isFulfilled } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
@@ -523,6 +524,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
           actionResults.length > 0 &&
           actionResults.every((actionResults) => isFulfilled(actionResults))
         ) {
+          dispatch(resetModelStatusCheckAttempts());
           notify(
             `The ${
               newCategories.length > 1 ? "categories" : "category"
@@ -556,6 +558,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
           actionResults.length > 0 &&
           actionResults.every((actionResults) => isFulfilled(actionResults))
         ) {
+          dispatch(resetModelStatusCheckAttempts());
           notify(
             `The ${
               editedCategories.length > 1 ? "categories" : "category"

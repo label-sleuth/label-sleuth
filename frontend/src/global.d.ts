@@ -75,7 +75,7 @@ interface PanelState {
   elements: ElementsDict | null;
   hitCount: number | null;
   page: number;
-  filters?: {[key: string]: string | null}
+  filters?: { [key: string]: string | null };
 }
 
 interface MainPanelState extends PanelState {
@@ -87,7 +87,7 @@ interface ContractingLabelsPanelState extends PanelState {
 }
 
 interface PositivePredictionsPanelState extends PanelState {
-  stats: {[key:string]: {count: number, fraction: number}}
+  stats: { [key: string]: { count: number; fraction: number } };
 }
 
 interface EvaluationPanelState extends PanelState {
@@ -166,8 +166,9 @@ interface FeatureFlagsSliceState {
   mainPanelElementsPerPage: number;
   rightToLeft: boolean;
   maxDatasetLength: number;
-  multiclassPerClassLabelingThreshold: number;
   binaryFirstModelPositiveThreshold: number;
+  multiclassPerClassLabelingThreshold: number;
+  multiclassZeroShotFirstModel: boolean;
 }
 
 interface CustomizableUITextSliceState {
@@ -282,7 +283,7 @@ interface FetchPanelElementsParams {
   useLastSearchString?: boolean;
   // value is used to filter user label and model prediction by category in mcmode and by true or neg label en bmode
   // in bmode, value is 'true' or 'false'
-  value?: string
+  value?: string;
 }
 
 interface ErrorResponse {
