@@ -807,6 +807,7 @@ class OrchestratorApi:
         dataset_name = workspace.dataset_name
 
         iterations = self.orchestrator_state.get_all_iterations(workspace_id, category_id).copy()
+        iteration_started = False
         try:
             iterations_without_errors = [iteration for iteration in iterations
                                          if iteration.status not in [IterationStatus.ERROR,
@@ -844,6 +845,7 @@ class OrchestratorApi:
             else:
                 model_type = self.config.multiclass_flow.model_policy.get_model_type(iteration_num)
 
+
             if force or (not is_multiclass and self._should_train_binary_condition(changes_since_last_model,
                                                                                    label_counts, workspace_id, config, category_id)) or \
                     (is_multiclass and self._should_train_multiclass_condition(changes_since_last_model,
@@ -856,7 +858,7 @@ class OrchestratorApi:
                 self.orchestrator_state.set_label_change_count_since_last_train(workspace_id, category_id, 0)
 
                 to_log_message += "Training a new model"
-
+                iteration_started = True
                 self.run_iteration(workspace_id=workspace_id, dataset_name=dataset_name, category_id=category_id,
                                    model_type=model_type)
             else:
@@ -867,7 +869,7 @@ class OrchestratorApi:
             logging.exception(f"train_if_recommended failed for workspace '{workspace_id}' category id {category_id}. "
                               f"trying to set the iteration to error status")
             iterations_latest = self.orchestrator_state.get_all_iterations(workspace_id, category_id)
-            if len(iterations) != len(iterations_latest):
+            if len(iterations) != len(iterations_latest) and iteration_started:
                 # iteration was already created, set the status to error
                 iteration_index = len(iterations_latest) - 1
                 self.orchestrator_state.update_iteration_status(workspace_id, category_id, iteration_index,

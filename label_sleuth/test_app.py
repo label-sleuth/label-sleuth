@@ -611,7 +611,7 @@ class TestAppIntegration(unittest.TestCase):
                             "text": "document 3 has three text elements, this is the first",
                             "user_labels": 0}
                           }, res.get_json())
-
+        time.sleep(0.1)
         res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the first label")
         self.assertEqual({'labeling_counts': {'0': 1, '1': 0, '2': 0}, 'progress': {'all': 33}},
@@ -631,7 +631,7 @@ class TestAppIntegration(unittest.TestCase):
                             "text": "document 3 has three text elements, this is the second that will be labeled as negative",
                             "user_labels": 1}
                           }, res.get_json())
-
+        time.sleep(0.1)
         res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the second label")
         self.assertEqual({'labeling_counts': {'0': 1, '1': 1, '2': 0}, 'progress': {'all': 67}},
@@ -651,12 +651,6 @@ class TestAppIntegration(unittest.TestCase):
                             "text": "document 3 has three text elements, this is the third",
                             "user_labels": 2}
                           }, res.get_json())
-    
-
-        res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
-        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the third label")
-        self.assertEqual({'0': 1, '1': 1, '2': 1},
-                         res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
 
         res = self.client.get(f"/workspace/{workspace_name}/query?qry_string=second%20text",
                               headers=HEADERS)
@@ -672,7 +666,7 @@ class TestAppIntegration(unittest.TestCase):
                         "text": "this is the second text element of document one",
                         "user_labels": None
                     }
-            ],
+                ],
                 "hit_count": 1,
                 "hit_count_unique": 1
             },
@@ -680,10 +674,22 @@ class TestAppIntegration(unittest.TestCase):
             msg="The searched text differs from the response"
         )
 
+
+        time.sleep(0.1)
+        res = self.client.get(f"/workspace/{workspace_name}/status?mode=MultiClass", headers=HEADERS)
+        self.assertEqual(200, res.status_code, msg="Failed to get status after successfully setting the third label")
+        self.assertEqual({'0': 1, '1': 1, '2': 1},
+                         res.get_json()['labeling_counts'], msg="diffs in get status response after setting a label")
+
+
         res = self.wait_for_new_iteration(None, res, workspace_name, 1, workspace_mode=WorkspaceModelType.MultiClass)
 
         self.assertEqual(200, res.status_code, msg="Failed to get iterations list")
-        self.assertEqual(1, len(res.get_json()["iterations"]), msg="first model was not added to the models list")
+        self.assertEqual(1, len(res.get_json()["iterations"]),
+                         msg="wrong number of iterations (should be 1)")
+        self.assertEqual(IterationStatus.READY.name, res.get_json()["iterations"][0]['iteration_status'],
+                         msg="status of the first iteration is error")
+
 
         # get active learning recommendations
         res = self.client.get(f"/workspace/{workspace_name}/active_learning", headers=HEADERS)
