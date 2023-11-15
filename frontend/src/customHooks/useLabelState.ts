@@ -73,7 +73,7 @@ const useLabelState = (updateCounter = true) => {
     dispatch(
       setElementLabel({
         element_id: element.id,
-        label: getBooleanLabel(newLabel),
+        binaryLabel: getBooleanLabel(newLabel),
         update_counter: updateCounter,
         categoryId: categoryToLabel,
         panelId,

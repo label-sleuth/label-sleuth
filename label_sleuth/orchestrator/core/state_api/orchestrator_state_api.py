@@ -385,7 +385,7 @@ class OrchestratorStateApi:
     def get_all_iterations(self, workspace_id, category_id: Union[int, None]) -> List[Iteration]:
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
-            if category_id is not None:
+            if type(self.get_workspace(workspace_id)) != MulticlassWorkspace:
                 return workspace.categories[category_id].iterations
             else:
                 return workspace.iterations

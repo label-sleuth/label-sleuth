@@ -79,7 +79,8 @@ def elements_back_to_front(workspace_id: str,
                            elements: List[Union[TextElement, LabeledTextElement, MulticlassLabeledTextElement]],
                            category_id: Union[int, None],
                            need_snippet: bool = True,
-                           query_string: str = None, is_regex: bool = False) -> List[Mapping]:
+                           query_string: str = None, 
+                           is_regex: bool = False)-> List[Mapping]:
     """
     Converts TextElement objects from the backend into dictionaries in the form expected by the frontend, and adds
     the model prediction for the elements if available.
@@ -90,7 +91,7 @@ def elements_back_to_front(workspace_id: str,
     :param query_string: query to include in snippet
     :return: a list of dictionaries with element information
     """
-
+    is_multiclass = current_app.orchestrator_api.data_access.is_multiclass(workspace_id)
     element_uri_to_info = \
         {text_element.uri:
              {'id': text_element.uri,
@@ -111,7 +112,6 @@ def elements_back_to_front(workspace_id: str,
     if len(elements) > 0 \
             and len(current_app.orchestrator_api.get_all_iterations_by_status(workspace_id, category_id,
                                                                               IterationStatus.READY)) > 0:
-        is_multiclass = category_id is None
         predicted_labels = [pred.label
                             for pred in current_app.orchestrator_api.infer(workspace_id, category_id, elements)]
         for text_element, prediction in zip(elements, predicted_labels):
