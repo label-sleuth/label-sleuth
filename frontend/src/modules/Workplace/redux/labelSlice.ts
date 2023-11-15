@@ -93,7 +93,7 @@ export const setElementLabel = createAsyncThunk<
   void,
   {
     element_id: string;
-    label?: string;
+    binaryLabel?: string;
     categoryId: number | string | null;
     update_counter: boolean;
     panelId: PanelIdsEnum;
@@ -104,7 +104,8 @@ export const setElementLabel = createAsyncThunk<
 >("workspace/set_element_label", async (request, { getState }) => {
   const state = getState();
   const mode = state.workspace.mode;
-  const { element_id, label, categoryId, update_counter, panelId } = request;
+  const { element_id, binaryLabel, categoryId, update_counter, panelId } =
+    request;
   const queryParams = getQueryParamsString([
     getCategoryQueryString(categoryId),
     getModeQueryParam(mode),
@@ -113,22 +114,21 @@ export const setElementLabel = createAsyncThunk<
     getWorkspaceId()
   )}/element/${encodeURIComponent(element_id)}${queryParams}`;
 
+  let binary_label: boolean | undefined = undefined;
+  if (mode === WorkspaceMode.BINARY && binaryLabel !== LabelTypesEnum.NONE) {
+    binary_label = binaryLabel === LabelTypesEnum.POS;
+  }
+
+  let category_id: number | null = null;
+  if (categoryId !== null) {
+    category_id = +categoryId;
+  }
+
   await client.put(url, {
     // category_id is used in binary mode, its undefined in multiclass mode
-    category_id:
-      mode === WorkspaceMode.BINARY
-        ? categoryId !== null
-          ? +categoryId
-          : null
-        : undefined,
+    category_id,
     // in multiclass mode the new category is specified in the 'value' attribute, while it is true, false or none in binary mode
-    value:
-      mode === WorkspaceMode.BINARY
-        // label === "true" because the backend expects an actual boolean
-        ? label === "none"
-          ? undefined
-          : label === "true"
-        : categoryId === "none" ? undefined : categoryId,
+    binary_label,
     update_counter: update_counter,
     source: panelId,
     iteration:

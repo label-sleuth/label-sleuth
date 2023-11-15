@@ -791,41 +791,43 @@ def set_element_label(workspace_id, element_id):
 
     :param workspace_id:
     :param element_id:
-    :post_param category_id:
-    :post_param value: if value == 'none', this element's label for the given category will be removed. Otherwise, the
+    :post_param category_id: In multiclass workspaces, the category_id may be null to remove the label.
+    :post_param binary_label: Only used in binary workspaces. If binary_label == 'none', this element's label for the given category will be removed. Otherwise, the
     element will be assigned a boolean label for the category corresponding to the given string (e.g., "true" -> True)
     :post_param update_counter: determines whether the label changes are reflected in the label change counters
     of the categories. Since an increase in label change counts can trigger the training of a new model, in some
     specific situations this parameter is set to False and the updating of the counter is performed at a later time.
     """
     post_data = request.get_json(force=True)
-
     category_id = post_data.get("category_id")
-    value = post_data.get("value", None)
-    is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
-    if not is_multiclass:
+    binary_label = post_data.get("binary_label", None)
+
+    if category_id is not None: 
         category_id = int(category_id)
-        if value not in [LABEL_POSITIVE, LABEL_NEGATIVE, None]:
-            return make_error({
-                "type": "bad_label_value",
-                "title": f"Expected a boolean label in binary workspace, got {type(value)} with value '{value}'"
-            }, 422)
+
+    is_multiclass = request.args.get('mode') == WorkspaceModelType.MultiClass.name
+    multiclass_label = category_id
+
+    if not is_multiclass and binary_label not in [LABEL_POSITIVE, LABEL_NEGATIVE, None]:
+        return make_error({
+            "type": "bad_label_value",
+            "title": f"Expected a boolean label in binary workspace, got {type(binary_label)} with value '{binary_label}'"
+        }, 422)
 
     iteration = int(post_data.get("iteration", -1))
     source = post_data.get("source", "n/a")
     update_counter = post_data.get('update_counter', True)
-    if value is None:
+    if (not is_multiclass and binary_label is None) or (is_multiclass and multiclass_label is None) :
         curr_app.orchestrator_api. \
             unset_labels(workspace_id, category_id=category_id, uris=[element_id],
                          apply_to_duplicate_texts=curr_app.config["CONFIGURATION"].apply_labels_to_duplicate_texts)
     else:
         if is_multiclass:
-            value = int(value)
-            uri_with_updated_label = {element_id: MulticlassLabel(value,
+            uri_with_updated_label = {element_id: MulticlassLabel(multiclass_label,
                                                                   metadata={"iteration": iteration,
                                                                             "source": source})}
         else:
-            uri_with_updated_label = {element_id: {category_id: Label(value,
+            uri_with_updated_label = {element_id: {category_id: Label(binary_label,
                                                                       metadata={"iteration": iteration,
                                                                                 "source": source})}}
         curr_app.orchestrator_api. \
