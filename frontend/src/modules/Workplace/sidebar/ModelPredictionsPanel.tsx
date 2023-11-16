@@ -89,6 +89,15 @@ const ModelPredictionsPanel = () => {
   }, [dispatch]);
 
   const options: DropdownOption[] = useMemo(() => {
+    // total amount of predictions
+    const total = Object.values(modelPredictionStats)
+      .map((a) => a.count)
+      .reduce((a, b) => a + b, 0);
+
+    const getPercentageString = (count: number, total: number): string => {
+      return `${Math.round((count / total) * 1000)/10}%`;
+    };
+
     if (mode === WorkspaceMode.BINARY) {
       return [
         {
@@ -96,7 +105,12 @@ const ModelPredictionsPanel = () => {
           title: "Positive",
           chip:
             Object.keys(modelPredictionStats).length > 0
-              ? modelPredictionStats["true"].count.toString()
+              ? `${modelPredictionStats[
+                  "true"
+                ].count.toString()} (${getPercentageString(
+                  modelPredictionStats["true"].count,
+                  total
+                )})`
               : undefined,
         },
         {
@@ -104,7 +118,12 @@ const ModelPredictionsPanel = () => {
           title: "Negative",
           chip:
             Object.keys(modelPredictionStats).length > 0
-              ? modelPredictionStats["false"].count.toString()
+              ? `${modelPredictionStats[
+                  "false"
+                ].count.toString()} (${getPercentageString(
+                  modelPredictionStats["false"].count,
+                  total
+                )})`
               : undefined,
         },
       ];
@@ -114,9 +133,12 @@ const ModelPredictionsPanel = () => {
         title: item.category_name,
         chip:
           Object.keys(modelPredictionStats).length > 0
-            ? (
-                modelPredictionStats[item.category_id]["count"] as number
-              ).toLocaleString()
+            ? `${
+                modelPredictionStats[item.category_id].count
+              } (${getPercentageString(
+                modelPredictionStats[item.category_id].count,
+                total
+              )})`
             : undefined,
         chipColor: item.color?.palette[100],
       }));
