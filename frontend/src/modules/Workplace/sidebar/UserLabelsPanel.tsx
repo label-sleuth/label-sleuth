@@ -93,26 +93,46 @@ export const UserLabelsPanel = () => {
   }, [mode, nonDeletedCategories, setFilteredValue, filteredValue]);
 
   const options: DropdownOption[] = useMemo(() => {
+    // total amount of predictions
+    const total = Object.values(labelCount).reduce((a, b) => a + b, 0);
+
+    const getPercentageString = (count: number, total: number): string => {
+      return `${Math.round((count / total) * 1000) / 10}%`;
+    };
+
     if (mode === WorkspaceMode.BINARY) {
       return [
         {
           value: "true",
           title: "Positive",
-          chip: labelCount["pos"].toString(),
+          chip: `${labelCount["pos"].toString()} (${getPercentageString(
+            labelCount["pos"],
+            total
+          )})`,
         },
         {
           value: "false",
           title: "Negative",
-          chip: labelCount["neg"].toString(),
+          chip: `${labelCount["neg"].toString()} (${getPercentageString(
+            labelCount["neg"],
+            total
+          )})`,
         },
       ];
     } else if (mode === WorkspaceMode.MULTICLASS) {
       return nonDeletedCategories.map((item) => ({
         value: item.category_id.toString(),
         title: item.category_name,
-        chip: (labelCount as { [key: string]: number })[
+        chip: `${(labelCount as { [key: string]: number })[
           item.category_id.toString()
-        ].toLocaleString(),
+        ].toLocaleString()}
+        (${getPercentageString(
+          (labelCount as { [key: string]: number })[
+            item.category_id.toString()
+          ],
+          total
+        )})
+        `,
         chipColor: item.color?.palette[100],
       }));
     } else return [];

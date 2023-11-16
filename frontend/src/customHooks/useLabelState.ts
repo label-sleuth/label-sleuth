@@ -22,7 +22,7 @@ import {
 import { getNewLabelState, getBooleanLabel } from "../utils/utils";
 import { Action, isRejected } from "@reduxjs/toolkit";
 import { useAppDispatch, useAppSelector } from "./useRedux";
-import { LabelActionsEnum, LabelTypesEnum, PanelIdsEnum } from "../const";
+import { LabelActionsEnum, PanelIdsEnum } from "../const";
 import { Element } from "../global";
 
 /**
