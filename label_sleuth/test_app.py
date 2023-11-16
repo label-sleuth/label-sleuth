@@ -792,6 +792,8 @@ class TestAppIntegration(unittest.TestCase):
         # force model training
         res = self.client.get(f"/workspace/{workspace_name}/force_train?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to force train in multiclass workspace")
+        res = self.wait_for_new_iteration(None, res, workspace_name, 1, workspace_mode=WorkspaceModelType.MultiClass)
+
 
         # delete workspace
         res = self.client.delete(f"/workspace/{workspace_name}",
