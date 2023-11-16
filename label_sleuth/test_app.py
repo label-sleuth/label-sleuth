@@ -786,6 +786,9 @@ class TestAppIntegration(unittest.TestCase):
         self.assertEqual({'elements': [], 'hit_count': 0},
                          res.get_json(), msg="labeled elements for category 0 were deleted should not exist in this workspace")
 
+        res = self.client.get(f"/workspace/{workspace_name}/categories", headers=HEADERS)
+        res = self.client.put(f'/workspace/{workspace_name}/element/{document3_elements[3]["id"]}?mode=MultiClass',
+                                data='{"category_id":2}', headers=HEADERS)
         # force model training
         res = self.client.get(f"/workspace/{workspace_name}/force_train?mode=MultiClass", headers=HEADERS)
         self.assertEqual(200, res.status_code, msg="Failed to force train in multiclass workspace")
