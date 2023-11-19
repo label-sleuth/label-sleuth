@@ -107,12 +107,11 @@ class Multiclass_Verbalizer():
         return verbalizer
 
     @staticmethod
-    def get_instruction(tokenizer, train_seq_len, model_params, is_train=False):
-        if model_params and "sorted_categories_by_freq" in model_params and model_params["sorted_categories_by_freq"]:
-            sorted_pairs = model_params["sorted_categories_by_freq"] #from the most frequent to the less frequent
-            category_names = [x for x,y in sorted_pairs]
+    def get_instruction(tokenizer, train_seq_len, category_names, sorted_categories_by_freq, is_train=False):
+        if sorted_categories_by_freq:
+            category_names = [x for x,y in sorted_categories_by_freq]
         else:
-            category_names = sorted(model_params["category_name_to_id"])
+            category_names = sorted(category_names)
         class_names_in_verbalizer=True
         tokenizer = tokenizer
         verbalizer = Multiclass_Verbalizer.get_class_names_verbalizer(category_names)
@@ -128,7 +127,8 @@ class Multiclass_Verbalizer():
 class WatsonXBaseModel(ModelAPI, ABC):
     def __init__(self, output_dir, background_jobs_manager, gpu_support,
                  prompt_type: PromptType, watsonx_model_type: ModelType, api_endpoint:str):
-        super(WatsonXBaseModel, self).__init__(output_dir, background_jobs_manager, gpu_support, is_multiclass=prompt_type == PromptType.MULTICLASS)
+        super(WatsonXBaseModel, self).__init__(output_dir, background_jobs_manager, gpu_support,
+                                               is_multiclass=prompt_type == PromptType.MULTICLASS)
         load_dotenv()
         self.MAX_RETRIES = 3
         self.NUM_SHOTS = 20
@@ -294,7 +294,8 @@ class WatsonXBaseModel(ModelAPI, ABC):
     def get_instruction(self, model_components):
         if self.prompt_type == PromptType.MULTICLASS:
             return Multiclass_Verbalizer.get_instruction(self._get_tokenizer(), self.train_seq_len,
-                                                         model_params=asdict(model_components))[0]
+                                                         category_names=model_components.category_name_to_id.keys(),
+                                                         sorted_categories_by_freq=model_components.sorted_categories_by_freq)[0]
         elif self.prompt_type == PromptType.YES_NO:
             return f"Classify if the following text belongs to the category {model_components.category_name}." \
                        f" Answer {self.get_pos_label()} or {self.get_neg_label()}."
@@ -369,9 +370,10 @@ class WatsonXBaseModel(ModelAPI, ABC):
 
         return self._get_max_seq_length() - number_of_tokens_in_prompt
 
-    def infer_with_category_and_few_shot(self, labeled_texts, items_to_infer, model, model_components):
+    def infer_with_category_and_few_shot(self, items_to_infer, model, model_components):
         tokenizer = self._get_tokenizer()
         max_seq_length = self._get_max_seq_length()
+        labeled_texts = model_components.labeled_texts
         empty_prompt = self.build_prompt([""], labeled_texts, model_components)[0]
         empty_prompt_token_len = len(tokenizer(empty_prompt)["input_ids"])
         texts = [e['text'] for e in items_to_infer]
@@ -517,9 +519,7 @@ class FewShotsWatsonXModel(WatsonXBaseModel):
                                                        )
 
     def infer(self, model_components, items_to_infer) -> Sequence[Prediction]:
-        return self.infer_with_category_and_few_shot(model_components.category_name,
-                                                     model_components.labeled_texts,
-                                                     items_to_infer, self.zero_shot_model,
+        return self.infer_with_category_and_few_shot(items_to_infer, self.zero_shot_model,
                                                      model_components)
 
 
@@ -571,7 +571,6 @@ class FewShotsWatsonXModelBinary(FewShotsWatsonXModel):
 
         category_name = list(model_params['category_id_to_info'].values())[0]["category_name"]
         labeled_texts = {"pos": positives, "neg": negatives}
-        #category_name_to_id = {y["category_name"]: x for x, y in model_params['category_id_to_info'].items()}
         model_components = WatsonXBinaryModelComponent(labeled_texts= {"pos": positives, "neg": negatives},
                                              is_zero_shot= len(train_data) == 0, category_name=category_name, available_tokens=None)
         available_tokens = self._get_number_of_available_tokens(labeled_texts, model_components)
@@ -579,7 +578,7 @@ class FewShotsWatsonXModelBinary(FewShotsWatsonXModel):
         with open(train_path, "w") as train_file:
             train_file.write(json.dumps(asdict(model_components)))
 
-        self.save_curl_instruction_to_file(category_name=category_name, labeled_texts=labeled_texts,
+        self.save_curl_instruction_to_file(labeled_texts=labeled_texts,
                                            model_components=model_components, model_dir=model_dir)
 
     def build_prompt(self, texts, labeled_texts, model_components):
@@ -605,19 +604,19 @@ class FewShotsWatsonXModelBinary(FewShotsWatsonXModel):
         few_shot_examples = "\n".join(combined)
 
         if len(few_shot_examples) > 0:
-            prompts = ["\n".join([f"{self.get_instruction(model_components.category_name, model_components)} ",
+            prompts = ["\n".join([f"{self.get_instruction(model_components)} ",
                                   f"{few_shot_examples}", f"text: {text}", f"{self.get_category_prompt()}: "])
                        for text in texts]
         else:
             prompts = ["\n".join(
-                [f"{self.get_instruction(model_components.category_name, model_components)} ", f"text: {text}", f"{self.get_category_prompt()}: "])
+                [f"{self.get_instruction(model_components)} ", f"text: {text}", f"{self.get_category_prompt()}: "])
                        for text in texts]
         return prompts
 
-    def extract_predictions(self, response, category_name, model_components):
+    def extract_predictions(self, response, model_components):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
         return (Prediction(True, score) if response.generated_text.lower().strip() == self.get_pos_label(
-            category_name) else Prediction(
+            model_components.category_name) else Prediction(
             False, 1 - score))
 
 
@@ -626,7 +625,7 @@ class BinaryFewShotFlanT5XXLWatsonx(FewShotsWatsonXModelBinary):
         super(BinaryFewShotFlanT5XXLWatsonx, self).__init__(output_dir, background_jobs_manager, ModelType.FLAN_T5_11B)
 
 class TunableWatsonXModel(WatsonXBaseModel):
-    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type: str, prompt_type: PromptType):
+    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type: str, prompt_type: PromptType, tune_type):
         super(TunableWatsonXModel, self).__init__(output_dir, background_jobs_manager, gpu_support=False,
                                                  prompt_type=prompt_type,
                                                  watsonx_model_type=watsonx_model_type,
@@ -636,6 +635,7 @@ class TunableWatsonXModel(WatsonXBaseModel):
         self.train_batch_size = 16
         self.learning_rate = 0.3
         self.num_epochs = 50
+        self.tune_method = tune_type
 
     def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
         additional_training_data = self.prepare_training_data(model_params, train_data)
@@ -667,7 +667,7 @@ class TunableWatsonXModel(WatsonXBaseModel):
                 'name': model_name,
                 'model_id': self.platform_model_type,
                 'task_id': 'classification',
-                'method_id': "mpt",
+                'method_id': self.tune_method,
                 'training_file_ids': [train_file_id],
                 'parameters': {
                     'accumulate_steps': self.accumulate_steps,
@@ -677,6 +677,9 @@ class TunableWatsonXModel(WatsonXBaseModel):
                     'verbalizer': verbalizer
                 }
             }
+            if self.tune_method == "pt":
+                data['parameters']['init_method']= 'TEXT'
+                data['parameters']['init_text'] = 'classification_class_names'
             response = requests.post(f'{URL}/tunes', headers=headers, data=json.dumps(data))
             if response.status_code != 200:
                  raise ValueError(f'Tune request failed with status {response.status_code}:\n{response.text}')
@@ -755,7 +758,7 @@ class TunableWatsonXModel(WatsonXBaseModel):
                             credentials=Credentials(api_key=self.zero_shot_model.service.key,
                                                     api_endpoint=self.zero_shot_model.service.service_url))
         tuned_model.model = tune_id
-        return self.infer_with_category_and_few_shot({}, items_to_infer, tuned_model, model_components)
+        return self.infer_with_category_and_few_shot(items_to_infer, tuned_model, model_components)
 
     def _process_infer_response(self, response):
         return response
@@ -767,10 +770,11 @@ class TunableWatsonXModel(WatsonXBaseModel):
         return texts
 
 class TunableWatsonXModelBinary(TunableWatsonXModel):
-    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type):
-        super(TunableWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, watsonx_model_type, prompt_type=PromptType.CLS_NO_CLS)
+    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type, tune_type):
+        super(TunableWatsonXModelBinary, self).__init__(output_dir, background_jobs_manager, watsonx_model_type,
+                                                        prompt_type=PromptType.CLS_NO_CLS, tune_type=tune_type)
 
-    def extract_predictions(self, response, category_name, model_component):
+    def extract_predictions(self, response, model_component):
         score = float(numpy.prod(numpy.exp([x.logprob for x in response.generated_tokens])))
         return (Prediction(True, score) if response.generated_text.lower().strip() == self.get_pos_label(
             model_component.category_name) else Prediction(
@@ -787,8 +791,9 @@ class TunableWatsonXModelBinary(TunableWatsonXModel):
                 "labels": labels}
 
 class TunableWatsonXModelMC(TunableWatsonXModel):
-    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type):
-        super(TunableWatsonXModelMC, self).__init__(output_dir, background_jobs_manager, watsonx_model_type, PromptType.MULTICLASS)
+    def __init__(self, output_dir, background_jobs_manager, watsonx_model_type, tune_type):
+        super(TunableWatsonXModelMC, self).__init__(output_dir, background_jobs_manager, watsonx_model_type,
+                                                    PromptType.MULTICLASS, tune_type)
 
     def extract_predictions(self, response,  model_components):
         category_names = list(model_components.category_name_to_id.keys())
@@ -800,7 +805,7 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
             if (len(closest_class)) > 0:
                 predicted_class = closest_class[0]
             else:
-                if model_components.sorted_categories_by_freq and model_components.sorted_categories_by_freq > 0:
+                if model_components.sorted_categories_by_freq and len(model_components.sorted_categories_by_freq) > 0:
                     #this is initialized during tuning
                         predicted_class = model_components.sorted_categories_by_freq[0][0]
 
@@ -829,7 +834,8 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
         verbalizer, class_names_in_verbalizer = Multiclass_Verbalizer.get_instruction(self._get_tokenizer(),
                                                                                       self.train_seq_len,
                                                                                       is_train=True,
-                                                                                      model_params=local_model_params)
+                                                                                      category_names=category_names,
+                                                                                      sorted_categories_by_freq=sorted_categories_by_freq)
         additional_data = ({
                 "verbalizer": verbalizer,
                 "labels": labels,
@@ -840,11 +846,13 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
         return additional_data
 
 
-class MulticlassFlanT5XLWatsonx(TunableWatsonXModelMC):
+class MulticlassFlanT5XLWatsonxPT(TunableWatsonXModelMC):
     def __init__(self, output_dir, background_jobs_manager):
-        super(MulticlassFlanT5XLWatsonx, self).__init__(output_dir, background_jobs_manager, ModelType.FLAN_T5_3B)
+        super(MulticlassFlanT5XLWatsonxPT, self).__init__(output_dir, background_jobs_manager,
+                                                          ModelType.FLAN_T5_3B, tune_type="pt")
 
-class BinaryFlanT5XLWatsonx(TunableWatsonXModelBinary):
+class BinaryFlanT5XLWatsonxPT(TunableWatsonXModelBinary):
     def __init__(self, output_dir, background_jobs_manager):
-        super(BinaryFlanT5XLWatsonx, self).__init__(output_dir, background_jobs_manager, ModelType.FLAN_T5_3B)
+        super(BinaryFlanT5XLWatsonxPT, self).__init__(output_dir, background_jobs_manager,
+                                                          ModelType.FLAN_T5_3B, tune_type="pt")
 
