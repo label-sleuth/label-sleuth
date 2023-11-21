@@ -30,7 +30,7 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
     optionally a *doc_uri* that the texts belong to.
     The order of the returned elements DOES NOT match the order of the texts given as input.
     """
-    regex = '|'.join(f'^{re.escape(t)}$' for t in texts)
+    regex = '|'.join(f'^{re.escape(str(t))}$' for t in texts)
     elements = data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                              sample_size=sys.maxsize, query=regex, is_regex=True,
                                              document_uri=None, remove_duplicates=remove_duplicates)
