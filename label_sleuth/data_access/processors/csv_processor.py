@@ -1,3 +1,4 @@
+import math
 import os
 import time
 from collections import defaultdict
@@ -58,22 +59,26 @@ class CsvFileProcessor(DataProcessorAPI):
 
         :rtype: List[Document]
         """
+        MAX_TEXTS_PER_DOCUMENT = 10000
         if not os.path.isfile(self.get_raw_data_path()):
             raise Exception(f'file for dataset {self.dataset_name} not found')
 
         df = pd.read_csv(self.get_raw_data_path(), encoding=self.encoding, na_filter=False)
         df = df[df[self.text_col].apply(lambda x: len(x) > 0)]
+
         if self.doc_id_col not in df.columns:
-            self.doc_id_col = None
+            document_name = time.strftime('%d_%b_%Y_%H-%M-%S', time.gmtime())
+            num_parts = math.ceil(len(df) / MAX_TEXTS_PER_DOCUMENT)
+            doc_ids = [f"{document_name}_part_{math.ceil((idx+1)/MAX_TEXTS_PER_DOCUMENT)}_of_{num_parts}"
+                       for idx in range(len(df))]
+            df[self.doc_id_col] = doc_ids
+
         doc_uri_to_text_elements = defaultdict(list)
         metadata_column_names = [col for col in df.columns if col.startswith(self.metadata_column_name_prefix)]
         metadata_dict = {col_name.split(self.metadata_column_name_prefix)[1]: col_values
                          for col_name, col_values in zip(metadata_column_names, get_columns(df, metadata_column_names))}
         for idx, (text, doc_id) in enumerate(zip(*get_columns(df, [self.text_col, self.doc_id_col]))):
-            if doc_id is None:
-                doc_name_for_uri = time.strftime('%d_%b_%Y_%H-%M-%S', time.gmtime())
-            else:
-                doc_name_for_uri = str(doc_id).replace(URI_SEP, '_')
+            doc_name_for_uri = str(doc_id).replace(URI_SEP, '_')
             doc_uri = self.dataset_name + URI_SEP + doc_name_for_uri
             if doc_uri not in doc_uri_to_text_elements:
                 element_id = 0
