@@ -49,7 +49,7 @@ class SVM(ModelAPI):
         super().__init__(output_dir, background_jobs_manager, is_multiclass=is_multiclass)
         self.kernel = kernel
         self.representation_type = representation_type
-        if self.representation_type == RepresentationType.WORD_EMBEDDING:
+        if self.representation_type in [RepresentationType.WORD_EMBEDDING, RepresentationType.SBERT]:
             self.sentence_embedding_service = sentence_embedding_service
 
     def _train(self, model_id, train_data, model_params):
@@ -137,8 +137,10 @@ class SVM(ModelAPI):
                 return train_data_features, vectorizer
             else:
                 return vectorizer.transform(texts), None
-        elif self.representation_type == RepresentationType.WORD_EMBEDDING:
-            return self.sentence_embedding_service.get_sentence_embeddings_representation(texts, language=language), None
+        elif self.representation_type in [RepresentationType.WORD_EMBEDDING, RepresentationType.SBERT]:
+            return self.sentence_embedding_service.get_sentence_embeddings_representation(texts,
+                                                                                          language=language,
+                                                                                          representation_type=self.representation_type), None
 
     def get_model_dir_name(self):  # for backward compatibility, we override the default get_model_dir_name()
         return "svm"
@@ -173,6 +175,14 @@ class SVM_WordEmbeddings(SVM):
     def get_supported_languages(self):
         return Languages.all_languages()
 
+class SVM_Sbert(SVM):
+    def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
+        super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
+                         representation_type=RepresentationType.SBERT,
+                         sentence_embedding_service=sentence_embedding_service)
+
+    def get_supported_languages(self):
+        return Languages.all_languages()
 
 class MulticlassSVM_WordEmbeddings(SVM):
     def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
