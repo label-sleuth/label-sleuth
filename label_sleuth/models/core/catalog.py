@@ -18,8 +18,9 @@ from label_sleuth.models.ensemble import SVM_Ensemble, MulticlassSVM_Ensemble
 from label_sleuth.models.hf_transformers import HFBert, HFXLMRoberta
 from label_sleuth.models.naive_bayes import NaiveBayes_BOW, NaiveBayes_WordEmbeddings
 from label_sleuth.models.random_model import RandomModel
-from label_sleuth.models.svm import SVM_BOW, SVM_WordEmbeddings, MulticlassSVM_BOW, MulticlassSVM_WordEmbeddings
-from label_sleuth.models.svm import SVM_BOW, SVM_WordEmbeddings, MulticlassSVM_BOW
+
+from label_sleuth.models.svm import SVM_BOW, SVM_WordEmbeddings, MulticlassSVM_BOW, SVM_Sbert, \
+    MulticlassSVM_WordEmbeddings
 from label_sleuth.models.watsonx_models import MulticlassFlanT5XLWatsonxPT, BinaryFlanT5XLWatsonxPT
 
 
@@ -28,6 +29,7 @@ class ModelsCatalog:
     NB_OVER_BOW = ModelType(NaiveBayes_BOW)
     NB_OVER_WORD_EMBEDDINGS = ModelType(NaiveBayes_WordEmbeddings)
     SVM_OVER_BOW = ModelType(SVM_BOW)
+    SVM_OVER_SBERT = ModelType(SVM_Sbert)
     SVM_OVER_WORD_EMBEDDINGS = ModelType(SVM_WordEmbeddings)
     SVM_ENSEMBLE = ModelType(SVM_Ensemble)
     HF_BERT = ModelType(HFBert)

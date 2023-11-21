@@ -40,6 +40,7 @@ from label_sleuth.models.core.languages import Language, Languages
 class RepresentationType(Enum):
     WORD_EMBEDDING = 1
     BOW = 2
+    SBERT = 3
 
 
 class SentenceEmbeddingService:
@@ -57,7 +58,8 @@ class SentenceEmbeddingService:
             self.get_fasttext_model(preload_fasttext_language_id)
 
     def get_sentence_embeddings_representation(self, sentences: List[str],
-                                               language: Language = Languages.ENGLISH) -> List[np.ndarray]:
+                                               language: Language = Languages.ENGLISH,
+                                               representation_type=RepresentationType.WORD_EMBEDDING) -> List[np.ndarray]:
         """
         Given a list of texts, return a list of representation vectors. Each text is represented by the
         mean of the vector representations of its consisting tokens.
@@ -66,8 +68,15 @@ class SentenceEmbeddingService:
         :return: a list of numpy vectors. Vector length depends on the representation model specified under *language*
         """
 
-        sentences = remove_stop_words_and_punctuation(sentences, language=language)
+        if representation_type == RepresentationType.WORD_EMBEDDING:
+            return self.get_word_embeddings_based_representation(language, sentences)
+        elif representation_type == RepresentationType.SBERT:
+            return self._get_sbert_embeddings(sentences)
+        else:
+            raise Exception(f"RepresentationType {representation_type} is not supported")
 
+    def get_word_embeddings_based_representation(self, language, sentences):
+        sentences = remove_stop_words_and_punctuation(sentences, language=language)
         if language.spacy_model_name is not None:
             model_name = language.spacy_model_name
 
@@ -86,7 +95,6 @@ class SentenceEmbeddingService:
             model = self.get_fasttext_model(language.fasttext_language_id)
             embeddings = [model.get_sentence_vector(sent) for sent in sentences]
             logging.info(f"Done getting FastText representations for {len(embeddings)} sentences")
-
         return embeddings
 
     def get_spacy_model(self, model_name) -> spacy.Language:
@@ -98,6 +106,18 @@ class SentenceEmbeddingService:
             if self.spacy_models[model_name] is None:
                 self.spacy_models[model_name] = self.load_or_download_spacy_model(model_name)
         return self.spacy_models[model_name]
+
+    @staticmethod
+    def _get_sbert_embeddings(texts, model='sentence-transformers/all-MiniLM-L6-v2'):
+        from sentence_transformers import SentenceTransformer
+
+        import logging
+        logger = logging.getLogger('sentence_transformers')
+        logger.setLevel(logging.WARNING)
+
+        model = SentenceTransformer(model)
+        text_embeddings = model.encode(texts, show_progress_bar=True)
+        return text_embeddings
 
     @staticmethod
     def download_spacy_model(model_name, output_path):
