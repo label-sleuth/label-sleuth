@@ -186,6 +186,15 @@ def get_all_dataset_ids():
     return jsonify(res)
 
 
+def _read_csv(csv_data):
+    try:
+        df = pd.read_csv(csv_data)
+    except Exception:
+        logging.info(f"retrying reading csv file using \ as an escape character")
+        df = pd.read_csv(csv_data, escapechar='\\')
+
+    return df.rename(columns=lambda x: x.strip())
+
 @main_blueprint.route('/datasets/<dataset_name>/add_documents', methods=['POST'])
 @cross_origin()
 @login_if_required
@@ -206,8 +215,7 @@ def add_documents(dataset_name):
         text_column = DisplayFields.text
 
         csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
-        df = pd.read_csv(csv_data, escapechar='\\').rename(columns=lambda x: x.strip())
-
+        df = _read_csv(csv_data)
         if text_column not in df.columns:
             raise NoTextColumnException("The csv file doesn't have a text column")
 
@@ -906,7 +914,7 @@ def import_labels(workspace_id):
     if curr_app.orchestrator_api.is_binary_workspace(workspace_id):
         required_columns.append(DisplayFields.category_name)
     csv_data = StringIO(request.files['file'].stream.read().decode("utf-8"))
-    df = pd.read_csv(csv_data).rename(columns=lambda x: x.strip())
+    df = _read_csv(csv_data)
 
     # check for required columns and send specific error messaging
     missing_columns = []
