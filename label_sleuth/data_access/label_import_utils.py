@@ -30,7 +30,7 @@ def get_element_group_by_texts(texts: Sequence[str], workspace_id, dataset_name,
     optionally a *doc_uri* that the texts belong to.
     The order of the returned elements DOES NOT match the order of the texts given as input.
     """
-    regex = '|'.join(f'^{re.escape(str(t))}$' for t in texts)
+    regex = '|'.join(f'^{re.escape(t)}$' for t in texts)
     elements = data_access.get_text_elements(workspace_id=workspace_id, dataset_name=dataset_name,
                                              sample_size=sys.maxsize, query=regex, is_regex=True,
                                              document_uri=None, remove_duplicates=remove_duplicates)
@@ -63,6 +63,7 @@ def process_labels_dataframe(workspace_id, dataset_name, data_access, labels_df_
     if DisplayFields.label_type not in labels_df_to_import.columns:
         labels_df_to_import[DisplayFields.label_type] = LabelType.Standard.name
 
+    labels_df_to_import[DisplayFields.text] = labels_df_to_import[DisplayFields.text].astype(str)
     # calling get_element_group_by_texts is the most expensive call on this function and,
     # removing duplicates from the texts iterable significantly reduces its runtime
     texts = labels_df_to_import[DisplayFields.text].unique()
