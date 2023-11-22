@@ -122,7 +122,7 @@ class Multiclass_Verbalizer():
                 "The verbalizer itself is longer than the permitted token limit. We fallback to the generic verbalizer.")
             verbalizer = Multiclass_Verbalizer.get_no_class_names_verbalizer()
             class_names_in_verbalizer=False
-        return verbalizer, class_names_in_verbalizer
+        return verbalizer, class_names_in_verbalizer, category_names
 
 class WatsonXBaseModel(ModelAPI, ABC):
     def __init__(self, output_dir, background_jobs_manager, gpu_support,
@@ -679,7 +679,8 @@ class TunableWatsonXModel(WatsonXBaseModel):
             }
             if self.tune_method == "pt":
                 data['parameters']['init_method']= 'TEXT'
-                data['parameters']['init_text'] = 'classification_class_names'
+                data['parameters']['init_text'] = "Classify the text into one of the following categories: " + \
+                                                  ", ".join(additional_training_data.get("ordered_class_names"))
             response = requests.post(f'{URL}/tunes', headers=headers, data=json.dumps(data))
             if response.status_code != 200:
                  raise ValueError(f'Tune request failed with status {response.status_code}:\n{response.text}')
@@ -831,7 +832,7 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
             all_categories_with_counts.update({x: 0 for x in category_names if x not in sorted_categories_by_freq})
             sorted_categories_by_freq = sorted(all_categories_with_counts.items(), key=lambda x: all_categories_with_counts.get(x[0]), reverse=True)
             local_model_params["sorted_categories_by_freq"] = sorted_categories_by_freq
-        verbalizer, class_names_in_verbalizer = Multiclass_Verbalizer.get_instruction(self._get_tokenizer(),
+        verbalizer, class_names_in_verbalizer, ordered_class_names = Multiclass_Verbalizer.get_instruction(self._get_tokenizer(),
                                                                                       self.train_seq_len,
                                                                                       is_train=True,
                                                                                       category_names=category_names,
@@ -840,7 +841,8 @@ class TunableWatsonXModelMC(TunableWatsonXModel):
                 "verbalizer": verbalizer,
                 "labels": labels,
                 "class_names_in_verbalizer": class_names_in_verbalizer,
-                "sorted_categories_by_freq": sorted_categories_by_freq
+                "sorted_categories_by_freq": sorted_categories_by_freq,
+                "ordered_class_names": ordered_class_names
         })
 
         return additional_data
