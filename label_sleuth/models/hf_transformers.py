@@ -68,8 +68,7 @@ class HFTransformerModel(ModelAPI):
                                           overwrite_output_dir=True,
                                           num_train_epochs=self.num_train_epochs,
                                           per_device_train_batch_size=self.train_batch_size,
-                                          learning_rate=self.learning_rate,
-                                          use_mps_device=MPS_GPU_AVAILABLE)
+                                          learning_rate=self.learning_rate)
         model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_model_name)
         trainer = Trainer(model=model, args=training_args, train_dataset=train_dataset)
         trainer.train()

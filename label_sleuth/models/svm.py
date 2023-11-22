@@ -54,7 +54,7 @@ class SVM(ModelAPI):
 
     def _train(self, model_id, train_data, model_params):
         if self.kernel == "linear":
-            model = sklearn.svm.LinearSVC()
+            model = sklearn.svm.LinearSVC(dual=True)
         elif self.kernel == "rbf":
             logging.warning("Using some arbitrary low gamma, gamma and C values might be better with tuning")
             model = sklearn.svm.SVC(gamma=1e-08)
