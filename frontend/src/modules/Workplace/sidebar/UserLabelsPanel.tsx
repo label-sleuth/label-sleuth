@@ -97,7 +97,7 @@ export const UserLabelsPanel = () => {
     const total = Object.values(labelCount).reduce((a, b) => a + b, 0);
 
     const getPercentageString = (count: number, total: number): string => {
-      return `${Math.round((count / total) * 1000) / 10}%`;
+      return total > 0 ? `${Math.round((count / total) * 1000) / 10}%` : "0%";
     };
 
     if (mode === WorkspaceMode.BINARY) {
