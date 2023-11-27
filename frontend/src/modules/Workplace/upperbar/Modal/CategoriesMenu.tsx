@@ -486,6 +486,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
               autoClose: 5000,
               toastId: "category_deleted_toast",
             });
+            dispatch(checkStatus());
           }
         }
       );
