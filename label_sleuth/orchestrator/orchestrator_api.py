@@ -19,6 +19,7 @@ import logging
 import os
 import sys
 import time
+import copy 
 
 from collections import Counter, defaultdict
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -569,7 +570,8 @@ class OrchestratorApi:
         train_statistics = {TRAIN_COUNTS_STR_KEY: train_counts}
 
         if is_multiclass:
-            train_statistics[MODEL_CATEGORIES_STR_KEY] = self.orchestrator_state.get_workspace(workspace_id).categories.copy()
+            train_statistics[MODEL_CATEGORIES_STR_KEY] = copy.deepcopy(self.orchestrator_state.get_workspace(workspace_id).categories)
+
             train_data = convert_text_elements_to_multiclass_train_data(train_data)
             logging.info(f"workspace '{workspace_id}' (multiclass) training a model."
                          f"train_statistics: {train_statistics}")
