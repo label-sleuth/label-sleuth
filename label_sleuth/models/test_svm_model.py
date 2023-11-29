@@ -30,7 +30,7 @@ class TestEnsembleModel(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
 
         self.svm = MulticlassSVM_BOW(self.temp_dir.name, BackgroundJobsManager(),
-                                     SentenceEmbeddingService(self.temp_dir.name))
+                                     SentenceEmbeddingService(self.temp_dir.name,background_jobs_manager=None))
 
     def test_svm_bow_train_and_infer(self):
         model_id = self.svm.train(

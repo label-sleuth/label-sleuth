@@ -576,6 +576,7 @@ class OrchestratorApi:
             logging.info(f"workspace '{workspace_id}' (multiclass) training a model."
                          f"train_statistics: {train_statistics}")
             model_params = {
+                "dataset_name": self.get_dataset_name(workspace_id),
                 "category_id_to_info": {
                     cat_id: {
                         "category_name": category.name,
@@ -589,6 +590,7 @@ class OrchestratorApi:
             logging.info(f"workspace '{workspace_id}' training a model for category id '{category_id}', "
                          f"train_statistics: {train_statistics}")
             model_params = {
+                "dataset_name": self.get_dataset_name(workspace_id),
                 "category_id_to_info": {
                     category_id: {
                         "category_name": category.name,

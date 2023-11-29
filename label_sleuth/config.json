@@ -1,10 +1,10 @@
 {
     "binary_flow": {
-        "first_model_positive_threshold": 5,
+        "first_model_positive_threshold": 20,
         "first_model_negative_threshold": 0,
-        "changed_element_threshold": 5,
+        "changed_element_threshold": 20,
         "training_set_selection_strategy": "ALL_LABELED_PLUS_UNLABELED_AS_NEGATIVE_X2_RATIO",
-        "model_policy": "STATIC_SVM_SBERT",
+        "model_policy": "STATIC_SVM_ENSEMBLE",
         "active_learning_strategy": "HARD_MINING",
         "precision_evaluation_size": 20
     },
