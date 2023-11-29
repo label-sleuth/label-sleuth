@@ -917,7 +917,7 @@ class OrchestratorApi:
             prev_model = previous_not_failed_iterations[-1].model
             if prev_model:
                 prev_categories = set([x.name for x in prev_model.train_statistics[MODEL_CATEGORIES_STR_KEY].values()])
-                changed_categories = len(prev_categories.intersection([x.name for x in workspace.categories.values()])) != len(workspace.categories)
+                changed_categories = len(prev_categories.intersection([x.name for x in workspace.categories.values() if x.deleted is False])) != len(workspace.categories)
 
         enough_training_data = (len(label_counts) == num_classes and len(label_counts) >= 2 and
                 all(count >= self.config.multiclass_flow.per_class_labeling_threshold for count in label_counts.values())
