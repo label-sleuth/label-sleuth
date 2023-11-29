@@ -481,6 +481,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
       dispatch(deleteCategory({ categoryId: category.category_id })).then(
         (action) => {
           if (isFulfilled(action)) {
+            dispatch(resetModelStatusCheckAttempts());
             notify(`The category ${category.category_name} has been deleted`, {
               type: toast.TYPE.SUCCESS,
               autoClose: 5000,
