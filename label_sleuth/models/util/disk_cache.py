@@ -3,7 +3,7 @@ import logging
 import os
 import time
 
-from typing import Dict, Tuple, Type
+from typing import Type, Union
 
 import ujson
 
@@ -11,7 +11,7 @@ from label_sleuth.models.core.prediction import Prediction
 
 
 def load_model_prediction_store_from_disk(path_to_store: str, prediction_class: Type[Prediction]) \
-        -> Dict[Tuple, Prediction]:
+        -> dict[tuple, Prediction]:
     """
     Load predictions for a particular model from a json file
     :param path_to_store: path to a predictions json
@@ -23,11 +23,14 @@ def load_model_prediction_store_from_disk(path_to_store: str, prediction_class: 
         return {}
     with open(path_to_store) as reader:
         model_prediction_store = ujson.load(reader)
-    res = {k: prediction_class(**v) for k, v in model_prediction_store.items()}
+    if dataclasses.is_dataclass(prediction_class):
+        res = {k: prediction_class(**v) for k, v in model_prediction_store.items()}
+    else:
+        res = model_prediction_store
     return res
 
 
-def save_model_prediction_store_to_disk(path_to_store: str, model_cache: Dict[Tuple, Prediction]):
+def save_model_prediction_store_to_disk(path_to_store: str, model_cache: dict[tuple, Union[Prediction, list]]):
     """
     Convert a dict of model predictions to json and save to disk
     :param path_to_store: path to a predictions json
@@ -36,7 +39,11 @@ def save_model_prediction_store_to_disk(path_to_store: str, model_cache: Dict[Tu
     """
     os.makedirs(os.path.dirname(path_to_store), exist_ok=True)
     start = time.time()
-    model_cache = {k: dataclasses.asdict(v) for k, v in model_cache.items()}
+    first_value = next(iter(model_cache.values()))
+    if dataclasses.is_dataclass(first_value):
+        model_cache = {k: dataclasses.asdict(v) for k, v in model_cache.items()}
+    elif not isinstance(first_value, list):
+        raise Exception(f"type {type(first_value)} is not supported by the disk cache yet")
     with open(path_to_store, "w") as output_file:
         output_file.write(ujson.dumps(model_cache))
     end = time.time()

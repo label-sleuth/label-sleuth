@@ -93,13 +93,15 @@ def create_app(
 
     app.users = {x['username']: dacite.from_dict(data_class=User, data=x) for x in app.config["CONFIGURATION"].users}
     app.tokens = [user.token for user in app.users.values()]
+    background_jobs_manager = BackgroundJobsManager(app.config['CONFIGURATION'].cpu_workers)
     sentence_embedding_service = \
         SentenceEmbeddingService(embedding_model_dir=output_dir,
                                  preload_spacy_model_name=config.language.spacy_model_name,
+                                 background_jobs_manager=background_jobs_manager,
                                  preload_fasttext_language_id=config.language.fasttext_language_id)
 
     data_access = FileBasedDataAccess(output_dir, config.max_document_name_length)
-    background_jobs_manager = BackgroundJobsManager(app.config['CONFIGURATION'].cpu_workers)
+
     training_set_selection_factory = TrainingSetSelectionFactory(data_access, background_jobs_manager)
 
     app.orchestrator_api = OrchestratorApi(OrchestratorStateApi(os.path.join(output_dir, "workspaces")),
@@ -1138,7 +1140,7 @@ def prepare_model(workspace_id):
                     "predictions = model_api.infer(model, items_to_infer)\n" \
                     "for sentence_dict, pred in zip(items_to_infer, predictions):\n" \
                     "    if type(pred.label) == bool:\n" \
-                    "        category_name = category_id_to_info['0']['category_name']\n" \
+                    "        category_name = next(iter(category_id_to_info.values()))['category_name']\n" \
                     "    else:\n" \
                     "        category_name = category_id_to_info[str(pred.label)]['category_name']\n" \
                     "    print(f'sentence: \"{sentence_dict[\"text\"]}\" -> prediction: {pred.label} " \

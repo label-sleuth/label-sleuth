@@ -22,9 +22,11 @@ def get_model_api(model_path: str, sentence_embedding_model_path=os.getcwd()) ->
     with open(model_info_path) as json_file:
         model_info = json_file.read()
     model_info = jsonpickle.decode(model_info)
+    background_jobs_manager = BackgroundJobsManager()
     model_factory = ModelFactory(output_dir=tempfile.gettempdir(),
-                                 background_jobs_manager=BackgroundJobsManager(),
+                                 background_jobs_manager=background_jobs_manager,
                                  sentence_embedding_service=SentenceEmbeddingService(
+                                     background_jobs_manager=background_jobs_manager,
                                      embedding_model_dir=sentence_embedding_model_path))
     return model_factory.get_model_api(model_info["model_type"])
 

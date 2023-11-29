@@ -14,6 +14,7 @@
 #
 
 import abc
+import functools
 import logging
 import os
 import shutil
@@ -31,9 +32,8 @@ import jsonpickle
 import label_sleuth.definitions as definitions
 from label_sleuth.models.core.languages import Languages, Language
 from label_sleuth.models.core.prediction import Prediction, MulticlassPrediction
-from label_sleuth.models.util.disk_cache import load_model_prediction_store_from_disk, \
-    save_model_prediction_store_to_disk
 from label_sleuth.models.util.LRUCache import LRUCache
+from label_sleuth.models.util.caches_infer_funnel import get_from_memory_or_disk_or_infer
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
 
 PREDICTIONS_STORE_DIR_NAME = "predictions"
@@ -192,7 +192,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
                          f"model id {model_id}")
             return self._infer_by_id(model_id, items_to_infer)
 
-        in_memory_cache_keys = [(model_id, self._infer_item_to_cache_key(item)) for item in items_to_infer]
+        items_cache_keys = [self._infer_item_to_cache_key(item) for item in items_to_infer]
 
         # If there are multiple calls to infer_by_id() using the same *model_id*, we do not want them to perform the
         # below logic at the same time. Specifically, if two calls are asking for prediction results for the same
@@ -201,52 +201,14 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         # Thus, we use a lock per model_id.
         model_lock_object = self._get_model_lock_object(model_id)
         with model_lock_object:
-            # Try to get the predictions from the in-memory cache.
-            with self.cache_lock:  # we avoid different threads reading and writing to the cache at the same time
-                infer_res = [self.cache.get(cache_key) for cache_key in in_memory_cache_keys]
-
-            indices_not_in_cache = [i for i, v in enumerate(infer_res) if v is None]
-
-            if len(indices_not_in_cache) > 0:  # i.e., some items aren't in the in-memory cache
-                logging.info(f"{len(indices_not_in_cache)} not in cache, loading model prediction store from disk "
-                             f"in {self.__class__.__name__} for model {model_id}")
-                model_predictions_store = self._load_model_prediction_store_to_cache(model_id)
-                logging.info(f"done loading model prediction store from disk in {self.__class__.__name__} for "
-                             f"model id {model_id}")
-                for idx in indices_not_in_cache:
-                    infer_res[idx] = self.cache.get(in_memory_cache_keys[idx])
-                indices_not_in_cache = [i for i, v in enumerate(infer_res) if v is None]
-
-            if len(indices_not_in_cache) > 0:  # i.e., some items aren't in the in-memory cache or the prediction store
-                logging.info(f"model id {model_id}, {len(items_to_infer) - len(indices_not_in_cache)} already in cache,"
-                             f" running inference for {len(indices_not_in_cache)} values "
-                             f"(cache size {self.cache.get_current_size()}) in {self.__class__.__name__}")
-                missing_items_to_infer = [items_to_infer[idx] for idx in indices_not_in_cache]
-                # If duplicates exist, do not infer the same item more than once
-                uniques = set()
-                uniques_to_infer = [e for e in missing_items_to_infer if frozenset(e.items()) not in uniques
-                                    and not uniques.add(frozenset(e.items()))]
-
-                # Run inference using the model for the missing elements
-                new_predictions = self._infer_by_id(model_id, uniques_to_infer)
-                logging.info(f"model id {model_id} finished running infer for {len(indices_not_in_cache)} values")
-
-                item_to_prediction = {frozenset(unique_item.items()): item_predictions
-                                      for unique_item, item_predictions in zip(uniques_to_infer, new_predictions)}
-
-                # each model has a separate store so model id should not be part of the cache key
-                model_predictions_store_keys = [cache_key[1] for cache_key in in_memory_cache_keys]
-
-                # Update cache and prediction store with predictions for the newly inferred elements
-                with self.cache_lock:
-                    for idx, entry in zip(indices_not_in_cache, missing_items_to_infer):
-                        prediction = item_to_prediction[frozenset(entry.items())]
-                        infer_res[idx] = prediction
-                        self.cache.set(in_memory_cache_keys[idx], prediction)
-                        model_predictions_store[model_predictions_store_keys[idx]] = prediction
-                save_model_prediction_store_to_disk(self.get_model_prediction_store_file(model_id),
-                                                    model_predictions_store)
-            return infer_res
+            return get_from_memory_or_disk_or_infer(items_to_infer,
+                                                    self.cache_lock,
+                                                    self.cache,
+                                                    items_cache_keys,
+                                                    model_id,
+                                                    functools.partial(self._infer_by_id, model_id),
+                                                    self.get_prediction_class(),
+                                                    self.get_model_prediction_store_file(model_id))
 
     def infer_by_id_async(self, model_id, items_to_infer: Sequence[Mapping], done_callback=None):
         """
@@ -324,15 +286,6 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
     def get_language(model_path: str) -> Language:
         language_name = ModelAPI.get_metadata(model_path)[LANGUAGE_STR_KEY]
         return getattr(Languages, language_name.upper())
-
-    def _load_model_prediction_store_to_cache(self, model_id):
-        logging.debug(f"start loading cache from disk from {self.get_model_prediction_store_file(model_id)}")
-        model_predictions_store = load_model_prediction_store_from_disk(self.get_model_prediction_store_file(model_id),
-                                                                        self.get_prediction_class())
-        logging.debug(f"done loading cache from disk from {self.get_model_prediction_store_file(model_id)}")
-        for key, value in model_predictions_store.items():
-            self.cache.set((model_id, key), value)
-        return model_predictions_store
 
     def get_model_prediction_store_file(self, model_id):
         return os.path.join(self.get_models_dir(), PREDICTIONS_STORE_DIR_NAME, model_id + ".json")

@@ -63,7 +63,8 @@ class SVM(ModelAPI):
 
         language = self.get_language(self.get_model_dir_by_id(model_id))
         texts = [x['text'] for x in train_data]
-        train_data_features, vectorizer = self.input_to_features(texts, language=language)
+        train_data_features, vectorizer = self.input_to_features(texts, language=language,
+                                                                 dataset_name=model_params.get('dataset_name'))
         labels = np.array([x['label'] for x in train_data])
 
         model.fit(train_data_features, labels)
@@ -82,8 +83,8 @@ class SVM(ModelAPI):
         with open(os.path.join(model_path, "vectorizer"), "rb") as fl:
             vectorizer = pickle.load(fl)
         language = self.get_language(model_path)
-
-        additional_fields = {}
+        dataset_name = self.get_metadata(model_path).get("dataset_name")
+        additional_fields = {'dataset_name': dataset_name}
         if self.representation_type == RepresentationType.WORD_EMBEDDING and language.spacy_model_name is not None:
             spacy_version_file = os.path.join(model_path, "spacy_version.txt")
             if os.path.exists(spacy_version_file):
@@ -104,9 +105,11 @@ class SVM(ModelAPI):
                 raise Exception("This model is incompatible with the current version of Label Sleuth. To perform "
                                 "inference using this model, please downgrade to version 0.14.0 or earlier.")
 
-        features_all_texts, _ = self.input_to_features([x['text'] for x in items_to_infer],
-                                                       language=model_components.language,
-                                                       vectorizer=model_components.vectorizer)
+        features_all_texts, _ = self.input_to_features\
+            ([x['text'] for x in items_to_infer],
+           language=model_components.language,
+           vectorizer=model_components.vectorizer,
+           dataset_name=model_components.additional_fields.get('dataset_name'))
         labels = model_components.model.predict(features_all_texts).tolist()
         if self.is_multiclass:
             all_classes = model_components.model.classes_
@@ -128,7 +131,7 @@ class SVM(ModelAPI):
         prob = np.exp(distances) / np.sum(np.exp(distances), axis=1, keepdims=True)
         return prob
 
-    def input_to_features(self, texts, language=Languages.ENGLISH, vectorizer=None):
+    def input_to_features(self, texts, language=Languages.ENGLISH, vectorizer=None,dataset_name=None):
         if self.representation_type == RepresentationType.BOW:
             if vectorizer is None:
                 vectorizer = CountVectorizer(analyzer="word", tokenizer=None, preprocessor=None, stop_words=None,
@@ -138,9 +141,11 @@ class SVM(ModelAPI):
             else:
                 return vectorizer.transform(texts), None
         elif self.representation_type in [RepresentationType.WORD_EMBEDDING, RepresentationType.SBERT]:
-            return self.sentence_embedding_service.get_sentence_embeddings_representation(texts,
-                                                                                          language=language,
-                                                                                          representation_type=self.representation_type), None
+            return self.sentence_embedding_service.\
+                       get_sentence_embeddings_representation(texts,
+                                                              language=language,
+                                                              representation_type=self.representation_type,
+                                                              dataset_name=dataset_name), None
 
     def get_model_dir_name(self):  # for backward compatibility, we override the default get_model_dir_name()
         return "svm"
@@ -182,7 +187,7 @@ class SVM_Sbert(SVM):
                          sentence_embedding_service=sentence_embedding_service)
 
     def get_supported_languages(self):
-        return Languages.all_languages()
+        return {Languages.ENGLISH}
 
 class MulticlassSVM_WordEmbeddings(SVM):
     def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):

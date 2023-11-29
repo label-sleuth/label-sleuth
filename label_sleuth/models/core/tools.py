@@ -13,7 +13,6 @@
 #  limitations under the License.
 #
 import json
-import logging
 import re
 import os
 import shutil
@@ -32,9 +31,18 @@ import fasttext.util
 import numpy as np
 import requests
 import spacy
+from sentence_transformers import SentenceTransformer
+
+import logging
+logger = logging.getLogger('sentence_transformers')
+logger.setLevel(logging.WARNING)
+
 from tqdm.auto import tqdm
 
+from label_sleuth import definitions
 from label_sleuth.models.core.languages import Language, Languages
+from label_sleuth.models.util.LRUCache import LRUCache
+from label_sleuth.models.util.caches_infer_funnel import get_from_memory_or_disk_or_infer
 
 
 class RepresentationType(Enum):
@@ -44,22 +52,32 @@ class RepresentationType(Enum):
 
 
 class SentenceEmbeddingService:
-    def __init__(self, embedding_model_dir, preload_spacy_model_name=None, preload_fasttext_language_id=None):
+    def __init__(self, embedding_model_dir, background_jobs_manager,
+                 preload_spacy_model_name=None, preload_fasttext_language_id=None):
         self.spacy_models_path = os.path.join(embedding_model_dir, "spacy_models")
         self.fasttext_models_path = os.path.join(embedding_model_dir, "fasttext_models")
+        self.sbert_models_path = os.path.join(embedding_model_dir, "sbert_models")
+        self.embedding_model_dir = embedding_model_dir
         fasttext.FastText.eprint = lambda x: None
         os.makedirs(self.spacy_models_path, exist_ok=True)
         os.makedirs(self.fasttext_models_path, exist_ok=True)
         self.spacy_models = defaultdict(lambda: None)
         self.spacy_model_lock = threading.Lock()
+        self.sbert_cache_lock = threading.Lock()
+        self.sbert_cache = LRUCache(definitions.INFER_CACHE_SIZE)
         if preload_spacy_model_name is not None:
             self.load_or_download_spacy_model(preload_spacy_model_name)
         if preload_fasttext_language_id is not None:
             self.get_fasttext_model(preload_fasttext_language_id)
 
+        self.cache = LRUCache(definitions.INFER_CACHE_SIZE)
+        self.cache_lock = threading.Lock()
+        self.background_jobs_manager = background_jobs_manager
+
     def get_sentence_embeddings_representation(self, sentences: List[str],
                                                language: Language = Languages.ENGLISH,
-                                               representation_type=RepresentationType.WORD_EMBEDDING) -> List[np.ndarray]:
+                                               representation_type=RepresentationType.WORD_EMBEDDING,
+                                               dataset_name=None) -> List[np.ndarray]:
         """
         Given a list of texts, return a list of representation vectors. Each text is represented by the
         mean of the vector representations of its consisting tokens.
@@ -71,7 +89,7 @@ class SentenceEmbeddingService:
         if representation_type == RepresentationType.WORD_EMBEDDING:
             return self.get_word_embeddings_based_representation(language, sentences)
         elif representation_type == RepresentationType.SBERT:
-            return self._get_sbert_embeddings(sentences)
+            return self._get_sbert_embeddings(sentences, dataset_name)
         else:
             raise Exception(f"RepresentationType {representation_type} is not supported")
 
@@ -107,16 +125,34 @@ class SentenceEmbeddingService:
                 self.spacy_models[model_name] = self.load_or_download_spacy_model(model_name)
         return self.spacy_models[model_name]
 
-    @staticmethod
-    def _get_sbert_embeddings(texts, model='sentence-transformers/all-MiniLM-L6-v2'):
-        from sentence_transformers import SentenceTransformer
 
-        import logging
-        logger = logging.getLogger('sentence_transformers')
-        logger.setLevel(logging.WARNING)
+    def _get_sbert_embeddings(self, texts, dataset_name, model_name='all-MiniLM-L6-v2'):
 
-        model = SentenceTransformer(model)
-        text_embeddings = model.encode(texts, show_progress_bar=True)
+        model_full_name = f"sentence-transformers/{model_name}"
+
+        def _sbert_infer(inputs):
+            def infer_all(texts):
+                model = SentenceTransformer(model_full_name, cache_folder=self.sbert_models_path)
+                return [x.tolist() for x in model.encode([x['text'] for x in texts], show_progress_bar=True)]
+
+            future = self.background_jobs_manager.add_background_job(infer_all, (inputs,), True, None)
+            return future.result()
+
+        text_embeddings = get_from_memory_or_disk_or_infer([{'text':text} for text in texts],
+                                         self.sbert_cache_lock,
+                                         self.sbert_cache,
+                                         texts,
+                                         model_name,
+                                         _sbert_infer,
+                                         list,
+                                         os.path.join(self.embedding_model_dir, "models", "sentence-transformers",
+                                                      'predictions', model_name,
+                                                      'other_dataset' if dataset_name is None else dataset_name))
+
+
+
+
+        #text_embeddings = model.encode(texts, show_progress_bar=True)
         return text_embeddings
 
     @staticmethod
