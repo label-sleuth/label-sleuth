@@ -198,15 +198,17 @@ export const extraReducers: Array<ReducerObj> = [
     action: createCategory.fulfilled,
     reducer: (state: WorkspaceState, action: PayloadAction<Category>) => {
       const newCategory: Category = action.payload;
-      return {
-        ...state,
-        curCategory:
-          state.mode === WorkspaceMode.BINARY
-            ? newCategory.category_id
-            : state.curCategory,
-        categories: [...state.categories, newCategory],
-        nextModelShouldBeTraining: false,
-      };
+      state.curCategory =
+        state.mode === WorkspaceMode.BINARY
+          ? newCategory.category_id
+          : state.curCategory;
+      state.categories = [...state.categories, newCategory];
+      state.nextModelShouldBeTraining = false;
+      (
+        state.labelCount as {
+          [key: string]: number;
+        }
+      )[newCategory.category_id.toString()] = 0;
     },
   },
   {
