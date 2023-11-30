@@ -570,7 +570,7 @@ class OrchestratorApi:
         train_statistics = {TRAIN_COUNTS_STR_KEY: train_counts}
 
         if is_multiclass:
-            train_statistics[MODEL_CATEGORIES_STR_KEY] = copy.deepcopy(self.orchestrator_state.get_workspace(workspace_id).categories)
+            train_statistics[MODEL_CATEGORIES_STR_KEY] = copy.deepcopy({k:v for k,v in self.orchestrator_state.get_workspace(workspace_id).categories.items() if not v.deleted })
 
             train_data = convert_text_elements_to_multiclass_train_data(train_data)
             logging.info(f"workspace '{workspace_id}' (multiclass) training a model."
@@ -919,7 +919,8 @@ class OrchestratorApi:
             prev_model = previous_not_failed_iterations[-1].model
             if prev_model:
                 prev_categories = set([x.name for x in prev_model.train_statistics[MODEL_CATEGORIES_STR_KEY].values()])
-                changed_categories = len(prev_categories.intersection([x.name for x in workspace.categories.values() if x.deleted is False])) != len(workspace.categories)
+                non_deleted_categories = [x.name for x in workspace.categories.values() if x.deleted is False]
+                changed_categories = len(prev_categories.intersection(non_deleted_categories)) != len(non_deleted_categories)
 
         enough_training_data = (len(label_counts) == num_classes and len(label_counts) >= 2 and
                 all(count >= self.config.multiclass_flow.per_class_labeling_threshold for count in label_counts.values())
