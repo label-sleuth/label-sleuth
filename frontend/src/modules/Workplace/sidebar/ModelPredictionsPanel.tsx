@@ -86,7 +86,7 @@ const ModelPredictionsPanel = () => {
 
   useEffect(() => {
     dispatch(getPredictionsStats());
-  }, [dispatch]);
+  }, [nonDeletedCategories ,dispatch]);
 
   const options: DropdownOption[] = useMemo(() => {
     // total amount of predictions
@@ -95,7 +95,7 @@ const ModelPredictionsPanel = () => {
       .reduce((a, b) => a + b, 0);
 
     const getPercentageString = (count: number, total: number): string => {
-      return `${Math.round((count / total) * 1000)/10}%`;
+      return `${Math.round((count / total) * 1000) / 10}%`;
     };
 
     if (mode === WorkspaceMode.BINARY) {
@@ -128,20 +128,27 @@ const ModelPredictionsPanel = () => {
         },
       ];
     } else if (mode === WorkspaceMode.MULTICLASS) {
-      return nonDeletedCategories.map((item) => ({
-        value: item.category_id.toString(),
-        title: item.category_name,
-        chip:
-          Object.keys(modelPredictionStats).length > 0
-            ? `${
-                modelPredictionStats[item.category_id].count
-              } (${getPercentageString(
-                modelPredictionStats[item.category_id].count,
-                total
-              )})`
-            : undefined,
-        chipColor: item.color?.palette[100],
-      }));
+      return nonDeletedCategories.map((item) => {
+        console.log(nonDeletedCategories);
+        return {
+          value: item.category_id.toString(),
+          title: item.category_name,
+          chip:
+            Object.keys(modelPredictionStats).length > 0
+              ? `${
+                  item.category_id in modelPredictionStats
+                    ? modelPredictionStats[item.category_id].count
+                    : 0
+                } (${getPercentageString(
+                  item.category_id in modelPredictionStats
+                    ? modelPredictionStats[item.category_id].count
+                    : 0,
+                  total
+                )})`
+              : undefined,
+          chipColor: item.color?.palette[100],
+        };
+      });
     } else return [];
   }, [mode, nonDeletedCategories, modelPredictionStats]);
 
