@@ -603,6 +603,7 @@ class OrchestratorApi:
                                                         iteration_index=iteration_index,
                                                         new_status=IterationStatus.TRAINING)
         model_api = self.model_factory.get_model_api(model_type)
+
         model_id, future = model_api.train(train_data=train_data, language=self.config.language,
                                            model_params=model_params)
         model_status = model_api.get_model_status(model_id)
@@ -848,7 +849,7 @@ class OrchestratorApi:
                 model_type = self.config.binary_flow.model_policy.get_model_type(iteration_num)
             else:
                 model_type = self.config.multiclass_flow.model_policy.get_model_type(iteration_num)
-
+            
 
             if force or (not is_multiclass and self._should_train_binary_condition(changes_since_last_model,
                                                                                    label_counts, workspace_id, config, category_id)) or \
@@ -913,19 +914,39 @@ class OrchestratorApi:
         zero_shot_training_condition = len(previous_not_failed_iterations) == 0 and \
                                        config.zero_shot_first_model and sum(label_counts.values()) == 0 and len(workspace.categories) > 0
 
-        # a change in the categories list:
-        changed_categories = False
+        # a change in the categories list (category name edit is relevant only if model.uses_category_name is True ):
+        categories_have_relevant_changes = False
+
         if len(previous_not_failed_iterations) > 0:
             prev_model = previous_not_failed_iterations[-1].model
             if prev_model:
-                prev_categories = set([x.name for x in prev_model.train_statistics[MODEL_CATEGORIES_STR_KEY].values()])
-                non_deleted_categories = [x.name for x in workspace.categories.values() if x.deleted is False]
-                changed_categories = len(prev_categories.intersection(non_deleted_categories)) != len(non_deleted_categories)
+                prev_categories = [x for x in prev_model.train_statistics[MODEL_CATEGORIES_STR_KEY].values()]
+                curr_categories = [x for x in workspace.categories.values() if x.deleted is False]
+
+                # get uses_category_name for next model 
+                next_iteration_index = len(previous_not_failed_iterations)
+                next_model_type = self.config.multiclass_flow.model_policy.get_model_type(next_iteration_index)
+                next_model_api = self.model_factory.get_model_api(next_model_type)
+                uses_category_name = next_model_api.uses_category_name
+
+                # if the id of the previous and current categories are equal
+                # and the model doesn't use category names don't trigger a new iteration
+                if set([x.id for x in prev_categories]) == set([x.id for x in curr_categories]) and not uses_category_name:
+                    categories_have_relevant_changes = False
+                elif not uses_category_name:
+                    # ids sets are not equal, thus categories were added or deleted
+                    categories_have_relevant_changes = True
+                elif set([x.name for x in prev_categories]) != set([x.name for x in curr_categories]):
+                    # ids sets are equals, 
+                    # name sets are different (there are edited categories)
+                    # and model uses the category name
+                    # trigger a new iteration
+                    categories_have_relevant_changes = True
 
         enough_training_data = (len(label_counts) == num_classes and len(label_counts) >= 2 and
                 all(count >= self.config.multiclass_flow.per_class_labeling_threshold for count in label_counts.values())
                 and changes_since_last_model >= self.config.multiclass_flow.changed_element_threshold)
-        should_train = zero_shot_training_condition or changed_categories or enough_training_data
+        should_train = zero_shot_training_condition or categories_have_relevant_changes or enough_training_data
         return should_train
 
     def infer(self, workspace_id: str, category_id: int, elements_to_infer: Sequence[TextElement],

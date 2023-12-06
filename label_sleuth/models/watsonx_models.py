@@ -138,6 +138,7 @@ class WatsonXBaseModel(ModelAPI, ABC):
         self.str_model_name = bam_model_type_to_str_model_name[watsonx_model_type]
         self.prompt_type = prompt_type
         self.is_bam=False
+        self.uses_category_name = True
 
         if watsonx_model_type not in watsonx_model_type_to_max_seq_length:
             raise Exception(f"could not find max sequence length for watsonx model type {watsonx_model_type}")

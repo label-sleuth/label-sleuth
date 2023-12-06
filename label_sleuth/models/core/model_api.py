@@ -70,6 +70,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         self.cache_lock = threading.Lock()
         self.is_multiclass = is_multiclass
         self.zero_shot_enabled = False
+        self.uses_category_name = False
 
     @abc.abstractmethod
     def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
