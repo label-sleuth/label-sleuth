@@ -128,7 +128,8 @@ class WatsonXBaseModel(ModelAPI, ABC):
     def __init__(self, output_dir, background_jobs_manager, gpu_support,
                  prompt_type: PromptType, watsonx_model_type: ModelType, api_endpoint:str):
         super(WatsonXBaseModel, self).__init__(output_dir, background_jobs_manager, gpu_support,
-                                               is_multiclass=prompt_type == PromptType.MULTICLASS)
+                                               is_multiclass=prompt_type == PromptType.MULTICLASS,
+                                               uses_category_name=True)
         load_dotenv()
         self.MAX_RETRIES = 3
         self.NUM_SHOTS = 20
@@ -138,7 +139,6 @@ class WatsonXBaseModel(ModelAPI, ABC):
         self.str_model_name = bam_model_type_to_str_model_name[watsonx_model_type]
         self.prompt_type = prompt_type
         self.is_bam=False
-        self.uses_category_name = True
 
         if watsonx_model_type not in watsonx_model_type_to_max_seq_length:
             raise Exception(f"could not find max sequence length for watsonx model type {watsonx_model_type}")
