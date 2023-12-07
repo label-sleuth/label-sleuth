@@ -128,7 +128,8 @@ class WatsonXBaseModel(ModelAPI, ABC):
     def __init__(self, output_dir, background_jobs_manager, gpu_support,
                  prompt_type: PromptType, watsonx_model_type: ModelType, api_endpoint:str):
         super(WatsonXBaseModel, self).__init__(output_dir, background_jobs_manager, gpu_support,
-                                               is_multiclass=prompt_type == PromptType.MULTICLASS)
+                                               is_multiclass=prompt_type == PromptType.MULTICLASS,
+                                               uses_category_name=True)
         load_dotenv()
         self.MAX_RETRIES = 3
         self.NUM_SHOTS = 20

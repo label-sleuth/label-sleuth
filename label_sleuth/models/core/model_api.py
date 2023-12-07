@@ -54,7 +54,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
     while the _train(), load_model() and infer() methods are specific to each model implementation.
     """
     def __init__(self, output_dir, background_jobs_manager: BackgroundJobsManager, gpu_support=False,
-                 is_multiclass=False):
+                 is_multiclass=False, uses_category_name=False):
         """
         Model implementations can require some or all of the parameters in models_factory.ModelDependencies
         in their __init__ method, as these will be passed to the model by the ModelFactory.
@@ -70,6 +70,7 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         self.cache_lock = threading.Lock()
         self.is_multiclass = is_multiclass
         self.zero_shot_enabled = False
+        self.uses_category_name = uses_category_name
 
     @abc.abstractmethod
     def _train(self, model_id: str, train_data: Sequence[Mapping], model_params: Mapping):
