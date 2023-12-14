@@ -501,13 +501,31 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     setOpen(false);
   }, [setEditedCategories, setNewCategories, setOpen]);
 
+  const didCategoryChange = useCallback(
+    (c: Category) => {
+      const editedCategoryUnchaged = nonDeletedCategories[c.category_id];
+      return (
+        c.category_name !== editedCategoryUnchaged.category_name ||
+        c.category_description !==
+          editedCategoryUnchaged.category_description ||
+        c.color?.name !== editedCategoryUnchaged.color?.name
+      );
+    },
+    [nonDeletedCategories]
+  );
+
   const saveChangesEnabled = useMemo(() => {
     return (
       (newCategories.length > 0 || editedCategories.length > 0) &&
       !newCategories.some((c) => c.category_name === "") &&
-      !editedCategories.some((c) => c.category_name === "")
+      !editedCategories.some((c) => c.category_name === "") &&
+      // check that if changes are only edited categories
+      // there is at least one edited category that actually changes
+      // either its name, description or color
+      (newCategories.length !== 0 ||
+        editedCategories.some((c) => didCategoryChange(c)))
     );
-  }, [newCategories, editedCategories]);
+  }, [newCategories, editedCategories, didCategoryChange]);
 
   const onSubmit = useCallback(() => {
     if (saveChangesEnabled) {
@@ -544,8 +562,15 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
         }
       });
 
+      // first get the categories that were actually edited
+      // if user just pressed the edit button without changing anything
+      // the edit request may trigger a new iteration without any purpose
+      const actuallyEditedCategories = editedCategories.filter((c) =>
+        didCategoryChange(c)
+      );
+      console.log(actuallyEditedCategories);
       Promise.all(
-        editedCategories.map((c) =>
+        actuallyEditedCategories.map((c) =>
           dispatch(
             editCategory({
               newCategoryName: c.category_name,
@@ -563,10 +588,12 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
           dispatch(resetModelStatusCheckAttempts());
           notify(
             `The ${
-              editedCategories.length > 1 ? "categories" : "category"
+              actuallyEditedCategories.length > 1 ? "categories" : "category"
             } ${stringifyList(
-              editedCategories.map((ec) => ec.category_name)
-            )} ${editedCategories.length > 1 ? "have" : "has"} been edited`,
+              actuallyEditedCategories.map((ec) => ec.category_name)
+            )} ${
+              actuallyEditedCategories.length > 1 ? "have" : "has"
+            } been edited`,
             {
               type: toast.TYPE.SUCCESS,
               autoClose: 5000,
@@ -588,6 +615,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     notify,
     onClose,
     saveChangesEnabled,
+    didCategoryChange,
   ]);
 
   const setCategoryEdited = useCallback(
@@ -704,6 +732,21 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
               mt: 0,
             }}
           >
+            {saveChangesEnabled && (
+              <Typography
+                variant="caption"
+                sx={{
+                  position: "absolute",
+                  ml: 4,
+                  left: 0,
+                  alignSelf: "center",
+                  fontStyle: "italic",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {"Note: Saving the changes may trigger a new iteration!"}
+              </Typography>
+            )}
             <PrimaryButton
               onClick={onSubmit}
               sx={{
