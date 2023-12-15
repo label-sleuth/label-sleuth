@@ -528,9 +528,17 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
   }, [newCategories, editedCategories, didCategoryChange]);
 
   const onSubmit = useCallback(() => {
+    // TODO: when there are two errors on submit only one is show, ie two category conflicts
     if (saveChangesEnabled) {
-      Promise.all(
-        newCategories.map((nc) =>
+      // first get the categories that were actually edited
+      // if user just pressed the edit button without changing anything
+      // the edit request may trigger a new iteration without any purpose
+      const actuallyEditedCategories = editedCategories.filter((c) =>
+        didCategoryChange(c)
+      );
+
+      Promise.all([
+        ...newCategories.map((nc) =>
           dispatch(
             createCategory({
               categoryName: nc.category_name,
@@ -538,39 +546,8 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
               categoryColor: nc.color || greyColor,
             })
           )
-        )
-      ).then((actionResults) => {
-        if (
-          actionResults.length > 0 &&
-          actionResults.every((actionResults) => isFulfilled(actionResults))
-        ) {
-          dispatch(resetModelStatusCheckAttempts());
-          notify(
-            `The ${
-              newCategories.length > 1 ? "categories" : "category"
-            } ${stringifyList(newCategories.map((nc) => nc.category_name))} ${
-              newCategories.length > 1 ? "have" : "has"
-            } been created`,
-            {
-              type: toast.TYPE.SUCCESS,
-              autoClose: 5000,
-              toastId: "category_created_toast",
-            }
-          );
-          setNewCategories([]);
-          dispatch(checkStatus());
-        }
-      });
-
-      // first get the categories that were actually edited
-      // if user just pressed the edit button without changing anything
-      // the edit request may trigger a new iteration without any purpose
-      const actuallyEditedCategories = editedCategories.filter((c) =>
-        didCategoryChange(c)
-      );
-      console.log(actuallyEditedCategories);
-      Promise.all(
-        actuallyEditedCategories.map((c) =>
+        ),
+        ...actuallyEditedCategories.map((c) =>
           dispatch(
             editCategory({
               newCategoryName: c.category_name,
@@ -579,32 +556,47 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
               categoryId: c.category_id,
             })
           )
-        )
-      ).then((actionResults) => {
-        if (
-          actionResults.length > 0 &&
-          actionResults.every((actionResults) => isFulfilled(actionResults))
-        ) {
-          dispatch(resetModelStatusCheckAttempts());
+        ),
+      ]).then((actionResults) => {
+        dispatch(resetModelStatusCheckAttempts());
+        const notifyChanges = (
+          changedCategories: Category[],
+          actionPerformed: string
+        ) => {
           notify(
             `The ${
-              actuallyEditedCategories.length > 1 ? "categories" : "category"
+              changedCategories.length > 1 ? "categories" : "category"
             } ${stringifyList(
-              actuallyEditedCategories.map((ec) => ec.category_name)
+              changedCategories.map((nc) => nc.category_name)
             )} ${
-              actuallyEditedCategories.length > 1 ? "have" : "has"
-            } been edited`,
+              changedCategories.length > 1 ? "have" : "has"
+            } been ${actionPerformed}`,
             {
               type: toast.TYPE.SUCCESS,
               autoClose: 5000,
-              toastId: "category_edited_toast",
+              toastId: `category_${actionPerformed}_toast`,
             }
           );
-          setEditedCategories([]);
-          dispatch(checkStatus());
-        }
-        onClose();
+        };
+
+        // only notify category changes that didn't fail
+        const okCreations = newCategories.filter((c, i) =>
+          isFulfilled(actionResults[i])
+        );
+
+        const okEdits = actuallyEditedCategories.filter((c, i) =>
+          isFulfilled(actionResults[newCategories.length + i])
+        );
+
+        okCreations.length && notifyChanges(okCreations, "created");
+        okEdits.length && notifyChanges(okEdits, "edited");
+
+        setNewCategories([]);
+        setEditedCategories([]);
+
+        dispatch(checkStatus());
       });
+      onClose();
     }
   }, [
     newCategories,
