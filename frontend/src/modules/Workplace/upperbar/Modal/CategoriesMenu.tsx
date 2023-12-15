@@ -25,6 +25,7 @@ import {
   IconButton,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -35,6 +36,7 @@ import {
 import { BadgeColor, Category } from "../../../../global";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import UndoIcon from "@mui/icons-material/Undo";
 import classes from "./index.module.css";
 import {
   CATEGORY_NAME_MAX_CHARS,
@@ -87,7 +89,7 @@ interface NewOrEditCategoryFormProps {
   removeNewCategory: (id: number) => void;
   isEditing: boolean;
   inCreationCategories: Category[];
-  onRemoveCategory?: (category: Category) => void;
+  onRemoveInEditionCategory?: (category: Category) => void;
 }
 
 const NewOrEditCategoryForm = ({
@@ -95,7 +97,7 @@ const NewOrEditCategoryForm = ({
   setCategoryAttribute,
   removeNewCategory,
   inCreationCategories,
-  onRemoveCategory,
+  onRemoveInEditionCategory,
   isEditing,
 }: NewOrEditCategoryFormProps) => {
   const {
@@ -105,9 +107,6 @@ const NewOrEditCategoryForm = ({
   } = useColorPicker();
 
   const [categoryNameError, setCategoryNameError] = React.useState("");
-
-  const [inDeleteConfirmationStep, setInDeleteConfirmationStep] =
-    useState(false);
 
   const categoryDescriptionPlaceholder = useAppSelector(
     (state) =>
@@ -210,7 +209,7 @@ const NewOrEditCategoryForm = ({
           <Stack
             direction={"column"}
             sx={{
-              width: inDeleteConfirmationStep ? "350px" : "400px",
+              width: "350px",
             }}
           >
             <TextField
@@ -246,36 +245,22 @@ const NewOrEditCategoryForm = ({
             />
           </Stack>
         </Stack>
-        {!inDeleteConfirmationStep ? (
-          <Stack direction={"row"} className={classes["hide-on-not-hover"]}>
-            <IconButton
-              size="small"
-              sx={(palette) => ({ color: palette.palette.primary.main })}
-              onClick={() =>
-                isEditing
-                  ? setInDeleteConfirmationStep(true)
-                  : removeNewCategory(category.category_id)
-              }
-            >
-              <DeleteOutlineOutlinedIcon fontSize="inherit" />
-            </IconButton>
-          </Stack>
-        ) : (
-          <Stack direction="row">
-            <Button
-              onClick={() => onRemoveCategory && onRemoveCategory(category)}
-              color="error"
-            >
-              {"Delete"}
-            </Button>
-            <Button
-              sx={{ alignItems: "flex-start" }}
-              onClick={() => setInDeleteConfirmationStep(false)}
-            >
-              {"Cancel"}
-            </Button>
-          </Stack>
-        )}
+
+        <Stack direction={"row"} className={classes["hide-on-not-hover"]}>
+          <IconButton
+            size="small"
+            sx={(palette) => ({ color: palette.palette.primary.main })}
+            onClick={() =>
+              isEditing
+                ? // onRemoveInEditionCategory is undefined for new category entries
+                  onRemoveInEditionCategory &&
+                  onRemoveInEditionCategory(category)
+                : removeNewCategory(category.category_id)
+            }
+          >
+            <DeleteOutlineOutlinedIcon fontSize="inherit" />
+          </IconButton>
+        </Stack>
       </Stack>
       <Divider sx={{ mt: 1 }} />
       <ColorPickerMenu
@@ -295,16 +280,17 @@ interface CategoryEntryProps {
   category: Category;
   onRemoveCategory: (category: Category) => void;
   setCategoryEdited: (category: Category) => void;
+  isDeleted: boolean;
+  onUndoCategoryDeletion: (category: Category) => void;
 }
 
 const CategoryEntry = ({
   category,
   onRemoveCategory,
   setCategoryEdited,
+  isDeleted,
+  onUndoCategoryDeletion,
 }: CategoryEntryProps) => {
-  const [inDeleteConfirmationStep, setInDeleteConfirmationStep] =
-    useState(false);
-
   return (
     <Box
       sx={{
@@ -319,6 +305,7 @@ const CategoryEntry = ({
         direction={"row"}
         justifyContent="space-between"
         alignItems={"flex-start"}
+        sx={isDeleted ? { color: "gray" } : {}}
       >
         <Stack direction={"row"}>
           <Box
@@ -334,7 +321,7 @@ const CategoryEntry = ({
           <Stack
             direction={"column"}
             sx={{
-              width: inDeleteConfirmationStep ? "350px" : "400px",
+              width: "350px",
             }}
           >
             <Typography
@@ -360,9 +347,18 @@ const CategoryEntry = ({
             >
               {category.category_description || "No description"}
             </Typography>
+            {isDeleted && (
+              <Typography
+                color={"error"}
+                variant={"subtitle2"}
+                fontStyle={"italic"}
+              >
+                {"Deleted"}
+              </Typography>
+            )}
           </Stack>
         </Stack>
-        {!inDeleteConfirmationStep ? (
+        {!isDeleted ? (
           <Stack direction={"row"} className={classes["hide-on-not-hover"]}>
             <IconButton
               onClick={() => setCategoryEdited(category)}
@@ -374,23 +370,22 @@ const CategoryEntry = ({
             <IconButton
               size="small"
               sx={(palette) => ({ color: palette.palette.primary.main })}
-              onClick={() => setInDeleteConfirmationStep(true)}
+              onClick={() => onRemoveCategory(category)}
             >
               <DeleteOutlineOutlinedIcon fontSize="inherit" />
             </IconButton>
           </Stack>
         ) : (
-          <Stack direction="row">
-            <Button onClick={() => onRemoveCategory(category)} color="error">
-              {"Delete"}
-            </Button>
-            <Button
-              sx={{ alignItems: "flex-start" }}
-              onClick={() => setInDeleteConfirmationStep(false)}
+          <Tooltip title={"Undo deletion"}>
+            <IconButton
+              onClick={() => onUndoCategoryDeletion(category)}
+              size="small"
+              sx={(palette) => ({ color: palette.palette.primary.main })}
+              className={classes["hide-on-not-hover"]}
             >
-              {"Cancel"}
-            </Button>
-          </Stack>
+              <UndoIcon fontSize="inherit" />
+            </IconButton>
+          </Tooltip>
         )}
       </Stack>
       <Divider sx={{ mt: 1 }} />
@@ -406,11 +401,15 @@ interface CategoriesMenuProps {
 export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
   const dispatch = useAppDispatch();
 
+  const modelVersion = useAppSelector((state) => state.workspace.modelVersion);
+
   const nonDeletedCategories = useAppSelector(nonDeletedCategoriesSelector);
 
   const [newCategories, setNewCategories] = useState<Category[]>([]);
 
   const [editedCategories, setEditedCategories] = useState<Category[]>([]);
+
+  const [deletedCategories, setDeletedCategories] = useState<Category[]>([]);
 
   const { notify } = useNotification();
 
@@ -478,32 +477,47 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
 
   const onRemoveCategory = useCallback(
     (category: Category) => {
-      dispatch(deleteCategory({ categoryId: category.category_id })).then(
-        (action) => {
-          if (isFulfilled(action)) {
-            dispatch(resetModelStatusCheckAttempts());
-            notify(`The category ${category.category_name} has been deleted`, {
-              type: toast.TYPE.SUCCESS,
-              autoClose: 5000,
-              toastId: "category_deleted_toast",
-            });
-            dispatch(checkStatus());
-          }
-        }
+      setDeletedCategories([...deletedCategories, structuredClone(category)]);
+    },
+    [deletedCategories, setDeletedCategories]
+  );
+  const undoCategoryEdition = useCallback(
+    (category: Category) => {
+      setEditedCategories(
+        editedCategories.filter((c) => c.category_id != category.category_id)
       );
     },
-    [dispatch, notify]
+    [editedCategories]
+  );
+
+  const onRemoveInEditionCategory = useCallback(
+    (category: Category) => {
+      onRemoveCategory(category);
+      undoCategoryEdition(category);
+    },
+    [onRemoveCategory, undoCategoryEdition]
+  );
+
+  const onUndoCategoryDeletion = useCallback(
+    (category: Category) =>
+      setDeletedCategories(
+        deletedCategories.filter((c) => c.category_id != category.category_id)
+      ),
+    [deletedCategories]
   );
 
   const onClose = useCallback(() => {
     setEditedCategories([]);
     setNewCategories([]);
+    setDeletedCategories([]);
     setOpen(false);
   }, [setEditedCategories, setNewCategories, setOpen]);
 
   const didCategoryChange = useCallback(
     (c: Category) => {
-      const editedCategoryUnchaged = nonDeletedCategories[c.category_id];
+      const editedCategoryUnchaged = nonDeletedCategories.find(
+        (ndc) => ndc.category_id == c.category_id
+      ) as Category;
       return (
         c.category_name !== editedCategoryUnchaged.category_name ||
         c.category_description !==
@@ -516,26 +530,39 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
 
   const saveChangesEnabled = useMemo(() => {
     return (
-      (newCategories.length > 0 || editedCategories.length > 0) &&
+      (newCategories.length > 0 ||
+        editedCategories.length > 0 ||
+        deletedCategories.length > 0) &&
       !newCategories.some((c) => c.category_name === "") &&
       !editedCategories.some((c) => c.category_name === "") &&
-      // check that if changes are only edited categories
-      // there is at least one edited category that actually changes
+      // check that that all the edited categories changed 
       // either its name, description or color
-      (newCategories.length !== 0 ||
-        editedCategories.some((c) => didCategoryChange(c)))
+      (editedCategories.length === 0 ||
+        editedCategories.every((c) => didCategoryChange(c)))
     );
-  }, [newCategories, editedCategories, didCategoryChange]);
+  }, [newCategories, editedCategories, didCategoryChange, deletedCategories]);
 
   const onSubmit = useCallback(() => {
     // TODO: when there are two errors on submit only one is show, ie two category conflicts
     if (saveChangesEnabled) {
-      // first get the categories that were actually edited
-      // if user just pressed the edit button without changing anything
-      // the edit request may trigger a new iteration without any purpose
-      const actuallyEditedCategories = editedCategories.filter((c) =>
-        didCategoryChange(c)
-      );
+
+      const notifyChanges = (
+        changedCategories: Category[],
+        actionPerformed: string
+      ) => {
+        notify(
+          `The ${
+            changedCategories.length > 1 ? "categories" : "category"
+          } ${stringifyList(changedCategories.map((nc) => nc.category_name))} ${
+            changedCategories.length > 1 ? "have" : "has"
+          } been ${actionPerformed}`,
+          {
+            type: toast.TYPE.SUCCESS,
+            autoClose: 5000,
+            toastId: `category_${actionPerformed}_toast`,
+          }
+        );
+      };
 
       Promise.all([
         ...newCategories.map((nc) =>
@@ -547,7 +574,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
             })
           )
         ),
-        ...actuallyEditedCategories.map((c) =>
+        ...editedCategories.map((c) =>
           dispatch(
             editCategory({
               newCategoryName: c.category_name,
@@ -557,42 +584,36 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
             })
           )
         ),
+        ...deletedCategories.map((c) =>
+          dispatch(deleteCategory({ categoryId: c.category_id }))
+        ),
       ]).then((actionResults) => {
         dispatch(resetModelStatusCheckAttempts());
-        const notifyChanges = (
-          changedCategories: Category[],
-          actionPerformed: string
-        ) => {
-          notify(
-            `The ${
-              changedCategories.length > 1 ? "categories" : "category"
-            } ${stringifyList(
-              changedCategories.map((nc) => nc.category_name)
-            )} ${
-              changedCategories.length > 1 ? "have" : "has"
-            } been ${actionPerformed}`,
-            {
-              type: toast.TYPE.SUCCESS,
-              autoClose: 5000,
-              toastId: `category_${actionPerformed}_toast`,
-            }
-          );
-        };
 
         // only notify category changes that didn't fail
         const okCreations = newCategories.filter((c, i) =>
           isFulfilled(actionResults[i])
         );
 
-        const okEdits = actuallyEditedCategories.filter((c, i) =>
+        const okEdits = editedCategories.filter((c, i) =>
           isFulfilled(actionResults[newCategories.length + i])
+        );
+
+        const okDeletions = deletedCategories.filter((c, i) =>
+          isFulfilled(
+            actionResults[
+              newCategories.length + editedCategories.length + i
+            ]
+          )
         );
 
         okCreations.length && notifyChanges(okCreations, "created");
         okEdits.length && notifyChanges(okEdits, "edited");
+        okDeletions.length && notifyChanges(okDeletions, "deleted");
 
         setNewCategories([]);
         setEditedCategories([]);
+        setDeletedCategories([]);
 
         dispatch(checkStatus());
       });
@@ -608,10 +629,12 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
     onClose,
     saveChangesEnabled,
     didCategoryChange,
+    deletedCategories,
   ]);
 
   const setCategoryEdited = useCallback(
     (category: Category) => {
+      // structuredClone is used to avoid having a reference to the category object
       setEditedCategories([...editedCategories, structuredClone(category)]);
     },
     [editedCategories, setEditedCategories]
@@ -689,7 +712,7 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                   removeNewCategory={onRemoveNewCategory}
                   isEditing={true}
                   inCreationCategories={[]}
-                  onRemoveCategory={onRemoveCategory}
+                  onRemoveInEditionCategory={onRemoveInEditionCategory}
                 />
               ) : (
                 <CategoryEntry
@@ -697,6 +720,12 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                   key={category.category_id}
                   category={category}
                   setCategoryEdited={setCategoryEdited}
+                  isDeleted={
+                    deletedCategories.filter(
+                      (dc) => category.category_id == dc.category_id
+                    ).length === 1
+                  }
+                  onUndoCategoryDeletion={onUndoCategoryDeletion}
                 />
               )
             )}
@@ -711,7 +740,6 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
                 removeNewCategory={onRemoveNewCategory}
                 isEditing={false}
                 inCreationCategories={newCategories}
-                onRemoveCategory={onRemoveCategory}
               />
             ))}
           </DialogContent>
@@ -724,21 +752,23 @@ export const CategoriesMenu = ({ open, setOpen }: CategoriesMenuProps) => {
               mt: 0,
             }}
           >
-            {saveChangesEnabled && (
-              <Typography
-                variant="caption"
-                sx={{
-                  position: "absolute",
-                  ml: 4,
-                  left: 0,
-                  alignSelf: "center",
-                  fontStyle: "italic",
-                  fontSize: "0.9rem",
-                }}
-              >
-                {"Note: Saving the changes may trigger a new iteration!"}
-              </Typography>
-            )}
+            {saveChangesEnabled &&
+              modelVersion !== null &&
+              modelVersion > 0 && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    position: "absolute",
+                    ml: 4,
+                    left: 0,
+                    alignSelf: "center",
+                    fontStyle: "italic",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {"Note: Saving the changes may trigger a new iteration!"}
+                </Typography>
+              )}
             <PrimaryButton
               onClick={onSubmit}
               sx={{
