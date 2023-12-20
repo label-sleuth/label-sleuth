@@ -117,7 +117,7 @@ const NewWorkspaceForm = ({
       <FormControl variant="standard">
         <FormControl
           variant="standard"
-          sx={{ minWidth: 300, ml: "25px", mr: "25px", mb: "25px" }}
+          sx={{ minWidth: 350, ml: "25px", mr: "25px", mb: "25px" }}
         >
           <TextField
             onChange={handleChangeText}
