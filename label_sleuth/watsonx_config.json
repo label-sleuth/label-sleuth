@@ -1,22 +1,22 @@
 {
     "binary_flow": {
-        "first_model_positive_threshold": 20,
-        "first_model_negative_threshold": 3,
+        "first_model_positive_threshold": 8,
+        "first_model_negative_threshold": 12,
         "changed_element_threshold": 20,
         "training_set_selection_strategy": "ALL_LABELED",
-        "model_policy": "STATIC_BINARY_FLANT5XL_PT",
-        "active_learning_strategy": "RANDOM",
+        "model_policy": "STATIC_SVM_SBERT",
+        "active_learning_strategy": "HARD_MINING",
         "precision_evaluation_size": 20
     },
 
     "multiclass_flow": {
-        "per_class_labeling_threshold": 2,
-        "changed_element_threshold": 4,
+        "per_class_labeling_threshold": 3,
+        "changed_element_threshold": 20,
         "training_set_selection_strategy": "ALL_LABELED_MULTICLASS",
-        "model_policy": "STATIC_MULTICLASS_FLANT5XL_PT",
+        "model_policy": "STATIC_MULTICLASS_SVM_SBERT",
         "active_learning_strategy": "RANDOM",
         "accuracy_evaluation_size": 30,
-        "zero_shot_first_model": true
+        "zero_shot_first_model": false
     },
 
     "apply_labels_to_duplicate_texts": true,

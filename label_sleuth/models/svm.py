@@ -189,6 +189,15 @@ class SVM_Sbert(SVM):
     def get_supported_languages(self):
         return {Languages.ENGLISH}
 
+class MulticlassSVM_Sbert(SVM):
+    def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
+        super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
+                         representation_type=RepresentationType.SBERT,
+                         sentence_embedding_service=sentence_embedding_service, is_multiclass=True)
+
+    def get_supported_languages(self):
+        return {Languages.ENGLISH}
+
 class MulticlassSVM_WordEmbeddings(SVM):
     def __init__(self, output_dir, background_jobs_manager, sentence_embedding_service):
         super().__init__(output_dir=output_dir, background_jobs_manager=background_jobs_manager,
