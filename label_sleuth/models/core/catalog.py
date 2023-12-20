@@ -20,7 +20,7 @@ from label_sleuth.models.naive_bayes import NaiveBayes_BOW, NaiveBayes_WordEmbed
 from label_sleuth.models.random_model import RandomModel
 
 from label_sleuth.models.svm import SVM_BOW, SVM_WordEmbeddings, MulticlassSVM_BOW, SVM_Sbert, \
-    MulticlassSVM_WordEmbeddings
+    MulticlassSVM_WordEmbeddings, MulticlassSVM_Sbert
 from label_sleuth.models.watsonx_models import MulticlassFlanT5XLWatsonxPT, BinaryFlanT5XLWatsonxPT
 
 
@@ -35,6 +35,7 @@ class ModelsCatalog:
     HF_BERT = ModelType(HFBert)
     HF_XLM_ROBERTA = ModelType(HFXLMRoberta)
     MULTICLASS_SVM_BOW = ModelType(MulticlassSVM_BOW)
+    MULTICLASS_SVM_SBERT = ModelType(MulticlassSVM_Sbert)
     MULTICLASS_SVM_WORD_EMBEDDINGS = ModelType(MulticlassSVM_WordEmbeddings)
     MULTICLASS_SVM_ENSEMBLE = ModelType(MulticlassSVM_Ensemble)
     MULTICLASS_FLANT5XL_PT = ModelType(MulticlassFlanT5XLWatsonxPT)
