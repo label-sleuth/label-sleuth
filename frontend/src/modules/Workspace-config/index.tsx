@@ -55,7 +55,7 @@ export const WorkspaceConfig = () => {
       <ButtonAppBar logout={logout} />
       <div className={classes.container}>
         <div />
-        <div style={{ maxWidth: "362px" }}>
+        <div style={{ maxWidth: "412px" }}>
           <h2 style={{ display: "flex", alignItems: "center", marginTop: 0 }}>
             <img
               alt=""

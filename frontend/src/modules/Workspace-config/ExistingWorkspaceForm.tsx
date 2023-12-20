@@ -48,17 +48,11 @@ const ExistingWorkspaceForm = ({
       className={classes.wrapper}
       style={{ borderBottom: "solid 1px #8d8d8d" }}
     >
-      <DeleteWorkspaceModal
-        open={deleteWorkspaceModalOpen}
-        setOpen={setDeleteWorkspaceModalOpen}
-        handleDeleteWorkspace={handleDeleteWorkspace}
-        value={value}
-      />
       <h2 style={{ padding: "25px", margin: 0 }}>Continue</h2>
       <FormControl variant="standard">
         <FormControl
           variant="standard"
-          sx={{ minWidth: 300, ml: "25px", mr: "25px" }}
+          sx={{ minWidth: 350, ml: "25px", mr: "25px" }}
         >
           <ControlledSelect
             label="Continue with existing workspace"
@@ -70,9 +64,8 @@ const ExistingWorkspaceForm = ({
             itemMinHeight={35}
           />
         </FormControl>
-        <div
+        <Box
           style={{
-            width: "100%",
             display: "flex",
             justifyContent: "right",
             marginTop: "20px",
@@ -90,8 +83,14 @@ const ExistingWorkspaceForm = ({
             className={buttonIBMClasses["button-ibm"]}
             text="Go"
           />
-        </div>
+        </Box>
       </FormControl>
+      <DeleteWorkspaceModal
+        open={deleteWorkspaceModalOpen}
+        setOpen={setDeleteWorkspaceModalOpen}
+        handleDeleteWorkspace={handleDeleteWorkspace}
+        value={value}
+      />
     </Box>
   );
 };
