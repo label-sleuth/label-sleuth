@@ -1,7 +1,7 @@
 {
     "binary_flow": {
-        "first_model_positive_threshold": 8,
-        "first_model_negative_threshold": 12,
+        "first_model_positive_threshold": 5,
+        "first_model_negative_threshold": 10,
         "changed_element_threshold": 20,
         "training_set_selection_strategy": "ALL_LABELED",
         "model_policy": "STATIC_SVM_SBERT",
