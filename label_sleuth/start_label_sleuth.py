@@ -118,7 +118,7 @@ if __name__ == '__main__':
     default_output = os.path.join(str(Path.home()), 'label-sleuth')
     parser.add_argument('--output_path', type=str, help=f'output directory. Default is your home directory: '
                                                         f'{default_output}', default=default_output)
-    config_path = os.path.join(PROJECT_ROOT, "config.json")
+    config_path = "config.json"
     parser.add_argument('--config_path', type=str, help=f'Config file path. Default is {config_path}',
                         default=config_path)
     
@@ -144,6 +144,14 @@ if __name__ == '__main__':
     os.makedirs(args.output_path, exist_ok=True)
 
     add_file_logger(args.output_path)  # log to file in addition to the console
+
+    if not os.path.exists(args.config_path):
+        logging.info(f"looking for the configuration file in the project installation dir")
+        orig_path = args.config_path
+        args.config_path = os.path.join(PROJECT_ROOT, args.config_path)
+        if not os.path.exists(args.config_path):
+            raise FileNotFoundError(f"could not locate config file in {orig_path} or {args.config_path}")
+
     logging.info(f"Starting label-sleuth using config file {args.config_path}. Output directory is {args.output_path}")
     logging.info("(Starting the service for the first time may take a little longer)")
     curr_app = app.create_app(config=load_config(args.config_path, vars(args)),
