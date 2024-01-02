@@ -124,8 +124,9 @@ const useWorkspaceState = () => {
   React.useEffect(() => {
     // this useEffect manages the actions to be carried on when new labels have been imported
     // if new categories where added the category list is fetched again
-    // if the user is currently in a category where labels have been added then the document is
-    // fetched again, as well as the search bar results (in case element labels has to be updated there)
+    // if the workspace is multiclass or if it is binary and the user is currently in a category where 
+    // labels have been added then the document is fetched again, 
+    // as well as the search bar results (in case element labels have to be updated there)
     if (uploadedLabels) {
       const { categories: categoriesStats, categoriesCreated } = uploadedLabels;
       // update elements and status only if the workspace is mc mode or if the current category was affected
@@ -150,6 +151,7 @@ const useWorkspaceState = () => {
 
         dispatch(checkStatus());
       }
+
       if (categoriesCreated) {
         if (mode === WorkspaceMode.BINARY) {
           dispatch(fetchCategories());
@@ -177,7 +179,7 @@ const useWorkspaceState = () => {
                   newCategoryName: c.category_name,
                   newCategoryDescription: "",
                   newCategoryColor: chosenColor,
-                  categoryId: categoriesStats[i].category_id,
+                  categoryId: c.category_id,
                 })
               );
             });
