@@ -1,5 +1,6 @@
 include requirements.txt
 include label_sleuth/config.json
+include label_sleuth/watsonx_config.json
 include label_sleuth/ui_defaults.json
 recursive-include label_sleuth/build/ *
 recursive-include label_sleuth/assets/ *
