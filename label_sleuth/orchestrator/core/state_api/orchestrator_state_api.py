@@ -23,11 +23,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Sequence, Tuple, Mapping, Union, Optional
 
-import jsonpickle
-
 from label_sleuth.data_access.core.data_structs import WorkspaceModelType
 from label_sleuth.models.core.model_api import ModelStatus
 from label_sleuth.models.core.model_type import ModelType
+from label_sleuth.utils import jsonpickle_decode, jsonpickle_encode
 
 
 class IterationStatus(Enum):
@@ -201,7 +200,7 @@ class OrchestratorStateApi:
             return cached_workspace
         with open(os.path.join(self.workspace_dir, self._filename_from_workspace_id(workspace_id))) as json_file:
             workspace = json_file.read()
-        workspace = jsonpickle.decode(workspace, keys=True)
+        workspace = jsonpickle_decode(workspace, keys=True)
         # for backward compatibility with jsonpickle formatting of old workspaces
         workspace.categories = {int(category_id_str): category
                                 for category_id_str, category in workspace.categories.items()}
@@ -209,7 +208,7 @@ class OrchestratorStateApi:
         return workspace
 
     def _save_workspace(self, workspace: Workspace):
-        workspace_encoded = jsonpickle.encode(workspace, keys=True)
+        workspace_encoded = jsonpickle_encode(workspace, keys=True)
         with open(os.path.join(self.workspace_dir, self._filename_from_workspace_id(workspace.workspace_id)), 'w') as f:
             f.write(workspace_encoded)
 
@@ -219,7 +218,7 @@ class OrchestratorStateApi:
 
     # Category-related methods
 
-    def add_category_to_workspace(self, workspace_id: str, category_name: str, category_description: str, 
+    def add_category_to_workspace(self, workspace_id: str, category_name: str, category_description: str,
                                   category_color:str = None):
         with self.workspaces_lock[workspace_id]:
             workspace = self._load_workspace(workspace_id)
@@ -228,7 +227,7 @@ class OrchestratorStateApi:
             if category_name in existing_category_names:
                 raise CategoryNameAlreadyExistsException(f"Category name {category_name} already exist in "
                                                          f"workspace {workspace_id}", category_name)
-            if type(workspace) == Workspace:   
+            if type(workspace) == Workspace:
                 category_id = len(workspace.categories)
                 workspace.categories[category_id] = Category(name=category_name, description=category_description,
                                                              id=category_id)
@@ -242,7 +241,7 @@ class OrchestratorStateApi:
                                                                        id=category_id, color=category_color)
             else:
                 raise Exception(f"workspace type {type(workspace)} is not supported yet")
-            
+
             self._save_workspace(workspace)
             return category_id
 
@@ -337,7 +336,6 @@ class OrchestratorStateApi:
             else:
                 raise Exception(f"Workspace type {type} is not supported")
             self._save_workspace(workspace)
-
 
     # Iteration-related methods
 

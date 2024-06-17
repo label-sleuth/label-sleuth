@@ -27,14 +27,13 @@ from concurrent.futures import Future
 from enum import Enum
 from typing import Mapping, Sequence, Tuple, Set, Union
 
-import jsonpickle
-
 import label_sleuth.definitions as definitions
 from label_sleuth.models.core.languages import Languages, Language
 from label_sleuth.models.core.prediction import Prediction, MulticlassPrediction
 from label_sleuth.models.util.LRUCache import LRUCache
 from label_sleuth.models.util.caches_infer_funnel import get_from_memory_or_disk_or_infer
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
+from label_sleuth.utils import jsonpickle_encode, jsonpickle_decode
 
 PREDICTIONS_STORE_DIR_NAME = "predictions"
 LANGUAGE_STR_KEY = "Language"
@@ -274,13 +273,13 @@ class ModelAPI(object, metaclass=abc.ABCMeta):
         model_metadata = {LANGUAGE_STR_KEY: language.name, **model_params}
 
         with open(metadata_path, 'w') as f:
-            f.write(jsonpickle.encode(model_metadata))
+            f.write(jsonpickle_encode(model_metadata))
 
     @staticmethod
     def get_metadata(model_path: str):
         metadata_path = os.path.join(model_path, 'model_metadata.json')
         with open(metadata_path, 'r') as f:
-            metadata = jsonpickle.decode(f.read())
+            metadata = jsonpickle_decode(f.read())
         return metadata
 
     @staticmethod
