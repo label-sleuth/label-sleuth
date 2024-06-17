@@ -52,6 +52,7 @@ from label_sleuth.orchestrator.core.state_api.orchestrator_state_api import Cate
 from label_sleuth.orchestrator.utils import convert_text_elements_to_train_data, \
     convert_text_elements_to_multiclass_train_data
 from label_sleuth.training_set_selector.training_set_selector_factory import TrainingSetSelectionFactory
+from label_sleuth.utils import jsonpickle_encode
 
 # constants
 NUMBER_OF_MODELS_TO_KEEP = 2
@@ -212,7 +213,6 @@ class OrchestratorApi:
             self._delete_category_models(workspace_id, category_id)
 
         self.orchestrator_state.delete_category_from_workspace(workspace_id, category_id)
-
 
     def get_all_categories(self, workspace_id: str) -> Mapping[int, Union[Category, MulticlassCategory]]:
         return self.orchestrator_state.get_all_categories(workspace_id)
@@ -1358,7 +1358,7 @@ class OrchestratorApi:
         exported_model_dir = model_api.copy_model_dir_for_export(iteration.model.model_id)
 
         exported_model_info = {'model_type': iteration.model.model_type}
-        model_info_encoded = jsonpickle.encode(exported_model_info)
+        model_info_encoded = jsonpickle_encode(exported_model_info)
         with open(os.path.join(exported_model_dir, 'model_info.json'), 'w') as f:
             f.write(model_info_encoded)
         return os.path.abspath(os.path.join(exported_model_dir, os.pardir))

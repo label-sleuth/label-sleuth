@@ -1,12 +1,11 @@
 import os
 import tempfile
 
-import jsonpickle
-
 from label_sleuth.models.core.model_api import ModelAPI
 from label_sleuth.models.core.models_factory import ModelFactory
 from label_sleuth.models.core.tools import SentenceEmbeddingService
 from label_sleuth.orchestrator.background_jobs_manager import BackgroundJobsManager
+from label_sleuth.utils import jsonpickle_decode
 
 
 def get_model_api(model_path: str, sentence_embedding_model_path=os.getcwd()) -> ModelAPI:
@@ -21,7 +20,7 @@ def get_model_api(model_path: str, sentence_embedding_model_path=os.getcwd()) ->
     model_info_path = os.path.join(model_path, "model_info.json")
     with open(model_info_path) as json_file:
         model_info = json_file.read()
-    model_info = jsonpickle.decode(model_info)
+    model_info = jsonpickle_decode(model_info)
     background_jobs_manager = BackgroundJobsManager()
     model_factory = ModelFactory(output_dir=tempfile.gettempdir(),
                                  background_jobs_manager=background_jobs_manager,

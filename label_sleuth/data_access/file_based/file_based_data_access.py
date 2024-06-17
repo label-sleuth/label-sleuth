@@ -23,7 +23,6 @@ import sys
 import threading
 import re
 
-import jsonpickle
 import ujson as json
 import pandas as pd
 
@@ -37,6 +36,7 @@ from label_sleuth.data_access.core.data_structs import Document, Label, TextElem
 from label_sleuth.data_access.data_access_api import DataAccessApi, AlreadyExistsException, DocumentStatistics, \
     LabeledStatus, BadDocumentNamesException, DocumentNameTooLongException, get_document_id, DocumentNameEmptyException
 from label_sleuth.data_access.file_based.utils import get_dataset_name_from_uri
+from label_sleuth.utils import jsonpickle_encode, jsonpickle_decode
 
 
 def _validate_document_names(documents: Sequence[Document], max_document_name_length):
@@ -126,7 +126,7 @@ class FileBasedDataAccess(DataAccessApi):
             # save doc to file
             filename = utils.uri_to_filename(doc.uri)
             file_path = os.path.join(doc_dump_dir, filename)
-            doc_encoded = jsonpickle.encode(doc)
+            doc_encoded = jsonpickle_encode(doc)
             with open(file_path + '.json', 'w') as f:
                 f.write(doc_encoded)
             # add doc sentences to working memory
@@ -241,7 +241,7 @@ class FileBasedDataAccess(DataAccessApi):
             file_path = os.path.join(doc_dump_dir, filename)
             with open(file_path + '.json') as json_file:
                 doc_encoded = json_file.read()
-            doc = jsonpickle.decode(doc_encoded)
+            doc = jsonpickle_decode(doc_encoded)
             if len(doc.text_elements) > 0:
                 if hasattr(doc.text_elements[0], "category_to_label"): # for backward compatability remove the empty "category_to_label" field from TextElement objects
                     for te in doc.text_elements:
