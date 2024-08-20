@@ -1111,7 +1111,8 @@ def export_predictions(workspace_id):
     infer_results = curr_app.orchestrator_api.infer(workspace_id, category_id, elements,
                                                     iteration_index=iteration_index)
     if is_multiclass:
-        return pd.DataFrame([{**te.__dict__, "scores": list(mc_pred.scores.values()), 'predicted_label': mc_pred.label}
+        categories = curr_app.orchestrator_api.get_all_categories(workspace_id)
+        return pd.DataFrame([{**te.__dict__, "scores": list(mc_pred.scores.values()), 'predicted_label': categories[mc_pred.label].name}
                              for te, mc_pred in zip(elements, infer_results)]).to_csv(index=False)
     else:
         return pd.DataFrame([{**te.__dict__, "score": pred.score, 'predicted_label': pred.label} for te, pred
