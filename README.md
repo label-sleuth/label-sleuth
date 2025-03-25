@@ -53,11 +53,11 @@ The system requires Python 3.8 or 3.9 (other versions are currently not supporte
 <details><summary><b>Installing with <tt>conda</tt></b></summary>
 <p>
 
-- Install Anaconda https://docs.anaconda.com/anaconda/install/index.html
+- Install Miniforge
 
 - Restart your console
 
-- Use the following commands to create a new anaconda environment and install the requirements:
+- Use the following commands to create a new conda environment and install the requirements:
 ```bash
 # Create and activate a virtual environment:
 conda create --yes -n label-sleuth python=3.9
