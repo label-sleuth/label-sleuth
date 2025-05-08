@@ -44,7 +44,7 @@ This interactive system enables users to efficiently collect data for varied tas
 Follow [the instructions on our website](https://www.label-sleuth.org/docs/installation.html).
 
 ## Setting up a development environment
-The system requires Python 3.8 or 3.9 (other versions are currently not supported and may cause issues).
+The system requires Python 3.9 or higher.
 1. Clone the repository: 
 
    `git clone git@github.com:label-sleuth/label-sleuth.git`
