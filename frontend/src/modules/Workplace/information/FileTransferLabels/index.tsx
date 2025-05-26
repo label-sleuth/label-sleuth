@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-import React, { Dispatch, SetStateAction, useEffect } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useMemo } from "react";
 import {
   LargeTitle,
   MainContent,
@@ -50,6 +50,7 @@ import {
   CustomizableUIMiscEnum,
   CustomizableUITextEnum,
 } from "../../../../const";
+import { returnByMode } from "../../../../utils/utils";
 
 interface UploadLabelsDialogProps {
   open: boolean;
@@ -61,6 +62,7 @@ export const UploadLabelsDialog = ({
   setOpen,
 }: UploadLabelsDialogProps) => {
   const dispatch = useAppDispatch();
+  const mode = useAppSelector((state) => state.workspace.mode);
 
   const handleClose = () => {
     setOpen(false);
@@ -75,14 +77,28 @@ export const UploadLabelsDialog = ({
     setOpen(false);
   };
 
-  const bullets = {
-    text: "all elements in the current workspace which are exactly equal to text will be assigned with label for category_name (overriding existing labels).",
-    category_name:
-      "the category for which the element is labeled. If this category does not exist in the current workspace, it will be automatically created.",
-    label: "true/false or 1/0.",
-    document_id:
-      "an optional column - if provided, label will be applied only to the elements in document_id matching text (as opposed to in the entire current workspace).",
-  };
+  const bullets = useMemo(
+    () =>
+      returnByMode(
+        {
+          text: "all elements in the current workspace which are exactly equal to text will be assigned with label for category_name (overriding existing labels).",
+          category_name:
+            "the category for which the element is labeled. If this category does not exist in the current workspace, it will be automatically created.",
+          label: "true/false or 1/0.",
+          document_id:
+            "an optional column - if provided, label will be applied only to the elements in document_id matching text (as opposed to in the entire current workspace).",
+        },
+        {
+          text: "all elements in the current workspace which are exactly equal to text will be assigned with label for category_name (overriding existing labels).",
+          label:
+            "the category for which the element is labeled. If this category does not exist in the current workspace, it will be automatically created.",
+          document_id:
+            "an optional column - if provided, label will be applied only to the elements in document_id matching text (as opposed to in the entire current workspace).",
+        },
+        mode
+      ),
+    [mode]
+  );
 
   return (
     <Modal open={open} onClose={handleClose} disableRestoreFocus>
