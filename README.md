@@ -47,7 +47,10 @@ Follow [the instructions on our website](https://www.label-sleuth.org/docs/insta
 The system requires Python 3.9 or higher.
 1. Clone the repository: 
 
-   `git clone git@github.com:label-sleuth/label-sleuth.git`
+```bash
+git clone git@github.com:label-sleuth/label-sleuth.git
+```
+
 2. cd to the cloned directory: `cd label-sleuth`
 3. Install the project dependencies using `conda` (recommended) or `pip`:
 <details><summary><b>Installing with <tt>conda</tt></b></summary>
@@ -101,7 +104,9 @@ The repository consists of a backend library, written in Python, and a frontend 
 
 See our website for a [simple tutorial](https://www.label-sleuth.org/docs/tutorial.html) that illustrates how to use the system with a sample dataset of Wikipedia pages. Before starting the tutorial, make sure you pre-load the sample dataset by running:
 
-`python -m label_sleuth.start_label_sleuth --load_sample_corpus wiki_animals_2000_pages`.
+```bash
+python -m label_sleuth.start_label_sleuth --load_sample_corpus wiki_animals_2000_pages
+```
 
 ## Customizing the system
 
