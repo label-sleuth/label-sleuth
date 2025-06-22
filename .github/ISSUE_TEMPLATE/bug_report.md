@@ -30,3 +30,5 @@ assignees: ''
  - Label Sleuth version (as it appears on the bottom left of the UI):
 
 **Suggested solution (if any):**
+
+**If possible, please attach the log files that can be found under \<label-sleuth-output-dir\>\/logs**
